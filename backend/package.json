@@ -2,11 +2,11 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "build": "npx tsc",
-    "start": "node dist/index.js",
-    "dev": "tsc-watch --onSuccess \"node ./dist/index.js\"",
+    "start": "node dist/app.js",
+    "dev": "tsc-watch --onSuccess \"node ./dist/app.js\"",
     "test": "vitest"
   },
   "keywords": [],
