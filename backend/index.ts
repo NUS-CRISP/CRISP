@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config({path: '../.env'});
 
 const app: Express = express();
-const port = process.env.PORT;
+const port = 5000;
 
 app.get('/', (req: Request, res: Response) => {
   res.send('hello world');
