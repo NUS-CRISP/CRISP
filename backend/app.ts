@@ -15,7 +15,7 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 // Use the course routes
-app.use('api/courses', courseRoutes);
+app.use('/api/courses', courseRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
