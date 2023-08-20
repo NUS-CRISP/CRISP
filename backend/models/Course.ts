@@ -3,7 +3,7 @@ import { assistantSchema, Assistant } from './Assistant';
 import { lecturerSchema, Lecturer } from './Lecturer';
 import { studentSchema, Student } from './Student';
 
-interface Course extends Document {
+export interface Course extends Document {
   courseName: string;
   courseCode: string;
   lecturers: Lecturer[],
@@ -11,7 +11,7 @@ interface Course extends Document {
   students: Student[];
 }
 
-const courseSchema = new Schema<Course>({
+export const courseSchema = new Schema<Course>({
   courseName: { type: String, required: true },
   courseCode: { type: String, required: true },
   lecturers: [lecturerSchema],
