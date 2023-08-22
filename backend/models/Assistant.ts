@@ -1,12 +1,12 @@
 import mongoose, { Schema } from 'mongoose';
-import {basePersonSchema, BasePerson } from './BasePerson';
+import {userSchema, User } from './User';
 
-export interface Assistant extends BasePerson {
+export interface Assistant extends User {
   isHeadAssistant : boolean;
 }
 
 export const assistantSchema = new Schema<Assistant>({
-  ...basePersonSchema.obj,
+  ...userSchema.obj,
   isHeadAssistant: { type: Boolean, required: true }
 });
 

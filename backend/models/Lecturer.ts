@@ -1,12 +1,12 @@
 import mongoose, { Schema } from 'mongoose';
-import {basePersonSchema, BasePerson } from './BasePerson';
+import {userSchema, User } from './User';
 
-export interface Lecturer extends BasePerson {
+export interface Lecturer extends User {
   isCourseCoordinator : boolean;
 }
 
 export const lecturerSchema = new Schema<Lecturer>({
-  ...basePersonSchema.obj,
+  ...userSchema.obj,
   isCourseCoordinator: { type: Boolean, required: true }
 });
 

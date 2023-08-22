@@ -1,12 +1,12 @@
 import mongoose, { Schema } from 'mongoose';
-import {basePersonSchema, BasePerson } from './BasePerson';
+import {userSchema, User } from './User';
 
-export interface Student extends BasePerson {
+export interface Student extends User {
   githubUsername: string;
 }
 
 export const studentSchema = new Schema<Student>({
-  ...basePersonSchema.obj,
+  ...userSchema.obj,
   githubUsername: { type: String, required: true }
 });
 const StudentModel = mongoose.model<Student>('Student', studentSchema);
