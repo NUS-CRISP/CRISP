@@ -36,7 +36,7 @@ jobs:
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
-      - name: Use Node.js ${{ matrix.node-version }} (Backend)
+    - name: Use Node.js ${{ matrix.node-version }} (Backend)
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
