@@ -8,19 +8,24 @@ describe('Lecturer Model and Schema', () => {
     const validLecturerData = {
       name: 'John Doe',
       email: 'john@example.com',
+      id: 'e0123456',
+      course_student: [],
+      course_teaching:[],
       isCourseCoordinator: true
     };
 
     const lecturerDoc = new LecturerModel(validLecturerData);
     expect(lecturerDoc.name).toBe('John Doe');
     expect(lecturerDoc.email).toBe('john@example.com');
+    expect(lecturerDoc.id).toBe('e0123456');
   });
 
 
-  it('should require name, email and isCourseCoordinator fields', async () => {
+  it('should require name, email, id and isCourseCoordinator fields', async () => {
     const invalidLecturerData: Partial<Lecturer> = {
       name: 'John Doe',
-      email: 'john@example.com'
+      email: 'john@example.com',
+      id: 'e0123456'
     };
 
     try {

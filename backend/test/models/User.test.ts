@@ -8,15 +8,19 @@ describe('User Model and Schema', () => {
     const validUserData = {
       name: 'John Doe',
       email: 'john@example.com',
+      id: 'e0123456',
+      course_student: [],
+      course_teaching:[]
     };
 
     const userDoc = new UserModel(validUserData);
     expect(userDoc.name).toBe('John Doe');
     expect(userDoc.email).toBe('john@example.com');
+    expect(userDoc.id).toBe('e0123456');
   });
 
 
-  it('should require name and email fields', async () => {
+  it('should require name, email and id fields', async () => {
     const invalidUserData: Partial<User> = {
       name: 'John Doe',
     };
@@ -27,6 +31,7 @@ describe('User Model and Schema', () => {
       expect(error).toBeInstanceOf(mongoose.Error.ValidationError);
       const validationError = error as mongoose.Error.ValidationError;
       expect(validationError.errors.email).toBeDefined();
+      expect(validationError.errors.id).toBeDefined();
     }
   });
 });

@@ -1,22 +1,19 @@
 import mongoose, { Document, Schema } from 'mongoose';
-import { assistantSchema, Assistant } from './Assistant';
-import { lecturerSchema, Lecturer } from './Lecturer';
-import { studentSchema, Student } from './Student';
 
 export interface Course extends Document {
   courseName: string;
   courseCode: string;
-  lecturers: Lecturer[],
-  assistants: Assistant[],
-  students: Student[];
+  lecturers: mongoose.Types.ObjectId[];
+  assistants: mongoose.Types.ObjectId[];
+  students: mongoose.Types.ObjectId[];
 }
 
 export const courseSchema = new Schema<Course>({
   courseName: { type: String, required: true },
   courseCode: { type: String, required: true },
-  lecturers: [lecturerSchema],
-  assistants: [assistantSchema],
-  students: [studentSchema]
+  lecturers: [{ type: Schema.Types.ObjectId, ref: 'Lecturer' }],
+  assistants: [{ type: Schema.Types.ObjectId, ref: 'Assistant' }],
+  students: [{ type: Schema.Types.ObjectId, ref: 'Student' }]
 });
 
 const CourseModel = mongoose.model<Course>('Course', courseSchema);

@@ -8,19 +8,25 @@ describe('Student Model and Schema', () => {
     const validStudentData = {
       name: 'John Doe',
       email: 'john@example.com',
-      githubUsername: "johndoe123"
+      id: 'e0123456',
+      course_student: [],
+      course_teaching:[],
+      githubUsername: 'johndoe123'
     };
 
     const studentDoc = new StudentModel(validStudentData);
     expect(studentDoc.name).toBe('John Doe');
     expect(studentDoc.email).toBe('john@example.com');
+    expect(studentDoc.id).toBe('e0123456');
+    expect(studentDoc.githubUsername).toBe('johndoe123');
   });
 
 
-  it('should require name, email and githubUsername fields', async () => {
+  it('should require name, email, id and githubUsername fields', async () => {
     const invalidStudentData: Partial<Student> = {
       name: 'John Doe',
-      email: 'john@example.com'
+      email: 'john@example.com',
+      id: 'e0123456'
     };
 
     try {

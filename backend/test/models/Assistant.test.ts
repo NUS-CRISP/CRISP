@@ -8,19 +8,24 @@ describe('Assistant Model and Schema', () => {
     const validAssistantData = {
       name: 'John Doe',
       email: 'john@example.com',
+      id: 'e0123456',
+      course_student: [],
+      course_teaching:[],
       isHeadAssistant: true
     };
 
     const assistantDoc = new AssistantModel(validAssistantData);
     expect(assistantDoc.name).toBe('John Doe');
     expect(assistantDoc.email).toBe('john@example.com');
+    expect(assistantDoc.id).toBe('e0123456');
   });
 
 
-  it('should require name, email and isHeadAssistant fields', async () => {
+  it('should require name, email, id and isHeadAssistant fields', async () => {
     const invalidAssistantData: Partial<Assistant> = {
       name: 'John Doe',
-      email: 'john@example.com'
+      email: 'john@example.com',
+      id: 'e0123456'
     };
 
     try {
