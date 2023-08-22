@@ -1,6 +1,6 @@
-import { githubApp } from "./github";
+import { githubApp } from "../app/github";
 
-export default async function Home() {
+export default async function GetGitHubStats() {
   const installations = await githubApp.octokit.request('GET /users/{username}/installation', {
     username: 'NUS-CRISP',
     headers: {
