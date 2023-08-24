@@ -1,43 +1,20 @@
 import RepoCard from '@/components/RepoCard';
-import React, { useEffect } from 'react';
-import { githubApp } from './api/github';
+import React from 'react';
+import useSWR from 'swr';
 
 const RepoStatsPage: React.FC = () => {
-  const [weeks, setWeeks] = React.useState<number[][]>([]);
+  const { data, error } = useSWR('/api/github', key => fetch(key).then(res => res.json()));
 
-  useEffect(() => {
-    async function getData() {
-      const installations = await githubApp.octokit.request('GET /users/{username}/installation', {
-        username: 'NUS-CRISP',
-        headers: {
-          'X-GitHub-Api-Version': '2022-11-28'
-        }
-      });
+  if (error) return <div>failed to load</div>;
+  if (!data) return <div>loading...</div>;
 
-      const INSTALLATION_ID = installations.data.id;
-
-      const octokit = await githubApp.getInstallationOctokit(INSTALLATION_ID);
-
-      const res = await octokit.request('GET /repos/{owner}/{repo}/stats/code_frequency', {
-        owner: 'NUS-CRISP',
-        repo: 'CRISP',
-        headers: {
-          'X-GitHub-Api-Version': '2022-11-28'
-        }
-      });
-
-      if (res.status === 200) {
-        setWeeks(res.data);
-      }
-    }}, []);
-
-    return (
-      <main className="flex min-h-screen flex-col items-center justify-between p-24">
-        <div className="flex flex-col items-center justify-center">
-          <RepoCard weeks={weeks} />
-        </div>
-      </main>
-    );
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+      <div className="flex flex-col items-center justify-center">
+        <RepoCard weeks={data} />
+      </div>
+    </main>
+  );
 }
 
 export default RepoStatsPage;
