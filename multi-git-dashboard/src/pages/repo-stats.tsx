@@ -3,7 +3,14 @@ import React from 'react';
 import useSWR from 'swr';
 
 const RepoStatsPage: React.FC = () => {
-  const { data, error } = useSWR('/api/github', key => fetch(key).then(res => res.json()));
+  const { data, error } = useSWR('/api/github', async key => {
+    const res = await fetch(key);
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch GitHub API');
+    }
+    return res.json();
+  });
 
   if (error) return <div>failed to load</div>;
   if (!data) return <div>loading...</div>;
