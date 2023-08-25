@@ -1,5 +1,5 @@
 import React from 'react';
-import CourseForm from '@/components/Forms/CourseForm';
+import CourseForm from '../components/forms/CourseForm'
 
 const CreateCoursePage: React.FC = () => {
   return (
