@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
+const apiUrl = `http://localhost:${backendPort}/api/courses`;
 
 const CourseForm: React.FC = () => {
   const [courseData, setCourseData] = useState({
@@ -11,10 +11,17 @@ const CourseForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     try {
-      const response = await axios.post('http://localhost:${backendPort}/api/courses', courseData);
-      console.log('Course created:', response.data);
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(courseData),
+      });
+      const data = await response.json();
+      console.log('Course created:', data);
     } catch (error) {
       console.error('Failed to create course:', error);
     }
