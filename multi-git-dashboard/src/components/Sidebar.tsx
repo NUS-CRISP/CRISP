@@ -13,12 +13,17 @@ const Sidebar: React.FC = () => {
             </Link>
           </li>
           <li>
-            <Link href="/CreateCourse">
+          <Link href="/view-courses">
+              View Courses
+            </Link>
+          </li>
+          <li>
+            <Link href="/create-course">
               Create Course
             </Link>
           </li>
           <li>
-          <Link href="/GetGitHubStats">
+          <Link href="/repo-stats">
               Get GitHub Stats
           </Link>
           </li>
