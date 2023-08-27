@@ -1,6 +1,7 @@
-import RepoCard from '@/components/RepoCard';
 import React from 'react';
 import useSWR from 'swr';
+import { Repo } from './api/github';
+import RepoCard from '../components/RepoCard';
 
 const RepoStatsPage: React.FC = () => {
   const { data, error } = useSWR('/api/github', async key => {
@@ -9,7 +10,9 @@ const RepoStatsPage: React.FC = () => {
     if (!res.ok) {
       throw new Error('Failed to fetch GitHub API');
     }
-    return res.json();
+
+    const repoData: Repo[] = await res.json(); 
+    return repoData;
   });
 
   if (error) return <div>failed to load</div>;
@@ -18,7 +21,7 @@ const RepoStatsPage: React.FC = () => {
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <div className="flex flex-col items-center justify-center">
-        <RepoCard weeks={data} />
+        {data.map((repo) => <RepoCard repo={repo} key={repo.id} />)}
       </div>
     </main>
   );
