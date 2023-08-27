@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import CourseCard from '@/components/CourseCard';
 import { Course } from '@/types/course';
-import RootLayout from '@/components/RootLayout';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
 const apiUrl = `http://localhost:${backendPort}/api/courses`;
@@ -28,7 +27,6 @@ const CourseListPage: React.FC = () => {
   }
 
   return (
-    <RootLayout>
       <main className="flex min-h-screen flex-col items-center justify-between p-24">
         <div>
         <h1>Course List</h1>
@@ -47,7 +45,6 @@ const CourseListPage: React.FC = () => {
         )}
       </div>
       </main>
-    </RootLayout>
   );
 };
 

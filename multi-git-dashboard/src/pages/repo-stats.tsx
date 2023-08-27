@@ -2,6 +2,7 @@ import React from 'react';
 import useSWR from 'swr';
 import { Repo } from './api/github';
 import RepoCard from '../components/RepoCard';
+import { Box, Button, Group, LoadingOverlay } from '@mantine/core';
 
 const RepoStatsPage: React.FC = () => {
   const { data, error } = useSWR('/api/github', async key => {
@@ -11,19 +12,25 @@ const RepoStatsPage: React.FC = () => {
       throw new Error('Failed to fetch GitHub API');
     }
 
-    const repoData: Repo[] = await res.json(); 
+    const repoData: Repo[] = await res.json();
     return repoData;
   });
 
   if (error) return <div>failed to load</div>;
-  if (!data) return <div>loading...</div>;
+  if (!data) return (
+    <>
+      <Box maw={400}>
+        <LoadingOverlay visible={true} overlayBlur={2} />
+      </Box>
+    </>
+  );
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="flex flex-col items-center justify-center">
-        {data.map((repo) => <RepoCard repo={repo} key={repo.id} />)}
-      </div>
-    </main>
+      <main>
+        <Group position="apart">
+          {data.map((repo) => <RepoCard repo={repo} key={repo.id} />)}
+        </Group>
+      </main>
   );
 }
 
