@@ -10,6 +10,7 @@ describe('Course Model and Schema', () => {
       lecturers: [],
       assistants: [],
       students: [],
+      teams: []
     };
 
     const courseDoc = new CourseModel(validCourseData);
