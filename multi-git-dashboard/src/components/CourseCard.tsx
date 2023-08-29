@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from "../styles/course-card.module.css";
+import { Card, Text, Group } from '@mantine/core';
 
 interface CourseCardProps {
   key: string;
@@ -9,10 +9,15 @@ interface CourseCardProps {
 
 const CourseCard: React.FC<CourseCardProps> = ({ key, courseName, courseCode }) => {
   return (
-    <div className="course-card">
-      <h2 className="course-title">{courseName}</h2>
-      <p className="course-code">Course Code: {courseCode}</p>
-    </div>
+    <Card shadow="sm" padding="lg" radius="md" withBorder>
+      <Group position="apart" mt="md" mb="xs">
+        <Text weight={500}>{courseName}</Text>
+      </Group>
+
+      <Text size="sm" color="dimmed">
+      {courseCode}
+      </Text>
+    </Card>
   );
 };
 

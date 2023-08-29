@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import CourseCard from '@/components/CourseCard';
 import { Course } from '@/types/course';
+import Link from 'next/link';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
 const apiUrl = `http://localhost:${backendPort}/api/courses`;
@@ -35,11 +36,13 @@ const CourseListPage: React.FC = () => {
         ) : (
           <div className="course-card-list">
             {courses.map(course => (
-              <CourseCard
-                key={course._id}
-                courseName={course.courseName}
-                courseCode={course.courseCode}
-              />
+              <Link key={course._id} href={`/view-course/${course._id}`}>
+                <CourseCard
+                  key={course._id}
+                  courseName={course.courseName}
+                  courseCode={course.courseCode}
+                />
+              </Link>
             ))}
           </div>
         )}
