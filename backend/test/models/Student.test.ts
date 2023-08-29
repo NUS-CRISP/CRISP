@@ -6,27 +6,25 @@ import StudentModel, { Student } from '../../models/Student';
 describe('Student Model and Schema', () => {
   it('should create a valid lecturer document', async () => {
     const validStudentData = {
+      _id: 'e0123456',
       name: 'John Doe',
       email: 'john@example.com',
-      id: 'e0123456',
-      course_student: [],
-      course_teaching:[],
-      githubUsername: 'johndoe123'
+      gitHandle: 'johndoe123'
     };
 
     const studentDoc = new StudentModel(validStudentData);
+    expect(studentDoc._id).toBe('e0123456');
     expect(studentDoc.name).toBe('John Doe');
     expect(studentDoc.email).toBe('john@example.com');
-    expect(studentDoc.id).toBe('e0123456');
-    expect(studentDoc.githubUsername).toBe('johndoe123');
+    expect(studentDoc.gitHandle).toBe('johndoe123');
   });
 
 
-  it('should require name, email, id and githubUsername fields', async () => {
+  it('should require name, email, id and gitHandle fields', async () => {
     const invalidStudentData: Partial<Student> = {
+      _id: 'e0123456',
       name: 'John Doe',
       email: 'john@example.com',
-      id: 'e0123456'
     };
 
     try {
@@ -34,7 +32,7 @@ describe('Student Model and Schema', () => {
     } catch (error) {
       expect(error).toBeInstanceOf(mongoose.Error.ValidationError);
       const validationError = error as mongoose.Error.ValidationError;
-      expect(validationError.errors.githubUsername).toBeDefined();
+      expect(validationError.errors.gitHandle).toBeDefined();
     }
   });
 });

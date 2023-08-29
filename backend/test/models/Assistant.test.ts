@@ -6,26 +6,26 @@ import AssistantModel, { Assistant } from '../../models/Assistant';
 describe('Assistant Model and Schema', () => {
   it('should create a valid assistant document', async () => {
     const validAssistantData = {
+      _id: 'e0123456',
       name: 'John Doe',
       email: 'john@example.com',
-      id: 'e0123456',
       course_student: [],
       course_teaching:[],
       isHeadAssistant: true
     };
 
     const assistantDoc = new AssistantModel(validAssistantData);
+    expect(assistantDoc._id).toBe('e0123456');
     expect(assistantDoc.name).toBe('John Doe');
     expect(assistantDoc.email).toBe('john@example.com');
-    expect(assistantDoc.id).toBe('e0123456');
   });
 
 
   it('should require name, email, id and isHeadAssistant fields', async () => {
     const invalidAssistantData: Partial<Assistant> = {
+      _id: 'e0123456',
       name: 'John Doe',
-      email: 'john@example.com',
-      id: 'e0123456'
+      email: 'john@example.com' 
     };
 
     try {
