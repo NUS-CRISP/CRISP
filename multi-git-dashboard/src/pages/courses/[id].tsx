@@ -1,7 +1,8 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { Course } from '@/types/course';
-import { Container, Text, Loader, Table, Button } from '@mantine/core';
+import { Container, Text, Loader, Table, Button, Tabs } from '@mantine/core';
+import StudentForm from '@/components/forms/StudentForm';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
 const apiUrl = `http://localhost:${backendPort}/api/courses/`;
@@ -9,8 +10,9 @@ const apiUrl = `http://localhost:${backendPort}/api/courses/`;
 
 const CourseViewPage: React.FC = () => {
   const router = useRouter();
-  const { id } = router.query;
+  const id = router.query.id as string;
   const [course, setCourse] = useState<Course | null>(null);
+  const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -47,6 +49,11 @@ const CourseViewPage: React.FC = () => {
     }
   };
 
+  const handleStudentCreated = () => {
+    fetchCourse();
+    setShowForm(false);
+  };
+
   if (!course) {
     return (
       <Container size="md" style={{ minHeight: '100vh' }}>
@@ -59,31 +66,55 @@ const CourseViewPage: React.FC = () => {
     <tr key={student._id}>
       <td>{student.name}</td>
       <td>{student.email}</td>
-      <td>{student.gitHandle}</td>
-      <td>{student.teamNumber}</td>
+      <td>{student.courseDetails[id]?.gitHandle }</td>
+      <td>{student.courseDetails[id]?.teamNumber }</td>
     </tr>
   ));
 
   return (
     <Container size="md" style={{ minHeight: '100vh' }}>
-      <Text variant="h1">Course Name: {course.name}</Text>
-      <Text variant="h1">Course Code: {course.code}</Text>
-      <Text variant="h1">Semester: {course.semester}</Text>
-      <Text variant="h1">Students</Text>
-      <Table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>GitHandle</th>
-            <th>Team</th>
-          </tr>
-        </thead>
-      <tbody>{student_rows}</tbody>
-    </Table>
-    <Button color="red" onClick={deleteCourse}>
-      Delete Course
-    </Button>
+      {course ? (
+        <Tabs defaultValue="info">
+          <Tabs.List>
+            <Tabs.Tab value="info">Course Info</Tabs.Tab>
+            <Tabs.Tab value="students">Students</Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="info">
+            <div>
+              <Text variant="h1">Course Name: {course.name}</Text>
+              <Text variant="h1">Course Code: {course.code}</Text>
+              <Text variant="h1">Semester: {course.semester}</Text>
+            </div>
+            <Button color="red" onClick={deleteCourse}>
+              Delete Course
+            </Button>
+          </Tabs.Panel>
+          <Tabs.Panel value="students">
+            <div>
+              <Table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>GitHandle</th>
+                    <th>Team</th>
+                  </tr>
+                </thead>
+                <tbody>{student_rows}</tbody>
+              </Table>
+              <div>
+                <Button onClick={() => setShowForm(!showForm)}>
+                  {showForm ? 'Cancel' : 'Add Student'}
+                </Button>
+                {showForm && <StudentForm courseId={id} onStudentCreated={handleStudentCreated} />}
+              </div>
+            </div>
+          </Tabs.Panel>
+        </Tabs>
+      ) : (
+        <Loader size="md" />
+      )}
+      
     </Container>
   );
 };

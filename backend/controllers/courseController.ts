@@ -1,9 +1,11 @@
 import { Request, Response } from 'express';
-import CourseModel from '../models/Course'; // Import your CourseModel
+import CourseModel from '../models/Course';
+import StudentModel, { CourseDetailsModel, Student } from '../models/Student';
 
 // Create a new course
 export const createCourse = async (req: Request, res: Response) => {
   try {
+    console.log(req.body)
     const newCourse = await CourseModel.create(req.body);
     res.status(201).json(newCourse);
   } catch (error) {
@@ -65,5 +67,51 @@ export const deleteCourseById = async (req: Request, res: Response) => {
     }
   } catch (error) {
     res.status(400).json({ error: 'Failed to delete course' });
+  }
+};
+
+// Add students to a course by course ID
+export const addStudentsToCourse = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  const studentData = req.body;
+
+  try {
+    const course = await CourseModel.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    const students: Student[] = [];
+    for (const studentInfo of studentData) {
+      // Find or create a student using the StudentModel
+      let student = await StudentModel.findById(studentInfo._id);
+      if (!student) {
+        student = new StudentModel({ name: studentInfo.name , _id: studentInfo._id, email: studentInfo.email });
+        await student.save();
+      }
+      console.log(student)
+      const courseDetails = new CourseDetailsModel({
+        courseId: courseId,
+        gitHandle: studentInfo.gitHandle,
+        teamNumber: studentInfo.teamNumber
+      });
+      await courseDetails.save();
+
+      // Issue here with student not saving new course details
+      student.courseDetails[courseId] = courseDetails;
+
+      await student.save();
+      
+      console.log(student.courseDetails)
+      console.log(courseDetails)
+      students.push(student);
+    }
+
+    course.students.push(...students);
+    const updatedCourse = await course.save();
+    res.json(updatedCourse);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to add students to course' });
+    console.log(error);
   }
 };
