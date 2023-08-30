@@ -5,8 +5,9 @@ import CourseModel, { Course } from '../../models/Course';
 describe('Course Model and Schema', () => {
   it('should create a valid course document', async () => {
     const validCourseData = {
-      courseName: 'Software Engineering Project',
-      courseCode: 'CS3203',
+      name: 'Software Engineering Project',
+      code: 'CS3203',
+      semester: '23/24/1',
       lecturers: [],
       assistants: [],
       students: [],
@@ -14,13 +15,14 @@ describe('Course Model and Schema', () => {
     };
 
     const courseDoc = new CourseModel(validCourseData);
-    expect(courseDoc.courseName).toBe('Software Engineering Project');
-    expect(courseDoc.courseCode).toBe('CS3203');
+    expect(courseDoc.name).toBe('Software Engineering Project');
+    expect(courseDoc.code).toBe('CS3203');
+    expect(courseDoc.semester).toBe('23/24/1');
   });
 
   it('should require courseName and courseCode fields', async () => {
     const invalidCourseData: Partial<Course> = {
-      courseName: 'Software Engineering Project'
+      name: 'Software Engineering Project'
     };
 
     try {
@@ -29,6 +31,7 @@ describe('Course Model and Schema', () => {
       expect(error).toBeInstanceOf(mongoose.Error.ValidationError);
       const validationError = error as mongoose.Error.ValidationError;
       expect(validationError.errors.courseCode).toBeDefined();
+      expect(validationError.errors.semester).toBeDefined();
     }
   });
 });

@@ -5,9 +5,9 @@ import { Student, studentSchema } from './Student';
 import { Team, teamSchema} from './Team';
 
 export interface Course extends Document {
-  courseName: string;
-  courseCode: string;
-  courseSemester: string;
+  name: string;
+  code: string;
+  semester: string;
   lecturers: Lecturer[];
   assistants: Assistant[];
   students: Student[];
@@ -15,9 +15,9 @@ export interface Course extends Document {
 }
 
 export const courseSchema = new Schema<Course>({
-  courseName: { type: String, required: true },
-  courseCode: { type: String, required: true },
-  courseSemester: { type: String, required: true },
+  name: { type: String, required: true },
+  code: { type: String, required: true },
+  semester: { type: String, required: true },
   lecturers: { type: [lecturerSchema], required: true},
   assistants: { type: [assistantSchema] },
   students: { type: [studentSchema] },
