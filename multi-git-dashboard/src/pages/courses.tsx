@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import CourseCard from '@/components/CourseCard';
 import { Course } from '@/types/course';
 import Link from 'next/link';
+import { Button } from '@mantine/core';
+import CourseForm from '@/components/forms/CourseForm';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
 const apiUrl = `http://localhost:${backendPort}/api/courses`;
 
 const CourseListPage: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
+  const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     fetchCourses();
@@ -27,27 +30,39 @@ const CourseListPage: React.FC = () => {
     }
   }
 
+  const handleCourseCreated = () => {
+    fetchCourses();
+    setShowForm(false);
+  };
+
   return (
-      <main className="flex min-h-screen flex-col items-center justify-between p-24">
-        <div>
-        <h1>Course List</h1>
+    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+      <div>
+        <h1>Courses</h1>
         {courses.length === 0 ? (
-          <p>{apiUrl}</p>
+          <p>No courses to show</p>
         ) : (
           <div className="course-card-list">
             {courses.map(course => (
-              <Link key={course._id} href={`/view-course/${course._id}`}>
+              <Link key={course._id} href={`/courses/${course._id}`}>
                 <CourseCard
                   key={course._id}
-                  courseName={course.courseName}
-                  courseCode={course.courseCode}
+                  name={course.name}
+                  code={course.code}
+                  semester={course.semester}
                 />
               </Link>
             ))}
           </div>
         )}
       </div>
-      </main>
+      <div>
+        <Button onClick={() => setShowForm(!showForm)}>
+          {showForm ? 'Cancel' : 'Add Course'}
+        </Button>
+        {showForm && <CourseForm onCourseCreated={handleCourseCreated} />}
+      </div>
+    </main>
   );
 };
 

@@ -38,7 +38,7 @@ const CourseViewPage: React.FC = () => {
         method: 'DELETE',
       });
       if (response.ok) {
-        router.push('/view-courses'); // Redirect to course list page after deletion
+        router.push('/courses'); // Redirect to course list page after deletion
       } else {
         console.error('Error deleting course:', response.statusText);
       }
@@ -60,13 +60,15 @@ const CourseViewPage: React.FC = () => {
       <td>{student.name}</td>
       <td>{student.email}</td>
       <td>{student.gitHandle}</td>
+      <td>{student.teamNumber}</td>
     </tr>
   ));
 
   return (
     <Container size="md" style={{ minHeight: '100vh' }}>
-      <Text variant="h1">Course Name: {course.courseName}</Text>
-      <Text variant="h1">Course Code: {course.courseCode}</Text>
+      <Text variant="h1">Course Name: {course.name}</Text>
+      <Text variant="h1">Course Code: {course.code}</Text>
+      <Text variant="h1">Semester: {course.semester}</Text>
       <Text variant="h1">Students</Text>
       <Table>
         <thead>
@@ -74,6 +76,7 @@ const CourseViewPage: React.FC = () => {
             <th>Name</th>
             <th>Email</th>
             <th>GitHandle</th>
+            <th>Team</th>
           </tr>
         </thead>
       <tbody>{student_rows}</tbody>

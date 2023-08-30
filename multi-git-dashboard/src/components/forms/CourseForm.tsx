@@ -1,52 +1,74 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Box, TextInput, Button } from '@mantine/core';
+import { useForm } from '@mantine/form';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
 const apiUrl = `http://localhost:${backendPort}/api/courses`;
 
-const CourseForm: React.FC = () => {
-  const [courseData, setCourseData] = useState({
-    courseName: '',
-    courseCode: '',
+interface CourseFormProps {
+  onCourseCreated: () => void;
+}
+
+const CourseForm: React.FC<CourseFormProps> = ({ onCourseCreated }) => {
+
+  const form = useForm({
+    initialValues: {
+      name: '',
+      code: '',
+      semester: '',
+    },
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(courseData),
-      });
-      const data = await response.json();
-      console.log('Course created:', data);
-    } catch (error) {
-      console.error('Failed to create course:', error);
-    }
-  };
+  const handleSubmit = async () => {
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setCourseData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+    console.log('Sending course data:', form.values);
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(form.values),
+    });
+
+    const data = await response.json();
+    console.log('Course created:', data);
+    onCourseCreated();
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div>
-        <label>Course Name:</label>
-        <input type="text" name="courseName" value={courseData.courseName} onChange={handleChange} />
-      </div>
-      <div>
-        <label>Course Code:</label>
-        <input type="text" name="courseCode" value={courseData.courseCode} onChange={handleChange} />
-      </div>
-      <button type="submit">Create Course</button>
-    </form>
+    <Box maw={300} mx="auto">
+      <form onSubmit={form.onSubmit(handleSubmit)}>
+          <TextInput
+            withAsterisk
+            label="Course Name"
+            {...form.getInputProps('name')}
+            value={form.values.name}
+            onChange={(event) => {
+              form.setFieldValue('name', event.currentTarget.value);
+            }}
+          />
+          <TextInput
+            withAsterisk
+            label="Course Code"
+            {...form.getInputProps('code')}
+            value={form.values.code}
+            onChange={(event) => {
+              form.setFieldValue('code', event.currentTarget.value);
+            }}
+          />
+          <TextInput
+            withAsterisk
+            label="Semester"
+            {...form.getInputProps('semester')}
+            value={form.values.semester}
+            onChange={(event) => {
+              form.setFieldValue('semester', event.currentTarget.value);
+            }}
+          />
+        <Button type="submit">Create Course</Button>
+      </form>
+    </Box>
   );
 };
 

@@ -9,13 +9,8 @@ function Home() {
       <nav>
         <ul>
           <li>
-            <Link href="/view-courses">
+            <Link href="/courses">
               View Courses
-            </Link>
-          </li>
-          <li>
-            <Link href="/create-course">
-              Create Course
             </Link>
           </li>
           <li>

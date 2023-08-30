@@ -69,8 +69,7 @@ const Sidebar: React.FC = () => {
 
   const data = [
     { link: '/', label: 'Home', icon: IconHome },
-    { link: '/view-courses', label: 'View Courses', icon: IconListDetails },
-    { link: '/create-course', label: 'Create Course', icon: IconPlus },
+    { link: '/courses', label: 'View Courses', icon: IconListDetails },
     { link: '/repo-stats', label: 'Get GitHub Stats', icon: IconChartArcs },
   ];
 
