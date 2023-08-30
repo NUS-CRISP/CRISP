@@ -8,15 +8,13 @@ describe('Student Model and Schema', () => {
     const validStudentData = {
       _id: 'e0123456',
       name: 'John Doe',
-      email: 'john@example.com',
-      gitHandle: 'johndoe123'
+      email: 'john@example.com'
     };
 
     const studentDoc = new StudentModel(validStudentData);
     expect(studentDoc._id).toBe('e0123456');
     expect(studentDoc.name).toBe('John Doe');
     expect(studentDoc.email).toBe('john@example.com');
-    expect(studentDoc.gitHandle).toBe('johndoe123');
   });
 
 
@@ -24,7 +22,6 @@ describe('Student Model and Schema', () => {
     const invalidStudentData: Partial<Student> = {
       _id: 'e0123456',
       name: 'John Doe',
-      email: 'john@example.com',
     };
 
     try {
@@ -32,7 +29,7 @@ describe('Student Model and Schema', () => {
     } catch (error) {
       expect(error).toBeInstanceOf(mongoose.Error.ValidationError);
       const validationError = error as mongoose.Error.ValidationError;
-      expect(validationError.errors.gitHandle).toBeDefined();
+      expect(validationError.errors.email).toBeDefined();
     }
   });
 });
