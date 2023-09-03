@@ -1,22 +1,42 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import bcrypt from 'bcrypt';
 
 export interface User extends Document{
-  name: string;
   email: string;
-  id: string;
-  course_student: mongoose.Types.ObjectId[];
-  course_teaching: mongoose.Types.ObjectId[];
+  username: string;
+  password: string;
+  created_at: Date;
+  name: string;
 }
 
-export const userSchema = new Schema<User>({
-  name: { type: String, required: true },
-  email: { type: String, required: true },
-  id: { type: String, required: true},
-  course_student: [{ type: Schema.Types.ObjectId, ref: 'Course' }],
-  course_teaching: [{ type: Schema.Types.ObjectId, ref: 'Course' }]
+const userSchema = new Schema<User>({
+  email: { 
+    type: String, 
+    required: [true, "Your email address is required"] ,
+    unique: true,
+  },
+  username: { 
+    type: String, 
+    required: [true, "Your username is required"],
+  },
+  password: {
+    type: String,
+    required: [true, "Your password is required"],
+  },
+  created_at: { 
+    type: Date, 
+    default: Date.now 
+  },
+  name: { 
+    type: String, 
+    required: true 
+  },
 });
 
+userSchema.pre<User>('save', async function() {
+  this.password = await bcrypt.hash(this.password, 12);
+});
 
-const UserModel = mongoose.model<User>('User', userSchema);
+const User = mongoose.model<User>('User', userSchema);
 
-export default UserModel;
+export default User;

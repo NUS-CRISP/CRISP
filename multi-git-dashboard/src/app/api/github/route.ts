@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { App } from 'octokit';
-import { delay } from '../../../common/utils';
+import { delay } from '../../../../common/utils';
+import { NextResponse } from 'next/server';
 
 interface RepoRequestParams {
   id: number,
@@ -57,7 +58,7 @@ async function getRepoStats(repo: RepoRequestParams) {
 }
 
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse<Repo[]>) {
+export async function GET(req: NextApiRequest, res: NextApiResponse<Repo[]>) {
   const repos = (await octokit.request('GET /installation/repositories', {
     org: ORG_NAME,
     headers: {
@@ -67,5 +68,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
   const responses: Repo[] = await Promise.all(repos.map(getRepoStats));
 
-  return res.status(200).json(responses);
+  return NextResponse.json(responses, { status: 200 });
 }

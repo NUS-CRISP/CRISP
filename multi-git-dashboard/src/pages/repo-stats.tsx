@@ -1,6 +1,6 @@
 import React from 'react';
 import useSWR from 'swr';
-import { Repo } from './api/github';
+import { Repo } from '../app/api/github/route';
 import RepoCard from '../components/RepoCard';
 import { Box, Button, Group, LoadingOverlay } from '@mantine/core';
 
