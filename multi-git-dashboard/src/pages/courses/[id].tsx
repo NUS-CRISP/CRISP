@@ -66,8 +66,7 @@ const CourseViewPage: React.FC = () => {
     <tr key={student._id}>
       <td>{student.name}</td>
       <td>{student.email}</td>
-      <td>{student.courseDetails[id]?.gitHandle }</td>
-      <td>{student.courseDetails[id]?.teamNumber }</td>
+      <td>{student.gitHandle }</td>
     </tr>
   ));
 
@@ -97,7 +96,6 @@ const CourseViewPage: React.FC = () => {
                     <th>Name</th>
                     <th>Email</th>
                     <th>GitHandle</th>
-                    <th>Team</th>
                   </tr>
                 </thead>
                 <tbody>{student_rows}</tbody>

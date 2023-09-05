@@ -16,7 +16,6 @@ const StudentForm: React.FC<StudentFormProps> = ({ courseId, onStudentCreated })
       name: '',
       _id: '',
       email: '',
-      teamNumber: '',
       gitHandle: ''
     },
   });
@@ -30,7 +29,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ courseId, onStudentCreated })
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify([form.values]),
+      body: JSON.stringify(form.values),
     });
 
     const data = await response.json();
@@ -66,14 +65,6 @@ const StudentForm: React.FC<StudentFormProps> = ({ courseId, onStudentCreated })
             value={form.values.email}
             onChange={(event) => {
               form.setFieldValue('email', event.currentTarget.value);
-            }}
-          />
-          <TextInput
-            label="Team Number"
-            {...form.getInputProps('teamNumber')}
-            value={form.values.teamNumber}
-            onChange={(event) => {
-              form.setFieldValue('teamNumber', event.currentTarget.value);
             }}
           />
           <TextInput
