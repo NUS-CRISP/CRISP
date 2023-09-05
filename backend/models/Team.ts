@@ -1,17 +1,15 @@
 import mongoose, { Schema } from 'mongoose';
-import {studentSchema, Student } from './Student';
-import {assistantSchema, Assistant } from './Assistant';
 
 export interface Team {
   teamNumber: number;
-  assistant: Assistant;
-  students: Student[];
+  assistant: mongoose.Types.ObjectId;
+  students: mongoose.Types.ObjectId[];
 }
 
 export const teamSchema = new Schema<Team>({
   teamNumber: { type: Number, require: true},
-  assistant: { type: assistantSchema },
-  students: { type: [studentSchema] }
+  assistant: { type: Schema.Types.ObjectId, ref: 'Assistant' },
+  students: [{ type: Schema.Types.ObjectId, ref: 'Student' }]
 });
 const TeamModel = mongoose.model<Team>('Team', teamSchema);
 
