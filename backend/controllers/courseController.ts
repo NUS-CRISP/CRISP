@@ -1,11 +1,12 @@
 import { Request, Response } from 'express';
 import CourseModel from '../models/Course';
-import StudentModel, { CourseDetailsModel, Student } from '../models/Student';
+import StudentModel from '../models/Student';
+import mongoose from 'mongoose';
+import { Student } from '../../multi-git-dashboard/src/types/user';
 
 // Create a new course
 export const createCourse = async (req: Request, res: Response) => {
   try {
-    console.log(req.body)
     const newCourse = await CourseModel.create(req.body);
     res.status(201).json(newCourse);
   } catch (error) {
@@ -27,7 +28,8 @@ export const getAllCourses = async (_req: Request, res: Response) => {
 export const getCourseById = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   try {
-    const course = await CourseModel.findById(courseId);
+    const course = await CourseModel.findById(courseId)
+    .populate('students');
     if (course) {
       res.json(course);
     } else {
@@ -74,44 +76,34 @@ export const deleteCourseById = async (req: Request, res: Response) => {
 export const addStudentsToCourse = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   const studentData = req.body;
-
   try {
     const course = await CourseModel.findById(courseId);
+
     if (!course) {
-      return res.status(404).json({ error: 'Course not found' });
+      return res.status(404).json({ message: 'Course not found' });
     }
 
-    const students: Student[] = [];
-    for (const studentInfo of studentData) {
-      // Find or create a student using the StudentModel
-      let student = await StudentModel.findById(studentInfo._id);
-      if (!student) {
-        student = new StudentModel({ name: studentInfo.name , _id: studentInfo._id, email: studentInfo.email });
-        await student.save();
-      }
-      console.log(student)
-      const courseDetails = new CourseDetailsModel({
-        courseId: courseId,
-        gitHandle: studentInfo.gitHandle,
-        teamNumber: studentInfo.teamNumber
-      });
-      await courseDetails.save();
+    const studentId = studentData._id;
 
-      // Issue here with student not saving new course details
-      student.courseDetails[courseId] = courseDetails;
+    let student = await StudentModel.findById(studentId);
 
+    if (!student) {
+      student = new StudentModel(studentData);
       await student.save();
-      
-      console.log(student.courseDetails)
-      console.log(courseDetails)
-      students.push(student);
+    } else {
+      await StudentModel.findByIdAndUpdate(studentId, studentData, { new: true });
     }
 
-    course.students.push(...students);
-    const updatedCourse = await course.save();
-    res.json(updatedCourse);
+    const studentObjectId = mongoose.Types.ObjectId.createFromHexString(studentId);
+
+    if (!course.students.includes(studentObjectId)) {
+      course.students.push(studentObjectId);
+    }
+
+    await course.save();
+
+    return res.status(200).json({ message: 'Students added to the course successfully' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to add students to course' });
-    console.log(error);
+    res.status(400).json({ error: 'Failed to add students' });
   }
 };
