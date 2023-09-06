@@ -6,7 +6,7 @@ import UserModel, { User } from '../../models/User';
 describe('User Model and Schema', () => {
   it('should create a valid user document', async () => {
     const validUserData = {
-      _id: 'e0123456',
+      id: 'e0123456',
       name: 'John Doe',
       email: 'john@example.com'
     };

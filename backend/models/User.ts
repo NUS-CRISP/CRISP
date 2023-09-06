@@ -1,14 +1,14 @@
-import mongoose, { Schema } from 'mongoose';
+import mongoose, { Schema, Types } from 'mongoose';
 
 export interface User {
-  _id: string;
+  id: string;
   name: string;
   email: string;
   enrolledCourses: mongoose.Types.ObjectId[];
 }
 
 export const userSchema = new Schema<User>({
-  _id: { type: String, required: true},
+  id: { type: String, unique : true, required: true },
   name: { type: String, required: true },
   email: { type: String, required: true },
   enrolledCourses: [{ type: Schema.Types.ObjectId, ref: 'Course' }]

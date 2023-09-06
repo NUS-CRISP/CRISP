@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import { describe, expect, it} from 'vitest'
 import StudentModel, { Student } from '../../models/Student';
 
@@ -6,7 +6,7 @@ import StudentModel, { Student } from '../../models/Student';
 describe('Student Model and Schema', () => {
   it('should create a valid lecturer document', async () => {
     const validStudentData = {
-      _id: 'e0123456',
+      id: 'e0123456',
       name: 'John Doe',
       email: 'john@example.com'
     };
@@ -20,7 +20,7 @@ describe('Student Model and Schema', () => {
 
   it('should require name, email, id and gitHandle fields', async () => {
     const invalidStudentData: Partial<Student> = {
-      _id: 'e0123456',
+      id: 'e0123456',
       name: 'John Doe',
     };
 

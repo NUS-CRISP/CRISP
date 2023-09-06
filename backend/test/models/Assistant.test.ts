@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import { describe, expect, it} from 'vitest'
 import AssistantModel, { Assistant } from '../../models/Assistant';
 
@@ -6,7 +6,7 @@ import AssistantModel, { Assistant } from '../../models/Assistant';
 describe('Assistant Model and Schema', () => {
   it('should create a valid assistant document', async () => {
     const validAssistantData = {
-      _id: 'e0123456',
+      id: 'e0123456',
       name: 'John Doe',
       email: 'john@example.com',
       course_student: [],
@@ -15,7 +15,7 @@ describe('Assistant Model and Schema', () => {
     };
 
     const assistantDoc = new AssistantModel(validAssistantData);
-    expect(assistantDoc._id).toBe('e0123456');
+    expect(assistantDoc.id).toBe('e0123456');
     expect(assistantDoc.name).toBe('John Doe');
     expect(assistantDoc.email).toBe('john@example.com');
   });
@@ -23,7 +23,7 @@ describe('Assistant Model and Schema', () => {
 
   it('should require name, email, id and isHeadAssistant fields', async () => {
     const invalidAssistantData: Partial<Assistant> = {
-      _id: 'e0123456',
+      id: 'e0123456',
       name: 'John Doe',
       email: 'john@example.com' 
     };
