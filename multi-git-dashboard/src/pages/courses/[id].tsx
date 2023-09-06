@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Course } from '@/types/course';
 import { Container, Text, Loader, Table, Button, Tabs } from '@mantine/core';
 import StudentForm from '@/components/forms/StudentForm';
+import TeamCard from '@/components/TeamCard';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
 const apiUrl = `http://localhost:${backendPort}/api/courses/`;
@@ -70,6 +71,10 @@ const CourseViewPage: React.FC = () => {
     </tr>
   ));
 
+  const teams_rows = course.teams.map((team) => (
+    <TeamCard key={team._id} teamNumber={team.teamNumber} assitant={team.assistant} students={team.students} />
+  ));
+
   return (
     <Container size="md" style={{ minHeight: '100vh' }}>
       {course ? (
@@ -77,6 +82,7 @@ const CourseViewPage: React.FC = () => {
           <Tabs.List>
             <Tabs.Tab value="info">Course Info</Tabs.Tab>
             <Tabs.Tab value="students">Students</Tabs.Tab>
+            <Tabs.Tab value="teams">Teams</Tabs.Tab>
           </Tabs.List>
           <Tabs.Panel value="info">
             <div>
@@ -95,7 +101,7 @@ const CourseViewPage: React.FC = () => {
                   <tr>
                     <th>Name</th>
                     <th>Email</th>
-                    <th>GitHandle</th>
+                    <th>Git Handle</th>
                   </tr>
                 </thead>
                 <tbody>{student_rows}</tbody>
@@ -106,6 +112,11 @@ const CourseViewPage: React.FC = () => {
                 </Button>
                 {showForm && <StudentForm courseId={id} onStudentCreated={handleStudentCreated} />}
               </div>
+            </div>
+          </Tabs.Panel>
+          <Tabs.Panel value="teams">
+            <div>
+            {teams_rows}
             </div>
           </Tabs.Panel>
         </Tabs>
