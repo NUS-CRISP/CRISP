@@ -12,6 +12,7 @@ export interface Course {
 }
 
 export interface Team {
+  _id: string;
   teamNumber: number;
   assistant: Assistant;
   students: Student[];
