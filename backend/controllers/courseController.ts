@@ -1,8 +1,7 @@
 import { Request, Response } from 'express';
 import CourseModel from '../models/Course';
 import StudentModel from '../models/Student';
-import mongoose from 'mongoose';
-import { Student } from '../../multi-git-dashboard/src/types/user';
+import TeamModel from '../models/Team';
 
 // Create a new course
 export const createCourse = async (req: Request, res: Response) => {
@@ -29,7 +28,13 @@ export const getCourseById = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   try {
     const course = await CourseModel.findById(courseId)
-    .populate('students');
+    .populate('students')
+    .populate({
+      path : 'teams',
+      populate : {
+        path : 'students'
+      }
+    });
     if (course) {
       res.json(course);
     } else {
@@ -75,7 +80,7 @@ export const deleteCourseById = async (req: Request, res: Response) => {
 // Add students to a course by course ID
 export const addStudentsToCourse = async (req: Request, res: Response) => {
   const courseId = req.params.id;
-  const studentData = req.body;
+  const students = req.body.items;
   try {
     const course = await CourseModel.findById(courseId);
 
@@ -83,21 +88,39 @@ export const addStudentsToCourse = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Course not found' });
     }
 
-    const studentId = studentData._id;
+    for (const studentData of students) {
+      console.log(studentData);
+      const studentId = studentData.id;
+      let newStudent = false;
 
-    let student = await StudentModel.findById(studentId);
-
-    if (!student) {
-      student = new StudentModel(studentData);
+      let student = await StudentModel.findOne({ id: studentId });
+ 
+      if (!student) {
+        newStudent = true;
+        student = new StudentModel(studentData);
+      }
+      if (!student.enrolledCourses.includes(course._id)) {
+        student.enrolledCourses.push(course._id)
+      }
       await student.save();
-    } else {
-      await StudentModel.findByIdAndUpdate(studentId, studentData, { new: true });
-    }
 
-    const studentObjectId = mongoose.Types.ObjectId.createFromHexString(studentId);
+      if (!course.students.includes(student._id)) {
+        course.students.push(student._id);
+      }
 
-    if (!course.students.includes(studentObjectId)) {
-      course.students.push(studentObjectId);
+      if (newStudent) {
+        let team = await TeamModel.findOne({ teamNumber: studentData.teamNumber });
+        if (!team) {
+          team = new TeamModel({teamNumber : studentData.teamNumber});
+        }
+        if (!team.students.includes(student._id)) {
+          team.students.push(student._id)
+        }
+        await team.save();
+        if (!course.teams.includes(team._id)) {
+          course.teams.push(team._id);
+        }
+      }
     }
 
     await course.save();
