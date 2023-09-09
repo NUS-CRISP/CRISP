@@ -8,6 +8,8 @@ export interface Course extends Document {
   assistants: mongoose.Types.ObjectId[];
   students: mongoose.Types.ObjectId[];
   teams: mongoose.Types.ObjectId[];
+  sprints: { sprintNumber: number, description: string, startDate: Date, endDate: Date }[]
+  timeline: { milestoneNumber: number, dateline: Date, description: string }[]
 }
 
 export const courseSchema = new Schema<Course>({
@@ -17,7 +19,18 @@ export const courseSchema = new Schema<Course>({
   lecturers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   assistants: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   students: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-  teams: [{ type: Schema.Types.ObjectId, ref: 'Team' }]
+  teams: [{ type: Schema.Types.ObjectId, ref: 'Team' }],
+  sprints: [{  
+    sprintNumber: { type: Number, required: true }, 
+    description: { type: String, required: true }, 
+    startDate: { type: Date, required: true }, 
+    endDate: { type: Date, required: true }
+  }],
+  timeline: [{
+    milestoneNumber: { type: Number, required: true },
+    dateline: { type: Date, required: true },
+    description: { type: String, required: true }
+  }]
 });
 
 const CourseModel = mongoose.model<Course>('Course', courseSchema);
