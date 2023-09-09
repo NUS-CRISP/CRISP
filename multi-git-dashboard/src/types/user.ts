@@ -3,17 +3,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-}
-
-export interface Student extends User {
+  enrolledCourses: string[];
   gitHandle: string;
-}
-
-export interface Assistant extends User {
-  isHeadAssistant : boolean;
-  teamNumber: number;
-}
-
-export interface Lecturer extends User {
-  isCourseCoordinator : boolean;
+  role: 'student' | 'assistant' | 'lecturer';
 }

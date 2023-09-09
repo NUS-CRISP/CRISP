@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import CourseModel from '../models/Course';
-import StudentModel from '../models/Student';
+import UserModel from '../models/User';
 import TeamModel from '../models/Team';
 
 // Create a new course
@@ -66,8 +66,10 @@ export const updateCourseById = async (req: Request, res: Response) => {
 export const deleteCourseById = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   try {
+    //delete course and its teams
     const deletedCourse = await CourseModel.findByIdAndDelete(courseId);
     if (deletedCourse) {
+      await TeamModel.deleteMany({ _id: { $in: deletedCourse?.teams }});
       res.json({ message: 'Course deleted successfully' });
     } else {
       res.status(404).json({ error: 'Course not found' });
@@ -89,15 +91,15 @@ export const addStudentsToCourse = async (req: Request, res: Response) => {
     }
 
     for (const studentData of students) {
-      console.log(studentData);
+
       const studentId = studentData.id;
       let newStudent = false;
 
-      let student = await StudentModel.findOne({ id: studentId });
+      let student = await UserModel.findOne({ id: studentId });
  
       if (!student) {
         newStudent = true;
-        student = new StudentModel(studentData);
+        student = new UserModel(studentData);
       }
       if (!student.enrolledCourses.includes(course._id)) {
         student.enrolledCourses.push(course._id)

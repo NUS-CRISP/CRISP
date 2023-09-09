@@ -41,6 +41,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ courseId, onStudentCreated })
           email : form.values.email,
           teamNumber : form.values.teamNumber,
           gitHandle : form.values.gitHandle,
+          role : "student"
         }]})
     });
 

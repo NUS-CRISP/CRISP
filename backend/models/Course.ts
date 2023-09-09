@@ -14,9 +14,9 @@ export const courseSchema = new Schema<Course>({
   name: { type: String, required: true },
   code: { type: String, required: true },
   semester: { type: String, required: true },
-  lecturers: [{ type: Schema.Types.ObjectId, ref: 'Lecturer' }],
-  assistants: [{ type: Schema.Types.ObjectId, ref: 'Assistant' }],
-  students: [{ type: Schema.Types.ObjectId, ref: 'Student' }],
+  lecturers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  assistants: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  students: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   teams: [{ type: Schema.Types.ObjectId, ref: 'Team' }]
 });
 

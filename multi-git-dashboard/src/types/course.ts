@@ -1,19 +1,19 @@
-import { Assistant, Lecturer, Student } from "./user";
+import { User } from "./user";
 
 export interface Course {
   _id: string;
   name: string;
   code: string;
   semester: string;
-  lecturers: Lecturer[];
-  assistants: Assistant[];
-  students: Student[];
+  lecturers: User[];
+  assistants: User[];
+  students: User[];
   teams: Team[]
 }
 
 export interface Team {
   _id: string;
   teamNumber: number;
-  assistant: Assistant;
-  students: Student[];
+  assistant: User;
+  students: User[];
 }
