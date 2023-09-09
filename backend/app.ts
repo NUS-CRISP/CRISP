@@ -2,6 +2,7 @@ import express, { Express } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectToDatabase } from './database/database';
+import assessmentRoutes from './routes/assessmentRoutes';
 import courseRoutes from './routes/courseRoutes';
 import userRoutes from './routes/userRoutes';
 
@@ -19,6 +20,7 @@ app.use(cors(corsOptions));
 
 app.use('/api/courses', courseRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/assessment', assessmentRoutes);
 
 
 app.listen(port, () => {
