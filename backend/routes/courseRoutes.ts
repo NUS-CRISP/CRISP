@@ -10,7 +10,6 @@ import {
 
 const router = express.Router();
 
-// Define course routes using the controller functions
 router.post('/', createCourse);
 router.get('/', getAllCourses);
 router.get('/:id', getCourseById);

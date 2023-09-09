@@ -68,12 +68,17 @@ export const deleteCourseById = async (req: Request, res: Response) => {
   try {
     //delete course and its teams
     const deletedCourse = await CourseModel.findByIdAndDelete(courseId);
-    if (deletedCourse) {
-      await TeamModel.deleteMany({ _id: { $in: deletedCourse?.teams }});
-      res.json({ message: 'Course deleted successfully' });
-    } else {
-      res.status(404).json({ error: 'Course not found' });
+    if (!deletedCourse) {
+      return res.status(404).json({ error: 'Course not found' });
     }
+
+    // Delete corresponding teams
+    await TeamModel.deleteMany({ _id: { $in: deletedCourse.teams } });
+
+    // Update references in the Users (students) collection
+    await UserModel.updateMany({ enrolledCourses: courseId }, { $pull: { enrolledCourses: courseId } });
+
+    return res.json({ message: 'Course deleted successfully' });
   } catch (error) {
     res.status(400).json({ error: 'Failed to delete course' });
   }
