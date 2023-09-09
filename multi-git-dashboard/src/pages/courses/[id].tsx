@@ -1,9 +1,11 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { Course } from '@/types/course';
-import { Container, Text, Loader, Table, Button, Tabs } from '@mantine/core';
+import { Container, Loader, Button, Tabs } from '@mantine/core';
 import StudentForm from '@/components/forms/StudentForm';
-import TeamCard from '@/components/TeamCard';
+import CourseInfo from '@/components/CourseView/CourseInfo';
+import StudentsInfo from '@/components/CourseView/StudentsInfo';
+import TeamsInfo from '@/components/CourseView/TeamsInfo';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
 const apiUrl = `http://localhost:${backendPort}/api/courses/`;
@@ -63,51 +65,32 @@ const CourseViewPage: React.FC = () => {
     );
   }
 
-  const student_rows = course.students.map((student) => (
-    <tr key={student._id}>
-      <td>{student.name}</td>
-      <td>{student.email}</td>
-      <td>{student.gitHandle }</td>
-    </tr>
-  ));
-
-  const teams_rows = course.teams.map((team) => (
-    <TeamCard key={team._id} teamNumber={team.teamNumber} assitant={team.assistant} students={team.students} />
-  ));
-
   return (
     <Container size="md" style={{ minHeight: '100vh' }}>
       {course ? (
         <Tabs defaultValue="info">
-          <Tabs.List>
+          <Tabs.List style={{ display: 'flex', justifyContent: 'space-evenly' }}>
             <Tabs.Tab value="info">Course Info</Tabs.Tab>
             <Tabs.Tab value="students">Students</Tabs.Tab>
             <Tabs.Tab value="teams">Teams</Tabs.Tab>
+            <Tabs.Tab value="sprints">Sprints</Tabs.Tab>
+            <Tabs.Tab value="milestones">Milestones</Tabs.Tab>
           </Tabs.List>
           <Tabs.Panel value="info">
             <div>
-              <Text variant="h1">Course Name: {course.name}</Text>
-              <Text variant="h1">Course Code: {course.code}</Text>
-              <Text variant="h1">Semester: {course.semester}</Text>
-            </div>
+              <CourseInfo course={course} />
+            </div >
+            <div style={{ position: 'absolute', bottom: '0', left: '57%', transform: 'translateX(-50%)' }}>
             <Button color="red" onClick={deleteCourse}>
               Delete Course
             </Button>
+            </div>
           </Tabs.Panel>
           <Tabs.Panel value="students">
             <div>
-              <Table>
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Git Handle</th>
-                  </tr>
-                </thead>
-                <tbody>{student_rows}</tbody>
-              </Table>
+              <StudentsInfo students={course.students} />
               <div>
-                <Button onClick={() => setShowForm(!showForm)}>
+                <Button onClick={() => setShowForm(!showForm)} style={{ marginTop: '16px' }}>
                   {showForm ? 'Cancel' : 'Add Student'}
                 </Button>
                 {showForm && <StudentForm courseId={id} onStudentCreated={handleStudentCreated} />}
@@ -116,7 +99,7 @@ const CourseViewPage: React.FC = () => {
           </Tabs.Panel>
           <Tabs.Panel value="teams">
             <div>
-            {teams_rows}
+              <TeamsInfo teams={course.teams} />
             </div>
           </Tabs.Panel>
         </Tabs>

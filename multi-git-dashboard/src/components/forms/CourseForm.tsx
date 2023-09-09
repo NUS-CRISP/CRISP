@@ -66,7 +66,7 @@ const CourseForm: React.FC<CourseFormProps> = ({ onCourseCreated }) => {
               form.setFieldValue('semester', event.currentTarget.value);
             }}
           />
-        <Button type="submit">Create Course</Button>
+        <Button type="submit" style={{ marginTop: '16px' }}>Create Course</Button>
       </form>
     </Box>
   );

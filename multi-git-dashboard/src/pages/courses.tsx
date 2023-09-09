@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import CourseCard from '@/components/CourseCard';
+import CourseCard from '@/components/CourseView/CourseCard';
 import { Course } from '@/types/course';
 import Link from 'next/link';
 import { Button } from '@mantine/core';
@@ -57,7 +57,7 @@ const CourseListPage: React.FC = () => {
         )}
       </div>
       <div>
-        <Button onClick={() => setShowForm(!showForm)}>
+        <Button onClick={() => setShowForm(!showForm)} style={{ marginTop: '16px' }}>
           {showForm ? 'Cancel' : 'Add Course'}
         </Button>
         {showForm && <CourseForm onCourseCreated={handleCourseCreated} />}

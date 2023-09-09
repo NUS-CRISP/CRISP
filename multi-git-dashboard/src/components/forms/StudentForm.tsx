@@ -96,7 +96,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ courseId, onStudentCreated })
               form.setFieldValue('gitHandle', event.currentTarget.value);
             }}
           />
-        <Button type="submit">Create Student</Button>
+        <Button type="submit" style={{ marginTop: '16px' }}>Create Student</Button>
       </form>
     </Box>
   );
