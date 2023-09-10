@@ -5,7 +5,7 @@ import {
   getAssessmentById,
   updateAssessmentById,
   deleteAssessmentById,
-} from '../controllers/AssessmentController';
+} from '../controllers/assessmentController';
 
 const router = express.Router();
 
