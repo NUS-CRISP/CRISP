@@ -137,3 +137,28 @@ export const addStudentsToCourse = async (req: Request, res: Response) => {
     res.status(400).json({ error: 'Failed to add students' });
   }
 };
+
+export const addMilestone = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  const { milestoneNumber, dateline, description } = req.body;
+
+  try {
+    const course = await CourseModel.findById(courseId);
+
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    const milestone = {
+      milestoneNumber,
+      dateline,
+      description,
+    };
+    course.milestones.push(milestone);
+    await course.save();
+
+    return res.status(201).json({ message: 'Milestone added successfully', milestone });
+  } catch (error) {
+    res.status(400).json({ error: 'Failed to add milestone' });
+  }
+};

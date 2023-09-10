@@ -43,7 +43,7 @@ const CourseViewPage: React.FC = () => {
         method: 'DELETE',
       });
       if (response.ok) {
-        router.push('/courses'); // Redirect to course list page after deletion
+        router.push('/courses');
       } else {
         console.error('Error deleting course:', response.statusText);
       }
@@ -74,7 +74,7 @@ const CourseViewPage: React.FC = () => {
             <Tabs.Tab value="students">Students</Tabs.Tab>
             <Tabs.Tab value="teams">Teams</Tabs.Tab>
             <Tabs.Tab value="sprints">Sprints</Tabs.Tab>
-            <Tabs.Tab value="milestones">Milestones</Tabs.Tab>
+            <Tabs.Tab value="milestones">Timeline</Tabs.Tab>
           </Tabs.List>
           <Tabs.Panel value="info">
             <div>

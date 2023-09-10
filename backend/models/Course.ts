@@ -9,7 +9,7 @@ export interface Course extends Document {
   students: mongoose.Types.ObjectId[];
   teams: mongoose.Types.ObjectId[];
   sprints: { sprintNumber: number, description: string, startDate: Date, endDate: Date }[]
-  timeline: { milestoneNumber: number, dateline: Date, description: string }[]
+  milestones: { milestoneNumber: number, dateline: Date, description: string }[]
 }
 
 export const courseSchema = new Schema<Course>({
@@ -26,7 +26,7 @@ export const courseSchema = new Schema<Course>({
     startDate: { type: Date, required: true }, 
     endDate: { type: Date, required: true }
   }],
-  timeline: [{
+  milestones: [{
     milestoneNumber: { type: Number, required: true },
     dateline: { type: Date, required: true },
     description: { type: String, required: true }
