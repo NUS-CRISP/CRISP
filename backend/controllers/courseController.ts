@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import CourseModel from '../models/Course';
 import UserModel from '../models/User';
 import TeamModel from '../models/Team';
+import TeamSetModel from '../models/TeamSet';
 
 // Create a new course
 export const createCourse = async (req: Request, res: Response) => {
@@ -30,9 +31,12 @@ export const getCourseById = async (req: Request, res: Response) => {
     const course = await CourseModel.findById(courseId)
     .populate('students')
     .populate({
-      path : 'teams',
+      path : 'teamSets',
       populate : {
-        path : 'students'
+        path : 'teams',
+        populate : {
+          path : 'members'
+        }
       }
     });
     if (course) {
@@ -73,7 +77,7 @@ export const deleteCourseById = async (req: Request, res: Response) => {
     }
 
     // Delete corresponding teams
-    await TeamModel.deleteMany({ _id: { $in: deletedCourse.teams } });
+    await TeamSetModel.deleteMany({ _id: { $in: deletedCourse.teamSets } });
 
     // Update references in the Users (students) collection
     await UserModel.updateMany({ enrolledCourses: courseId }, { $pull: { enrolledCourses: courseId } });
@@ -96,37 +100,35 @@ export const addStudentsToCourse = async (req: Request, res: Response) => {
     }
 
     for (const studentData of students) {
-
       const studentId = studentData.id;
-      let newStudent = false;
-
       let student = await UserModel.findOne({ id: studentId });
  
       if (!student) {
-        newStudent = true;
         student = new UserModel(studentData);
       }
       if (!student.enrolledCourses.includes(course._id)) {
         student.enrolledCourses.push(course._id)
       }
       await student.save();
-
       if (!course.students.includes(student._id)) {
         course.students.push(student._id);
       }
 
-      if (newStudent) {
-        let team = await TeamModel.findOne({ teamNumber: studentData.teamNumber });
+      for (const teamSetName in studentData.teamSets) {
+        let teamSet = await TeamSetModel.findOne({ course: course._id, name: teamSetName });
+        if (!teamSet) {
+          teamSet = new TeamSetModel({ course: course._id, name: teamSetName, teams: [] });
+          course.teamSets.push(teamSet._id);
+        }          
+        const teamNumber = studentData.teamSets[teamSetName];
+        let team = await TeamModel.findOne({ number: teamNumber, teamSet: teamSet._id });
         if (!team) {
-          team = new TeamModel({teamNumber : studentData.teamNumber});
+          team = new TeamModel({ number: teamNumber, teamSet: teamSet._id, members: [] });
+          teamSet.teams.push(team._id);
         }
-        if (!team.students.includes(student._id)) {
-          team.students.push(student._id)
-        }
+        team.members.push(student._id);
         await team.save();
-        if (!course.teams.includes(team._id)) {
-          course.teams.push(team._id);
-        }
+        await teamSet.save();
       }
     }
 

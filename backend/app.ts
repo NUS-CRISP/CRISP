@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { connectToDatabase } from './database/database';
 import assessmentRoutes from './routes/assessmentRoutes';
 import courseRoutes from './routes/courseRoutes';
+import teamSetRoutes from './routes/teamSetRoutes';
 import userRoutes from './routes/userRoutes';
 
 dotenv.config();
@@ -18,10 +19,10 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-app.use('/api/courses', courseRoutes);
-app.use('/api/users', userRoutes);
 app.use('/api/assessment', assessmentRoutes);
-
+app.use('/api/courses', courseRoutes);
+app.use('/api/team-sets', teamSetRoutes);
+app.use('/api/users', userRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
