@@ -97,11 +97,7 @@ const CourseViewPage: React.FC = () => {
               </div>
             </div>
           </Tabs.Panel>
-          <Tabs.Panel value="teams">
-            <div>
-              <TeamsInfo teams={course.teams} />
-            </div>
-          </Tabs.Panel>
+          
         </Tabs>
       ) : (
         <Loader size="md" />
@@ -112,3 +108,11 @@ const CourseViewPage: React.FC = () => {
 };
 
 export default CourseViewPage;
+
+/*
+<Tabs.Panel value="teams">
+  <div>
+    <TeamsInfo teamSets={course.teamSets} />
+  </div>
+</Tabs.Panel>
+*/

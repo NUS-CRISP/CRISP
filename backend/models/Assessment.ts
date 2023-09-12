@@ -7,7 +7,6 @@ export interface Assessment extends Document {
   marks: {student_id : string, mark: number}[];
   frequency: string;
   granularity: 'individual' | 'team';
-  students: mongoose.Types.ObjectId[];
 }
 
 const assessmentSchema = new Schema<Assessment>({
@@ -21,7 +20,6 @@ const assessmentSchema = new Schema<Assessment>({
     enum: ['individual', 'team'],
     required: true,
   },
-  students: [{ type: Schema.Types.ObjectId, ref: 'User' }]
 });
 
 const AssessmentModel = mongoose.model<Assessment>('Assessment', assessmentSchema);

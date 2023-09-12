@@ -6,22 +6,37 @@ interface User {
   name: string;
   email: string;
   gitHandle: string;
+  role: 'student' | 'assistant' | 'lecturer';
 }
 
 interface TeamCardProps {
   teamNumber: number;
-  assistant: User | null;
-  students: User[];
+  members: User[];
 }
 
-const TeamCard: React.FC<TeamCardProps> = ({ teamNumber, assistant, students }) => {
-  const student_rows = students?.map((student) => (
-    <tr key={student._id}>
-      <td>{student.name}</td>
-      <td>{student.email}</td>
-      <td>{student.gitHandle}</td>
-    </tr>
-  ));
+const findAssistant = (members: User[]) => {
+  for (const member of members) {
+    if (member.role === 'assistant') {
+      return member.name;
+    }
+  }
+  return null;
+};
+
+const TeamCard: React.FC<TeamCardProps> = ({ teamNumber, members }) => {
+  const student_rows = members?.map((member) => {
+    if (member.role === 'student') {
+      (
+      <tr key={member._id}>
+        <td>{member.name}</td>
+        <td>{member.email}</td>
+        <td>{member.gitHandle}</td>
+      </tr>
+      )
+    } else {
+      return null;
+    }
+  });
 
   return (
     <Card shadow="sm" padding="lg" radius="md" withBorder>
@@ -30,7 +45,7 @@ const TeamCard: React.FC<TeamCardProps> = ({ teamNumber, assistant, students }) 
       </Group>
 
       <Text>
-        Teaching Assistant: {assistant?.name || 'N/A'}
+        Teaching Assistant: {findAssistant(members) || 'N/A' }
       </Text>
       <Table>
         <thead>

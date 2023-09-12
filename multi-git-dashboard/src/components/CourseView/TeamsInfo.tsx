@@ -5,21 +5,25 @@ import { User } from '../../types/user';
 interface Team {
   _id: string;
   teamNumber: number;
-  assistant: User;
-  students: User[];
+  members: User[];
 }
 
-interface TeamsInfoProps {
+interface TeamSet {
+  _id: string;
+  name: string;
   teams: Team[];
 }
 
-const TeamsInfo: React.FC<TeamsInfoProps> = ({ teams }) => {
-  const teamsRows = teams.map((team) => (
+interface TeamsInfoProps {
+  teamSets: TeamSet[];
+}
+
+const TeamsInfo: React.FC<TeamsInfoProps> = ({ teamSets }) => {
+  const teamsRows = teamSets.map((teamSet) => (
     <TeamCard
-      key={team._id}
-      teamNumber={team.teamNumber}
-      assistant={team.assistant}
-      students={team.students}
+      key={teamSet.teams[0]?._id}
+      teamNumber={teamSet.teams[0]?.teamNumber}
+      members={teamSet.teams[0]?.members}
     />
   ));
 

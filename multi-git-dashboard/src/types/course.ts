@@ -8,14 +8,28 @@ export interface Course {
   lecturers: User[];
   assistants: User[];
   students: User[];
-  teams: Team[]
+  teamSets: TeamSet[]
   sprints: { sprintNumber: number, description: string, startDate: Date, endDate: Date }[]
   milestones: { milestoneNumber: number, dateline: Date, description: string }[]
 }
 
+export interface TeamSet {
+  course: Course;
+  name: string;
+  teams: Team[];
+}
+
 export interface Team {
   _id: string;
-  teamNumber: number;
-  assistant: User;
-  students: User[];
+  numbers: number;
+  members: User[];
+}
+
+export interface Assessment {
+  course: Course;
+  assessmentType: string;
+  markType: string;
+  marks: {student_id : string, mark: number}[];
+  frequency: string;
+  granularity: 'individual' | 'team';
 }
