@@ -99,7 +99,7 @@ const CourseViewPage: React.FC = () => {
           </Tabs.Panel>
           <Tabs.Panel value="teams">
             <div>
-              <TeamSetsInfo teamSets={course.teamSets} />
+              <TeamSetsInfo course={course} />
             </div>
           </Tabs.Panel>
         </Tabs>

@@ -1,13 +1,15 @@
-import React from 'react';
-import { TeamSet } from '@/types/course';
+import React, { useState } from 'react';
+import { Course, TeamSet } from '@/types/course';
 import TeamCard from '@/components/CourseView/TeamCard';
-import { Container, Tabs } from '@mantine/core';
+import { Container, Tabs, Button } from '@mantine/core';
+import TeamSetForm from '../forms/TeamSetForm';
 
 interface TeamsInfoProps {
-  teamSets: TeamSet[];
+  course : Course
 }
 
-const TeamsInfo: React.FC<TeamsInfoProps> = ({ teamSets }) => {
+const TeamsInfo: React.FC<TeamsInfoProps> = ({ course }) => {
+  const [isCreatingTeamSet, setIsCreatingTeamSet] = useState(false);
 
   const teamCards = (teamSet : TeamSet) => (
     teamSet.teams.map((team) => (
@@ -15,26 +17,43 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ teamSets }) => {
     ))
   );
 
-  const headers = teamSets.map((teamSet) => (
-    <Tabs.Tab key={teamSet._id} value={teamSet.name} />
+  const headers = course.teamSets.map((teamSet) => (
+    <Tabs.Tab key={teamSet._id} value={teamSet.name}>{teamSet.name}</Tabs.Tab>
   ));
 
-  const panels = teamSets.map((teamSet) => (
+  const panels = course.teamSets.map((teamSet) => (
     <Tabs.Panel key={teamSet._id} value={teamSet.name}>
       {teamCards(teamSet)}
     </Tabs.Panel>
   ));
 
+  const handleCreateTeamSet = () => {
+    setIsCreatingTeamSet(true);
+  };
+
+  const handleTeamSetCreated = () => {
+    setIsCreatingTeamSet(false);
+  };
+
   return (
-    <Container size="md" style={{ minHeight: '100vh' }}>
+    <Container>
       <Tabs>
         <Tabs.List style={{ display: 'flex', justifyContent: 'space-evenly' }}>
           {headers}
         </Tabs.List>
         {panels}
       </Tabs>
+      <Button onClick={handleCreateTeamSet} style={{ marginBottom: '16px' }}>
+        Create TeamSet
+      </Button>
+
+      {isCreatingTeamSet ? (
+        <TeamSetForm
+          courseId={course._id}
+          onTeamSetCreated={handleTeamSetCreated}
+        />
+      ) : <h1>{course.teamSets.length}</h1>}
     </Container>
-  
   );
 };
 
