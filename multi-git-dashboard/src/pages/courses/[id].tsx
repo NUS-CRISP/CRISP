@@ -5,7 +5,7 @@ import { Container, Loader, Button, Tabs } from '@mantine/core';
 import StudentForm from '@/components/forms/StudentForm';
 import CourseInfo from '@/components/CourseView/CourseInfo';
 import StudentsInfo from '@/components/CourseView/StudentsInfo';
-import TeamsInfo from '@/components/CourseView/TeamsInfo';
+import TeamSetsInfo from '@/components/CourseView/TeamSetsInfo';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
 const apiUrl = `http://localhost:${backendPort}/api/courses/`;
@@ -97,7 +97,11 @@ const CourseViewPage: React.FC = () => {
               </div>
             </div>
           </Tabs.Panel>
-          
+          <Tabs.Panel value="teams">
+            <div>
+              <TeamSetsInfo teamSets={course.teamSets} />
+            </div>
+          </Tabs.Panel>
         </Tabs>
       ) : (
         <Loader size="md" />
@@ -108,11 +112,3 @@ const CourseViewPage: React.FC = () => {
 };
 
 export default CourseViewPage;
-
-/*
-<Tabs.Panel value="teams">
-  <div>
-    <TeamsInfo teamSets={course.teamSets} />
-  </div>
-</Tabs.Panel>
-*/
