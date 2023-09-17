@@ -164,3 +164,25 @@ export const addMilestone = async (req: Request, res: Response) => {
     res.status(400).json({ error: 'Failed to add milestone' });
   }
 };
+
+export const addTeamSet = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  const { name } = req.body;
+  console.log(req.body);
+  try {
+    const course = await CourseModel.findById(courseId);
+
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    const teamSet = new TeamSetModel({ name, course: courseId });
+    course.teamSets.push(teamSet._id);
+    await course.save();
+    await teamSet.save();
+
+    return res.status(201).json({ message: 'Team set created successfully', teamSet });
+  } catch (error) {
+    res.status(400).json({ error: 'Failed to create team set' });
+  }
+}
