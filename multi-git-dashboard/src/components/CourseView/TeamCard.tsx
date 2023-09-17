@@ -1,16 +1,9 @@
 import React from 'react';
 import { Card, Text, Group, Table } from '@mantine/core';
-
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-  gitHandle: string;
-  role: 'student' | 'assistant' | 'lecturer';
-}
+import { User } from '@/types/user';
 
 interface TeamCardProps {
-  teamNumber: number;
+  number: number;
   members: User[];
 }
 
@@ -23,7 +16,7 @@ const findAssistant = (members: User[]) => {
   return null;
 };
 
-const TeamCard: React.FC<TeamCardProps> = ({ teamNumber, members }) => {
+const TeamCard: React.FC<TeamCardProps> = ({ number, members }) => {
   const student_rows = members?.map((member) => {
     if (member.role === 'student') {
       (
@@ -41,7 +34,7 @@ const TeamCard: React.FC<TeamCardProps> = ({ teamNumber, members }) => {
   return (
     <Card shadow="sm" padding="lg" radius="md" withBorder>
       <Group position="apart" mt="md" mb="xs">
-        <Text weight={500}>Team {teamNumber.toString()}</Text>
+        <Text weight={500}>Team {number.toString()}</Text>
       </Group>
 
       <Text>

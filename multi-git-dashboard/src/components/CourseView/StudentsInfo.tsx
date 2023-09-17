@@ -1,12 +1,6 @@
 import React from 'react';
 import { Table } from '@mantine/core';
-
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-  gitHandle: string;
-}
+import { User } from '@/types/user';
 
 interface StudentsInfoProps {
   students: User[];

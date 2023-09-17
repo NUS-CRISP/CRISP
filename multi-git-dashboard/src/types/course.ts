@@ -14,6 +14,7 @@ export interface Course {
 }
 
 export interface TeamSet {
+  _id: string;
   course: Course;
   name: string;
   teams: Team[];
@@ -21,11 +22,12 @@ export interface TeamSet {
 
 export interface Team {
   _id: string;
-  numbers: number;
+  number: number;
   members: User[];
 }
 
 export interface Assessment {
+  _id: string;
   course: Course;
   assessmentType: string;
   markType: string;
