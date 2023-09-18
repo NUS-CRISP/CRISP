@@ -1,6 +1,6 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
-export interface Team extends Document {
+export interface Team {
   teamSet: mongoose.Types.ObjectId;
   number: number;
   members: mongoose.Types.ObjectId[];

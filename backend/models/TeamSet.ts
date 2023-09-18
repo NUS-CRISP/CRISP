@@ -1,6 +1,6 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
-export interface TeamSet extends Document {
+export interface TeamSet {
   course: mongoose.Types.ObjectId;
   name: string;
   teams: mongoose.Types.ObjectId[]

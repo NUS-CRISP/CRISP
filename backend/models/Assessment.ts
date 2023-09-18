@@ -1,6 +1,6 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
-export interface Assessment extends Document {
+export interface Assessment {
   course: mongoose.Types.ObjectId;
   assessmentType: string;
   markType: string;
