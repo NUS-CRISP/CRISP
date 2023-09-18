@@ -165,6 +165,33 @@ export const addMilestone = async (req: Request, res: Response) => {
   }
 };
 
+export const addSprint = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  const { sprintNumber, startDate, endDate, description } = req.body;
+
+  try {
+    const course = await CourseModel.findById(courseId);
+
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    const sprint = {
+      sprintNumber,
+      startDate,
+      endDate,
+      description,
+    };
+
+    course.sprints.push(sprint);
+    await course.save();
+
+    return res.status(201).json({ message: 'Sprint added successfully', sprint });
+  } catch (error) {
+    res.status(400).json({ error: 'Failed to add sprint' });
+  }
+};
+
 export const addTeamSet = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   const { name } = req.body;
