@@ -10,7 +10,7 @@ export interface User extends Document {
 }
 
 export const userSchema = new Schema<User>({
-  id: { type: String, unique : true, required: true },
+  id: { type: String, unique: true, required: true },
   name: { type: String, required: true },
   email: { type: String, required: true },
   enrolledCourses: [{ type: Schema.Types.ObjectId, ref: 'Course' }],

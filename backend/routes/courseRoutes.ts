@@ -6,7 +6,9 @@ import {
   updateCourseById,
   deleteCourseById,
   addStudentsToCourse,
-  addMilestone
+  addMilestone,
+  addSprint,
+  addTeamSet
 } from '../controllers/courseController';
 
 const router = express.Router();
@@ -18,5 +20,7 @@ router.put('/:id', updateCourseById);
 router.delete('/:id', deleteCourseById);
 router.post('/:id/students', addStudentsToCourse);
 router.post('/:id/milestones', addMilestone);
+router.post('/:id/sprints', addSprint);
+router.post('/:id/teamsets', addTeamSet)
 
 export default router;

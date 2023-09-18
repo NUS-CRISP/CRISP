@@ -16,12 +16,10 @@ const StudentForm: React.FC<StudentFormProps> = ({ courseId, onStudentCreated })
       name: '',
       id: '',
       email: '',
-      teamNumber: 0,
       gitHandle: ''
     },
     validate: {
-      email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
-      teamNumber: (value) => (!isNaN(value) ? null : "Invalid team number")
+      //email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
     }
   });
 
@@ -39,7 +37,6 @@ const StudentForm: React.FC<StudentFormProps> = ({ courseId, onStudentCreated })
           id : form.values.id,
           name : form.values.name,
           email : form.values.email,
-          teamNumber : form.values.teamNumber,
           gitHandle : form.values.gitHandle,
           role : "student"
         }]})
@@ -78,14 +75,6 @@ const StudentForm: React.FC<StudentFormProps> = ({ courseId, onStudentCreated })
             value={form.values.email}
             onChange={(event) => {
               form.setFieldValue('email', event.currentTarget.value);
-            }}
-          />
-          <TextInput
-            label="Team Number"
-            {...form.getInputProps('teamNumber')}
-            value={form.values.teamNumber}
-            onChange={(event) => {
-              form.setFieldValue('teamNumber', +event.currentTarget.value);
             }}
           />
           <TextInput

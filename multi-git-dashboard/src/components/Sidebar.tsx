@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useState } from 'react';
-import { IconChartArcs, IconGitBranch, IconHome, IconListDetails, IconLogout, IconPlus, IconSwitchHorizontal } from '@tabler/icons-react';
+import { IconChartArcs, IconGitBranch, IconHome, IconListDetails, IconLogout, IconSwitchHorizontal } from '@tabler/icons-react';
 import { createStyles, Navbar, Group, Code, getStylesRef, rem } from '@mantine/core';
 import { useRouter } from 'next/router';
 

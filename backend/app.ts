@@ -18,10 +18,9 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
+app.use('/api/assessment', assessmentRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/assessment', assessmentRoutes);
-
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);

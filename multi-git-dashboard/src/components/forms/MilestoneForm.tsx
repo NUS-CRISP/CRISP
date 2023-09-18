@@ -7,17 +7,21 @@ const backendPort = process.env.BACKEND_PORT || 3001;
 
 interface MilestoneFormProps {
   courseId: string | string[] | undefined;
-  onMileStoneCreated: () => void;
+  onMilestoneCreated: () => void;
 }
 
-const MilestoneForm: React.FC<MilestoneFormProps> = ({ courseId, onMileStoneCreated }) => {
+const MilestoneForm: React.FC<MilestoneFormProps> = ({ courseId, onMilestoneCreated }) => {
 
   const form = useForm({
     initialValues: {
-      mileStoneNumber: 0,
+      milestoneNumber: 0,
       dateline: new Date(),
       description: '',
     },
+    validate: {
+      milestoneNumber: (value) => (value >= 1 && value <= 100 ? null : 'Invalid milestone number'),
+      dateline: (value) => (value ? null : 'Dateline is required'),
+    }
   });
 
   const handleSubmit = async () => {
@@ -34,7 +38,7 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({ courseId, onMileStoneCrea
 
     const data = await response.json();
     console.log('Milestone created:', data);
-    onMileStoneCreated();
+    onMilestoneCreated();
   };
 
   return (
@@ -43,10 +47,10 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({ courseId, onMileStoneCrea
         <TextInput
           withAsterisk
           label="Milestone Number"
-          {...form.getInputProps('mileStoneNumber')}
-          value={form.values.mileStoneNumber}
+          {...form.getInputProps('milestoneNumber')}
+          value={form.values.milestoneNumber}
           onChange={(event) => {
-            form.setFieldValue('mileStoneNumber', +event.currentTarget.value);
+            form.setFieldValue('milestoneNumber', +event.currentTarget.value);
           }}
         />
         <DatePicker
