@@ -1,8 +1,13 @@
 import mongoose, { ConnectOptions } from "mongoose";
 import UserModel, { User } from '../../models/User';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+
+let mongoServer: MongoMemoryServer;
 
 beforeAll(async () => {
-  await mongoose.connect('mongodb://localhost/testdb', {
+  mongoServer = await MongoMemoryServer.create();
+  const mongoUri = mongoServer.getUri();
+  await mongoose.connect(mongoUri, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   } as ConnectOptions);
@@ -13,7 +18,8 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  await mongoose.connection.close();
+  await mongoose.disconnect();
+  await mongoServer.stop();
 });
 
 describe('UserModel', () => {

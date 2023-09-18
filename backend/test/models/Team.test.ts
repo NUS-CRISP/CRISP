@@ -1,19 +1,21 @@
 import mongoose, { ConnectOptions } from 'mongoose';
 import TeamModel, { Team } from '../../models/Team';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+
+let mongoServer: MongoMemoryServer;
 
 beforeAll(async () => {
-  await mongoose.connect('mongodb://localhost/testdb', {
+  mongoServer = await MongoMemoryServer.create();
+  const mongoUri = mongoServer.getUri();
+  await mongoose.connect(mongoUri, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   } as ConnectOptions);
 });
 
-beforeEach(async () => {
-  await TeamModel.deleteMany({});
-});
-
 afterAll(async () => {
-  await mongoose.connection.close();
+  await mongoose.disconnect();
+  await mongoServer.stop();
 });
 
 describe('TeamModel', () => {
