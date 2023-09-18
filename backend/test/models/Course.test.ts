@@ -1,7 +1,6 @@
 import mongoose, { ConnectOptions } from 'mongoose';
 import CourseModel, { Course } from '../../models/Course';
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import exp from 'constants';
 
 let mongoServer: MongoMemoryServer;
 
