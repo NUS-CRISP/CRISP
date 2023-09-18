@@ -20,7 +20,7 @@ export const getAllCourses = async (_req: Request, res: Response) => {
     const courses = await CourseModel.find();
     res.json(courses);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch courses' });
+    res.status(400).json({ error: 'Failed to fetch courses' });
   }
 };
 
@@ -45,7 +45,7 @@ export const getCourseById = async (req: Request, res: Response) => {
       res.status(404).json({ error: 'Course not found' });
     }
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch course' });
+    res.status(400).json({ error: 'Failed to fetch course' });
   }
 };
 
