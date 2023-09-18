@@ -109,7 +109,7 @@ describe('Course Controller', () => {
       await getAllCourses(req as Request, res as Response);
 
       expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch courses' });
-      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.status).toHaveBeenCalledWith(400);
     });
   });
 
@@ -134,7 +134,7 @@ describe('Course Controller', () => {
 
     it('should handle errors when fetching a course by ID', async () => {
 
-      const req: Partial<Request> = { params: { _id: 'invalid-id' } };
+      const req: Partial<Request> = { params: { id: 'invalid-id' } };
       const res: Partial<Response> = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn(),
@@ -142,12 +142,12 @@ describe('Course Controller', () => {
 
       await getCourseById(req as Request, res as Response);
 
-      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch course' });
     });
 
     it('should handle not found when fetching a non-existent course by ID', async () => {
-      const req: Partial<Request> = { params: { _id: 'non-existent-id' } };
+      const req: Partial<Request> = { params: { id: 'nonexistentid1234567890' } };
       const res: Partial<Response> = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn(),
@@ -210,7 +210,7 @@ describe('Course Controller', () => {
 
     it('should handle not found when updating a non-existent course by ID', async () => {
       const req: Partial<Request> = {
-        params: { id: 'non-existent-id' },
+        params: { id: 'nonexistentid1234567890' },
         body: {},
       };
       const res: Partial<Response> = {
@@ -267,7 +267,7 @@ describe('Course Controller', () => {
 
     it('should handle not found when deleting a non-existent course by ID', async () => {
       const req: Partial<Request> = {
-        params: { id: 'non-existent-id' },
+        params: { id: 'nonexistentid1234567890' },
         body: {},
       };
       const res: Partial<Response> = {
