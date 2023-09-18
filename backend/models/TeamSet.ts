@@ -8,7 +8,7 @@ export interface TeamSet {
 
 const teamSetSchema = new Schema<TeamSet>({
   course: { type: Schema.Types.ObjectId, required: true },
-  name: { type: String, unique: true, required: true },
+  name: { type: String, required: true },
   teams: [{ type: Schema.Types.ObjectId, ref: 'Team' }],
 });
 
