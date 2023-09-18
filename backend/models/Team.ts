@@ -8,7 +8,7 @@ export interface Team {
 
 export const teamSchema = new Schema<Team>({
   teamSet: { type: Schema.Types.ObjectId, ref: 'Team' },
-  number: { type: Number, require: true},
+  number: { type: Number, required: true},
   members: [{ type: Schema.Types.ObjectId, ref: 'User' }]
 });
 
