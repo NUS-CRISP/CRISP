@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { Course, TeamSet } from '@/types/course';
-import TeamCard from '@/components/CourseView/TeamCard';
+import TeamCard from './Cards/TeamCard';
 import { Container, Tabs, Button } from '@mantine/core';
 import TeamSetForm from '../forms/TeamSetForm';
 
 interface TeamsInfoProps {
-  course : Course
+  course : Course;
+  onUpdate: () => void;
 }
 
-const TeamsInfo: React.FC<TeamsInfoProps> = ({ course }) => {
+const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
   const [isCreatingTeamSet, setIsCreatingTeamSet] = useState(false);
 
   const teamCards = (teamSet : TeamSet) => (
@@ -27,12 +28,9 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course }) => {
     </Tabs.Panel>
   ));
 
-  const handleCreateTeamSet = () => {
-    setIsCreatingTeamSet(true);
-  };
-
   const handleTeamSetCreated = () => {
     setIsCreatingTeamSet(false);
+    onUpdate();
   };
 
   return (
@@ -43,16 +41,16 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course }) => {
         </Tabs.List>
         {panels}
       </Tabs>
-      <Button onClick={handleCreateTeamSet} style={{ marginBottom: '16px' }}>
-        Create TeamSet
+      <Button onClick={() => setIsCreatingTeamSet(!isCreatingTeamSet)} style={{ marginBottom: '16px' }}>
+        {isCreatingTeamSet ? 'Cancel' : 'Create TeamSet'}
       </Button>
 
-      {isCreatingTeamSet ? (
+      {isCreatingTeamSet &&
         <TeamSetForm
           courseId={course._id}
           onTeamSetCreated={handleTeamSetCreated}
         />
-      ) : <h1>{course.teamSets.length}</h1>}
+      }
     </Container>
   );
 };

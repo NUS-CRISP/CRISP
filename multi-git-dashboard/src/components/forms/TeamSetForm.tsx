@@ -19,6 +19,7 @@ const TeamSetForm: React.FC<TeamSetFormProps> = ({ courseId, onTeamSetCreated })
   });
 
   const handleSubmit = async () => {
+    
     console.log('Sending teamset data:', form.values);
 
     const response = await fetch(`http://localhost:${backendPort}/api/courses/${courseId}/teamsets`, {

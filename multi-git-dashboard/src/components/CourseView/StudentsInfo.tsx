@@ -1,31 +1,51 @@
-import React from 'react';
-import { Table } from '@mantine/core';
-import { User } from '@/types/user';
+import React, { useState } from 'react';
+import { Table, Button, Container } from '@mantine/core';
+import StudentForm from '../forms/StudentForm';
+import { Course } from '@/types/course';
 
 interface StudentsInfoProps {
-  students: User[];
+  course : Course;
+  onUpdate: () => void;
 }
 
-const StudentsInfo: React.FC<StudentsInfoProps> = ({ students }) => {
+const StudentsInfo: React.FC<StudentsInfoProps> = ({ course, onUpdate }) => {
+  const [isCreatingStudent, setIsCreatingStudent] = useState(false);
+
+  const handleStudentCreated = () => {
+    setIsCreatingStudent(false);
+    onUpdate();
+  };
+
   return (
-    <Table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Email</th>
-          <th>Git Handle</th>
-        </tr>
-      </thead>
-      <tbody>
-        {students.map((student) => (
-          <tr key={student._id}>
-            <td>{student.name}</td>
-            <td>{student.email}</td>
-            <td>{student.gitHandle}</td>
+    <Container>
+      <Table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Git Handle</th>
           </tr>
-        ))}
-      </tbody>
-    </Table>
+        </thead>
+        <tbody>
+          {course.students.map((student) => (
+            <tr key={student._id}>
+              <td>{student.name}</td>
+              <td>{student.email}</td>
+              <td>{student.gitHandle}</td>
+            </tr>
+          ))}
+        </tbody>
+      </Table>
+      <Button onClick={() => setIsCreatingStudent(!isCreatingStudent)} style={{ marginTop: '16px' }}>
+        {isCreatingStudent ? 'Cancel' : 'Add Student'}
+      </Button>
+      {isCreatingStudent && 
+        <StudentForm 
+          courseId={course._id} 
+          onStudentCreated={handleStudentCreated}
+        />
+      }
+    </Container>
   );
 };
 
