@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Course } from '@/types/course';
 import { Container, Loader, Button, Tabs } from '@mantine/core';
 import CourseInfo from '@/components/CourseView/CourseInfo';
@@ -16,15 +16,8 @@ const CourseViewPage: React.FC = () => {
   const router = useRouter();
   const id = router.query.id as string;
   const [course, setCourse] = useState<Course>();
-  
 
-  useEffect(() => {
-    if (id) {
-      fetchCourse();
-    }
-  }, [id]);
-
-  const fetchCourse = async () => {
+  const fetchCourse = useCallback(async () => {
     try {
       const response = await fetch(`${apiUrl}${id}`);
       if (response.ok) {
@@ -49,7 +42,13 @@ const CourseViewPage: React.FC = () => {
     } catch (error) {
       console.error('Error fetching course:', error);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (id) {
+      fetchCourse();
+    }
+  }, [id, fetchCourse]);
 
   const deleteCourse = async () => {
     try {
