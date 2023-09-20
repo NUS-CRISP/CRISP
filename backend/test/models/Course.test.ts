@@ -35,6 +35,7 @@ describe('CourseModel', () => {
       teamSets: [],
       sprints: [],
       milestones: [],
+      assessments: [],
     };
 
     const course = new CourseModel(courseData);
@@ -57,6 +58,7 @@ describe('CourseModel', () => {
       teamSets: [],
       sprints: [],
       milestones: [],
+      assessments: [],
     });
 
     await existingCourse.save();
@@ -88,6 +90,7 @@ describe('CourseModel', () => {
       teamSets: [],
       sprints: [],
       milestones: [],
+      assessments: [],
     });
 
     await courseToDelete.save();
@@ -119,6 +122,7 @@ describe('CourseModel', () => {
       teamSets: [],
       sprints: [],
       milestones: [],
+      assessments: [],
     });
 
     await existingCourse.save();
@@ -152,6 +156,7 @@ describe('CourseModel', () => {
       teamSets: [],
       sprints: [],
       milestones: [],
+      assessments: [],
     });
 
     await existingCourse.save();

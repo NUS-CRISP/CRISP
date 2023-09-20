@@ -6,7 +6,7 @@ import {
   getCourseById,
   updateCourseById,
   deleteCourseById,
-  addStudentsToCourse,
+  addStudents,
   addMilestone,
   addSprint,
   addTeamSet
