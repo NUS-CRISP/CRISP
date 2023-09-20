@@ -1,6 +1,6 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
-export interface Course extends Document {
+export interface Course {
   name: string;
   code: string;
   semester: string;

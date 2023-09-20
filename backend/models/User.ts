@@ -1,6 +1,6 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
-export interface User extends Document {
+export interface User {
   id: string;
   name: string;
   email: string;
@@ -12,10 +12,17 @@ export interface User extends Document {
 export const userSchema = new Schema<User>({
   id: { type: String, unique: true, required: true },
   name: { type: String, required: true },
-  email: { type: String, required: true },
+  email: { type: String, unique: true, required: true },
   enrolledCourses: [{ type: Schema.Types.ObjectId, ref: 'Course' }],
   gitHandle: { type: String },
-  role: { type: String, required: true }
+  role: {
+    type: String,
+    required: true,
+    validate: {
+      validator: (value: string) => ['student', 'assistant', 'lecturer'].includes(value),
+      message: 'Invalid role. Must be one of: student, assistant, lecturer',
+    },
+  },
 });
 
 

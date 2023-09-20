@@ -1,6 +1,6 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
-export interface TeamSet extends Document {
+export interface TeamSet {
   course: mongoose.Types.ObjectId;
   name: string;
   teams: mongoose.Types.ObjectId[]
@@ -8,7 +8,7 @@ export interface TeamSet extends Document {
 
 const teamSetSchema = new Schema<TeamSet>({
   course: { type: Schema.Types.ObjectId, required: true },
-  name: { type: String, unique: true, required: true },
+  name: { type: String, required: true },
   teams: [{ type: Schema.Types.ObjectId, ref: 'Team' }],
 });
 
