@@ -7,6 +7,7 @@ import StudentsInfo from '@/components/CourseView/StudentsInfo';
 import TeamSetsInfo from '@/components/CourseView/TeamSetsInfo';
 import MilestonesInfo from '@/components/CourseView/MilestonesInfo';
 import SprintsInfo from '@/components/CourseView/SprintsInfo';
+import AssessmentsInfo from '@/components/CourseView/AssessmentsInfo';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
 const apiUrl = `http://localhost:${backendPort}/api/courses/`;
@@ -87,6 +88,7 @@ const CourseViewPage: React.FC = () => {
             <Tabs.Tab value="teams">Teams</Tabs.Tab>
             <Tabs.Tab value="milestones">Timeline</Tabs.Tab>
             <Tabs.Tab value="sprints">Sprints</Tabs.Tab>
+            <Tabs.Tab value="assessments">Assessments</Tabs.Tab>
           </Tabs.List>
           <Tabs.Panel value="info">
             <div>
@@ -116,6 +118,11 @@ const CourseViewPage: React.FC = () => {
           <Tabs.Panel value="sprints">
             <div>
               <SprintsInfo course={course} onUpdate={handleUpdate}/>
+            </div>
+          </Tabs.Panel>
+          <Tabs.Panel value="assessments">
+            <div>
+              <AssessmentsInfo course={course} onUpdate={handleUpdate}/>
             </div>
           </Tabs.Panel>
         </Tabs>
