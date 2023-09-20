@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import SprintCard from './Cards/SprintCard';
+import SprintCard from './cards/SprintCard';
 import { Course } from '../../types/course';
 import SprintForm from '../forms/SprintForm';
 import { Button, Container } from '@mantine/core';
