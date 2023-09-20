@@ -92,6 +92,7 @@ export const deleteCourseById = async (req: Request, res: Response) => {
 export const addStudentsToCourse = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   const students = req.body.items;
+  console.log(req.body);
   try {
     const course = await CourseModel.findById(courseId);
 
@@ -195,7 +196,6 @@ export const addSprint = async (req: Request, res: Response) => {
 export const addTeamSet = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   const { name } = req.body;
-  console.log(req.body);
   try {
     const course = await CourseModel.findById(courseId);
 
