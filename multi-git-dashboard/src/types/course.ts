@@ -32,7 +32,7 @@ export interface Assessment {
   course: Course;
   assessmentType: string;
   markType: string;
-  marks: {student_id : string, mark: number}[];
+  marks: { student_id: string, mark: number }[];
   frequency: string;
   granularity: 'individual' | 'team';
 }

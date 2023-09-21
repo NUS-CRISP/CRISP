@@ -1,0 +1,66 @@
+version: "3.8"
+
+services:
+
+  jenkins:
+    build:
+      dockerfile: jenkins-Dockerfile
+    container_name: jenkins-crisp
+    networks:
+      - jenkins
+    volumes:
+      - jenkins_data:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - '8080:8080'
+      - '50000:50000'
+
+  sonarqube:
+    image: sonarqube:community
+    depends_on:
+      - db
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
+      SONAR_JDBC_USERNAME: sonartest
+      SONAR_JDBC_PASSWORD: sonartest
+    networks:
+      - jenkins
+    volumes:
+      - SonarQube_data:/opt/SonarQube/data
+      - SonarQube_extensions:/opt/SonarQube/extensions
+      - SonarQube_logs:/opt/SonarQube/logs
+    ports:
+      - "9000:9000"
+
+  sonarqube-scanner:
+    image: sonarsource/sonar-scanner-cli
+    depends_on:
+      - sonarqube
+    networks:
+      - jenkins
+    volumes:
+      - ./:/usr/src
+
+  db:
+    image: postgres
+    environment:
+      POSTGRES_DB: sonar
+      POSTGRES_USER: sonartest
+      POSTGRES_PASSWORD: sonartest
+    networks:
+      - jenkins
+    volumes:
+      - postgresql:/var/lib/postgresql
+      - postgresql_data:/var/lib/postgresql/data
+
+networks:
+  jenkins:
+    driver: bridge
+
+volumes:
+  SonarQube_data:
+  SonarQube_extensions:
+  SonarQube_logs:
+  postgresql:
+  postgresql_data:
+  jenkins_data:
