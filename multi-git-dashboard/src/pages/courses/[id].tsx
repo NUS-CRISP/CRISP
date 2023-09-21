@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Course } from '@/types/course';
 import { Container, Loader, Button, Tabs } from '@mantine/core';
 import CourseInfo from '@/components/CourseView/CourseInfo';
@@ -7,6 +7,7 @@ import StudentsInfo from '@/components/CourseView/StudentsInfo';
 import TeamSetsInfo from '@/components/CourseView/TeamSetsInfo';
 import MilestonesInfo from '@/components/CourseView/MilestonesInfo';
 import SprintsInfo from '@/components/CourseView/SprintsInfo';
+import AssessmentsInfo from '@/components/CourseView/AssessmentsInfo';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
 const apiUrl = `http://localhost:${backendPort}/api/courses/`;
@@ -16,15 +17,8 @@ const CourseViewPage: React.FC = () => {
   const router = useRouter();
   const id = router.query.id as string;
   const [course, setCourse] = useState<Course>();
-  
 
-  useEffect(() => {
-    if (id) {
-      fetchCourse();
-    }
-  }, [id]);
-
-  const fetchCourse = async () => {
+  const fetchCourse = useCallback(async () => {
     try {
       const response = await fetch(`${apiUrl}${id}`);
       if (response.ok) {
@@ -49,7 +43,13 @@ const CourseViewPage: React.FC = () => {
     } catch (error) {
       console.error('Error fetching course:', error);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (id) {
+      fetchCourse();
+    }
+  }, [id, fetchCourse]);
 
   const deleteCourse = async () => {
     try {
@@ -88,6 +88,7 @@ const CourseViewPage: React.FC = () => {
             <Tabs.Tab value="teams">Teams</Tabs.Tab>
             <Tabs.Tab value="milestones">Timeline</Tabs.Tab>
             <Tabs.Tab value="sprints">Sprints</Tabs.Tab>
+            <Tabs.Tab value="assessments">Assessments</Tabs.Tab>
           </Tabs.List>
           <Tabs.Panel value="info">
             <div>
@@ -117,6 +118,11 @@ const CourseViewPage: React.FC = () => {
           <Tabs.Panel value="sprints">
             <div>
               <SprintsInfo course={course} onUpdate={handleUpdate}/>
+            </div>
+          </Tabs.Panel>
+          <Tabs.Panel value="assessments">
+            <div>
+              <AssessmentsInfo course={course} onUpdate={handleUpdate}/>
             </div>
           </Tabs.Panel>
         </Tabs>

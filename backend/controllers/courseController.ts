@@ -3,6 +3,7 @@ import CourseModel from '../models/Course';
 import UserModel from '../models/User';
 import TeamModel from '../models/Team';
 import TeamSetModel from '../models/TeamSet';
+import AssessmentModel from '../models/Assessment';
 
 // Create a new course
 export const createCourse = async (req: Request, res: Response) => {
@@ -30,6 +31,7 @@ export const getCourseById = async (req: Request, res: Response) => {
   try {
     const course = await CourseModel.findById(courseId)
     .populate('students')
+    .populate('assessments')
     .populate({
       path : 'teamSets',
       populate : {
@@ -88,10 +90,10 @@ export const deleteCourseById = async (req: Request, res: Response) => {
   }
 };
 
-// Add students to a course by course ID
-export const addStudentsToCourse = async (req: Request, res: Response) => {
+export const addStudents = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   const students = req.body.items;
+  console.log(req.body);
   try {
     const course = await CourseModel.findById(courseId);
 
@@ -195,7 +197,6 @@ export const addSprint = async (req: Request, res: Response) => {
 export const addTeamSet = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   const { name } = req.body;
-  console.log(req.body);
   try {
     const course = await CourseModel.findById(courseId);
 
@@ -213,3 +214,34 @@ export const addTeamSet = async (req: Request, res: Response) => {
     res.status(400).json({ error: 'Failed to create team set' });
   }
 }
+
+export const addAssessment = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  const { assessmentType, markType, marks, frequency, granularity } = req.body;
+
+  try {
+    const course = await CourseModel.findById(courseId);
+
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    const assessment = new AssessmentModel({
+      course: courseId,
+      assessmentType,
+      markType,
+      marks,
+      frequency,
+      granularity,
+    });
+
+    course.assessments.push(assessment._id);
+
+    await course.save();
+    await assessment.save();
+
+    return res.status(201).json({ message: 'Assessment added successfully', assessment });
+  } catch (error) {
+    res.status(400).json({ error: 'Failed to add assessment' });
+  }
+};

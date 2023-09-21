@@ -8,9 +8,10 @@ export interface Course {
   lecturers: User[];
   assistants: User[];
   students: User[];
-  teamSets: TeamSet[]
-  sprints: { sprintNumber: number, description: string, startDate: Date, endDate: Date }[]
-  milestones: { milestoneNumber: number, dateline: Date, description: string }[]
+  teamSets: TeamSet[];
+  sprints: { sprintNumber: number, description: string, startDate: Date, endDate: Date }[];
+  milestones: { milestoneNumber: number, dateline: Date, description: string }[];
+  assessments: Assessment[];
 }
 
 export interface TeamSet {
