@@ -21,7 +21,7 @@ export const authOptions: AuthOptions = {
         const client = await clientPromise;
         const accountsCollection = client
           .db(process.env.DB_NAME)
-          .collection("accounts");
+          .collection("account");
         const email = credentials?.email.toLowerCase();
         const account = await accountsCollection.findOne({ email });
         if (!account) {
