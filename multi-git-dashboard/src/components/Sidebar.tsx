@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { IconChartArcs, IconGitBranch, IconHome, IconListDetails, IconLogout, IconSwitchHorizontal } from '@tabler/icons-react';
 import { createStyles, Navbar, Group, Code, getStylesRef, rem } from '@mantine/core';
 import { useRouter } from 'next/router';
+import { signOut } from 'next-auth/react';
 
 const useStyles = createStyles((theme) => ({
   header: {
@@ -84,7 +85,6 @@ const Sidebar: React.FC = () => {
   const data = [
     { link: '/', label: 'Home', icon: IconHome },
     { link: '/courses', label: 'View Courses', icon: IconListDetails },
-    { link: '/repo-stats', label: 'Get GitHub Stats', icon: IconChartArcs },
   ];
 
   const links = data.map((item) => (
