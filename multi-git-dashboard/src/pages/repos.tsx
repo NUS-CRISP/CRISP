@@ -1,6 +1,5 @@
 import React from "react";
 import useSWR from "swr";
-import { Repo } from "./api/github";
 import RepoCard from "../components/RepoCard";
 import { Box, Group, LoadingOverlay } from "@mantine/core";
 
@@ -12,7 +11,7 @@ const ReposPage: React.FC = () => {
       throw new Error("Failed to fetch GitHub API");
     }
 
-    const repoData: Repo[] = await res.json();
+    const repoData: any[] = await res.json();
     return repoData;
   });
 

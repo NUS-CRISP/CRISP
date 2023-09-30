@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import AssessmentCard from './cards/AssessmentCard';
+import AssessmentCard from '../CourseView/Cards/AssessmentCard'
 import { Course } from '../../types/course';
 import AssessmentForm from '../forms/AssessmentForm';
 import { Button, Container } from '@mantine/core';
