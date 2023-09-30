@@ -1,5 +1,5 @@
 import React from 'react';
-import { Repo } from '../app/api/github/route';
+import { Repo } from '../pages/api/github';
 import { CartesianGrid, LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts';
 import { createStyles, Text, Card, Group, rem } from '@mantine/core';
 import { epochToDateString } from '../../common/utils';
