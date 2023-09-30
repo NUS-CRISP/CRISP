@@ -1,19 +1,28 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
-export interface User extends Document{
+export interface User {
+  id: string;
   name: string;
   email: string;
-  id: string;
-  course_student: mongoose.Types.ObjectId[];
-  course_teaching: mongoose.Types.ObjectId[];
+  enrolledCourses: mongoose.Types.ObjectId[];
+  gitHandle: string;
+  role: 'student' | 'assistant' | 'lecturer';
 }
 
 export const userSchema = new Schema<User>({
+  id: { type: String, unique: true, required: true },
   name: { type: String, required: true },
-  email: { type: String, required: true },
-  id: { type: String, required: true},
-  course_student: [{ type: Schema.Types.ObjectId, ref: 'Course' }],
-  course_teaching: [{ type: Schema.Types.ObjectId, ref: 'Course' }]
+  email: { type: String, unique: true, required: true },
+  enrolledCourses: [{ type: Schema.Types.ObjectId, ref: 'Course' }],
+  gitHandle: { type: String },
+  role: {
+    type: String,
+    required: true,
+    validate: {
+      validator: (value: string) => ['student', 'assistant', 'lecturer'].includes(value),
+      message: 'Invalid role. Must be one of: student, assistant, lecturer',
+    },
+  },
 });
 
 

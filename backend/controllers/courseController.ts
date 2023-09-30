@@ -1,5 +1,9 @@
 import { Request, Response } from 'express';
-import CourseModel from '../models/Course'; // Import your CourseModel
+import CourseModel from '../models/Course';
+import UserModel from '../models/User';
+import TeamModel from '../models/Team';
+import TeamSetModel from '../models/TeamSet';
+import AssessmentModel from '../models/Assessment';
 
 // Create a new course
 export const createCourse = async (req: Request, res: Response) => {
@@ -17,7 +21,7 @@ export const getAllCourses = async (_req: Request, res: Response) => {
     const courses = await CourseModel.find();
     res.json(courses);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch courses' });
+    res.status(400).json({ error: 'Failed to fetch courses' });
   }
 };
 
@@ -25,14 +29,25 @@ export const getAllCourses = async (_req: Request, res: Response) => {
 export const getCourseById = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   try {
-    const course = await CourseModel.findById(courseId);
+    const course = await CourseModel.findById(courseId)
+    .populate('students')
+    .populate('assessments')
+    .populate({
+      path : 'teamSets',
+      populate : {
+        path : 'teams',
+        populate : {
+          path : 'members'
+        }
+      }
+    });
     if (course) {
       res.json(course);
     } else {
       res.status(404).json({ error: 'Course not found' });
     }
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch course' });
+    res.status(400).json({ error: 'Failed to fetch course' });
   }
 };
 
@@ -57,13 +72,176 @@ export const updateCourseById = async (req: Request, res: Response) => {
 export const deleteCourseById = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   try {
+    //delete course and its teams
     const deletedCourse = await CourseModel.findByIdAndDelete(courseId);
-    if (deletedCourse) {
-      res.json({ message: 'Course deleted successfully' });
-    } else {
-      res.status(404).json({ error: 'Course not found' });
+    if (!deletedCourse) {
+      return res.status(404).json({ error: 'Course not found' });
     }
+
+    // Delete corresponding teams
+    await TeamSetModel.deleteMany({ _id: { $in: deletedCourse.teamSets } });
+
+    // Update references in the Users (students) collection
+    await UserModel.updateMany({ enrolledCourses: courseId }, { $pull: { enrolledCourses: courseId } });
+
+    return res.json({ message: 'Course deleted successfully' });
   } catch (error) {
     res.status(400).json({ error: 'Failed to delete course' });
+  }
+};
+
+export const addStudents = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  const students = req.body.items;
+  console.log(req.body);
+  try {
+    const course = await CourseModel.findById(courseId);
+
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    for (const studentData of students) {
+      const studentId = studentData.id;
+      let student = await UserModel.findOne({ id: studentId });
+ 
+      if (!student) {
+        student = new UserModel(studentData);
+      }
+      if (!student.enrolledCourses.includes(course._id)) {
+        student.enrolledCourses.push(course._id)
+      }
+      await student.save();
+      if (!course.students.includes(student._id)) {
+        course.students.push(student._id);
+      }
+
+      for (const teamSetName in studentData.teamSets) {
+        let teamSet = await TeamSetModel.findOne({ course: course._id, name: teamSetName });
+        if (!teamSet) {
+          teamSet = new TeamSetModel({ course: course._id, name: teamSetName, teams: [] });
+          course.teamSets.push(teamSet._id);
+        }          
+        const teamNumber = studentData.teamSets[teamSetName];
+        let team = await TeamModel.findOne({ number: teamNumber, teamSet: teamSet._id });
+        if (!team) {
+          team = new TeamModel({ number: teamNumber, teamSet: teamSet._id, members: [] });
+          teamSet.teams.push(team._id);
+        }
+        team.members.push(student._id);
+        await team.save();
+        await teamSet.save();
+      }
+    }
+
+    await course.save();
+
+    return res.status(200).json({ message: 'Students added to the course successfully' });
+  } catch (error) {
+    res.status(400).json({ error: 'Failed to add students' });
+  }
+};
+
+export const addMilestone = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  const { milestoneNumber, dateline, description } = req.body;
+
+  try {
+    const course = await CourseModel.findById(courseId);
+
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    const milestone = {
+      milestoneNumber,
+      dateline,
+      description,
+    };
+    course.milestones.push(milestone);
+    await course.save();
+
+    return res.status(201).json({ message: 'Milestone added successfully', milestone });
+  } catch (error) {
+    res.status(400).json({ error: 'Failed to add milestone' });
+  }
+};
+
+export const addSprint = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  const { sprintNumber, startDate, endDate, description } = req.body;
+
+  try {
+    const course = await CourseModel.findById(courseId);
+
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    const sprint = {
+      sprintNumber,
+      startDate,
+      endDate,
+      description,
+    };
+
+    course.sprints.push(sprint);
+    await course.save();
+
+    return res.status(201).json({ message: 'Sprint added successfully', sprint });
+  } catch (error) {
+    res.status(400).json({ error: 'Failed to add sprint' });
+  }
+};
+
+export const addTeamSet = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  const { name } = req.body;
+  try {
+    const course = await CourseModel.findById(courseId);
+
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    const teamSet = new TeamSetModel({ name, course: courseId });
+    course.teamSets.push(teamSet._id);
+    await course.save();
+    await teamSet.save();
+
+    return res.status(201).json({ message: 'Team set created successfully', teamSet });
+  } catch (error) {
+    res.status(400).json({ error: 'Failed to create team set' });
+  }
+}
+
+export const addAssessment = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  const { assessmentType, markType, marks, frequency, granularity } = req.body;
+
+  try {
+    const course = await CourseModel.findById(courseId);
+
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    const assessment = new AssessmentModel({
+      course: courseId,
+      assessmentType,
+      markType,
+      marks,
+      frequency,
+      granularity,
+    });
+
+    course.assessments.push(assessment._id);
+
+    await course.save();
+    await assessment.save();
+
+    return res.status(201).json({ message: 'Assessment added successfully', assessment });
+  } catch (error) {
+    res.status(400).json({ error: 'Failed to add assessment' });
   }
 };

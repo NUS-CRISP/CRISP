@@ -5,15 +5,24 @@ import {
   getCourseById,
   updateCourseById,
   deleteCourseById,
+  addStudents,
+  addMilestone,
+  addSprint,
+  addTeamSet,
+  addAssessment
 } from '../controllers/courseController';
 
 const router = express.Router();
 
-// Define course routes using the controller functions
 router.post('/', createCourse);
 router.get('/', getAllCourses);
 router.get('/:id', getCourseById);
 router.put('/:id', updateCourseById);
 router.delete('/:id', deleteCourseById);
+router.post('/:id/students', addStudents);
+router.post('/:id/milestones', addMilestone);
+router.post('/:id/sprints', addSprint);
+router.post('/:id/teamsets', addTeamSet)
+router.post('/:id/assessments', addAssessment)  
 
 export default router;
