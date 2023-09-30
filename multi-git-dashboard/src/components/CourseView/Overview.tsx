@@ -1,5 +1,5 @@
 import { TeamData } from '@/types/teamdata';
-import GithubTeamCard from './Cards/GithubTeamCard';
+import GithubTeamCard from '../CourseView/Cards/GithubTeamCard';
 import { Container, ScrollArea, Text } from '@mantine/core';
 
 interface OverviewProps {

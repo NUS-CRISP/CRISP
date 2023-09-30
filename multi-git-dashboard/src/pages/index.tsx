@@ -13,9 +13,6 @@ function Home() {
               View Courses
             </Link>
           </li>
-          <li>
-            <Link href="/repo-stats">Get GitHub Stats</Link>
-          </li>
         </ul>
       </nav>
     </>

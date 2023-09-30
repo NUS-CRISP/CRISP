@@ -1,7 +1,7 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState, useCallback } from 'react';
 import { Course } from '@/types/course';
-import { Container, Loader, Button, Tabs } from '@mantine/core';
+import { Container, Loader, Tabs } from '@mantine/core';
 import Overview from '@/components/CourseView/Overview';
 import StudentsInfo from '@/components/CourseView/StudentsInfo';
 import TeamSetsInfo from '@/components/CourseView/TeamSetsInfo';

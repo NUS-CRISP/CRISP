@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import MilestoneCard from './Cards/MilestoneCard';
+import MilestoneCard from '../CourseView/Cards/MilestoneCard';
 import { Course } from '../../types/course';
 import MilestoneForm from '../forms/MilestoneForm';
 import { Button, Container } from '@mantine/core';

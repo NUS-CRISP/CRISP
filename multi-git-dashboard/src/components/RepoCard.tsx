@@ -9,7 +9,6 @@ import {
 } from "recharts";
 import { createStyles, Text, Card, Group, rem } from "@mantine/core";
 import { epochToDateString } from "@/lib/utils";
-import { Repo } from "@/pages/api/github";
 
 const useStyles = createStyles((theme) => ({
   card: {
@@ -52,10 +51,10 @@ const useStyles = createStyles((theme) => ({
   },
 }));
 
-const RepoCard: React.FC<{ repo: Repo }> = ({ repo }) => {
-  const { classes, theme } = useStyles();
+const RepoCard: React.FC<{ repo: any }> = ({ repo }) => {
+  const { classes } = useStyles();
   const data = repo.data
-    ? repo.data.map((row) => ({
+    ? repo.data.map((row: any) => ({
         date: epochToDateString(row[0]),
         delta: row[1] - row[2],
       }))
