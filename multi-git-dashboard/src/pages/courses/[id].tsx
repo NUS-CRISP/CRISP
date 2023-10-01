@@ -4,6 +4,7 @@ import { Course } from '@/types/course';
 import { Container, Loader, Tabs } from '@mantine/core';
 import Overview from '@/components/CourseView/Overview';
 import StudentsInfo from '@/components/CourseView/StudentsInfo';
+import StaffInfo from '@/components/CourseView/StaffInfo';
 import TeamSetsInfo from '@/components/CourseView/TeamSetsInfo';
 import MilestonesInfo from '@/components/CourseView/MilestonesInfo';
 import SprintsInfo from '@/components/CourseView/SprintsInfo';
@@ -104,6 +105,7 @@ const CourseViewPage: React.FC = () => {
           <Tabs.List style={{ display: 'flex', justifyContent: 'space-evenly' }}>
             <Tabs.Tab value="overview">Overview</Tabs.Tab>
             <Tabs.Tab value="students">Students</Tabs.Tab>
+            <Tabs.Tab value="staff">Staff</Tabs.Tab>
             <Tabs.Tab value="teams">Teams</Tabs.Tab>
             <Tabs.Tab value="milestones">Timeline</Tabs.Tab>
             <Tabs.Tab value="sprints">Sprints</Tabs.Tab>
@@ -122,6 +124,11 @@ const CourseViewPage: React.FC = () => {
           <Tabs.Panel value="students">
             <div>
               <StudentsInfo course={course} onUpdate={handleUpdate} />
+            </div>
+          </Tabs.Panel>
+          <Tabs.Panel value="staff">
+            <div>
+              <StaffInfo course={course} onUpdate={handleUpdate} />
             </div>
           </Tabs.Panel>
           <Tabs.Panel value="teams">
