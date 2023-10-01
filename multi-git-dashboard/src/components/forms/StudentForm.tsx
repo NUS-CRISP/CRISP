@@ -5,7 +5,6 @@ import { useForm } from '@mantine/form';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
 import Papa from 'papaparse';
 import { User } from '@/types/user';
-import { error } from 'console';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
 
