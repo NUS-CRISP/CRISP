@@ -5,8 +5,8 @@ import { NextApiRequest, NextApiResponse } from "next";
 interface Course extends WithId<Document> {
   courseName: string;
   courseCode: string;
-  lecturers: ObjectId[];
-  assistants: ObjectId[];
+  faculty: ObjectId[];
+  tas: ObjectId[];
   students: ObjectId[];
 }
 
