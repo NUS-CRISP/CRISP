@@ -23,6 +23,7 @@ describe('TeamModel', () => {
     const teamData: Team = {
       teamSet: new mongoose.Types.ObjectId(),
       number: 1,
+      ta: new mongoose.Types.ObjectId(),
       members: [],
     };
 
@@ -49,6 +50,7 @@ describe('TeamModel', () => {
     const existingTeam = new TeamModel({
       teamSet: new mongoose.Types.ObjectId(),
       number: 2,
+      ta: new mongoose.Types.ObjectId(),
       members: [],
     });
 
@@ -67,6 +69,7 @@ describe('TeamModel', () => {
     const teamToDelete = new TeamModel({
       teamSet: new mongoose.Types.ObjectId(),
       number: 4,
+      ta: new mongoose.Types.ObjectId(),
       members: [],
     });
 
