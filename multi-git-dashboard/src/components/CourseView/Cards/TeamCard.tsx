@@ -5,10 +5,10 @@ import { User } from '@/types/user';
 interface TeamCardProps {
   number: number;
   members: User[];
-  ta: User;
+  TA: User;
 }
 
-const TeamCard: React.FC<TeamCardProps> = ({ number, members, ta }) => {
+const TeamCard: React.FC<TeamCardProps> = ({ number, members, TA }) => {
   const student_rows = members.map((member) => {
     return (<tr key={member._id}>
       <td>{member.name}</td>
@@ -24,7 +24,7 @@ const TeamCard: React.FC<TeamCardProps> = ({ number, members, ta }) => {
       </Group>
 
       <Text>
-        Teaching Assistant: {ta?.name || 'N/A' }
+        Teaching Assistant: {TA?.name || 'N/A' }
       </Text>
       <Table>
         <thead>

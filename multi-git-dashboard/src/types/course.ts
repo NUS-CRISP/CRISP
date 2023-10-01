@@ -6,7 +6,7 @@ export interface Course {
   code: string;
   semester: string;
   faculty: User[];
-  tas: User[];
+  TAs: User[];
   students: User[];
   teamSets: TeamSet[];
   sprints: { sprintNumber: number, description: string, startDate: Date, endDate: Date }[];
@@ -24,7 +24,7 @@ export interface TeamSet {
 export interface Team {
   _id: string;
   number: number;
-  ta: User;
+  TA: User;
   members: User[];
 }
 

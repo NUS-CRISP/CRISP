@@ -17,7 +17,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
 
   const teamCards = (teamSet : TeamSet) => (
     teamSet.teams.map((team) => (
-      <TeamCard key={team._id} number={team.number} ta={team.ta} members={team.members} />
+      <TeamCard key={team._id} number={team.number} TA={team.TA} members={team.members} />
     ))
   );
 

@@ -5,7 +5,7 @@ export interface Course {
   code: string;
   semester: string;
   faculty: mongoose.Types.ObjectId[];
-  tas: mongoose.Types.ObjectId[];
+  TAs: mongoose.Types.ObjectId[];
   students: mongoose.Types.ObjectId[];
   teamSets: mongoose.Types.ObjectId[];
   assessments: mongoose.Types.ObjectId[];
@@ -18,7 +18,7 @@ export const courseSchema = new Schema<Course>({
   code: { type: String, required: true },
   semester: { type: String, required: true },
   faculty: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-  tas: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  TAs: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   students: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   teamSets: [{ type: Schema.Types.ObjectId, ref: 'TeamSet' }],
   assessments: [{ type: Schema.Types.ObjectId, ref: 'Assessment' }],
