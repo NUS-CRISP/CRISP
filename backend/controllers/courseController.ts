@@ -115,23 +115,6 @@ export const addStudents = async (req: Request, res: Response) => {
       if (!course.students.includes(student._id)) {
         course.students.push(student._id);
       }
-
-      for (const teamSetName in studentData.teamSets) {
-        let teamSet = await TeamSetModel.findOne({ course: course._id, name: teamSetName });
-        if (!teamSet) {
-          teamSet = new TeamSetModel({ course: course._id, name: teamSetName, teams: [] });
-          course.teamSets.push(teamSet._id);
-        }          
-        const teamNumber = studentData.teamSets[teamSetName];
-        let team = await TeamModel.findOne({ number: teamNumber, teamSet: teamSet._id });
-        if (!team) {
-          team = new TeamModel({ number: teamNumber, teamSet: teamSet._id, members: [] });
-          teamSet.teams.push(team._id);
-        }
-        team.members.push(student._id);
-        await team.save();
-        await teamSet.save();
-      }
     }
 
     await course.save();
@@ -139,6 +122,53 @@ export const addStudents = async (req: Request, res: Response) => {
     return res.status(200).json({ message: 'Students added to the course successfully' });
   } catch (error) {
     res.status(400).json({ error: 'Failed to add students' });
+  }
+};
+
+export const addTeams = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  const students = req.body.items;
+  console.log(req.body);
+  try {
+    const course = await CourseModel.findById(courseId);
+
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    for (const studentData of students) {
+      const studentId = studentData.id;
+      let student = await UserModel.findOne({ id: studentId });
+ 
+      if (!student 
+        || !student.enrolledCourses.includes(course._id) 
+        || !course.students.includes(student._id)
+        || !studentData.teamSet
+        || !studentData.teamNumber) {
+        continue;
+      }
+
+      let teamSet = await TeamSetModel.findOne({ course: course._id, name: studentData.teamSet });
+      if (!teamSet) {
+        return res.status(404).json({ message: 'TeamSet not found' });
+      }          
+      let team = await TeamModel.findOne({ number: studentData.teamNumber, teamSet: teamSet._id });
+      if (!team) {
+        team = new TeamModel({ number: studentData.teamNumber, teamSet: teamSet._id, members: [] });
+        teamSet.teams.push(team._id);
+      }
+      if (!team.members.includes(student._id)) {
+        team.members.push(student._id);
+      }
+      await team.save();
+      await teamSet.save();
+    }
+
+    await course.save();
+
+    return res.status(200).json({ message: 'Students added to teams successfully' });
+  } catch (error) {
+    res.status(400).json({ error: 'Failed to add students to teams' });
   }
 };
 
