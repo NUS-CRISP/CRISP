@@ -31,6 +31,8 @@ export const getCourseById = async (req: Request, res: Response) => {
   try {
     const course = await CourseModel.findById(courseId)
     .populate('students')
+    .populate('TAs')
+    .populate('faculty')
     .populate('assessments')
     .populate({
       path : 'teamSets',
@@ -93,7 +95,7 @@ export const deleteCourseById = async (req: Request, res: Response) => {
 export const addStudents = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   const students = req.body.items;
-  console.log(req.body);
+
   try {
     const course = await CourseModel.findById(courseId);
 
@@ -107,6 +109,9 @@ export const addStudents = async (req: Request, res: Response) => {
  
       if (!student) {
         student = new UserModel(studentData);
+      }
+      if (student.role !== 'student') {
+        continue;
       }
       if (!student.enrolledCourses.includes(course._id)) {
         student.enrolledCourses.push(course._id)
@@ -128,7 +133,7 @@ export const addStudents = async (req: Request, res: Response) => {
 export const addTeams = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   const students = req.body.items;
-  console.log(req.body);
+
   try {
     const course = await CourseModel.findById(courseId);
 
@@ -141,6 +146,7 @@ export const addTeams = async (req: Request, res: Response) => {
       let student = await UserModel.findOne({ id: studentId });
  
       if (!student 
+        || student.role !== 'student'
         || !student.enrolledCourses.includes(course._id) 
         || !course.students.includes(student._id)
         || !studentData.teamSet
@@ -169,6 +175,44 @@ export const addTeams = async (req: Request, res: Response) => {
     return res.status(200).json({ message: 'Students added to teams successfully' });
   } catch (error) {
     res.status(400).json({ error: 'Failed to add students to teams' });
+  }
+};
+
+export const addTAs = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  const TAs = req.body.items;
+
+  try {
+    const course = await CourseModel.findById(courseId);
+
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    for (const TAData of TAs) {
+      const TAId = TAData.id;
+      let TA = await UserModel.findOne({ id: TAId });
+      
+      if (!TA) {
+        TA = new UserModel(TAData);
+      }
+      if (TA.role !== 'ta') {
+        continue;
+      }
+      if (!TA.enrolledCourses.includes(course._id)) {
+        TA.enrolledCourses.push(course._id)
+      }
+      await TA.save();
+      if (!course.TAs.includes(TA._id)) {
+        course.TAs.push(TA._id);
+      }
+    }
+
+    await course.save();
+
+    return res.status(200).json({ message: 'TAs added to the course successfully' });
+  } catch (error) {
+    res.status(400).json({ error: 'Failed to add TAs' });
   }
 };
 
