@@ -63,27 +63,27 @@ const StudentForm: React.FC<StudentFormProps> = ({ courseId, onStudentCreated })
     console.log('Sending students data:', students);
 
     try {
-    const response = await fetch(`http://localhost:${backendPort}/api/courses/${courseId}/students`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        items: students,
-      }),
-    });
+      const response = await fetch(`http://localhost:${backendPort}/api/courses/${courseId}/students`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          items: students,
+        }),
+      });
 
-    if (response.ok) {
-      const data = await response.json();
-      console.log('Students created:', data);
-      onStudentCreated();
-    } else {
-      console.error('Error uploading students:', response.statusText);
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Students created:', data);
+        onStudentCreated();
+      } else {
+        console.error('Error uploading students:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error uploading students:', error);
     }
-  } catch (error) {
-    console.error('Error uploading students:', error);
-  }
-};
+  };
 
   const handleSubmitForm = async () => {
     console.log('Sending student data:', form.values);
