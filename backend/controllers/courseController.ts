@@ -33,7 +33,12 @@ export const getCourseById = async (req: Request, res: Response) => {
     .populate('students')
     .populate('TAs')
     .populate('faculty')
-    .populate('assessments')
+    .populate({
+      path : 'assessments',
+      populate : {
+        path : 'teamSets',
+      }
+    })
     .populate({
       path : 'teamSets',
       populate : {
@@ -291,7 +296,7 @@ export const addTeamSet = async (req: Request, res: Response) => {
 
 export const addAssessment = async (req: Request, res: Response) => {
   const courseId = req.params.id;
-  const { assessmentType, markType, marks, frequency, granularity } = req.body;
+  const { assessmentType, markType, frequency, granularity, teamSetName, formLink } = req.body;
 
   try {
     const course = await CourseModel.findById(courseId);
@@ -299,14 +304,24 @@ export const addAssessment = async (req: Request, res: Response) => {
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
+    let teamSetID = null;
+    if (granularity === 'team' && teamSetName) {
+      const teamSet = await TeamSetModel.findOne({ course: courseId, name: teamSetName });
+      if (!teamSet) {
+        return res.status(404).json({ message: 'TeamSet not found' });
+      }
+      teamSetID = teamSet._id;
+    }
 
     const assessment = new AssessmentModel({
       course: courseId,
       assessmentType,
       markType,
-      marks,
+      result: [],
       frequency,
       granularity,
+      teamSet: teamSetID,
+      formLink
     });
 
     course.assessments.push(assessment._id);
