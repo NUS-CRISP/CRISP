@@ -6,9 +6,11 @@ interface AssessmentCardProps {
   markType: string;
   frequency: string;
   granularity: 'individual' | 'team';
+  teamSetName: string;
+  formLink: string;
 }
 
-const AssessmentCard: React.FC<AssessmentCardProps> = ({ assessmentType, markType, frequency, granularity }) => {
+const AssessmentCard: React.FC<AssessmentCardProps> = ({ assessmentType, markType, frequency, granularity, teamSetName, formLink }) => {
   return (
     <Card shadow="xs" padding="md" style={{ marginBottom: '16px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -23,6 +25,12 @@ const AssessmentCard: React.FC<AssessmentCardProps> = ({ assessmentType, markTyp
         </Text>
         <Text size="sm" color="dimmed">
           Granularity: {granularity}
+        </Text>
+        <Text size="sm" color="dimmed">
+          Team Set: {teamSetName}
+        </Text>
+        <Text size="sm" color="dimmed">
+          Form Link: {formLink}
         </Text>
       </div>
 

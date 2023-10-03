@@ -18,9 +18,10 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
     initialValues: {
       assessmentType: '',
       markType: '',
-      marks: [],
       frequency: '',
       granularity: 'individual',
+      teamSetName: '',
+      formLink: '',
     },
     validate: {
     },
@@ -86,8 +87,24 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
             <Radio label="Individual" value="individual" />
             <Radio label="Team" value="team" />
           </Radio.Group>
+          </div>
         </div>
-        </div>
+        <TextInput
+          label="Team Set Name"
+          {...form.getInputProps('teamSetName')}
+          value={form.values.teamSetName}
+          onChange={(event) => {
+            form.setFieldValue('teamSetName', event.currentTarget.value);
+          }}
+        />
+        <TextInput
+          label="Form Link"
+          {...form.getInputProps('formLink')}
+          value={form.values.formLink}
+          onChange={(event) => {
+            form.setFieldValue('formLink', event.currentTarget.value);
+          }}
+        />
         <Button type="submit" style={{ marginTop: '16px' }}>
           Create Assessment
         </Button>
