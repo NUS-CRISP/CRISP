@@ -91,14 +91,14 @@ const CourseViewPage: React.FC = () => {
 
   if (!course) {
     return (
-      <Container size="md" style={{ minHeight: '100vh' }}>
+      <Container size="md">
         <Loader size="md" />
       </Container>
     );
   }
 
   return (
-    <Container size="md" style={{ minHeight: '100vh' }}>
+    <Container size="md">
       {course ? (
         <Tabs defaultValue="overview">
           <Tabs.List style={{ display: 'flex', justifyContent: 'space-evenly' }}>

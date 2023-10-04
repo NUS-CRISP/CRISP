@@ -14,11 +14,11 @@ interface OverviewProps {
 
 const Overview: React.FC<OverviewProps> = ({ course, teamsData }) => {
   return (
-    <Container>
+    <Container my={10}>
       <Text variant="h1">Course Name: {course.name}</Text>
       <Text variant="h1">Course Code: {course.code}</Text>
       <Text variant="h1">Semester: {course.semester}</Text>
-      <ScrollArea h={730}>
+      <ScrollArea>
         <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {teamsData.map((team, index) => (
             <GithubTeamCard key={index} teamData={team} milestones={course.milestones} />

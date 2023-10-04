@@ -23,6 +23,40 @@ const fetchAndSaveTeamData = async () => {
   await TeamData.deleteMany({});  // temp w/a to avoid duplicates
 
   for (const repo of repos.data) {
+    const contributors = await octokit.rest.repos.listContributors({
+      owner: ORG_NAME,
+      repo: repo.name,
+    });
+
+    const teamContributions = {};
+
+    for (const contributor of contributors.data) {
+      const commitsByContributor = await octokit.rest.repos.listCommits({
+        owner: ORG_NAME,
+        repo: repo.name,
+        author: contributor.login,
+      });
+      if (contributor.login) {
+        interface TeamContributions {
+          [key: string]: number;
+        }
+
+        const teamContributions: TeamContributions = {};
+
+        for (const contributor of contributors.data) {
+          const commitsByContributor = await octokit.rest.repos.listCommits({
+            owner: ORG_NAME,
+            repo: repo.name,
+            author: contributor.login,
+          });
+          if (contributor.login) {
+            teamContributions[contributor.login] = commitsByContributor.data.length;
+          }
+        }
+
+      }
+    }
+
     // Fetch commits
     const commits = await octokit.rest.repos.listCommits({
       owner: ORG_NAME,
