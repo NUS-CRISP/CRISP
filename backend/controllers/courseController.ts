@@ -30,22 +30,27 @@ export const getCourseById = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   try {
     const course = await CourseModel.findById(courseId)
-    .populate('students')
-    .populate('TAs')
     .populate('faculty')
-    .populate({
-      path : 'assessments',
-      populate : {
-        path : 'teamSets',
-      }
-    })
+    .populate('TAs')
+    .populate('students')
     .populate({
       path : 'teamSets',
       populate : {
         path : 'teams',
-        populate : {
-          path : 'members'
-        }
+        populate: [
+          {
+            path: 'members',
+          },
+          {
+            path: 'TA',
+          },
+        ],
+      }
+    })
+    .populate({
+      path : 'assessments',
+      populate : {
+        path : 'teamSet',
       }
     });
     if (course) {
@@ -296,6 +301,7 @@ export const addTeamSet = async (req: Request, res: Response) => {
 
 export const addAssessment = async (req: Request, res: Response) => {
   const courseId = req.params.id;
+
   const { assessmentType, markType, frequency, granularity, teamSetName, formLink } = req.body;
 
   try {
@@ -304,6 +310,15 @@ export const addAssessment = async (req: Request, res: Response) => {
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
+    const existingAssessment = await AssessmentModel.findOne({
+      course: courseId,
+      assessmentType: assessmentType,
+    });
+
+    if (existingAssessment) {
+      return res.status(400).json({ message: 'Failed to add assessment' });
+    }
+
     let teamSetID = null;
     if (granularity === 'team' && teamSetName) {
       const teamSet = await TeamSetModel.findOne({ course: courseId, name: teamSetName });
