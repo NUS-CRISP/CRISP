@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import SprintCard from './cards/SprintCard';
+import SprintCard from './Cards/SprintCard';
 import { Course } from '../../types/course';
 import SprintForm from '../forms/SprintForm';
 import { Button, Container } from '@mantine/core';
@@ -35,7 +35,7 @@ const SprintsInfo: React.FC<SprintsInfoProps> = ({ course, onUpdate }) => {
       </Button>
       {isCreatingSprint &&
         <SprintForm
-          courseId={course._id} 
+          courseId={course._id}
           onSprintCreated={handleSprintCreated}
         />
       }

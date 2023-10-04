@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import { Course, TeamSet } from '@/types/course';
-import TeamCard from './cards/TeamCard';
 import { Container, Tabs, Button } from '@mantine/core';
 import TeamSetForm from '../forms/TeamSetForm';
+import TeamCard from './Cards/TeamCard';
 
 interface TeamsInfoProps {
-  course : Course;
+  course: Course;
   onUpdate: () => void;
 }
 
 const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
   const [isCreatingTeamSet, setIsCreatingTeamSet] = useState(false);
 
-  const teamCards = (teamSet : TeamSet) => (
+  const teamCards = (teamSet: TeamSet) => (
     teamSet.teams.map((team) => (
       <TeamCard key={team._id} number={team.number} members={team.members} />
     ))
