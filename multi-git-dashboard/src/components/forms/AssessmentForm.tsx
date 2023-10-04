@@ -89,6 +89,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
           </Radio.Group>
           </div>
         </div>
+        { form.values.granularity == "team" &&
         <TextInput
           label="Team Set Name"
           {...form.getInputProps('teamSetName')}
@@ -97,6 +98,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
             form.setFieldValue('teamSetName', event.currentTarget.value);
           }}
         />
+        }
         <TextInput
           label="Form Link"
           {...form.getInputProps('formLink')}

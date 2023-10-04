@@ -6,34 +6,33 @@ interface AssessmentCardProps {
   markType: string;
   frequency: string;
   granularity: 'individual' | 'team';
-  teamSetName: string;
+  teamSetName: string | null;
   formLink: string;
 }
 
 const AssessmentCard: React.FC<AssessmentCardProps> = ({ assessmentType, markType, frequency, granularity, teamSetName, formLink }) => {
   return (
-    <Card shadow="xs" padding="md" style={{ marginBottom: '16px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Text weight={500} size="xl">
-          Assessment: {assessmentType}
-        </Text>
-        <Text size="sm" color="dimmed">
-          Mark Type: {markType}
-        </Text>
-        <Text size="sm" color="dimmed">
-          Frequency: {frequency}
-        </Text>
-        <Text size="sm" color="dimmed">
-          Granularity: {granularity}
-        </Text>
-        <Text size="sm" color="dimmed">
-          Team Set: {teamSetName}
-        </Text>
-        <Text size="sm" color="dimmed">
-          Form Link: {formLink}
-        </Text>
-      </div>
-
+    <Card shadow="sm" padding="lg" radius="md" withBorder>
+      <Text size="lg" weight={500}>
+        {assessmentType}
+      </Text>
+      <Text size="sm" color="dimmed">
+        Mark Type: {markType}
+      </Text>
+      <Text size="sm" color="dimmed">
+        Frequency: {frequency}
+      </Text>
+      <Text size="sm" color="dimmed">
+        Granularity: {granularity}
+      </Text>
+      { teamSetName && 
+      <Text size="sm" color="dimmed">
+        Team Set: {teamSetName}
+      </Text>
+      }
+      <Text size="sm" color="dimmed">
+        Form Link: {formLink}
+      </Text>
     </Card>
   );
 };

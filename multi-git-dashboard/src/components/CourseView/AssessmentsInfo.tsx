@@ -19,7 +19,7 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({ course, onUpdate }) => 
       markType={assessment.markType}
       frequency={assessment.frequency}
       granularity={assessment.granularity}
-      teamSetName={assessment.teamSet?.name}
+      teamSetName={assessment.teamSet? assessment.teamSet.name : null}
       formLink={assessment.formLink}
     />
   ));
