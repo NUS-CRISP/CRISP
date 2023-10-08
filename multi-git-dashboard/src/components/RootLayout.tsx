@@ -1,5 +1,5 @@
-import Sidebar from "./Sidebar";
-import styles from "../styles/root-layout.module.css";
+import Sidebar from './Sidebar';
+import styles from '../styles/root-layout.module.css';
 
 export default function RootLayout({
   children,

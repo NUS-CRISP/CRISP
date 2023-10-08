@@ -4,7 +4,7 @@ import StudentForm from '../forms/StudentForm';
 import { Course } from '@/types/course';
 
 interface StudentsInfoProps {
-  course : Course;
+  course: Course;
   onUpdate: () => void;
 }
 
@@ -27,7 +27,7 @@ const StudentsInfo: React.FC<StudentsInfoProps> = ({ course, onUpdate }) => {
           </tr>
         </thead>
         <tbody>
-          {course.students.map((student) => (
+          {course.students.map(student => (
             <tr key={student._id}>
               <td>{student.name}</td>
               <td>{student.email}</td>
@@ -36,15 +36,18 @@ const StudentsInfo: React.FC<StudentsInfoProps> = ({ course, onUpdate }) => {
           ))}
         </tbody>
       </Table>
-      <Button onClick={() => setIsCreatingStudent(!isCreatingStudent)} style={{ marginTop: '16px' }}>
+      <Button
+        onClick={() => setIsCreatingStudent(!isCreatingStudent)}
+        style={{ marginTop: '16px' }}
+      >
         {isCreatingStudent ? 'Cancel' : 'Add Student'}
       </Button>
-      {isCreatingStudent && 
-        <StudentForm 
-          courseId={course._id} 
+      {isCreatingStudent && (
+        <StudentForm
+          courseId={course._id}
           onStudentCreated={handleStudentCreated}
         />
-      }
+      )}
     </Container>
   );
 };

@@ -12,17 +12,18 @@ interface TeamsInfoProps {
 const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
   const [isCreatingTeamSet, setIsCreatingTeamSet] = useState(false);
 
-  const teamCards = (teamSet: TeamSet) => (
-    teamSet.teams.map((team) => (
+  const teamCards = (teamSet: TeamSet) =>
+    teamSet.teams.map(team => (
       <TeamCard key={team._id} number={team.number} members={team.members} />
-    ))
-  );
+    ));
 
-  const headers = course.teamSets.map((teamSet) => (
-    <Tabs.Tab key={teamSet._id} value={teamSet.name}>{teamSet.name}</Tabs.Tab>
+  const headers = course.teamSets.map(teamSet => (
+    <Tabs.Tab key={teamSet._id} value={teamSet.name}>
+      {teamSet.name}
+    </Tabs.Tab>
   ));
 
-  const panels = course.teamSets.map((teamSet) => (
+  const panels = course.teamSets.map(teamSet => (
     <Tabs.Panel key={teamSet._id} value={teamSet.name}>
       {teamCards(teamSet)}
     </Tabs.Panel>
@@ -41,16 +42,19 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
         </Tabs.List>
         {panels}
       </Tabs>
-      <Button onClick={() => setIsCreatingTeamSet(!isCreatingTeamSet)} style={{ marginBottom: '16px' }}>
+      <Button
+        onClick={() => setIsCreatingTeamSet(!isCreatingTeamSet)}
+        style={{ marginBottom: '16px' }}
+      >
         {isCreatingTeamSet ? 'Cancel' : 'Create TeamSet'}
       </Button>
 
-      {isCreatingTeamSet &&
+      {isCreatingTeamSet && (
         <TeamSetForm
           courseId={course._id}
           onTeamSetCreated={handleTeamSetCreated}
         />
-      }
+      )}
     </Container>
   );
 };

@@ -17,15 +17,13 @@ const findAssistant = (members: User[]) => {
 };
 
 const TeamCard: React.FC<TeamCardProps> = ({ number, members }) => {
-  const student_rows = members?.map((member) => {
+  const student_rows = members?.map(member => {
     if (member.role === 'student') {
-      (
       <tr key={member._id}>
         <td>{member.name}</td>
         <td>{member.email}</td>
         <td>{member.gitHandle}</td>
-      </tr>
-      )
+      </tr>;
     } else {
       return null;
     }
@@ -37,9 +35,7 @@ const TeamCard: React.FC<TeamCardProps> = ({ number, members }) => {
         <Text weight={500}>Team {number.toString()}</Text>
       </Group>
 
-      <Text>
-        Teaching Assistant: {findAssistant(members) || 'N/A' }
-      </Text>
+      <Text>Teaching Assistant: {findAssistant(members) || 'N/A'}</Text>
       <Table>
         <thead>
           <tr>

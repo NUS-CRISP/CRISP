@@ -8,10 +8,21 @@ interface AssessmentCardProps {
   granularity: 'individual' | 'team';
 }
 
-const AssessmentCard: React.FC<AssessmentCardProps> = ({ assessmentType, markType, frequency, granularity }) => {
+const AssessmentCard: React.FC<AssessmentCardProps> = ({
+  assessmentType,
+  markType,
+  frequency,
+  granularity,
+}) => {
   return (
     <Card shadow="xs" padding="md" style={{ marginBottom: '16px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
         <Text weight={500} size="xl">
           Assessment: {assessmentType}
         </Text>
@@ -25,7 +36,6 @@ const AssessmentCard: React.FC<AssessmentCardProps> = ({ assessmentType, markTyp
           Granularity: {granularity}
         </Text>
       </div>
-
     </Card>
   );
 };

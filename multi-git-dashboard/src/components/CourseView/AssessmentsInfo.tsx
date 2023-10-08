@@ -9,10 +9,13 @@ interface AssessmentInfoProps {
   onUpdate: () => void;
 }
 
-const AssessmentInfo: React.FC<AssessmentInfoProps> = ({ course, onUpdate }) => {
+const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
+  course,
+  onUpdate,
+}) => {
   const [isCreatingAssessment, setIsCreatingAssessment] = useState(false);
 
-  const assessmentCards = course.assessments.map((assessment) => (
+  const assessmentCards = course.assessments.map(assessment => (
     <AssessmentCard
       key={assessment._id}
       assessmentType={assessment.assessmentType}
@@ -37,7 +40,10 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({ course, onUpdate }) => 
         {isCreatingAssessment ? 'Cancel' : 'Create Assessment'}
       </Button>
       {isCreatingAssessment && (
-        <AssessmentForm courseId={course._id} onAssessmentCreated={handleAssessmentCreated} />
+        <AssessmentForm
+          courseId={course._id}
+          onAssessmentCreated={handleAssessmentCreated}
+        />
       )}
     </Container>
   );
