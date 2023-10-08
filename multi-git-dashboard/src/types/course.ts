@@ -1,4 +1,4 @@
-import { User } from "./user";
+import { User } from './user';
 
 export interface Course {
   _id: string;
@@ -9,9 +9,27 @@ export interface Course {
   assistants: User[];
   students: User[];
   teamSets: TeamSet[];
-  sprints: { sprintNumber: number, description: string, startDate: Date, endDate: Date }[];
-  milestones: { milestoneNumber: number, dateline: Date, description: string }[];
+  sprints: Sprint[];
+  milestones: Milestone[];
   assessments: Assessment[];
+}
+
+export interface Sprint {
+  sprintNumber: number;
+  description: string;
+  startDate: Date;
+  endDate: Date;
+}
+
+// sprint type guard
+export function isSprint(sprint: Sprint | Milestone): sprint is Sprint {
+  return 'sprintNumber' in sprint;
+}
+
+export interface Milestone {
+  milestoneNumber: number;
+  dateline: Date;
+  description: string;
 }
 
 export interface TeamSet {
@@ -32,7 +50,7 @@ export interface Assessment {
   course: Course;
   assessmentType: string;
   markType: string;
-  marks: { student_id: string, mark: number }[];
+  marks: { student_id: string; mark: number }[];
   frequency: string;
   granularity: 'individual' | 'team';
 }

@@ -1,7 +1,12 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema } from 'mongoose';
 
-// Define schema for storing team data
-interface ITeamData extends Document {
+export interface TeamContribution {
+  commits: number;
+  additions: number;
+  deletions: number;
+}
+
+export interface ITeamData extends Document {
   teamId: number;
   repoName: string;
   commits: number;
@@ -9,21 +14,28 @@ interface ITeamData extends Document {
   stars: number;
   forks: number;
   pullRequests: number;
-  updatedIssues: number[];
+  updatedIssues: string[];
+  teamContributions: Record<string, TeamContribution>;
 }
 
-const teamDataSchema: Schema = new mongoose.Schema({
-  teamId: Number,
-  repoName: String,
-  commits: Number,
-  issues: Number,
-  stars: Number,
-  forks: Number,
-  pullRequests: Number,
-  updatedIssues: [String],
+const teamDataSchema: Schema = new Schema<ITeamData>({
+  teamId: { type: Number, required: true },
+  repoName: { type: String, required: true },
+  commits: { type: Number, required: true },
+  issues: { type: Number, required: true },
+  stars: { type: Number, required: true },
+  forks: { type: Number, required: true },
+  pullRequests: { type: Number, required: true },
+  updatedIssues: { type: [String], required: true },
+  teamContributions: {
+    type: Map,
+    of: {
+      type: Map,
+      of: Number,
+    },
+    required: true,
+  },
 });
 
 // Create a model
-const TeamData = mongoose.model<ITeamData>("TeamData", teamDataSchema);
-
-export default TeamData;
+export const TeamData = mongoose.model<ITeamData>('TeamData', teamDataSchema);

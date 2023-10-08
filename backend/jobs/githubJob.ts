@@ -1,8 +1,9 @@
-import { createAppAuth } from "@octokit/auth-app";
-import { Octokit } from "octokit";
-import TeamData from "../models/TeamData";
+import cron from 'node-cron';
+import { createAppAuth } from '@octokit/auth-app';
+import { Octokit } from 'octokit';
+import { TeamContribution, TeamData } from '../models/TeamData';
 
-const ORG_NAME = "NUS-CRISP";
+const ORG_NAME = 'NUS-CRISP';
 
 const fetchAndSaveTeamData = async () => {
   const auth = createAppAuth({
@@ -11,7 +12,7 @@ const fetchAndSaveTeamData = async () => {
     installationId: process.env.GITHUB_APP_INSTALLATION_ID!,
   });
 
-  const { token } = await auth({ type: "installation" });
+  const { token } = await auth({ type: 'installation' });
 
   const octokit = new Octokit({ auth: token });
 
@@ -20,7 +21,7 @@ const fetchAndSaveTeamData = async () => {
     org: ORG_NAME,
   });
 
-  await TeamData.deleteMany({});  // temp w/a to avoid duplicates
+  await TeamData.deleteMany({}); // temp w/a to avoid duplicates
 
   for (const repo of repos.data) {
     const contributors = await octokit.rest.repos.listContributors({
@@ -28,7 +29,7 @@ const fetchAndSaveTeamData = async () => {
       repo: repo.name,
     });
 
-    const teamContributions = {};
+    const teamContributions: Record<string, TeamContribution> = {};
 
     for (const contributor of contributors.data) {
       const commitsByContributor = await octokit.rest.repos.listCommits({
@@ -36,24 +37,30 @@ const fetchAndSaveTeamData = async () => {
         repo: repo.name,
         author: contributor.login,
       });
+
+      let additions = 0;
+      let deletions = 0;
+
+      // Fetch detailed commit data to get additions/deletions
+      for (const commit of commitsByContributor.data) {
+        const commitDetail = await octokit.rest.repos.getCommit({
+          owner: ORG_NAME,
+          repo: repo.name,
+          ref: commit.sha,
+        });
+
+        if (commitDetail.data.stats) {
+          additions += commitDetail.data.stats.additions || 0;
+          deletions += commitDetail.data.stats.deletions || 0;
+        }
+      }
+
       if (contributor.login) {
-        interface TeamContributions {
-          [key: string]: number;
-        }
-
-        const teamContributions: TeamContributions = {};
-
-        for (const contributor of contributors.data) {
-          const commitsByContributor = await octokit.rest.repos.listCommits({
-            owner: ORG_NAME,
-            repo: repo.name,
-            author: contributor.login,
-          });
-          if (contributor.login) {
-            teamContributions[contributor.login] = commitsByContributor.data.length;
-          }
-        }
-
+        teamContributions[contributor.login] = {
+          commits: commitsByContributor.data.length,
+          additions,
+          deletions,
+        };
       }
     }
 
@@ -90,10 +97,28 @@ const fetchAndSaveTeamData = async () => {
       forks,
       pullRequests: pullRequests.data.length,
       updatedIssues: issues.data.map((issue) => issue.updated_at),
+      teamContributions,
     });
 
     await teamData.save();
   }
 };
 
-export default fetchAndSaveTeamData
+export const setupJob = () => {
+  // Schedule the job to run every day at midnight
+  cron.schedule('0 0 * * *', async () => {
+    console.log('Running fetchAndSaveTeamData job:', new Date().toString());
+    try {
+      await fetchAndSaveTeamData();
+    } catch (err) {
+      console.error('Error in cron job fetchAndSaveTeamData:', err);
+    }
+  });
+
+  // To run the job immediately for testing
+  if (process.env.RUN_JOB_NOW === 'true') {
+    fetchAndSaveTeamData().catch((err) => {
+      console.error('Error running job manually:', err);
+    });
+  }
+};

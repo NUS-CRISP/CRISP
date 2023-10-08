@@ -4,18 +4,18 @@ import dotenv from 'dotenv';
 import { connectToDatabase } from './database/database';
 import courseRoutes from './routes/courseRoutes';
 import githubRoutes from './routes/githubRoutes';
-import { setupJobs } from './jobs/jobs';
+import { setupJob } from './jobs/githubJob';
 
 dotenv.config();
 connectToDatabase();
-setupJobs();
+setupJob();
 
 const port = process.env.PORT;
 const app: Express = express();
 app.use(express.json());
 
 const corsOptions = {
-  origin: ['http://localhost:3000'],
+  origin: ['http://localhost:3000', 'http://strand-i.comp.nus.edu.sg:3000'],
 };
 app.use(cors(corsOptions));
 

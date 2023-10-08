@@ -1,32 +1,36 @@
-import { TeamData } from '@/types/teamdata';
 import GithubTeamCard from './Cards/GithubTeamCard';
-import { Container, ScrollArea, Text } from '@mantine/core';
+import { Container, Flex, ScrollArea, Text } from '@mantine/core';
+import { Milestone } from '@/types/course';
+import { ITeamData } from '@backend/models/TeamData';
 
 interface OverviewProps {
   course: {
     name: string;
     code: string;
     semester: string;
-    milestones: any[];
-  },
-  teamsData: TeamData[]
+    milestones: Milestone[];
+  };
+  teamsData: ITeamData[];
 }
 
-const Overview: React.FC<OverviewProps> = ({ course, teamsData }) => {
-  return (
-    <Container my={10}>
+const Overview: React.FC<OverviewProps> = ({ course, teamsData }) => (
+  <Flex direction={'column'} h={'100dvh'}>
+    <Container>
       <Text variant="h1">Course Name: {course.name}</Text>
       <Text variant="h1">Course Code: {course.code}</Text>
       <Text variant="h1">Semester: {course.semester}</Text>
-      <ScrollArea>
-        <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {teamsData.map((team, index) => (
-            <GithubTeamCard key={index} teamData={team} milestones={course.milestones} />
-          ))}
-        </div>
-      </ScrollArea>
     </Container>
-  );
-};
+    <ScrollArea style={{ flex: 1, overflowY: 'auto' }}>
+      {teamsData.map((team, index) => (
+        <GithubTeamCard
+          key={index}
+          teamData={team}
+          milestones={course.milestones}
+          sprints={course.sprints}
+        />
+      ))}
+    </ScrollArea>
+  </Flex>
+);
 
 export default Overview;
