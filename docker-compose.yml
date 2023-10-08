@@ -53,6 +53,16 @@ services:
       - postgresql:/var/lib/postgresql
       - postgresql_data:/var/lib/postgresql/data
 
+  mongo:
+    image: mongo
+    container_name: mongo-crisp
+    networks:
+      - jenkins
+    volumes:
+      - mongodb:/data/db
+    ports:
+      - '27017:27017'
+
 networks:
   jenkins:
     driver: bridge
@@ -64,3 +74,4 @@ volumes:
   postgresql:
   postgresql_data:
   jenkins_data:
+  mongodb:
