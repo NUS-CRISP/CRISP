@@ -25,7 +25,9 @@ const SprintCard: React.FC<SprintCardProps> = ({
       <Text size="sm" color="dimmed">
         End Date: {endDate.toLocaleDateString()}
       </Text>
-      <Text size="sm">{description}</Text>
+      <Text size="sm" color="dimmed">
+        {description}
+      </Text>
     </Card>
   );
 };

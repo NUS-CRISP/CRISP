@@ -6,7 +6,7 @@ export interface User {
   email: string;
   enrolledCourses: mongoose.Types.ObjectId[];
   gitHandle: string;
-  role: 'student' | 'assistant' | 'lecturer';
+  role: 'student' | 'ta' | 'faculty';
 }
 
 export const userSchema = new Schema<User>({
@@ -19,8 +19,8 @@ export const userSchema = new Schema<User>({
     type: String,
     required: true,
     validate: {
-      validator: (value: string) => ['student', 'assistant', 'lecturer'].includes(value),
-      message: 'Invalid role. Must be one of: student, assistant, lecturer',
+      validator: (value: string) => ['student', 'ta', 'faculty'].includes(value),
+      message: 'Invalid role. Must be one of: student, ta, faculty',
     },
   },
 });

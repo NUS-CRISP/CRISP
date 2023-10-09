@@ -5,9 +5,10 @@ import TeamData from "../models/TeamData";
 const ORG_NAME = "NUS-CRISP";
 
 const fetchAndSaveTeamData = async () => {
+
   const auth = createAppAuth({
     appId: process.env.GITHUB_APP_ID!,
-    privateKey: process.env.GITHUB_APP_PRIVATE_KEY!,
+    privateKey: process.env.GITHUB_APP_PRIVATE_KEY!.replace(/\\n/g, '\n'),
     installationId: process.env.GITHUB_APP_INSTALLATION_ID!,
   });
 

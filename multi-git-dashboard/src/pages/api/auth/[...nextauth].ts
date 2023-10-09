@@ -28,11 +28,15 @@ export const authOptions: AuthOptions = {
           throw new Error("Account does not exist.");
         }
 
+        console.error(credentials?.password!);
+        console.error(account.password);
+
         // Validate password
         const passwordIsValid = await bcrypt.compare(
           credentials?.password!,
           account.password,
         );
+        //const passwordIsValid = credentials?.password! === account.password;
 
         if (!passwordIsValid) {
           throw new Error("Invalid credentials");

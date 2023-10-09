@@ -20,7 +20,9 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
       <Text size="sm" color="dimmed">
         Dateline: {dateline.toLocaleDateString()}
       </Text>
-      <Text size="sm">{description}</Text>
+      <Text size="sm" color="dimmed">
+        {description}
+      </Text>
     </Card>
   );
 };

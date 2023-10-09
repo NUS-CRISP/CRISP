@@ -6,6 +6,8 @@ import {
   updateCourseById,
   deleteCourseById,
   addStudents,
+  addTeams,
+  addTAs,
   addMilestone,
   addSprint,
   addTeamSet,
@@ -20,6 +22,8 @@ router.get('/:id', getCourseById);
 router.put('/:id', updateCourseById);
 router.delete('/:id', deleteCourseById);
 router.post('/:id/students', addStudents);
+router.post('/:id/teams', addTeams);
+router.post('/:id/tas', addTAs);
 router.post('/:id/milestones', addMilestone);
 router.post('/:id/sprints', addSprint);
 router.post('/:id/teamsets', addTeamSet)

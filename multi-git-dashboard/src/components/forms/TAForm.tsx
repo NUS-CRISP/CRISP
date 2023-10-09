@@ -8,12 +8,12 @@ import { User } from '@/types/user';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
 
-interface StudentFormProps {
+interface TAFormProps {
   courseId: string | string[] | undefined;
-  onStudentCreated: () => void;
+  onTACreated: () => void;
 }
 
-const StudentForm: React.FC<StudentFormProps> = ({ courseId, onStudentCreated }) => {
+const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
   const form = useForm({
     initialValues: {
       name: '',
@@ -25,7 +25,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ courseId, onStudentCreated })
       //email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
     },
   });
-  const [students, setStudents] = useState<User[]>([]);
+  const [TAs, setTAs] = useState<User[]>([]);
 
   const handleFileUpload = useCallback((file: File) => {
     if (file) {
@@ -35,15 +35,15 @@ const StudentForm: React.FC<StudentFormProps> = ({ courseId, onStudentCreated })
           header: true,
           skipEmptyLines: true,
           complete: function (results: any) {
-            const studentsData = results.data;
-            const students = studentsData.map((student: User) => ({
-              id: student.id || '',
-              name: student.name || '',
-              email: student.email || '',
-              gitHandle: student.gitHandle || '',
-              role: 'student',
+            const TAsData = results.data;
+            const TAs = TAsData.map((TA: User) => ({
+              id: TA.id || '',
+              name: TA.name || '',
+              email: TA.email || '',
+              gitHandle: TA.gitHandle || '',
+              role: 'ta',
             }));
-            setStudents(students);
+            setTAs(TAs);
           },
           error: function (error: any) {
             console.error('CSV parsing error:', error.message);
@@ -55,40 +55,40 @@ const StudentForm: React.FC<StudentFormProps> = ({ courseId, onStudentCreated })
   }, []);
 
   const handleSubmitCSV = async () => {
-    if (students.length === 0) {
-      console.log('No students to upload.');
+    if (TAs.length === 0) {
+      console.log('No TAs to upload.');
       return;
     }
 
-    console.log('Sending students data:', students);
+    console.log('Sending TAs data:', TAs);
 
     try {
-      const response = await fetch(`http://localhost:${backendPort}/api/courses/${courseId}/students`, {
+      const response = await fetch(`http://localhost:${backendPort}/api/courses/${courseId}/tas`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          items: students,
+          items: TAs,
         }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Students created:', data);
-        onStudentCreated();
+        console.log('TAs created:', data);
+        onTACreated();
       } else {
-        console.error('Error uploading students:', response.statusText);
+        console.error('Error uploading TAs:', response.statusText);
       }
     } catch (error) {
-      console.error('Error uploading students:', error);
+      console.error('Error uploading TAs:', error);
     }
   };
 
   const handleSubmitForm = async () => {
-    console.log('Sending student data:', form.values);
+    console.log('Sending ta data:', form.values);
 
-    const response = await fetch(`http://localhost:${backendPort}/api/courses/${courseId}/students`, {
+    const response = await fetch(`http://localhost:${backendPort}/api/courses/${courseId}/tas`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -100,15 +100,15 @@ const StudentForm: React.FC<StudentFormProps> = ({ courseId, onStudentCreated })
             name: form.values.name,
             email: form.values.email,
             gitHandle: form.values.gitHandle,
-            role: 'student',
+            role: 'ta',
           },
         ],
       }),
     });
 
     const data = await response.json();
-    console.log('Student created:', data);
-    onStudentCreated();
+    console.log('TA created:', data);
+    onTACreated();
   };
 
   return (
@@ -116,7 +116,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ courseId, onStudentCreated })
       <form onSubmit={form.onSubmit(handleSubmitForm)}>
         <TextInput
           withAsterisk
-          label="Student Name"
+          label="TA Name"
           {...form.getInputProps('name')}
           value={form.values.name}
           onChange={(event) => {
@@ -125,7 +125,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ courseId, onStudentCreated })
         />
         <TextInput
           withAsterisk
-          label="Student ID"
+          label="TA ID"
           {...form.getInputProps('id')}
           value={form.values.id}
           onChange={(event) => {
@@ -134,7 +134,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ courseId, onStudentCreated })
         />
         <TextInput
           withAsterisk
-          label="Student Email"
+          label="TA Email"
           {...form.getInputProps('email')}
           value={form.values.email}
           onChange={(event) => {
@@ -150,7 +150,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ courseId, onStudentCreated })
           }}
         />
         <Button type="submit" style={{ marginTop: '16px' }}>
-          Create Student
+          Create TA
         </Button>
       </form>
 
@@ -189,10 +189,10 @@ const StudentForm: React.FC<StudentFormProps> = ({ courseId, onStudentCreated })
         </Group>
       </Dropzone>
       <Button onClick={handleSubmitCSV} style={{ marginTop: '16px' }}>
-        Upload Students
+        Upload TAs
       </Button>
     </Box>
   );
 };
 
-export default StudentForm;
+export default TAForm;

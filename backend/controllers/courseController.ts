@@ -30,15 +30,27 @@ export const getCourseById = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   try {
     const course = await CourseModel.findById(courseId)
+    .populate('faculty')
+    .populate('TAs')
     .populate('students')
-    .populate('assessments')
     .populate({
       path : 'teamSets',
       populate : {
         path : 'teams',
-        populate : {
-          path : 'members'
-        }
+        populate: [
+          {
+            path: 'members',
+          },
+          {
+            path: 'TA',
+          },
+        ],
+      }
+    })
+    .populate({
+      path : 'assessments',
+      populate : {
+        path : 'teamSet',
       }
     });
     if (course) {
@@ -93,7 +105,7 @@ export const deleteCourseById = async (req: Request, res: Response) => {
 export const addStudents = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   const students = req.body.items;
-  console.log(req.body);
+
   try {
     const course = await CourseModel.findById(courseId);
 
@@ -108,29 +120,15 @@ export const addStudents = async (req: Request, res: Response) => {
       if (!student) {
         student = new UserModel(studentData);
       }
+      if (student.role !== 'student') {
+        continue;
+      }
       if (!student.enrolledCourses.includes(course._id)) {
         student.enrolledCourses.push(course._id)
       }
       await student.save();
       if (!course.students.includes(student._id)) {
         course.students.push(student._id);
-      }
-
-      for (const teamSetName in studentData.teamSets) {
-        let teamSet = await TeamSetModel.findOne({ course: course._id, name: teamSetName });
-        if (!teamSet) {
-          teamSet = new TeamSetModel({ course: course._id, name: teamSetName, teams: [] });
-          course.teamSets.push(teamSet._id);
-        }          
-        const teamNumber = studentData.teamSets[teamSetName];
-        let team = await TeamModel.findOne({ number: teamNumber, teamSet: teamSet._id });
-        if (!team) {
-          team = new TeamModel({ number: teamNumber, teamSet: teamSet._id, members: [] });
-          teamSet.teams.push(team._id);
-        }
-        team.members.push(student._id);
-        await team.save();
-        await teamSet.save();
       }
     }
 
@@ -139,6 +137,92 @@ export const addStudents = async (req: Request, res: Response) => {
     return res.status(200).json({ message: 'Students added to the course successfully' });
   } catch (error) {
     res.status(400).json({ error: 'Failed to add students' });
+  }
+};
+
+export const addTeams = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  const students = req.body.items;
+
+  try {
+    const course = await CourseModel.findById(courseId);
+
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    for (const studentData of students) {
+      const studentId = studentData.id;
+      let student = await UserModel.findOne({ id: studentId });
+ 
+      if (!student 
+        || student.role !== 'student'
+        || !student.enrolledCourses.includes(course._id) 
+        || !course.students.includes(student._id)
+        || !studentData.teamSet
+        || !studentData.teamNumber) {
+        continue;
+      }
+
+      let teamSet = await TeamSetModel.findOne({ course: course._id, name: studentData.teamSet });
+      if (!teamSet) {
+        return res.status(404).json({ message: 'TeamSet not found' });
+      }          
+      let team = await TeamModel.findOne({ number: studentData.teamNumber, teamSet: teamSet._id });
+      if (!team) {
+        team = new TeamModel({ number: studentData.teamNumber, teamSet: teamSet._id, members: [] });
+        teamSet.teams.push(team._id);
+      }
+      if (!team.members.includes(student._id)) {
+        team.members.push(student._id);
+      }
+      await team.save();
+      await teamSet.save();
+    }
+
+    await course.save();
+
+    return res.status(200).json({ message: 'Students added to teams successfully' });
+  } catch (error) {
+    res.status(400).json({ error: 'Failed to add students to teams' });
+  }
+};
+
+export const addTAs = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  const TAs = req.body.items;
+
+  try {
+    const course = await CourseModel.findById(courseId);
+
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    for (const TAData of TAs) {
+      const TAId = TAData.id;
+      let TA = await UserModel.findOne({ id: TAId });
+      
+      if (!TA) {
+        TA = new UserModel(TAData);
+      }
+      if (TA.role !== 'ta') {
+        continue;
+      }
+      if (!TA.enrolledCourses.includes(course._id)) {
+        TA.enrolledCourses.push(course._id)
+      }
+      await TA.save();
+      if (!course.TAs.includes(TA._id)) {
+        course.TAs.push(TA._id);
+      }
+    }
+
+    await course.save();
+
+    return res.status(200).json({ message: 'TAs added to the course successfully' });
+  } catch (error) {
+    res.status(400).json({ error: 'Failed to add TAs' });
   }
 };
 
@@ -217,7 +301,8 @@ export const addTeamSet = async (req: Request, res: Response) => {
 
 export const addAssessment = async (req: Request, res: Response) => {
   const courseId = req.params.id;
-  const { assessmentType, markType, marks, frequency, granularity } = req.body;
+
+  const { assessmentType, markType, frequency, granularity, teamSetName, formLink } = req.body;
 
   try {
     const course = await CourseModel.findById(courseId);
@@ -225,14 +310,33 @@ export const addAssessment = async (req: Request, res: Response) => {
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
+    const existingAssessment = await AssessmentModel.findOne({
+      course: courseId,
+      assessmentType: assessmentType,
+    });
+
+    if (existingAssessment) {
+      return res.status(400).json({ message: 'Failed to add assessment' });
+    }
+
+    let teamSetID = null;
+    if (granularity === 'team' && teamSetName) {
+      const teamSet = await TeamSetModel.findOne({ course: courseId, name: teamSetName });
+      if (!teamSet) {
+        return res.status(404).json({ message: 'TeamSet not found' });
+      }
+      teamSetID = teamSet._id;
+    }
 
     const assessment = new AssessmentModel({
       course: courseId,
       assessmentType,
       markType,
-      marks,
+      result: [],
       frequency,
       granularity,
+      teamSet: teamSetID,
+      formLink
     });
 
     course.assessments.push(assessment._id);

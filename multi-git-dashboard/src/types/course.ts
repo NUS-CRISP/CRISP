@@ -5,8 +5,8 @@ export interface Course {
   name: string;
   code: string;
   semester: string;
-  lecturers: User[];
-  assistants: User[];
+  faculty: User[];
+  TAs: User[];
   students: User[];
   teamSets: TeamSet[];
   sprints: { sprintNumber: number, description: string, startDate: Date, endDate: Date }[];
@@ -24,6 +24,7 @@ export interface TeamSet {
 export interface Team {
   _id: string;
   number: number;
+  TA: User;
   members: User[];
 }
 
@@ -32,7 +33,16 @@ export interface Assessment {
   course: Course;
   assessmentType: string;
   markType: string;
-  marks: { student_id: string, mark: number }[];
+  results: Result[];
   frequency: string;
   granularity: 'individual' | 'team';
+  teamSet: TeamSet;
+  formLink: string;
+}
+
+export interface Result {
+  assessment: Assessment;
+  team: Team;
+  markers: User[];
+  marks: {student_id : string, mark: number}[];
 }
