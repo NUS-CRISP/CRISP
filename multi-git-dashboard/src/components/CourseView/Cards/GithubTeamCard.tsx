@@ -1,6 +1,5 @@
 import {
   Text,
-  Col,
   Grid,
   Badge,
   Card,
@@ -102,10 +101,10 @@ const GithubTeamCard: React.FC<GithubTeamCardProps> = ({
   return (
     <Card withBorder p="xl" radius="md" ml={40} mr={60} my={10}>
       <Grid gutter="xs">
-        <Col span={6}>
+        <Grid.Col span={6}>
           <Grid>
-            <Col span={12}>
-              <Text size="xl" weight={700}>
+            <Grid.Col span={12}>
+              <Text size="xl" fw={700}>
                 {teamData.repoName}
               </Text>
               <Badge color="blue" mr={5}>
@@ -117,8 +116,8 @@ const GithubTeamCard: React.FC<GithubTeamCardProps> = ({
               <Badge color="green" mx={5}>
                 PRs: {teamData.pullRequests}
               </Badge>
-            </Col>
-            <Col span={12}>
+            </Grid.Col>
+            <Grid.Col span={12}>
               <PieChart width={300} height={220}>
                 <Pie
                   data={chartData}
@@ -138,18 +137,18 @@ const GithubTeamCard: React.FC<GithubTeamCardProps> = ({
                 <Tooltip />
                 <Legend />
               </PieChart>
-            </Col>
+            </Grid.Col>
           </Grid>
-        </Col>
-        <Col span={6}>
+        </Grid.Col>
+        <Grid.Col span={6}>
           <Grid>
-            <Col span={12}>
+            <Grid.Col span={12}>
               <Stack w={100}>
                 <Badge color="yellow">Stars: {teamData.stars}</Badge>
                 <Badge color="teal">Forks: {teamData.forks}</Badge>
               </Stack>
-            </Col>
-            <Col span={12}>
+            </Grid.Col>
+            <Grid.Col span={12}>
               <Text c="dimmed" fz="sm" mt="md">
                 Issues completed:{' '}
                 <Text span fw={500} c="bright">
@@ -174,11 +173,11 @@ const GithubTeamCard: React.FC<GithubTeamCardProps> = ({
                   </div>
                 }
               />
-            </Col>
+            </Grid.Col>
           </Grid>
-        </Col>
-        <Col span={6}>
-          <Text size="xl" weight={700} mb={15}>
+        </Grid.Col>
+        <Grid.Col span={6}>
+          <Text size="xl" fw={700} mb={15}>
             Contributors
           </Text>
           <Container>
@@ -200,27 +199,26 @@ const GithubTeamCard: React.FC<GithubTeamCardProps> = ({
               <Line type="monotone" dataKey="deletions" stroke="#387908" />
             </ComposedChart>
           </Container>
-        </Col>
+        </Grid.Col>
 
-        <Col span={6}>
-          <Text size="xl" weight={700} mb={15}>
+        <Grid.Col span={6}>
+          <Text size="xl" fw={700} mb={15}>
             Progress
           </Text>
           <Stepper
             active={active}
             onStepClick={setActive}
-            breakpoint="sm"
             orientation="vertical"
           >
             {stepperSteps}
           </Stepper>
-          <Group position="center" mt="xl">
+          <Group justify="center" mt="xl">
             <Button variant="default" onClick={prevStep}>
               Back
             </Button>
             <Button onClick={nextStep}>Next step</Button>
           </Group>
-        </Col>
+        </Grid.Col>
       </Grid>
     </Card>
   );

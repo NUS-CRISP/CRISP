@@ -1,153 +1,79 @@
-import React from 'react';
-import Link from 'next/link';
 import { useState } from 'react';
 import {
   IconGitBranch,
   IconHome,
   IconListDetails,
   IconLogout,
-  IconSwitchHorizontal,
+  IconSettings2,
+  IconUserCircle,
 } from '@tabler/icons-react';
-import {
-  createStyles,
-  Navbar,
-  Group,
-  Code,
-  getStylesRef,
-  rem,
-} from '@mantine/core';
+import { signOut, useSession } from 'next-auth/react';
+import classes from './Sidebar.module.css';
+import { Code, Group } from '@mantine/core';
 import { useRouter } from 'next/router';
-import { signOut } from 'next-auth/react';
-
-const useStyles = createStyles(theme => ({
-  header: {
-    paddingBottom: theme.spacing.md,
-    marginBottom: `calc(${theme.spacing.md} * 1.5)`,
-    borderBottom: `${rem(1)} solid ${
-      theme.colorScheme === 'dark' ? theme.colors.dark[4] : theme.colors.gray[2]
-    }`,
-  },
-
-  footer: {
-    paddingTop: theme.spacing.md,
-    marginTop: theme.spacing.md,
-    borderTop: `${rem(1)} solid ${
-      theme.colorScheme === 'dark' ? theme.colors.dark[4] : theme.colors.gray[2]
-    }`,
-  },
-
-  link: {
-    ...theme.fn.focusStyles(),
-    display: 'flex',
-    alignItems: 'center',
-    textDecoration: 'none',
-    fontSize: theme.fontSizes.sm,
-    color:
-      theme.colorScheme === 'dark'
-        ? theme.colors.dark[1]
-        : theme.colors.gray[7],
-    padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
-    borderRadius: theme.radius.sm,
-    fontWeight: 500,
-
-    '&:hover': {
-      backgroundColor:
-        theme.colorScheme === 'dark'
-          ? theme.colors.dark[6]
-          : theme.colors.gray[0],
-      color: theme.colorScheme === 'dark' ? theme.white : theme.black,
-
-      [`& .${getStylesRef('icon')}`]: {
-        color: theme.colorScheme === 'dark' ? theme.white : theme.black,
-      },
-    },
-  },
-
-  linkIcon: {
-    ref: getStylesRef('icon'),
-    color:
-      theme.colorScheme === 'dark'
-        ? theme.colors.dark[2]
-        : theme.colors.gray[6],
-    marginRight: theme.spacing.sm,
-  },
-
-  linkActive: {
-    '&, &:hover': {
-      backgroundColor: theme.fn.variant({
-        variant: 'light',
-        color: theme.primaryColor,
-      }).background,
-      color: theme.fn.variant({ variant: 'light', color: theme.primaryColor })
-        .color,
-      [`& .${getStylesRef('icon')}`]: {
-        color: theme.fn.variant({ variant: 'light', color: theme.primaryColor })
-          .color,
-      },
-    },
-  },
-
-  version: {
-    marginLeft: 'auto',
-  },
-}));
 
 const Sidebar: React.FC = () => {
-  const { classes, cx } = useStyles();
-  const [active, setActive] = useState('/');
   const router = useRouter();
+  const { data: session } = useSession();
+  const [active, setActive] = useState('Home');
 
-  const data = [
+  const linksData = [
     { link: '/', label: 'Home', icon: IconHome },
     { link: '/courses', label: 'View Courses', icon: IconListDetails },
   ];
 
-  const links = data.map(item => (
-    <Link
-      className={cx(classes.link, {
-        [classes.linkActive]: item.label === active,
-      })}
+  if (session && session.user.role === 'admin') {
+    linksData.push({ link: '/admin', label: 'Admin', icon: IconSettings2 });
+  }
+
+  const links = linksData.map(item => (
+    <a
+      className={classes.link}
+      data-active={item.label === active || undefined}
       href={item.link}
       key={item.label}
-      onClick={() => {
+      onClick={event => {
+        event.preventDefault();
         setActive(item.label);
         router.push(item.link);
       }}
     >
       <item.icon className={classes.linkIcon} stroke={1.5} />
       <span>{item.label}</span>
-    </Link>
+    </a>
   ));
 
   return (
-    <Navbar width={{ sm: 270 }} p="md">
-      <Navbar.Section grow>
-        <Group className={classes.header}>
-          <IconGitBranch size={28} />
-          CRISP
-          <Code sx={{ fontWeight: 700 }} className={classes.version}>
-            v0.0.1
-          </Code>
+    <nav className={classes.navbar}>
+      <div className={classes.navbarMain}>
+        <Group className={classes.header} justify="space-between">
+          <Group>
+            <IconGitBranch size={28} />
+            CRISP
+          </Group>
+          <Code fw={700}>v0.0.1</Code>
         </Group>
         {links}
-      </Navbar.Section>
+      </div>
 
-      <Navbar.Section className={classes.footer}>
+      <div className={classes.footer}>
         <a
           href="#"
           className={classes.link}
           onClick={event => event.preventDefault()}
         >
-          <IconSwitchHorizontal className={classes.linkIcon} stroke={1.5} />
-          <span>Change account</span>
+          <IconUserCircle className={classes.linkIcon} stroke={1.5} />
+          <span>
+            Hello, {session && session.user ? session.user.name : 'user'}
+          </span>
         </a>
 
         <a href="#" className={classes.link} onClick={() => signOut()}>
           <IconLogout className={classes.linkIcon} stroke={1.5} />
           <span>Logout</span>
         </a>
-      </Navbar.Section>
-    </Navbar>
+      </div>
+    </nav>
   );
 };
 

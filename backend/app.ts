@@ -2,6 +2,7 @@ import express, { Express } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectToDatabase } from './database/database';
+import accountRoutes from './routes/accountRoutes';
 import courseRoutes from './routes/courseRoutes';
 import githubRoutes from './routes/githubRoutes';
 import { setupJob } from './jobs/githubJob';
@@ -21,6 +22,7 @@ app.use(cors(corsOptions));
 
 app.use('/api/courses', courseRoutes);
 app.use('/api/github', githubRoutes);
+app.use('/api/accounts', accountRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
