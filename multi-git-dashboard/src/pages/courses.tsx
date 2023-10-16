@@ -28,7 +28,7 @@ const CourseListPage: React.FC = () => {
     } catch (error) {
       console.error('Error fetching courses:', error);
     }
-  }
+  };
 
   const handleCourseCreated = () => {
     fetchCourses();
@@ -57,7 +57,10 @@ const CourseListPage: React.FC = () => {
         )}
       </div>
       <div>
-        <Button onClick={() => setShowForm(!showForm)} style={{ marginTop: '16px' }}>
+        <Button
+          onClick={() => setShowForm(!showForm)}
+          style={{ marginTop: '16px' }}
+        >
           {showForm ? 'Cancel' : 'Add Course'}
         </Button>
         {showForm && <CourseForm onCourseCreated={handleCourseCreated} />}

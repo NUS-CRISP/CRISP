@@ -13,7 +13,10 @@ interface StudentFormProps {
   onStudentCreated: () => void;
 }
 
-const StudentForm: React.FC<StudentFormProps> = ({ courseId, onStudentCreated }) => {
+const StudentForm: React.FC<StudentFormProps> = ({
+  courseId,
+  onStudentCreated,
+}) => {
   const form = useForm({
     initialValues: {
       name: '',
@@ -63,15 +66,18 @@ const StudentForm: React.FC<StudentFormProps> = ({ courseId, onStudentCreated })
     console.log('Sending students data:', students);
 
     try {
-      const response = await fetch(`http://localhost:${backendPort}/api/courses/${courseId}/students`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          items: students,
-        }),
-      });
+      const response = await fetch(
+        `http://localhost:${backendPort}/api/courses/${courseId}/students`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            items: students,
+          }),
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -88,23 +94,26 @@ const StudentForm: React.FC<StudentFormProps> = ({ courseId, onStudentCreated })
   const handleSubmitForm = async () => {
     console.log('Sending student data:', form.values);
 
-    const response = await fetch(`http://localhost:${backendPort}/api/courses/${courseId}/students`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        items: [
-          {
-            id: form.values.id,
-            name: form.values.name,
-            email: form.values.email,
-            gitHandle: form.values.gitHandle,
-            role: 'student',
-          },
-        ],
-      }),
-    });
+    const response = await fetch(
+      `http://localhost:${backendPort}/api/courses/${courseId}/students`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          items: [
+            {
+              id: form.values.id,
+              name: form.values.name,
+              email: form.values.email,
+              gitHandle: form.values.gitHandle,
+              role: 'student',
+            },
+          ],
+        }),
+      }
+    );
 
     const data = await response.json();
     console.log('Student created:', data);
@@ -119,7 +128,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ courseId, onStudentCreated })
           label="Student Name"
           {...form.getInputProps('name')}
           value={form.values.name}
-          onChange={(event) => {
+          onChange={event => {
             form.setFieldValue('name', event.currentTarget.value);
           }}
         />
@@ -128,7 +137,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ courseId, onStudentCreated })
           label="Student ID"
           {...form.getInputProps('id')}
           value={form.values.id}
-          onChange={(event) => {
+          onChange={event => {
             form.setFieldValue('id', event.currentTarget.value);
           }}
         />
@@ -137,7 +146,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ courseId, onStudentCreated })
           label="Student Email"
           {...form.getInputProps('email')}
           value={form.values.email}
-          onChange={(event) => {
+          onChange={event => {
             form.setFieldValue('email', event.currentTarget.value);
           }}
         />
@@ -145,7 +154,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ courseId, onStudentCreated })
           label="Git Handle"
           {...form.getInputProps('gitHandle')}
           value={form.values.gitHandle}
-          onChange={(event) => {
+          onChange={event => {
             form.setFieldValue('gitHandle', event.currentTarget.value);
           }}
         />
@@ -163,19 +172,28 @@ const StudentForm: React.FC<StudentFormProps> = ({ courseId, onStudentCreated })
         }}
         accept={[MIME_TYPES.csv]}
         maxSize={1024 * 1024 * 5}
-        maxFiles = {1}
-        multiple = {false}
+        maxFiles={1}
+        multiple={false}
         style={{ marginTop: '16px' }}
       >
         <Group mih={220} style={{ pointerEvents: 'none' }}>
           <Dropzone.Accept>
-            <IconUpload style={{ color: 'var(--mantine-color-blue-6)' }} stroke={1.5} />
+            <IconUpload
+              style={{ color: 'var(--mantine-color-blue-6)' }}
+              stroke={1.5}
+            />
           </Dropzone.Accept>
           <Dropzone.Reject>
-            <IconX style={{ color: 'var(--mantine-color-red-6)' }} stroke={1.5} />
+            <IconX
+              style={{ color: 'var(--mantine-color-red-6)' }}
+              stroke={1.5}
+            />
           </Dropzone.Reject>
           <Dropzone.Idle>
-            <IconPhoto style={{ color: 'var(--mantine-color-dimmed)' }} stroke={1.5} />
+            <IconPhoto
+              style={{ color: 'var(--mantine-color-dimmed)' }}
+              stroke={1.5}
+            />
           </Dropzone.Idle>
 
           <div>

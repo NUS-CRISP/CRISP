@@ -1,22 +1,10 @@
-import Link from "next/link";
+import { Container } from '@mantine/core';
 
-function Home() {
-  return (
-    <>
-      <h1>Welcome to CRISP</h1>
-      <p>This is the index page.</p>
+const HomePage: React.FC = () => (
+  <Container>
+    <h1>Welcome to CRISP</h1>
+    <p>This is the index page.</p>
+  </Container>
+);
 
-      <nav>
-        <ul>
-          <li>
-            <Link href="/courses">
-              View Courses
-            </Link>
-          </li>
-        </ul>
-      </nav>
-    </>
-  );
-}
-
-export default Home;
+export default HomePage;

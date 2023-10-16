@@ -1,31 +1,17 @@
 import mongoose, { Schema } from 'mongoose';
 
 export interface User {
-  id: string;
   name: string;
-  email: string;
   enrolledCourses: mongoose.Types.ObjectId[];
   gitHandle: string;
-  role: 'student' | 'ta' | 'faculty';
 }
 
-export const userSchema = new Schema<User>({
-  id: { type: String, unique: true, required: true },
+export const userSchema = new Schema({
   name: { type: String, required: true },
-  email: { type: String, unique: true, required: true },
   enrolledCourses: [{ type: Schema.Types.ObjectId, ref: 'Course' }],
   gitHandle: { type: String },
-  role: {
-    type: String,
-    required: true,
-    validate: {
-      validator: (value: string) => ['student', 'ta', 'faculty'].includes(value),
-      message: 'Invalid role. Must be one of: student, ta, faculty',
-    },
-  },
 });
 
-
-const UserModel = mongoose.model<User>('User', userSchema);
+const UserModel = mongoose.model('User', userSchema);
 
 export default UserModel;
