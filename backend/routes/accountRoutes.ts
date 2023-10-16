@@ -9,6 +9,6 @@ const router = express.Router();
 
 router.post('/', createAccount);
 router.get('/pending', getPendingAccounts);
-router.get('/${accountId}/approve', approveAccount);
+router.post('/:accountId/approve', approveAccount);
 
 export default router;
