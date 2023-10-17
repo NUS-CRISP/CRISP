@@ -44,5 +44,4 @@ describe('TeamSetModel', () => {
 
     await expect(teamSet.save()).rejects.toThrow();
   });
-
 });

@@ -11,7 +11,7 @@ import {
   addMilestone,
   addSprint,
   addTeamSet,
-  addAssessment
+  addAssessment,
 } from '../controllers/courseController';
 
 const router = express.Router();
@@ -26,7 +26,7 @@ router.post('/:id/teams', addTeams);
 router.post('/:id/tas', addTAs);
 router.post('/:id/milestones', addMilestone);
 router.post('/:id/sprints', addSprint);
-router.post('/:id/teamsets', addTeamSet)
-router.post('/:id/assessments', addAssessment)  
+router.post('/:id/teamsets', addTeamSet);
+router.post('/:id/assessments', addAssessment);
 
 export default router;

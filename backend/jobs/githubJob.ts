@@ -6,7 +6,6 @@ import { TeamContribution, TeamData } from '../models/TeamData';
 const ORG_NAME = 'NUS-CRISP';
 
 const fetchAndSaveTeamData = async () => {
-
   const auth = createAppAuth({
     appId: process.env.GITHUB_APP_ID!,
     privateKey: process.env.GITHUB_APP_PRIVATE_KEY!.replace(/\\n/g, '\n'),
@@ -97,7 +96,7 @@ const fetchAndSaveTeamData = async () => {
       stars,
       forks,
       pullRequests: pullRequests.data.length,
-      updatedIssues: issues.data.map((issue) => issue.updated_at),
+      updatedIssues: issues.data.map(issue => issue.updated_at),
       teamContributions,
     });
 
@@ -118,7 +117,7 @@ export const setupJob = () => {
 
   // To run the job immediately for testing
   if (process.env.RUN_JOB_NOW === 'true') {
-    fetchAndSaveTeamData().catch((err) => {
+    fetchAndSaveTeamData().catch(err => {
       console.error('Error running job manually:', err);
     });
   }

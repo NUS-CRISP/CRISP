@@ -1,5 +1,5 @@
-import express from "express";
-import { getAllTeamData } from "../controllers/githubController";
+import express from 'express';
+import { getAllTeamData } from '../controllers/githubController';
 
 const router = express.Router();
 

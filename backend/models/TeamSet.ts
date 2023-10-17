@@ -3,7 +3,7 @@ import mongoose, { Schema } from 'mongoose';
 export interface TeamSet {
   course: mongoose.Types.ObjectId;
   name: string;
-  teams: mongoose.Types.ObjectId[]
+  teams: mongoose.Types.ObjectId[];
 }
 
 const teamSetSchema = new Schema<TeamSet>({

@@ -9,9 +9,9 @@ export interface Team {
 
 export const teamSchema = new Schema<Team>({
   teamSet: { type: Schema.Types.ObjectId, ref: 'Team' },
-  number: { type: Number, required: true},
+  number: { type: Number, required: true },
   TA: { type: Schema.Types.ObjectId, ref: 'User' },
-  members: [{ type: Schema.Types.ObjectId, ref: 'User' }]
+  members: [{ type: Schema.Types.ObjectId, ref: 'User' }],
 });
 
 const TeamModel = mongoose.model<Team>('Team', teamSchema);
