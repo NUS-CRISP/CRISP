@@ -28,7 +28,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
     console.log('Sending assessment data:', form.values);
 
     const response = await fetch(
-      `http://localhost:${backendPort}/api/courses/${courseId}/assessments`,
+      `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/assessments`,
       {
         method: 'POST',
         headers: {
