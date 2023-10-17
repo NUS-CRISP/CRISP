@@ -12,8 +12,8 @@ import AssessmentsInfo from '@/components/CourseView/AssessmentsInfo';
 import { ITeamData } from '@backend/models/TeamData';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
-const apiUrl = `http://localhost:${backendPort}/api/courses/`;
-const teamDataUrl = `http://localhost:${backendPort}/api/github/`;
+const apiUrl = `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/`;
+const teamDataUrl = `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/github/`;
 
 const CourseViewPage: React.FC = () => {
   const router = useRouter();
@@ -69,21 +69,6 @@ const CourseViewPage: React.FC = () => {
       fetchTeamData();
     }
   }, [id, fetchCourse, fetchTeamData]);
-
-  const deleteCourse = async () => {
-    try {
-      const response = await fetch(`${apiUrl}${id}`, {
-        method: 'DELETE',
-      });
-      if (response.ok) {
-        router.push('/courses');
-      } else {
-        console.error('Error deleting course:', response.statusText);
-      }
-    } catch (error) {
-      console.error('Error deleting course:', error);
-    }
-  };
 
   const handleUpdate = () => {
     fetchCourse();

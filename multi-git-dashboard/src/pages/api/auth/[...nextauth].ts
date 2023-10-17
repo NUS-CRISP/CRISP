@@ -1,7 +1,16 @@
-import NextAuth, { AuthOptions } from 'next-auth';
+import NextAuth, { AuthOptions, User } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcrypt';
 import clientPromise from '@/lib/mongodb';
+import { JWT } from 'next-auth/jwt';
+
+interface CustomUser extends User {
+  role: string;
+}
+
+interface CustomToken extends JWT {
+  role: string;
+}
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -30,7 +39,7 @@ export const authOptions: AuthOptions = {
           throw new Error('Account does not exist.');
         }
 
-        console.error(credentials?.password!);
+        console.error(credentials?.password);
         console.error(account.password);
 
         // Validate password
@@ -70,12 +79,12 @@ export const authOptions: AuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role;
+        token.role = (user as CustomUser).role;
       }
       return token;
     },
     async session({ session, token }) {
-      session.user.role = token.role;
+      (session.user as CustomUser).role = (token as CustomToken).role;
       return session;
     },
   },

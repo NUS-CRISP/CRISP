@@ -13,6 +13,10 @@ interface StudentFormProps {
   onStudentCreated: () => void;
 }
 
+interface Results {
+  data: User[];
+}
+
 const StudentForm: React.FC<StudentFormProps> = ({
   courseId,
   onStudentCreated,
@@ -37,7 +41,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
         Papa.parse(reader.result as string, {
           header: true,
           skipEmptyLines: true,
-          complete: function (results: any) {
+          complete: function (results: Results) {
             const studentsData = results.data;
             const students = studentsData.map((student: User) => ({
               id: student.id || '',
@@ -46,9 +50,9 @@ const StudentForm: React.FC<StudentFormProps> = ({
               gitHandle: student.gitHandle || '',
               role: 'student',
             }));
-            setStudents(students);
+            setStudents(students as User[]);
           },
-          error: function (error: any) {
+          error: function (error: Error) {
             console.error('CSV parsing error:', error.message);
           },
         });
@@ -67,7 +71,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
 
     try {
       const response = await fetch(
-        `http://localhost:${backendPort}/api/courses/${courseId}/students`,
+        `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/students`,
         {
           method: 'POST',
           headers: {
@@ -95,7 +99,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
     console.log('Sending student data:', form.values);
 
     const response = await fetch(
-      `http://localhost:${backendPort}/api/courses/${courseId}/students`,
+      `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/students`,
       {
         method: 'POST',
         headers: {

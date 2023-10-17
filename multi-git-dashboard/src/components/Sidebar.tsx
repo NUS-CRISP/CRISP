@@ -11,6 +11,11 @@ import { signOut, useSession } from 'next-auth/react';
 import classes from './Sidebar.module.css';
 import { Code, Group } from '@mantine/core';
 import { useRouter } from 'next/router';
+import { User } from 'next-auth';
+
+interface CustomUser extends User {
+  role: string;
+}
 
 const Sidebar: React.FC = () => {
   const router = useRouter();
@@ -22,7 +27,11 @@ const Sidebar: React.FC = () => {
     { link: '/courses', label: 'View Courses', icon: IconListDetails },
   ];
 
-  if (session && session.user.role === 'admin') {
+  if (
+    session &&
+    session.user &&
+    (session.user as CustomUser).role === 'admin'
+  ) {
     linksData.push({ link: '/admin', label: 'Admin', icon: IconSettings2 });
   }
 

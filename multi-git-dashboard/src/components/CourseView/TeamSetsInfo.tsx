@@ -29,7 +29,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
     <Tabs.Tab
       key={teamSet._id}
       value={teamSet.name}
-      onClick={e => setActiveTab(teamSet.name)}
+      onClick={() => setActiveTab(teamSet.name)}
     >
       {teamSet.name}
     </Tabs.Tab>

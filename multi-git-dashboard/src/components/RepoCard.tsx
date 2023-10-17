@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
   CartesianGrid,
   LineChart,
@@ -6,14 +6,20 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-} from "recharts";
-import { createStyles, Text, Card, Group, rem } from "@mantine/core";
-import { epochToDateString } from "@/lib/utils";
+} from 'recharts';
+import { Text, Card, Group, rem } from '@mantine/core';
+import { createStyles } from '@mantine/styles';
+import { epochToDateString } from '@/lib/utils';
 
-const useStyles = createStyles((theme) => ({
+interface Repo {
+  name: string;
+  data: [number, number, number][];
+}
+
+const useStyles = createStyles(theme => ({
   card: {
     backgroundColor:
-      theme.colorScheme === "dark"
+      theme.colorScheme === 'dark'
         ? theme.colors.dark[6]
         : theme.colors.gray[0],
   },
@@ -32,29 +38,29 @@ const useStyles = createStyles((theme) => ({
   },
 
   inner: {
-    display: "flex",
+    display: 'flex',
 
-    [theme.fn.smallerThan("xs")]: {
-      flexDirection: "column",
+    [theme.fn.smallerThan('xs')]: {
+      flexDirection: 'column',
     },
   },
 
   ring: {
     flex: 1,
-    display: "flex",
-    justifyContent: "flex-end",
+    display: 'flex',
+    justifyContent: 'flex-end',
 
-    [theme.fn.smallerThan("xs")]: {
-      justifyContent: "center",
+    [theme.fn.smallerThan('xs')]: {
+      justifyContent: 'center',
       marginTop: theme.spacing.md,
     },
   },
 }));
 
-const RepoCard: React.FC<{ repo: any }> = ({ repo }) => {
+const RepoCard: React.FC<{ repo: Repo }> = ({ repo }) => {
   const { classes } = useStyles();
   const data = repo.data
-    ? repo.data.map((row: any) => ({
+    ? repo.data.map(row => ({
         date: epochToDateString(row[0]),
         delta: row[1] - row[2],
       }))
@@ -63,12 +69,12 @@ const RepoCard: React.FC<{ repo: any }> = ({ repo }) => {
   // Dummy data
   const completed = Math.floor(Math.random() * 100);
   const items = [
-    { value: Math.floor(Math.random() * 10), label: "Commits" },
-    { value: Math.floor(Math.random() * 10), label: "Issues" },
-  ].map((stat) => (
+    { value: Math.floor(Math.random() * 10), label: 'Commits' },
+    { value: Math.floor(Math.random() * 10), label: 'Issues' },
+  ].map(stat => (
     <div key={stat.label}>
       <Text className={classes.label}>{stat.value}</Text>
-      <Text size="xs" color="dimmed">
+      <Text size="xs" c="dimmed">
         {stat.label}
       </Text>
     </div>
@@ -85,13 +91,13 @@ const RepoCard: React.FC<{ repo: any }> = ({ repo }) => {
             <Text className={classes.lead} mt={30}>
               {completed}
             </Text>
-            <Text fz="xs" color="dimmed">
+            <Text fz="xs" c="dimmed">
               Completed
             </Text>
           </div>
           <Group mt="lg">{items}</Group>
         </div>
-        <div className={classes.ring} style={{ color: "yellow" }}>
+        <div className={classes.ring} style={{ color: 'yellow' }}>
           <LineChart width={600} height={300} data={data}>
             <Line type="monotone" dataKey="delta" />
             <CartesianGrid stroke="#ffffff" />

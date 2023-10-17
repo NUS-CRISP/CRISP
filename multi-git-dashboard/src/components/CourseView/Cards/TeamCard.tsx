@@ -23,8 +23,8 @@ const TeamCard: React.FC<TeamCardProps> = ({ number, members, TA }) => {
 
   return (
     <Card shadow="sm" padding="lg" radius="md" withBorder>
-      <Group position="apart" mt="md" mb="xs">
-        <Text weight={500}>Team {number.toString()}</Text>
+      <Group mt="md" mb="xs">
+        <Text> Team {number.toString()}</Text>
       </Group>
 
       <Text>Teaching Assistant: {TA?.name || 'N/A'}</Text>
