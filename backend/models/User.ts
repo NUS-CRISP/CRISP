@@ -3,6 +3,7 @@ import mongoose, { Schema } from 'mongoose';
 export interface User {
   name: string;
   identifier: string;
+  email: string;
   enrolledCourses: mongoose.Types.ObjectId[];
   gitHandle: string;
   role: string;
@@ -11,6 +12,7 @@ export interface User {
 export const userSchema = new Schema({
   name: { type: String, required: true },
   identifier: { type: String, required: true, unique: true },
+  email: { type: String, required: true, unique: true },
   enrolledCourses: [{ type: Schema.Types.ObjectId, ref: 'Course' }],
   gitHandle: { type: String },
   role: {

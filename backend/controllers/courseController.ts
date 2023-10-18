@@ -115,26 +115,25 @@ export const addStudents = async (req: Request, res: Response) => {
 
   try {
     const course = await CourseModel.findById(courseId);
-
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
-
     for (const studentData of students) {
       const studentId = studentData.id;
 
-      const user = await UserModel.findOne({ identifier: studentId });
-
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-      if (user.role !== 'Student') {
-        continue;
-      }
-
-      const student = await UserModel.findOne({ id: studentId });
+      let student = await UserModel.findOne({ identifier: studentId });
       if (!student) {
-        return res.status(404).json({ message: 'Student not found' });
+        student = new UserModel({
+          name: studentData.name,
+          identifier: studentId,
+          email: studentData.email,
+          enrolledCourses: [],
+          gitHandle: studentData.gitHandle,
+          role: 'Student',
+        });
+      }
+      if (student.role !== 'Student') {
+        continue;
       }
       if (!student.enrolledCourses.includes(course._id)) {
         student.enrolledCourses.push(course._id);
@@ -170,7 +169,7 @@ export const addStudentToTeams = async (req: Request, res: Response) => {
       const studentId = studentData.id;
 
       const student = await UserModel.findOne({ identifier: studentId });
-
+      console.log(1);
       if (
         !student ||
         student.role !== 'Student' ||
@@ -186,13 +185,16 @@ export const addStudentToTeams = async (req: Request, res: Response) => {
         course: course._id,
         name: studentData.teamSet,
       });
+      console.log(2);
       if (!teamSet) {
         return res.status(404).json({ message: 'TeamSet not found' });
       }
+      console.log(3);
       let team = await TeamModel.findOne({
         number: studentData.teamNumber,
         teamSet: teamSet._id,
       });
+      console.log(4);
       if (!team) {
         team = new TeamModel({
           number: studentData.teamNumber,
@@ -201,11 +203,13 @@ export const addStudentToTeams = async (req: Request, res: Response) => {
         });
         teamSet.teams.push(team._id);
       }
+      console.log(5);
       if (!team.members.includes(student._id)) {
         team.members.push(student._id);
       }
       await team.save();
       await teamSet.save();
+      console.log(6);
     }
 
     await course.save();
@@ -231,10 +235,15 @@ export const addTAs = async (req: Request, res: Response) => {
 
     for (const TAData of TAs) {
       const TAId = TAData.id;
-      const TA = await UserModel.findOne({ identifier: TAId });
-
+      let TA = await UserModel.findOne({ identifier: TAId });
       if (!TA) {
-        return res.status(404).json({ message: 'TA not found' });
+        TA = new UserModel({
+          name: TAData.name,
+          identifier: TAId,
+          email: TAData.email,
+          role: 'Teaching assistant',
+          enrolledCourses: [],
+        });
       }
       if (TA.role !== 'Teaching assistant') {
         continue;
