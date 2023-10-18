@@ -10,18 +10,23 @@ interface TeamsInfoProps {
   onUpdate: () => void;
 }
 
+const backendPort = process.env.BACKEND_PORT || 3001;
+
 const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
   const [isCreatingTeamSet, setIsCreatingTeamSet] = useState<boolean>(false);
   const [isCreatingTeam, setIsCreatingTeam] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string | null>(null);
+  const [teamSetId, setTeamSetId] = useState<string | null>(null);
 
   const teamCards = (teamSet: TeamSet) =>
     teamSet.teams.map(team => (
       <TeamCard
         key={team._id}
+        teamId={team._id}
         number={team.number}
         TA={team.TA}
         members={team.members}
+        onTeamDeleted={onUpdate}
       />
     ));
 
@@ -29,7 +34,10 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
     <Tabs.Tab
       key={teamSet._id}
       value={teamSet.name}
-      onClick={() => setActiveTab(teamSet.name)}
+      onClick={() => {
+        setActiveTab(teamSet.name);
+        setTeamSetId(teamSet._id);
+      }}
     >
       {teamSet.name}
     </Tabs.Tab>
@@ -49,7 +57,25 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
   const handleTeamCreated = () => {
     setIsCreatingTeam(false);
     onUpdate();
-    console.error(course.teamSets[0]);
+  };
+
+  const handleDeleteTeamSet = async () => {
+    try {
+      const response = await fetch(
+        `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/teamsets/${teamSetId}`,
+        {
+          method: 'DELETE',
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to delete the TeamSet');
+      }
+
+      onUpdate();
+    } catch (error) {
+      console.error('Error deleting TeamSet:', error);
+    }
   };
 
   return (
@@ -72,6 +98,11 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
           style={{ marginBottom: '16px' }}
         >
           {isCreatingTeam ? 'Cancel' : 'Create Teams'}
+        </Button>
+      )}
+      {teamSetId && (
+        <Button onClick={handleDeleteTeamSet} style={{ marginBottom: '16px' }}>
+          Delete TeamSet
         </Button>
       )}
       {isCreatingTeamSet && (

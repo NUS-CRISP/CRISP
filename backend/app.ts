@@ -26,7 +26,7 @@ app.use('/api/courses', courseRoutes);
 app.use('/api/github', githubRoutes);
 app.use('/api/accounts', accountRoutes);
 app.use('/api/teams', teamRoutes);
-app.use('/api/teamset', teamSetRoutes);
+app.use('/api/teamsets', teamSetRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
