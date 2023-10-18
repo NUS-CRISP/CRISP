@@ -10,12 +10,14 @@ interface TeamCardProps {
 
 const TeamCard: React.FC<TeamCardProps> = ({ number, members, TA }) => {
   const student_rows = members?.map(member => {
-    if (member.role === 'student') {
-      <tr key={member._id}>
-        <td>{member.name}</td>
-        <td>{member.email}</td>
-        <td>{member.gitHandle}</td>
-      </tr>;
+    if (member.role === 'Student') {
+      return (
+        <tr key={member._id}>
+          <td>{member.name}</td>
+          <td>{member.email}</td>
+          <td>{member.gitHandle}</td>
+        </tr>
+      );
     } else {
       return null;
     }
