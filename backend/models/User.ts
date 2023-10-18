@@ -10,7 +10,7 @@ export interface User {
 
 export const userSchema = new Schema({
   name: { type: String, required: true },
-  identifier: { type: String, required: true, unique: true},
+  identifier: { type: String, required: true, unique: true },
   enrolledCourses: [{ type: Schema.Types.ObjectId, ref: 'Course' }],
   gitHandle: { type: String },
   role: {
