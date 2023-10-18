@@ -1,5 +1,12 @@
 import React, { useState, useCallback } from 'react';
-import { Box, TextInput, Button, Group, Text } from '@mantine/core';
+import {
+  Box,
+  TextInput,
+  Button,
+  Group,
+  Text,
+  Notification,
+} from '@mantine/core';
 import { IconUpload, IconPhoto, IconX } from '@tabler/icons-react';
 import { useForm } from '@mantine/form';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
@@ -66,13 +73,15 @@ const TeamForm: React.FC<TeamFormProps> = ({
     }
   }, []);
 
+  const [error, setError] = useState<string | null>(null);
+
   const handleSubmitCSV = async () => {
     if (students.length === 0) {
-      console.log('No students to upload.');
+      console.log('No teams to upload.');
       return;
     }
 
-    console.log('Sending students data:', students);
+    console.log('Sending teams data:', students);
 
     try {
       const response = await fetch(
@@ -90,45 +99,61 @@ const TeamForm: React.FC<TeamFormProps> = ({
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Students created:', data);
+        console.log('Team created:', data);
         onTeamCreated();
       } else {
-        console.error('Error uploading students:', response.statusText);
+        console.error('Error creating team:', response.statusText);
+        setError('Error creating team. Please try again.');
       }
     } catch (error) {
-      console.error('Error uploading students:', error);
+      console.error('Error creating team:', error);
+      setError('Error creating team. Please try again.');
     }
   };
 
   const handleSubmitForm = async () => {
-    console.log('Sending student data:', form.values);
+    console.log('Sending teams data:', form.values);
 
-    const response = await fetch(
-      `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/teams`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          items: [
-            {
-              identifier: form.values.identifier,
-              teamSet: teamSet,
-              teamNumber: form.values.teamNumber,
-            },
-          ],
-        }),
+    try {
+      const response = await fetch(
+        `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/teams`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            items: [
+              {
+                identifier: form.values.identifier,
+                teamSet: teamSet,
+                teamNumber: form.values.teamNumber,
+              },
+            ],
+          }),
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Team created:', data);
+        onTeamCreated();
+      } else {
+        console.error('Error creating team:', response.statusText);
+        setError('Error creating team. Please try again.');
       }
-    );
-
-    const data = await response.json();
-    console.log('Team created:', data);
-    onTeamCreated();
+    } catch (error) {
+      console.error('Error creating team:', error);
+      setError('Error creating team. Please try again.');
+    }
   };
 
   return (
     <Box maw={300} mx="auto">
+      {error && (
+        <Notification title="Error" color="red" onClose={() => setError(null)}>
+          {error}
+        </Notification>
+      )}
       <form onSubmit={form.onSubmit(handleSubmitForm)}>
         <TextInput
           withAsterisk

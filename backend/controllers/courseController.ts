@@ -177,7 +177,7 @@ export const addStudentToTeams = async (req: Request, res: Response) => {
         !studentData.teamSet ||
         !studentData.teamNumber
       ) {
-        continue;
+        return res.status(400).json({ message: 'Invalid Student' });
       }
 
       let teamSet = await TeamSetModel.findOne({
