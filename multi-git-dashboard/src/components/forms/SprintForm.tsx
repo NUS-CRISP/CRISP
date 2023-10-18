@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, TextInput, Button } from '@mantine/core';
 import { DatePicker } from '@mantine/dates';
+import '@mantine/dates/styles.css';
 import { useForm } from '@mantine/form';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
