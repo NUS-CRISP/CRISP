@@ -17,7 +17,7 @@ const SprintCard: React.FC<SprintCardProps> = ({
   return (
     <Card shadow="sm" padding="lg" radius="md" withBorder>
       <Text size="lg">Sprint {sprintNumber}</Text>
-      <Text size="sm" className="dimmed">
+      <Text size="sm" c="dimmed">
         Start Date: {startDate.toLocaleDateString()}
       </Text>
       <Text size="sm" c="dimmed">
