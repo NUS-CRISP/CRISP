@@ -19,31 +19,23 @@ const AssessmentCard: React.FC<AssessmentCardProps> = ({
   formLink,
 }) => {
   return (
-    <Card shadow="xs" padding="md" style={{ marginBottom: '16px' }}>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <Text size="xl">Assessment: {assessmentType}</Text>
-        <Text size="sm" c="dimmed">
-          Mark Type: {markType}
-        </Text>
-        <Text size="sm" c="dimmed">
-          Frequency: {frequency}
-        </Text>
-        <Text size="sm" c="dimmed">
-          Granularity: {granularity}
-        </Text>
-        <Text size="sm" c="dimmed">
-          Team Set: {teamSetName}
-        </Text>
-        <Text size="sm" c="dimmed">
-          Form Link: {formLink}
-        </Text>
-      </div>
+    <Card shadow="sm" padding="lg" radius="md" withBorder>
+      <Text size="lg">{assessmentType}</Text>
+      <Text size="sm" c="dimmed">
+        Mark Type: {markType}
+      </Text>
+      <Text size="sm" c="dimmed">
+        Frequency: {frequency}
+      </Text>
+      <Text size="sm" c="dimmed">
+        Granularity: {granularity}
+      </Text>
+      <Text size="sm" c="dimmed">
+        Team Set: {teamSetName}
+      </Text>
+      <Text size="sm" c="dimmed">
+        Form Link: {formLink}
+      </Text>
     </Card>
   );
 };
