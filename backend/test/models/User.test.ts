@@ -26,8 +26,10 @@ describe('UserModel', () => {
   it('should create and save a new user', async () => {
     const userData: User = {
       name: 'John Doe',
+      identifier: '1',
       enrolledCourses: [],
       gitHandle: 'johndoe-git',
+      role: 'Student'
     };
 
     const user = new UserModel(userData);
@@ -44,6 +46,7 @@ describe('UserModel', () => {
       name: 'John Doe',
       enrolledCourses: [],
       gitHandle: 'johndoe-git',
+      role: 'Student'
     };
 
     const user = new UserModel(userData);
