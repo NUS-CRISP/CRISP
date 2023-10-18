@@ -5,6 +5,8 @@ import { connectToDatabase } from './database/database';
 import accountRoutes from './routes/accountRoutes';
 import courseRoutes from './routes/courseRoutes';
 import githubRoutes from './routes/githubRoutes';
+import teamRoutes from './routes/teamRoutes';
+import teamSetRoutes from './routes/teamSetRoutes';
 import { setupJob } from './jobs/githubJob';
 
 dotenv.config();
@@ -23,6 +25,8 @@ app.use(cors(corsOptions));
 app.use('/api/courses', courseRoutes);
 app.use('/api/github', githubRoutes);
 app.use('/api/accounts', accountRoutes);
+app.use('/api/teams', teamRoutes);
+app.use('/api/teamset', teamSetRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
