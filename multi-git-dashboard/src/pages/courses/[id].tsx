@@ -101,11 +101,6 @@ const CourseViewPage: React.FC = () => {
             <div>
               <Overview course={course} teamsData={teamsData} />
             </div>
-            {/* <div style={{ position: 'absolute', bottom: '0', left: '57%', transform: 'translateX(-50%)' }}>
-              <Button color="red" onClick={deleteCourse}>
-                Delete Course
-              </Button>
-            </div> */}
           </Tabs.Panel>
           <Tabs.Panel value="students">
             <div>
