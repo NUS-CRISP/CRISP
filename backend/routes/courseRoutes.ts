@@ -6,12 +6,12 @@ import {
   updateCourseById,
   deleteCourseById,
   addStudents,
-  addTeams,
+  addStudentToTeams,
   addTAs,
   addMilestone,
   addSprint,
   addTeamSet,
-  addAssessment,
+  addAssessments,
 } from '../controllers/courseController';
 
 const router = express.Router();
@@ -22,11 +22,11 @@ router.get('/:id', getCourseById);
 router.put('/:id', updateCourseById);
 router.delete('/:id', deleteCourseById);
 router.post('/:id/students', addStudents);
-router.post('/:id/teams', addTeams);
+router.post('/:id/teams', addStudentToTeams);
 router.post('/:id/tas', addTAs);
 router.post('/:id/milestones', addMilestone);
 router.post('/:id/sprints', addSprint);
 router.post('/:id/teamsets', addTeamSet);
-router.post('/:id/assessments', addAssessment);
+router.post('/:id/assessments', addAssessments);
 
 export default router;
