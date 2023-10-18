@@ -24,7 +24,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
     validate: {},
   });
 
-  const handleSubmit = async () => {
+  const handleSubmitForm = async () => {
     console.log('Sending assessment data:', form.values);
 
     const response = await fetch(
@@ -34,7 +34,9 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(form.values),
+        body: JSON.stringify({
+          items: [form.values],
+        }),
       }
     );
 
@@ -45,7 +47,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
 
   return (
     <Box maw={300} mx="auto">
-      <form onSubmit={form.onSubmit(handleSubmit)}>
+      <form onSubmit={form.onSubmit(handleSubmitForm)}>
         <TextInput
           withAsterisk
           label="Assessment Type"
