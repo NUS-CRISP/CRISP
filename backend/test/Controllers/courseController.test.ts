@@ -6,10 +6,6 @@ import {
   getCourseById,
   updateCourseById,
   deleteCourseById,
-  addStudents,
-  addMilestone,
-  addSprint,
-  addTeamSet,
 } from '../../controllers/courseController';
 import CourseModel from '../../models/Course';
 import UserModel from '../../models/User';
