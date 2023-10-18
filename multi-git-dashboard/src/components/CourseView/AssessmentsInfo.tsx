@@ -44,6 +44,7 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
       {isCreatingAssessment && (
         <AssessmentForm
           courseId={course._id}
+          teamSets={course.teamSets}
           onAssessmentCreated={handleAssessmentCreated}
         />
       )}
