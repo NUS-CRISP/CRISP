@@ -378,7 +378,10 @@ export const addAssessments = async (req: Request, res: Response) => {
       }
 
       let teamSetID = null;
-      if (granularity === 'team' && teamSetName) {
+      if (granularity === 'team') {
+        if (teamSetName === null || teamSetName == '') {
+          continue;
+        }
         const teamSet = await TeamSetModel.findOne({
           course: courseId,
           name: teamSetName,
