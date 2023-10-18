@@ -341,8 +341,6 @@ export const addSprint = async (req: Request, res: Response) => {
   }
 };
 
-
-
 /*----------------------------------------Assessment----------------------------------------*/
 export const addAssessments = async (req: Request, res: Response) => {
   const courseId = req.params.id;
