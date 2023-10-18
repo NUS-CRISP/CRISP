@@ -343,74 +343,77 @@ export const addAssessments = async (req: Request, res: Response) => {
   const assessments = req.body.items;
 
   if (!Array.isArray(assessments) || assessments.length === 0) {
-      return res.status(400).json({ message: 'Invalid or empty assessments data' });
+    return res
+      .status(400)
+      .json({ message: 'Invalid or empty assessments data' });
   }
 
   try {
-      const course = await CourseModel.findById(courseId);
-      if (!course) {
-          return res.status(404).json({ message: 'Course not found' });
+    const course = await CourseModel.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    const newAssessments = [];
+    for (let assessmentData of assessments) {
+      const {
+        assessmentType,
+        markType,
+        frequency,
+        granularity,
+        teamSetName,
+        formLink,
+      } = assessmentData;
+
+      const existingAssessment = await AssessmentModel.findOne({
+        course: courseId,
+        assessmentType: assessmentType,
+      });
+
+      if (existingAssessment) {
+        continue;
       }
 
-      const newAssessments = [];
-      for (let assessmentData of assessments) {
-          const {
-              assessmentType,
-              markType,
-              frequency,
-              granularity,
-              teamSetName,
-              formLink
-          } = assessmentData;
-
-          const existingAssessment = await AssessmentModel.findOne({
-              course: courseId,
-              assessmentType: assessmentType,
-          });
-
-          if (existingAssessment) {
-              continue;
-          }
-
-          let teamSetID = null;
-          if (granularity === 'team' && teamSetName) {
-              const teamSet = await TeamSetModel.findOne({
-                  course: courseId,
-                  name: teamSetName,
-              });
-              if (!teamSet) {
-                  continue;
-              }
-              teamSetID = teamSet._id;
-          }
-
-          const assessment = new AssessmentModel({
-              course: courseId,
-              assessmentType,
-              markType,
-              result: [],
-              frequency,
-              granularity,
-              teamSet: teamSetID,
-              formLink,
-          });
-
-          course.assessments.push(assessment._id);
-          newAssessments.push(assessment);
+      let teamSetID = null;
+      if (granularity === 'team' && teamSetName) {
+        const teamSet = await TeamSetModel.findOne({
+          course: courseId,
+          name: teamSetName,
+        });
+        if (!teamSet) {
+          continue;
+        }
+        teamSetID = teamSet._id;
       }
 
-      if (newAssessments.length === 0) {
-          return res.status(400).json({ message: 'Failed to add any assessments' });
-      }
+      const assessment = new AssessmentModel({
+        course: courseId,
+        assessmentType,
+        markType,
+        result: [],
+        frequency,
+        granularity,
+        teamSet: teamSetID,
+        formLink,
+      });
 
-      await Promise.all([
-          course.save(),
-          ...newAssessments.map(assessment => assessment.save())
-      ]);
+      course.assessments.push(assessment._id);
+      newAssessments.push(assessment);
+    }
 
-      return res.status(201).json({ message: 'Assessments added successfully', newAssessments });
+    if (newAssessments.length === 0) {
+      return res.status(400).json({ message: 'Failed to add any assessments' });
+    }
 
+    await Promise.all([
+      course.save(),
+      ...newAssessments.map(assessment => assessment.save()),
+    ]);
+
+    return res
+      .status(201)
+      .json({ message: 'Assessments added successfully', newAssessments });
   } catch (error) {
-      res.status(400).json({ error: 'Failed to add assessments' });
+    res.status(400).json({ error: 'Failed to add assessments' });
   }
 };
