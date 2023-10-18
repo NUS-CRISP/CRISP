@@ -30,7 +30,7 @@ describe('UserModel', () => {
       email: 'a@a.com',
       enrolledCourses: [],
       gitHandle: 'johndoe-git',
-      role: 'Student'
+      role: 'Student',
     };
 
     const user = new UserModel(userData);
@@ -47,7 +47,7 @@ describe('UserModel', () => {
       name: 'John Doe',
       enrolledCourses: [],
       gitHandle: 'johndoe-git',
-      role: 'Student'
+      role: 'Student',
     };
 
     const user = new UserModel(userData);
