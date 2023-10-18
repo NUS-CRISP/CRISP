@@ -23,7 +23,6 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
       name: '',
       id: '',
       email: '',
-      gitHandle: '',
     },
     validate: {
       //email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
@@ -44,8 +43,6 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
               id: TA.id || '',
               name: TA.name || '',
               email: TA.email || '',
-              gitHandle: TA.gitHandle || '',
-              role: 'ta',
             }));
             setTAs(TAs as User[]);
           },
@@ -108,8 +105,6 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
               id: form.values.id,
               name: form.values.name,
               email: form.values.email,
-              gitHandle: form.values.gitHandle,
-              role: 'ta',
             },
           ],
         }),
@@ -149,14 +144,6 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
           value={form.values.email}
           onChange={event => {
             form.setFieldValue('email', event.currentTarget.value);
-          }}
-        />
-        <TextInput
-          label="Git Handle"
-          {...form.getInputProps('gitHandle')}
-          value={form.values.gitHandle}
-          onChange={event => {
-            form.setFieldValue('gitHandle', event.currentTarget.value);
           }}
         />
         <Button type="submit" style={{ marginTop: '16px' }}>
