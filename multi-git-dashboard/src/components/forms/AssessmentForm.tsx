@@ -1,4 +1,5 @@
-import { Box, TextInput, Button, Text, Radio } from '@mantine/core';
+import { TeamSet } from '@/types/course';
+import { Box, TextInput, Button, Text, Radio, Select } from '@mantine/core';
 import { useForm } from '@mantine/form';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
@@ -6,11 +7,13 @@ const backendPort = process.env.BACKEND_PORT || 3001;
 interface AssessmentFormProps {
   courseId: string | string[] | undefined;
   onAssessmentCreated: () => void;
+  teamSets: TeamSet[];
 }
 
 const AssessmentForm: React.FC<AssessmentFormProps> = ({
   courseId,
   onAssessmentCreated,
+  teamSets,
 }) => {
   const form = useForm({
     initialValues: {
@@ -89,12 +92,20 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
           </div>
         </div>
         {form.values.granularity === 'team' && (
-          <TextInput
+          <Select
             label="Team Set Name"
+            data={teamSets.map((teamSet: TeamSet) => ({
+              value: teamSet.name,
+              label: teamSet.name,
+            }))}
             {...form.getInputProps('teamSetName')}
-            value={form.values.teamSetName}
-            onChange={event => {
-              form.setFieldValue('teamSetName', event.currentTarget.value);
+            value={teamSets.length > 0 ? form.values.teamSetName : null}
+            onChange={value => {
+              if (teamSets.length === 0 || value === null) {
+                form.setFieldValue('teamSetName', '');
+              } else {
+                form.setFieldValue('teamSetName', value);
+              }
             }}
           />
         )}
