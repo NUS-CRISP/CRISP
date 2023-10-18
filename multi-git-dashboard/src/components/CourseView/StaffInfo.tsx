@@ -32,7 +32,7 @@ const StaffInfo: React.FC<StaffInfoProps> = ({ course, onUpdate }) => {
             <tr key={TA._id}>
               <td>{TA.name}</td>
               <td>{TA.email}</td>
-              <td>{TA.id}</td>
+              <td>{TA.identifier}</td>
               <td>{TA.gitHandle}</td>
             </tr>
           ))}
