@@ -169,7 +169,6 @@ export const addStudentToTeams = async (req: Request, res: Response) => {
       const studentId = studentData.id;
 
       const student = await UserModel.findOne({ identifier: studentId });
-      console.log(1);
       if (
         !student ||
         student.role !== 'Student' ||
@@ -185,16 +184,13 @@ export const addStudentToTeams = async (req: Request, res: Response) => {
         course: course._id,
         name: studentData.teamSet,
       });
-      console.log(2);
       if (!teamSet) {
         return res.status(404).json({ message: 'TeamSet not found' });
       }
-      console.log(3);
       let team = await TeamModel.findOne({
         number: studentData.teamNumber,
         teamSet: teamSet._id,
       });
-      console.log(4);
       if (!team) {
         team = new TeamModel({
           number: studentData.teamNumber,
@@ -203,13 +199,11 @@ export const addStudentToTeams = async (req: Request, res: Response) => {
         });
         teamSet.teams.push(team._id);
       }
-      console.log(5);
       if (!team.members.includes(student._id)) {
         team.members.push(student._id);
       }
       await team.save();
       await teamSet.save();
-      console.log(6);
     }
 
     await course.save();
