@@ -21,7 +21,7 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
   const form = useForm({
     initialValues: {
       name: '',
-      id: '',
+      identifier: '',
       email: '',
     },
     validate: {
@@ -40,11 +40,11 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
           complete: function (results: Results) {
             const TAsData = results.data;
             const TAs = TAsData.map((TA: User) => ({
-              id: TA.id || '',
+              identifier: TA.identifier || '',
               name: TA.name || '',
               email: TA.email || '',
             }));
-            setTAs(TAs as User[]);
+            setTAs(TAs as unknown as User[]);
           },
           error: function (error: Error) {
             console.error('CSV parsing error:', error.message);
@@ -102,7 +102,7 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
         body: JSON.stringify({
           items: [
             {
-              id: form.values.id,
+              identifier: form.values.identifier,
               name: form.values.name,
               email: form.values.email,
             },
@@ -131,10 +131,10 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
         <TextInput
           withAsterisk
           label="TA ID"
-          {...form.getInputProps('id')}
-          value={form.values.id}
+          {...form.getInputProps('identifier')}
+          value={form.values.identifier}
           onChange={event => {
-            form.setFieldValue('id', event.currentTarget.value);
+            form.setFieldValue('identifier', event.currentTarget.value);
           }}
         />
         <TextInput

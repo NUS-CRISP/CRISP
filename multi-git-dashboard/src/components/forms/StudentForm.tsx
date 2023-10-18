@@ -24,7 +24,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
   const form = useForm({
     initialValues: {
       name: '',
-      id: '',
+      identifier: '',
       email: '',
       gitHandle: '',
     },
@@ -44,13 +44,12 @@ const StudentForm: React.FC<StudentFormProps> = ({
           complete: function (results: Results) {
             const studentsData = results.data;
             const students = studentsData.map((student: User) => ({
-              id: student.id || '',
+              identifier: student.identifier || '',
               name: student.name || '',
               email: student.email || '',
               gitHandle: student.gitHandle || '',
-              role: 'student',
             }));
-            setStudents(students as User[]);
+            setStudents(students as unknown as User[]);
           },
           error: function (error: Error) {
             console.error('CSV parsing error:', error.message);
@@ -108,7 +107,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
         body: JSON.stringify({
           items: [
             {
-              id: form.values.id,
+              identifier: form.values.identifier,
               name: form.values.name,
               email: form.values.email,
               gitHandle: form.values.gitHandle,
@@ -139,10 +138,10 @@ const StudentForm: React.FC<StudentFormProps> = ({
         <TextInput
           withAsterisk
           label="Student ID"
-          {...form.getInputProps('id')}
-          value={form.values.id}
+          {...form.getInputProps('identifier')}
+          value={form.values.identifier}
           onChange={event => {
-            form.setFieldValue('id', event.currentTarget.value);
+            form.setFieldValue('identifier', event.currentTarget.value);
           }}
         />
         <TextInput

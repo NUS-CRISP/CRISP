@@ -119,7 +119,7 @@ export const addStudents = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Course not found' });
     }
     for (const studentData of students) {
-      const studentId = studentData.id;
+      const studentId = studentData.identifier;
 
       let student = await UserModel.findOne({ identifier: studentId });
       if (!student) {
@@ -166,7 +166,7 @@ export const addStudentToTeams = async (req: Request, res: Response) => {
     }
 
     for (const studentData of students) {
-      const studentId = studentData.id;
+      const studentId = studentData.identifier;
 
       const student = await UserModel.findOne({ identifier: studentId });
       if (
@@ -228,7 +228,7 @@ export const addTAs = async (req: Request, res: Response) => {
     }
 
     for (const TAData of TAs) {
-      const TAId = TAData.id;
+      const TAId = TAData.identifier;
       let TA = await UserModel.findOne({ identifier: TAId });
       if (!TA) {
         TA = new UserModel({

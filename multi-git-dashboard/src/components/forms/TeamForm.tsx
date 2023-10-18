@@ -14,14 +14,14 @@ interface TeamFormProps {
 }
 
 interface TeamFormUser {
-  id: string;
+  identifier: string;
   teamSet: string;
   teamNumber: number;
 }
 
 interface Results {
   data: {
-    id: string;
+    identifier: string;
     teamSet: string;
     teamNumber: number;
   }[];
@@ -34,7 +34,7 @@ const TeamForm: React.FC<TeamFormProps> = ({
 }) => {
   const form = useForm({
     initialValues: {
-      id: '',
+      identifier: '',
       teamNumber: 0,
     },
   });
@@ -51,7 +51,7 @@ const TeamForm: React.FC<TeamFormProps> = ({
           complete: function (results: Results) {
             const studentsData = results.data;
             const students = studentsData.map((student: TeamFormUser) => ({
-              id: student.id || '',
+              identifier: student.identifier || '',
               teamSet: teamSet,
               teamNumber: student.teamNumber,
             }));
@@ -113,7 +113,7 @@ const TeamForm: React.FC<TeamFormProps> = ({
         body: JSON.stringify({
           items: [
             {
-              id: form.values.id,
+              identifier: form.values.identifier,
               teamSet: teamSet,
               teamNumber: form.values.teamNumber,
             },
@@ -133,10 +133,10 @@ const TeamForm: React.FC<TeamFormProps> = ({
         <TextInput
           withAsterisk
           label="Student ID"
-          {...form.getInputProps('id')}
-          value={form.values.id}
+          {...form.getInputProps('identifier')}
+          value={form.values.identifier}
           onChange={event => {
-            form.setFieldValue('id', event.currentTarget.value);
+            form.setFieldValue('identifier', event.currentTarget.value);
           }}
         />
         <TextInput
