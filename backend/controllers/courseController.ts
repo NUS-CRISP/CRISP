@@ -283,6 +283,67 @@ export const addStudentToTeams = async (req: Request, res: Response) => {
   }
 };
 
+export const addTAToTeam = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  const tas = req.body.items;
+
+  try {
+    const course = await CourseModel.findById(courseId);
+
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    for (const taData of tas) {
+      const taId = taData.identifier;
+
+      const ta = await UserModel.findOne({ identifier: taId });
+      if (
+        !ta ||
+        ta.role !== 'Teaching assistant' ||
+        !ta.enrolledCourses.includes(course._id) ||
+        !taData.teamSet ||
+        !taData.teamNumber
+      ) {
+        return res.status(400).json({ message: 'Invalid TA' });
+      }
+
+      let teamSet = await TeamSetModel.findOne({
+        course: course._id,
+        name: taData.teamSet,
+      });
+      if (!teamSet) {
+        return res.status(404).json({ message: 'TeamSet not found' });
+      }
+      let team = await TeamModel.findOne({
+        number: taData.teamNumber,
+        teamSet: teamSet._id,
+      });
+      if (!team) {
+        team = new TeamModel({
+          number: taData.teamNumber,
+          teamSet: teamSet._id,
+          members: [],
+          TA: null,
+        });
+        teamSet.teams.push(team._id);
+      }
+      team.TA = ta._id;
+
+      await team.save();
+      await teamSet.save();
+    }
+
+    await course.save();
+
+    return res
+      .status(200)
+      .json({ message: 'TAs added to teams successfully' });
+  } catch (error) {
+    res.status(400).json({ error: 'Failed to add TAs to teams' });
+  }
+};
+
 /*----------------------------------------Milestone----------------------------------------*/
 export const addMilestone = async (req: Request, res: Response) => {
   const courseId = req.params.id;
