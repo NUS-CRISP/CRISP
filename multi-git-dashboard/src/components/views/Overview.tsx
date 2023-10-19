@@ -1,4 +1,4 @@
-import GithubTeamCard from '../CourseView/Cards/GithubTeamCard';
+import GithubTeamCard from '../cards/GithubTeamCard';
 import { Container, Flex, ScrollArea, Text } from '@mantine/core';
 import { Milestone, Sprint } from '@/types/course';
 import { ITeamData } from '@backend/models/TeamData';

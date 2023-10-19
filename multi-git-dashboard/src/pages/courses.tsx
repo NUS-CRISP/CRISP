@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import CourseCard from '@/components/CourseView/Cards/CourseCard';
+import CourseCard from '@/components/cards/CourseCard';
 import { Course } from '@/types/course';
 import Link from 'next/link';
 import { Button } from '@mantine/core';

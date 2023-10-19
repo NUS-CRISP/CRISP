@@ -85,7 +85,7 @@ const TeamForm: React.FC<TeamFormProps> = ({
 
     try {
       const response = await fetch(
-        `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/teams`,
+        `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/teams/students`,
         {
           method: 'POST',
           headers: {
@@ -116,7 +116,7 @@ const TeamForm: React.FC<TeamFormProps> = ({
 
     try {
       const response = await fetch(
-        `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/teams`,
+        `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/teams/students`,
         {
           method: 'POST',
           headers: {
