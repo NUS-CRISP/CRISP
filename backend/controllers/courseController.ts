@@ -221,7 +221,7 @@ export const addTeamSet = async (req: Request, res: Response) => {
 };
 
 /*----------------------------------------Team----------------------------------------*/
-export const addStudentToTeams = async (req: Request, res: Response) => {
+export const addStudentsToTeams = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   const students = req.body.items;
 
@@ -283,7 +283,7 @@ export const addStudentToTeams = async (req: Request, res: Response) => {
   }
 };
 
-export const addTAToTeam = async (req: Request, res: Response) => {
+export const addTAsToTeams = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   const tas = req.body.items;
 
