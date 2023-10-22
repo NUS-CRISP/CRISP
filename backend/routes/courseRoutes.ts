@@ -29,7 +29,6 @@ router.post('/:id/teams/students', addStudentsToTeams);
 router.post('/:id/teams/tas', addTAsToTeams);
 router.post('/:id/milestones', addMilestone);
 router.post('/:id/sprints', addSprint);
-
 router.post('/:id/assessments', addAssessments);
 
 export default router;
