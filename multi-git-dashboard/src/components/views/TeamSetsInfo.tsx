@@ -87,11 +87,8 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
         {panels}
       </Tabs>
 
-      <Group
-        position="apart"
-        style={{ marginBottom: '16px', marginTop: '16px' }}
-      >
-        <Group spacing="xs">
+      <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
+        <Group>
           <Button onClick={() => setIsCreatingTeamSet(!isCreatingTeamSet)}>
             {isCreatingTeamSet ? 'Cancel' : 'Create TeamSet'}
           </Button>
