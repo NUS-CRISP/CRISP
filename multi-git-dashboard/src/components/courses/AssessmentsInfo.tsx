@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import AssessmentCard from './cards/AssessmentCard';
 import AssessmentForm from '../forms/AssessmentForm';
 import { Button, Container } from '@mantine/core';
-import { Course } from '@backend/models/Course';
+import { Course } from '@shared/types/Course';
 
 interface AssessmentInfoProps {
   course: Course;

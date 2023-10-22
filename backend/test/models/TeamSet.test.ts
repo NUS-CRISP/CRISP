@@ -1,6 +1,6 @@
 import mongoose, { ConnectOptions, Types } from 'mongoose';
 import TeamSetModel from '../../models/TeamSet';
-import { TeamSet } from '../../../shared/types/TeamSet';
+import { TeamSet } from '@shared/types/TeamSet';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
 let mongoServer: MongoMemoryServer;
@@ -23,6 +23,7 @@ describe('TeamSetModel', () => {
   it('should create and save a new team set', async () => {
     const teamSetData: TeamSet = {
       course: {
+        _id: new Types.ObjectId().toString(),
         name: 'Test Course',
         code: 'COURSE101',
         semester: 'Spring 2023',

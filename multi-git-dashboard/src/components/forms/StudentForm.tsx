@@ -4,7 +4,7 @@ import { IconUpload, IconPhoto, IconX } from '@tabler/icons-react';
 import { useForm } from '@mantine/form';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
 import Papa, { ParseResult } from 'papaparse';
-import { User } from '@backend/models/User';
+import { User } from '@shared/types/User';
 
 interface StudentFormProps {
   courseId: string | string[] | undefined;

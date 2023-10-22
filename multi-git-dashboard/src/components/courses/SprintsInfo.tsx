@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import SprintCard from './cards/SprintCard';
 import SprintForm from '../forms/SprintForm';
 import { Button, Container } from '@mantine/core';
-import { Course } from '@backend/models/Course';
+import { Course } from '@shared/types/Course';
 
 interface SprintsInfoProps {
   course: Course;

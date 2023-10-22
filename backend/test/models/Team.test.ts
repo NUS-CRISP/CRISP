@@ -22,9 +22,11 @@ afterAll(async () => {
 describe('TeamModel', () => {
   it('should create and save a new team', async () => {
     const teamData: Team = {
+      _id: new Types.ObjectId().toString(),
       teamSet: {
         name: 'Test Team Set',
         course: {
+          _id: new Types.ObjectId().toString(),
           name: 'Test Course',
           code: 'COURSE101',
           semester: 'Spring 2023',
@@ -41,6 +43,7 @@ describe('TeamModel', () => {
       },
       number: 1,
       TA: {
+        _id: new Types.ObjectId().toString(),
         orgId: 'testTA',
         name: 'Test TA',
         enrolledCourses: [],

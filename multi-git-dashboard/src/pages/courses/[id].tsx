@@ -1,6 +1,5 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState, useCallback } from 'react';
-import { Course, Milestone, Sprint } from '@/types/course';
 import { Container, Loader, Tabs } from '@mantine/core';
 import Overview from '@/components/courses/Overview';
 import StudentsInfo from '@/components/courses/StudentsInfo';
@@ -9,11 +8,8 @@ import TeamSetsInfo from '@/components/courses/TeamSetsInfo';
 import MilestonesInfo from '@/components/courses/MilestonesInfo';
 import SprintsInfo from '@/components/courses/SprintsInfo';
 import AssessmentsInfo from '@/components/courses/AssessmentsInfo';
-import { TeamData } from '@backend/models/TeamData';
-
-const backendPort = process.env.BACKEND_PORT || 3001;
-const apiUrl = `http://localhost:${backendPort}/api/courses/`;
-const teamDataUrl = `http://localhost:${backendPort}/api/github/`;
+import { Course, Milestone, Sprint } from '@shared/types/Course';
+import { TeamData } from '@shared/types/TeamData';
 
 const CourseViewPage: React.FC = () => {
   const router = useRouter();
@@ -23,9 +19,11 @@ const CourseViewPage: React.FC = () => {
 
   const fetchCourse = useCallback(async () => {
     try {
-      const response = await fetch(`${apiUrl}${id}`);
+      const response = await fetch(
+        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${id}`
+      );
       if (response.ok) {
-        const data = await response.json();
+        const data: Course = await response.json();
         if (data.milestones) {
           data.milestones = data.milestones.map((milestone: Milestone) => ({
             ...milestone,
@@ -50,7 +48,9 @@ const CourseViewPage: React.FC = () => {
 
   const fetchTeamData = useCallback(async () => {
     try {
-      const response = await fetch(teamDataUrl);
+      const response = await fetch(
+        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/github`
+      );
       if (response.ok) {
         const data = await response.json();
         const teamsData: TeamData[] = data.teamData;
@@ -72,9 +72,12 @@ const CourseViewPage: React.FC = () => {
 
   const deleteCourse = async () => {
     try {
-      const response = await fetch(`${apiUrl}${id}`, {
-        method: 'DELETE',
-      });
+      const response = await fetch(
+        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${id}`,
+        {
+          method: 'DELETE',
+        }
+      );
       if (response.ok) {
         router.push('/courses');
       } else {

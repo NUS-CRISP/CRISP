@@ -1,7 +1,8 @@
 import mongoose, { Schema, Types } from 'mongoose';
 import { User as SharedUser } from '@shared/types/User';
 
-export interface User extends Omit<SharedUser, 'enrolledCourses'> {
+export interface User extends Omit<SharedUser, '_id' | 'enrolledCourses'> {
+  _id: Types.ObjectId;
   enrolledCourses: Types.ObjectId[];
 }
 

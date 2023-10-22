@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Course } from '@backend/models/Course';
-import { TeamSet } from '@backend/models/TeamSet';
+import { useState } from 'react';
+import { Course } from '@shared/types/Course';
+import { TeamSet } from '@shared/types/TeamSet';
 import TeamCard from './cards/TeamCard';
 import { Container, Tabs, Button } from '@mantine/core';
 import TeamSetForm from '../forms/TeamSetForm';

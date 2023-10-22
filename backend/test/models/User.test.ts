@@ -1,6 +1,6 @@
-import mongoose, { ConnectOptions } from 'mongoose';
+import mongoose, { ConnectOptions, Types } from 'mongoose';
 import UserModel from '../../models/User';
-import { User } from '../../../shared/types/User';
+import { User } from '@shared/types/User';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
 let mongoServer: MongoMemoryServer;
@@ -26,6 +26,7 @@ afterAll(async () => {
 describe('UserModel', () => {
   it('should create and save a new user', async () => {
     const userData: User = {
+      _id: new Types.ObjectId().toString(),
       name: 'John Doe',
       enrolledCourses: [],
       gitHandle: 'johndoe-git',

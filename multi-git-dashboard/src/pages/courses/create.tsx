@@ -2,9 +2,6 @@ import React from 'react';
 import { Box, TextInput, Button } from '@mantine/core';
 import { useForm } from '@mantine/form';
 
-const backendPort = process.env.BACKEND_PORT || 3001;
-const apiUrl = `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses`;
-
 interface CourseFormProps {
   onCourseCreated: () => void;
 }
@@ -19,15 +16,16 @@ const CreateCoursePage: React.FC<CourseFormProps> = ({ onCourseCreated }) => {
   });
 
   const handleSubmit = async () => {
-    console.log('Sending course data:', form.values, 'to:', apiUrl);
-
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(form.values),
-    });
+    const response = await fetch(
+      `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form.values),
+      }
+    );
 
     const data = await response.json();
     console.log('Course created:', data);

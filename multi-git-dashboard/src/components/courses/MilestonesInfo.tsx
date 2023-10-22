@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import MilestoneCard from './cards/MilestoneCard';
 import MilestoneForm from '../forms/MilestoneForm';
 import { Button, Container } from '@mantine/core';
-import { Course } from '@backend/models/Course';
+import { Course } from '@shared/types/Course';
 
 interface MilestonesInfoProps {
   course: Course;

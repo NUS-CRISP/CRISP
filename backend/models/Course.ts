@@ -4,8 +4,9 @@ import { Course as SharedCourse } from '@shared/types/Course';
 export interface Course
   extends Omit<
     SharedCourse,
-    'faculty' | 'TAs' | 'students' | 'teamSets' | 'assessments'
+    '_id' | 'faculty' | 'TAs' | 'students' | 'teamSets' | 'assessments'
   > {
+  _id: Types.ObjectId;
   faculty: Types.ObjectId[];
   TAs: Types.ObjectId[];
   students: Types.ObjectId[];

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Table, Button, Container } from '@mantine/core';
 import StudentForm from '../forms/StudentForm';
-import { Course } from '@/types/course';
+import { Course } from '@shared/types/Course';
 
 interface StudentsInfoProps {
   course: Course;
@@ -31,8 +31,7 @@ const StudentsInfo: React.FC<StudentsInfoProps> = ({ course, onUpdate }) => {
           {course.students.map(student => (
             <tr key={student._id}>
               <td>{student.name}</td>
-              <td>{student.email}</td>
-              <td>{student.id}</td>
+              <td>{student.orgId}</td>
               <td>{student.gitHandle}</td>
             </tr>
           ))}

@@ -5,7 +5,6 @@ import Team from '../models/Team';
 import TeamSet from '../models/TeamSet';
 import Assessment from '../models/Assessment';
 import Account from '../models/Account';
-import { Document } from 'mongoose';
 
 // Create a new course
 export const createCourse = async (req: Request, res: Response) => {
@@ -18,7 +17,10 @@ export const createCourse = async (req: Request, res: Response) => {
 };
 
 // Get all courses
-export const getAllCourses = async (_req: Request, res: Response) => {
+export const getAllCourses = async (
+  _req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const courses = await Course.find();
     res.json(courses);

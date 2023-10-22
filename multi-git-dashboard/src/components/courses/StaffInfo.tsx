@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Table, Button, Container } from '@mantine/core';
 import TAForm from '../forms/TAForm';
-import { Course } from '@/types/course';
+import { Course } from '@shared/types/Course';
 
 interface StaffInfoProps {
-  course : Course;
+  course: Course;
   onUpdate: () => void;
 }
 
@@ -28,25 +28,24 @@ const StaffInfo: React.FC<StaffInfoProps> = ({ course, onUpdate }) => {
           </tr>
         </thead>
         <tbody>
-          {course.TAs.map((TA) => (
+          {course.TAs.map(TA => (
             <tr key={TA._id}>
               <td>{TA.name}</td>
-              <td>{TA.email}</td>
-              <td>{TA.id}</td>
+              <td>{TA.orgId}</td>
               <td>{TA.gitHandle}</td>
             </tr>
           ))}
         </tbody>
       </Table>
-      <Button onClick={() => setIsCreatingTA(!isCreatingTA)} style={{ marginTop: '16px' }}>
+      <Button
+        onClick={() => setIsCreatingTA(!isCreatingTA)}
+        style={{ marginTop: '16px' }}
+      >
         {isCreatingTA ? 'Cancel' : 'Add TA'}
       </Button>
-      {isCreatingTA && 
-        <TAForm 
-          courseId={course._id} 
-          onTACreated={handleTACreated}
-        />
-      }
+      {isCreatingTA && (
+        <TAForm courseId={course._id} onTACreated={handleTACreated} />
+      )}
     </Container>
   );
 };

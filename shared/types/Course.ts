@@ -19,6 +19,7 @@ export const isSprint = (obj: Sprint | Milestone): obj is Sprint =>
   (obj as Sprint).startDate !== undefined;
 
 export interface Course {
+  _id: string;
   name: string;
   code: string;
   semester: string;

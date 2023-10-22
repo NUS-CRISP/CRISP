@@ -1,6 +1,6 @@
-import mongoose, { ConnectOptions } from 'mongoose';
+import mongoose, { ConnectOptions, Types } from 'mongoose';
 import CourseModel from '../../models/Course';
-import { Course } from '../../../shared/types/Course';
+import { Course } from '@shared/types/Course';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
 let mongoServer: MongoMemoryServer;
@@ -26,6 +26,7 @@ afterAll(async () => {
 describe('CourseModel', () => {
   it('should create and save a new course', async () => {
     const courseData: Course = {
+      _id: new Types.ObjectId().toString(),
       name: 'Test Course',
       code: 'COURSE101',
       semester: 'Spring 2023',

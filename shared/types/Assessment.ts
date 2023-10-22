@@ -3,6 +3,7 @@ import { Result } from './Result';
 import { TeamSet } from './TeamSet';
 
 export interface Assessment {
+  _id: string;
   course: Course;
   assessmentType: string;
   markType: string;
