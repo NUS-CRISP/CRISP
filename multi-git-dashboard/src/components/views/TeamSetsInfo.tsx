@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Course, TeamSet } from '@/types/course';
 import TeamCard from '../cards/TeamCard';
-import { Container, Tabs, Button } from '@mantine/core';
+import { Container, Tabs, Button, Group } from '@mantine/core';
 import TeamSetForm from '../forms/TeamSetForm';
 import TeamForm from '../forms/TeamForm';
 
@@ -86,25 +86,29 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
         </Tabs.List>
         {panels}
       </Tabs>
-      <Button
-        onClick={() => setIsCreatingTeamSet(!isCreatingTeamSet)}
-        style={{ marginBottom: '16px' }}
+
+      <Group
+        position="apart"
+        style={{ marginBottom: '16px', marginTop: '16px' }}
       >
-        {isCreatingTeamSet ? 'Cancel' : 'Create TeamSet'}
-      </Button>
-      {activeTab && (
-        <Button
-          onClick={() => setIsCreatingTeam(!isCreatingTeam)}
-          style={{ marginBottom: '16px' }}
-        >
-          {isCreatingTeam ? 'Cancel' : 'Create Teams'}
-        </Button>
-      )}
-      {teamSetId && (
-        <Button onClick={handleDeleteTeamSet} style={{ marginBottom: '16px' }}>
-          Delete TeamSet
-        </Button>
-      )}
+        <Group spacing="xs">
+          <Button onClick={() => setIsCreatingTeamSet(!isCreatingTeamSet)}>
+            {isCreatingTeamSet ? 'Cancel' : 'Create TeamSet'}
+          </Button>
+          {activeTab && (
+            <Button onClick={() => setIsCreatingTeam(!isCreatingTeam)}>
+              {isCreatingTeam ? 'Cancel' : 'Create Teams'}
+            </Button>
+          )}
+        </Group>
+
+        {teamSetId && (
+          <Button color="red" onClick={handleDeleteTeamSet}>
+            Delete TeamSet
+          </Button>
+        )}
+      </Group>
+
       {isCreatingTeamSet && (
         <TeamSetForm
           courseId={course._id}
