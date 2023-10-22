@@ -5,5 +5,5 @@ export interface User {
   email: string;
   enrolledCourses: string[];
   gitHandle: string;
-  role: 'student' | 'assistant' | 'lecturer';
+  role: 'student' | 'ta' | 'lecturer';
 }

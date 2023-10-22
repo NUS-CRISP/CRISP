@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import MilestoneCard from './Cards/MilestoneCard';
+import MilestoneCard from '../CourseView/Cards/MilestoneCard';
 import { Course } from '../../types/course';
 import MilestoneForm from '../forms/MilestoneForm';
 import { Button, Container } from '@mantine/core';
@@ -9,10 +9,13 @@ interface MilestonesInfoProps {
   onUpdate: () => void;
 }
 
-const MilestonesInfo: React.FC<MilestonesInfoProps> = ({ course, onUpdate }) => {
+const MilestonesInfo: React.FC<MilestonesInfoProps> = ({
+  course,
+  onUpdate,
+}) => {
   const [isCreatingMilestone, setIsCreatingMilestone] = useState(false);
 
-  const milestoneCards = course.milestones.map((milestone) => (
+  const milestoneCards = course.milestones.map(milestone => (
     <MilestoneCard
       key={milestone.milestoneNumber}
       milestoneNumber={milestone.milestoneNumber}
@@ -29,15 +32,18 @@ const MilestonesInfo: React.FC<MilestonesInfoProps> = ({ course, onUpdate }) => 
   return (
     <Container>
       {milestoneCards}
-      <Button onClick={() => setIsCreatingMilestone(!isCreatingMilestone)} style={{ marginTop: '16px' }}>
+      <Button
+        onClick={() => setIsCreatingMilestone(!isCreatingMilestone)}
+        style={{ marginTop: '16px' }}
+      >
         {isCreatingMilestone ? 'Cancel' : 'Create Milestone'}
       </Button>
-      {isCreatingMilestone &&
+      {isCreatingMilestone && (
         <MilestoneForm
           courseId={course._id}
           onMilestoneCreated={handleMilestoneCreated}
         />
-      }
+      )}
     </Container>
   );
 };

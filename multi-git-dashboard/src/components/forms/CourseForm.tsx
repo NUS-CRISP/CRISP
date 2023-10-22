@@ -3,7 +3,7 @@ import { Box, TextInput, Button } from '@mantine/core';
 import { useForm } from '@mantine/form';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
-const apiUrl = `http://localhost:${backendPort}/api/courses`;
+const apiUrl = `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses`;
 
 interface CourseFormProps {
   onCourseCreated: () => void;
@@ -21,7 +21,7 @@ const CourseForm: React.FC<CourseFormProps> = ({ onCourseCreated }) => {
 
   const handleSubmit = async () => {
 
-    console.log('Sending course data:', form.values);
+    console.log('Sending course data:', form.values, 'to:', apiUrl);
 
     const response = await fetch(apiUrl, {
       method: 'POST',

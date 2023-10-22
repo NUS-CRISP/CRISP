@@ -1,12 +1,11 @@
 import mongoose, { Schema } from 'mongoose';
-import { Assessment } from './Assessment';
 
 export interface Course {
   name: string;
   code: string;
   semester: string;
-  lecturers: mongoose.Types.ObjectId[];
-  assistants: mongoose.Types.ObjectId[];
+  faculty: mongoose.Types.ObjectId[];
+  TAs: mongoose.Types.ObjectId[];
   students: mongoose.Types.ObjectId[];
   teamSets: mongoose.Types.ObjectId[];
   assessments: mongoose.Types.ObjectId[];
@@ -18,8 +17,8 @@ export const courseSchema = new Schema<Course>({
   name: { type: String, required: true },
   code: { type: String, required: true },
   semester: { type: String, required: true },
-  lecturers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-  assistants: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  faculty: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  TAs: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   students: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   teamSets: [{ type: Schema.Types.ObjectId, ref: 'TeamSet' }],
   assessments: [{ type: Schema.Types.ObjectId, ref: 'Assessment' }],

@@ -1,5 +1,3 @@
-// AssessmentForm.tsx
-import React from 'react';
 import { Box, TextInput, Button, Text, Radio } from '@mantine/core';
 import { useForm } from '@mantine/form';
 
@@ -18,12 +16,12 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
     initialValues: {
       assessmentType: '',
       markType: '',
-      marks: [],
       frequency: '',
       granularity: 'individual',
+      teamSetName: '',
+      formLink: '',
     },
-    validate: {
-    },
+    validate: {},
   });
 
   const handleSubmit = async () => {
@@ -53,7 +51,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
           label="Assessment Type"
           {...form.getInputProps('assessmentType')}
           value={form.values.assessmentType}
-          onChange={(event) => {
+          onChange={event => {
             form.setFieldValue('assessmentType', event.currentTarget.value);
           }}
         />
@@ -62,7 +60,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
           label="Mark Type"
           {...form.getInputProps('markType')}
           value={form.values.markType}
-          onChange={(event) => {
+          onChange={event => {
             form.setFieldValue('markType', event.currentTarget.value);
           }}
         />
@@ -70,24 +68,42 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
           label="Frequency"
           {...form.getInputProps('frequency')}
           value={form.values.frequency}
-          onChange={(event) => {
+          onChange={event => {
             form.setFieldValue('frequency', event.currentTarget.value);
           }}
         />
         <div style={{ marginBottom: '16px' }}>
           <div style={{ marginBottom: '16px' }}>
-          <Text>Granularity:</Text>
-          <Radio.Group
-            value={form.values.granularity}
-            onChange={(value) => {
-              form.setFieldValue('granularity', value);
+            <Text>Granularity:</Text>
+            <Radio.Group
+              value={form.values.granularity}
+              onChange={value => {
+                form.setFieldValue('granularity', value);
+              }}
+            >
+              <Radio label="Individual" value="individual" />
+              <Radio label="Team" value="team" />
+            </Radio.Group>
+          </div>
+        </div>
+        {form.values.granularity === 'team' && (
+          <TextInput
+            label="Team Set Name"
+            {...form.getInputProps('teamSetName')}
+            value={form.values.teamSetName}
+            onChange={event => {
+              form.setFieldValue('teamSetName', event.currentTarget.value);
             }}
-          >
-            <Radio label="Individual" value="individual" />
-            <Radio label="Team" value="team" />
-          </Radio.Group>
-        </div>
-        </div>
+          />
+        )}
+        <TextInput
+          label="Form Link"
+          {...form.getInputProps('formLink')}
+          value={form.values.formLink}
+          onChange={event => {
+            form.setFieldValue('formLink', event.currentTarget.value);
+          }}
+        />
         <Button type="submit" style={{ marginTop: '16px' }}>
           Create Assessment
         </Button>

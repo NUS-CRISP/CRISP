@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import SprintCard from './cards/SprintCard';
+import SprintCard from '../CourseView/Cards/SprintCard';
 import { Course } from '../../types/course';
 import SprintForm from '../forms/SprintForm';
 import { Button, Container } from '@mantine/core';
@@ -12,7 +12,7 @@ interface SprintsInfoProps {
 const SprintsInfo: React.FC<SprintsInfoProps> = ({ course, onUpdate }) => {
   const [isCreatingSprint, setIsCreatingSprint] = useState(false);
 
-  const sprintCards = course.sprints.map((sprint) => (
+  const sprintCards = course.sprints.map(sprint => (
     <SprintCard
       key={sprint.sprintNumber}
       sprintNumber={sprint.sprintNumber}
@@ -30,15 +30,18 @@ const SprintsInfo: React.FC<SprintsInfoProps> = ({ course, onUpdate }) => {
   return (
     <Container>
       {sprintCards}
-      <Button onClick={() => setIsCreatingSprint(!isCreatingSprint)} style={{ marginTop: '16px' }}>
+      <Button
+        onClick={() => setIsCreatingSprint(!isCreatingSprint)}
+        style={{ marginTop: '16px' }}
+      >
         {isCreatingSprint ? 'Cancel' : 'Create Sprint'}
       </Button>
-      {isCreatingSprint &&
+      {isCreatingSprint && (
         <SprintForm
-          courseId={course._id} 
+          courseId={course._id}
           onSprintCreated={handleSprintCreated}
         />
-      }
+      )}
     </Container>
   );
 };

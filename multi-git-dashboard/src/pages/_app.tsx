@@ -1,8 +1,10 @@
-import { AppProps } from "next/app";
-import Head from "next/head";
-import { MantineProvider } from "@mantine/core";
-import RootLayout from "@/components/RootLayout";
-import { SessionProvider } from "next-auth/react";
+import '@mantine/core/styles.css';
+
+import type { AppProps } from 'next/app';
+import Head from 'next/head';
+import { MantineProvider } from '@mantine/core';
+import RootLayout from '@/components/RootLayout';
+import { SessionProvider } from 'next-auth/react';
 
 export default function App(props: AppProps) {
   const {
@@ -20,19 +22,12 @@ export default function App(props: AppProps) {
         />
       </Head>
 
-      <MantineProvider
-        withGlobalStyles
-        withNormalizeCSS
-        theme={{
-          /** Put your mantine theme override here */
-          colorScheme: "light",
-        }}
-      >
-        <RootLayout>
-          <SessionProvider session={session}>
+      <MantineProvider>
+        <SessionProvider session={session}>
+          <RootLayout>
             <Component {...pageProps} />
-          </SessionProvider>
-        </RootLayout>
+          </RootLayout>
+        </SessionProvider>
       </MantineProvider>
     </>
   );
