@@ -1,6 +1,17 @@
-import React from 'react';
-import { Box, TextInput, Button } from '@mantine/core';
+import { useState } from 'react';
+import {
+  Box,
+  TextInput,
+  Button,
+  SegmentedControl,
+  Collapse,
+  Space,
+  List,
+  Title,
+} from '@mantine/core';
 import { useForm } from '@mantine/form';
+import { CourseType } from '@shared/types/Course';
+import { IconBrandGithub } from '@tabler/icons-react';
 
 interface CourseFormProps {
   onCourseCreated: () => void;
@@ -14,6 +25,8 @@ const CreateCoursePage: React.FC<CourseFormProps> = ({ onCourseCreated }) => {
       semester: '',
     },
   });
+
+  const [courseType, setCourseType] = useState<CourseType>(CourseType.Normal);
 
   const handleSubmit = async () => {
     const response = await fetch(
@@ -62,9 +75,43 @@ const CreateCoursePage: React.FC<CourseFormProps> = ({ onCourseCreated }) => {
             form.setFieldValue('semester', event.currentTarget.value);
           }}
         />
-        <Button type="submit" style={{ marginTop: '16px' }}>
-          Create Course
-        </Button>
+        <Space h="md" />
+        <Box>
+          <SegmentedControl
+            data={[
+              { label: 'Normal', value: CourseType.Normal },
+              { label: 'GitHub Organisation', value: CourseType.GitHubOrg },
+            ]}
+            value={courseType}
+            onChange={value => setCourseType(value as CourseType)}
+          />
+
+          <Collapse in={courseType === CourseType.GitHubOrg}>
+            <Box>
+              <Title order={4} my={15}>
+                GitHub Org Integration Setup:
+              </Title>
+              <List>
+                <List.Item>
+                  <Button
+                    leftSection={<IconBrandGithub size={14} />}
+                    variant="default"
+                    component="a"
+                    href="https://github.com/apps/NUS-CRISP/installations/new"
+                    target="_blank"
+                  >
+                    Install our GitHub App
+                  </Button>
+                </List.Item>
+                <List.Item>
+                  Ensure you have granted the necessary permissions.
+                </List.Item>
+              </List>
+            </Box>
+          </Collapse>
+        </Box>
+        <Space h="md" />
+        <Button type="submit">Create Course</Button>
       </form>
     </Box>
   );

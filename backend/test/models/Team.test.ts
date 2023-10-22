@@ -2,6 +2,7 @@ import mongoose, { ConnectOptions, Types } from 'mongoose';
 import TeamModel from '../../models/Team';
 import { Team } from '@shared/types/Team';
 import { MongoMemoryServer } from 'mongodb-memory-server';
+import { CourseType } from '@shared/types/Course';
 
 let mongoServer: MongoMemoryServer;
 
@@ -37,7 +38,7 @@ describe('TeamModel', () => {
           sprints: [],
           milestones: [],
           assessments: [],
-          courseType: 'Normal',
+          courseType: 'Normal' as CourseType,
         },
         teams: [],
       },

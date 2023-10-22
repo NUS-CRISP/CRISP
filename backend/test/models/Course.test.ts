@@ -1,6 +1,6 @@
 import mongoose, { ConnectOptions, Types } from 'mongoose';
 import CourseModel from '../../models/Course';
-import { Course } from '@shared/types/Course';
+import { Course, CourseType } from '@shared/types/Course';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
 let mongoServer: MongoMemoryServer;
@@ -37,7 +37,7 @@ describe('CourseModel', () => {
       sprints: [],
       milestones: [],
       assessments: [],
-      courseType: 'Normal',
+      courseType: 'Normal' as CourseType,
     };
 
     const course = new CourseModel(courseData);

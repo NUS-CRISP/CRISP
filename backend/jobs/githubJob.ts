@@ -1,32 +1,67 @@
 import cron from 'node-cron';
 import { createAppAuth } from '@octokit/auth-app';
-import { Octokit } from 'octokit';
+import { App, Octokit } from 'octokit';
 import { TeamContribution } from '@shared/types/TeamData';
 import TeamData from '../models/TeamData';
 
-const ORG_NAME = 'NUS-CRISP';
-
-const fetchAndSaveTeamData = async () => {
+const getOctokit = async () => {
   const auth = createAppAuth({
     appId: process.env.GITHUB_APP_ID!,
-    privateKey: process.env.GITHUB_APP_PRIVATE_KEY!.replace(/\\n/g, '\n'),
+    privateKey: process.env.GITHUB_APP_PRIVATE_KEY!.replace(/\n/g, '\n'),
     installationId: process.env.GITHUB_APP_INSTALLATION_ID!,
   });
 
   const { token } = await auth({ type: 'installation' });
 
-  const octokit = new Octokit({ auth: token });
+  return new Octokit({ auth: token });
+};
+
+const fetchAndSaveTeamData = async () => {
+  const octokit = await getOctokit();
+
+  await TeamData.deleteMany({}); // TODO: temp w/a to avoid duplicates
 
   // Fetch all repositories for an organization
-  const repos = await octokit.rest.repos.listForOrg({
-    org: ORG_NAME,
+
+  await getOrgData(octokit, 'NUS-CRISP');
+};
+
+const getOctokitV1 = () => {
+  const app = new App({
+    appId: process.env.GITHUB_APP_ID!,
+    privateKey: process.env.GITHUB_APP_PRIVATE_KEY!.replace(/\n/g, '\n'),
   });
 
-  await TeamData.deleteMany({}); // temp w/a to avoid duplicates
+  return app.octokit;
+};
+
+const fetchAndSaveTeamDataV1 = async () => {
+  const octokit = getOctokitV1();
+
+  // List installations, from there, list organizations
+  const installations = await octokit.rest.apps.listInstallations();
+  const orgs = installations.data.map((installation) => {
+    if (installation.account && 'login' in installation.account) {
+      return installation.account.login;
+    }
+    return null;
+  });
+  // Fetch all repositories for an organization
+  for (const org of orgs) {
+    if (org) {
+      getOrgData(octokit, org);
+    }
+  }
+};
+
+const getOrgData = async (octokit: Octokit, orgName: string) => {
+  const repos = await octokit.rest.repos.listForOrg({
+    org: orgName,
+  });
 
   for (const repo of repos.data) {
     const contributors = await octokit.rest.repos.listContributors({
-      owner: ORG_NAME,
+      owner: orgName,
       repo: repo.name,
     });
 
@@ -34,7 +69,7 @@ const fetchAndSaveTeamData = async () => {
 
     for (const contributor of contributors.data) {
       const commitsByContributor = await octokit.rest.repos.listCommits({
-        owner: ORG_NAME,
+        owner: orgName,
         repo: repo.name,
         author: contributor.login,
       });
@@ -45,7 +80,7 @@ const fetchAndSaveTeamData = async () => {
       // Fetch detailed commit data to get additions/deletions
       for (const commit of commitsByContributor.data) {
         const commitDetail = await octokit.rest.repos.getCommit({
-          owner: ORG_NAME,
+          owner: orgName,
           repo: repo.name,
           ref: commit.sha,
         });
@@ -67,19 +102,19 @@ const fetchAndSaveTeamData = async () => {
 
     // Fetch commits
     const commits = await octokit.rest.repos.listCommits({
-      owner: ORG_NAME,
+      owner: orgName,
       repo: repo.name,
     });
 
     // Fetch issues
     const issues = await octokit.rest.issues.listForRepo({
-      owner: ORG_NAME,
+      owner: orgName,
       repo: repo.name,
     });
 
     // Fetch pull requests
     const pullRequests = await octokit.rest.pulls.list({
-      owner: ORG_NAME,
+      owner: orgName,
       repo: repo.name,
       state: 'open',
     });
@@ -110,7 +145,7 @@ export const setupJob = () => {
   cron.schedule('0 0 * * *', async () => {
     console.log('Running fetchAndSaveTeamData job:', new Date().toString());
     try {
-      await fetchAndSaveTeamData();
+      await fetchAndSaveTeamDataV1();
     } catch (err) {
       console.error('Error in cron job fetchAndSaveTeamData:', err);
     }
