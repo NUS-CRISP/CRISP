@@ -30,13 +30,9 @@ export const deleteTeam = async (req: Request, res: Response) => {
 export const updateTeam = async (req: Request, res: Response) => {
   const teamId = req.params.id;
   try {
-    const updatedTeam = await TeamModel.findByIdAndUpdate(
-      teamId,
-      req.body,
-      {
-        new: true,
-      }
-    );
+    const updatedTeam = await TeamModel.findByIdAndUpdate(teamId, req.body, {
+      new: true,
+    });
     if (updatedTeam) {
       res.json(updatedTeam);
     } else {

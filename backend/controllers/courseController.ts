@@ -336,9 +336,7 @@ export const addTAsToTeams = async (req: Request, res: Response) => {
 
     await course.save();
 
-    return res
-      .status(200)
-      .json({ message: 'TAs added to teams successfully' });
+    return res.status(200).json({ message: 'TAs added to teams successfully' });
   } catch (error) {
     res.status(400).json({ error: 'Failed to add TAs to teams' });
   }
