@@ -11,6 +11,7 @@ import { IconUpload, IconPhoto, IconX } from '@tabler/icons-react';
 import { useForm } from '@mantine/form';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
 import Papa from 'papaparse';
+import { saveAs } from 'file-saver';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
 
@@ -76,6 +77,12 @@ const StudentTeamForm: React.FC<StudentTeamFormProps> = ({
   }, []);
 
   const [error, setError] = useState<string | null>(null);
+
+  const downloadCsvTemplate = () => {
+    const csvHeaders = 'identifier,teamNumber\n';
+    const blob = new Blob([csvHeaders], { type: 'text/csv;charset=utf-8' });
+    saveAs(blob, 'students_team_template.csv');
+  };
 
   const handleSubmitCSV = async () => {
     if (students.length === 0) {
@@ -225,6 +232,9 @@ const StudentTeamForm: React.FC<StudentTeamFormProps> = ({
       </Dropzone>
       <Button onClick={handleSubmitCSV} style={{ marginTop: '16px' }}>
         Upload Students
+      </Button>
+      <Button onClick={downloadCsvTemplate} style={{ marginTop: '16px' }}>
+        Download CSV Template
       </Button>
     </Box>
   );

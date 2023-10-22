@@ -13,6 +13,7 @@ import { IconUpload, IconPhoto, IconX } from '@tabler/icons-react';
 import { useForm } from '@mantine/form';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
 import Papa from 'papaparse';
+import { saveAs } from 'file-saver';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
 
@@ -68,6 +69,13 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
       reader.readAsText(file);
     }
   }, []);
+
+  const downloadCsvTemplate = () => {
+    const csvHeaders =
+      'assessmentType,markType,frequency,granularity,teamSetName,formLink\n';
+    const blob = new Blob([csvHeaders], { type: 'text/csv;charset=utf-8' });
+    saveAs(blob, 'assessments_template.csv');
+  };
 
   const handleSubmitCSV = async () => {
     if (assessments.length === 0) {
@@ -240,6 +248,9 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
       </Dropzone>
       <Button onClick={handleSubmitCSV} style={{ marginTop: '16px' }}>
         Upload Assessments
+      </Button>
+      <Button onClick={downloadCsvTemplate} style={{ marginTop: '16px' }}>
+        Download CSV Template
       </Button>
     </Box>
   );

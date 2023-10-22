@@ -4,6 +4,7 @@ import { IconUpload, IconPhoto, IconX } from '@tabler/icons-react';
 import { useForm } from '@mantine/form';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
 import Papa from 'papaparse';
+import { saveAs } from 'file-saver';
 import { User } from '@/types/user';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
@@ -54,6 +55,12 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
       reader.readAsText(file);
     }
   }, []);
+
+  const downloadCsvTemplate = () => {
+    const csvHeaders = 'name,identifier,email\n';
+    const blob = new Blob([csvHeaders], { type: 'text/csv;charset=utf-8' });
+    saveAs(blob, 'tas_template.csv');
+  };
 
   const handleSubmitCSV = async () => {
     if (TAs.length === 0) {
@@ -196,6 +203,9 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
       </Dropzone>
       <Button onClick={handleSubmitCSV} style={{ marginTop: '16px' }}>
         Upload TAs
+      </Button>
+      <Button onClick={downloadCsvTemplate} style={{ marginTop: '16px' }}>
+        Download CSV Template
       </Button>
     </Box>
   );

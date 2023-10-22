@@ -3,6 +3,7 @@ import { Box, Button, Group, Text, Notification } from '@mantine/core';
 import { IconUpload, IconPhoto, IconX } from '@tabler/icons-react';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
 import Papa from 'papaparse';
+import { saveAs } from 'file-saver';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
 
@@ -59,6 +60,12 @@ const TATeamForm: React.FC<TATeamFormProps> = ({
   }, []);
 
   const [error, setError] = useState<string | null>(null);
+
+  const downloadCsvTemplate = () => {
+    const csvHeaders = 'identifier,teamNumber\n';
+    const blob = new Blob([csvHeaders], { type: 'text/csv;charset=utf-8' });
+    saveAs(blob, 'tas_team_template.csv');
+  };
 
   const handleSubmitCSV = async () => {
     if (TAs.length === 0) {
@@ -149,6 +156,9 @@ const TATeamForm: React.FC<TATeamFormProps> = ({
       </Dropzone>
       <Button onClick={handleSubmitCSV} style={{ marginTop: '16px' }}>
         Upload TAs
+      </Button>
+      <Button onClick={downloadCsvTemplate} style={{ marginTop: '16px' }}>
+        Download CSV Template
       </Button>
     </Box>
   );
