@@ -14,13 +14,13 @@ import Papa from 'papaparse';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
 
-interface TeamFormProps {
+interface StudentTeamFormProps {
   courseId: string | string[] | undefined;
   teamSet: string;
   onTeamCreated: () => void;
 }
 
-interface TeamFormUser {
+interface StudentTeamFormUser {
   identifier: string;
   teamSet: string;
   teamNumber: number;
@@ -34,7 +34,7 @@ interface Results {
   }[];
 }
 
-const TeamForm: React.FC<TeamFormProps> = ({
+const StudentTeamForm: React.FC<StudentTeamFormProps> = ({
   courseId,
   teamSet,
   onTeamCreated,
@@ -46,7 +46,7 @@ const TeamForm: React.FC<TeamFormProps> = ({
     },
   });
 
-  const [students, setStudents] = useState<TeamFormUser[]>([]);
+  const [students, setStudents] = useState<StudentTeamFormUser[]>([]);
 
   const handleFileUpload = useCallback((file: File) => {
     if (file) {
@@ -57,11 +57,13 @@ const TeamForm: React.FC<TeamFormProps> = ({
           skipEmptyLines: true,
           complete: function (results: Results) {
             const studentsData = results.data;
-            const students = studentsData.map((student: TeamFormUser) => ({
-              identifier: student.identifier || '',
-              teamSet: teamSet,
-              teamNumber: student.teamNumber,
-            }));
+            const students = studentsData.map(
+              (student: StudentTeamFormUser) => ({
+                identifier: student.identifier || '',
+                teamSet: teamSet,
+                teamNumber: student.teamNumber,
+              })
+            );
             setStudents(students);
           },
           error: function (error: Error) {
@@ -174,7 +176,7 @@ const TeamForm: React.FC<TeamFormProps> = ({
           }}
         />
         <Button type="submit" style={{ marginTop: '16px' }}>
-          Create Student
+          Upload Student
         </Button>
       </form>
 
@@ -222,10 +224,10 @@ const TeamForm: React.FC<TeamFormProps> = ({
         </Group>
       </Dropzone>
       <Button onClick={handleSubmitCSV} style={{ marginTop: '16px' }}>
-        Upload Teams
+        Upload Students
       </Button>
     </Box>
   );
 };
 
-export default TeamForm;
+export default StudentTeamForm;
