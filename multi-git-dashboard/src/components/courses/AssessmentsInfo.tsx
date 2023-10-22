@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import AssessmentCard from '../CourseView/Cards/AssessmentCard';
-import { Course } from '../../types/course';
+import AssessmentCard from './cards/AssessmentCard';
 import AssessmentForm from '../forms/AssessmentForm';
 import { Button, Container } from '@mantine/core';
+import { Course } from '@backend/models/Course';
 
 interface AssessmentInfoProps {
   course: Course;
@@ -17,13 +17,11 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
 
   const assessmentCards = course.assessments.map(assessment => (
     <AssessmentCard
-      key={assessment._id}
+      key={assessment._id.toString()}
       assessmentType={assessment.assessmentType}
       markType={assessment.markType}
       frequency={assessment.frequency}
       granularity={assessment.granularity}
-      teamSetName={assessment.teamSet ? assessment.teamSet.name : null}
-      formLink={assessment.formLink}
     />
   ));
 
@@ -43,7 +41,7 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
       </Button>
       {isCreatingAssessment && (
         <AssessmentForm
-          courseId={course._id}
+          courseId={course._id.toString()}
           onAssessmentCreated={handleAssessmentCreated}
         />
       )}

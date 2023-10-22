@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Course, TeamSet } from '@/types/course';
-import TeamCard from '../CourseView/Cards/TeamCard';
+import { Course } from '@backend/models/Course';
+import { TeamSet } from '@backend/models/TeamSet';
+import TeamCard from './cards/TeamCard';
 import { Container, Tabs, Button } from '@mantine/core';
 import TeamSetForm from '../forms/TeamSetForm';
 import TeamForm from '../forms/TeamForm';
@@ -18,7 +19,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
   const teamCards = (teamSet: TeamSet) =>
     teamSet.teams.map(team => (
       <TeamCard
-        key={team._id}
+        key={team._id.toString()}
         number={team.number}
         TA={team.TA}
         members={team.members}
@@ -27,16 +28,16 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
 
   const headers = course.teamSets.map(teamSet => (
     <Tabs.Tab
-      key={teamSet._id}
+      key={teamSet._id.toString()}
       value={teamSet.name}
-      onClick={e => setActiveTab(teamSet.name)}
+      onClick={() => setActiveTab(teamSet.name)}
     >
       {teamSet.name}
     </Tabs.Tab>
   ));
 
   const panels = course.teamSets.map(teamSet => (
-    <Tabs.Panel key={teamSet._id} value={teamSet.name}>
+    <Tabs.Panel key={teamSet._id.toString()} value={teamSet.name}>
       {teamCards(teamSet)}
     </Tabs.Panel>
   ));
@@ -76,13 +77,13 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
       )}
       {isCreatingTeamSet && (
         <TeamSetForm
-          courseId={course._id}
+          courseId={course._id.toString()}
           onTeamSetCreated={handleTeamSetCreated}
         />
       )}
       {isCreatingTeam && activeTab && (
         <TeamForm
-          courseId={course._id}
+          courseId={course._id.toString()}
           teamSet={activeTab}
           onTeamCreated={handleTeamCreated}
         />

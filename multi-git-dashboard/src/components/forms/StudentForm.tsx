@@ -3,10 +3,8 @@ import { Box, TextInput, Button, Group, Text } from '@mantine/core';
 import { IconUpload, IconPhoto, IconX } from '@tabler/icons-react';
 import { useForm } from '@mantine/form';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
-import Papa from 'papaparse';
-import { User } from '@/types/user';
-
-const backendPort = process.env.BACKEND_PORT || 3001;
+import Papa, { ParseResult } from 'papaparse';
+import { User } from '@backend/models/User';
 
 interface StudentFormProps {
   courseId: string | string[] | undefined;
@@ -37,18 +35,16 @@ const StudentForm: React.FC<StudentFormProps> = ({
         Papa.parse(reader.result as string, {
           header: true,
           skipEmptyLines: true,
-          complete: function (results: any) {
-            const studentsData = results.data;
-            const students = studentsData.map((student: User) => ({
-              id: student.id || '',
+          complete: function (result: ParseResult<User>) {
+            const students: User[] = result.data.map((student: User) => ({
               name: student.name || '',
-              email: student.email || '',
               gitHandle: student.gitHandle || '',
               role: 'student',
+              enrolledCourses: [],
             }));
             setStudents(students);
           },
-          error: function (error: any) {
+          error: function (error: { message: string }) {
             console.error('CSV parsing error:', error.message);
           },
         });
@@ -67,7 +63,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
 
     try {
       const response = await fetch(
-        `http://localhost:${backendPort}/api/courses/${courseId}/students`,
+        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${courseId}/students`,
         {
           method: 'POST',
           headers: {
@@ -95,7 +91,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
     console.log('Sending student data:', form.values);
 
     const response = await fetch(
-      `http://localhost:${backendPort}/api/courses/${courseId}/students`,
+      `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${courseId}/students`,
       {
         method: 'POST',
         headers: {

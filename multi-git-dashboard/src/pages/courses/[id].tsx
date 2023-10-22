@@ -2,14 +2,14 @@ import { useRouter } from 'next/router';
 import { useEffect, useState, useCallback } from 'react';
 import { Course, Milestone, Sprint } from '@/types/course';
 import { Container, Loader, Tabs } from '@mantine/core';
-import Overview from '@/components/CourseView/Overview';
-import StudentsInfo from '@/components/CourseView/StudentsInfo';
-import StaffInfo from '@/components/CourseView/StaffInfo';
-import TeamSetsInfo from '@/components/CourseView/TeamSetsInfo';
-import MilestonesInfo from '@/components/CourseView/MilestonesInfo';
-import SprintsInfo from '@/components/CourseView/SprintsInfo';
-import AssessmentsInfo from '@/components/CourseView/AssessmentsInfo';
-import { ITeamData } from '@backend/models/TeamData';
+import Overview from '@/components/courses/Overview';
+import StudentsInfo from '@/components/courses/StudentsInfo';
+import StaffInfo from '@/components/courses/StaffInfo';
+import TeamSetsInfo from '@/components/courses/TeamSetsInfo';
+import MilestonesInfo from '@/components/courses/MilestonesInfo';
+import SprintsInfo from '@/components/courses/SprintsInfo';
+import AssessmentsInfo from '@/components/courses/AssessmentsInfo';
+import { TeamData } from '@backend/models/TeamData';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
 const apiUrl = `http://localhost:${backendPort}/api/courses/`;
@@ -19,7 +19,7 @@ const CourseViewPage: React.FC = () => {
   const router = useRouter();
   const id = router.query.id as string;
   const [course, setCourse] = useState<Course>();
-  const [teamsData, setTeamsData] = useState<ITeamData[]>([]);
+  const [teamsData, setTeamsData] = useState<TeamData[]>([]);
 
   const fetchCourse = useCallback(async () => {
     try {
@@ -53,7 +53,7 @@ const CourseViewPage: React.FC = () => {
       const response = await fetch(teamDataUrl);
       if (response.ok) {
         const data = await response.json();
-        const teamsData: ITeamData[] = data.teamData;
+        const teamsData: TeamData[] = data.teamData;
         setTeamsData(teamsData);
       } else {
         console.error('Error fetching team data:', response.statusText);

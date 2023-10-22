@@ -2,13 +2,13 @@ import React from 'react';
 import { Card, Text } from '@mantine/core';
 
 interface MilestoneCardProps {
-  milestoneNumber: number;
+  number: number;
   dateline: Date;
   description: string;
 }
 
 const MilestoneCard: React.FC<MilestoneCardProps> = ({
-  milestoneNumber,
+  number: milestoneNumber,
   dateline,
   description,
 }) => {

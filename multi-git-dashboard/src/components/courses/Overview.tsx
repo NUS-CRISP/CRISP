@@ -1,16 +1,11 @@
-import GithubTeamCard from '../CourseView/Cards/GithubTeamCard';
+import GithubTeamCard from './cards/GithubTeamCard';
 import { Container, Flex, ScrollArea, Text } from '@mantine/core';
-import { Milestone } from '@/types/course';
-import { ITeamData } from '@backend/models/TeamData';
+import { Course } from '@backend/models/Course';
+import { TeamData } from '@backend/models/TeamData';
 
 interface OverviewProps {
-  course: {
-    name: string;
-    code: string;
-    semester: string;
-    milestones: Milestone[];
-  };
-  teamsData: ITeamData[];
+  course: Course;
+  teamsData: TeamData[];
 }
 
 const Overview: React.FC<OverviewProps> = ({ course, teamsData }) => (

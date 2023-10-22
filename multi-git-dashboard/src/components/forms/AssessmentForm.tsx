@@ -1,8 +1,6 @@
 import { Box, TextInput, Button, Text, Radio } from '@mantine/core';
 import { useForm } from '@mantine/form';
 
-const backendPort = process.env.BACKEND_PORT || 3001;
-
 interface AssessmentFormProps {
   courseId: string | string[] | undefined;
   onAssessmentCreated: () => void;
@@ -28,7 +26,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
     console.log('Sending assessment data:', form.values);
 
     const response = await fetch(
-      `http://localhost:${backendPort}/api/courses/${courseId}/assessments`,
+      `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${courseId}/assessments`,
       {
         method: 'POST',
         headers: {

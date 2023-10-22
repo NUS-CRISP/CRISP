@@ -6,7 +6,7 @@ export interface TeamContribution {
   deletions: number;
 }
 
-export interface ITeamData extends Document {
+export interface TeamData {
   teamId: number;
   repoName: string;
   commits: number;
@@ -18,7 +18,7 @@ export interface ITeamData extends Document {
   teamContributions: Record<string, TeamContribution>;
 }
 
-const teamDataSchema: Schema = new Schema<ITeamData>({
+const teamDataSchema: Schema = new Schema<TeamData>({
   teamId: { type: Number, required: true },
   repoName: { type: String, required: true },
   commits: { type: Number, required: true },
@@ -37,5 +37,4 @@ const teamDataSchema: Schema = new Schema<ITeamData>({
   },
 });
 
-// Create a model
-export const TeamData = mongoose.model<ITeamData>('TeamData', teamDataSchema);
+export const TeamData = mongoose.model<TeamData>('TeamData', teamDataSchema);

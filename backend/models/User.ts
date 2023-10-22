@@ -6,7 +6,7 @@ export interface User {
   gitHandle: string;
 }
 
-export const userSchema = new Schema({
+export const userSchema = new Schema<User>({
   name: { type: String, required: true },
   enrolledCourses: [{ type: Schema.Types.ObjectId, ref: 'Course' }],
   gitHandle: { type: String },

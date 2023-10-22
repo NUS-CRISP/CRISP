@@ -22,10 +22,10 @@ afterAll(async () => {
   await mongoServer.stop();
 });
 
-
 describe('CourseModel', () => {
   it('should create and save a new course', async () => {
     const courseData: Course = {
+      _id: new mongoose.Types.ObjectId(),
       name: 'Test Course',
       code: 'COURSE101',
       semester: 'Spring 2023',
@@ -36,6 +36,7 @@ describe('CourseModel', () => {
       sprints: [],
       milestones: [],
       assessments: [],
+      courseType: 'Normal',
     };
 
     const course = new CourseModel(courseData);
@@ -95,7 +96,9 @@ describe('CourseModel', () => {
 
     await courseToDelete.save();
 
-    const deletedCourse = await CourseModel.findByIdAndDelete(courseToDelete._id);
+    const deletedCourse = await CourseModel.findByIdAndDelete(
+      courseToDelete._id
+    );
 
     expect(deletedCourse?._id).toStrictEqual(courseToDelete._id);
   });
@@ -139,7 +142,9 @@ describe('CourseModel', () => {
     const updatedCourse = await existingCourse.save();
 
     expect(updatedCourse.sprints).toHaveLength(1);
-    expect(updatedCourse.sprints[0].sprintNumber).toEqual(newSprint.sprintNumber);
+    expect(updatedCourse.sprints[0].sprintNumber).toEqual(
+      newSprint.sprintNumber
+    );
     expect(updatedCourse.sprints[0].description).toEqual(newSprint.description);
     expect(updatedCourse.sprints[0].startDate).toEqual(newSprint.startDate);
     expect(updatedCourse.sprints[0].endDate).toEqual(newSprint.endDate);
@@ -172,8 +177,12 @@ describe('CourseModel', () => {
     const updatedCourse = await existingCourse.save();
 
     expect(updatedCourse.milestones).toHaveLength(1);
-    expect(updatedCourse.milestones[0].milestoneNumber).toEqual(newMilestone.milestoneNumber);
+    expect(updatedCourse.milestones[0].milestoneNumber).toEqual(
+      newMilestone.milestoneNumber
+    );
     expect(updatedCourse.milestones[0].dateline).toEqual(newMilestone.dateline);
-    expect(updatedCourse.milestones[0].description).toEqual(newMilestone.description);
+    expect(updatedCourse.milestones[0].description).toEqual(
+      newMilestone.description
+    );
   });
 });

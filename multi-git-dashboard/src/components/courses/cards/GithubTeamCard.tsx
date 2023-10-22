@@ -25,12 +25,12 @@ import {
   ComposedChart,
   Line,
 } from 'recharts';
-import { ITeamData } from '@backend/models/TeamData';
-import { Milestone, Sprint, isSprint } from '@/types/course';
+import { TeamData } from '@backend/models/TeamData';
 import { useState } from 'react';
+import { Milestone, Sprint, isSprint } from '@backend/models/Course';
 
 interface GithubTeamCardProps {
-  teamData: ITeamData;
+  teamData: TeamData;
   milestones: Milestone[];
   sprints: Sprint[];
 }
@@ -79,19 +79,21 @@ const GithubTeamCard: React.FC<GithubTeamCardProps> = ({
 
   const stepperSteps = [...sprints, ...milestones]
     .sort((a, b) => {
-      const dateA = 'startDate' in a ? a.startDate : a.dateline;
-      const dateB = 'startDate' in b ? b.startDate : b.dateline;
+      const dateA =
+        'startDate' in a ? (a as Sprint).startDate : (a as Milestone).dateline;
+      const dateB =
+        'startDate' in b ? (b as Sprint).startDate : (b as Milestone).dateline;
       return dateA.getTime() - dateB.getTime();
     })
     .map((item, index) =>
       isSprint(item) ? (
-        <Stepper.Step key={index} label={`Sprint ${item.sprintNumber}`}>
+        <Stepper.Step key={index} label={`Sprint ${item.number}`}>
           <Text>Start: {item.startDate.toLocaleDateString()}</Text>
           <Text>End: {item.endDate.toLocaleDateString()}</Text>
-          <Text>{item.description}</Text>
+          <Text>{(item as Sprint).description}</Text>
         </Stepper.Step>
       ) : (
-        <Stepper.Step key={index} label={`Milestone ${item.milestoneNumber}`}>
+        <Stepper.Step key={index} label={`Milestone ${item.number}`}>
           <Text>Deadline: {item.dateline.toLocaleDateString()}</Text>
           <Text>{item.description}</Text>
         </Stepper.Step>

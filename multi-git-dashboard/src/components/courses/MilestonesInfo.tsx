@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import MilestoneCard from '../CourseView/Cards/MilestoneCard';
-import { Course } from '../../types/course';
+import MilestoneCard from './cards/MilestoneCard';
 import MilestoneForm from '../forms/MilestoneForm';
 import { Button, Container } from '@mantine/core';
+import { Course } from '@backend/models/Course';
 
 interface MilestonesInfoProps {
   course: Course;
@@ -17,8 +17,8 @@ const MilestonesInfo: React.FC<MilestonesInfoProps> = ({
 
   const milestoneCards = course.milestones.map(milestone => (
     <MilestoneCard
-      key={milestone.milestoneNumber}
-      milestoneNumber={milestone.milestoneNumber}
+      key={milestone.number}
+      number={milestone.number}
       dateline={milestone.dateline}
       description={milestone.description}
     />
@@ -40,7 +40,7 @@ const MilestonesInfo: React.FC<MilestonesInfoProps> = ({
       </Button>
       {isCreatingMilestone && (
         <MilestoneForm
-          courseId={course._id}
+          courseId={course._id.toString()}
           onMilestoneCreated={handleMilestoneCreated}
         />
       )}

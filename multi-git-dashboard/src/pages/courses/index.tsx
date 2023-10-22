@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import CourseCard from '@/components/CourseView/Cards/CourseCard';
-import { Course } from '@/types/course';
+import CourseCard from '@/components/courses/cards/CourseCard';
+import { Course } from '@backend/models/Course';
 import Link from 'next/link';
 import { Button } from '@mantine/core';
-import CourseForm from '@/components/forms/CourseForm';
-
-const backendPort = process.env.BACKEND_PORT || 3001;
-const apiUrl = `http://localhost:${backendPort}/api/courses`;
+import { useRouter } from 'next/router';
 
 const CourseListPage: React.FC = () => {
+  const router = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
-  const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     fetchCourses();
@@ -18,7 +15,9 @@ const CourseListPage: React.FC = () => {
 
   const fetchCourses = async () => {
     try {
-      const response = await fetch(apiUrl);
+      const response = await fetch(
+        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses`
+      );
       if (response.ok) {
         const data = await response.json();
         setCourses(data);
@@ -30,11 +29,6 @@ const CourseListPage: React.FC = () => {
     }
   };
 
-  const handleCourseCreated = () => {
-    fetchCourses();
-    setShowForm(false);
-  };
-
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <div>
@@ -44,9 +38,9 @@ const CourseListPage: React.FC = () => {
         ) : (
           <div className="course-card-list">
             {courses.map(course => (
-              <Link key={course._id} href={`/courses/${course._id}`}>
+              <Link key={course._id.toString()} href={`/courses/${course._id}`}>
                 <CourseCard
-                  key={course._id}
+                  key={course._id.toString()}
                   name={course.name}
                   code={course.code}
                   semester={course.semester}
@@ -58,12 +52,11 @@ const CourseListPage: React.FC = () => {
       </div>
       <div>
         <Button
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => router.push('/courses/create')}
           style={{ marginTop: '16px' }}
         >
-          {showForm ? 'Cancel' : 'Add Course'}
+          Create Course
         </Button>
-        {showForm && <CourseForm onCourseCreated={handleCourseCreated} />}
       </div>
     </main>
   );

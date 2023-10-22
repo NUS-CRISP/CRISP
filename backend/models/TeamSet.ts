@@ -1,9 +1,12 @@
-import mongoose, { Schema } from 'mongoose';
+import mongoose, { Schema, Types } from 'mongoose';
+import { Course } from './Course';
+import { Team } from './Team';
 
 export interface TeamSet {
-  course: mongoose.Types.ObjectId;
+  _id: Types.ObjectId;
+  course: Course;
   name: string;
-  teams: mongoose.Types.ObjectId[]
+  teams: Team[];
 }
 
 const teamSetSchema = new Schema<TeamSet>({
