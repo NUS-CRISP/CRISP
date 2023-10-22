@@ -1,5 +1,5 @@
-import React from 'react';
-import { Card, Text, Group, Table, ActionIcon } from '@mantine/core';
+import React, { useState } from 'react';
+import { Card, Text, Group, Table, ActionIcon, Select } from '@mantine/core';
 import { IconX } from '@tabler/icons-react';
 import { User } from '@/types/user';
 
@@ -7,7 +7,8 @@ interface TeamCardProps {
   teamId: string;
   number: number;
   members: User[];
-  TA: User;
+  TA: User | null;
+  TAs: User[];
   onTeamDeleted: () => void;
 }
 
@@ -18,8 +19,10 @@ const TeamCard: React.FC<TeamCardProps> = ({
   number,
   members,
   TA,
+  TAs,
   onTeamDeleted,
 }) => {
+  const [selectedTA, setSelectedTA] = useState<string | null>(TA?._id || null);
   const handleDelete = async () => {
     try {
       const response = await fetch(
@@ -39,6 +42,30 @@ const TeamCard: React.FC<TeamCardProps> = ({
     }
   };
 
+  const handleTAChange = async (TAId: string | null) => {
+    try {
+      const response = await fetch(
+        `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/teams/${teamId}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ TA: TAId }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to update the team');
+      }
+      console.log('Team updated');
+      setSelectedTA(TAId);
+    } catch (error) {
+      console.error('Error updating team:', error);
+    }
+  };
+
+  const taOptions = TAs.map(ta => ({ value: ta._id, label: ta.name }));
   const student_rows = members?.map(member => {
     if (member.role === 'Student') {
       return (
@@ -77,7 +104,15 @@ const TeamCard: React.FC<TeamCardProps> = ({
         </ActionIcon>
       </div>
 
-      <Text>Teaching Assistant: {TA?.name || 'N/A'}</Text>
+      <Group style={{ alignItems: 'center' }}>
+        <Text>Teaching Assistant:</Text>
+        <Select
+          data={taOptions}
+          value={selectedTA}
+          onChange={e => handleTAChange(e)}
+          placeholder="Assign TA"
+        />
+      </Group>
       <Table>
         <thead>
           <tr>
