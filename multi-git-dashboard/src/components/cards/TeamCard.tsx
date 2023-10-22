@@ -1,5 +1,6 @@
 import React from 'react';
-import { Card, Text, Group, Table, Button } from '@mantine/core';
+import { Card, Text, Group, Table, ActionIcon } from '@mantine/core';
+import { IconX } from '@tabler/icons-react';
 import { User } from '@/types/user';
 
 interface TeamCardProps {
@@ -54,9 +55,27 @@ const TeamCard: React.FC<TeamCardProps> = ({
 
   return (
     <Card shadow="sm" padding="lg" radius="md" withBorder>
-      <Group mt="md" mb="xs">
-        <Text> Team {number.toString()}</Text>
-      </Group>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'start',
+        }}
+      >
+        <Group mt="md" mb="xs">
+          <Text> Team {number.toString()}</Text>
+        </Group>
+
+        <ActionIcon
+          variant="transparent"
+          color="red"
+          size="sm"
+          onClick={handleDelete}
+          title="Delete Team"
+        >
+          <IconX size={16} />
+        </ActionIcon>
+      </div>
 
       <Text>Teaching Assistant: {TA?.name || 'N/A'}</Text>
       <Table>
@@ -69,9 +88,6 @@ const TeamCard: React.FC<TeamCardProps> = ({
         </thead>
         <tbody>{student_rows}</tbody>
       </Table>
-      <Button onClick={handleDelete} style={{ marginBottom: '16px' }}>
-        Delete Team
-      </Button>
     </Card>
   );
 };
