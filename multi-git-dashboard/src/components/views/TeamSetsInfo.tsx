@@ -3,7 +3,8 @@ import { Course, TeamSet } from '@/types/course';
 import TeamCard from '../cards/TeamCard';
 import { Container, Tabs, Button, Group } from '@mantine/core';
 import TeamSetForm from '../forms/TeamSetForm';
-import TeamForm from '../forms/TeamForm';
+import StudentTeamForm from '../forms/StudentTeamForm';
+import TATeamForm from '../forms/TATeamForm';
 
 interface TeamsInfoProps {
   course: Course;
@@ -14,7 +15,8 @@ const backendPort = process.env.BACKEND_PORT || 3001;
 
 const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
   const [isCreatingTeamSet, setIsCreatingTeamSet] = useState<boolean>(false);
-  const [isCreatingTeam, setIsCreatingTeam] = useState<boolean>(false);
+  const [isAddingStudents, setIsAddingStudents] = useState<boolean>(false);
+  const [isAddingTAs, setIsAddingTAs] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const [teamSetId, setTeamSetId] = useState<string | null>(null);
 
@@ -25,6 +27,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
         teamId={team._id}
         number={team.number}
         TA={team.TA}
+        TAs={course.TAs}
         members={team.members}
         onTeamDeleted={onUpdate}
       />
@@ -54,8 +57,13 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
     onUpdate();
   };
 
-  const handleTeamCreated = () => {
-    setIsCreatingTeam(false);
+  const handleAddStudentsUploaded = () => {
+    setIsAddingStudents(false);
+    onUpdate();
+  };
+
+  const handleAddTAsUploaded = () => {
+    setIsAddingTAs(false);
     onUpdate();
   };
 
@@ -93,8 +101,13 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
             {isCreatingTeamSet ? 'Cancel' : 'Create TeamSet'}
           </Button>
           {activeTab && (
-            <Button onClick={() => setIsCreatingTeam(!isCreatingTeam)}>
-              {isCreatingTeam ? 'Cancel' : 'Create Teams'}
+            <Button onClick={() => setIsAddingStudents(!isAddingStudents)}>
+              {isAddingStudents ? 'Cancel' : 'Add Students'}
+            </Button>
+          )}
+          {activeTab && (
+            <Button onClick={() => setIsAddingTAs(!isAddingTAs)}>
+              {isAddingTAs ? 'Cancel' : 'Add TAs'}
             </Button>
           )}
         </Group>
@@ -112,11 +125,18 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
           onTeamSetCreated={handleTeamSetCreated}
         />
       )}
-      {isCreatingTeam && activeTab && (
-        <TeamForm
+      {isAddingStudents && activeTab && (
+        <StudentTeamForm
           courseId={course._id}
           teamSet={activeTab}
-          onTeamCreated={handleTeamCreated}
+          onTeamCreated={handleAddStudentsUploaded}
+        />
+      )}
+      {isAddingTAs && activeTab && (
+        <TATeamForm
+          courseId={course._id}
+          teamSet={activeTab}
+          onTeamCreated={handleAddTAsUploaded}
         />
       )}
     </Container>
