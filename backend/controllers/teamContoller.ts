@@ -26,3 +26,23 @@ export const deleteTeam = async (req: Request, res: Response) => {
     res.status(400).json({ error: 'Failed to delete the team' });
   }
 };
+
+export const updateTeam = async (req: Request, res: Response) => {
+  const teamId = req.params.id;
+  try {
+    const updatedTeam = await TeamModel.findByIdAndUpdate(
+      teamId,
+      req.body,
+      {
+        new: true,
+      }
+    );
+    if (updatedTeam) {
+      res.json(updatedTeam);
+    } else {
+      res.status(404).json({ error: 'Team not found' });
+    }
+  } catch (error) {
+    res.status(400).json({ error: 'Failed to update team' });
+  }
+};
