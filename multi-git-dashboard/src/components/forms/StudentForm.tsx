@@ -18,7 +18,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
   const form = useForm({
     initialValues: {
       name: '',
-      id: '',
+      orgId: '',
       email: '',
       gitHandle: '',
     },
@@ -37,6 +37,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
           skipEmptyLines: true,
           complete: function (result: ParseResult<User>) {
             const students: User[] = result.data.map((student: User) => ({
+              orgId: student.orgId || '',
               name: student.name || '',
               gitHandle: student.gitHandle || '',
               role: 'student',
@@ -100,7 +101,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
         body: JSON.stringify({
           items: [
             {
-              id: form.values.id,
+              orgId: form.values.orgId,
               name: form.values.name,
               email: form.values.email,
               gitHandle: form.values.gitHandle,
@@ -131,10 +132,10 @@ const StudentForm: React.FC<StudentFormProps> = ({
         <TextInput
           withAsterisk
           label="Student ID"
-          {...form.getInputProps('id')}
-          value={form.values.id}
+          {...form.getInputProps('orgId')}
+          value={form.values.orgId}
           onChange={event => {
-            form.setFieldValue('id', event.currentTarget.value);
+            form.setFieldValue('orgId', event.currentTarget.value);
           }}
         />
         <TextInput

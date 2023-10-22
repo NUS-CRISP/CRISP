@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { TeamData } from '../models/TeamData';
+import TeamData from '../models/TeamData';
 
 export const getAllTeamData = async (req: Request, res: Response) => {
   try {

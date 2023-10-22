@@ -1,14 +1,10 @@
 import mongoose, { Schema, Types } from 'mongoose';
-import { TeamSet } from './TeamSet';
-import { User } from './User';
+import { Team as SharedTeam } from '@shared/types/Team';
 
-export interface Team {
-  _id: Types.ObjectId;
-  teamSet: TeamSet;
-  number: number;
-  TA: User;
-  members: User[];
-  // repoUrl: string;
+export interface Team extends Omit<SharedTeam, 'teamSet' | 'TA' | 'members'> {
+  teamSet: Types.ObjectId;
+  TA?: Types.ObjectId;
+  members?: Types.ObjectId[];
 }
 
 export const teamSchema = new Schema<Team>({
@@ -19,6 +15,4 @@ export const teamSchema = new Schema<Team>({
   // repoUrl: { type: String, required: true },
 });
 
-const TeamModel = mongoose.model<Team>('Team', teamSchema);
-
-export default TeamModel;
+export default mongoose.model<Team>('Team', teamSchema);

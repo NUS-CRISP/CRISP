@@ -1,12 +1,12 @@
-import mongoose, { Schema } from 'mongoose';
+import mongoose, { Schema, Types } from 'mongoose';
+import { User as SharedUser } from '@shared/types/User';
 
-export interface User {
-  name: string;
-  enrolledCourses: mongoose.Types.ObjectId[];
-  gitHandle: string;
+export interface User extends Omit<SharedUser, 'enrolledCourses'> {
+  enrolledCourses: Types.ObjectId[];
 }
 
 export const userSchema = new Schema<User>({
+  orgId: { type: String, required: true },
   name: { type: String, required: true },
   enrolledCourses: [{ type: Schema.Types.ObjectId, ref: 'Course' }],
   gitHandle: { type: String },

@@ -1,15 +1,16 @@
 import { Request, Response } from 'express';
-import CourseModel from '../models/Course';
-import UserModel from '../models/User';
-import TeamModel from '../models/Team';
-import TeamSetModel from '../models/TeamSet';
-import AssessmentModel from '../models/Assessment';
+import Course from '../models/Course';
+import User from '../models/User';
+import Team from '../models/Team';
+import TeamSet from '../models/TeamSet';
+import Assessment from '../models/Assessment';
 import Account from '../models/Account';
+import { Document } from 'mongoose';
 
 // Create a new course
 export const createCourse = async (req: Request, res: Response) => {
   try {
-    const newCourse = await CourseModel.create(req.body);
+    const newCourse = await Course.create(req.body);
     res.status(201).json(newCourse);
   } catch (error) {
     res.status(400).json({ error: 'Failed to create course' });
@@ -19,7 +20,7 @@ export const createCourse = async (req: Request, res: Response) => {
 // Get all courses
 export const getAllCourses = async (_req: Request, res: Response) => {
   try {
-    const courses = await CourseModel.find();
+    const courses = await Course.find();
     res.json(courses);
   } catch (error) {
     res.status(400).json({ error: 'Failed to fetch courses' });
@@ -30,7 +31,7 @@ export const getAllCourses = async (_req: Request, res: Response) => {
 export const getCourseById = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   try {
-    const course = await CourseModel.findById(courseId)
+    const course = await Course.findById(courseId)
       .populate('faculty')
       .populate('TAs')
       .populate('students')
@@ -68,13 +69,9 @@ export const getCourseById = async (req: Request, res: Response) => {
 export const updateCourseById = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   try {
-    const updatedCourse = await CourseModel.findByIdAndUpdate(
-      courseId,
-      req.body,
-      {
-        new: true,
-      }
-    );
+    const updatedCourse = await Course.findByIdAndUpdate(courseId, req.body, {
+      new: true,
+    });
     if (updatedCourse) {
       res.json(updatedCourse);
     } else {
@@ -90,16 +87,16 @@ export const deleteCourseById = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   try {
     //delete course and its teams
-    const deletedCourse = await CourseModel.findByIdAndDelete(courseId);
+    const deletedCourse = await Course.findByIdAndDelete(courseId);
     if (!deletedCourse) {
       return res.status(404).json({ error: 'Course not found' });
     }
 
     // Delete corresponding teams
-    await TeamSetModel.deleteMany({ _id: { $in: deletedCourse.teamSets } });
+    await TeamSet.deleteMany({ _id: { $in: deletedCourse.teamSets } });
 
     // Update references in the Users (students) collection
-    await UserModel.updateMany(
+    await User.updateMany(
       { enrolledCourses: courseId },
       { $pull: { enrolledCourses: courseId } }
     );
@@ -115,7 +112,7 @@ export const addStudents = async (req: Request, res: Response) => {
   const students = req.body.items;
 
   try {
-    const course = await CourseModel.findById(courseId);
+    const course = await Course.findById(courseId);
 
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
@@ -124,24 +121,24 @@ export const addStudents = async (req: Request, res: Response) => {
     for (const studentData of students) {
       const studentId = studentData.id;
 
-      const account = await Account.findOne({ userId: studentId });
-
-      if (!account) {
-        return res.status(404).json({ message: 'Account not found' });
-      }
-      if (account.role !== 'Student') {
-        continue;
-      }
-
-      const student = await UserModel.findOne({ id: studentId });
+      const student = await User.findOne({ orgId: studentId });
       if (!student) {
         return res.status(404).json({ message: 'Student not found' });
       }
-      if (!student.enrolledCourses.includes(course._id)) {
+
+      const account = await Account.findOne({ userId: student._id });
+
+      if (!account) {
+        return res.status(404).json({ message: 'Account not found' });
+      } else if (account.role !== 'Student') {
+        continue;
+      }
+
+      if (!student.enrolledCourses.some((s) => s.equals(course._id))) {
         student.enrolledCourses.push(course._id);
       }
       await student.save();
-      if (!course.students.includes(student._id)) {
+      if (!course.students.some((s: any) => s.orgId === student.orgId)) {
         course.students.push(student._id);
       }
     }
@@ -161,51 +158,55 @@ export const addTeams = async (req: Request, res: Response) => {
   const students = req.body.items;
 
   try {
-    const course = await CourseModel.findById(courseId);
+    const course = await Course.findById(courseId);
 
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
 
     for (const studentData of students) {
-      const studentId = studentData.id;
+      const student = await User.findOne({ orgId: studentData.id });
 
-      const account = await Account.findOne({ userId: studentId });
+      if (!student) {
+        return res.status(404).json({ message: 'Student not found' });
+      }
 
-      const student = await UserModel.findOne({ id: studentId });
+      const account = await Account.findOne({ user: student._id });
 
       if (
         !account ||
-        !student ||
         account.role !== 'Student' ||
-        !student.enrolledCourses.includes(course._id) ||
-        !course.students.includes(student._id) ||
+        !student.enrolledCourses.some((ec) => ec._id === course._id) ||
+        !course.students.some((s) => s._id == student._id) ||
         !studentData.teamSet ||
         !studentData.teamNumber
       ) {
         continue;
       }
 
-      let teamSet = await TeamSetModel.findOne({
+      let teamSet = await TeamSet.findOne({
         course: course._id,
         name: studentData.teamSet,
       });
       if (!teamSet) {
         return res.status(404).json({ message: 'TeamSet not found' });
       }
-      let team = await TeamModel.findOne({
+      let team = await Team.findOne({
         number: studentData.teamNumber,
         teamSet: teamSet._id,
       });
       if (!team) {
-        team = new TeamModel({
+        team = new Team({
           number: studentData.teamNumber,
           teamSet: teamSet._id,
           members: [],
         });
+        if (!teamSet.teams) {
+          teamSet.teams = [];
+        }
         teamSet.teams.push(team._id);
       }
-      if (!team.members.includes(student._id)) {
+      if (team.members && !team.members.some((s) => s._id === student._id)) {
         team.members.push(student._id);
       }
       await team.save();
@@ -227,7 +228,7 @@ export const addTAs = async (req: Request, res: Response) => {
   const TAs = req.body.items;
 
   try {
-    const course = await CourseModel.findById(courseId);
+    const course = await Course.findById(courseId);
 
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
@@ -236,7 +237,7 @@ export const addTAs = async (req: Request, res: Response) => {
     for (const TAData of TAs) {
       const TAId = TAData.id;
       const account = await Account.findOne({ userId: TAId });
-      const TA = await UserModel.findOne({ id: TAId });
+      const TA = await User.findOne({ id: TAId });
 
       if (!account || !TA) {
         return res.status(404).json({ message: 'TA not found' });
@@ -244,11 +245,11 @@ export const addTAs = async (req: Request, res: Response) => {
       if (account.role !== 'Teaching assistant') {
         continue;
       }
-      if (!TA.enrolledCourses.includes(course._id)) {
+      if (!TA.enrolledCourses.some((s) => s._id === course._id)) {
         TA.enrolledCourses.push(course._id);
       }
       await TA.save();
-      if (!course.TAs.includes(TA._id)) {
+      if (!course.TAs.some((s) => s._id === TA._id)) {
         course.TAs.push(TA._id);
       }
     }
@@ -268,14 +269,14 @@ export const addMilestone = async (req: Request, res: Response) => {
   const { milestoneNumber, dateline, description } = req.body;
 
   try {
-    const course = await CourseModel.findById(courseId);
+    const course = await Course.findById(courseId);
 
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
 
     const milestone = {
-      milestoneNumber,
+      number: milestoneNumber,
       dateline,
       description,
     };
@@ -295,14 +296,14 @@ export const addSprint = async (req: Request, res: Response) => {
   const { sprintNumber, startDate, endDate, description } = req.body;
 
   try {
-    const course = await CourseModel.findById(courseId);
+    const course = await Course.findById(courseId);
 
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
 
     const sprint = {
-      sprintNumber,
+      number: sprintNumber,
       startDate,
       endDate,
       description,
@@ -323,13 +324,13 @@ export const addTeamSet = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   const { name } = req.body;
   try {
-    const course = await CourseModel.findById(courseId);
+    const course = await Course.findById(courseId);
 
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
 
-    const teamSet = new TeamSetModel({ name, course: courseId });
+    const teamSet = new TeamSet({ name, course: courseId });
     course.teamSets.push(teamSet._id);
     await course.save();
     await teamSet.save();
@@ -355,12 +356,12 @@ export const addAssessment = async (req: Request, res: Response) => {
   } = req.body;
 
   try {
-    const course = await CourseModel.findById(courseId);
+    const course = await Course.findById(courseId);
 
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
-    const existingAssessment = await AssessmentModel.findOne({
+    const existingAssessment = await Assessment.findOne({
       course: courseId,
       assessmentType: assessmentType,
     });
@@ -371,7 +372,7 @@ export const addAssessment = async (req: Request, res: Response) => {
 
     let teamSetID = null;
     if (granularity === 'team' && teamSetName) {
-      const teamSet = await TeamSetModel.findOne({
+      const teamSet = await TeamSet.findOne({
         course: courseId,
         name: teamSetName,
       });
@@ -381,7 +382,7 @@ export const addAssessment = async (req: Request, res: Response) => {
       teamSetID = teamSet._id;
     }
 
-    const assessment = new AssessmentModel({
+    const assessment = new Assessment({
       course: courseId,
       assessmentType,
       markType,

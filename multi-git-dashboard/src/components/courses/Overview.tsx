@@ -1,7 +1,7 @@
 import GithubTeamCard from './cards/GithubTeamCard';
 import { Container, Flex, ScrollArea, Text } from '@mantine/core';
-import { Course } from '@backend/models/Course';
-import { TeamData } from '@backend/models/TeamData';
+import { Course } from '@shared/types/Course';
+import { TeamData } from '@shared/types/TeamData';
 
 interface OverviewProps {
   course: Course;

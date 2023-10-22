@@ -1,22 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-
-export interface TeamContribution {
-  commits: number;
-  additions: number;
-  deletions: number;
-}
-
-export interface TeamData {
-  teamId: number;
-  repoName: string;
-  commits: number;
-  issues: number;
-  stars: number;
-  forks: number;
-  pullRequests: number;
-  updatedIssues: string[];
-  teamContributions: Record<string, TeamContribution>;
-}
+import { TeamData } from '@shared/types/TeamData';
 
 const teamDataSchema: Schema = new Schema<TeamData>({
   teamId: { type: Number, required: true },
@@ -37,4 +20,4 @@ const teamDataSchema: Schema = new Schema<TeamData>({
   },
 });
 
-export const TeamData = mongoose.model<TeamData>('TeamData', teamDataSchema);
+export default mongoose.model<TeamData>('TeamData', teamDataSchema);

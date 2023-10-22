@@ -1,5 +1,6 @@
-import mongoose, { ConnectOptions } from 'mongoose';
-import TeamModel, { Team } from '../../models/Team';
+import mongoose, { ConnectOptions, Types } from 'mongoose';
+import TeamModel from '../../models/Team';
+import { Team } from '@shared/types/Team';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
 let mongoServer: MongoMemoryServer;
@@ -21,9 +22,30 @@ afterAll(async () => {
 describe('TeamModel', () => {
   it('should create and save a new team', async () => {
     const teamData: Team = {
-      teamSet: new mongoose.Types.ObjectId(),
+      teamSet: {
+        name: 'Test Team Set',
+        course: {
+          name: 'Test Course',
+          code: 'COURSE101',
+          semester: 'Spring 2023',
+          faculty: [],
+          TAs: [],
+          students: [],
+          teamSets: [],
+          sprints: [],
+          milestones: [],
+          assessments: [],
+          courseType: 'Normal',
+        },
+        teams: [],
+      },
       number: 1,
-      TA: new mongoose.Types.ObjectId(),
+      TA: {
+        orgId: 'testTA',
+        name: 'Test TA',
+        enrolledCourses: [],
+        gitHandle: 'testTA',
+      },
       members: [],
     };
 
@@ -48,9 +70,9 @@ describe('TeamModel', () => {
 
   it('should update an existing team', async () => {
     const existingTeam = new TeamModel({
-      teamSet: new mongoose.Types.ObjectId(),
+      teamSet: new Types.ObjectId(),
       number: 2,
-      TA: new mongoose.Types.ObjectId(),
+      TA: new Types.ObjectId(),
       members: [],
     });
 
@@ -67,9 +89,9 @@ describe('TeamModel', () => {
 
   it('should delete an existing team', async () => {
     const teamToDelete = new TeamModel({
-      teamSet: new mongoose.Types.ObjectId(),
+      teamSet: new Types.ObjectId(),
       number: 4,
-      TA: new mongoose.Types.ObjectId(),
+      TA: new Types.ObjectId(),
       members: [],
     });
 

@@ -25,9 +25,9 @@ import {
   ComposedChart,
   Line,
 } from 'recharts';
-import { TeamData } from '@backend/models/TeamData';
+import { TeamData } from '@shared/types/TeamData';
 import { useState } from 'react';
-import { Milestone, Sprint, isSprint } from '@backend/models/Course';
+import { Milestone, Sprint, isSprint } from '@shared/types/Course';
 
 interface GithubTeamCardProps {
   teamData: TeamData;

@@ -1,41 +1,16 @@
 import mongoose, { Schema, Types } from 'mongoose';
-import { Assessment } from './Assessment';
-import { TeamSet } from './TeamSet';
-import { User } from './User';
+import { Course as SharedCourse } from '@shared/types/Course';
 
-export interface Sprint {
-  number: number;
-  description: string;
-  startDate: Date;
-  endDate: Date;
-}
-
-export interface Milestone {
-  number: number;
-  dateline: Date;
-  description: string;
-}
-
-export const isSprint = (obj: Sprint | Milestone): obj is Sprint =>
-  (obj as Sprint).startDate !== undefined;
-
-export interface Course {
-  _id: Types.ObjectId;
-  name: string;
-  code: string;
-  semester: string;
-  faculty: User[];
-  TAs: User[];
-  students: User[];
-  teamSets: TeamSet[];
-  assessments: Assessment[];
-  sprints: Sprint[];
-  milestones: Milestone[];
-  courseType: 'GitHubOrg' | 'Normal';
-  // start 'GitHubOrg' fields
-  githubOrgName?: string;
-  installationToken?: string;
-  // end 'GitHubOrg' fields
+export interface Course
+  extends Omit<
+    SharedCourse,
+    'faculty' | 'TAs' | 'students' | 'teamSets' | 'assessments'
+  > {
+  faculty: Types.ObjectId[];
+  TAs: Types.ObjectId[];
+  students: Types.ObjectId[];
+  teamSets: Types.ObjectId[];
+  assessments: Types.ObjectId[];
 }
 
 export const courseSchema = new Schema<Course>({
@@ -71,6 +46,4 @@ export const courseSchema = new Schema<Course>({
   installationToken: String,
 });
 
-const CourseModel = mongoose.model<Course>('Course', courseSchema);
-
-export default CourseModel;
+export default mongoose.model<Course>('Course', courseSchema);

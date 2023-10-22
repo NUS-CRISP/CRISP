@@ -1,5 +1,6 @@
 import mongoose, { ConnectOptions } from 'mongoose';
-import UserModel, { User } from '../../models/User';
+import UserModel from '../../models/User';
+import { User } from '../../../shared/types/User';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
 let mongoServer: MongoMemoryServer;
@@ -28,6 +29,7 @@ describe('UserModel', () => {
       name: 'John Doe',
       enrolledCourses: [],
       gitHandle: 'johndoe-git',
+      orgId: 'e1234567',
     };
 
     const user = new UserModel(userData);

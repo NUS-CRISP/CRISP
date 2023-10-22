@@ -1,12 +1,9 @@
 import mongoose, { Schema, Types } from 'mongoose';
-import { Course } from './Course';
-import { Team } from './Team';
+import { TeamSet as SharedTeamSet } from '@shared/types/TeamSet';
 
-export interface TeamSet {
-  _id: Types.ObjectId;
-  course: Course;
-  name: string;
-  teams: Team[];
+export interface TeamSet extends Omit<SharedTeamSet, 'course' | 'teams'> {
+  course: Types.ObjectId;
+  teams?: Types.ObjectId[];
 }
 
 const teamSetSchema = new Schema<TeamSet>({
@@ -15,6 +12,4 @@ const teamSetSchema = new Schema<TeamSet>({
   teams: [{ type: Schema.Types.ObjectId, ref: 'Team' }],
 });
 
-const TeamSetModel = mongoose.model<TeamSet>('TeamSet', teamSetSchema);
-
-export default TeamSetModel;
+export default mongoose.model<TeamSet>('TeamSet', teamSetSchema);
