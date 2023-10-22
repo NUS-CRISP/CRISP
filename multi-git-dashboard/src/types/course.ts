@@ -59,6 +59,7 @@ export interface Assessment {
 }
 
 export interface Result {
+  _id: string;
   assessment: Assessment;
   team: Team;
   markers: User[];

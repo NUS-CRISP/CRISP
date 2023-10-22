@@ -1,8 +1,20 @@
 import { useEffect, useState } from 'react';
 import { Button, Table } from '@mantine/core';
-import { getSession } from 'next-auth/react';
+import { GetSessionParams, getSession } from 'next-auth/react';
+import { User } from 'next-auth';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
+
+interface Account {
+  _id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+interface CustomUser extends User {
+  role: string;
+}
 
 const AdminPage: React.FC = () => {
   const [pendingAccounts, setPendingAccounts] = useState([]);
@@ -22,7 +34,7 @@ const AdminPage: React.FC = () => {
     fetchPendingAccounts();
   }, []);
 
-  const handleApprove = async id => {
+  const handleApprove = async (id: string) => {
     // Approve account
     const response = await fetch(
       `http://localhost:${backendPort}/api/accounts/${id}/approve`,
@@ -33,11 +45,13 @@ const AdminPage: React.FC = () => {
 
     if (response.ok) {
       // Remove account from the list of pending accounts
-      setPendingAccounts(pendingAccounts.filter(account => account._id !== id));
+      setPendingAccounts(
+        pendingAccounts.filter((account: Account) => account._id !== id)
+      );
     }
   };
 
-  const rows = pendingAccounts.map(account => (
+  const rows = pendingAccounts.map((account: Account) => (
     <Table.Tr key={account._id}>
       <Table.Td>{account.name}</Table.Td>
       <Table.Td>{account.email}</Table.Td>
@@ -55,10 +69,10 @@ const AdminPage: React.FC = () => {
   );
 };
 
-export async function getServerSideProps(context) {
+export async function getServerSideProps(context: GetSessionParams) {
   const session = await getSession(context);
 
-  if (!session || session.user.role !== 'admin') {
+  if (!session || (session.user as CustomUser).role !== 'admin') {
     return {
       redirect: {
         destination: '/auth/signin', // redirect to signin page or another appropriate page

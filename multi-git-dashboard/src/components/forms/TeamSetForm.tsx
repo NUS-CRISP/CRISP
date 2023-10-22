@@ -5,11 +5,14 @@ import { useForm } from '@mantine/form';
 const backendPort = process.env.BACKEND_PORT || 3001;
 
 interface TeamSetFormProps {
-  courseId : string;
+  courseId: string;
   onTeamSetCreated: () => void;
 }
 
-const TeamSetForm: React.FC<TeamSetFormProps> = ({ courseId, onTeamSetCreated }) => {
+const TeamSetForm: React.FC<TeamSetFormProps> = ({
+  courseId,
+  onTeamSetCreated,
+}) => {
   const form = useForm({
     initialValues: {
       course: courseId,
@@ -19,16 +22,18 @@ const TeamSetForm: React.FC<TeamSetFormProps> = ({ courseId, onTeamSetCreated })
   });
 
   const handleSubmit = async () => {
-    
     console.log('Sending teamset data:', form.values);
 
-    const response = await fetch(`http://localhost:${backendPort}/api/courses/${courseId}/teamsets`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(form.values),
-    });
+    const response = await fetch(
+      `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/teamsets`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form.values),
+      }
+    );
 
     const data = await response.json();
     console.log('TeamSet created:', data);
@@ -43,7 +48,7 @@ const TeamSetForm: React.FC<TeamSetFormProps> = ({ courseId, onTeamSetCreated })
           label="TeamSet Name"
           {...form.getInputProps('name')}
           value={form.values.name}
-          onChange={(event) => {
+          onChange={event => {
             form.setFieldValue('name', event.currentTarget.value);
           }}
         />

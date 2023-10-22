@@ -16,14 +16,14 @@ const CourseCard: React.FC<CourseCardProps> = ({ name, code, semester }) => {
       withBorder
       style={{ width: '350px', height: '200px' }}
     >
-      <Group position="apart" mt="md" mb="xs">
-        <Text weight={500}>{name}</Text>
+      <Group mt="md" mb="xs">
+        <Text>{name}</Text>
       </Group>
 
-      <Text size="sm" color="dimmed">
+      <Text size="sm" c="dimmed">
         {code}
       </Text>
-      <Text size="sm" color="dimmed">
+      <Text size="sm" c="dimmed">
         {semester}
       </Text>
     </Card>

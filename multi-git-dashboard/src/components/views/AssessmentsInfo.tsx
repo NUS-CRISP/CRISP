@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import AssessmentCard from '../CourseView/Cards/AssessmentCard';
+import Link from 'next/link';
+import AssessmentCard from '../cards/AssessmentCard';
 import { Course } from '../../types/course';
 import AssessmentForm from '../forms/AssessmentForm';
 import { Button, Container } from '@mantine/core';
@@ -16,15 +17,21 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
   const [isCreatingAssessment, setIsCreatingAssessment] = useState(false);
 
   const assessmentCards = course.assessments.map(assessment => (
-    <AssessmentCard
+    <Link
       key={assessment._id}
-      assessmentType={assessment.assessmentType}
-      markType={assessment.markType}
-      frequency={assessment.frequency}
-      granularity={assessment.granularity}
-      teamSetName={assessment.teamSet ? assessment.teamSet.name : null}
-      formLink={assessment.formLink}
-    />
+      href={`/courses/${course._id}/assessments/${assessment._id}`}
+      passHref
+    >
+      <AssessmentCard
+        key={assessment._id}
+        assessmentType={assessment.assessmentType}
+        markType={assessment.markType}
+        frequency={assessment.frequency}
+        granularity={assessment.granularity}
+        teamSetName={assessment.teamSet ? assessment.teamSet.name : null}
+        formLink={assessment.formLink}
+      />
+    </Link>
   ));
 
   const handleAssessmentCreated = () => {
@@ -44,6 +51,7 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
       {isCreatingAssessment && (
         <AssessmentForm
           courseId={course._id}
+          teamSets={course.teamSets}
           onAssessmentCreated={handleAssessmentCreated}
         />
       )}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, TextInput, Button } from '@mantine/core';
 import { DatePicker } from '@mantine/dates';
+import '@mantine/dates/styles.css';
 import { useForm } from '@mantine/form';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
@@ -10,8 +11,10 @@ interface MilestoneFormProps {
   onMilestoneCreated: () => void;
 }
 
-const MilestoneForm: React.FC<MilestoneFormProps> = ({ courseId, onMilestoneCreated }) => {
-
+const MilestoneForm: React.FC<MilestoneFormProps> = ({
+  courseId,
+  onMilestoneCreated,
+}) => {
   const form = useForm({
     initialValues: {
       milestoneNumber: 0,
@@ -19,22 +22,25 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({ courseId, onMilestoneCrea
       description: '',
     },
     validate: {
-      milestoneNumber: (value) => (value >= 1 && value <= 100 ? null : 'Invalid milestone number'),
-      dateline: (value) => (value ? null : 'Dateline is required'),
-    }
+      milestoneNumber: value =>
+        value >= 1 && value <= 100 ? null : 'Invalid milestone number',
+      dateline: value => (value ? null : 'Dateline is required'),
+    },
   });
 
   const handleSubmit = async () => {
-
     console.log('Sending milestone data:', form.values);
 
-    const response = await fetch(`http://localhost:${backendPort}/api/courses/${courseId}/milestones`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(form.values),
-    });
+    const response = await fetch(
+      `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/milestones`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form.values),
+      }
+    );
 
     const data = await response.json();
     console.log('Milestone created:', data);
@@ -49,7 +55,7 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({ courseId, onMilestoneCrea
           label="Milestone Number"
           {...form.getInputProps('milestoneNumber')}
           value={form.values.milestoneNumber}
-          onChange={(event) => {
+          onChange={event => {
             form.setFieldValue('milestoneNumber', +event.currentTarget.value);
           }}
         />
@@ -57,7 +63,7 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({ courseId, onMilestoneCrea
           allowDeselect
           {...form.getInputProps('dateline')}
           value={form.values.dateline}
-          onChange={(date) => {
+          onChange={date => {
             form.setFieldValue('dateline', date || new Date());
           }}
           placeholder="Select dateline"
@@ -68,7 +74,7 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({ courseId, onMilestoneCrea
           label="Description"
           {...form.getInputProps('description')}
           value={form.values.description}
-          onChange={(event) => {
+          onChange={event => {
             form.setFieldValue('description', event.currentTarget.value);
           }}
         />

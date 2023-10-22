@@ -1,9 +1,9 @@
 export interface User {
   _id: string;
-  id: string;
   name: string;
+  identifier: string;
   email: string;
   enrolledCourses: string[];
   gitHandle: string;
-  role: 'student' | 'ta' | 'lecturer';
+  role: 'Faculty member' | 'Teaching assistant' | 'Student';
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, TextInput, Button } from '@mantine/core';
 import { DatePicker } from '@mantine/dates';
+import '@mantine/dates/styles.css';
 import { useForm } from '@mantine/form';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
@@ -10,7 +11,10 @@ interface SprintFormProps {
   onSprintCreated: () => void;
 }
 
-const SprintForm: React.FC<SprintFormProps> = ({ courseId, onSprintCreated }) => {
+const SprintForm: React.FC<SprintFormProps> = ({
+  courseId,
+  onSprintCreated,
+}) => {
   const form = useForm({
     initialValues: {
       sprintNumber: 0,
@@ -19,22 +23,26 @@ const SprintForm: React.FC<SprintFormProps> = ({ courseId, onSprintCreated }) =>
       endDate: new Date(),
     },
     validate: {
-      sprintNumber: (value) => (value >= 1 && value <= 100 ? null : 'Invalid sprint number'),
-      startDate: (value) => (value ? null : 'Start date is required'),
-      endDate: (value) => (value ? null : 'End date is required'),
+      sprintNumber: value =>
+        value >= 1 && value <= 100 ? null : 'Invalid sprint number',
+      startDate: value => (value ? null : 'Start date is required'),
+      endDate: value => (value ? null : 'End date is required'),
     },
   });
 
   const handleSubmit = async () => {
     console.log('Sending sprint data:', form.values);
 
-    const response = await fetch(`http://localhost:${backendPort}/api/courses/${courseId}/sprints`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(form.values),
-    });
+    const response = await fetch(
+      `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/sprints`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form.values),
+      }
+    );
 
     const data = await response.json();
     console.log('Sprint created:', data);
@@ -49,7 +57,7 @@ const SprintForm: React.FC<SprintFormProps> = ({ courseId, onSprintCreated }) =>
           label="Sprint Number"
           {...form.getInputProps('sprintNumber')}
           value={form.values.sprintNumber}
-          onChange={(event) => {
+          onChange={event => {
             form.setFieldValue('sprintNumber', +event.currentTarget.value);
           }}
         />
@@ -57,7 +65,7 @@ const SprintForm: React.FC<SprintFormProps> = ({ courseId, onSprintCreated }) =>
           allowDeselect
           {...form.getInputProps('startDate')}
           value={form.values.startDate}
-          onChange={(date) => {
+          onChange={date => {
             form.setFieldValue('startDate', date || new Date());
           }}
           placeholder="Select start date"
@@ -67,7 +75,7 @@ const SprintForm: React.FC<SprintFormProps> = ({ courseId, onSprintCreated }) =>
           allowDeselect
           {...form.getInputProps('endDate')}
           value={form.values.endDate}
-          onChange={(date) => {
+          onChange={date => {
             form.setFieldValue('endDate', date || new Date());
           }}
           placeholder="Select end date"
@@ -78,7 +86,7 @@ const SprintForm: React.FC<SprintFormProps> = ({ courseId, onSprintCreated }) =>
           label="Description"
           {...form.getInputProps('description')}
           value={form.values.description}
-          onChange={(event) => {
+          onChange={event => {
             form.setFieldValue('description', event.currentTarget.value);
           }}
         />

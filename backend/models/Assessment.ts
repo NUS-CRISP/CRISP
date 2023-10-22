@@ -22,10 +22,13 @@ const assessmentSchema = new Schema<Assessment>({
     enum: ['individual', 'team'],
     required: true,
   },
-  teamSet: { type: Schema.Types.ObjectId, ref: 'TeamSet'},
+  teamSet: { type: Schema.Types.ObjectId, ref: 'TeamSet' },
   formLink: { type: String },
 });
 
-const AssessmentModel = mongoose.model<Assessment>('Assessment', assessmentSchema);
+const AssessmentModel = mongoose.model<Assessment>(
+  'Assessment',
+  assessmentSchema
+);
 
 export default AssessmentModel;

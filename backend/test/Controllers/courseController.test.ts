@@ -6,10 +6,6 @@ import {
   getCourseById,
   updateCourseById,
   deleteCourseById,
-  addStudents,
-  addMilestone,
-  addSprint,
-  addTeamSet
 } from '../../controllers/courseController';
 import CourseModel from '../../models/Course';
 import UserModel from '../../models/User';
@@ -41,8 +37,10 @@ describe('Course Controller', () => {
   });
 
   describe('createCourse', () => {
-    it('should create a new course', async () => {  
-      const req: Partial<Request> = { body: { name: 'Test Course', code: 'TEST101', semester: 'Spring' } };
+    it('should create a new course', async () => {
+      const req: Partial<Request> = {
+        body: { name: 'Test Course', code: 'TEST101', semester: 'Spring' },
+      };
       const res: Partial<Response> = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn(),
@@ -72,7 +70,9 @@ describe('Course Controller', () => {
       await createCourse(req as Request, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create course' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to create course',
+      });
     });
   });
 
@@ -98,7 +98,9 @@ describe('Course Controller', () => {
 
     it('should handle errors when fetching courses', async () => {
       // Mock the CourseModel.find() function to throw an error
-      CourseModel.find = jest.fn().mockRejectedValue(new Error('Database error'));
+      CourseModel.find = jest
+        .fn()
+        .mockRejectedValue(new Error('Database error'));
 
       const req: Partial<Request> = {};
       const res: Partial<Response> = {
@@ -108,7 +110,9 @@ describe('Course Controller', () => {
 
       await getAllCourses(req as Request, res as Response);
 
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch courses' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to fetch courses',
+      });
       expect(res.status).toHaveBeenCalledWith(400);
     });
   });
@@ -122,18 +126,21 @@ describe('Course Controller', () => {
       };
       const newCourse = await CourseModel.create(courseData);
 
-      const req: Partial<Request> = { params: { id: newCourse._id.toString() } };
+      const req: Partial<Request> = {
+        params: { id: newCourse._id.toString() },
+      };
       const res: Partial<Response> = {
         json: jest.fn(),
       };
 
       await getCourseById(req as Request, res as Response);
 
-      expect(res.json).toHaveBeenCalledWith(expect.objectContaining(courseData));
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining(courseData)
+      );
     });
 
     it('should handle errors when fetching a course by ID', async () => {
-
       const req: Partial<Request> = { params: { id: 'invalid-id' } };
       const res: Partial<Response> = {
         status: jest.fn().mockReturnThis(),
@@ -143,11 +150,15 @@ describe('Course Controller', () => {
       await getCourseById(req as Request, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch course' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to fetch course',
+      });
     });
 
     it('should handle not found when fetching a non-existent course by ID', async () => {
-      const req: Partial<Request> = { params: { id: 'nonexistentid1234567890' } };
+      const req: Partial<Request> = {
+        params: { id: 'nonexistentid1234567890' },
+      };
       const res: Partial<Response> = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn(),
@@ -192,7 +203,6 @@ describe('Course Controller', () => {
     });
 
     it('should handle errors when updating a course by ID', async () => {
-
       const req: Partial<Request> = {
         params: { id: 'invalid-id' },
         body: {},
@@ -205,7 +215,9 @@ describe('Course Controller', () => {
       await updateCourseById(req as Request, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update course' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to update course',
+      });
     });
 
     it('should handle not found when updating a non-existent course by ID', async () => {
@@ -246,11 +258,12 @@ describe('Course Controller', () => {
       const deletedCourse = await CourseModel.findById(newCourse._id);
 
       expect(deletedCourse).toBeNull();
-      expect(res.json).toHaveBeenCalledWith({ message: 'Course deleted successfully' });
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Course deleted successfully',
+      });
     });
 
     it('should handle errors when deleting a course by ID', async () => {
-
       const req: Partial<Request> = {
         params: { id: 'invalid-id' },
       };
@@ -262,7 +275,9 @@ describe('Course Controller', () => {
       await deleteCourseById(req as Request, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete course' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to delete course',
+      });
     });
 
     it('should handle not found when deleting a non-existent course by ID', async () => {
@@ -280,8 +295,5 @@ describe('Course Controller', () => {
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
     });
-    
   });
-
-
 });

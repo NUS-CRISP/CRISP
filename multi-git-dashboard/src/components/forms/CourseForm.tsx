@@ -10,7 +10,6 @@ interface CourseFormProps {
 }
 
 const CourseForm: React.FC<CourseFormProps> = ({ onCourseCreated }) => {
-
   const form = useForm({
     initialValues: {
       name: '',
@@ -20,7 +19,6 @@ const CourseForm: React.FC<CourseFormProps> = ({ onCourseCreated }) => {
   });
 
   const handleSubmit = async () => {
-
     console.log('Sending course data:', form.values, 'to:', apiUrl);
 
     const response = await fetch(apiUrl, {
@@ -44,7 +42,7 @@ const CourseForm: React.FC<CourseFormProps> = ({ onCourseCreated }) => {
           label="Course Name"
           {...form.getInputProps('name')}
           value={form.values.name}
-          onChange={(event) => {
+          onChange={event => {
             form.setFieldValue('name', event.currentTarget.value);
           }}
         />
@@ -53,7 +51,7 @@ const CourseForm: React.FC<CourseFormProps> = ({ onCourseCreated }) => {
           label="Course Code"
           {...form.getInputProps('code')}
           value={form.values.code}
-          onChange={(event) => {
+          onChange={event => {
             form.setFieldValue('code', event.currentTarget.value);
           }}
         />
@@ -62,11 +60,13 @@ const CourseForm: React.FC<CourseFormProps> = ({ onCourseCreated }) => {
           label="Semester"
           {...form.getInputProps('semester')}
           value={form.values.semester}
-          onChange={(event) => {
+          onChange={event => {
             form.setFieldValue('semester', event.currentTarget.value);
           }}
         />
-        <Button type="submit" style={{ marginTop: '16px' }}>Create Course</Button>
+        <Button type="submit" style={{ marginTop: '16px' }}>
+          Create Course
+        </Button>
       </form>
     </Box>
   );

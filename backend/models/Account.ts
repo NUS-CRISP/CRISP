@@ -1,6 +1,14 @@
-import mongoose from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
-const accountSchema = new mongoose.Schema({
+export interface Account {
+  email: string;
+  password: string;
+  role: string;
+  isApproved: boolean;
+  userId: mongoose.Types.ObjectId;
+}
+
+const accountSchema = new Schema({
   email: {
     type: String,
     unique: true,
@@ -22,4 +30,6 @@ const accountSchema = new mongoose.Schema({
   },
 });
 
-export default mongoose.model('Account', accountSchema);
+const AccountModel = mongoose.model('Account', accountSchema);
+
+export default AccountModel;

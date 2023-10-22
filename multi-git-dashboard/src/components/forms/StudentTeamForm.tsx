@@ -1,35 +1,53 @@
 import React, { useState, useCallback } from 'react';
-import { Box, TextInput, Button, Group, Text } from '@mantine/core';
+import {
+  Box,
+  TextInput,
+  Button,
+  Group,
+  Text,
+  Notification,
+} from '@mantine/core';
 import { IconUpload, IconPhoto, IconX } from '@tabler/icons-react';
 import { useForm } from '@mantine/form';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
 import Papa from 'papaparse';
 import { saveAs } from 'file-saver';
-import { User } from '@/types/user';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
 
-interface TAFormProps {
+interface StudentTeamFormProps {
   courseId: string | string[] | undefined;
-  onTACreated: () => void;
+  teamSet: string;
+  onTeamCreated: () => void;
+}
+
+interface StudentTeamFormUser {
+  identifier: string;
+  teamSet: string;
+  teamNumber: number;
 }
 
 interface Results {
-  data: User[];
+  data: {
+    identifier: string;
+    teamSet: string;
+    teamNumber: number;
+  }[];
 }
 
-const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
+const StudentTeamForm: React.FC<StudentTeamFormProps> = ({
+  courseId,
+  teamSet,
+  onTeamCreated,
+}) => {
   const form = useForm({
     initialValues: {
-      name: '',
       identifier: '',
-      email: '',
-    },
-    validate: {
-      //email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
+      teamNumber: 0,
     },
   });
-  const [TAs, setTAs] = useState<User[]>([]);
+
+  const [students, setStudents] = useState<StudentTeamFormUser[]>([]);
 
   const handleFileUpload = useCallback((file: File) => {
     if (file) {
@@ -39,13 +57,15 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
           header: true,
           skipEmptyLines: true,
           complete: function (results: Results) {
-            const TAsData = results.data;
-            const TAs = TAsData.map((TA: User) => ({
-              identifier: TA.identifier || '',
-              name: TA.name || '',
-              email: TA.email || '',
-            }));
-            setTAs(TAs as unknown as User[]);
+            const studentsData = results.data;
+            const students = studentsData.map(
+              (student: StudentTeamFormUser) => ({
+                identifier: student.identifier || '',
+                teamSet: teamSet,
+                teamNumber: student.teamNumber,
+              })
+            );
+            setStudents(students);
           },
           error: function (error: Error) {
             console.error('CSV parsing error:', error.message);
@@ -56,88 +76,97 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
     }
   }, []);
 
+  const [error, setError] = useState<string | null>(null);
+
   const downloadCsvTemplate = () => {
-    const csvHeaders = 'name,identifier,email\n';
+    const csvHeaders = 'identifier,teamNumber\n';
     const blob = new Blob([csvHeaders], { type: 'text/csv;charset=utf-8' });
-    saveAs(blob, 'tas_template.csv');
+    saveAs(blob, 'students_team_template.csv');
   };
 
   const handleSubmitCSV = async () => {
-    if (TAs.length === 0) {
-      console.log('No TAs to upload.');
+    if (students.length === 0) {
+      console.log('No teams to upload.');
       return;
     }
 
-    console.log('Sending TAs data:', TAs);
+    console.log('Sending teams data:', students);
 
     try {
       const response = await fetch(
-        `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/tas`,
+        `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/teams/students`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            items: TAs,
+            items: students,
           }),
         }
       );
 
       if (response.ok) {
         const data = await response.json();
-        console.log('TAs created:', data);
-        onTACreated();
+        console.log('Team created:', data);
+        onTeamCreated();
       } else {
-        console.error('Error uploading TAs:', response.statusText);
+        console.error('Error creating team:', response.statusText);
+        setError('Error creating team. Please try again.');
       }
     } catch (error) {
-      console.error('Error uploading TAs:', error);
+      console.error('Error creating team:', error);
+      setError('Error creating team. Please try again.');
     }
   };
 
   const handleSubmitForm = async () => {
-    console.log('Sending ta data:', form.values);
+    console.log('Sending teams data:', form.values);
 
-    const response = await fetch(
-      `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/tas`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          items: [
-            {
-              identifier: form.values.identifier,
-              name: form.values.name,
-              email: form.values.email,
-            },
-          ],
-        }),
+    try {
+      const response = await fetch(
+        `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/teams/students`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            items: [
+              {
+                identifier: form.values.identifier,
+                teamSet: teamSet,
+                teamNumber: form.values.teamNumber,
+              },
+            ],
+          }),
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Team created:', data);
+        onTeamCreated();
+      } else {
+        console.error('Error creating team:', response.statusText);
+        setError('Error creating team. Please try again.');
       }
-    );
-
-    const data = await response.json();
-    console.log('TA created:', data);
-    onTACreated();
+    } catch (error) {
+      console.error('Error creating team:', error);
+      setError('Error creating team. Please try again.');
+    }
   };
 
   return (
     <Box maw={300} mx="auto">
+      {error && (
+        <Notification title="Error" color="red" onClose={() => setError(null)}>
+          {error}
+        </Notification>
+      )}
       <form onSubmit={form.onSubmit(handleSubmitForm)}>
         <TextInput
           withAsterisk
-          label="TA Name"
-          {...form.getInputProps('name')}
-          value={form.values.name}
-          onChange={event => {
-            form.setFieldValue('name', event.currentTarget.value);
-          }}
-        />
-        <TextInput
-          withAsterisk
-          label="TA ID"
+          label="Student ID"
           {...form.getInputProps('identifier')}
           value={form.values.identifier}
           onChange={event => {
@@ -146,15 +175,15 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
         />
         <TextInput
           withAsterisk
-          label="TA Email"
-          {...form.getInputProps('email')}
-          value={form.values.email}
+          label="Team Number"
+          {...form.getInputProps('teamNumber')}
+          value={form.values.teamNumber}
           onChange={event => {
-            form.setFieldValue('email', event.currentTarget.value);
+            form.setFieldValue('teamNumber', +event.currentTarget.value);
           }}
         />
         <Button type="submit" style={{ marginTop: '16px' }}>
-          Create TA
+          Upload Student
         </Button>
       </form>
 
@@ -202,7 +231,7 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
         </Group>
       </Dropzone>
       <Button onClick={handleSubmitCSV} style={{ marginTop: '16px' }}>
-        Upload TAs
+        Upload Students
       </Button>
       <Button onClick={downloadCsvTemplate} style={{ marginTop: '16px' }}>
         Download CSV Template
@@ -211,4 +240,4 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
   );
 };
 
-export default TAForm;
+export default StudentTeamForm;

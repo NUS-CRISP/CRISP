@@ -1,6 +1,6 @@
-import GithubTeamCard from '../CourseView/Cards/GithubTeamCard';
+import GithubTeamCard from '../cards/GithubTeamCard';
 import { Container, Flex, ScrollArea, Text } from '@mantine/core';
-import { Milestone } from '@/types/course';
+import { Milestone, Sprint } from '@/types/course';
 import { ITeamData } from '@backend/models/TeamData';
 
 interface OverviewProps {
@@ -9,6 +9,7 @@ interface OverviewProps {
     code: string;
     semester: string;
     milestones: Milestone[];
+    sprints: Sprint[];
   };
   teamsData: ITeamData[];
 }

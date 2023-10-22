@@ -1,35 +1,38 @@
 import React, { useState, useCallback } from 'react';
-import { Box, TextInput, Button, Group, Text } from '@mantine/core';
+import { Box, Button, Group, Text, Notification } from '@mantine/core';
 import { IconUpload, IconPhoto, IconX } from '@tabler/icons-react';
-import { useForm } from '@mantine/form';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
 import Papa from 'papaparse';
 import { saveAs } from 'file-saver';
-import { User } from '@/types/user';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
 
-interface TAFormProps {
+interface TATeamFormProps {
   courseId: string | string[] | undefined;
-  onTACreated: () => void;
+  teamSet: string;
+  onTeamCreated: () => void;
+}
+
+interface TATeamFormUser {
+  identifier: string;
+  teamSet: string;
+  teamNumber: number;
 }
 
 interface Results {
-  data: User[];
+  data: {
+    identifier: string;
+    teamSet: string;
+    teamNumber: number;
+  }[];
 }
 
-const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
-  const form = useForm({
-    initialValues: {
-      name: '',
-      identifier: '',
-      email: '',
-    },
-    validate: {
-      //email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
-    },
-  });
-  const [TAs, setTAs] = useState<User[]>([]);
+const TATeamForm: React.FC<TATeamFormProps> = ({
+  courseId,
+  teamSet,
+  onTeamCreated,
+}) => {
+  const [TAs, setTAs] = useState<TATeamFormUser[]>([]);
 
   const handleFileUpload = useCallback((file: File) => {
     if (file) {
@@ -40,12 +43,12 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
           skipEmptyLines: true,
           complete: function (results: Results) {
             const TAsData = results.data;
-            const TAs = TAsData.map((TA: User) => ({
+            const TAs = TAsData.map((TA: TATeamFormUser) => ({
               identifier: TA.identifier || '',
-              name: TA.name || '',
-              email: TA.email || '',
+              teamSet: teamSet,
+              teamNumber: TA.teamNumber,
             }));
-            setTAs(TAs as unknown as User[]);
+            setTAs(TAs);
           },
           error: function (error: Error) {
             console.error('CSV parsing error:', error.message);
@@ -56,23 +59,25 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
     }
   }, []);
 
+  const [error, setError] = useState<string | null>(null);
+
   const downloadCsvTemplate = () => {
-    const csvHeaders = 'name,identifier,email\n';
+    const csvHeaders = 'identifier,teamNumber\n';
     const blob = new Blob([csvHeaders], { type: 'text/csv;charset=utf-8' });
-    saveAs(blob, 'tas_template.csv');
+    saveAs(blob, 'tas_team_template.csv');
   };
 
   const handleSubmitCSV = async () => {
     if (TAs.length === 0) {
-      console.log('No TAs to upload.');
+      console.log('No teams to upload.');
       return;
     }
 
-    console.log('Sending TAs data:', TAs);
+    console.log('Sending teams data:', TAs);
 
     try {
       const response = await fetch(
-        `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/tas`,
+        `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/teams/tas`,
         {
           method: 'POST',
           headers: {
@@ -86,77 +91,25 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('TAs created:', data);
-        onTACreated();
+        console.log('Team created:', data);
+        onTeamCreated();
       } else {
-        console.error('Error uploading TAs:', response.statusText);
+        console.error('Error creating team:', response.statusText);
+        setError('Error creating team. Please try again.');
       }
     } catch (error) {
-      console.error('Error uploading TAs:', error);
+      console.error('Error creating team:', error);
+      setError('Error creating team. Please try again.');
     }
-  };
-
-  const handleSubmitForm = async () => {
-    console.log('Sending ta data:', form.values);
-
-    const response = await fetch(
-      `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/tas`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          items: [
-            {
-              identifier: form.values.identifier,
-              name: form.values.name,
-              email: form.values.email,
-            },
-          ],
-        }),
-      }
-    );
-
-    const data = await response.json();
-    console.log('TA created:', data);
-    onTACreated();
   };
 
   return (
     <Box maw={300} mx="auto">
-      <form onSubmit={form.onSubmit(handleSubmitForm)}>
-        <TextInput
-          withAsterisk
-          label="TA Name"
-          {...form.getInputProps('name')}
-          value={form.values.name}
-          onChange={event => {
-            form.setFieldValue('name', event.currentTarget.value);
-          }}
-        />
-        <TextInput
-          withAsterisk
-          label="TA ID"
-          {...form.getInputProps('identifier')}
-          value={form.values.identifier}
-          onChange={event => {
-            form.setFieldValue('identifier', event.currentTarget.value);
-          }}
-        />
-        <TextInput
-          withAsterisk
-          label="TA Email"
-          {...form.getInputProps('email')}
-          value={form.values.email}
-          onChange={event => {
-            form.setFieldValue('email', event.currentTarget.value);
-          }}
-        />
-        <Button type="submit" style={{ marginTop: '16px' }}>
-          Create TA
-        </Button>
-      </form>
+      {error && (
+        <Notification title="Error" color="red" onClose={() => setError(null)}>
+          {error}
+        </Notification>
+      )}
 
       <Dropzone
         onDrop={(files: File[]) => {
@@ -211,4 +164,4 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
   );
 };
 
-export default TAForm;
+export default TATeamForm;

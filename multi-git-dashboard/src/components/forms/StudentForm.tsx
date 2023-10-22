@@ -4,6 +4,7 @@ import { IconUpload, IconPhoto, IconX } from '@tabler/icons-react';
 import { useForm } from '@mantine/form';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
 import Papa from 'papaparse';
+import { saveAs } from 'file-saver';
 import { User } from '@/types/user';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
@@ -13,6 +14,10 @@ interface StudentFormProps {
   onStudentCreated: () => void;
 }
 
+interface Results {
+  data: User[];
+}
+
 const StudentForm: React.FC<StudentFormProps> = ({
   courseId,
   onStudentCreated,
@@ -20,7 +25,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
   const form = useForm({
     initialValues: {
       name: '',
-      id: '',
+      identifier: '',
       email: '',
       gitHandle: '',
     },
@@ -37,18 +42,17 @@ const StudentForm: React.FC<StudentFormProps> = ({
         Papa.parse(reader.result as string, {
           header: true,
           skipEmptyLines: true,
-          complete: function (results: any) {
+          complete: function (results: Results) {
             const studentsData = results.data;
             const students = studentsData.map((student: User) => ({
-              id: student.id || '',
+              identifier: student.identifier || '',
               name: student.name || '',
               email: student.email || '',
               gitHandle: student.gitHandle || '',
-              role: 'student',
             }));
-            setStudents(students);
+            setStudents(students as unknown as User[]);
           },
-          error: function (error: any) {
+          error: function (error: Error) {
             console.error('CSV parsing error:', error.message);
           },
         });
@@ -56,6 +60,12 @@ const StudentForm: React.FC<StudentFormProps> = ({
       reader.readAsText(file);
     }
   }, []);
+
+  const downloadCsvTemplate = () => {
+    const csvHeaders = 'name,identifier,email,gitHandle\n';
+    const blob = new Blob([csvHeaders], { type: 'text/csv;charset=utf-8' });
+    saveAs(blob, 'students_template.csv');
+  };
 
   const handleSubmitCSV = async () => {
     if (students.length === 0) {
@@ -67,7 +77,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
 
     try {
       const response = await fetch(
-        `http://localhost:${backendPort}/api/courses/${courseId}/students`,
+        `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/students`,
         {
           method: 'POST',
           headers: {
@@ -95,7 +105,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
     console.log('Sending student data:', form.values);
 
     const response = await fetch(
-      `http://localhost:${backendPort}/api/courses/${courseId}/students`,
+      `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/students`,
       {
         method: 'POST',
         headers: {
@@ -104,7 +114,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
         body: JSON.stringify({
           items: [
             {
-              id: form.values.id,
+              identifier: form.values.identifier,
               name: form.values.name,
               email: form.values.email,
               gitHandle: form.values.gitHandle,
@@ -135,10 +145,10 @@ const StudentForm: React.FC<StudentFormProps> = ({
         <TextInput
           withAsterisk
           label="Student ID"
-          {...form.getInputProps('id')}
-          value={form.values.id}
+          {...form.getInputProps('identifier')}
+          value={form.values.identifier}
           onChange={event => {
-            form.setFieldValue('id', event.currentTarget.value);
+            form.setFieldValue('identifier', event.currentTarget.value);
           }}
         />
         <TextInput
@@ -208,6 +218,9 @@ const StudentForm: React.FC<StudentFormProps> = ({
       </Dropzone>
       <Button onClick={handleSubmitCSV} style={{ marginTop: '16px' }}>
         Upload Students
+      </Button>
+      <Button onClick={downloadCsvTemplate} style={{ marginTop: '16px' }}>
+        Download CSV Template
       </Button>
     </Box>
   );
