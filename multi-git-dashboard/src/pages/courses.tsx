@@ -6,7 +6,7 @@ import { Button } from '@mantine/core';
 import CourseForm from '@/components/forms/CourseForm';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
-const apiUrl = `http://localhost:${backendPort}/api/courses`;
+const apiUrl = `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses`;
 
 const CourseListPage: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
