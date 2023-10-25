@@ -2,6 +2,11 @@ export interface TeamContribution {
   commits: number;
   additions: number;
   deletions: number;
+  pullRequests: number;
+  reviews: number;
+  createdIssues: number;
+  openIssues: number;
+  closedIssues: number;
 }
 
 export interface TeamData {

@@ -50,25 +50,42 @@ const GithubTeamCard: React.FC<GithubTeamCardProps> = ({
 
   const [active, setActive] = useState(1);
   const nextStep = () =>
-    setActive((current: number) =>
+    setActive(current =>
       current < stepperSteps.length ? current + 1 : current
     );
   const prevStep = () =>
-    setActive((current: number) => (current > 0 ? current - 1 : current));
+    setActive(current => (current > 0 ? current - 1 : current));
 
-  // Data for Pie chart
   const chartData = [
     { name: 'Commits', value: teamData.commits },
     { name: 'Issues', value: teamData.issues },
     { name: 'PRs', value: teamData.pullRequests },
   ];
+
   const commitsData = [];
   const composedChartData = [];
+  const prsData = [];
+  const reviewsData = [];
+  const issuesData = [];
   for (const contributor in teamData.teamContributions) {
     const contribution = teamData.teamContributions[contributor];
     commitsData.push({
       name: contributor,
       commits: contribution.commits,
+    });
+    prsData.push({
+      name: contributor,
+      prs: contribution.pullRequests,
+    });
+    reviewsData.push({
+      name: contributor,
+      reviews: contribution.reviews,
+    });
+    issuesData.push({
+      name: contributor,
+      created: contribution.createdIssues,
+      open: contribution.openIssues,
+      closed: contribution.closedIssues,
     });
     composedChartData.push({
       name: contributor,
@@ -220,6 +237,14 @@ const GithubTeamCard: React.FC<GithubTeamCardProps> = ({
             </Button>
             <Button onClick={nextStep}>Next step</Button>
           </Group>
+        </Grid.Col>
+        <Grid.Col span={6}>
+          <Container>
+            <BarChart width={300} height={250} data={commitsData}></BarChart>
+            <BarChart width={300} height={250} data={prsData}></BarChart>
+            <BarChart width={300} height={250} data={reviewsData}></BarChart>
+            <BarChart width={300} height={250} data={issuesData}></BarChart>
+          </Container>
         </Grid.Col>
       </Grid>
     </Card>
