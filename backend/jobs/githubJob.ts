@@ -1,34 +1,12 @@
 import cron from 'node-cron';
-import { createAppAuth } from '@octokit/auth-app';
-import { App, Octokit } from 'octokit';
-import { TeamContribution } from '@shared/types/TeamData';
+import { App } from 'octokit';
+import {
+  TeamContribution,
+  TeamData as ITeamData,
+} from '@shared/types/TeamData';
 import TeamData from '../models/TeamData';
 
-const getOctokit = async (env: Record<string, string>) => {
-  const APP_ID = Number(env.GITHUB_APP_ID);
-  const PRIVATE_KEY = env.GITHUB_APP_PRIVATE_KEY.replace(/\n/g, '\n');
-  const INSTALLATION_ID = Number(env.GITHUB_APP_INSTALLATION_ID);
-
-  const auth = createAppAuth({
-    appId: APP_ID,
-    privateKey: PRIVATE_KEY,
-    installationId: INSTALLATION_ID,
-  });
-
-  const { token } = await auth({ type: 'installation' });
-
-  return new Octokit({ auth: token });
-};
-
 const fetchAndSaveTeamData = async (env: Record<string, string>) => {
-  const octokit = await getOctokit(env);
-
-  await TeamData.deleteMany({}); // TODO: temp w/a to avoid duplicates
-
-  await getOrgData(octokit, 'NUS-CRISP');
-};
-
-const fetchAndSaveTeamDataV1 = async (env: Record<string, string>) => {
   const APP_ID = Number(env.GITHUB_APP_ID);
   const PRIVATE_KEY = env.GITHUB_APP_PRIVATE_KEY.replace(/\n/g, '\n');
 
@@ -40,20 +18,27 @@ const fetchAndSaveTeamDataV1 = async (env: Record<string, string>) => {
 
   const response = await octokit.rest.apps.listInstallations();
   const installations = response.data;
-  const orgs = installations
-    .map((installation) => {
-      if (installation.account && 'login' in installation.account) {
-        return installation.account.login;
-      }
-      return null;
-    })
-    .filter((org) => org !== null) as string[];
-
-  // Fetch all repositories for an organization
-  orgs.map((org) => getOrgData(octokit, org));
+  installations.map((installation) => {
+    if (installation.account && 'login' in installation.account) {
+      getOrgData(app, {
+        id: installation.id,
+        account: { login: installation.account.login },
+      });
+    }
+  });
 };
 
-const getOrgData = async (octokit: Octokit, orgName: string) => {
+interface Installation {
+  id: number;
+  account: {
+    login: string;
+  };
+}
+
+const getOrgData = async (app: App, installation: Installation) => {
+  const octokit = await app.getInstallationOctokit(installation.id);
+  const orgName = installation.account.login;
+
   const repos = await octokit.rest.repos.listForOrg({
     org: orgName,
   });
@@ -157,21 +142,23 @@ const getOrgData = async (octokit: Octokit, orgName: string) => {
       state: 'open',
     });
 
-    const teamData = new TeamData({
+    const teamData: ITeamData = {
       teamId: repo.id,
       repoName: repo.name,
       commits: commits.data.length,
       issues: issues.data.length,
-      stars: repo.stargazers_count,
-      forks: repo.forks_count,
+      stars: repo.stargazers_count ?? 0,
+      forks: repo.forks_count ?? 0,
       pullRequests: pullRequests.data.length,
       updatedIssues: issues.data.map((issue) => issue.updated_at),
       teamContributions,
-    });
+    };
 
     console.log('Saving team data:', teamData);
 
-    await teamData.save();
+    await TeamData.findOneAndUpdate({ teamId: teamData.teamId }, teamData, {
+      upsert: true,
+    });
   }
 };
 
@@ -182,7 +169,7 @@ export const setupJob = () => {
   cron.schedule('0 0 * * *', async () => {
     console.log('Running fetchAndSaveTeamData job:', new Date().toString());
     try {
-      await fetchAndSaveTeamDataV1(env);
+      await fetchAndSaveTeamData(env);
     } catch (err) {
       console.error('Error in cron job fetchAndSaveTeamData:', err);
     }
@@ -190,7 +177,7 @@ export const setupJob = () => {
 
   // To run the job immediately for testing
   if (process.env.RUN_JOB_NOW === 'true') {
-    fetchAndSaveTeamDataV1(env).catch((err) => {
+    fetchAndSaveTeamData(env).catch((err) => {
       console.error('Error running job manually:', err);
     });
   }

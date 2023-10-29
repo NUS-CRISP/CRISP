@@ -240,10 +240,32 @@ const GithubTeamCard: React.FC<GithubTeamCardProps> = ({
         </Grid.Col>
         <Grid.Col span={6}>
           <Container>
-            <BarChart width={300} height={250} data={commitsData}></BarChart>
-            <BarChart width={300} height={250} data={prsData}></BarChart>
-            <BarChart width={300} height={250} data={reviewsData}></BarChart>
-            <BarChart width={300} height={250} data={issuesData}></BarChart>
+            <BarChart width={300} height={250} data={prsData}>
+              <CartesianGrid stroke="#f5f5f5" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="prs" fill="#8884d8" />
+            </BarChart>
+            <BarChart width={300} height={250} data={reviewsData}>
+              <CartesianGrid stroke="#f5f5f5" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="reviews" fill="#8884d8" />
+            </BarChart>
+            <BarChart width={300} height={250} data={issuesData}>
+              <CartesianGrid stroke="#f5f5f5" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="created" fill="#8884d8" />
+              <Bar dataKey="open" fill="#82ca9d" />
+              <Bar dataKey="closed" fill="#ffc658" />
+            </BarChart>
           </Container>
         </Grid.Col>
       </Grid>
