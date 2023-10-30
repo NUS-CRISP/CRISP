@@ -11,7 +11,7 @@ interface Course extends WithId<Document> {
 }
 
 export default async function handler(
-  req: NextApiRequest,
+  _req: NextApiRequest,
   res: NextApiResponse<WithId<Course>[]>
 ) {
   // Fetch courses from local mongodb

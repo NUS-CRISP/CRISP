@@ -1,18 +1,18 @@
 import express from 'express';
 import {
+  addAssessments,
+  addMilestone,
+  addSprint,
+  addStudents,
+  addStudentsToTeams,
+  addTAs,
+  addTAsToTeams,
+  addTeamSet,
   createCourse,
+  deleteCourseById,
   getAllCourses,
   getCourseById,
   updateCourseById,
-  deleteCourseById,
-  addStudents,
-  addTAs,
-  addTeamSet,
-  addStudentsToTeams,
-  addTAsToTeams,
-  addMilestone,
-  addSprint,
-  addAssessments,
 } from '../controllers/courseController';
 
 const router = express.Router();

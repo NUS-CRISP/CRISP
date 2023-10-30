@@ -1,19 +1,20 @@
-import mongoose, { Schema } from 'mongoose';
+import { Team as SharedTeam } from '@shared/types/Team';
+import mongoose, { Schema, Types } from 'mongoose';
 
-export interface Team {
-  teamSet: mongoose.Types.ObjectId;
-  number: number;
-  TA: mongoose.Types.ObjectId;
-  members: mongoose.Types.ObjectId[];
+export interface Team
+  extends Omit<SharedTeam, '_id' | 'teamSet' | 'TA' | 'members'> {
+  _id: Types.ObjectId;
+  teamSet: Types.ObjectId;
+  TA?: Types.ObjectId;
+  members?: Types.ObjectId[];
 }
 
 export const teamSchema = new Schema<Team>({
-  teamSet: { type: Schema.Types.ObjectId, ref: 'Team' },
+  teamSet: { type: Schema.Types.ObjectId, ref: 'TeamSet' },
   number: { type: Number, required: true },
   TA: { type: Schema.Types.ObjectId, ref: 'User' },
   members: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  // repoUrl: { type: String, required: true },
 });
 
-const TeamModel = mongoose.model<Team>('Team', teamSchema);
-
-export default TeamModel;
+export default mongoose.model<Team>('Team', teamSchema);

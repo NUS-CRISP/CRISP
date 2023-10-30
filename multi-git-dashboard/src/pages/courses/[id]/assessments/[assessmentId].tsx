@@ -1,7 +1,8 @@
+import { Container, Tabs, Text } from '@mantine/core';
+import { Assessment } from '@shared/types/Assessment';
+import { Result } from '@shared/types/Result';
 import { useRouter } from 'next/router';
-import React, { useEffect, useState, useCallback } from 'react';
-import { Container, Text, Tabs } from '@mantine/core';
-import { Assessment, Result } from '../../../../types/course';
+import { useCallback, useEffect, useState } from 'react';
 
 interface ResultCardProps {
   result: Result;

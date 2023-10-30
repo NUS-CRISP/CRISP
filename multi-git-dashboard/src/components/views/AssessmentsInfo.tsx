@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import Link from 'next/link';
-import AssessmentCard from '../cards/AssessmentCard';
-import { Course } from '../../types/course';
-import AssessmentForm from '../forms/AssessmentForm';
 import { Button, Container } from '@mantine/core';
+import { Course } from '@shared/types/Course';
+import Link from 'next/link';
+import { useState } from 'react';
+import AssessmentCard from '../cards/AssessmentCard';
+import AssessmentForm from '../forms/AssessmentForm';
 
 interface AssessmentInfoProps {
   course: Course;
@@ -50,8 +50,8 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
       </Button>
       {isCreatingAssessment && (
         <AssessmentForm
-          courseId={course._id}
           teamSets={course.teamSets}
+          courseId={course._id.toString()}
           onAssessmentCreated={handleAssessmentCreated}
         />
       )}

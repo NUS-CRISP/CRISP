@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Table, Button, Container } from '@mantine/core';
+import { Button, Container, Table } from '@mantine/core';
+import { Course } from '@shared/types/Course';
+import { getTableUser } from '@shared/types/User';
+import { useState } from 'react';
 import TAForm from '../forms/TAForm';
-import { Course } from '@/types/course';
 
 interface StaffInfoProps {
   course: Course;
@@ -18,26 +19,26 @@ const StaffInfo: React.FC<StaffInfoProps> = ({ course, onUpdate }) => {
 
   return (
     <Container>
-      <Table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>ID</th>
-            <th>Git Handle</th>
-          </tr>
-        </thead>
-        <tbody>
-          {course.TAs.map(TA => (
-            <tr key={TA._id}>
-              <td>{TA.name}</td>
-              <td>{TA.email}</td>
-              <td>{TA.identifier}</td>
-              <td>{TA.gitHandle}</td>
+      {course.TAs && course.TAs.length > 0 && (
+        <Table>
+          <thead>
+            <tr>
+              {Object.keys(getTableUser(course.TAs[0])).map(key => (
+                <th>{key}</th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </Table>
+          </thead>
+          <tbody>
+            {course.TAs.map(TA => (
+              <tr key={TA._id}>
+                {Object.values(getTableUser(TA)).map(value => (
+                  <td>{value}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      )}
       <Button
         onClick={() => setIsCreatingTA(!isCreatingTA)}
         style={{ marginTop: '16px' }}

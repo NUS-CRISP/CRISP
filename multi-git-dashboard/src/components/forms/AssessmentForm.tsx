@@ -1,19 +1,19 @@
-import React, { useState, useCallback } from 'react';
-import { TeamSet } from '@/types/course';
 import {
   Box,
-  TextInput,
   Button,
-  Text,
+  Group,
   Radio,
   Select,
-  Group,
+  Text,
+  TextInput,
 } from '@mantine/core';
-import { IconUpload, IconPhoto, IconX } from '@tabler/icons-react';
-import { useForm } from '@mantine/form';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
-import Papa from 'papaparse';
+import { useForm } from '@mantine/form';
+import { TeamSet } from '@shared/types/TeamSet';
+import { IconPhoto, IconUpload, IconX } from '@tabler/icons-react';
 import { saveAs } from 'file-saver';
+import Papa from 'papaparse';
+import { useCallback, useState } from 'react';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
 
@@ -115,7 +115,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
     console.log('Sending assessment data:', form.values);
 
     const response = await fetch(
-      `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/assessments`,
+      `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${courseId}/assessments`,
       {
         method: 'POST',
         headers: {

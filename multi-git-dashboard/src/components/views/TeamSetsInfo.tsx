@@ -1,17 +1,16 @@
-import React, { useState } from 'react';
-import { Course, TeamSet } from '@/types/course';
+import { Button, Container, Group, Tabs } from '@mantine/core';
+import { Course } from '@shared/types/Course';
+import { TeamSet } from '@shared/types/TeamSet';
+import { useState } from 'react';
 import TeamCard from '../cards/TeamCard';
-import { Container, Tabs, Button, Group } from '@mantine/core';
-import TeamSetForm from '../forms/TeamSetForm';
 import StudentTeamForm from '../forms/StudentTeamForm';
 import TATeamForm from '../forms/TATeamForm';
+import TeamSetForm from '../forms/TeamSetForm';
 
 interface TeamsInfoProps {
   course: Course;
   onUpdate: () => void;
 }
-
-const backendPort = process.env.BACKEND_PORT || 3001;
 
 const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
   const [isCreatingTeamSet, setIsCreatingTeamSet] = useState<boolean>(false);
@@ -33,9 +32,9 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
       />
     ));
 
-  const headers = course.teamSets.map(teamSet => (
+  const headers = course.teamSets.map((teamSet, index) => (
     <Tabs.Tab
-      key={teamSet._id}
+      key={index}
       value={teamSet.name}
       onClick={() => {
         setActiveTab(teamSet.name);
@@ -70,7 +69,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
   const handleDeleteTeamSet = async () => {
     try {
       const response = await fetch(
-        `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/teamsets/${teamSetId}`,
+        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/teamsets/${teamSetId}`,
         {
           method: 'DELETE',
         }
@@ -135,7 +134,6 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
       {isAddingTAs && activeTab && (
         <TATeamForm
           courseId={course._id}
-          teamSet={activeTab}
           onTeamCreated={handleAddTAsUploaded}
         />
       )}

@@ -1,24 +1,11 @@
-import mongoose, { Schema } from 'mongoose';
+import { TeamData as SharedTeamData } from '@shared/types/TeamData';
+import mongoose, { Schema, Types } from 'mongoose';
 
-export interface TeamContribution {
-  commits: number;
-  additions: number;
-  deletions: number;
+export interface TeamData extends Omit<SharedTeamData, '_id'> {
+  _id: Types.ObjectId;
 }
 
-export interface ITeamData extends Document {
-  teamId: number;
-  repoName: string;
-  commits: number;
-  issues: number;
-  stars: number;
-  forks: number;
-  pullRequests: number;
-  updatedIssues: string[];
-  teamContributions: Record<string, TeamContribution>;
-}
-
-const teamDataSchema: Schema = new Schema<ITeamData>({
+const teamDataSchema: Schema = new Schema<TeamData>({
   teamId: { type: Number, required: true },
   repoName: { type: String, required: true },
   commits: { type: Number, required: true },
@@ -37,5 +24,4 @@ const teamDataSchema: Schema = new Schema<ITeamData>({
   },
 });
 
-// Create a model
-export const TeamData = mongoose.model<ITeamData>('TeamData', teamDataSchema);
+export default mongoose.model<TeamData>('TeamData', teamDataSchema);

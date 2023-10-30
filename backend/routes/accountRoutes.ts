@@ -1,8 +1,8 @@
 import express from 'express';
 import {
+  approveAccount,
   createAccount,
   getPendingAccounts,
-  approveAccount,
 } from '../controllers/accountController';
 
 const router = express.Router();

@@ -1,14 +1,16 @@
 import { Request, Response } from 'express';
-import CourseModel from '../models/Course';
-import UserModel from '../models/User';
-import TeamModel from '../models/Team';
-import TeamSetModel from '../models/TeamSet';
-import AssessmentModel from '../models/Assessment';
+import Role from '../../shared/types/auth/Role';
+import Account from '../models/Account';
+import Assessment from '../models/Assessment';
+import Course from '../models/Course';
+import Team from '../models/Team';
+import TeamSet from '../models/TeamSet';
+import User, { User as IUser } from '../models/User';
 
 /*----------------------------------------Course----------------------------------------*/
 export const createCourse = async (req: Request, res: Response) => {
   try {
-    const newCourse = await CourseModel.create(req.body);
+    const newCourse = await Course.create(req.body);
     res.status(201).json(newCourse);
   } catch (error) {
     res.status(400).json({ error: 'Failed to create course' });
@@ -17,7 +19,7 @@ export const createCourse = async (req: Request, res: Response) => {
 
 export const getAllCourses = async (_req: Request, res: Response) => {
   try {
-    const courses = await CourseModel.find();
+    const courses = await Course.find();
     res.json(courses);
   } catch (error) {
     res.status(400).json({ error: 'Failed to fetch courses' });
@@ -27,7 +29,7 @@ export const getAllCourses = async (_req: Request, res: Response) => {
 export const getCourseById = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   try {
-    const course = await CourseModel.findById(courseId)
+    const course = await Course.findById(courseId)
       .populate('faculty')
       .populate('TAs')
       .populate('students')
@@ -64,13 +66,9 @@ export const getCourseById = async (req: Request, res: Response) => {
 export const updateCourseById = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   try {
-    const updatedCourse = await CourseModel.findByIdAndUpdate(
-      courseId,
-      req.body,
-      {
-        new: true,
-      }
-    );
+    const updatedCourse = await Course.findByIdAndUpdate(courseId, req.body, {
+      new: true,
+    });
     if (updatedCourse) {
       res.json(updatedCourse);
     } else {
@@ -84,16 +82,18 @@ export const updateCourseById = async (req: Request, res: Response) => {
 export const deleteCourseById = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   try {
-    const deletedCourse = await CourseModel.findByIdAndDelete(courseId);
+    // Delete course and its teams
+    const deletedCourse = await Course.findByIdAndDelete(courseId);
     if (!deletedCourse) {
       return res.status(404).json({ error: 'Course not found' });
     }
 
-    await TeamModel.deleteMany({ teamSet: { $in: deletedCourse.teamSets } });
+    await Team.deleteMany({ teamSet: { $in: deletedCourse.teamSets } });
 
-    await TeamSetModel.deleteMany({ _id: { $in: deletedCourse.teamSets } });
+    await TeamSet.deleteMany({ _id: { $in: deletedCourse.teamSets } });
 
-    await UserModel.updateMany(
+    // Update references in the Users (students) collection
+    await User.updateMany(
       { enrolledCourses: courseId },
       { $pull: { enrolledCourses: courseId } }
     );
@@ -110,33 +110,39 @@ export const addStudents = async (req: Request, res: Response) => {
   const students = req.body.items;
 
   try {
-    const course = await CourseModel.findById(courseId);
+    const course = await Course.findById(courseId)
+      .populate<{ students: IUser[] }>('students')
+      .exec();
+
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
     for (const studentData of students) {
       const studentId = studentData.identifier;
 
-      let student = await UserModel.findOne({ identifier: studentId });
+      let student = await User.findOne({ identifier: studentId });
       if (!student) {
-        student = new UserModel({
-          name: studentData.name,
+        student = new User({
           identifier: studentId,
-          email: studentData.email,
+          name: studentData.name,
           enrolledCourses: [],
-          gitHandle: studentData.gitHandle,
-          role: 'Student',
+          gitHandle: studentData.gitHandle ?? null,
         });
+      } else {
+        const studentAccount = await Account.findOne({ user: student._id });
+        if (studentAccount && studentAccount.role !== Role.Student) {
+          continue;
+        }
       }
-      if (student.role !== 'Student') {
-        continue;
-      }
+
       if (!student.enrolledCourses.includes(course._id)) {
         student.enrolledCourses.push(course._id);
       }
+
       await student.save();
-      if (!course.students.includes(student._id)) {
-        course.students.push(student._id);
+
+      if (!course.students.some(s => s.identifier === student?.identifier)) {
+        course.students.push(student);
       }
     }
 
@@ -156,7 +162,9 @@ export const addTAs = async (req: Request, res: Response) => {
   const TAs = req.body.items;
 
   try {
-    const course = await CourseModel.findById(courseId);
+    const course = await Course.findById(courseId)
+      .populate<{ TAs: IUser[] }>('TAs')
+      .exec();
 
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
@@ -164,25 +172,29 @@ export const addTAs = async (req: Request, res: Response) => {
 
     for (const TAData of TAs) {
       const TAId = TAData.identifier;
-      let TA = await UserModel.findOne({ identifier: TAId });
+      let TA = await User.findOne({ identifier: TAId });
       if (!TA) {
-        TA = new UserModel({
-          name: TAData.name,
+        TA = new User({
           identifier: TAId,
-          email: TAData.email,
-          role: 'Teaching assistant',
+          name: TAData.name,
           enrolledCourses: [],
+          gitHandle: TAData.gitHandle ?? null,
         });
+      } else {
+        const TAAccount = await Account.findOne({ user: TA._id });
+        if (TAAccount && TAAccount.role !== 'Teaching assistant') {
+          continue;
+        }
       }
-      if (TA.role !== 'Teaching assistant') {
-        continue;
-      }
+
       if (!TA.enrolledCourses.includes(course._id)) {
         TA.enrolledCourses.push(course._id);
       }
+
       await TA.save();
-      if (!course.TAs.includes(TA._id)) {
-        course.TAs.push(TA._id);
+
+      if (!course.TAs.some(ta => ta.identifier === TA?.identifier)) {
+        course.TAs.push(TA);
       }
     }
 
@@ -201,13 +213,13 @@ export const addTeamSet = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   const { name } = req.body;
   try {
-    const course = await CourseModel.findById(courseId);
+    const course = await Course.findById(courseId);
 
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
 
-    const teamSet = new TeamSetModel({ name, course: courseId });
+    const teamSet = new TeamSet({ name, course: courseId });
     course.teamSets.push(teamSet._id);
     await course.save();
     await teamSet.save();
@@ -226,47 +238,57 @@ export const addStudentsToTeams = async (req: Request, res: Response) => {
   const students = req.body.items;
 
   try {
-    const course = await CourseModel.findById(courseId);
+    const course = await Course.findById(courseId);
 
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
 
     for (const studentData of students) {
-      const studentId = studentData.identifier;
+      const student = await User.findOne({
+        identifier: studentData.identifier,
+      });
 
-      const student = await UserModel.findOne({ identifier: studentId });
+      if (!student) {
+        return res.status(404).json({ message: 'Student not found' });
+      }
+
+      const account = await Account.findOne({ user: student._id });
+
       if (
-        !student ||
-        student.role !== 'Student' ||
-        !student.enrolledCourses.includes(course._id) ||
-        !course.students.includes(student._id) ||
+        !account ||
+        account.role !== 'Student' ||
+        !student.enrolledCourses.some(ec => ec._id === course._id) ||
+        !course.students.some(s => s._id == student._id) ||
         !studentData.teamSet ||
         !studentData.teamNumber
       ) {
         return res.status(400).json({ message: 'Invalid Student' });
       }
 
-      let teamSet = await TeamSetModel.findOne({
+      let teamSet = await TeamSet.findOne({
         course: course._id,
         name: studentData.teamSet,
       });
       if (!teamSet) {
         return res.status(404).json({ message: 'TeamSet not found' });
       }
-      let team = await TeamModel.findOne({
+      let team = await Team.findOne({
         number: studentData.teamNumber,
         teamSet: teamSet._id,
       });
       if (!team) {
-        team = new TeamModel({
+        team = new Team({
           number: studentData.teamNumber,
           teamSet: teamSet._id,
           members: [],
         });
+        if (!teamSet.teams) {
+          teamSet.teams = [];
+        }
         teamSet.teams.push(team._id);
       }
-      if (!team.members.includes(student._id)) {
+      if (team.members && !team.members.some(s => s._id === student._id)) {
         team.members.push(student._id);
       }
       await team.save();
@@ -288,7 +310,7 @@ export const addTAsToTeams = async (req: Request, res: Response) => {
   const tas = req.body.items;
 
   try {
-    const course = await CourseModel.findById(courseId);
+    const course = await Course.findById(courseId);
 
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
@@ -297,10 +319,16 @@ export const addTAsToTeams = async (req: Request, res: Response) => {
     for (const taData of tas) {
       const taId = taData.identifier;
 
-      const ta = await UserModel.findOne({ identifier: taId });
+      const ta = await User.findOne({ identifier: taId });
+      if (!ta) {
+        return res.status(404).json({ message: 'TA not found' });
+      }
+
+      const taAccount = await Account.findOne({ user: ta._id });
+
       if (
-        !ta ||
-        ta.role !== 'Teaching assistant' ||
+        !taAccount ||
+        taAccount.role !== 'Teaching assistant' ||
         !ta.enrolledCourses.includes(course._id) ||
         !taData.teamSet ||
         !taData.teamNumber
@@ -308,24 +336,27 @@ export const addTAsToTeams = async (req: Request, res: Response) => {
         return res.status(400).json({ message: 'Invalid TA' });
       }
 
-      let teamSet = await TeamSetModel.findOne({
+      let teamSet = await TeamSet.findOne({
         course: course._id,
         name: taData.teamSet,
       });
       if (!teamSet) {
         return res.status(404).json({ message: 'TeamSet not found' });
       }
-      let team = await TeamModel.findOne({
+      let team = await Team.findOne({
         number: taData.teamNumber,
         teamSet: teamSet._id,
       });
       if (!team) {
-        team = new TeamModel({
+        team = new Team({
           number: taData.teamNumber,
           teamSet: teamSet._id,
           members: [],
           TA: null,
         });
+        if (!teamSet.teams) {
+          teamSet.teams = [];
+        }
         teamSet.teams.push(team._id);
       }
       team.TA = ta._id;
@@ -348,14 +379,14 @@ export const addMilestone = async (req: Request, res: Response) => {
   const { milestoneNumber, dateline, description } = req.body;
 
   try {
-    const course = await CourseModel.findById(courseId);
+    const course = await Course.findById(courseId);
 
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
 
     const milestone = {
-      milestoneNumber,
+      number: milestoneNumber,
       dateline,
       description,
     };
@@ -376,14 +407,14 @@ export const addSprint = async (req: Request, res: Response) => {
   const { sprintNumber, startDate, endDate, description } = req.body;
 
   try {
-    const course = await CourseModel.findById(courseId);
+    const course = await Course.findById(courseId);
 
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
 
     const sprint = {
-      sprintNumber,
+      number: sprintNumber,
       startDate,
       endDate,
       description,
@@ -413,7 +444,8 @@ export const addAssessments = async (req: Request, res: Response) => {
   }
 
   try {
-    const course = await CourseModel.findById(courseId);
+    const course = await Course.findById(courseId);
+
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
@@ -429,7 +461,10 @@ export const addAssessments = async (req: Request, res: Response) => {
         formLink,
       } = assessmentData;
 
-      const existingAssessment = await AssessmentModel.findOne({
+      if (!course) {
+        return res.status(404).json({ message: 'Course not found' });
+      }
+      const existingAssessment = await Assessment.findOne({
         course: courseId,
         assessmentType: assessmentType,
       });
@@ -443,7 +478,7 @@ export const addAssessments = async (req: Request, res: Response) => {
         if (teamSetName === null || teamSetName == '') {
           continue;
         }
-        const teamSet = await TeamSetModel.findOne({
+        const teamSet = await TeamSet.findOne({
           course: courseId,
           name: teamSetName,
         });
@@ -453,7 +488,7 @@ export const addAssessments = async (req: Request, res: Response) => {
         teamSetID = teamSet._id;
       }
 
-      const assessment = new AssessmentModel({
+      const assessment = new Assessment({
         course: courseId,
         assessmentType,
         markType,

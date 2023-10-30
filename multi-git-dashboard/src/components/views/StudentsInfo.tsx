@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Table, Button, Container } from '@mantine/core';
+import { Button, Container, Table } from '@mantine/core';
+import { Course } from '@shared/types/Course';
+import { getTableUser } from '@shared/types/User';
+import { useState } from 'react';
 import StudentForm from '../forms/StudentForm';
-import { Course } from '@/types/course';
 
 interface StudentsInfoProps {
   course: Course;
@@ -18,26 +19,26 @@ const StudentsInfo: React.FC<StudentsInfoProps> = ({ course, onUpdate }) => {
 
   return (
     <Container>
-      <Table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>ID</th>
-            <th>Git Handle</th>
-          </tr>
-        </thead>
-        <tbody>
-          {course.students.map(student => (
-            <tr key={student._id}>
-              <td>{student.name}</td>
-              <td>{student.email}</td>
-              <td>{student.identifier}</td>
-              <td>{student.gitHandle}</td>
+      {course.students && course.students.length > 0 && (
+        <Table>
+          <thead>
+            <tr>
+              {Object.keys(getTableUser(course.students[0])).map(key => (
+                <th>{key}</th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </Table>
+          </thead>
+          <tbody>
+            {course.students.map(student => (
+              <tr key={student._id}>
+                {Object.values(getTableUser(student)).map(value => (
+                  <td>{value}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      )}
       <Button
         onClick={() => setIsCreatingStudent(!isCreatingStudent)}
         style={{ marginTop: '16px' }}

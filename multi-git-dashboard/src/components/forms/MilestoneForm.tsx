@@ -1,10 +1,6 @@
-import React from 'react';
-import { Box, TextInput, Button } from '@mantine/core';
+import { Box, Button, TextInput } from '@mantine/core';
 import { DatePicker } from '@mantine/dates';
-import '@mantine/dates/styles.css';
 import { useForm } from '@mantine/form';
-
-const backendPort = process.env.BACKEND_PORT || 3001;
 
 interface MilestoneFormProps {
   courseId: string | string[] | undefined;
@@ -32,7 +28,7 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({
     console.log('Sending milestone data:', form.values);
 
     const response = await fetch(
-      `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/milestones`,
+      `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${courseId}/milestones`,
       {
         method: 'POST',
         headers: {

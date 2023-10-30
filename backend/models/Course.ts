@@ -1,25 +1,17 @@
-import mongoose, { Schema } from 'mongoose';
+import { Course as SharedCourse } from '@shared/types/Course';
+import mongoose, { Schema, Types } from 'mongoose';
 
-export interface Course {
-  name: string;
-  code: string;
-  semester: string;
-  faculty: mongoose.Types.ObjectId[];
-  TAs: mongoose.Types.ObjectId[];
-  students: mongoose.Types.ObjectId[];
-  teamSets: mongoose.Types.ObjectId[];
-  assessments: mongoose.Types.ObjectId[];
-  sprints: {
-    sprintNumber: number;
-    description: string;
-    startDate: Date;
-    endDate: Date;
-  }[];
-  milestones: {
-    milestoneNumber: number;
-    dateline: Date;
-    description: string;
-  }[];
+export interface Course
+  extends Omit<
+    SharedCourse,
+    '_id' | 'faculty' | 'TAs' | 'students' | 'teamSets' | 'assessments'
+  > {
+  _id: Types.ObjectId;
+  faculty: Types.ObjectId[];
+  TAs: Types.ObjectId[];
+  students: Types.ObjectId[];
+  teamSets: Types.ObjectId[];
+  assessments: Types.ObjectId[];
 }
 
 export const courseSchema = new Schema<Course>({
@@ -33,7 +25,7 @@ export const courseSchema = new Schema<Course>({
   assessments: [{ type: Schema.Types.ObjectId, ref: 'Assessment' }],
   sprints: [
     {
-      sprintNumber: { type: Number, required: true },
+      number: { type: Number, required: true },
       description: { type: String, required: true },
       startDate: { type: Date, required: true },
       endDate: { type: Date, required: true },
@@ -41,13 +33,18 @@ export const courseSchema = new Schema<Course>({
   ],
   milestones: [
     {
-      milestoneNumber: { type: Number, required: true },
+      number: { type: Number, required: true },
       dateline: { type: Date, required: true },
       description: { type: String, required: true },
     },
   ],
+  courseType: {
+    type: String,
+    enum: ['GitHubOrg', 'Normal'],
+    required: true,
+  },
+  githubOrgName: String,
+  installationToken: String,
 });
 
-const CourseModel = mongoose.model<Course>('Course', courseSchema);
-
-export default CourseModel;
+export default mongoose.model<Course>('Course', courseSchema);

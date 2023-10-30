@@ -1,16 +1,7 @@
-import NextAuth, { AuthOptions, User } from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
-import bcrypt from 'bcrypt';
 import clientPromise from '@/lib/mongodb';
-import { JWT } from 'next-auth/jwt';
-
-interface CustomUser extends User {
-  role: string;
-}
-
-interface CustomToken extends JWT {
-  role: string;
-}
+import bcrypt from 'bcrypt';
+import NextAuth, { AuthOptions } from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -39,15 +30,11 @@ export const authOptions: AuthOptions = {
           throw new Error('Account does not exist.');
         }
 
-        console.error(credentials?.password);
-        console.error(account.password);
-
         // Validate password
         const passwordIsValid = await bcrypt.compare(
           credentials?.password || '',
           account.password || ''
         );
-        //const passwordIsValid = credentials?.password! === account.password;
 
         if (!passwordIsValid) {
           throw new Error('Invalid credentials');
@@ -79,12 +66,12 @@ export const authOptions: AuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = (user as CustomUser).role;
+        token.role = user.role;
       }
       return token;
     },
     async session({ session, token }) {
-      (session.user as CustomUser).role = (token as CustomToken).role;
+      session.user.role = token.role;
       return session;
     },
   },

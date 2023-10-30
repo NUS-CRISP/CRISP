@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import SprintCard from '../cards/SprintCard';
-import { Course } from '../../types/course';
-import SprintForm from '../forms/SprintForm';
 import { Button, Container } from '@mantine/core';
+import { Course } from '@shared/types/Course';
+import { useState } from 'react';
+import SprintCard from '../cards/SprintCard';
+import SprintForm from '../forms/SprintForm';
 
 interface SprintsInfoProps {
   course: Course;
@@ -14,8 +14,8 @@ const SprintsInfo: React.FC<SprintsInfoProps> = ({ course, onUpdate }) => {
 
   const sprintCards = course.sprints.map(sprint => (
     <SprintCard
-      key={sprint.sprintNumber}
-      sprintNumber={sprint.sprintNumber}
+      key={sprint.number}
+      sprintNumber={sprint.number}
       startDate={sprint.startDate}
       endDate={sprint.endDate}
       description={sprint.description}
@@ -38,7 +38,7 @@ const SprintsInfo: React.FC<SprintsInfoProps> = ({ course, onUpdate }) => {
       </Button>
       {isCreatingSprint && (
         <SprintForm
-          courseId={course._id}
+          courseId={course._id.toString()}
           onSprintCreated={handleSprintCreated}
         />
       )}

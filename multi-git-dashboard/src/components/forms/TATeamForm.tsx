@@ -1,15 +1,12 @@
-import React, { useState, useCallback } from 'react';
-import { Box, Button, Group, Text, Notification } from '@mantine/core';
-import { IconUpload, IconPhoto, IconX } from '@tabler/icons-react';
+import { Box, Button, Group, Notification, Text } from '@mantine/core';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
-import Papa from 'papaparse';
+import { IconPhoto, IconUpload, IconX } from '@tabler/icons-react';
 import { saveAs } from 'file-saver';
-
-const backendPort = process.env.BACKEND_PORT || 3001;
+import Papa, { ParseResult } from 'papaparse';
+import { useCallback, useState } from 'react';
 
 interface TATeamFormProps {
   courseId: string | string[] | undefined;
-  teamSet: string;
   onTeamCreated: () => void;
 }
 
@@ -19,19 +16,7 @@ interface TATeamFormUser {
   teamNumber: number;
 }
 
-interface Results {
-  data: {
-    identifier: string;
-    teamSet: string;
-    teamNumber: number;
-  }[];
-}
-
-const TATeamForm: React.FC<TATeamFormProps> = ({
-  courseId,
-  teamSet,
-  onTeamCreated,
-}) => {
+const TATeamForm: React.FC<TATeamFormProps> = ({ courseId, onTeamCreated }) => {
   const [TAs, setTAs] = useState<TATeamFormUser[]>([]);
 
   const handleFileUpload = useCallback((file: File) => {
@@ -41,14 +26,8 @@ const TATeamForm: React.FC<TATeamFormProps> = ({
         Papa.parse(reader.result as string, {
           header: true,
           skipEmptyLines: true,
-          complete: function (results: Results) {
-            const TAsData = results.data;
-            const TAs = TAsData.map((TA: TATeamFormUser) => ({
-              identifier: TA.identifier || '',
-              teamSet: teamSet,
-              teamNumber: TA.teamNumber,
-            }));
-            setTAs(TAs);
+          complete: function (results: ParseResult<TATeamFormUser>) {
+            setTAs(results.data);
           },
           error: function (error: Error) {
             console.error('CSV parsing error:', error.message);
@@ -77,7 +56,7 @@ const TATeamForm: React.FC<TATeamFormProps> = ({
 
     try {
       const response = await fetch(
-        `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/teams/tas`,
+        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${courseId}/teams/tas`,
         {
           method: 'POST',
           headers: {

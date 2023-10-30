@@ -1,31 +1,29 @@
-import { useRouter } from 'next/router';
-import { useEffect, useState, useCallback } from 'react';
-import { Course, Milestone, Sprint } from '@/types/course';
-import { Container, Loader, Tabs } from '@mantine/core';
-import Overview from '@/components/views/Overview';
-import StudentsInfo from '@/components/views/StudentsInfo';
-import StaffInfo from '@/components/views/StaffInfo';
-import TeamSetsInfo from '@/components/views/TeamSetsInfo';
-import MilestonesInfo from '@/components/views/MilestonesInfo';
-import SprintsInfo from '@/components/views/SprintsInfo';
 import AssessmentsInfo from '@/components/views/AssessmentsInfo';
-import { ITeamData } from '@backend/models/TeamData';
-
-const backendPort = process.env.BACKEND_PORT || 3001;
-const apiUrl = `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/`;
-const teamDataUrl = `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/github/`;
+import MilestonesInfo from '@/components/views/MilestonesInfo';
+import Overview from '@/components/views/Overview';
+import SprintsInfo from '@/components/views/SprintsInfo';
+import StaffInfo from '@/components/views/StaffInfo';
+import StudentsInfo from '@/components/views/StudentsInfo';
+import TeamSetsInfo from '@/components/views/TeamSetsInfo';
+import { Container, Loader, Tabs } from '@mantine/core';
+import { Course, Milestone, Sprint } from '@shared/types/Course';
+import { TeamData } from '@shared/types/TeamData';
+import { useRouter } from 'next/router';
+import { useCallback, useEffect, useState } from 'react';
 
 const CourseViewPage: React.FC = () => {
   const router = useRouter();
   const id = router.query.id as string;
   const [course, setCourse] = useState<Course>();
-  const [teamsData, setTeamsData] = useState<ITeamData[]>([]);
+  const [teamsData, setTeamsData] = useState<TeamData[]>([]);
 
   const fetchCourse = useCallback(async () => {
     try {
-      const response = await fetch(`${apiUrl}${id}`);
+      const response = await fetch(
+        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${id}`
+      );
       if (response.ok) {
-        const data = await response.json();
+        const data: Course = await response.json();
         if (data.milestones) {
           data.milestones = data.milestones.map((milestone: Milestone) => ({
             ...milestone,
@@ -50,10 +48,12 @@ const CourseViewPage: React.FC = () => {
 
   const fetchTeamData = useCallback(async () => {
     try {
-      const response = await fetch(teamDataUrl);
+      const response = await fetch(
+        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/github`
+      );
       if (response.ok) {
         const data = await response.json();
-        const teamsData: ITeamData[] = data.teamData;
+        const teamsData: TeamData[] = data.teamData;
         setTeamsData(teamsData);
       } else {
         console.error('Error fetching team data:', response.statusText);
@@ -69,6 +69,25 @@ const CourseViewPage: React.FC = () => {
       fetchTeamData();
     }
   }, [id, fetchCourse, fetchTeamData]);
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const deleteCourse = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${id}`,
+        {
+          method: 'DELETE',
+        }
+      );
+      if (response.ok) {
+        router.push('/courses');
+      } else {
+        console.error('Error deleting course:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error deleting course:', error);
+    }
+  };
 
   const handleUpdate = () => {
     fetchCourse();

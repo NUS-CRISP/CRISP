@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
 import { Button, Table } from '@mantine/core';
-import { GetSessionParams, getSession } from 'next-auth/react';
 import { User } from 'next-auth';
+import { GetSessionParams, getSession } from 'next-auth/react';
+import { useEffect, useState } from 'react';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
 

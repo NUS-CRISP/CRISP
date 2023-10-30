@@ -1,4 +1,3 @@
-import React from 'react';
 import { Card, Text, Group } from '@mantine/core';
 
 interface CourseCardProps {

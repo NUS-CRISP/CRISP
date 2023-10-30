@@ -1,17 +1,17 @@
-import React, { useState, useCallback } from 'react';
 import {
   Box,
-  TextInput,
   Button,
   Group,
-  Text,
   Notification,
+  Text,
+  TextInput,
 } from '@mantine/core';
-import { IconUpload, IconPhoto, IconX } from '@tabler/icons-react';
-import { useForm } from '@mantine/form';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
-import Papa from 'papaparse';
+import { useForm } from '@mantine/form';
+import { IconPhoto, IconUpload, IconX } from '@tabler/icons-react';
 import { saveAs } from 'file-saver';
+import Papa from 'papaparse';
+import { useCallback, useState } from 'react';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
 

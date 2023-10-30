@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
 import Account from '../models/Account';
+import User from '../models/User';
 
 export const createAccount = async (req: Request, res: Response) => {
   const { name, email, password, role } = req.body;
@@ -16,19 +17,22 @@ export const createAccount = async (req: Request, res: Response) => {
     const salt = await bcrypt.genSalt();
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // const newUser = new User({
-    //   _id: new mongoose.Types.ObjectId(),
-    //   name,
-    // });
+    const newUser = new User({
+      identifier: null,
+      name: name,
+      enrolledCourses: [],
+      gitHandle: null,
+    });
 
     const newAccount = new Account({
       email,
       password: passwordHash,
       role,
       isApproved: false,
-      // userId: newUser._id,
+      userId: newUser._id,
     });
 
+    await newUser.save();
     await newAccount.save();
     res.status(201).send({ message: 'Account created' });
   } catch (error) {

@@ -1,11 +1,17 @@
-import mongoose, { Schema } from 'mongoose';
+import { Mark, Result as SharedResult } from '@shared/types/Result';
+import mongoose, { Schema, Types } from 'mongoose';
 
-export interface Result {
-  assessment: mongoose.Types.ObjectId;
-  team: mongoose.Types.ObjectId;
-  user: mongoose.Types.ObjectId;
-  markers: mongoose.Types.ObjectId[];
-  marks: { student_id: string; mark: number }[];
+export interface Result
+  extends Omit<
+    SharedResult,
+    '_id' | 'assessment' | 'team' | 'user' | 'markers' | 'marks'
+  > {
+  _id: Types.ObjectId;
+  assessment: Types.ObjectId;
+  team?: Types.ObjectId;
+  user?: Types.ObjectId;
+  markers?: Types.ObjectId[];
+  marks?: Mark[];
 }
 
 const resultSchema = new Schema<Result>({
@@ -17,9 +23,7 @@ const resultSchema = new Schema<Result>({
   team: { type: Schema.Types.ObjectId, ref: 'Team' },
   user: { type: Schema.Types.ObjectId, ref: 'User' },
   markers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-  marks: [{ student_id: String, mark: Number }],
+  marks: [{ userId: String, mark: Number }],
 });
 
-const ResultModel = mongoose.model<Result>('Result', resultSchema);
-
-export default ResultModel;
+export default mongoose.model<Result>('Result', resultSchema);

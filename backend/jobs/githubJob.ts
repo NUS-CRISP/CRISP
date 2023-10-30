@@ -1,31 +1,51 @@
+import {
+  TeamData as ITeamData,
+  TeamContribution,
+} from '@shared/types/TeamData';
 import cron from 'node-cron';
-import { createAppAuth } from '@octokit/auth-app';
-import { Octokit } from 'octokit';
-import { TeamContribution, TeamData } from '../models/TeamData';
+import { App } from 'octokit';
+import TeamData from '../models/TeamData';
 
-const ORG_NAME = 'NUS-CRISP';
+const fetchAndSaveTeamData = async (env: Record<string, string>) => {
+  const APP_ID = Number(env.GITHUB_APP_ID);
+  const PRIVATE_KEY = env.GITHUB_APP_PRIVATE_KEY.replace(/\n/g, '\n');
 
-const fetchAndSaveTeamData = async () => {
-  const auth = createAppAuth({
-    appId: process.env.GITHUB_APP_ID!,
-    privateKey: process.env.GITHUB_APP_PRIVATE_KEY!.replace(/\\n/g, '\n'),
-    installationId: process.env.GITHUB_APP_INSTALLATION_ID!,
+  const app = new App({
+    appId: APP_ID,
+    privateKey: PRIVATE_KEY,
   });
+  const octokit = app.octokit;
 
-  const { token } = await auth({ type: 'installation' });
+  const response = await octokit.rest.apps.listInstallations();
+  const installations = response.data;
+  installations.map(installation => {
+    if (installation.account && 'login' in installation.account) {
+      getOrgData(app, {
+        id: installation.id,
+        account: { login: installation.account.login },
+      });
+    }
+  });
+};
 
-  const octokit = new Octokit({ auth: token });
+interface Installation {
+  id: number;
+  account: {
+    login: string;
+  };
+}
 
-  // Fetch all repositories for an organization
+const getOrgData = async (app: App, installation: Installation) => {
+  const octokit = await app.getInstallationOctokit(installation.id);
+  const orgName = installation.account.login;
+
   const repos = await octokit.rest.repos.listForOrg({
-    org: ORG_NAME,
+    org: orgName,
   });
-
-  await TeamData.deleteMany({}); // temp w/a to avoid duplicates
 
   for (const repo of repos.data) {
     const contributors = await octokit.rest.repos.listContributors({
-      owner: ORG_NAME,
+      owner: orgName,
       repo: repo.name,
     });
 
@@ -33,18 +53,55 @@ const fetchAndSaveTeamData = async () => {
 
     for (const contributor of contributors.data) {
       const commitsByContributor = await octokit.rest.repos.listCommits({
-        owner: ORG_NAME,
+        owner: orgName,
         repo: repo.name,
         author: contributor.login,
       });
 
+      const prsByContributor = await octokit.rest.pulls.list({
+        owner: orgName,
+        repo: repo.name,
+        creator: contributor.login,
+      });
+
+      let reviewsByContributor = 0;
+
+      const prs = await octokit.rest.pulls.list({
+        owner: orgName,
+        repo: repo.name,
+      });
+
+      for (const pr of prs.data) {
+        const reviews = await octokit.rest.pulls.listReviews({
+          owner: orgName,
+          repo: repo.name,
+          pull_number: pr.number,
+        });
+
+        reviewsByContributor += reviews.data.filter(
+          review => review.user && review.user.login === contributor.login
+        ).length;
+      }
+
+      const issuesCreatedByContributor = await octokit.rest.issues.listForRepo({
+        owner: orgName,
+        repo: repo.name,
+        creator: contributor.login,
+      });
+
+      const openIssuesByContributor = issuesCreatedByContributor.data.filter(
+        issue => issue.state === 'open'
+      ).length;
+      const closedIssuesByContributor = issuesCreatedByContributor.data.filter(
+        issue => issue.state === 'closed'
+      ).length;
+
       let additions = 0;
       let deletions = 0;
 
-      // Fetch detailed commit data to get additions/deletions
       for (const commit of commitsByContributor.data) {
         const commitDetail = await octokit.rest.repos.getCommit({
-          owner: ORG_NAME,
+          owner: orgName,
           repo: repo.name,
           ref: commit.sha,
         });
@@ -60,56 +117,59 @@ const fetchAndSaveTeamData = async () => {
           commits: commitsByContributor.data.length,
           additions,
           deletions,
+          pullRequests: prsByContributor.data.length,
+          reviews: reviewsByContributor,
+          createdIssues: issuesCreatedByContributor.data.length,
+          openIssues: openIssuesByContributor,
+          closedIssues: closedIssuesByContributor,
         };
       }
     }
 
-    // Fetch commits
     const commits = await octokit.rest.repos.listCommits({
-      owner: ORG_NAME,
+      owner: orgName,
       repo: repo.name,
     });
 
-    // Fetch issues
     const issues = await octokit.rest.issues.listForRepo({
-      owner: ORG_NAME,
+      owner: orgName,
       repo: repo.name,
     });
 
-    // Fetch pull requests
     const pullRequests = await octokit.rest.pulls.list({
-      owner: ORG_NAME,
+      owner: orgName,
       repo: repo.name,
       state: 'open',
     });
 
-    // Extract more information
-    const stars = repo.stargazers_count;
-    const forks = repo.forks_count;
-
-    // Process and save to MongoDB
-    const teamData = new TeamData({
+    const teamData: Omit<ITeamData, '_id'> = {
       teamId: repo.id,
       repoName: repo.name,
       commits: commits.data.length,
       issues: issues.data.length,
-      stars,
-      forks,
+      stars: repo.stargazers_count ?? 0,
+      forks: repo.forks_count ?? 0,
       pullRequests: pullRequests.data.length,
       updatedIssues: issues.data.map(issue => issue.updated_at),
       teamContributions,
-    });
+    };
 
-    await teamData.save();
+    console.log('Saving team data:', teamData);
+
+    await TeamData.findOneAndUpdate({ teamId: teamData.teamId }, teamData, {
+      upsert: true,
+    });
   }
 };
 
 export const setupJob = () => {
+  const env = validateEnv();
+
   // Schedule the job to run every day at midnight
   cron.schedule('0 0 * * *', async () => {
     console.log('Running fetchAndSaveTeamData job:', new Date().toString());
     try {
-      await fetchAndSaveTeamData();
+      await fetchAndSaveTeamData(env);
     } catch (err) {
       console.error('Error in cron job fetchAndSaveTeamData:', err);
     }
@@ -117,8 +177,27 @@ export const setupJob = () => {
 
   // To run the job immediately for testing
   if (process.env.RUN_JOB_NOW === 'true') {
-    fetchAndSaveTeamData().catch(err => {
+    fetchAndSaveTeamData(env).catch(err => {
       console.error('Error running job manually:', err);
     });
   }
+};
+
+const ENV_KEYS = [
+  'GITHUB_APP_ID',
+  'GITHUB_APP_PRIVATE_KEY',
+  'GITHUB_APP_INSTALLATION_ID',
+  'RUN_JOB_NOW',
+];
+
+const validateEnv = () => {
+  const env: Record<string, string> = {};
+  for (const key of ENV_KEYS) {
+    if (process.env[key] === undefined) {
+      throw new Error(`${key} is not defined`);
+    } else {
+      env[key] = process.env[key]!;
+    }
+  }
+  return env;
 };

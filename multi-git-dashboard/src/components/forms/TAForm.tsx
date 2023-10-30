@@ -1,32 +1,23 @@
-import React, { useState, useCallback } from 'react';
-import { Box, TextInput, Button, Group, Text } from '@mantine/core';
-import { IconUpload, IconPhoto, IconX } from '@tabler/icons-react';
-import { useForm } from '@mantine/form';
+import { Box, Button, Group, Text, TextInput } from '@mantine/core';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
-import Papa from 'papaparse';
+import { useForm } from '@mantine/form';
+import { User } from '@shared/types/User';
+import { IconPhoto, IconUpload, IconX } from '@tabler/icons-react';
 import { saveAs } from 'file-saver';
-import { User } from '@/types/user';
-
-const backendPort = process.env.BACKEND_PORT || 3001;
+import Papa, { ParseResult } from 'papaparse';
+import { useCallback, useState } from 'react';
 
 interface TAFormProps {
   courseId: string | string[] | undefined;
   onTACreated: () => void;
 }
 
-interface Results {
-  data: User[];
-}
-
 const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
   const form = useForm({
     initialValues: {
-      name: '',
       identifier: '',
-      email: '',
-    },
-    validate: {
-      //email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
+      name: '',
+      gitHandle: '',
     },
   });
   const [TAs, setTAs] = useState<User[]>([]);
@@ -38,14 +29,8 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
         Papa.parse(reader.result as string, {
           header: true,
           skipEmptyLines: true,
-          complete: function (results: Results) {
-            const TAsData = results.data;
-            const TAs = TAsData.map((TA: User) => ({
-              identifier: TA.identifier || '',
-              name: TA.name || '',
-              email: TA.email || '',
-            }));
-            setTAs(TAs as unknown as User[]);
+          complete: function (results: ParseResult<User>) {
+            setTAs(results.data);
           },
           error: function (error: Error) {
             console.error('CSV parsing error:', error.message);
@@ -72,7 +57,7 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
 
     try {
       const response = await fetch(
-        `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/tas`,
+        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${courseId}/tas`,
         {
           method: 'POST',
           headers: {
@@ -100,7 +85,7 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
     console.log('Sending ta data:', form.values);
 
     const response = await fetch(
-      `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/tas`,
+      `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${courseId}/tas`,
       {
         method: 'POST',
         headers: {
@@ -111,7 +96,7 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
             {
               identifier: form.values.identifier,
               name: form.values.name,
-              email: form.values.email,
+              gitHandle: form.values.gitHandle,
             },
           ],
         }),
@@ -145,12 +130,11 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
           }}
         />
         <TextInput
-          withAsterisk
-          label="TA Email"
-          {...form.getInputProps('email')}
-          value={form.values.email}
+          label="Git Handle"
+          {...form.getInputProps('gitHandle')}
+          value={form.values.gitHandle}
           onChange={event => {
-            form.setFieldValue('email', event.currentTarget.value);
+            form.setFieldValue('gitHandle', event.currentTarget.value);
           }}
         />
         <Button type="submit" style={{ marginTop: '16px' }}>

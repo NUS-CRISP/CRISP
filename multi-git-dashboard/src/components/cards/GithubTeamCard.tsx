@@ -1,36 +1,36 @@
 import {
-  Text,
-  Grid,
   Badge,
-  Card,
-  Stack,
-  RingProgress,
-  useMantineTheme,
-  Stepper,
   Button,
-  Group,
+  Card,
   Container,
+  Grid,
+  Group,
+  RingProgress,
+  Stack,
+  Stepper,
+  Text,
+  useMantineTheme,
 } from '@mantine/core';
+import { Milestone, Sprint, isSprint } from '@shared/types/Course';
+import { TeamData } from '@shared/types/TeamData';
+import { useState } from 'react';
 import {
-  Tooltip,
-  Legend,
-  Cell,
-  Pie,
-  PieChart,
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
+  ComposedChart,
+  Legend,
+  Line,
+  Pie,
+  PieChart,
+  Tooltip,
   XAxis,
   YAxis,
-  ComposedChart,
-  Line,
 } from 'recharts';
-import { ITeamData } from '@backend/models/TeamData';
-import { Milestone, Sprint, isSprint } from '@/types/course';
-import { useState } from 'react';
 
 interface GithubTeamCardProps {
-  teamData: ITeamData;
+  teamData: TeamData;
   milestones: Milestone[];
   sprints: Sprint[];
 }
@@ -50,25 +50,42 @@ const GithubTeamCard: React.FC<GithubTeamCardProps> = ({
 
   const [active, setActive] = useState(1);
   const nextStep = () =>
-    setActive((current: number) =>
+    setActive(current =>
       current < stepperSteps.length ? current + 1 : current
     );
   const prevStep = () =>
-    setActive((current: number) => (current > 0 ? current - 1 : current));
+    setActive(current => (current > 0 ? current - 1 : current));
 
-  // Data for Pie chart
   const chartData = [
     { name: 'Commits', value: teamData.commits },
     { name: 'Issues', value: teamData.issues },
     { name: 'PRs', value: teamData.pullRequests },
   ];
+
   const commitsData = [];
   const composedChartData = [];
+  const prsData = [];
+  const reviewsData = [];
+  const issuesData = [];
   for (const contributor in teamData.teamContributions) {
     const contribution = teamData.teamContributions[contributor];
     commitsData.push({
       name: contributor,
       commits: contribution.commits,
+    });
+    prsData.push({
+      name: contributor,
+      prs: contribution.pullRequests,
+    });
+    reviewsData.push({
+      name: contributor,
+      reviews: contribution.reviews,
+    });
+    issuesData.push({
+      name: contributor,
+      created: contribution.createdIssues,
+      open: contribution.openIssues,
+      closed: contribution.closedIssues,
     });
     composedChartData.push({
       name: contributor,
@@ -79,19 +96,21 @@ const GithubTeamCard: React.FC<GithubTeamCardProps> = ({
 
   const stepperSteps = [...sprints, ...milestones]
     .sort((a, b) => {
-      const dateA = 'startDate' in a ? a.startDate : a.dateline;
-      const dateB = 'startDate' in b ? b.startDate : b.dateline;
+      const dateA =
+        'startDate' in a ? (a as Sprint).startDate : (a as Milestone).dateline;
+      const dateB =
+        'startDate' in b ? (b as Sprint).startDate : (b as Milestone).dateline;
       return dateA.getTime() - dateB.getTime();
     })
     .map((item, index) =>
       isSprint(item) ? (
-        <Stepper.Step key={index} label={`Sprint ${item.sprintNumber}`}>
+        <Stepper.Step key={index} label={`Sprint ${item.number}`}>
           <Text>Start: {item.startDate.toLocaleDateString()}</Text>
           <Text>End: {item.endDate.toLocaleDateString()}</Text>
-          <Text>{item.description}</Text>
+          <Text>{(item as Sprint).description}</Text>
         </Stepper.Step>
       ) : (
-        <Stepper.Step key={index} label={`Milestone ${item.milestoneNumber}`}>
+        <Stepper.Step key={index} label={`Milestone ${item.number}`}>
           <Text>Deadline: {item.dateline.toLocaleDateString()}</Text>
           <Text>{item.description}</Text>
         </Stepper.Step>
@@ -218,6 +237,36 @@ const GithubTeamCard: React.FC<GithubTeamCardProps> = ({
             </Button>
             <Button onClick={nextStep}>Next step</Button>
           </Group>
+        </Grid.Col>
+        <Grid.Col span={6}>
+          <Container>
+            <BarChart width={300} height={250} data={prsData}>
+              <CartesianGrid stroke="#f5f5f5" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="prs" fill="#8884d8" />
+            </BarChart>
+            <BarChart width={300} height={250} data={reviewsData}>
+              <CartesianGrid stroke="#f5f5f5" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="reviews" fill="#8884d8" />
+            </BarChart>
+            <BarChart width={300} height={250} data={issuesData}>
+              <CartesianGrid stroke="#f5f5f5" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="created" fill="#8884d8" />
+              <Bar dataKey="open" fill="#82ca9d" />
+              <Bar dataKey="closed" fill="#ffc658" />
+            </BarChart>
+          </Container>
         </Grid.Col>
       </Grid>
     </Card>

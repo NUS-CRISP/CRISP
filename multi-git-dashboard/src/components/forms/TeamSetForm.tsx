@@ -1,8 +1,5 @@
-import React from 'react';
-import { Box, TextInput, Button } from '@mantine/core';
+import { Box, Button, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
-
-const backendPort = process.env.BACKEND_PORT || 3001;
 
 interface TeamSetFormProps {
   courseId: string;
@@ -25,7 +22,7 @@ const TeamSetForm: React.FC<TeamSetFormProps> = ({
     console.log('Sending teamset data:', form.values);
 
     const response = await fetch(
-      `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/teamsets`,
+      `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${courseId}/teamsets`,
       {
         method: 'POST',
         headers: {

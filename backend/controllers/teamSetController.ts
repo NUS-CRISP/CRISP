@@ -1,21 +1,21 @@
 import { Request, Response } from 'express';
-import CourseModel from '../models/Course';
-import TeamSetModel from '../models/TeamSet';
-import TeamModel from '../models/Team';
+import Course from '../models/Course';
+import Team from '../models/Team';
+import TeamSet from '../models/TeamSet';
 
 export const deleteTeamSet = async (req: Request, res: Response) => {
   const teamSetId = req.params.id;
 
   try {
-    const teamSet = await TeamSetModel.findById(teamSetId);
+    const teamSet = await TeamSet.findById(teamSetId);
 
     if (!teamSet) {
       return res.status(404).json({ message: 'TeamSet not found' });
     }
 
-    await TeamModel.deleteMany({ teamSet: teamSetId });
+    await Team.deleteMany({ teamSet: teamSetId });
 
-    const course = await CourseModel.findById(teamSet.course);
+    const course = await Course.findById(teamSet.course);
     if (course) {
       const index = course.teamSets.indexOf(teamSet._id);
       if (index !== -1) {
@@ -24,7 +24,7 @@ export const deleteTeamSet = async (req: Request, res: Response) => {
       }
     }
 
-    await TeamSetModel.findByIdAndDelete(teamSetId);
+    await TeamSet.findByIdAndDelete(teamSetId);
 
     return res.status(200).json({ message: 'TeamSet deleted successfully' });
   } catch (error) {

@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import AssessmentModel from '../models/Assessment';
+import Assessment from '../models/Assessment';
 
 export const getAssessmentById = async (req: Request, res: Response) => {
   try {
     const assessmentId = req.params.id;
-    const assessment = await AssessmentModel.findById(assessmentId);
+    const assessment = await Assessment.findById(assessmentId);
     if (!assessment) {
       return res.status(404).json({ error: 'Assessment not found' });
     }

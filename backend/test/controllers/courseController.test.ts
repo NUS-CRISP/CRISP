@@ -1,17 +1,17 @@
 import { Request, Response } from 'express';
+import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose, { ConnectOptions } from 'mongoose';
 import {
   createCourse,
+  deleteCourseById,
   getAllCourses,
   getCourseById,
   updateCourseById,
-  deleteCourseById,
 } from '../../controllers/courseController';
 import CourseModel from '../../models/Course';
-import UserModel from '../../models/User';
-import TeamSetModel from '../../models/TeamSet';
-import { MongoMemoryServer } from 'mongodb-memory-server';
 import TeamModel from '../../models/Team';
+import TeamSetModel from '../../models/TeamSet';
+import UserModel from '../../models/User';
 
 describe('Course Controller', () => {
   let mongoServer: MongoMemoryServer;

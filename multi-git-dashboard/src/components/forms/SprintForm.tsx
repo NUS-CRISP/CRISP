@@ -1,7 +1,5 @@
-import React from 'react';
-import { Box, TextInput, Button } from '@mantine/core';
+import { Box, Button, TextInput } from '@mantine/core';
 import { DatePicker } from '@mantine/dates';
-import '@mantine/dates/styles.css';
 import { useForm } from '@mantine/form';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
@@ -34,7 +32,7 @@ const SprintForm: React.FC<SprintFormProps> = ({
     console.log('Sending sprint data:', form.values);
 
     const response = await fetch(
-      `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/sprints`,
+      `http://localhost:${backendPort}/api/courses/${courseId}/sprints`,
       {
         method: 'POST',
         headers: {

@@ -1,14 +1,13 @@
 import { useRouter } from 'next/router';
-import Sidebar from './Sidebar';
 import styles from '../styles/root-layout.module.css';
+import Sidebar from './Sidebar';
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const { pathname } = router;
+  const { pathname } = useRouter();
 
   const excludedRoutes = ['/auth/signin', '/auth/register'];
 

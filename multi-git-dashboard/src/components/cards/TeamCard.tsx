@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Card, Text, Group, Table, ActionIcon, Select } from '@mantine/core';
+import { ActionIcon, Card, Group, Select, Table, Text } from '@mantine/core';
+import { User } from '@shared/types/User';
 import { IconX } from '@tabler/icons-react';
-import { User } from '@/types/user';
+import { useState } from 'react';
 
 interface TeamCardProps {
   teamId: string;
@@ -66,19 +66,13 @@ const TeamCard: React.FC<TeamCardProps> = ({
   };
 
   const taOptions = TAs.map(ta => ({ value: ta._id, label: ta.name }));
-  const student_rows = members?.map(member => {
-    if (member.role === 'Student') {
-      return (
-        <tr key={member._id}>
-          <td>{member.name}</td>
-          <td>{member.email}</td>
-          <td>{member.gitHandle}</td>
-        </tr>
-      );
-    } else {
-      return null;
-    }
-  });
+  const student_rows = members?.map(member => (
+    <tr key={member._id}>
+      {Object.values(member).map((value, index) => (
+        <td key={index}>{value}</td>
+      ))}
+    </tr>
+  ));
 
   return (
     <Card shadow="sm" padding="lg" radius="md" withBorder>
@@ -116,9 +110,9 @@ const TeamCard: React.FC<TeamCardProps> = ({
       <Table>
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Git Handle</th>
+            {Object.keys(members[0]).map((key, index) => (
+              <th key={index}>{key}</th>
+            ))}
           </tr>
         </thead>
         <tbody>{student_rows}</tbody>

@@ -1,5 +1,5 @@
 /**
- * Adds a delay to function execution (rememer to await)
+ * Adds a delay to function execution (remember to await)
  * @param ms Number of milliseconds to delay
  */
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
