@@ -1,3 +1,4 @@
 .env
 .scannerwork
 sonar-project.properties
+.idea
