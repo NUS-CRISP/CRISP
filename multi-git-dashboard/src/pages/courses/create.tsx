@@ -11,22 +11,16 @@ import {
 import { useForm } from '@mantine/form';
 import { CourseType } from '@shared/types/Course';
 import { IconBrandGithub } from '@tabler/icons-react';
-import { useState } from 'react';
 
-interface CourseFormProps {
-  onCourseCreated: () => void;
-}
-
-const CreateCoursePage: React.FC<CourseFormProps> = ({ onCourseCreated }) => {
+const CreateCoursePage: React.FC = () => {
   const form = useForm({
     initialValues: {
       name: '',
       code: '',
       semester: '',
+      courseType: CourseType.Normal,
     },
   });
-
-  const [courseType, setCourseType] = useState<CourseType>(CourseType.Normal);
 
   const handleSubmit = async () => {
     const response = await fetch(
@@ -41,8 +35,12 @@ const CreateCoursePage: React.FC<CourseFormProps> = ({ onCourseCreated }) => {
     );
 
     const data = await response.json();
-    console.log('Course created:', data);
-    onCourseCreated();
+
+    if (response.ok) {
+      console.log('Course created:', data);
+    } else {
+      console.error('Error creating course:', data);
+    }
   };
 
   return (
@@ -53,40 +51,43 @@ const CreateCoursePage: React.FC<CourseFormProps> = ({ onCourseCreated }) => {
           label="Course Name"
           {...form.getInputProps('name')}
           value={form.values.name}
-          onChange={event => {
-            form.setFieldValue('name', event.currentTarget.value);
-          }}
+          onChange={event =>
+            form.setFieldValue('name', event.currentTarget.value)
+          }
         />
         <TextInput
           withAsterisk
           label="Course Code"
           {...form.getInputProps('code')}
           value={form.values.code}
-          onChange={event => {
-            form.setFieldValue('code', event.currentTarget.value);
-          }}
+          onChange={event =>
+            form.setFieldValue('code', event.currentTarget.value)
+          }
         />
         <TextInput
           withAsterisk
           label="Semester"
           {...form.getInputProps('semester')}
           value={form.values.semester}
-          onChange={event => {
-            form.setFieldValue('semester', event.currentTarget.value);
-          }}
+          onChange={event =>
+            form.setFieldValue('semester', event.currentTarget.value)
+          }
         />
         <Space h="md" />
         <Box>
           <SegmentedControl
             data={[
-              { label: 'Normal', value: CourseType.Normal },
-              { label: 'GitHub Organisation', value: CourseType.GitHubOrg },
+              { value: CourseType.Normal, label: 'Normal' },
+              { value: CourseType.GitHubOrg, label: 'GitHub Org' },
             ]}
-            value={courseType}
-            onChange={value => setCourseType(value as CourseType)}
+            // value={form.values.courseType}
+            // onChange={value =>
+            //   form.setFieldValue('courseType', value as CourseType)
+            // }
+            {...form.getInputProps('courseType')}
           />
 
-          <Collapse in={courseType === CourseType.GitHubOrg}>
+          <Collapse in={form.values.courseType === CourseType.GitHubOrg}>
             <Box>
               <Title order={4} my={15}>
                 GitHub Org Integration Setup:
