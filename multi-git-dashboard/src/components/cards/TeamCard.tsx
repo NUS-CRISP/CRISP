@@ -110,9 +110,13 @@ const TeamCard: React.FC<TeamCardProps> = ({
       <Table>
         <thead>
           <tr>
-            {Object.keys(members[0]).map((key, index) => (
-              <th key={index}>{key}</th>
-            ))}
+            {members && members.length > 0 ? (
+              Object.keys(members[0]).map((key, index) => (
+                <th key={index}>{key}</th>
+              ))
+            ) : (
+              <th>No members</th>
+            )}
           </tr>
         </thead>
         <tbody>{student_rows}</tbody>

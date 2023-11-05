@@ -8,7 +8,7 @@ import TeamData from '../models/TeamData';
 
 const fetchAndSaveTeamData = async (env: Record<string, string>) => {
   const APP_ID = Number(env.GITHUB_APP_ID);
-  const PRIVATE_KEY = env.GITHUB_APP_PRIVATE_KEY.replace(/\n/g, '\n');
+  const PRIVATE_KEY = env.GITHUB_APP_PRIVATE_KEY.replace(/\\n/g, '\n');
 
   const app = new App({
     appId: APP_ID,

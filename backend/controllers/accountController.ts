@@ -4,7 +4,7 @@ import Account from '../models/Account';
 import User from '../models/User';
 
 export const createAccount = async (req: Request, res: Response) => {
-  const { name, email, password, role } = req.body;
+  const { name, identifier, email, password, role } = req.body;
 
   try {
     const existingAccount = await Account.findOne({ email });
@@ -18,7 +18,7 @@ export const createAccount = async (req: Request, res: Response) => {
     const passwordHash = await bcrypt.hash(password, salt);
 
     const newUser = new User({
-      identifier: null,
+      identifier: identifier,
       name: name,
       enrolledCourses: [],
       gitHandle: null,
@@ -36,6 +36,7 @@ export const createAccount = async (req: Request, res: Response) => {
     await newAccount.save();
     res.status(201).send({ message: 'Account created' });
   } catch (error) {
+    console.log(error);
     res.status(500).send({ error: 'Error creating account' });
   }
 };

@@ -18,6 +18,7 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
       identifier: '',
       name: '',
       gitHandle: '',
+      email: '',
     },
   });
   const [TAs, setTAs] = useState<User[]>([]);
@@ -42,7 +43,7 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
   }, []);
 
   const downloadCsvTemplate = () => {
-    const csvHeaders = 'name,identifier,email\n';
+    const csvHeaders = 'name,identifier,gitHandle,email\n';
     const blob = new Blob([csvHeaders], { type: 'text/csv;charset=utf-8' });
     saveAs(blob, 'tas_template.csv');
   };
@@ -97,6 +98,7 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
               identifier: form.values.identifier,
               name: form.values.name,
               gitHandle: form.values.gitHandle,
+              email: form.values.email,
             },
           ],
         }),
@@ -127,6 +129,15 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
           value={form.values.identifier}
           onChange={event => {
             form.setFieldValue('identifier', event.currentTarget.value);
+          }}
+        />
+        <TextInput
+          withAsterisk
+          label="Email"
+          {...form.getInputProps('email')}
+          value={form.values.email}
+          onChange={event => {
+            form.setFieldValue('email', event.currentTarget.value);
           }}
         />
         <TextInput

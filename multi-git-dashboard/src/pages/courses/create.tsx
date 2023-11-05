@@ -12,12 +12,12 @@ import { useForm } from '@mantine/form';
 import { CourseType } from '@shared/types/Course';
 import { IconBrandGithub } from '@tabler/icons-react';
 import { useState } from 'react';
+import { useRouter } from 'next/router';
 
-interface CourseFormProps {
-  onCourseCreated: () => void;
-}
+interface CourseFormProps {}
 
-const CreateCoursePage: React.FC<CourseFormProps> = ({ onCourseCreated }) => {
+const CreateCoursePage: React.FC<CourseFormProps> = () => {
+  const router = useRouter();
   const form = useForm({
     initialValues: {
       name: '',
@@ -36,13 +36,19 @@ const CreateCoursePage: React.FC<CourseFormProps> = ({ onCourseCreated }) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(form.values),
+        body: JSON.stringify({
+          ...form.values,
+          courseType: courseType,
+        }),
       }
     );
-
-    const data = await response.json();
-    console.log('Course created:', data);
-    onCourseCreated();
+    if (response.ok) {
+      const data = await response.json();
+      console.log('Course created:', data);
+      router.push('/courses');
+    } else {
+      console.log('Error creating course:', response);
+    }
   };
 
   return (

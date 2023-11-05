@@ -21,6 +21,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
       identifier: '',
       name: '',
       gitHandle: '',
+      email: '',
     },
   });
   const [students, setStudents] = useState<User[]>([]);
@@ -100,6 +101,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
               identifier: form.values.identifier,
               name: form.values.name,
               gitHandle: form.values.gitHandle,
+              email: form.values.email,
             },
           ],
         }),
@@ -130,6 +132,15 @@ const StudentForm: React.FC<StudentFormProps> = ({
           value={form.values.identifier}
           onChange={event => {
             form.setFieldValue('identifier', event.currentTarget.value);
+          }}
+        />
+        <TextInput
+          withAsterisk
+          label="Email"
+          {...form.getInputProps('email')}
+          value={form.values.email}
+          onChange={event => {
+            form.setFieldValue('email', event.currentTarget.value);
           }}
         />
         <TextInput

@@ -20,6 +20,7 @@ const backendPort = process.env.BACKEND_PORT || 3001;
 
 const RegisterPage: React.FC = () => {
   const [name, setName] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -44,7 +45,7 @@ const RegisterPage: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, identifier, email, password }),
       }
     );
 
@@ -86,6 +87,13 @@ const RegisterPage: React.FC = () => {
             placeholder="Name"
             value={name}
             onChange={event => setName(event.currentTarget.value)}
+            required
+          />
+          <TextInput
+            label="Identifier"
+            placeholder="Identifier"
+            value={identifier}
+            onChange={event => setIdentifier(event.currentTarget.value)}
             required
           />
           <TextInput

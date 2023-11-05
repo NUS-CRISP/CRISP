@@ -10,9 +10,11 @@ import User, { User as IUser } from '../models/User';
 /*----------------------------------------Course----------------------------------------*/
 export const createCourse = async (req: Request, res: Response) => {
   try {
+    console.log(req.body);
     const newCourse = await Course.create(req.body);
     res.status(201).json(newCourse);
   } catch (error) {
+    console.log(error);
     res.status(400).json({ error: 'Failed to create course' });
   }
 };
@@ -30,9 +32,24 @@ export const getCourseById = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   try {
     const course = await Course.findById(courseId)
-      .populate('faculty')
-      .populate('TAs')
-      .populate('students')
+      .populate({
+        path: 'faculty',
+        populate: {
+          path: 'account',
+        },
+      })
+      .populate({
+        path: 'TAs',
+        populate: {
+          path: 'account',
+        },
+      })
+      .populate({
+        path: 'students',
+        populate: {
+          path: 'account',
+        },
+      })
       .populate({
         path: 'teamSets',
         populate: {
@@ -40,9 +57,15 @@ export const getCourseById = async (req: Request, res: Response) => {
           populate: [
             {
               path: 'members',
+              populate: {
+                path: 'account',
+              },
             },
             {
               path: 'TA',
+              populate: {
+                path: 'account',
+              },
             },
           ],
         },
@@ -82,7 +105,6 @@ export const updateCourseById = async (req: Request, res: Response) => {
 export const deleteCourseById = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   try {
-    // Delete course and its teams
     const deletedCourse = await Course.findByIdAndDelete(courseId);
     if (!deletedCourse) {
       return res.status(404).json({ error: 'Course not found' });
@@ -92,7 +114,6 @@ export const deleteCourseById = async (req: Request, res: Response) => {
 
     await TeamSet.deleteMany({ _id: { $in: deletedCourse.teamSets } });
 
-    // Update references in the Users (students) collection
     await User.updateMany(
       { enrolledCourses: courseId },
       { $pull: { enrolledCourses: courseId } }
@@ -111,7 +132,12 @@ export const addStudents = async (req: Request, res: Response) => {
 
   try {
     const course = await Course.findById(courseId)
-      .populate<{ students: IUser[] }>('students')
+      .populate<{ students: IUser[] }>({
+        path: 'students',
+        populate: {
+          path: 'account',
+        },
+      })
       .exec();
 
     if (!course) {
@@ -119,32 +145,44 @@ export const addStudents = async (req: Request, res: Response) => {
     }
     for (const studentData of students) {
       const studentId = studentData.identifier;
-
+      console.error(studentData)
       let student = await User.findOne({ identifier: studentId });
       if (!student) {
+        console.error(2)
         student = new User({
           identifier: studentId,
           name: studentData.name,
           enrolledCourses: [],
           gitHandle: studentData.gitHandle ?? null,
         });
+        console.error(studentData.email)
+        const newAccount = new Account({
+          email: studentData.email,
+          role: Role.Student,
+          isApproved: false,
+          userId: student._id,
+        });
+        console.error(3)
+        student.account = newAccount._id;
+        await newAccount.save();
       } else {
         const studentAccount = await Account.findOne({ user: student._id });
         if (studentAccount && studentAccount.role !== Role.Student) {
           continue;
         }
       }
-
+      console.error(4)
       if (!student.enrolledCourses.includes(course._id)) {
         student.enrolledCourses.push(course._id);
       }
-
+      console.error(5)
       await student.save();
-
+      console.error(6)
       if (!course.students.some(s => s.identifier === student?.identifier)) {
         course.students.push(student);
       }
     }
+    console.error(7)
 
     await course.save();
 
@@ -152,6 +190,7 @@ export const addStudents = async (req: Request, res: Response) => {
       .status(200)
       .json({ message: 'Students added to the course successfully' });
   } catch (error) {
+    console.error(error)
     res.status(400).json({ error: 'Failed to add students' });
   }
 };
@@ -174,12 +213,24 @@ export const addTAs = async (req: Request, res: Response) => {
       const TAId = TAData.identifier;
       let TA = await User.findOne({ identifier: TAId });
       if (!TA) {
+
         TA = new User({
           identifier: TAId,
           name: TAData.name,
           enrolledCourses: [],
           gitHandle: TAData.gitHandle ?? null,
         });
+
+        const newAccount = new Account({
+          email: TAData.email,
+          role: Role.Student,
+          isApproved: false,
+          userId: 
+          TA._id,
+        });
+
+        TA.account = newAccount._id;
+        newAccount.save();
       } else {
         const TAAccount = await Account.findOne({ user: TA._id });
         if (TAAccount && TAAccount.role !== 'Teaching assistant') {
