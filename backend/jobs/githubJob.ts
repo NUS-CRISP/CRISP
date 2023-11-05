@@ -5,15 +5,10 @@ import {
 import cron from 'node-cron';
 import { App } from 'octokit';
 import TeamData from '../models/TeamData';
+import { Installation, getGitHubApp } from '../utils/github';
 
-const fetchAndSaveTeamData = async (env: Record<string, string>) => {
-  const APP_ID = Number(env.GITHUB_APP_ID);
-  const PRIVATE_KEY = env.GITHUB_APP_PRIVATE_KEY.replace(/\n/g, '\n');
-
-  const app = new App({
-    appId: APP_ID,
-    privateKey: PRIVATE_KEY,
-  });
+const fetchAndSaveTeamData = async () => {
+  const app = getGitHubApp();
   const octokit = app.octokit;
 
   const response = await octokit.rest.apps.listInstallations();
@@ -28,24 +23,17 @@ const fetchAndSaveTeamData = async (env: Record<string, string>) => {
   });
 };
 
-interface Installation {
-  id: number;
-  account: {
-    login: string;
-  };
-}
-
 const getOrgData = async (app: App, installation: Installation) => {
   const octokit = await app.getInstallationOctokit(installation.id);
-  const orgName = installation.account.login;
+  const gitHubOrgName = installation.account.login;
 
   const repos = await octokit.rest.repos.listForOrg({
-    org: orgName,
+    org: gitHubOrgName,
   });
 
   for (const repo of repos.data) {
     const contributors = await octokit.rest.repos.listContributors({
-      owner: orgName,
+      owner: gitHubOrgName,
       repo: repo.name,
     });
 
@@ -53,13 +41,13 @@ const getOrgData = async (app: App, installation: Installation) => {
 
     for (const contributor of contributors.data) {
       const commitsByContributor = await octokit.rest.repos.listCommits({
-        owner: orgName,
+        owner: gitHubOrgName,
         repo: repo.name,
         author: contributor.login,
       });
 
       const prsByContributor = await octokit.rest.pulls.list({
-        owner: orgName,
+        owner: gitHubOrgName,
         repo: repo.name,
         creator: contributor.login,
       });
@@ -67,13 +55,13 @@ const getOrgData = async (app: App, installation: Installation) => {
       let reviewsByContributor = 0;
 
       const prs = await octokit.rest.pulls.list({
-        owner: orgName,
+        owner: gitHubOrgName,
         repo: repo.name,
       });
 
       for (const pr of prs.data) {
         const reviews = await octokit.rest.pulls.listReviews({
-          owner: orgName,
+          owner: gitHubOrgName,
           repo: repo.name,
           pull_number: pr.number,
         });
@@ -84,7 +72,7 @@ const getOrgData = async (app: App, installation: Installation) => {
       }
 
       const issuesCreatedByContributor = await octokit.rest.issues.listForRepo({
-        owner: orgName,
+        owner: gitHubOrgName,
         repo: repo.name,
         creator: contributor.login,
       });
@@ -101,7 +89,7 @@ const getOrgData = async (app: App, installation: Installation) => {
 
       for (const commit of commitsByContributor.data) {
         const commitDetail = await octokit.rest.repos.getCommit({
-          owner: orgName,
+          owner: gitHubOrgName,
           repo: repo.name,
           ref: commit.sha,
         });
@@ -127,22 +115,23 @@ const getOrgData = async (app: App, installation: Installation) => {
     }
 
     const commits = await octokit.rest.repos.listCommits({
-      owner: orgName,
+      owner: gitHubOrgName,
       repo: repo.name,
     });
 
     const issues = await octokit.rest.issues.listForRepo({
-      owner: orgName,
+      owner: gitHubOrgName,
       repo: repo.name,
     });
 
     const pullRequests = await octokit.rest.pulls.list({
-      owner: orgName,
+      owner: gitHubOrgName,
       repo: repo.name,
       state: 'open',
     });
 
     const teamData: Omit<ITeamData, '_id'> = {
+      gitHubOrgName: gitHubOrgName.toLowerCase(),
       teamId: repo.id,
       repoName: repo.name,
       commits: commits.data.length,
@@ -163,13 +152,11 @@ const getOrgData = async (app: App, installation: Installation) => {
 };
 
 export const setupJob = () => {
-  const env = validateEnv();
-
   // Schedule the job to run every day at midnight
   cron.schedule('0 0 * * *', async () => {
     console.log('Running fetchAndSaveTeamData job:', new Date().toString());
     try {
-      await fetchAndSaveTeamData(env);
+      await fetchAndSaveTeamData();
     } catch (err) {
       console.error('Error in cron job fetchAndSaveTeamData:', err);
     }
@@ -177,27 +164,8 @@ export const setupJob = () => {
 
   // To run the job immediately for testing
   if (process.env.RUN_JOB_NOW === 'true') {
-    fetchAndSaveTeamData(env).catch(err => {
+    fetchAndSaveTeamData().catch(err => {
       console.error('Error running job manually:', err);
     });
   }
-};
-
-const ENV_KEYS = [
-  'GITHUB_APP_ID',
-  'GITHUB_APP_PRIVATE_KEY',
-  'GITHUB_APP_INSTALLATION_ID',
-  'RUN_JOB_NOW',
-];
-
-const validateEnv = () => {
-  const env: Record<string, string> = {};
-  for (const key of ENV_KEYS) {
-    if (process.env[key] === undefined) {
-      throw new Error(`${key} is not defined`);
-    } else {
-      env[key] = process.env[key]!;
-    }
-  }
-  return env;
 };

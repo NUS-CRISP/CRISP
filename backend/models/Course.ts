@@ -43,8 +43,8 @@ export const courseSchema = new Schema<Course>({
     enum: ['GitHubOrg', 'Normal'],
     required: true,
   },
-  githubOrgName: String,
-  installationToken: String,
+  gitHubOrgName: String,
+  installationId: String,
 });
 
 export default mongoose.model<Course>('Course', courseSchema);

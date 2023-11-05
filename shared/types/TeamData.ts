@@ -11,6 +11,7 @@ export interface TeamContribution {
 
 export interface TeamData {
   _id: string;
+  gitHubOrgName: string;
   teamId: number;
   repoName: string;
   commits: number;

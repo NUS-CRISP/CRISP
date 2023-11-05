@@ -37,7 +37,7 @@ export interface Course {
   milestones: Milestone[];
   courseType: CourseType;
   // start 'GitHubOrg' fields
-  githubOrgName?: string;
-  installationToken?: string;
+  gitHubOrgName?: string;
+  installationId?: string;
   // end 'GitHubOrg' fields
 }
