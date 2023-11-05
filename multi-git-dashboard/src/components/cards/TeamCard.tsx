@@ -66,13 +66,19 @@ const TeamCard: React.FC<TeamCardProps> = ({
   };
 
   const taOptions = TAs.map(ta => ({ value: ta._id, label: ta.name }));
-  const student_rows = members?.map(member => (
-    <tr key={member._id}>
-      {Object.values(member).map((value, index) => (
-        <td key={index}>{value}</td>
-      ))}
-    </tr>
-  ));
+  const student_rows = members?.map(member => {
+    if (member.account.role === 'Student') {
+      return (
+        <tr key={member._id}>
+          <td>{member.name}</td>
+          <td>{member.account.email}</td>
+          <td>{member.gitHandle}</td>
+        </tr>
+      );
+    } else {
+      return null;
+    }
+  });
 
   return (
     <Card shadow="sm" padding="lg" radius="md" withBorder>
@@ -110,13 +116,9 @@ const TeamCard: React.FC<TeamCardProps> = ({
       <Table>
         <thead>
           <tr>
-            {members && members.length > 0 ? (
-              Object.keys(members[0]).map((key, index) => (
-                <th key={index}>{key}</th>
-              ))
-            ) : (
-              <th>No members</th>
-            )}
+            <th>Name</th>
+            <th>Email</th>
+            <th>Git Handle</th>
           </tr>
         </thead>
         <tbody>{student_rows}</tbody>

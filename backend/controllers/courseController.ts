@@ -10,11 +10,9 @@ import User, { User as IUser } from '../models/User';
 /*----------------------------------------Course----------------------------------------*/
 export const createCourse = async (req: Request, res: Response) => {
   try {
-    console.log(req.body);
     const newCourse = await Course.create(req.body);
     res.status(201).json(newCourse);
   } catch (error) {
-    console.log(error);
     res.status(400).json({ error: 'Failed to create course' });
   }
 };
@@ -145,24 +143,20 @@ export const addStudents = async (req: Request, res: Response) => {
     }
     for (const studentData of students) {
       const studentId = studentData.identifier;
-      console.error(studentData)
       let student = await User.findOne({ identifier: studentId });
       if (!student) {
-        console.error(2)
         student = new User({
           identifier: studentId,
           name: studentData.name,
           enrolledCourses: [],
           gitHandle: studentData.gitHandle ?? null,
         });
-        console.error(studentData.email)
         const newAccount = new Account({
           email: studentData.email,
           role: Role.Student,
           isApproved: false,
           userId: student._id,
         });
-        console.error(3)
         student.account = newAccount._id;
         await newAccount.save();
       } else {
@@ -171,18 +165,14 @@ export const addStudents = async (req: Request, res: Response) => {
           continue;
         }
       }
-      console.error(4)
       if (!student.enrolledCourses.includes(course._id)) {
         student.enrolledCourses.push(course._id);
       }
-      console.error(5)
       await student.save();
-      console.error(6)
       if (!course.students.some(s => s.identifier === student?.identifier)) {
         course.students.push(student);
       }
     }
-    console.error(7)
 
     await course.save();
 
@@ -190,7 +180,6 @@ export const addStudents = async (req: Request, res: Response) => {
       .status(200)
       .json({ message: 'Students added to the course successfully' });
   } catch (error) {
-    console.error(error)
     res.status(400).json({ error: 'Failed to add students' });
   }
 };
@@ -223,7 +212,7 @@ export const addTAs = async (req: Request, res: Response) => {
 
         const newAccount = new Account({
           email: TAData.email,
-          role: Role.Student,
+          role: Role.TA,
           isApproved: false,
           userId: 
           TA._id,
@@ -304,13 +293,14 @@ export const addStudentsToTeams = async (req: Request, res: Response) => {
         return res.status(404).json({ message: 'Student not found' });
       }
 
-      const account = await Account.findOne({ user: student._id });
+      const account_id = student.account;
+      const account = await Account.findById(account_id);
 
       if (
         !account ||
         account.role !== 'Student' ||
-        !student.enrolledCourses.some(ec => ec._id === course._id) ||
-        !course.students.some(s => s._id == student._id) ||
+        !student.enrolledCourses.includes(course._id)||
+        !course.students.some(s => s._id.equals(student._id)) ||
         !studentData.teamSet ||
         !studentData.teamNumber
       ) {
@@ -375,12 +365,14 @@ export const addTAsToTeams = async (req: Request, res: Response) => {
         return res.status(404).json({ message: 'TA not found' });
       }
 
-      const taAccount = await Account.findOne({ user: ta._id });
+      const account_id = ta.account;
+      const taAccount = await Account.findOne({ user: account_id });
 
       if (
         !taAccount ||
         taAccount.role !== 'Teaching assistant' ||
         !ta.enrolledCourses.includes(course._id) ||
+        !course.TAs.some(t => t._id.equals(ta._id)) ||
         !taData.teamSet ||
         !taData.teamNumber
       ) {

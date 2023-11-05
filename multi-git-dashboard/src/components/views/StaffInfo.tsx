@@ -1,6 +1,5 @@
 import { Button, Container, Table } from '@mantine/core';
 import { Course } from '@shared/types/Course';
-import { getTableUser } from '@shared/types/User';
 import { useState } from 'react';
 import TAForm from '../forms/TAForm';
 
@@ -23,17 +22,19 @@ const StaffInfo: React.FC<StaffInfoProps> = ({ course, onUpdate }) => {
         <Table>
           <thead>
             <tr>
-              {Object.keys(getTableUser(course.TAs[0])).map(key => (
-                <th>{key}</th>
-              ))}
+              <th>Name</th>
+              <th>Email</th>
+              <th>ID</th>
+              <th>Git Handle</th>
             </tr>
           </thead>
           <tbody>
             {course.TAs.map(TA => (
               <tr key={TA._id}>
-                {Object.values(getTableUser(TA)).map(value => (
-                  <td>{value}</td>
-                ))}
+                <td>{TA.name}</td>
+                <td>{TA.account.email}</td>
+                <td>{TA.identifier}</td>
+                <td>{TA.gitHandle}</td>
               </tr>
             ))}
           </tbody>
