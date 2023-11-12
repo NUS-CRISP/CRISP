@@ -34,18 +34,24 @@ export const getCourseById = async (req: Request, res: Response) => {
         path: 'faculty',
         populate: {
           path: 'account',
+          model: 'Account',
+          select: 'email'
         },
       })
       .populate({
         path: 'TAs',
         populate: {
           path: 'account',
+          model: 'Account',
+          select: 'email'
         },
       })
       .populate({
         path: 'students',
         populate: {
           path: 'account',
+          model: 'Account',
+          select: 'email'
         },
       })
       .populate({
@@ -57,12 +63,16 @@ export const getCourseById = async (req: Request, res: Response) => {
               path: 'members',
               populate: {
                 path: 'account',
+                model: 'Account',
+          select: 'email'
               },
             },
             {
               path: 'TA',
               populate: {
                 path: 'account',
+                model: 'Account',
+                select: 'email'
               },
             },
           ],
