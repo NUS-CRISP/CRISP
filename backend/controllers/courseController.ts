@@ -105,12 +105,7 @@ export const addStudents = async (req: Request, res: Response) => {
 
   try {
     const course = await Course.findById(courseId)
-      .populate<{ students: IUser[] }>({
-        path: 'students',
-        populate: {
-          path: 'account',
-        },
-      })
+      .populate<{ students: IUser[] }>('students')
       .exec();
 
     if (!course) {
@@ -126,11 +121,14 @@ export const addStudents = async (req: Request, res: Response) => {
           enrolledCourses: [],
           gitHandle: studentData.gitHandle ?? null,
         });
+
+        await student.save();
+
         const newAccount = new Account({
           email: studentData.email,
           role: Role.Student,
           isApproved: false,
-          userId: student._id,
+          user: student._id,
         });
         await newAccount.save();
       } else {
@@ -142,7 +140,9 @@ export const addStudents = async (req: Request, res: Response) => {
       if (!student.enrolledCourses.includes(course._id)) {
         student.enrolledCourses.push(course._id);
       }
+      
       await student.save();
+
       if (!course.students.some(s => s.identifier === student?.identifier)) {
         course.students.push(student);
       }
@@ -154,7 +154,8 @@ export const addStudents = async (req: Request, res: Response) => {
       .status(200)
       .json({ message: 'Students added to the course successfully' });
   } catch (error) {
-    res.status(400).json({ error: 'Failed to add students' });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(400).json({ error: 'Failed to add students: ' +  message});
   }
 };
 
@@ -183,11 +184,13 @@ export const addTAs = async (req: Request, res: Response) => {
           gitHandle: TAData.gitHandle ?? null,
         });
 
+        await TA.save();
+
         const newAccount = new Account({
           email: TAData.email,
           role: Role.TA,
           isApproved: false,
-          userId: TA._id,
+          user: TA._id,
         });
 
         newAccount.save();
@@ -215,7 +218,8 @@ export const addTAs = async (req: Request, res: Response) => {
       .status(200)
       .json({ message: 'TAs added to the course successfully' });
   } catch (error) {
-    res.status(400).json({ error: 'Failed to add TAs' });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(400).json({ error: 'Failed to add TAs: ' +  message});
   }
 };
 
@@ -239,7 +243,8 @@ export const addTeamSet = async (req: Request, res: Response) => {
       .status(201)
       .json({ message: 'Team set created successfully', teamSet });
   } catch (error) {
-    res.status(400).json({ error: 'Failed to create team set' });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(400).json({ error: 'Failed to create team set' + message });
   }
 };
 
@@ -250,23 +255,19 @@ export const addStudentsToTeams = async (req: Request, res: Response) => {
 
   try {
     const course = await Course.findById(courseId);
-
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
-
     for (const studentData of students) {
       const studentId = studentData.identifier;
 
-      const student = await User.findOne({
-        identifier: studentId,
-      });
+      const student = await User.findOne({ identifier: studentId });
 
       if (!student) {
         return res.status(404).json({ message: 'Student not found' });
       }
 
-      const account = await Account.findOne({ user: studentId });
+      const account = await Account.findOne({ user: student._id });
 
       if (
         !account ||
@@ -286,6 +287,7 @@ export const addStudentsToTeams = async (req: Request, res: Response) => {
       if (!teamSet) {
         return res.status(404).json({ message: 'TeamSet not found' });
       }
+
       let team = await Team.findOne({
         number: studentData.teamNumber,
         teamSet: teamSet._id,
@@ -301,6 +303,7 @@ export const addStudentsToTeams = async (req: Request, res: Response) => {
         }
         teamSet.teams.push(team._id);
       }
+
       if (team.members && !team.members.some(s => s._id === student._id)) {
         team.members.push(student._id);
       }
@@ -314,7 +317,8 @@ export const addStudentsToTeams = async (req: Request, res: Response) => {
       .status(200)
       .json({ message: 'Students added to teams successfully' });
   } catch (error) {
-    res.status(400).json({ error: 'Failed to add students to teams' });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(400).json({ error: 'Failed to add students to teams: ' + message });
   }
 };
 
@@ -337,9 +341,15 @@ export const addTAsToTeams = async (req: Request, res: Response) => {
       if (!ta) {
         return res.status(404).json({ message: 'TA not found' });
       }
-
-      const account = await Account.findOne({ user: taId });
-
+      console.error(1);
+      const account = await Account.findOne({ user: ta._id });
+      console.error(2);
+      console.error(!account);
+      console.error(account?.role !== 'Teaching assistant');
+      console.error(!ta.enrolledCourses.includes(course._id));
+      console.error(!course.TAs.some(t => t._id.equals(ta._id)));
+      console.error(!taData.teamSet);
+      console.error(!taData.teamNumber);
       if (
         !account ||
         account.role !== 'Teaching assistant' ||
@@ -348,9 +358,10 @@ export const addTAsToTeams = async (req: Request, res: Response) => {
         !taData.teamSet ||
         !taData.teamNumber
       ) {
+        console.error(3);
         return res.status(400).json({ message: 'Invalid TA' });
       }
-
+      console.error(4);
       let teamSet = await TeamSet.findOne({
         course: course._id,
         name: taData.teamSet,
@@ -384,7 +395,8 @@ export const addTAsToTeams = async (req: Request, res: Response) => {
 
     return res.status(200).json({ message: 'TAs added to teams successfully' });
   } catch (error) {
-    res.status(400).json({ error: 'Failed to add TAs to teams' });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(400).json({ error: 'Failed to add TAs to teams: ' + message });
   }
 };
 
@@ -412,7 +424,8 @@ export const addMilestone = async (req: Request, res: Response) => {
       .status(201)
       .json({ message: 'Milestone added successfully', milestone });
   } catch (error) {
-    res.status(400).json({ error: 'Failed to add milestone' });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(400).json({ error: 'Failed to add milestone: ' + message});
   }
 };
 
@@ -442,7 +455,8 @@ export const addSprint = async (req: Request, res: Response) => {
       .status(201)
       .json({ message: 'Sprint added successfully', sprint });
   } catch (error) {
-    res.status(400).json({ error: 'Failed to add sprint' });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(400).json({ error: 'Failed to add sprint: ' + message });
   }
 };
 
@@ -466,8 +480,7 @@ export const addAssessments = async (req: Request, res: Response) => {
       const { assessmentType, markType, frequency, granularity, teamSetName, formLink } = assessmentData;
 
       const existingAssessment = await Assessment.findOne({ course: courseId, assessmentType });
-      if (existingAssessment) continue;
-
+      if (existingAssessment) continue; 
       const assessment = new Assessment({
         course: courseId,
         assessmentType,
@@ -538,6 +551,7 @@ export const addAssessments = async (req: Request, res: Response) => {
 
     return res.status(201).json({ message: 'Assessments added successfully', newAssessments });
   } catch (error) {
-    res.status(400).json({ error: 'Failed to add assessments' });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(400).json({ error: 'Failed to add assessments: ' + message });
   }
 };
