@@ -1,20 +1,8 @@
 import { Container, Tabs, Text } from '@mantine/core';
 import { Assessment } from '@shared/types/Assessment';
-import { Result } from '@shared/types/Result';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
-
-interface ResultCardProps {
-  result: Result;
-}
-
-const ResultCard: React.FC<ResultCardProps> = ({ result }) => {
-  return (
-    <Container>
-      <Text>{result._id}</Text>
-    </Container>
-  );
-};
+import ResultCard from '../../../../components/cards/ResultCard';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
 const apiUrl = `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/assessments/`;
@@ -34,6 +22,7 @@ const AssessmentDetail: React.FC = () => {
       const response = await fetch(`${apiUrl}${assessmentId}`);
       if (response.ok) {
         const data = await response.json();
+        console.error(data);
         setAssessment(data);
       } else {
         console.error('Error fetching assessment:', response.statusText);

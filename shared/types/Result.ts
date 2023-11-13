@@ -7,5 +7,5 @@ export interface Result {
   assessment: Assessment;
   team: Team;
   marker: User;
-  marks: { userId: string; mark: number; }[]; 
+  marks: { userId: string; name: string; mark: number; }[];
 }

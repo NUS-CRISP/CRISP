@@ -4,7 +4,12 @@ import Assessment from '../models/Assessment';
 export const getAssessmentById = async (req: Request, res: Response) => {
   try {
     const assessmentId = req.params.id;
-    const assessment = await Assessment.findById(assessmentId);
+    const assessment = await Assessment.findById(assessmentId)
+    .populate({
+      path: 'results',
+      populate: ['team', 'marker',]
+    })
+    ;
     if (!assessment) {
       return res.status(404).json({ error: 'Assessment not found' });
     }
