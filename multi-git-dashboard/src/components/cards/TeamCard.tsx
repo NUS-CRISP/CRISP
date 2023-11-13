@@ -1,7 +1,7 @@
 import { ActionIcon, Card, Group, Select, Table, Text } from '@mantine/core';
 import { User } from '@shared/types/User';
 import { IconX } from '@tabler/icons-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface TeamCardProps {
   teamId: string;
@@ -23,6 +23,11 @@ const TeamCard: React.FC<TeamCardProps> = ({
   onTeamDeleted,
 }) => {
   const [selectedTA, setSelectedTA] = useState<string | null>(TA?._id || null);
+
+  useEffect(() => {
+    setSelectedTA(TA?._id || null);
+  }, [TA]);
+
   const handleDelete = async () => {
     try {
       const response = await fetch(
