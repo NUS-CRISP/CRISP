@@ -140,7 +140,7 @@ export const addStudents = async (req: Request, res: Response) => {
       if (!student.enrolledCourses.includes(course._id)) {
         student.enrolledCourses.push(course._id);
       }
-      
+
       await student.save();
 
       if (!course.students.some(s => s.identifier === student?.identifier)) {
@@ -155,7 +155,7 @@ export const addStudents = async (req: Request, res: Response) => {
       .json({ message: 'Students added to the course successfully' });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    res.status(400).json({ error: 'Failed to add students: ' +  message});
+    res.status(400).json({ error: 'Failed to add students: ' + message });
   }
 };
 
@@ -219,7 +219,28 @@ export const addTAs = async (req: Request, res: Response) => {
       .json({ message: 'TAs added to the course successfully' });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    res.status(400).json({ error: 'Failed to add TAs: ' +  message});
+    res.status(400).json({ error: 'Failed to add TAs: ' + message });
+  }
+};
+
+export const getTeachingTeam = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  try {
+    const course = await Course.findById(courseId)
+      .populate('TAs')
+      .populate('faculty')
+      .exec();
+
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    const teachingTeam = [...course.faculty, ...course.TAs];
+
+    res.status(200).json(teachingTeam);
+  } catch (error) {
+    console.error('Error fetching Teaching Team:', error);
+    res.status(500).json({ message: 'Failed to retrieve Teaching Team' });
   }
 };
 
@@ -318,7 +339,9 @@ export const addStudentsToTeams = async (req: Request, res: Response) => {
       .json({ message: 'Students added to teams successfully' });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    res.status(400).json({ error: 'Failed to add students to teams: ' + message });
+    res
+      .status(400)
+      .json({ error: 'Failed to add students to teams: ' + message });
   }
 };
 
@@ -425,7 +448,7 @@ export const addMilestone = async (req: Request, res: Response) => {
       .json({ message: 'Milestone added successfully', milestone });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    res.status(400).json({ error: 'Failed to add milestone: ' + message});
+    res.status(400).json({ error: 'Failed to add milestone: ' + message });
   }
 };
 
@@ -466,7 +489,9 @@ export const addAssessments = async (req: Request, res: Response) => {
   const assessments = req.body.items;
 
   if (!Array.isArray(assessments) || assessments.length === 0) {
-    return res.status(400).json({ message: 'Invalid or empty assessments data' });
+    return res
+      .status(400)
+      .json({ message: 'Invalid or empty assessments data' });
   }
 
   try {
@@ -478,11 +503,21 @@ export const addAssessments = async (req: Request, res: Response) => {
     const newAssessments: mongoose.Document[] = [];
     console.log(assessments.length);
     for (let assessmentData of assessments) {
-      const { assessmentType, markType, frequency, granularity, teamSetName, formLink } = assessmentData;
+      const {
+        assessmentType,
+        markType,
+        frequency,
+        granularity,
+        teamSetName,
+        formLink,
+      } = assessmentData;
 
-      const existingAssessment = await Assessment.findOne({ course: courseId, assessmentType });
+      const existingAssessment = await Assessment.findOne({
+        course: courseId,
+        assessmentType,
+      });
       console.log(existingAssessment);
-      if (existingAssessment) continue; 
+      if (existingAssessment) continue;
       const assessment = new Assessment({
         course: courseId,
         assessmentType,
@@ -491,7 +526,7 @@ export const addAssessments = async (req: Request, res: Response) => {
         frequency,
         granularity,
         teamSet: null,
-        formLink
+        formLink,
       });
 
       await assessment.save();
@@ -499,11 +534,13 @@ export const addAssessments = async (req: Request, res: Response) => {
       const results: mongoose.Document[] = [];
       console.error(0);
       if (granularity === 'team') {
-        const teamSet = await TeamSet.findOne({ course: courseId, name: teamSetName })
-        .populate({
+        const teamSet = await TeamSet.findOne({
+          course: courseId,
+          name: teamSetName,
+        }).populate({
           path: 'teams',
-          populate: ['members', 'TA',]
-        })
+          populate: ['members', 'TA'],
+        });
 
         console.error(teamSet);
 
@@ -515,13 +552,13 @@ export const addAssessments = async (req: Request, res: Response) => {
           const initialMarks = team.members.map((member: any) => ({
             userId: member.identifier,
             name: member.name,
-            mark: 0
+            mark: 0,
           }));
           const result = new Result({
             assessment: assessment._id,
             team: team._id,
             marker: team.TA?._id,
-            marks: initialMarks
+            marks: initialMarks,
           });
           results.push(result);
         });
@@ -533,11 +570,13 @@ export const addAssessments = async (req: Request, res: Response) => {
             assessment: assessment._id,
             team: null,
             marker: null,
-            marks: [{
-              userId: student.identifier,
-              name: student.name,
-              mark: 0
-            }]
+            marks: [
+              {
+                userId: student.identifier,
+                name: student.name,
+                mark: 0,
+              },
+            ],
           });
           results.push(result);
         });
@@ -558,10 +597,12 @@ export const addAssessments = async (req: Request, res: Response) => {
 
     await Promise.all([
       course.save(),
-      ...newAssessments.map(assessment => assessment.save())
+      ...newAssessments.map(assessment => assessment.save()),
     ]);
 
-    return res.status(201).json({ message: 'Assessments added successfully', newAssessments });
+    return res
+      .status(201)
+      .json({ message: 'Assessments added successfully', newAssessments });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     res.status(400).json({ error: 'Failed to add assessments: ' + message });

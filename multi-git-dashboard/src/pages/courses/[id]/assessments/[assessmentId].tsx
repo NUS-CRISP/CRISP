@@ -3,6 +3,7 @@ import { Assessment } from '@shared/types/Assessment';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
 import ResultCard from '../../../../components/cards/ResultCard';
+import { User } from '@shared/types/User';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
 const apiUrl = `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/assessments/`;
@@ -14,15 +15,13 @@ const AssessmentDetail: React.FC = () => {
     assessmentId: string;
   };
   const [assessment, setAssessment] = useState<Assessment | null>(null);
+  const [teachingTeam, setTeachingTeam] = useState<User[]>([]);
 
   const fetchAssessment = useCallback(async () => {
-    console.error(id);
-    console.error(assessmentId);
     try {
       const response = await fetch(`${apiUrl}${assessmentId}`);
       if (response.ok) {
         const data = await response.json();
-        console.error(data);
         setAssessment(data);
       } else {
         console.error('Error fetching assessment:', response.statusText);
@@ -32,11 +31,33 @@ const AssessmentDetail: React.FC = () => {
     }
   }, [assessmentId, id]);
 
+  const fetchTeachingTeam = useCallback(async () => {
+    try {
+      const response = await fetch(
+        `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${id}/teachingteam`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setTeachingTeam(data);
+      } else {
+        console.error('Error fetching Teaching Team:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error fetching Teaching Team:', error);
+    }
+  }, [id]);
+
   useEffect(() => {
     if (assessmentId && id) {
       fetchAssessment();
     }
   }, [assessmentId, id, fetchAssessment]);
+
+  useEffect(() => {
+    if (id) {
+      fetchTeachingTeam();
+    }
+  }, [id, fetchTeachingTeam]);
 
   return (
     <Container>
@@ -67,7 +88,12 @@ const AssessmentDetail: React.FC = () => {
 
         <Tabs.Panel value="results">
           {assessment?.results.map(result => (
-            <ResultCard key={result._id} result={result} />
+            <ResultCard
+              key={result._id}
+              result={result}
+              teachingTeam={teachingTeam}
+              assessmentId={assessmentId}
+            />
           ))}
         </Tabs.Panel>
       </Tabs>

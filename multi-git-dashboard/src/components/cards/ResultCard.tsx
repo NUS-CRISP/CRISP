@@ -1,12 +1,57 @@
-import React from 'react';
-import { Card, Group, Table, Text } from '@mantine/core';
+import React, { useEffect, useState } from 'react';
+import { Card, Group, Select, Table, Text } from '@mantine/core';
 import { Result } from '@shared/types/Result';
+import { User } from '@shared/types/User';
 
 interface ResultCardProps {
   result: Result;
+  teachingTeam: User[];
+  assessmentId: string;
 }
 
-const ResultCard: React.FC<ResultCardProps> = ({ result }) => {
+const backendPort = process.env.BACKEND_PORT || 3001;
+
+const ResultCard: React.FC<ResultCardProps> = ({
+  result,
+  teachingTeam,
+  assessmentId,
+}) => {
+  const [selectedMarker, setSelectedMarker] = useState<string | null>(
+    result.marker?._id || null
+  );
+
+  useEffect(() => {
+    setSelectedMarker(result.marker?._id || null);
+  }, [result.marker]);
+
+  const handleMarkerChange = async (markerId: string | null) => {
+    try {
+      const response = await fetch(
+        `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/assessments/${assessmentId}/results/${result._id}/marker`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ markerId }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to update the team');
+      }
+      console.log('Marker updated');
+      setSelectedMarker(markerId);
+    } catch (error) {
+      console.error('Error updating team:', error);
+    }
+  };
+
+  const taOptions = teachingTeam.map(user => ({
+    value: user._id,
+    label: user.name,
+  }));
+
   const studentRows = result.marks.map(mark => {
     return (
       <tr key={mark.userId}>
@@ -34,6 +79,14 @@ const ResultCard: React.FC<ResultCardProps> = ({ result }) => {
           </Text>
         </Group>
       </div>
+
+      <Select
+        value={selectedMarker}
+        onChange={handleMarkerChange}
+        data={taOptions}
+        placeholder="Assign Marker"
+        style={{ flex: 1 }}
+      />
 
       <Table>
         <thead>

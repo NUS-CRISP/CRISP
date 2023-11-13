@@ -24,6 +24,9 @@ const assessmentSchema = new Schema<Assessment>({
   formLink: { type: String },
 });
 
-const AssessmentModel = mongoose.model<Assessment>('Assessment', assessmentSchema);
+const AssessmentModel = mongoose.model<Assessment>(
+  'Assessment',
+  assessmentSchema
+);
 
 export default AssessmentModel;
