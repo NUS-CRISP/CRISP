@@ -67,12 +67,12 @@ const TeamCard: React.FC<TeamCardProps> = ({
 
   const taOptions = TAs.map(ta => ({ value: ta._id, label: ta.name }));
   const student_rows = members?.map(member => {
-      return (
-        <tr key={member._id}>
-          <td>{member.name}</td>
-          <td>{member.gitHandle}</td>
-        </tr>
-      );
+    return (
+      <tr key={member._id}>
+        <td>{member.name}</td>
+        <td>{member.gitHandle}</td>
+      </tr>
+    );
   });
 
   return (
