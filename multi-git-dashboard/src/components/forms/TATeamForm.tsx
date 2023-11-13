@@ -7,6 +7,7 @@ import { useCallback, useState } from 'react';
 
 interface TATeamFormProps {
   courseId: string | string[] | undefined;
+  teamSet: string;
   onTeamCreated: () => void;
 }
 
@@ -16,7 +17,11 @@ interface TATeamFormUser {
   teamNumber: number;
 }
 
-const TATeamForm: React.FC<TATeamFormProps> = ({ courseId, onTeamCreated }) => {
+const TATeamForm: React.FC<TATeamFormProps> = ({
+  courseId,
+  teamSet,
+  onTeamCreated,
+}) => {
   const [TAs, setTAs] = useState<TATeamFormUser[]>([]);
 
   const handleFileUpload = useCallback((file: File) => {
@@ -27,7 +32,13 @@ const TATeamForm: React.FC<TATeamFormProps> = ({ courseId, onTeamCreated }) => {
           header: true,
           skipEmptyLines: true,
           complete: function (results: ParseResult<TATeamFormUser>) {
-            setTAs(results.data);
+            const TAsData = results.data;
+            const TAs = TAsData.map((TA: TATeamFormUser) => ({
+              identifier: TA.identifier || '',
+              teamSet: teamSet,
+              teamNumber: TA.teamNumber,
+            }));
+            setTAs(TAs);
           },
           error: function (error: Error) {
             console.error('CSV parsing error:', error.message);
