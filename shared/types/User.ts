@@ -7,7 +7,6 @@ export interface User {
   name: string;
   enrolledCourses: Course[];
   gitHandle: string;
-  account: Account;
 }
 
 interface TableUser extends Omit<User, '_id' | 'enrolledCourses'> {
@@ -21,6 +20,5 @@ export const getTableUser = (user: User): TableUser => {
     name,
     enrolledCourses: enrolledCourses.map((c) => c.name),
     gitHandle,
-    account: user.account,
   };
 };

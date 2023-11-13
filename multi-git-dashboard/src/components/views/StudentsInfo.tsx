@@ -22,7 +22,6 @@ const StudentsInfo: React.FC<StudentsInfoProps> = ({ course, onUpdate }) => {
         <thead>
           <tr>
             <th>Name</th>
-            <th>Email</th>
             <th>ID</th>
             <th>Git Handle</th>
           </tr>
@@ -31,7 +30,6 @@ const StudentsInfo: React.FC<StudentsInfoProps> = ({ course, onUpdate }) => {
           {course.students.map(student => (
             <tr key={student._id}>
               <td>{student.name}</td>
-              <td>{student.account.email}</td>
               <td>{student.identifier}</td>
               <td>{student.gitHandle}</td>
             </tr>

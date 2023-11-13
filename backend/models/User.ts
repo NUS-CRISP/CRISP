@@ -1,10 +1,9 @@
 import { User as SharedUser } from '@shared/types/User';
 import mongoose, { Schema, Types } from 'mongoose';
 
-export interface User extends Omit<SharedUser, '_id' | 'enrolledCourses' | 'account'> {
+export interface User extends Omit<SharedUser, '_id' | 'enrolledCourses'> {
   _id: Types.ObjectId;
   enrolledCourses: Types.ObjectId[];
-  account: Types.ObjectId;
 }
 
 export const userSchema = new Schema<User>({
@@ -12,7 +11,6 @@ export const userSchema = new Schema<User>({
   name: { type: String, required: true },
   enrolledCourses: [{ type: Schema.Types.ObjectId, ref: 'Course' }],
   gitHandle: { type: String },
-  account: { type: Schema.Types.ObjectId, ref: 'Account' },
 });
 
 const UserModel = mongoose.model('User', userSchema);

@@ -67,17 +67,12 @@ const TeamCard: React.FC<TeamCardProps> = ({
 
   const taOptions = TAs.map(ta => ({ value: ta._id, label: ta.name }));
   const student_rows = members?.map(member => {
-    if (member.account.role === 'Student') {
       return (
         <tr key={member._id}>
           <td>{member.name}</td>
-          <td>{member.account.email}</td>
           <td>{member.gitHandle}</td>
         </tr>
       );
-    } else {
-      return null;
-    }
   });
 
   return (
@@ -117,7 +112,6 @@ const TeamCard: React.FC<TeamCardProps> = ({
         <thead>
           <tr>
             <th>Name</th>
-            <th>Email</th>
             <th>Git Handle</th>
           </tr>
         </thead>

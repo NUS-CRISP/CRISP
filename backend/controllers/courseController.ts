@@ -30,51 +30,16 @@ export const getCourseById = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   try {
     const course = await Course.findById(courseId)
-      .populate({
-        path: 'faculty',
-        populate: {
-          path: 'account',
-          model: 'Account',
-          select: 'email'
-        },
-      })
-      .populate({
-        path: 'TAs',
-        populate: {
-          path: 'account',
-          model: 'Account',
-          select: 'email'
-        },
-      })
-      .populate({
-        path: 'students',
-        populate: {
-          path: 'account',
-          model: 'Account',
-          select: 'email'
-        },
-      })
+    .populate('faculty')
+    .populate('TAs')
+    .populate('students')
       .populate({
         path: 'teamSets',
         populate: {
           path: 'teams',
           populate: [
-            {
-              path: 'members',
-              populate: {
-                path: 'account',
-                model: 'Account',
-          select: 'email'
-              },
-            },
-            {
-              path: 'TA',
-              populate: {
-                path: 'account',
-                model: 'Account',
-                select: 'email'
-              },
-            },
+            'members',
+            'TA',
           ],
         },
       })
@@ -167,7 +132,6 @@ export const addStudents = async (req: Request, res: Response) => {
           isApproved: false,
           userId: student._id,
         });
-        student.account = newAccount._id;
         await newAccount.save();
       } else {
         const studentAccount = await Account.findOne({ user: student._id });
@@ -228,7 +192,6 @@ export const addTAs = async (req: Request, res: Response) => {
           TA._id,
         });
 
-        TA.account = newAccount._id;
         newAccount.save();
       } else {
         const TAAccount = await Account.findOne({ user: TA._id });
@@ -295,16 +258,18 @@ export const addStudentsToTeams = async (req: Request, res: Response) => {
     }
 
     for (const studentData of students) {
+
+      const studentId = studentData.identifier
+
       const student = await User.findOne({
-        identifier: studentData.identifier,
+        identifier: studentId,
       });
 
       if (!student) {
         return res.status(404).json({ message: 'Student not found' });
       }
 
-      const account_id = student.account;
-      const account = await Account.findById(account_id);
+      const account = await Account.findOne({ user: studentId });
 
       if (
         !account ||
@@ -371,16 +336,16 @@ export const addTAsToTeams = async (req: Request, res: Response) => {
       const taId = taData.identifier;
 
       const ta = await User.findOne({ identifier: taId });
+
       if (!ta) {
         return res.status(404).json({ message: 'TA not found' });
       }
 
-      const account_id = ta.account;
-      const taAccount = await Account.findOne({ user: account_id });
+      const account = await Account.findOne({ user: taId });
 
       if (
-        !taAccount ||
-        taAccount.role !== 'Teaching assistant' ||
+        !account ||
+        account.role !== 'Teaching assistant' ||
         !ta.enrolledCourses.includes(course._id) ||
         !course.TAs.some(t => t._id.equals(ta._id)) ||
         !taData.teamSet ||
