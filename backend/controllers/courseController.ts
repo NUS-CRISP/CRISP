@@ -1,8 +1,11 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
+
 import Role from '../../shared/types/auth/Role';
 import Account from '../models/Account';
 import Assessment from '../models/Assessment';
 import Course from '../models/Course';
+import Result from '../models/Result';
 import Team from '../models/Team';
 import TeamSet from '../models/TeamSet';
 import User, { User as IUser } from '../models/User';
@@ -30,17 +33,14 @@ export const getCourseById = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   try {
     const course = await Course.findById(courseId)
-    .populate('faculty')
-    .populate('TAs')
-    .populate('students')
+      .populate('faculty')
+      .populate('TAs')
+      .populate('students')
       .populate({
         path: 'teamSets',
         populate: {
           path: 'teams',
-          populate: [
-            'members',
-            'TA',
-          ],
+          populate: ['members', 'TA'],
         },
       })
       .populate({
@@ -176,7 +176,6 @@ export const addTAs = async (req: Request, res: Response) => {
       const TAId = TAData.identifier;
       let TA = await User.findOne({ identifier: TAId });
       if (!TA) {
-
         TA = new User({
           identifier: TAId,
           name: TAData.name,
@@ -188,8 +187,7 @@ export const addTAs = async (req: Request, res: Response) => {
           email: TAData.email,
           role: Role.TA,
           isApproved: false,
-          userId: 
-          TA._id,
+          userId: TA._id,
         });
 
         newAccount.save();
@@ -258,8 +256,7 @@ export const addStudentsToTeams = async (req: Request, res: Response) => {
     }
 
     for (const studentData of students) {
-
-      const studentId = studentData.identifier
+      const studentId = studentData.identifier;
 
       const student = await User.findOne({
         identifier: studentId,
@@ -274,7 +271,7 @@ export const addStudentsToTeams = async (req: Request, res: Response) => {
       if (
         !account ||
         account.role !== 'Student' ||
-        !student.enrolledCourses.includes(course._id)||
+        !student.enrolledCourses.includes(course._id) ||
         !course.students.some(s => s._id.equals(student._id)) ||
         !studentData.teamSet ||
         !studentData.teamNumber
@@ -452,73 +449,82 @@ export const addSprint = async (req: Request, res: Response) => {
 /*----------------------------------------Assessment----------------------------------------*/
 export const addAssessments = async (req: Request, res: Response) => {
   const courseId = req.params.id;
-
   const assessments = req.body.items;
 
   if (!Array.isArray(assessments) || assessments.length === 0) {
-    return res
-      .status(400)
-      .json({ message: 'Invalid or empty assessments data' });
+    return res.status(400).json({ message: 'Invalid or empty assessments data' });
   }
 
   try {
-    const course = await Course.findById(courseId);
-
+    const course = await Course.findById(courseId).populate('students');
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
 
-    const newAssessments = [];
+    const newAssessments: mongoose.Document[] = [];
     for (let assessmentData of assessments) {
-      const {
-        assessmentType,
-        markType,
-        frequency,
-        granularity,
-        teamSetName,
-        formLink,
-      } = assessmentData;
+      const { assessmentType, markType, frequency, granularity, teamSetName, formLink } = assessmentData;
 
-      if (!course) {
-        return res.status(404).json({ message: 'Course not found' });
-      }
-      const existingAssessment = await Assessment.findOne({
-        course: courseId,
-        assessmentType: assessmentType,
-      });
-
-      if (existingAssessment) {
-        continue;
-      }
-
-      let teamSetID = null;
-      if (granularity === 'team') {
-        if (teamSetName === null || teamSetName == '') {
-          continue;
-        }
-        const teamSet = await TeamSet.findOne({
-          course: courseId,
-          name: teamSetName,
-        });
-        if (!teamSet) {
-          continue;
-        }
-        teamSetID = teamSet._id;
-      }
+      const existingAssessment = await Assessment.findOne({ course: courseId, assessmentType });
+      if (existingAssessment) continue;
 
       const assessment = new Assessment({
         course: courseId,
         assessmentType,
         markType,
-        result: [],
+        results: [],
         frequency,
         granularity,
-        teamSet: teamSetID,
-        formLink,
+        teamSet: null,
+        formLink
       });
+
+      await assessment.save();
+
+      const results: mongoose.Document[] = [];
+      if (granularity === 'team') {
+        const teamSet = await TeamSet.findOne({ course: courseId, name: teamSetName })
+        .populate('teams')
+        .populate('members')
+        .populate('TA');
+
+        if (!teamSet) continue;
+        assessment.teamSet = teamSet._id;
+
+        // Create a result object for each team
+        teamSet.teams.forEach((team: any) => {
+          const initialMarks = team.members.map((member: any) => ({
+            userId: member.identifier,
+            mark: 0
+          }));
+          const result = new Result({
+            assessment: assessment._id,
+            team: team._id,
+            marker: team.TA?._id,
+            marks: initialMarks
+          });
+          results.push(result);
+        });
+      } else {
+        // Create a result object for each student
+        course.students.forEach((student: any) => {
+          const result = new Result({
+            assessment: assessment._id,
+            team: null,
+            marker: null,
+            marks: [{
+              userId: student.identifier,
+              mark: 0
+            }]
+          });
+          results.push(result);
+        });
+      }
+      assessment.results = results.map(result => result._id);
 
       course.assessments.push(assessment._id);
       newAssessments.push(assessment);
+      await Promise.all(results.map(result => result.save()));
     }
 
     if (newAssessments.length === 0) {
@@ -527,12 +533,10 @@ export const addAssessments = async (req: Request, res: Response) => {
 
     await Promise.all([
       course.save(),
-      ...newAssessments.map(assessment => assessment.save()),
+      ...newAssessments.map(assessment => assessment.save())
     ]);
 
-    return res
-      .status(201)
-      .json({ message: 'Assessments added successfully', newAssessments });
+    return res.status(201).json({ message: 'Assessments added successfully', newAssessments });
   } catch (error) {
     res.status(400).json({ error: 'Failed to add assessments' });
   }
