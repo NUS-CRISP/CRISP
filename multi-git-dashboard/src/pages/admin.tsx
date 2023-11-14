@@ -1,44 +1,113 @@
-import { Button, Checkbox, Flex, Table } from '@mantine/core';
-import { User } from 'next-auth';
+import { Button, Center, Checkbox, Group, ScrollArea, Table, Text, TextInput, UnstyledButton, rem } from '@mantine/core';
+import { Account } from '@shared/types/Account';
+import { IconChevronDown, IconChevronUp, IconSearch, IconSelector } from '@tabler/icons-react';
 import { GetSessionParams, getSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 
-const backendPort = process.env.BACKEND_PORT || 3001;
+import classes from '../styles/admin.module.css';
 
-interface Account {
-  _id: string;
-  name: string;
-  email: string;
-  role: string;
+type RowData = Pick<Account, 'email' | 'role'>;
+
+interface ThProps {
+  children: React.ReactNode;
+  reversed: boolean;
+  sorted: boolean;
+  onSort(): void;
 }
 
-interface CustomUser extends User {
-  role: string;
+const filterData = (data: Account[], search: string) => {
+  const query = search.toLowerCase().trim();
+
+  return data.filter((item) =>
+    item.email.toLowerCase().includes(query) || item.role.toLowerCase().includes(query)
+  );
+}
+
+const sortData = (
+  data: Account[],
+  payload: { sortBy: keyof RowData | null; reversed: boolean; search: string }
+) => {
+  const { reversed, search, sortBy } = payload;
+
+  return !sortBy
+    ? filterData(data, search)
+    : filterData(
+      [...data].sort((a, b) => reversed
+        ? b[sortBy].localeCompare(a[sortBy])
+        : a[sortBy].localeCompare(b[sortBy])
+      ),
+      payload.search
+    );
+}
+
+const Th: React.FC<ThProps> = ({ children, reversed, sorted, onSort }: ThProps) => {
+  const Icon = sorted ? (reversed ? IconChevronUp : IconChevronDown) : IconSelector;
+
+  return (
+    <Table.Th className={classes.th}>
+      <UnstyledButton onClick={onSort} className={classes.control}>
+        <Group justify="space-between">
+          <Text fw={500} fz="sm">
+            {children}
+          </Text>
+          <Center className={classes.icon}>
+            <Icon style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
+          </Center>
+        </Group>
+      </UnstyledButton>
+    </Table.Th>
+  );
 }
 
 const AdminPage: React.FC = () => {
-  const [pendingAccounts, setPendingAccounts] = useState([]);
+  const [search, setSearch] = useState('');
+  const [pendingAccounts, setPendingAccounts] = useState<Account[]>([]);
+  const [filteredAccounts, setFilteredAccounts] = useState<Account[]>([]);
+  const [sortBy, setSortBy] = useState<keyof RowData | null>(null);
+  const [reverseSortDirection, setReverseSortDirection] = useState(false);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
 
-  useEffect(() => {
-    // Fetch accounts that are not yet approved
-    const fetchPendingAccounts = async () => {
-      const response = await fetch(
-        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/accounts/pending`
-      );
-      const data = await response.json();
-      console.log(data);
+  const setSorting = (field: keyof RowData) => {
+    let newSortBy = sortBy;
+    let newReverseSortDirection = reverseSortDirection;
 
-      setPendingAccounts(data);
-    };
+    if (sortBy === field) {
+      if (reverseSortDirection) {
+        // Disable sorting if it's currently in descending order
+        newSortBy = null;
+        newReverseSortDirection = false;
+      } else {
+        // Set to descending order
+        newReverseSortDirection = true;
+      }
+    } else {
+      // Set to ascending order on a new column
+      newSortBy = field;
+      newReverseSortDirection = false;
+    }
 
-    fetchPendingAccounts();
-  }, []);
+    // Update the state
+    setSortBy(newSortBy);
+    setReverseSortDirection(newReverseSortDirection);
+
+    // Use the new values for sorting
+    setFilteredAccounts(sortData(pendingAccounts, {
+      sortBy: newSortBy,
+      reversed: newReverseSortDirection,
+      search,
+    }));
+  };
+
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = event.currentTarget;
+    setSearch(value);
+    setFilteredAccounts(sortData(pendingAccounts, { sortBy, reversed: reverseSortDirection, search: value }));
+  };
 
   const handleApprove = async (ids: string[]) => {
     // Approve account
     const response = await fetch(
-      `http://localhost:${backendPort}/api/accounts/approve`,
+      `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/accounts/approve`,
       {
         method: 'POST',
         headers: {
@@ -50,11 +119,27 @@ const AdminPage: React.FC = () => {
 
     if (response.ok) {
       // Remove accounts from the list of pending accounts
-      setPendingAccounts(pendingAccounts.filter((account: Account) => !ids.includes(account._id)));
+      setPendingAccounts(pendingAccounts.filter((account) => !ids.includes(account._id)));
+      setFilteredAccounts(filteredAccounts.filter((account) => !ids.includes(account._id)));
     }
   };
 
-  const rows = pendingAccounts.map((account: Account) => (
+  useEffect(() => {
+    const fetchPendingAccounts = async () => {
+      const response = await fetch(
+        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/accounts/pending`
+      );
+      const data: Account[] = await response.json();
+      console.log(data);
+
+      setPendingAccounts(data);
+      setFilteredAccounts(sortData(data, { sortBy, reversed: reverseSortDirection, search }));
+    };
+
+    fetchPendingAccounts();
+  }, []);
+
+  const rows = filteredAccounts.map((account: Account) => (
     <Table.Tr key={account._id} bg={selectedRows.includes(account._id) ? 'var(--mantine-color-blue-light)' : undefined}>
       <Table.Td>
         <Checkbox
@@ -72,49 +157,90 @@ const AdminPage: React.FC = () => {
       <Table.Td>{account.email}</Table.Td>
       <Table.Td>{account.role}</Table.Td>
       <Table.Td>
-        <Button onClick={() => handleApprove([account._id])}>Approve</Button>
+        <Group>
+          <Button onClick={() => handleApprove([account._id])}>Approve</Button>
+          <Button color="red">Delete</Button>
+        </Group>
       </Table.Td>
     </Table.Tr>
   ));
 
   return (
-    <div>
-      <Table>
+    <ScrollArea>
+      <TextInput
+        placeholder="Search by any field"
+        mb="md"
+        leftSection={<IconSearch style={{ width: rem(16), height: rem(16) }} stroke={1.5} />}
+        value={search}
+        onChange={handleSearchChange}
+      />
+      <Table horizontalSpacing="md" verticalSpacing="xs" miw={700} mb={20} layout="fixed">
         <Table.Thead>
           <Table.Tr>
-            <Table.Th>Email</Table.Th>
-            <Table.Th>Role</Table.Th>
+            <Table.Th w={100} />
+            <Th
+              sorted={sortBy === 'email'}
+              reversed={reverseSortDirection}
+              onSort={() => setSorting('email')}
+            >
+              Email
+            </Th>
+            <Th
+              sorted={sortBy === 'role'}
+              reversed={reverseSortDirection}
+              onSort={() => setSorting('role')}
+            >
+              Role
+            </Th>
             <Table.Th>Actions</Table.Th>
           </Table.Tr>
         </Table.Thead>
-        <Table.Tbody>{rows}</Table.Tbody>
+        <Table.Tbody>
+          {rows.length > 0 ? (
+            rows
+          ) : (
+            <Table.Tr>
+              <Table.Td colSpan={4}>
+                <Text fw={500} ta="center">
+                  No pending accounts
+                </Text>
+              </Table.Td>
+            </Table.Tr>
+          )}
+        </Table.Tbody>
       </Table>
-      <Flex align={'flex-end'}>
+      <Group justify='flex-end'>
         <Button
           onClick={() => handleApprove(selectedRows)}
           disabled={selectedRows.length === 0}
         >
           Approve selected
         </Button>
-      </Flex>
-    </div>
+        <Button
+          color="red"
+          disabled={selectedRows.length === 0}
+        >
+          Delete selected
+        </Button>
+      </Group>
+    </ScrollArea>
   );
 };
 
 export async function getServerSideProps(context: GetSessionParams) {
   const session = await getSession(context);
 
-  if (!session || (session.user as CustomUser).role !== 'admin') {
+  if (!session || session.user.role !== 'admin') {
     return {
       redirect: {
-        destination: '/auth/signin', // redirect to signin page or another appropriate page
+        destination: '/auth/signin',
         permanent: false,
       },
     };
   }
 
   return {
-    props: {}, // will be passed to the page component as props
+    props: {},
   };
 }
 
