@@ -1,5 +1,5 @@
 import { User } from './User';
-import { Role } from './auth/Role';
+import type { Role } from './auth/Role';
 
 export interface Account {
   email: string;

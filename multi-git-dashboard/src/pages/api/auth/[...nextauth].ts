@@ -49,7 +49,7 @@ export const authOptions: AuthOptions = {
           .db(process.env.DB_NAME)
           .collection('users');
 
-        const user = await usersCollection.findOne({ _id: account.userId });
+        const user = await usersCollection.findOne({ _id: account.user });
 
         return {
           id: account._id.toString(),

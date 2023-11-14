@@ -1,50 +1,70 @@
 import {
-  TextInput,
-  PasswordInput,
-  Anchor,
-  Paper,
-  Title,
-  Text,
-  Container,
-  Button,
-  SegmentedControl,
   Alert,
+  Anchor,
+  Button,
+  Container,
+  Paper,
+  PasswordInput,
+  SegmentedControl,
+  Text,
+  TextInput,
+  Title,
 } from '@mantine/core';
+import { useForm } from '@mantine/form';
+import type { Role } from '@shared/types/auth/Role';
+import Roles from '@shared/types/auth/Role';
 import { IconInfoCircle } from '@tabler/icons-react';
 import Link from 'next/link';
-import router from 'next/router';
+import { useRouter } from 'next/router';
 import { useState } from 'react';
 
-const roles = ['Faculty member', 'Teaching assistant'];
-const backendPort = process.env.BACKEND_PORT || 3001;
+interface FormValues {
+  identifier: string;
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  role: Role;
+}
 
 const RegisterPage: React.FC = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const router = useRouter();
+  const form = useForm<FormValues>({
+    initialValues: {
+      identifier: '',
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      role: Roles.TA,
+    },
+    validate: {
+      identifier: (value) => value.trim().length < 3 ? 'NUSNet ID must be at least 3 characters long' : null,
+      name: (value) => value.trim().length < 3 ? 'Name must be at least 3 characters long' : null,
+      email: (value) => !(/^\S+@\S+$/.test(value)) ? 'Invalid email' : null,
+      password: (value) => value.length < 6 ? 'Password must be at least 6 characters long' : null,
+      confirmPassword: (value, values) => value !== values.password ? 'Passwords do not match' : null,
+      role: (value) => !Object.values(Roles).includes(value) ? 'Invalid role' : null,
+    },
+  });
+  const roleData = [Roles.TA, Roles.Faculty];
+
   const [errors, setErrors] = useState({
     passwordMismatch: false,
     registerError: null,
   });
 
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password !== confirmPassword) {
-      setErrors({ ...errors, passwordMismatch: true });
-      return;
-    } else {
-      setErrors({ ...errors, passwordMismatch: false });
-    }
+  const handleRegister = async (values: FormValues) => {
+    console.log(values);
 
     const response = await fetch(
-      `http://localhost:${backendPort}/api/accounts`,
+      `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/accounts`,
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify(form.values),
       }
     );
 
@@ -80,35 +100,39 @@ const RegisterPage: React.FC = () => {
       </Text>
 
       <Paper withBorder shadow="md" p={30} mt={30} radius="md">
-        <form onSubmit={handleSignIn}>
+        <form onSubmit={form.onSubmit(handleRegister)}>
           <TextInput
+            withAsterisk
+            label="NUSNet ID"
+            placeholder="e1234567"
+            {...form.getInputProps('identifier')}
+          />
+          <TextInput
+            withAsterisk
             label="Name"
-            placeholder="Name"
-            value={name}
-            onChange={event => setName(event.currentTarget.value)}
-            required
+            placeholder="John Doe"
+            {...form.getInputProps('name')}
+            mt="md"
           />
           <TextInput
+            withAsterisk
             label="Email"
-            placeholder="Email"
-            value={email}
-            onChange={event => setEmail(event.currentTarget.value)}
-            required
-          />
-          <PasswordInput
-            label="Password"
-            placeholder="Password"
-            value={password}
-            onChange={event => setPassword(event.currentTarget.value)}
-            required
+            placeholder="E-mail"
+            {...form.getInputProps('email')}
             mt="md"
           />
           <PasswordInput
-            label="Confirm Password"
-            placeholder="Confirm Password"
-            value={confirmPassword}
-            onChange={event => setConfirmPassword(event.currentTarget.value)}
-            required
+            withAsterisk
+            label="Password"
+            placeholder="Password"
+            {...form.getInputProps('password')}
+            mt="md"
+          />
+          <PasswordInput
+            withAsterisk
+            label="Confirm password"
+            placeholder="Confirm password"
+            {...form.getInputProps('confirmPassword')}
             mt="md"
           />
           {errors.passwordMismatch && (
@@ -117,7 +141,9 @@ const RegisterPage: React.FC = () => {
           <Text size="sm" fw={500} mt="md">
             Are you signing up as a:
           </Text>
-          <SegmentedControl data={roles} />
+          <SegmentedControl
+            data={roleData}
+            {...form.getInputProps('role')} />
           <Button type="submit" fullWidth mt="xl">
             Register
           </Button>
