@@ -1,21 +1,27 @@
-import express, { Express } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { connectToDatabase } from './database/database';
+import express, { Express } from 'express';
+import { setupJob } from './jobs/githubJob';
 import accountRoutes from './routes/accountRoutes';
+import assessmentRoutes from './routes/assessmentRoutes';
 import courseRoutes from './routes/courseRoutes';
 import githubRoutes from './routes/githubRoutes';
 import teamRoutes from './routes/teamRoutes';
 import teamSetRoutes from './routes/teamSetRoutes';
-import assessmentRoutes from './routes/assessmentRoutes';
-import { setupJob } from './jobs/githubJob';
+import { connectToDatabase } from './utils/database';
 
 dotenv.config();
-connectToDatabase();
-setupJob();
+
+const setupApp = async () => {
+  await connectToDatabase();
+  setupJob();
+}
+
+setupApp();
 
 const port = process.env.PORT;
 const app: Express = express();
+
 app.use(express.json());
 
 const corsOptions = {

@@ -8,12 +8,10 @@ export const connectToDatabase = async () => {
     throw new Error('Invalid/Missing environment variable: "MONGODB_URI"');
   }
 
-  mongoose
-    .connect(uri, options)
-    .then(() => {
-      console.log('Connected to MongoDB');
-    })
-    .catch(error => {
-      console.error('MongoDB connection error:', error);
-    });
+  try {
+    await mongoose.connect(uri, options);
+    console.log('Successfully connected to MongoDB');
+  } catch (error) {
+    console.log('Error connecting to MongoDB: ', error);
+  }
 };

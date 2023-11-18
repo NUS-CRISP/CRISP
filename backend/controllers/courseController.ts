@@ -13,7 +13,7 @@ export const createCourse = async (req: Request, res: Response) => {
     const newCourse = await Course.create(req.body);
     res.status(201).json(newCourse);
   } catch (error) {
-    res.status(400).json({ error: 'Failed to create course' });
+    res.status(400).json({ error: `Failed to create course: ${error}` });
   }
 };
 

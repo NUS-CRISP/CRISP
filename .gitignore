@@ -1,3 +1,6 @@
 .env
 .scannerwork
 sonar-project.properties
+
+# MacOS
+.DS_Store
