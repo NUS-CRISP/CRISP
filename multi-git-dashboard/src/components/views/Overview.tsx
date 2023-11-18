@@ -1,4 +1,4 @@
-import { Container, Flex, ScrollArea, Text } from '@mantine/core';
+import { Flex, ScrollArea } from '@mantine/core';
 import { Course } from '@shared/types/Course';
 import { TeamData } from '@shared/types/TeamData';
 import GithubTeamCard from '../cards/GithubTeamCard';
@@ -10,11 +10,11 @@ interface OverviewProps {
 
 const Overview: React.FC<OverviewProps> = ({ course, teamsData }) => (
   <Flex direction={'column'} h={'100dvh'}>
-    <Container>
+    {/* <Container>
       <Text variant="h1">Course Name: {course.name}</Text>
       <Text variant="h1">Course Code: {course.code}</Text>
       <Text variant="h1">Semester: {course.semester}</Text>
-    </Container>
+    </Container> */}
     <ScrollArea style={{ flex: 1, overflowY: 'auto' }}>
       {teamsData.map((team, index) => (
         <GithubTeamCard

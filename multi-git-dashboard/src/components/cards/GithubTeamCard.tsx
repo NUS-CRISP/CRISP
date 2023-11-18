@@ -1,15 +1,11 @@
 import {
   Badge,
-  Button,
   Card,
   Container,
   Grid,
-  Group,
-  RingProgress,
-  Stack,
   Stepper,
   Text,
-  useMantineTheme,
+  useMantineTheme
 } from '@mantine/core';
 import { Milestone, Sprint, isSprint } from '@shared/types/Course';
 import { TeamData } from '@shared/types/TeamData';
@@ -159,7 +155,7 @@ const GithubTeamCard: React.FC<GithubTeamCardProps> = ({
             </Grid.Col>
           </Grid>
         </Grid.Col>
-        <Grid.Col span={6}>
+        {/* <Grid.Col span={6}>
           <Grid>
             <Grid.Col span={12}>
               <Stack w={100}>
@@ -194,13 +190,13 @@ const GithubTeamCard: React.FC<GithubTeamCardProps> = ({
               />
             </Grid.Col>
           </Grid>
-        </Grid.Col>
+        </Grid.Col> */}
         <Grid.Col span={6}>
           <Text size="xl" fw={700} mb={15}>
             Contributors
           </Text>
           <Container>
-            <BarChart width={300} height={250} data={commitsData}>
+            <BarChart width={300} height={300} data={commitsData}>
               <CartesianGrid stroke="#f5f5f5" />
               <XAxis dataKey="name" />
               <YAxis />
@@ -208,7 +204,14 @@ const GithubTeamCard: React.FC<GithubTeamCardProps> = ({
               <Legend />
               <Bar dataKey="commits" fill="#8884d8" />
             </BarChart>
-            <ComposedChart width={300} height={250} data={composedChartData}>
+          </Container>
+        </Grid.Col>
+        <Grid.Col span={6}>
+          <Text size="xl" fw={700} mb={15}>
+            Code Changes
+          </Text>
+          <Container>
+            <ComposedChart width={300} height={300} data={composedChartData}>
               <CartesianGrid stroke="#f5f5f5" />
               <XAxis dataKey="name" />
               <YAxis />
@@ -219,8 +222,31 @@ const GithubTeamCard: React.FC<GithubTeamCardProps> = ({
             </ComposedChart>
           </Container>
         </Grid.Col>
-
         <Grid.Col span={6}>
+          <Text size="xl" fw={700} mb={15}>
+            Issues
+          </Text>
+          <BarChart width={300} height={300} data={issuesData}>
+            <CartesianGrid stroke="#f5f5f5" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="created" fill="#8884d8" />
+            <Bar dataKey="open" fill="#82ca9d" />
+            <Bar dataKey="closed" fill="#ffc658" />
+          </BarChart>
+        </Grid.Col>
+        <Grid.Col span={12}>
+          <Stepper
+            active={active}
+            onStepClick={setActive}
+          >
+            {stepperSteps}
+          </Stepper>
+        </Grid.Col>
+
+        {/* <Grid.Col span={6}>
           <Text size="xl" fw={700} mb={15}>
             Progress
           </Text>
@@ -256,18 +282,8 @@ const GithubTeamCard: React.FC<GithubTeamCardProps> = ({
               <Legend />
               <Bar dataKey="reviews" fill="#8884d8" />
             </BarChart>
-            <BarChart width={300} height={250} data={issuesData}>
-              <CartesianGrid stroke="#f5f5f5" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="created" fill="#8884d8" />
-              <Bar dataKey="open" fill="#82ca9d" />
-              <Bar dataKey="closed" fill="#ffc658" />
-            </BarChart>
           </Container>
-        </Grid.Col>
+        </Grid.Col> */}
       </Grid>
     </Card>
   );

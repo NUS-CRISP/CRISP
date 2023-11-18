@@ -7,7 +7,7 @@ export interface User extends Omit<SharedUser, '_id' | 'enrolledCourses'> {
 }
 
 export const userSchema = new Schema<User>({
-  identifier: { type: String, required: true, unique: true },
+  identifier: { type: String, unique: true },
   name: { type: String, required: true },
   enrolledCourses: [{ type: Schema.Types.ObjectId, ref: 'Course' }],
   gitHandle: { type: String },

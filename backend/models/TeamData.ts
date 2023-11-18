@@ -7,6 +7,7 @@ export interface TeamData extends Omit<SharedTeamData, '_id'> {
 
 const teamDataSchema: Schema = new Schema<TeamData>({
   teamId: { type: Number, required: true },
+  gitHubOrgName: { type: String, required: true },
   repoName: { type: String, required: true },
   commits: { type: Number, required: true },
   issues: { type: Number, required: true },
