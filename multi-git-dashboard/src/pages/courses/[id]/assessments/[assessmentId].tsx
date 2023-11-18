@@ -31,7 +31,7 @@ const AssessmentDetail: React.FC = () => {
     } catch (error) {
       console.error('Error fetching assessment:', error);
     }
-  }, [assessmentId, id]);
+  }, [assessmentId]);
 
   const fetchTeachingTeam = useCallback(async () => {
     try {
@@ -50,6 +50,10 @@ const AssessmentDetail: React.FC = () => {
   }, [id]);
 
   const toggleResultForm = () => {
+    setIsResultFormOpen(o => !o);
+  };
+
+  const onUpdate = () => {
     fetchAssessment();
     fetchTeachingTeam();
     setIsResultFormOpen(o => !o);
@@ -103,7 +107,7 @@ const AssessmentDetail: React.FC = () => {
           >
             <ResultForm
               assessmentId={assessmentId}
-              onResultsUploaded={toggleResultForm}
+              onResultsUploaded={onUpdate}
             />
           </Modal>
 
