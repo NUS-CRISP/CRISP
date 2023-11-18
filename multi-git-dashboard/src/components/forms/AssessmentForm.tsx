@@ -64,7 +64,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
           },
           error: function (error: Error) {
             console.error('CSV parsing error:', error.message);
-            setError('Error cparsing CSV. Please check the format.');
+            setError('Error parsing CSV. Please check the format.');
           },
         });
       };

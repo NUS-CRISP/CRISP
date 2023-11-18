@@ -1,5 +1,4 @@
 import type { Course } from './Course';
-import type { Account } from './Account';
 
 export interface User {
   _id: string;

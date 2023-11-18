@@ -39,7 +39,7 @@ const ResultForm: React.FC<ResultFormProps> = ({
           },
           error: function (error: Error) {
             console.error('Error parsing CSV:', error.message);
-            setError('Error cparsing CSV. Please check the format.');
+            setError('Error parsing CSV. Please check the format.');
           },
         });
       };
