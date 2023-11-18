@@ -8,7 +8,7 @@ import {
   Space,
   Text,
   TextInput,
-  Title
+  Title,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { CourseType } from '@shared/types/Course';
@@ -46,8 +46,8 @@ const CreateCoursePage: React.FC = () => {
       // field should be valid only if courseType is Normal, or if courseType is GitHubOrg and installation check is successful
       gitHubOrgName: (value, values) =>
         values.courseType === CourseType.Normal ||
-          (values.courseType === CourseType.GitHubOrg &&
-            appInstalled === 'success')
+        (values.courseType === CourseType.GitHubOrg &&
+          appInstalled === 'success')
           ? null
           : 'GitHub Org name is required',
     },
@@ -58,13 +58,16 @@ const CreateCoursePage: React.FC = () => {
     setErrorMessage('');
 
     try {
-      const response = await fetch(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/github/check-installation`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ orgName }),
-      });
+      const response = await fetch(
+        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/github/check-installation`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ orgName }),
+        }
+      );
 
       if (response.ok) {
         const { installationId } = await response.json();
@@ -80,7 +83,6 @@ const CreateCoursePage: React.FC = () => {
       setErrorMessage('Failed to connect to the server');
     }
   };
-
 
   const handleSubmit = async () => {
     const response = await fetch(
@@ -181,23 +183,27 @@ const CreateCoursePage: React.FC = () => {
                     />
                     <Space h="sm" />
                     {errorMessage && (
-                      <Text style={{
-                        maxWidth: CARD_W
-                      }}
-                        c="red" >
+                      <Text
+                        style={{
+                          maxWidth: CARD_W,
+                        }}
+                        c="red"
+                      >
                         {errorMessage}
                       </Text>
                     )}
                     <Button
-                      type='button'
+                      type="button"
                       loading={appInstalled === 'loading'}
-                      variant={appInstalled === 'success' ? 'filled' : 'outline'}
+                      variant={
+                        appInstalled === 'success' ? 'filled' : 'outline'
+                      }
                       color={
                         appInstalled === 'success'
                           ? 'green'
                           : appInstalled === 'error'
-                            ? 'red'
-                            : 'blue'
+                          ? 'red'
+                          : 'blue'
                       }
                       rightSection={
                         appInstalled === 'success' ? (
@@ -211,10 +217,10 @@ const CreateCoursePage: React.FC = () => {
                       {appInstalled === 'success'
                         ? 'Installed'
                         : appInstalled === 'error'
-                          ? 'Try Again'
-                          : appInstalled === 'loading'
-                            ? 'Checking...'
-                            : 'Check Installation'}
+                        ? 'Try Again'
+                        : appInstalled === 'loading'
+                        ? 'Checking...'
+                        : 'Check Installation'}
                     </Button>
                   </List.Item>
                 </List>

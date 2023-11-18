@@ -1,4 +1,4 @@
-import { App } from "octokit";
+import { App } from 'octokit';
 
 export const getGitHubApp = () => {
   const APP_ID = Number(process.env.GITHUB_APP_ID!);
@@ -8,7 +8,7 @@ export const getGitHubApp = () => {
     appId: APP_ID,
     privateKey: PRIVATE_KEY,
   });
-}
+};
 
 export interface Installation {
   id: number;

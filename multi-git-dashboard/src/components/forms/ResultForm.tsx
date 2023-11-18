@@ -24,6 +24,7 @@ const ResultForm: React.FC<ResultFormProps> = ({
   onResultsUploaded,
 }) => {
   const [results, setResults] = useState<Result[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const handleFileUpload = useCallback((file: File) => {
     if (file) {
@@ -38,6 +39,7 @@ const ResultForm: React.FC<ResultFormProps> = ({
           },
           error: function (error: Error) {
             console.error('Error parsing CSV:', error.message);
+            setError('Error cparsing CSV. Please check the format.');
           },
         });
       };
@@ -76,14 +78,22 @@ const ResultForm: React.FC<ResultFormProps> = ({
         onResultsUploaded();
       } else {
         console.error('Error uploading results:', response.statusText);
+        setError('Error uploading results. Please try again.');
       }
     } catch (error) {
       console.error('Error uploading results:', error);
+      setError('Error uploading results. Please try again.');
     }
   };
 
   return (
     <Box>
+      {error && (
+        <Notification title="Error" color="red" onClose={() => setError(null)}>
+          {error}
+        </Notification>
+      )}
+
       <Dropzone
         onDrop={(files: File[]) => {
           if (files.length > 0) {

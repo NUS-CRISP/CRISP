@@ -39,12 +39,21 @@ const RegisterPage: React.FC = () => {
       role: Roles.TA,
     },
     validate: {
-      identifier: (value) => value.trim().length < 3 ? 'NUSNet ID must be at least 3 characters long' : null,
-      name: (value) => value.trim().length < 3 ? 'Name must be at least 3 characters long' : null,
-      email: (value) => !(/^\S+@\S+$/.test(value)) ? 'Invalid email' : null,
-      password: (value) => value.length < 6 ? 'Password must be at least 6 characters long' : null,
-      confirmPassword: (value, values) => value !== values.password ? 'Passwords do not match' : null,
-      role: (value) => !Object.values(Roles).includes(value) ? 'Invalid role' : null,
+      identifier: value =>
+        value.trim().length < 3
+          ? 'NUSNet ID must be at least 3 characters long'
+          : null,
+      name: value =>
+        value.trim().length < 3
+          ? 'Name must be at least 3 characters long'
+          : null,
+      email: value => (!/^\S+@\S+$/.test(value) ? 'Invalid email' : null),
+      password: value =>
+        value.length < 6 ? 'Password must be at least 6 characters long' : null,
+      confirmPassword: (value, values) =>
+        value !== values.password ? 'Passwords do not match' : null,
+      role: value =>
+        !Object.values(Roles).includes(value) ? 'Invalid role' : null,
     },
   });
   const roleData = [Roles.TA, Roles.Faculty];
@@ -141,9 +150,7 @@ const RegisterPage: React.FC = () => {
           <Text size="sm" fw={500} mt="md">
             Are you signing up as a:
           </Text>
-          <SegmentedControl
-            data={roleData}
-            {...form.getInputProps('role')} />
+          <SegmentedControl data={roleData} {...form.getInputProps('role')} />
           <Button type="submit" fullWidth mt="xl">
             Register
           </Button>

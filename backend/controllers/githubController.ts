@@ -14,7 +14,9 @@ export const getAllTeamData = async (req: Request, res: Response) => {
 
 export const getAllTeamDataForOrg = async (req: Request, res: Response) => {
   try {
-    const teamDatas = await TeamData.find({ gitHubOrgName: req.params.gitHubOrgName.toLowerCase() });
+    const teamDatas = await TeamData.find({
+      gitHubOrgName: req.params.gitHubOrgName.toLowerCase(),
+    });
     if (!teamDatas) {
       return res.status(404).json({ error: 'Team datas not found' });
     }
@@ -22,7 +24,7 @@ export const getAllTeamDataForOrg = async (req: Request, res: Response) => {
   } catch (error) {
     return res.status(400).json({ error: 'Failed to get team datas for org' });
   }
-}
+};
 
 export const checkInstallation = async (req: Request, res: Response) => {
   // get request body; json with one field containing org name
@@ -40,9 +42,18 @@ export const checkInstallation = async (req: Request, res: Response) => {
     res.status(200).json({ installationId });
   } catch (error) {
     if (error instanceof RequestError && error.status === 404) {
-      res.status(404).json({ message: 'The GitHub App is not installed on the specified organization.' });
+      res
+        .status(404)
+        .json({
+          message:
+            'The GitHub App is not installed on the specified organization.',
+        });
     } else {
-      res.status(500).json({ message: 'An error occurred while checking the installation status.' });
+      res
+        .status(500)
+        .json({
+          message: 'An error occurred while checking the installation status.',
+        });
     }
     return false;
   }

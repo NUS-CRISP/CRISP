@@ -5,7 +5,7 @@ import {
   Grid,
   Stepper,
   Text,
-  useMantineTheme
+  //useMantineTheme
 } from '@mantine/core';
 import { Milestone, Sprint, isSprint } from '@shared/types/Course';
 import { TeamData } from '@shared/types/TeamData';
@@ -36,21 +36,26 @@ const GithubTeamCard: React.FC<GithubTeamCardProps> = ({
   milestones,
   sprints,
 }) => {
-  const theme = useMantineTheme();
+  //const theme = useMantineTheme();
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28'];
 
+  /*
   const totalIssues = teamData.issues;
   const completedIssues = teamData.updatedIssues.length;
+  /*
   const issuesProgress =
     completedIssues === 0 ? 100 : (completedIssues / totalIssues) * 100;
+    */
 
   const [active, setActive] = useState(1);
+  /*
   const nextStep = () =>
     setActive(current =>
       current < stepperSteps.length ? current + 1 : current
     );
   const prevStep = () =>
     setActive(current => (current > 0 ? current - 1 : current));
+    */
 
   const chartData = [
     { name: 'Commits', value: teamData.commits },
@@ -238,10 +243,7 @@ const GithubTeamCard: React.FC<GithubTeamCardProps> = ({
           </BarChart>
         </Grid.Col>
         <Grid.Col span={12}>
-          <Stepper
-            active={active}
-            onStepClick={setActive}
-          >
+          <Stepper active={active} onStepClick={setActive}>
             {stepperSteps}
           </Stepper>
         </Grid.Col>
