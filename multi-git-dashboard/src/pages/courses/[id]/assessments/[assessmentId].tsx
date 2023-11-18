@@ -1,9 +1,10 @@
-import { Container, Tabs, Text } from '@mantine/core';
+import { Button, Container, Modal, Tabs, Text } from '@mantine/core';
 import { Assessment } from '@shared/types/Assessment';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
 import ResultCard from '../../../../components/cards/ResultCard';
 import { User } from '@shared/types/User';
+import ResultForm from '@/components/forms/ResultForm';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
 const apiUrl = `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/assessments/`;
@@ -16,6 +17,7 @@ const AssessmentDetail: React.FC = () => {
   };
   const [assessment, setAssessment] = useState<Assessment | null>(null);
   const [teachingTeam, setTeachingTeam] = useState<User[]>([]);
+  const [isResultFormOpen, setIsResultFormOpen] = useState(false);
 
   const fetchAssessment = useCallback(async () => {
     try {
@@ -46,6 +48,12 @@ const AssessmentDetail: React.FC = () => {
       console.error('Error fetching Teaching Team:', error);
     }
   }, [id]);
+
+  const toggleResultForm = () => {
+    fetchAssessment();
+    fetchTeachingTeam();
+    setIsResultFormOpen(o => !o);
+  };
 
   useEffect(() => {
     if (assessmentId && id) {
@@ -87,6 +95,18 @@ const AssessmentDetail: React.FC = () => {
         </Tabs.Panel>
 
         <Tabs.Panel value="results">
+          <Button onClick={toggleResultForm}>Upload Results</Button>
+          <Modal
+            opened={isResultFormOpen}
+            onClose={toggleResultForm}
+            title="Upload Results"
+          >
+            <ResultForm
+              assessmentId={assessmentId}
+              onResultsUploaded={toggleResultForm}
+            />
+          </Modal>
+
           {assessment?.results.map(result => (
             <ResultCard
               key={result._id}

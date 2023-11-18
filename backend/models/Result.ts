@@ -1,8 +1,8 @@
 import { Result as SharedResult } from '@shared/types/Result';
-import mongoose, { Schema, Types } from 'mongoose';
+import mongoose, { Document, Schema, Types } from 'mongoose';
 
 export interface Result
-  extends Omit<SharedResult, '_id' | 'assessment' | 'team' | 'marker'> {
+  extends Omit<SharedResult, '_id' | 'assessment' | 'team' | 'marker'>, Document {
   _id: Types.ObjectId;
   assessment: Types.ObjectId;
   team?: Types.ObjectId;

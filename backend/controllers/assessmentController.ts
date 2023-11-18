@@ -1,6 +1,13 @@
 import { Request, Response } from 'express';
 import Assessment from '../models/Assessment';
-import Result from '../models/Result';
+import Result, { Result as IResult } from '../models/Result';
+import Team, { Team as ITeam } from '../models/Team';
+
+interface ResultItem {
+  teamNumber: number;
+  studentId: string;
+  mark: number;
+}
 
 export const getAssessmentById = async (req: Request, res: Response) => {
   try {
@@ -15,6 +22,73 @@ export const getAssessmentById = async (req: Request, res: Response) => {
     res.status(200).json(assessment);
   } catch (error) {
     res.status(400).json({ error: 'Failed to retrieve assessment' });
+  }
+};
+
+export const uploadResults = async (req: Request, res: Response) => {
+  try {
+    const assessmentId = req.params.id;
+    const results = req.body.items as ResultItem[];
+
+    const assessment = await Assessment.findById(assessmentId).populate({
+      path: 'results',
+      populate: {
+        path: 'team',
+        model: Team,
+      },
+    });;
+    if (!assessment) {
+      return res.status(404).json({ error: 'Assessment not found' });
+    }
+
+    if (assessment.assessmentType == 'individual') {
+      const resultMap: Record<string, number> = {};
+      results.forEach(({ studentId, mark }) => {
+        resultMap[studentId] = mark;
+      });
+
+      for (const result of assessment.results as unknown as IResult[]) {
+        const userId = result.marks[0]?.userId;
+        const mark = resultMap[userId];
+        if (mark !== undefined) {
+          result.marks[0].mark = mark;
+          await result.save();
+        }
+      }
+    } else {
+      const resultMap: Record<number, Record<string, number>> = {};
+      results.forEach(({ teamNumber, studentId, mark }) => {
+        if (!resultMap[teamNumber]) {
+          resultMap[teamNumber] = {};
+        }
+        resultMap[teamNumber][studentId] = mark;
+      });
+
+      for (const result of assessment.results as unknown as IResult[]) {
+        const team = result.team as unknown as ITeam;
+
+        if (!team || !team.number) {
+          continue;
+        }
+
+        const teamResults = resultMap[team.number];
+
+        if (teamResults) {
+          result.marks.forEach(markEntry => {
+            const mark = teamResults[markEntry.userId];
+            if (mark !== undefined) {
+              markEntry.mark = mark;
+            }
+          });
+          await result.save();
+        }
+      }
+    }
+
+    res.status(200).json({ message: 'Results uploaded successfully' });
+  } catch (error) {
+    console.error('Error uploading results:', error);
+    res.status(500).json({ error: 'Failed to upload results' });
   }
 };
 
