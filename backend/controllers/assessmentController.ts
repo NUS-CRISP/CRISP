@@ -11,7 +11,7 @@ interface ResultItem {
 
 export const getAssessmentById = async (req: Request, res: Response) => {
   try {
-    const assessmentId = req.params.id;
+    const { assessmentId } = req.params;
     const assessment = await Assessment.findById(assessmentId).populate({
       path: 'results',
       populate: ['team', 'marker'],
@@ -27,7 +27,7 @@ export const getAssessmentById = async (req: Request, res: Response) => {
 
 export const uploadResults = async (req: Request, res: Response) => {
   try {
-    const assessmentId = req.params.id;
+    const { assessmentId } = req.params;
     const results = req.body.items as ResultItem[];
 
     const assessment = await Assessment.findById(assessmentId).populate({
@@ -41,7 +41,7 @@ export const uploadResults = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Assessment not found' });
     }
 
-    if (assessment.assessmentType == 'individual') {
+    if (assessment.granularity == 'individual') {
       const resultMap: Record<string, number> = {};
       results.forEach(({ studentId, mark }) => {
         resultMap[studentId] = mark;
@@ -70,7 +70,6 @@ export const uploadResults = async (req: Request, res: Response) => {
         if (!team || !team.number) {
           continue;
         }
-
         const teamResults = resultMap[team.number];
 
         if (teamResults) {
