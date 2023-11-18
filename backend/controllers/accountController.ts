@@ -36,7 +36,6 @@ export const createAccount = async (req: Request, res: Response) => {
     await newAccount.save();
     res.status(201).send({ message: 'Account created' });
   } catch (error) {
-    console.log(error);
     if (error instanceof Error) {
       res.status(500).send({ error: error.message });
     } else {
