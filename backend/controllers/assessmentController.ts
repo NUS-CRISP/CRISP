@@ -36,7 +36,7 @@ export const uploadResults = async (req: Request, res: Response) => {
         path: 'team',
         model: Team,
       },
-    });;
+    });
     if (!assessment) {
       return res.status(404).json({ error: 'Assessment not found' });
     }
