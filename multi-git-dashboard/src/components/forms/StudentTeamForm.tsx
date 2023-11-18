@@ -48,6 +48,7 @@ const StudentTeamForm: React.FC<StudentTeamFormProps> = ({
   });
 
   const [students, setStudents] = useState<StudentTeamFormUser[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const handleFileUpload = useCallback((file: File) => {
     if (file) {
@@ -69,14 +70,13 @@ const StudentTeamForm: React.FC<StudentTeamFormProps> = ({
           },
           error: function (error: Error) {
             console.error('CSV parsing error:', error.message);
+            setError('Error cparsing CSV. Please check the format.');
           },
         });
       };
       reader.readAsText(file);
     }
   }, []);
-
-  const [error, setError] = useState<string | null>(null);
 
   const downloadCsvTemplate = () => {
     const csvHeaders = 'identifier,teamNumber\n';

@@ -1,5 +1,6 @@
-import { Box, Button, TextInput } from '@mantine/core';
+import { Box, Button, Notification, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
+import { useState } from 'react';
 
 interface CourseFormProps {
   onCourseCreated: () => void;
@@ -14,25 +15,42 @@ const CreateCoursePage: React.FC<CourseFormProps> = ({ onCourseCreated }) => {
     },
   });
 
-  const handleSubmit = async () => {
-    const response = await fetch(
-      `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(form.values),
-      }
-    );
+  const [error, setError] = useState<string | null>(null);
 
-    const data = await response.json();
-    console.log('Course created:', data);
-    onCourseCreated();
+  const handleSubmit = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(form.values),
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Course created:', data);
+        onCourseCreated();
+      } else {
+        console.error('Error creating course:', error);
+        setError('Error creating course. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error creating course:', error);
+      setError('Error creating course. Please try again.');
+    }
   };
 
   return (
     <Box maw={300} mx="auto">
+      {error && (
+        <Notification title="Error" color="red" onClose={() => setError(null)}>
+          {error}
+        </Notification>
+      )}
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <TextInput
           withAsterisk

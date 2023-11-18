@@ -1,4 +1,11 @@
-import { Box, Button, Group, Text, TextInput } from '@mantine/core';
+import {
+  Box,
+  Button,
+  Notification,
+  Group,
+  Text,
+  TextInput,
+} from '@mantine/core';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
 import { useForm } from '@mantine/form';
 import { User } from '@shared/types/User';
@@ -25,6 +32,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
     },
   });
   const [students, setStudents] = useState<User[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const handleFileUpload = useCallback((file: File) => {
     if (file) {
@@ -38,6 +46,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
           },
           error: function (error: Error) {
             console.error('CSV parsing error:', error.message);
+            setError('Error cparsing CSV. Please check the format.');
           },
         });
       };
@@ -79,9 +88,11 @@ const StudentForm: React.FC<StudentFormProps> = ({
         onStudentCreated();
       } else {
         console.error('Error uploading students:', response.statusText);
+        setError('Error uploading students. Please try again.');
       }
     } catch (error) {
       console.error('Error uploading students:', error);
+      setError('Error uploading students. Please try again.');
     }
   };
 
@@ -115,6 +126,11 @@ const StudentForm: React.FC<StudentFormProps> = ({
 
   return (
     <Box maw={300} mx="auto">
+      {error && (
+        <Notification title="Error" color="red" onClose={() => setError(null)}>
+          {error}
+        </Notification>
+      )}
       <form onSubmit={form.onSubmit(handleSubmitForm)}>
         <TextInput
           withAsterisk

@@ -23,6 +23,7 @@ const TATeamForm: React.FC<TATeamFormProps> = ({
   onTeamCreated,
 }) => {
   const [TAs, setTAs] = useState<TATeamFormUser[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const handleFileUpload = useCallback((file: File) => {
     if (file) {
@@ -42,14 +43,13 @@ const TATeamForm: React.FC<TATeamFormProps> = ({
           },
           error: function (error: Error) {
             console.error('CSV parsing error:', error.message);
+            setError('Error cparsing CSV. Please check the format.');
           },
         });
       };
       reader.readAsText(file);
     }
   }, []);
-
-  const [error, setError] = useState<string | null>(null);
 
   const downloadCsvTemplate = () => {
     const csvHeaders = 'identifier,teamNumber\n';

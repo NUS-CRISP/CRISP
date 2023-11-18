@@ -1,6 +1,7 @@
-import { Box, Button, TextInput } from '@mantine/core';
+import { Box, Button, Notification, TextInput } from '@mantine/core';
 import { DatePicker } from '@mantine/dates';
 import { useForm } from '@mantine/form';
+import { useState } from 'react';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
 
@@ -28,27 +29,44 @@ const SprintForm: React.FC<SprintFormProps> = ({
     },
   });
 
+  const [error, setError] = useState<string | null>(null);
+
   const handleSubmit = async () => {
     console.log('Sending sprint data:', form.values);
 
-    const response = await fetch(
-      `http://localhost:${backendPort}/api/courses/${courseId}/sprints`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(form.values),
-      }
-    );
+    try {
+      const response = await fetch(
+        `http://localhost:${backendPort}/api/courses/${courseId}/sprints`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(form.values),
+        }
+      );
 
-    const data = await response.json();
-    console.log('Sprint created:', data);
-    onSprintCreated();
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Sprint created:', data);
+        onSprintCreated();
+      } else {
+        console.error('Error creating sprint:', response.statusText);
+        setError('Error creating sprint. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error creating sprint:', error);
+      setError('Error creating sprint. Please try again.');
+    }
   };
 
   return (
     <Box maw={300} mx="auto">
+      {error && (
+        <Notification title="Error" color="red" onClose={() => setError(null)}>
+          {error}
+        </Notification>
+      )}
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <TextInput
           withAsterisk

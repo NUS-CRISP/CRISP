@@ -1,4 +1,11 @@
-import { Box, Button, Group, Text, TextInput } from '@mantine/core';
+import {
+  Box,
+  Button,
+  Notification,
+  Group,
+  Text,
+  TextInput,
+} from '@mantine/core';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
 import { useForm } from '@mantine/form';
 import { User } from '@shared/types/User';
@@ -22,6 +29,7 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
     },
   });
   const [TAs, setTAs] = useState<User[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const handleFileUpload = useCallback((file: File) => {
     if (file) {
@@ -35,6 +43,7 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
           },
           error: function (error: Error) {
             console.error('CSV parsing error:', error.message);
+            setError('Error cparsing CSV. Please check the format.');
           },
         });
       };
@@ -76,9 +85,11 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
         onTACreated();
       } else {
         console.error('Error uploading TAs:', response.statusText);
+        setError('Error uploading TAs. Please try again.');
       }
     } catch (error) {
       console.error('Error uploading TAs:', error);
+      setError('Error uploading TAs. Please try again.');
     }
   };
 
@@ -112,6 +123,11 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
 
   return (
     <Box maw={300} mx="auto">
+      {error && (
+        <Notification title="Error" color="red" onClose={() => setError(null)}>
+          {error}
+        </Notification>
+      )}
       <form onSubmit={form.onSubmit(handleSubmitForm)}>
         <TextInput
           withAsterisk
