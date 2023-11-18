@@ -7,7 +7,7 @@ import {
 
 const router = express.Router();
 
-router.get('/:id', getAssessmentById);
+router.get('/:assessmentId', getAssessmentById);
 router.post('/:assessmentId/results/', uploadResults);
 router.patch('/:assessmentId/results/:resultId/marker', updateResultMarker);
 
