@@ -1,4 +1,11 @@
-import { Box, Button, Group, Text, TextInput } from '@mantine/core';
+import {
+  Box,
+  Button,
+  Notification,
+  Group,
+  Text,
+  TextInput,
+} from '@mantine/core';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
 import { useForm } from '@mantine/form';
 import { User } from '@shared/types/User';
@@ -21,9 +28,11 @@ const StudentForm: React.FC<StudentFormProps> = ({
       identifier: '',
       name: '',
       gitHandle: '',
+      email: '',
     },
   });
   const [students, setStudents] = useState<User[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const handleFileUpload = useCallback((file: File) => {
     if (file) {
@@ -37,6 +46,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
           },
           error: function (error: Error) {
             console.error('CSV parsing error:', error.message);
+            setError('Error parsing CSV. Please check the format.');
           },
         });
       };
@@ -78,9 +88,11 @@ const StudentForm: React.FC<StudentFormProps> = ({
         onStudentCreated();
       } else {
         console.error('Error uploading students:', response.statusText);
+        setError('Error uploading students. Please try again.');
       }
     } catch (error) {
       console.error('Error uploading students:', error);
+      setError('Error uploading students. Please try again.');
     }
   };
 
@@ -100,6 +112,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
               identifier: form.values.identifier,
               name: form.values.name,
               gitHandle: form.values.gitHandle,
+              email: form.values.email,
             },
           ],
         }),
@@ -113,6 +126,11 @@ const StudentForm: React.FC<StudentFormProps> = ({
 
   return (
     <Box maw={300} mx="auto">
+      {error && (
+        <Notification title="Error" color="red" onClose={() => setError(null)}>
+          {error}
+        </Notification>
+      )}
       <form onSubmit={form.onSubmit(handleSubmitForm)}>
         <TextInput
           withAsterisk
@@ -130,6 +148,15 @@ const StudentForm: React.FC<StudentFormProps> = ({
           value={form.values.identifier}
           onChange={event => {
             form.setFieldValue('identifier', event.currentTarget.value);
+          }}
+        />
+        <TextInput
+          withAsterisk
+          label="Email"
+          {...form.getInputProps('email')}
+          value={form.values.email}
+          onChange={event => {
+            form.setFieldValue('email', event.currentTarget.value);
           }}
         />
         <TextInput

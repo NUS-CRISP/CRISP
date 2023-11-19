@@ -1,5 +1,9 @@
 import express from 'express';
-import { checkInstallation, getAllTeamData, getAllTeamDataForOrg } from '../controllers/githubController';
+import {
+  checkInstallation,
+  getAllTeamData,
+  getAllTeamDataForOrg,
+} from '../controllers/githubController';
 
 const router = express.Router();
 

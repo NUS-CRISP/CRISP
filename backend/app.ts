@@ -15,7 +15,7 @@ dotenv.config();
 const setupApp = async () => {
   await connectToDatabase();
   setupJob();
-}
+};
 
 setupApp();
 

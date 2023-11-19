@@ -1,6 +1,7 @@
-import { Box, Button, TextInput } from '@mantine/core';
+import { Box, Button, Notification, TextInput } from '@mantine/core';
 import { DatePicker } from '@mantine/dates';
 import { useForm } from '@mantine/form';
+import { useState } from 'react';
 
 interface MilestoneFormProps {
   courseId: string | string[] | undefined;
@@ -24,27 +25,44 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({
     },
   });
 
+  const [error, setError] = useState<string | null>(null);
+
   const handleSubmit = async () => {
     console.log('Sending milestone data:', form.values);
 
-    const response = await fetch(
-      `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${courseId}/milestones`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(form.values),
-      }
-    );
+    try {
+      const response = await fetch(
+        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${courseId}/milestones`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(form.values),
+        }
+      );
 
-    const data = await response.json();
-    console.log('Milestone created:', data);
-    onMilestoneCreated();
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Milestone created:', data);
+        onMilestoneCreated();
+      } else {
+        console.error('Error creating milestone:', response.statusText);
+        setError('Error creating milestone. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error creating milestone:', error);
+      setError('Error creating milestone. Please try again.');
+    }
   };
 
   return (
     <Box maw={300} mx="auto">
+      {error && (
+        <Notification title="Error" color="red" onClose={() => setError(null)}>
+          {error}
+        </Notification>
+      )}
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <TextInput
           withAsterisk

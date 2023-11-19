@@ -47,4 +47,6 @@ export const courseSchema = new Schema<Course>({
   installationId: String,
 });
 
-export default mongoose.model<Course>('Course', courseSchema);
+const CourseModel = mongoose.model<Course>('Course', courseSchema);
+
+export default CourseModel;

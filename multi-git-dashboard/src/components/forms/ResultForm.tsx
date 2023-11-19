@@ -1,48 +1,44 @@
-import { Box, Button, Group, Notification, Text } from '@mantine/core';
+import React, { useState, useCallback } from 'react';
+import { Box, Button, Notification, Group, Text } from '@mantine/core';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
-import { IconPhoto, IconUpload, IconX } from '@tabler/icons-react';
+import Papa from 'papaparse';
 import { saveAs } from 'file-saver';
-import Papa, { ParseResult } from 'papaparse';
-import { useCallback, useState } from 'react';
+import { IconPhoto, IconUpload, IconX } from '@tabler/icons-react';
 
-interface TATeamFormProps {
-  courseId: string | string[] | undefined;
-  teamSet: string;
-  onTeamCreated: () => void;
+const backendPort = process.env.BACKEND_PORT || 3001;
+const apiUrl = `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/assessments/`;
+
+interface ResultFormProps {
+  assessmentId: string;
+  onResultsUploaded: () => void;
 }
 
-interface TATeamFormUser {
-  identifier: string;
-  teamSet: string;
-  teamNumber: number;
+interface Result {
+  teamId: string;
+  studentId: string;
+  mark: string;
 }
 
-const TATeamForm: React.FC<TATeamFormProps> = ({
-  courseId,
-  teamSet,
-  onTeamCreated,
+const ResultForm: React.FC<ResultFormProps> = ({
+  assessmentId,
+  onResultsUploaded,
 }) => {
-  const [TAs, setTAs] = useState<TATeamFormUser[]>([]);
+  const [results, setResults] = useState<Result[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const handleFileUpload = useCallback((file: File) => {
     if (file) {
       const reader = new FileReader();
-      reader.onload = function () {
+      reader.onload = () => {
         Papa.parse(reader.result as string, {
           header: true,
           skipEmptyLines: true,
-          complete: function (results: ParseResult<TATeamFormUser>) {
-            const TAsData = results.data;
-            const TAs = TAsData.map((TA: TATeamFormUser) => ({
-              identifier: TA.identifier || '',
-              teamSet: teamSet,
-              teamNumber: TA.teamNumber,
-            }));
-            setTAs(TAs);
+          complete: function (results) {
+            const resultData = results.data as Result[];
+            setResults(resultData);
           },
           error: function (error: Error) {
-            console.error('CSV parsing error:', error.message);
+            console.error('Error parsing CSV:', error.message);
             setError('Error parsing CSV. Please check the format.');
           },
         });
@@ -52,49 +48,46 @@ const TATeamForm: React.FC<TATeamFormProps> = ({
   }, []);
 
   const downloadCsvTemplate = () => {
-    const csvHeaders = 'identifier,teamNumber\n';
+    const csvHeaders = 'teamNumber,studentId,mark\n';
     const blob = new Blob([csvHeaders], { type: 'text/csv;charset=utf-8' });
-    saveAs(blob, 'tas_team_template.csv');
+    saveAs(blob, 'results_template.csv');
   };
 
   const handleSubmitCSV = async () => {
-    if (TAs.length === 0) {
-      console.log('No teams to upload.');
+    if (results.length === 0) {
+      console.log('No results to upload.');
       return;
     }
 
-    console.log('Sending teams data:', TAs);
+    console.log('Sending results data:', results);
 
     try {
-      const response = await fetch(
-        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${courseId}/teams/tas`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            items: TAs,
-          }),
-        }
-      );
+      const response = await fetch(`${apiUrl}${assessmentId}/results`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          items: results,
+        }),
+      });
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Team created:', data);
-        onTeamCreated();
+        console.log('Results created:', data);
+        onResultsUploaded();
       } else {
-        console.error('Error creating team:', response.statusText);
-        setError('Error creating team. Please try again.');
+        console.error('Error uploading results:', response.statusText);
+        setError('Error uploading results. Please try again.');
       }
     } catch (error) {
-      console.error('Error creating team:', error);
-      setError('Error creating team. Please try again.');
+      console.error('Error uploading results:', error);
+      setError('Error uploading results. Please try again.');
     }
   };
 
   return (
-    <Box maw={300} mx="auto">
+    <Box>
       {error && (
         <Notification title="Error" color="red" onClose={() => setError(null)}>
           {error}
@@ -103,7 +96,6 @@ const TATeamForm: React.FC<TATeamFormProps> = ({
 
       <Dropzone
         onDrop={(files: File[]) => {
-          console.error(files);
           if (files.length > 0) {
             handleFileUpload(files[0]);
           }
@@ -133,10 +125,9 @@ const TATeamForm: React.FC<TATeamFormProps> = ({
               stroke={1.5}
             />
           </Dropzone.Idle>
-
           <div>
             <Text size="xl" inline>
-              Drag images here or click to select files
+              Drag CSV here or click to select files
             </Text>
             <Text size="sm" c="dimmed" inline mt={7}>
               Attach as many files as you like, each file should not exceed 5mb
@@ -145,7 +136,7 @@ const TATeamForm: React.FC<TATeamFormProps> = ({
         </Group>
       </Dropzone>
       <Button onClick={handleSubmitCSV} style={{ marginTop: '16px' }}>
-        Upload TAs
+        Upload Results
       </Button>
       <Button onClick={downloadCsvTemplate} style={{ marginTop: '16px' }}>
         Download CSV Template
@@ -154,4 +145,4 @@ const TATeamForm: React.FC<TATeamFormProps> = ({
   );
 };
 
-export default TATeamForm;
+export default ResultForm;

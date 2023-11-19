@@ -12,6 +12,7 @@ import {
   deleteCourseById,
   getAllCourses,
   getCourseById,
+  getTeachingTeam,
   updateCourseById,
 } from '../controllers/courseController';
 
@@ -27,6 +28,7 @@ router.post('/:id/tas', addTAs);
 router.post('/:id/teamsets', addTeamSet);
 router.post('/:id/teams/students', addStudentsToTeams);
 router.post('/:id/teams/tas', addTAsToTeams);
+router.get('/:id/teachingteam', getTeachingTeam);
 router.post('/:id/milestones', addMilestone);
 router.post('/:id/sprints', addSprint);
 router.post('/:id/assessments', addAssessments);

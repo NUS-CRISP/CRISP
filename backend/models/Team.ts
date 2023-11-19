@@ -17,4 +17,6 @@ export const teamSchema = new Schema<Team>({
   // repoUrl: { type: String, required: true },
 });
 
-export default mongoose.model<Team>('Team', teamSchema);
+const TeamModel = mongoose.model<Team>('Team', teamSchema);
+
+export default TeamModel;

@@ -13,6 +13,6 @@ export const userSchema = new Schema<User>({
   gitHandle: { type: String },
 });
 
-const UserModel = mongoose.model('User', userSchema);
+const UserModel = mongoose.model<User>('User', userSchema);
 
 export default UserModel;

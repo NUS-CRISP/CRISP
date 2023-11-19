@@ -1,7 +1,7 @@
 import { ActionIcon, Card, Group, Select, Table, Text } from '@mantine/core';
 import { User } from '@shared/types/User';
 import { IconX } from '@tabler/icons-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface TeamCardProps {
   teamId: string;
@@ -23,6 +23,11 @@ const TeamCard: React.FC<TeamCardProps> = ({
   onTeamDeleted,
 }) => {
   const [selectedTA, setSelectedTA] = useState<string | null>(TA?._id || null);
+
+  useEffect(() => {
+    setSelectedTA(TA?._id || null);
+  }, [TA]);
+
   const handleDelete = async () => {
     try {
       const response = await fetch(
@@ -66,13 +71,14 @@ const TeamCard: React.FC<TeamCardProps> = ({
   };
 
   const taOptions = TAs.map(ta => ({ value: ta._id, label: ta.name }));
-  const student_rows = members?.map(member => (
-    <tr key={member._id}>
-      {Object.values(member).map((value, index) => (
-        <td key={index}>{value}</td>
-      ))}
-    </tr>
-  ));
+  const student_rows = members?.map(member => {
+    return (
+      <tr key={member._id}>
+        <td>{member.name}</td>
+        <td>{member.gitHandle}</td>
+      </tr>
+    );
+  });
 
   return (
     <Card shadow="sm" padding="lg" radius="md" withBorder>
@@ -110,9 +116,8 @@ const TeamCard: React.FC<TeamCardProps> = ({
       <Table>
         <thead>
           <tr>
-            {Object.keys(members[0]).map((key, index) => (
-              <th key={index}>{key}</th>
-            ))}
+            <th>Name</th>
+            <th>Git Handle</th>
           </tr>
         </thead>
         <tbody>{student_rows}</tbody>

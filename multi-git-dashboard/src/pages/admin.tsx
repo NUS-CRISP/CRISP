@@ -1,6 +1,22 @@
-import { Button, Center, Checkbox, Group, ScrollArea, Table, Text, TextInput, UnstyledButton, rem } from '@mantine/core';
+import {
+  Button,
+  Center,
+  Checkbox,
+  Group,
+  ScrollArea,
+  Table,
+  Text,
+  TextInput,
+  UnstyledButton,
+  rem,
+} from '@mantine/core';
 import { Account } from '@shared/types/Account';
-import { IconChevronDown, IconChevronUp, IconSearch, IconSelector } from '@tabler/icons-react';
+import {
+  IconChevronDown,
+  IconChevronUp,
+  IconSearch,
+  IconSelector,
+} from '@tabler/icons-react';
 import { GetSessionParams, getSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 
@@ -18,10 +34,12 @@ interface ThProps {
 const filterData = (data: Account[], search: string) => {
   const query = search.toLowerCase().trim();
 
-  return data.filter((item) =>
-    item.email.toLowerCase().includes(query) || item.role.toLowerCase().includes(query)
+  return data.filter(
+    item =>
+      item.email.toLowerCase().includes(query) ||
+      item.role.toLowerCase().includes(query)
   );
-}
+};
 
 const sortData = (
   data: Account[],
@@ -32,16 +50,26 @@ const sortData = (
   return !sortBy
     ? filterData(data, search)
     : filterData(
-      [...data].sort((a, b) => reversed
-        ? b[sortBy].localeCompare(a[sortBy])
-        : a[sortBy].localeCompare(b[sortBy])
-      ),
-      payload.search
-    );
-}
+        [...data].sort((a, b) =>
+          reversed
+            ? b[sortBy].localeCompare(a[sortBy])
+            : a[sortBy].localeCompare(b[sortBy])
+        ),
+        payload.search
+      );
+};
 
-const Th: React.FC<ThProps> = ({ children, reversed, sorted, onSort }: ThProps) => {
-  const Icon = sorted ? (reversed ? IconChevronUp : IconChevronDown) : IconSelector;
+const Th: React.FC<ThProps> = ({
+  children,
+  reversed,
+  sorted,
+  onSort,
+}: ThProps) => {
+  const Icon = sorted
+    ? reversed
+      ? IconChevronUp
+      : IconChevronDown
+    : IconSelector;
 
   return (
     <Table.Th className={classes.th}>
@@ -57,7 +85,7 @@ const Th: React.FC<ThProps> = ({ children, reversed, sorted, onSort }: ThProps) 
       </UnstyledButton>
     </Table.Th>
   );
-}
+};
 
 const AdminPage: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -91,17 +119,25 @@ const AdminPage: React.FC = () => {
     setReverseSortDirection(newReverseSortDirection);
 
     // Use the new values for sorting
-    setFilteredAccounts(sortData(pendingAccounts, {
-      sortBy: newSortBy,
-      reversed: newReverseSortDirection,
-      search,
-    }));
+    setFilteredAccounts(
+      sortData(pendingAccounts, {
+        sortBy: newSortBy,
+        reversed: newReverseSortDirection,
+        search,
+      })
+    );
   };
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = event.currentTarget;
     setSearch(value);
-    setFilteredAccounts(sortData(pendingAccounts, { sortBy, reversed: reverseSortDirection, search: value }));
+    setFilteredAccounts(
+      sortData(pendingAccounts, {
+        sortBy,
+        reversed: reverseSortDirection,
+        search: value,
+      })
+    );
   };
 
   const handleApprove = async (ids: string[]) => {
@@ -119,8 +155,12 @@ const AdminPage: React.FC = () => {
 
     if (response.ok) {
       // Remove accounts from the list of pending accounts
-      setPendingAccounts(pendingAccounts.filter((account) => !ids.includes(account._id)));
-      setFilteredAccounts(filteredAccounts.filter((account) => !ids.includes(account._id)));
+      setPendingAccounts(
+        pendingAccounts.filter(account => !ids.includes(account._id))
+      );
+      setFilteredAccounts(
+        filteredAccounts.filter(account => !ids.includes(account._id))
+      );
     }
   };
 
@@ -133,23 +173,32 @@ const AdminPage: React.FC = () => {
       console.log(data);
 
       setPendingAccounts(data);
-      setFilteredAccounts(sortData(data, { sortBy, reversed: reverseSortDirection, search }));
+      setFilteredAccounts(
+        sortData(data, { sortBy, reversed: reverseSortDirection, search })
+      );
     };
 
     fetchPendingAccounts();
   }, []);
 
   const rows = filteredAccounts.map((account: Account) => (
-    <Table.Tr key={account._id} bg={selectedRows.includes(account._id) ? 'var(--mantine-color-blue-light)' : undefined}>
+    <Table.Tr
+      key={account._id}
+      bg={
+        selectedRows.includes(account._id)
+          ? 'var(--mantine-color-blue-light)'
+          : undefined
+      }
+    >
       <Table.Td>
         <Checkbox
           aria-label="Select row"
           checked={selectedRows.includes(account._id)}
-          onChange={(event) =>
+          onChange={event =>
             setSelectedRows(
               event.currentTarget.checked
                 ? [...selectedRows, account._id]
-                : selectedRows.filter((position) => position !== account._id)
+                : selectedRows.filter(position => position !== account._id)
             )
           }
         />
@@ -170,11 +219,22 @@ const AdminPage: React.FC = () => {
       <TextInput
         placeholder="Search by any field"
         mb="md"
-        leftSection={<IconSearch style={{ width: rem(16), height: rem(16) }} stroke={1.5} />}
+        leftSection={
+          <IconSearch
+            style={{ width: rem(16), height: rem(16) }}
+            stroke={1.5}
+          />
+        }
         value={search}
         onChange={handleSearchChange}
       />
-      <Table horizontalSpacing="md" verticalSpacing="xs" miw={700} mb={20} layout="fixed">
+      <Table
+        horizontalSpacing="md"
+        verticalSpacing="xs"
+        miw={700}
+        mb={20}
+        layout="fixed"
+      >
         <Table.Thead>
           <Table.Tr>
             <Table.Th w={100} />
@@ -209,17 +269,14 @@ const AdminPage: React.FC = () => {
           )}
         </Table.Tbody>
       </Table>
-      <Group justify='flex-end'>
+      <Group justify="flex-end">
         <Button
           onClick={() => handleApprove(selectedRows)}
           disabled={selectedRows.length === 0}
         >
           Approve selected
         </Button>
-        <Button
-          color="red"
-          disabled={selectedRows.length === 0}
-        >
+        <Button color="red" disabled={selectedRows.length === 0}>
           Delete selected
         </Button>
       </Group>

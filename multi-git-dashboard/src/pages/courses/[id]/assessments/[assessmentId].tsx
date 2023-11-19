@@ -1,20 +1,10 @@
-import { Container, Tabs, Text } from '@mantine/core';
+import { Button, Container, Modal, Tabs, Text } from '@mantine/core';
 import { Assessment } from '@shared/types/Assessment';
-import { Result } from '@shared/types/Result';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
-
-interface ResultCardProps {
-  result: Result;
-}
-
-const ResultCard: React.FC<ResultCardProps> = ({ result }) => {
-  return (
-    <Container>
-      <Text>{result._id}</Text>
-    </Container>
-  );
-};
+import ResultCard from '../../../../components/cards/ResultCard';
+import { User } from '@shared/types/User';
+import ResultForm from '@/components/forms/ResultForm';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
 const apiUrl = `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/assessments/`;
@@ -26,10 +16,10 @@ const AssessmentDetail: React.FC = () => {
     assessmentId: string;
   };
   const [assessment, setAssessment] = useState<Assessment | null>(null);
+  const [teachingTeam, setTeachingTeam] = useState<User[]>([]);
+  const [isResultFormOpen, setIsResultFormOpen] = useState(false);
 
   const fetchAssessment = useCallback(async () => {
-    console.error(id);
-    console.error(assessmentId);
     try {
       const response = await fetch(`${apiUrl}${assessmentId}`);
       if (response.ok) {
@@ -41,13 +31,45 @@ const AssessmentDetail: React.FC = () => {
     } catch (error) {
       console.error('Error fetching assessment:', error);
     }
-  }, [assessmentId, id]);
+  }, [assessmentId]);
+
+  const fetchTeachingTeam = useCallback(async () => {
+    try {
+      const response = await fetch(
+        `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${id}/teachingteam`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setTeachingTeam(data);
+      } else {
+        console.error('Error fetching Teaching Team:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error fetching Teaching Team:', error);
+    }
+  }, [id]);
+
+  const toggleResultForm = () => {
+    setIsResultFormOpen(o => !o);
+  };
+
+  const onUpdate = () => {
+    fetchAssessment();
+    fetchTeachingTeam();
+    setIsResultFormOpen(o => !o);
+  };
 
   useEffect(() => {
     if (assessmentId && id) {
       fetchAssessment();
     }
   }, [assessmentId, id, fetchAssessment]);
+
+  useEffect(() => {
+    if (id) {
+      fetchTeachingTeam();
+    }
+  }, [id, fetchTeachingTeam]);
 
   return (
     <Container>
@@ -77,8 +99,25 @@ const AssessmentDetail: React.FC = () => {
         </Tabs.Panel>
 
         <Tabs.Panel value="results">
+          <Button onClick={toggleResultForm}>Upload Results</Button>
+          <Modal
+            opened={isResultFormOpen}
+            onClose={toggleResultForm}
+            title="Upload Results"
+          >
+            <ResultForm
+              assessmentId={assessmentId}
+              onResultsUploaded={onUpdate}
+            />
+          </Modal>
+
           {assessment?.results.map(result => (
-            <ResultCard key={result._id} result={result} />
+            <ResultCard
+              key={result._id}
+              result={result}
+              teachingTeam={teachingTeam}
+              assessmentId={assessmentId}
+            />
           ))}
         </Tabs.Panel>
       </Tabs>

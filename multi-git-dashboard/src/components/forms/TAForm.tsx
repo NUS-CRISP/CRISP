@@ -1,4 +1,11 @@
-import { Box, Button, Group, Text, TextInput } from '@mantine/core';
+import {
+  Box,
+  Button,
+  Notification,
+  Group,
+  Text,
+  TextInput,
+} from '@mantine/core';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
 import { useForm } from '@mantine/form';
 import { User } from '@shared/types/User';
@@ -18,9 +25,11 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
       identifier: '',
       name: '',
       gitHandle: '',
+      email: '',
     },
   });
   const [TAs, setTAs] = useState<User[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const handleFileUpload = useCallback((file: File) => {
     if (file) {
@@ -34,6 +43,7 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
           },
           error: function (error: Error) {
             console.error('CSV parsing error:', error.message);
+            setError('Error parsing CSV. Please check the format.');
           },
         });
       };
@@ -42,7 +52,7 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
   }, []);
 
   const downloadCsvTemplate = () => {
-    const csvHeaders = 'name,identifier,email\n';
+    const csvHeaders = 'name,identifier,gitHandle,email\n';
     const blob = new Blob([csvHeaders], { type: 'text/csv;charset=utf-8' });
     saveAs(blob, 'tas_template.csv');
   };
@@ -75,9 +85,11 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
         onTACreated();
       } else {
         console.error('Error uploading TAs:', response.statusText);
+        setError('Error uploading TAs. Please try again.');
       }
     } catch (error) {
       console.error('Error uploading TAs:', error);
+      setError('Error uploading TAs. Please try again.');
     }
   };
 
@@ -97,6 +109,7 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
               identifier: form.values.identifier,
               name: form.values.name,
               gitHandle: form.values.gitHandle,
+              email: form.values.email,
             },
           ],
         }),
@@ -110,6 +123,11 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
 
   return (
     <Box maw={300} mx="auto">
+      {error && (
+        <Notification title="Error" color="red" onClose={() => setError(null)}>
+          {error}
+        </Notification>
+      )}
       <form onSubmit={form.onSubmit(handleSubmitForm)}>
         <TextInput
           withAsterisk
@@ -127,6 +145,15 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
           value={form.values.identifier}
           onChange={event => {
             form.setFieldValue('identifier', event.currentTarget.value);
+          }}
+        />
+        <TextInput
+          withAsterisk
+          label="Email"
+          {...form.getInputProps('email')}
+          value={form.values.email}
+          onChange={event => {
+            form.setFieldValue('email', event.currentTarget.value);
           }}
         />
         <TextInput

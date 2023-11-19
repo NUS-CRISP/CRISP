@@ -2,6 +2,7 @@ import {
   Box,
   Button,
   Group,
+  Notification,
   Radio,
   Select,
   Text,
@@ -63,12 +64,15 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
           },
           error: function (error: Error) {
             console.error('CSV parsing error:', error.message);
+            setError('Error parsing CSV. Please check the format.');
           },
         });
       };
       reader.readAsText(file);
     }
   }, []);
+
+  const [error, setError] = useState<string | null>(null);
 
   const downloadCsvTemplate = () => {
     const csvHeaders =
@@ -114,26 +118,40 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
   const handleSubmitForm = async () => {
     console.log('Sending assessment data:', form.values);
 
-    const response = await fetch(
-      `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${courseId}/assessments`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          items: [form.values],
-        }),
+    try {
+      const response = await fetch(
+        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${courseId}/assessments`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            items: [form.values],
+          }),
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Assessment created:', data);
+        onAssessmentCreated();
+      } else {
+        console.error('Error creating assessment:', response.statusText);
+        setError('Error creating assessment. Please try again.');
       }
-    );
-
-    const data = await response.json();
-    console.log('Assessment created:', data);
-    onAssessmentCreated();
+    } catch (error) {
+      console.error('Error creating assessment:', error);
+      setError('Error creating assessment. Please try again.');
+    }
   };
 
   return (
     <Box maw={300} mx="auto">
+      {error && (
+        <Notification title="Error" color="red" onClose={() => setError(null)}>
+          {error}
+        </Notification>
+      )}
       <form onSubmit={form.onSubmit(handleSubmitForm)}>
         <TextInput
           withAsterisk

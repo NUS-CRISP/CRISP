@@ -134,6 +134,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
       {isAddingTAs && activeTab && (
         <TATeamForm
           courseId={course._id}
+          teamSet={activeTab}
           onTeamCreated={handleAddTAsUploaded}
         />
       )}

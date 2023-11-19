@@ -25,4 +25,6 @@ const teamDataSchema: Schema = new Schema<TeamData>({
   },
 });
 
-export default mongoose.model<TeamData>('TeamData', teamDataSchema);
+const TeamDataModel = mongoose.model<TeamData>('TeamData', teamDataSchema);
+
+export default TeamDataModel;

@@ -1,8 +1,11 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
+
 import Role from '../../shared/types/auth/Role';
 import Account from '../models/Account';
 import Assessment from '../models/Assessment';
 import Course from '../models/Course';
+import Result from '../models/Result';
 import Team from '../models/Team';
 import TeamSet from '../models/TeamSet';
 import User, { User as IUser } from '../models/User';
@@ -37,14 +40,7 @@ export const getCourseById = async (req: Request, res: Response) => {
         path: 'teamSets',
         populate: {
           path: 'teams',
-          populate: [
-            {
-              path: 'members',
-            },
-            {
-              path: 'TA',
-            },
-          ],
+          populate: ['members', 'TA'],
         },
       })
       .populate({
@@ -82,7 +78,6 @@ export const updateCourseById = async (req: Request, res: Response) => {
 export const deleteCourseById = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   try {
-    // Delete course and its teams
     const deletedCourse = await Course.findByIdAndDelete(courseId);
     if (!deletedCourse) {
       return res.status(404).json({ error: 'Course not found' });
@@ -92,7 +87,6 @@ export const deleteCourseById = async (req: Request, res: Response) => {
 
     await TeamSet.deleteMany({ _id: { $in: deletedCourse.teamSets } });
 
-    // Update references in the Users (students) collection
     await User.updateMany(
       { enrolledCourses: courseId },
       { $pull: { enrolledCourses: courseId } }
@@ -119,7 +113,6 @@ export const addStudents = async (req: Request, res: Response) => {
     }
     for (const studentData of students) {
       const studentId = studentData.identifier;
-
       let student = await User.findOne({ identifier: studentId });
       if (!student) {
         student = new User({
@@ -128,13 +121,22 @@ export const addStudents = async (req: Request, res: Response) => {
           enrolledCourses: [],
           gitHandle: studentData.gitHandle ?? null,
         });
+
+        await student.save();
+
+        const newAccount = new Account({
+          email: studentData.email,
+          role: Role.Student,
+          isApproved: false,
+          user: student._id,
+        });
+        await newAccount.save();
       } else {
         const studentAccount = await Account.findOne({ user: student._id });
         if (studentAccount && studentAccount.role !== Role.Student) {
           continue;
         }
       }
-
       if (!student.enrolledCourses.includes(course._id)) {
         student.enrolledCourses.push(course._id);
       }
@@ -152,7 +154,8 @@ export const addStudents = async (req: Request, res: Response) => {
       .status(200)
       .json({ message: 'Students added to the course successfully' });
   } catch (error) {
-    res.status(400).json({ error: 'Failed to add students' });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(400).json({ error: 'Failed to add students: ' + message });
   }
 };
 
@@ -180,6 +183,17 @@ export const addTAs = async (req: Request, res: Response) => {
           enrolledCourses: [],
           gitHandle: TAData.gitHandle ?? null,
         });
+
+        await TA.save();
+
+        const newAccount = new Account({
+          email: TAData.email,
+          role: Role.TA,
+          isApproved: false,
+          user: TA._id,
+        });
+
+        newAccount.save();
       } else {
         const TAAccount = await Account.findOne({ user: TA._id });
         if (TAAccount && TAAccount.role !== 'Teaching assistant') {
@@ -204,7 +218,29 @@ export const addTAs = async (req: Request, res: Response) => {
       .status(200)
       .json({ message: 'TAs added to the course successfully' });
   } catch (error) {
-    res.status(400).json({ error: 'Failed to add TAs' });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(400).json({ error: 'Failed to add TAs: ' + message });
+  }
+};
+
+export const getTeachingTeam = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  try {
+    const course = await Course.findById(courseId)
+      .populate('TAs')
+      .populate('faculty')
+      .exec();
+
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    const teachingTeam = [...course.faculty, ...course.TAs];
+
+    res.status(200).json(teachingTeam);
+  } catch (error) {
+    console.error('Error fetching Teaching Team:', error);
+    res.status(500).json({ message: 'Failed to retrieve Teaching Team' });
   }
 };
 
@@ -228,7 +264,8 @@ export const addTeamSet = async (req: Request, res: Response) => {
       .status(201)
       .json({ message: 'Team set created successfully', teamSet });
   } catch (error) {
-    res.status(400).json({ error: 'Failed to create team set' });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(400).json({ error: 'Failed to create team set' + message });
   }
 };
 
@@ -239,15 +276,13 @@ export const addStudentsToTeams = async (req: Request, res: Response) => {
 
   try {
     const course = await Course.findById(courseId);
-
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
-
     for (const studentData of students) {
-      const student = await User.findOne({
-        identifier: studentData.identifier,
-      });
+      const studentId = studentData.identifier;
+
+      const student = await User.findOne({ identifier: studentId });
 
       if (!student) {
         return res.status(404).json({ message: 'Student not found' });
@@ -258,8 +293,8 @@ export const addStudentsToTeams = async (req: Request, res: Response) => {
       if (
         !account ||
         account.role !== 'Student' ||
-        !student.enrolledCourses.some(ec => ec._id === course._id) ||
-        !course.students.some(s => s._id == student._id) ||
+        !student.enrolledCourses.includes(course._id) ||
+        !course.students.some(s => s._id.equals(student._id)) ||
         !studentData.teamSet ||
         !studentData.teamNumber
       ) {
@@ -273,6 +308,7 @@ export const addStudentsToTeams = async (req: Request, res: Response) => {
       if (!teamSet) {
         return res.status(404).json({ message: 'TeamSet not found' });
       }
+
       let team = await Team.findOne({
         number: studentData.teamNumber,
         teamSet: teamSet._id,
@@ -288,6 +324,7 @@ export const addStudentsToTeams = async (req: Request, res: Response) => {
         }
         teamSet.teams.push(team._id);
       }
+
       if (team.members && !team.members.some(s => s._id === student._id)) {
         team.members.push(student._id);
       }
@@ -301,7 +338,10 @@ export const addStudentsToTeams = async (req: Request, res: Response) => {
       .status(200)
       .json({ message: 'Students added to teams successfully' });
   } catch (error) {
-    res.status(400).json({ error: 'Failed to add students to teams' });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res
+      .status(400)
+      .json({ error: 'Failed to add students to teams: ' + message });
   }
 };
 
@@ -320,22 +360,31 @@ export const addTAsToTeams = async (req: Request, res: Response) => {
       const taId = taData.identifier;
 
       const ta = await User.findOne({ identifier: taId });
+
       if (!ta) {
         return res.status(404).json({ message: 'TA not found' });
       }
-
-      const taAccount = await Account.findOne({ user: ta._id });
-
+      console.error(1);
+      const account = await Account.findOne({ user: ta._id });
+      console.error(2);
+      console.error(!account);
+      console.error(account?.role !== 'Teaching assistant');
+      console.error(!ta.enrolledCourses.includes(course._id));
+      console.error(!course.TAs.some(t => t._id.equals(ta._id)));
+      console.error(!taData.teamSet);
+      console.error(!taData.teamNumber);
       if (
-        !taAccount ||
-        taAccount.role !== 'Teaching assistant' ||
+        !account ||
+        account.role !== 'Teaching assistant' ||
         !ta.enrolledCourses.includes(course._id) ||
+        !course.TAs.some(t => t._id.equals(ta._id)) ||
         !taData.teamSet ||
         !taData.teamNumber
       ) {
+        console.error(3);
         return res.status(400).json({ message: 'Invalid TA' });
       }
-
+      console.error(4);
       let teamSet = await TeamSet.findOne({
         course: course._id,
         name: taData.teamSet,
@@ -369,7 +418,8 @@ export const addTAsToTeams = async (req: Request, res: Response) => {
 
     return res.status(200).json({ message: 'TAs added to teams successfully' });
   } catch (error) {
-    res.status(400).json({ error: 'Failed to add TAs to teams' });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(400).json({ error: 'Failed to add TAs to teams: ' + message });
   }
 };
 
@@ -397,7 +447,8 @@ export const addMilestone = async (req: Request, res: Response) => {
       .status(201)
       .json({ message: 'Milestone added successfully', milestone });
   } catch (error) {
-    res.status(400).json({ error: 'Failed to add milestone' });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(400).json({ error: 'Failed to add milestone: ' + message });
   }
 };
 
@@ -427,14 +478,14 @@ export const addSprint = async (req: Request, res: Response) => {
       .status(201)
       .json({ message: 'Sprint added successfully', sprint });
   } catch (error) {
-    res.status(400).json({ error: 'Failed to add sprint' });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(400).json({ error: 'Failed to add sprint: ' + message });
   }
 };
 
 /*----------------------------------------Assessment----------------------------------------*/
 export const addAssessments = async (req: Request, res: Response) => {
   const courseId = req.params.id;
-
   const assessments = req.body.items;
 
   if (!Array.isArray(assessments) || assessments.length === 0) {
@@ -444,13 +495,13 @@ export const addAssessments = async (req: Request, res: Response) => {
   }
 
   try {
-    const course = await Course.findById(courseId);
-
+    const course = await Course.findById(courseId).populate('students');
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
 
-    const newAssessments = [];
+    const newAssessments: mongoose.Document[] = [];
+    console.log(assessments.length);
     for (let assessmentData of assessments) {
       const {
         assessmentType,
@@ -461,46 +512,83 @@ export const addAssessments = async (req: Request, res: Response) => {
         formLink,
       } = assessmentData;
 
-      if (!course) {
-        return res.status(404).json({ message: 'Course not found' });
-      }
       const existingAssessment = await Assessment.findOne({
         course: courseId,
-        assessmentType: assessmentType,
+        assessmentType,
       });
-
-      if (existingAssessment) {
-        continue;
-      }
-
-      let teamSetID = null;
-      if (granularity === 'team') {
-        if (teamSetName === null || teamSetName == '') {
-          continue;
-        }
-        const teamSet = await TeamSet.findOne({
-          course: courseId,
-          name: teamSetName,
-        });
-        if (!teamSet) {
-          continue;
-        }
-        teamSetID = teamSet._id;
-      }
-
+      console.log(existingAssessment);
+      if (existingAssessment) continue;
       const assessment = new Assessment({
         course: courseId,
         assessmentType,
         markType,
-        result: [],
+        results: [],
         frequency,
         granularity,
-        teamSet: teamSetID,
+        teamSet: null,
         formLink,
       });
 
+      await assessment.save();
+
+      const results: mongoose.Document[] = [];
+      console.error(0);
+      if (granularity === 'team') {
+        const teamSet = await TeamSet.findOne({
+          course: courseId,
+          name: teamSetName,
+        }).populate({
+          path: 'teams',
+          populate: ['members', 'TA'],
+        });
+
+        console.error(teamSet);
+
+        if (!teamSet) continue;
+        assessment.teamSet = teamSet._id;
+        console.error(1);
+        // Create a result object for each team
+        teamSet.teams.forEach((team: any) => {
+          const initialMarks = team.members.map((member: any) => ({
+            userId: member.identifier,
+            name: member.name,
+            mark: 0,
+          }));
+          const result = new Result({
+            assessment: assessment._id,
+            team: team._id,
+            marker: team.TA?._id,
+            marks: initialMarks,
+          });
+          results.push(result);
+        });
+        console.error(2);
+      } else {
+        // Create a result object for each student
+        course.students.forEach((student: any) => {
+          const result = new Result({
+            assessment: assessment._id,
+            team: null,
+            marker: null,
+            marks: [
+              {
+                userId: student.identifier,
+                name: student.name,
+                mark: 0,
+              },
+            ],
+          });
+          results.push(result);
+        });
+      }
+      assessment.results = results.map(result => result._id);
+      console.error(3);
       course.assessments.push(assessment._id);
+      console.error(4);
       newAssessments.push(assessment);
+      console.error(5);
+      await Promise.all(results.map(result => result.save()));
+      console.error(6);
     }
 
     if (newAssessments.length === 0) {
@@ -516,6 +604,7 @@ export const addAssessments = async (req: Request, res: Response) => {
       .status(201)
       .json({ message: 'Assessments added successfully', newAssessments });
   } catch (error) {
-    res.status(400).json({ error: 'Failed to add assessments' });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(400).json({ error: 'Failed to add assessments: ' + message });
   }
 };

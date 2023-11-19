@@ -5,7 +5,7 @@ export interface TeamSet
   extends Omit<SharedTeamSet, '_id' | 'course' | 'teams'> {
   _id: Types.ObjectId;
   course: Types.ObjectId;
-  teams?: Types.ObjectId[];
+  teams: Types.ObjectId[];
 }
 
 const teamSetSchema = new Schema<TeamSet>({
@@ -14,4 +14,6 @@ const teamSetSchema = new Schema<TeamSet>({
   teams: [{ type: Schema.Types.ObjectId, ref: 'Team' }],
 });
 
-export default mongoose.model<TeamSet>('TeamSet', teamSetSchema);
+const TeamSetModel = mongoose.model<TeamSet>('TeamSet', teamSetSchema);
+
+export default TeamSetModel;
