@@ -364,15 +364,7 @@ export const addTAsToTeams = async (req: Request, res: Response) => {
       if (!ta) {
         return res.status(404).json({ message: 'TA not found' });
       }
-      console.error(1);
       const account = await Account.findOne({ user: ta._id });
-      console.error(2);
-      console.error(!account);
-      console.error(account?.role !== 'Teaching assistant');
-      console.error(!ta.enrolledCourses.includes(course._id));
-      console.error(!course.TAs.some(t => t._id.equals(ta._id)));
-      console.error(!taData.teamSet);
-      console.error(!taData.teamNumber);
       if (
         !account ||
         account.role !== 'Teaching assistant' ||
@@ -381,10 +373,8 @@ export const addTAsToTeams = async (req: Request, res: Response) => {
         !taData.teamSet ||
         !taData.teamNumber
       ) {
-        console.error(3);
         return res.status(400).json({ message: 'Invalid TA' });
       }
-      console.error(4);
       let teamSet = await TeamSet.findOne({
         course: course._id,
         name: taData.teamSet,
@@ -532,7 +522,6 @@ export const addAssessments = async (req: Request, res: Response) => {
       await assessment.save();
 
       const results: mongoose.Document[] = [];
-      console.error(0);
       if (granularity === 'team') {
         const teamSet = await TeamSet.findOne({
           course: courseId,
@@ -542,11 +531,9 @@ export const addAssessments = async (req: Request, res: Response) => {
           populate: ['members', 'TA'],
         });
 
-        console.error(teamSet);
 
         if (!teamSet) continue;
         assessment.teamSet = teamSet._id;
-        console.error(1);
         // Create a result object for each team
         teamSet.teams.forEach((team: any) => {
           const initialMarks = team.members.map((member: any) => ({
@@ -562,7 +549,6 @@ export const addAssessments = async (req: Request, res: Response) => {
           });
           results.push(result);
         });
-        console.error(2);
       } else {
         // Create a result object for each student
         course.students.forEach((student: any) => {
@@ -582,13 +568,9 @@ export const addAssessments = async (req: Request, res: Response) => {
         });
       }
       assessment.results = results.map(result => result._id);
-      console.error(3);
       course.assessments.push(assessment._id);
-      console.error(4);
       newAssessments.push(assessment);
-      console.error(5);
       await Promise.all(results.map(result => result.save()));
-      console.error(6);
     }
 
     if (newAssessments.length === 0) {
