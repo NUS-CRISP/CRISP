@@ -1,12 +1,18 @@
-import React, { useState, useCallback } from 'react';
-import { Box, TextInput, Button, Group, Text } from '@mantine/core';
-import { IconUpload, IconPhoto, IconX } from '@tabler/icons-react';
-import { useForm } from '@mantine/form';
+import {
+  Box,
+  Button,
+  Notification,
+  Group,
+  Text,
+  TextInput,
+} from '@mantine/core';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
-import Papa from 'papaparse';
-import { User } from '@/types/user';
-
-const backendPort = process.env.BACKEND_PORT || 3001;
+import { useForm } from '@mantine/form';
+import { User } from '@shared/types/User';
+import { IconPhoto, IconUpload, IconX } from '@tabler/icons-react';
+import { saveAs } from 'file-saver';
+import Papa, { ParseResult } from 'papaparse';
+import { useCallback, useState } from 'react';
 
 interface TAFormProps {
   courseId: string | string[] | undefined;
@@ -16,16 +22,14 @@ interface TAFormProps {
 const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
   const form = useForm({
     initialValues: {
+      identifier: '',
       name: '',
-      id: '',
-      email: '',
       gitHandle: '',
-    },
-    validate: {
-      //email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
+      email: '',
     },
   });
   const [TAs, setTAs] = useState<User[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const handleFileUpload = useCallback((file: File) => {
     if (file) {
@@ -34,25 +38,24 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
         Papa.parse(reader.result as string, {
           header: true,
           skipEmptyLines: true,
-          complete: function (results: any) {
-            const TAsData = results.data;
-            const TAs = TAsData.map((TA: User) => ({
-              id: TA.id || '',
-              name: TA.name || '',
-              email: TA.email || '',
-              gitHandle: TA.gitHandle || '',
-              role: 'ta',
-            }));
-            setTAs(TAs);
+          complete: function (results: ParseResult<User>) {
+            setTAs(results.data);
           },
-          error: function (error: any) {
+          error: function (error: Error) {
             console.error('CSV parsing error:', error.message);
+            setError('Error parsing CSV. Please check the format.');
           },
         });
       };
       reader.readAsText(file);
     }
   }, []);
+
+  const downloadCsvTemplate = () => {
+    const csvHeaders = 'name,identifier,gitHandle,email\n';
+    const blob = new Blob([csvHeaders], { type: 'text/csv;charset=utf-8' });
+    saveAs(blob, 'tas_template.csv');
+  };
 
   const handleSubmitCSV = async () => {
     if (TAs.length === 0) {
@@ -63,15 +66,18 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
     console.log('Sending TAs data:', TAs);
 
     try {
-      const response = await fetch(`http://localhost:${backendPort}/api/courses/${courseId}/tas`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          items: TAs,
-        }),
-      });
+      const response = await fetch(
+        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${courseId}/tas`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            items: TAs,
+          }),
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -79,32 +85,36 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
         onTACreated();
       } else {
         console.error('Error uploading TAs:', response.statusText);
+        setError('Error uploading TAs. Please try again.');
       }
     } catch (error) {
       console.error('Error uploading TAs:', error);
+      setError('Error uploading TAs. Please try again.');
     }
   };
 
   const handleSubmitForm = async () => {
     console.log('Sending ta data:', form.values);
 
-    const response = await fetch(`http://localhost:${backendPort}/api/courses/${courseId}/tas`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        items: [
-          {
-            id: form.values.id,
-            name: form.values.name,
-            email: form.values.email,
-            gitHandle: form.values.gitHandle,
-            role: 'ta',
-          },
-        ],
-      }),
-    });
+    const response = await fetch(
+      `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${courseId}/tas`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          items: [
+            {
+              identifier: form.values.identifier,
+              name: form.values.name,
+              gitHandle: form.values.gitHandle,
+              email: form.values.email,
+            },
+          ],
+        }),
+      }
+    );
 
     const data = await response.json();
     console.log('TA created:', data);
@@ -113,31 +123,36 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
 
   return (
     <Box maw={300} mx="auto">
+      {error && (
+        <Notification title="Error" color="red" onClose={() => setError(null)}>
+          {error}
+        </Notification>
+      )}
       <form onSubmit={form.onSubmit(handleSubmitForm)}>
         <TextInput
           withAsterisk
           label="TA Name"
           {...form.getInputProps('name')}
           value={form.values.name}
-          onChange={(event) => {
+          onChange={event => {
             form.setFieldValue('name', event.currentTarget.value);
           }}
         />
         <TextInput
           withAsterisk
           label="TA ID"
-          {...form.getInputProps('id')}
-          value={form.values.id}
-          onChange={(event) => {
-            form.setFieldValue('id', event.currentTarget.value);
+          {...form.getInputProps('identifier')}
+          value={form.values.identifier}
+          onChange={event => {
+            form.setFieldValue('identifier', event.currentTarget.value);
           }}
         />
         <TextInput
           withAsterisk
-          label="TA Email"
+          label="Email"
           {...form.getInputProps('email')}
           value={form.values.email}
-          onChange={(event) => {
+          onChange={event => {
             form.setFieldValue('email', event.currentTarget.value);
           }}
         />
@@ -145,7 +160,7 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
           label="Git Handle"
           {...form.getInputProps('gitHandle')}
           value={form.values.gitHandle}
-          onChange={(event) => {
+          onChange={event => {
             form.setFieldValue('gitHandle', event.currentTarget.value);
           }}
         />
@@ -163,19 +178,28 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
         }}
         accept={[MIME_TYPES.csv]}
         maxSize={1024 * 1024 * 5}
-        maxFiles = {1}
-        multiple = {false}
+        maxFiles={1}
+        multiple={false}
         style={{ marginTop: '16px' }}
       >
         <Group mih={220} style={{ pointerEvents: 'none' }}>
           <Dropzone.Accept>
-            <IconUpload style={{ color: 'var(--mantine-color-blue-6)' }} stroke={1.5} />
+            <IconUpload
+              style={{ color: 'var(--mantine-color-blue-6)' }}
+              stroke={1.5}
+            />
           </Dropzone.Accept>
           <Dropzone.Reject>
-            <IconX style={{ color: 'var(--mantine-color-red-6)' }} stroke={1.5} />
+            <IconX
+              style={{ color: 'var(--mantine-color-red-6)' }}
+              stroke={1.5}
+            />
           </Dropzone.Reject>
           <Dropzone.Idle>
-            <IconPhoto style={{ color: 'var(--mantine-color-dimmed)' }} stroke={1.5} />
+            <IconPhoto
+              style={{ color: 'var(--mantine-color-dimmed)' }}
+              stroke={1.5}
+            />
           </Dropzone.Idle>
 
           <div>
@@ -190,6 +214,9 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
       </Dropzone>
       <Button onClick={handleSubmitCSV} style={{ marginTop: '16px' }}>
         Upload TAs
+      </Button>
+      <Button onClick={downloadCsvTemplate} style={{ marginTop: '16px' }}>
+        Download CSV Template
       </Button>
     </Box>
   );

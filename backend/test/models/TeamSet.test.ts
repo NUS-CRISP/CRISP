@@ -1,6 +1,8 @@
-import mongoose, { ConnectOptions } from 'mongoose';
-import TeamSetModel, { TeamSet } from '../../models/TeamSet';
+import { CourseType } from '@shared/types/Course';
+import { TeamSet } from '@shared/types/TeamSet';
 import { MongoMemoryServer } from 'mongodb-memory-server';
+import mongoose, { ConnectOptions, Types } from 'mongoose';
+import TeamSetModel from '../../models/TeamSet';
 
 let mongoServer: MongoMemoryServer;
 
@@ -21,8 +23,22 @@ afterAll(async () => {
 describe('TeamSetModel', () => {
   it('should create and save a new team set', async () => {
     const teamSetData: TeamSet = {
-      course: new mongoose.Types.ObjectId(),
-      name: 'Team Set 1',
+      _id: new Types.ObjectId().toString(),
+      course: {
+        _id: new Types.ObjectId().toString(),
+        name: 'Test Course',
+        code: 'COURSE101',
+        semester: 'Spring 2023',
+        faculty: [],
+        TAs: [],
+        students: [],
+        teamSets: [],
+        sprints: [],
+        milestones: [],
+        assessments: [],
+        courseType: 'Normal' as CourseType,
+      },
+      name: 'Test Team Set',
       teams: [],
     };
 
@@ -44,5 +60,4 @@ describe('TeamSetModel', () => {
 
     await expect(teamSet.save()).rejects.toThrow();
   });
-
 });

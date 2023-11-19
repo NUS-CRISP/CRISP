@@ -1,12 +1,18 @@
-import React, { useState, useCallback } from 'react';
-import { Box, TextInput, Button, Group, Text } from '@mantine/core';
-import { IconUpload, IconPhoto, IconX } from '@tabler/icons-react';
-import { useForm } from '@mantine/form';
+import {
+  Box,
+  Button,
+  Notification,
+  Group,
+  Text,
+  TextInput,
+} from '@mantine/core';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
-import Papa from 'papaparse';
-import { User } from '@/types/user';
-
-const backendPort = process.env.BACKEND_PORT || 3001;
+import { useForm } from '@mantine/form';
+import { User } from '@shared/types/User';
+import { IconPhoto, IconUpload, IconX } from '@tabler/icons-react';
+import { saveAs } from 'file-saver';
+import Papa, { ParseResult } from 'papaparse';
+import { useCallback, useState } from 'react';
 
 interface StudentFormProps {
   courseId: string | string[] | undefined;
@@ -19,16 +25,14 @@ const StudentForm: React.FC<StudentFormProps> = ({
 }) => {
   const form = useForm({
     initialValues: {
+      identifier: '',
       name: '',
-      id: '',
-      email: '',
       gitHandle: '',
-    },
-    validate: {
-      //email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
+      email: '',
     },
   });
   const [students, setStudents] = useState<User[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const handleFileUpload = useCallback((file: File) => {
     if (file) {
@@ -37,25 +41,24 @@ const StudentForm: React.FC<StudentFormProps> = ({
         Papa.parse(reader.result as string, {
           header: true,
           skipEmptyLines: true,
-          complete: function (results: any) {
-            const studentsData = results.data;
-            const students = studentsData.map((student: User) => ({
-              id: student.id || '',
-              name: student.name || '',
-              email: student.email || '',
-              gitHandle: student.gitHandle || '',
-              role: 'student',
-            }));
-            setStudents(students);
+          complete: function (results: ParseResult<User>) {
+            setStudents(results.data);
           },
-          error: function (error: any) {
+          error: function (error: Error) {
             console.error('CSV parsing error:', error.message);
+            setError('Error parsing CSV. Please check the format.');
           },
         });
       };
       reader.readAsText(file);
     }
   }, []);
+
+  const downloadCsvTemplate = () => {
+    const csvHeaders = 'name,identifier,email,gitHandle\n';
+    const blob = new Blob([csvHeaders], { type: 'text/csv;charset=utf-8' });
+    saveAs(blob, 'students_template.csv');
+  };
 
   const handleSubmitCSV = async () => {
     if (students.length === 0) {
@@ -67,7 +70,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
 
     try {
       const response = await fetch(
-        `http://localhost:${backendPort}/api/courses/${courseId}/students`,
+        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${courseId}/students`,
         {
           method: 'POST',
           headers: {
@@ -85,9 +88,11 @@ const StudentForm: React.FC<StudentFormProps> = ({
         onStudentCreated();
       } else {
         console.error('Error uploading students:', response.statusText);
+        setError('Error uploading students. Please try again.');
       }
     } catch (error) {
       console.error('Error uploading students:', error);
+      setError('Error uploading students. Please try again.');
     }
   };
 
@@ -95,7 +100,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
     console.log('Sending student data:', form.values);
 
     const response = await fetch(
-      `http://localhost:${backendPort}/api/courses/${courseId}/students`,
+      `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${courseId}/students`,
       {
         method: 'POST',
         headers: {
@@ -104,11 +109,10 @@ const StudentForm: React.FC<StudentFormProps> = ({
         body: JSON.stringify({
           items: [
             {
-              id: form.values.id,
+              identifier: form.values.identifier,
               name: form.values.name,
-              email: form.values.email,
               gitHandle: form.values.gitHandle,
-              role: 'student',
+              email: form.values.email,
             },
           ],
         }),
@@ -122,6 +126,11 @@ const StudentForm: React.FC<StudentFormProps> = ({
 
   return (
     <Box maw={300} mx="auto">
+      {error && (
+        <Notification title="Error" color="red" onClose={() => setError(null)}>
+          {error}
+        </Notification>
+      )}
       <form onSubmit={form.onSubmit(handleSubmitForm)}>
         <TextInput
           withAsterisk
@@ -135,15 +144,15 @@ const StudentForm: React.FC<StudentFormProps> = ({
         <TextInput
           withAsterisk
           label="Student ID"
-          {...form.getInputProps('id')}
-          value={form.values.id}
+          {...form.getInputProps('identifier')}
+          value={form.values.identifier}
           onChange={event => {
-            form.setFieldValue('id', event.currentTarget.value);
+            form.setFieldValue('identifier', event.currentTarget.value);
           }}
         />
         <TextInput
           withAsterisk
-          label="Student Email"
+          label="Email"
           {...form.getInputProps('email')}
           value={form.values.email}
           onChange={event => {
@@ -208,6 +217,9 @@ const StudentForm: React.FC<StudentFormProps> = ({
       </Dropzone>
       <Button onClick={handleSubmitCSV} style={{ marginTop: '16px' }}>
         Upload Students
+      </Button>
+      <Button onClick={downloadCsvTemplate} style={{ marginTop: '16px' }}>
+        Download CSV Template
       </Button>
     </Box>
   );

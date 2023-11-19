@@ -1,14 +1,12 @@
-import mongoose, { Schema } from 'mongoose';
+import { Assessment as SharedAssessment } from '@shared/types/Assessment';
+import mongoose, { Schema, Types } from 'mongoose';
 
-export interface Assessment {
-  course: mongoose.Types.ObjectId;
-  assessmentType: string;
-  markType: string;
-  results: mongoose.Types.ObjectId[];
-  frequency: string;
-  granularity: 'individual' | 'team';
-  teamSet: mongoose.Types.ObjectId;
-  formLink: string;
+export interface Assessment
+  extends Omit<SharedAssessment, '_id' | 'course' | 'results' | 'teamSet'> {
+  _id: Types.ObjectId;
+  course: Types.ObjectId;
+  results: Types.ObjectId[];
+  teamSet?: Types.ObjectId;
 }
 
 const assessmentSchema = new Schema<Assessment>({
@@ -22,10 +20,13 @@ const assessmentSchema = new Schema<Assessment>({
     enum: ['individual', 'team'],
     required: true,
   },
-  teamSet: { type: Schema.Types.ObjectId, ref: 'TeamSet'},
+  teamSet: { type: Schema.Types.ObjectId, ref: 'TeamSet' },
   formLink: { type: String },
 });
 
-const AssessmentModel = mongoose.model<Assessment>('Assessment', assessmentSchema);
+const AssessmentModel = mongoose.model<Assessment>(
+  'Assessment',
+  assessmentSchema
+);
 
 export default AssessmentModel;

@@ -1,6 +1,7 @@
-import mongoose, { ConnectOptions } from 'mongoose';
-import UserModel, { User } from '../../models/User';
+import { User } from '@shared/types/User';
 import { MongoMemoryServer } from 'mongodb-memory-server';
+import mongoose, { ConnectOptions, Types } from 'mongoose';
+import UserModel from '../../models/User';
 
 let mongoServer: MongoMemoryServer;
 
@@ -25,6 +26,8 @@ afterAll(async () => {
 describe('UserModel', () => {
   it('should create and save a new user', async () => {
     const userData: User = {
+      _id: new Types.ObjectId().toString(),
+      identifier: 'e1234567',
       name: 'John Doe',
       enrolledCourses: [],
       gitHandle: 'johndoe-git',
@@ -44,6 +47,7 @@ describe('UserModel', () => {
       name: 'John Doe',
       enrolledCourses: [],
       gitHandle: 'johndoe-git',
+      role: 'Student',
     };
 
     const user = new UserModel(userData);

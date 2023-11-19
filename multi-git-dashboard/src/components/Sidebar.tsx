@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Code, Group } from '@mantine/core';
 import {
   IconGitBranch,
   IconHome,
@@ -8,9 +8,9 @@ import {
   IconUserCircle,
 } from '@tabler/icons-react';
 import { signOut, useSession } from 'next-auth/react';
-import classes from './Sidebar.module.css';
-import { Code, Group } from '@mantine/core';
 import { useRouter } from 'next/router';
+import { useState } from 'react';
+import classes from '../styles/Sidebar.module.css';
 
 const Sidebar: React.FC = () => {
   const router = useRouter();
@@ -22,7 +22,7 @@ const Sidebar: React.FC = () => {
     { link: '/courses', label: 'View Courses', icon: IconListDetails },
   ];
 
-  if (session && session.user.role === 'admin') {
+  if (session && session.user && session.user.role === 'admin') {
     linksData.push({ link: '/admin', label: 'Admin', icon: IconSettings2 });
   }
 

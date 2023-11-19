@@ -1,6 +1,7 @@
-import mongoose, { ConnectOptions } from 'mongoose';
-import CourseModel, { Course } from '../../models/Course';
+import { Course, CourseType } from '@shared/types/Course';
 import { MongoMemoryServer } from 'mongodb-memory-server';
+import mongoose, { ConnectOptions, Types } from 'mongoose';
+import CourseModel from '../../models/Course';
 
 let mongoServer: MongoMemoryServer;
 
@@ -22,10 +23,10 @@ afterAll(async () => {
   await mongoServer.stop();
 });
 
-
 describe('CourseModel', () => {
   it('should create and save a new course', async () => {
     const courseData: Course = {
+      _id: new Types.ObjectId().toString(),
       name: 'Test Course',
       code: 'COURSE101',
       semester: 'Spring 2023',
@@ -36,6 +37,7 @@ describe('CourseModel', () => {
       sprints: [],
       milestones: [],
       assessments: [],
+      courseType: 'Normal' as CourseType,
     };
 
     const course = new CourseModel(courseData);
@@ -95,7 +97,9 @@ describe('CourseModel', () => {
 
     await courseToDelete.save();
 
-    const deletedCourse = await CourseModel.findByIdAndDelete(courseToDelete._id);
+    const deletedCourse = await CourseModel.findByIdAndDelete(
+      courseToDelete._id
+    );
 
     expect(deletedCourse?._id).toStrictEqual(courseToDelete._id);
   });
@@ -128,7 +132,7 @@ describe('CourseModel', () => {
     await existingCourse.save();
 
     const newSprint = {
-      sprintNumber: 1,
+      number: 1,
       description: 'First Sprint',
       startDate: new Date('2022-10-01'),
       endDate: new Date('2022-10-15'),
@@ -139,7 +143,7 @@ describe('CourseModel', () => {
     const updatedCourse = await existingCourse.save();
 
     expect(updatedCourse.sprints).toHaveLength(1);
-    expect(updatedCourse.sprints[0].sprintNumber).toEqual(newSprint.sprintNumber);
+    expect(updatedCourse.sprints[0].number).toEqual(newSprint.number);
     expect(updatedCourse.sprints[0].description).toEqual(newSprint.description);
     expect(updatedCourse.sprints[0].startDate).toEqual(newSprint.startDate);
     expect(updatedCourse.sprints[0].endDate).toEqual(newSprint.endDate);
@@ -162,7 +166,7 @@ describe('CourseModel', () => {
     await existingCourse.save();
 
     const newMilestone = {
-      milestoneNumber: 1,
+      number: 1,
       dateline: new Date('2022-11-15'),
       description: 'First Milestone',
     };
@@ -172,8 +176,10 @@ describe('CourseModel', () => {
     const updatedCourse = await existingCourse.save();
 
     expect(updatedCourse.milestones).toHaveLength(1);
-    expect(updatedCourse.milestones[0].milestoneNumber).toEqual(newMilestone.milestoneNumber);
+    expect(updatedCourse.milestones[0].number).toEqual(newMilestone.number);
     expect(updatedCourse.milestones[0].dateline).toEqual(newMilestone.dateline);
-    expect(updatedCourse.milestones[0].description).toEqual(newMilestone.description);
+    expect(updatedCourse.milestones[0].description).toEqual(
+      newMilestone.description
+    );
   });
 });

@@ -1,15 +1,16 @@
-import React from 'react';
-import { Box, TextInput, Button } from '@mantine/core';
+import { Box, Button, Notification, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
-
-const backendPort = process.env.BACKEND_PORT || 3001;
+import { useState } from 'react';
 
 interface TeamSetFormProps {
-  courseId : string;
+  courseId: string;
   onTeamSetCreated: () => void;
 }
 
-const TeamSetForm: React.FC<TeamSetFormProps> = ({ courseId, onTeamSetCreated }) => {
+const TeamSetForm: React.FC<TeamSetFormProps> = ({
+  courseId,
+  onTeamSetCreated,
+}) => {
   const form = useForm({
     initialValues: {
       course: courseId,
@@ -18,32 +19,51 @@ const TeamSetForm: React.FC<TeamSetFormProps> = ({ courseId, onTeamSetCreated })
     },
   });
 
+  const [error, setError] = useState<string | null>(null);
+
   const handleSubmit = async () => {
-    
     console.log('Sending teamset data:', form.values);
 
-    const response = await fetch(`http://localhost:${backendPort}/api/courses/${courseId}/teamsets`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(form.values),
-    });
+    try {
+      const response = await fetch(
+        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${courseId}/teamsets`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(form.values),
+        }
+      );
 
-    const data = await response.json();
-    console.log('TeamSet created:', data);
-    onTeamSetCreated();
+      if (response.ok) {
+        const data = await response.json();
+        console.log('TeamSet created:', data);
+        onTeamSetCreated();
+      } else {
+        console.error('Error creating teamset:', response.statusText);
+        setError('Error creating teamset. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error creating teamset:', error);
+      setError('Error creating teamset. Please try again.');
+    }
   };
 
   return (
     <Box maw={300} mx="auto">
+      {error && (
+        <Notification title="Error" color="red" onClose={() => setError(null)}>
+          {error}
+        </Notification>
+      )}
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <TextInput
           withAsterisk
           label="TeamSet Name"
           {...form.getInputProps('name')}
           value={form.values.name}
-          onChange={(event) => {
+          onChange={event => {
             form.setFieldValue('name', event.currentTarget.value);
           }}
         />

@@ -1,6 +1,12 @@
-import mongoose from 'mongoose';
+import mongoose, { Schema, Types } from 'mongoose';
+import { Account as SharedAccount } from '../../shared/types/Account';
+import Role from '../../shared/types/auth/Role';
 
-const accountSchema = new mongoose.Schema({
+export interface Account extends Omit<SharedAccount, 'user'> {
+  user: Types.ObjectId;
+}
+
+const accountSchema = new Schema<Account>({
   email: {
     type: String,
     unique: true,
@@ -9,17 +15,19 @@ const accountSchema = new mongoose.Schema({
   password: String,
   role: {
     type: String,
-    enum: ['admin', 'Faculty member', 'Teaching assistant', 'Student'],
-    default: 'Teaching assistant',
+    enum: Role,
+    default: Role.TA,
   },
   isApproved: {
     type: Boolean,
     default: false,
   },
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
+  user: {
+    type: Schema.Types.ObjectId,
     ref: 'User',
   },
 });
 
-export default mongoose.model('Account', accountSchema);
+const AccountModel = mongoose.model<Account>('Account', accountSchema);
+
+export default AccountModel;

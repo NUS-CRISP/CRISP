@@ -1,9 +1,10 @@
 import bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
 import Account from '../models/Account';
+import User from '../models/User';
 
 export const createAccount = async (req: Request, res: Response) => {
-  const { name, email, password, role } = req.body;
+  const { identifier, name, email, password, role } = req.body;
 
   try {
     const existingAccount = await Account.findOne({ email });
@@ -16,23 +17,30 @@ export const createAccount = async (req: Request, res: Response) => {
     const salt = await bcrypt.genSalt();
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // const newUser = new User({
-    //   _id: new mongoose.Types.ObjectId(),
-    //   name,
-    // });
+    const newUser = new User({
+      identifier: identifier,
+      name: name,
+      enrolledCourses: [],
+      gitHandle: null,
+    });
 
     const newAccount = new Account({
       email,
       password: passwordHash,
       role,
       isApproved: false,
-      // userId: newUser._id,
+      user: newUser._id,
     });
 
+    await newUser.save();
     await newAccount.save();
     res.status(201).send({ message: 'Account created' });
   } catch (error) {
-    res.status(500).send({ error: 'Error creating account' });
+    if (error instanceof Error) {
+      res.status(500).send({ error: error.message });
+    } else {
+      res.status(500).send({ error: 'Error creating account' });
+    }
   }
 };
 
@@ -45,18 +53,16 @@ export const getPendingAccounts = async (req: Request, res: Response) => {
   }
 };
 
-export const approveAccount = async (req: Request, res: Response) => {
-  const { accountId } = req.params;
+export const approveAccounts = async (req: Request, res: Response) => {
+  const { ids }: { ids: string[] } = req.body;
 
   try {
-    const account = await Account.findById(accountId);
-    if (!account) {
-      return res.status(404).send({ error: 'Account not found' });
-    }
-    account.isApproved = true;
-    await account.save();
-    res.status(200).send({ message: 'Account approved' });
+    await Account.updateMany(
+      { _id: { $in: ids } },
+      { $set: { isApproved: true } }
+    );
+    res.status(200).send({ message: 'Accounts approved' });
   } catch (error) {
-    res.status(500).send({ error: 'Error approving account' });
+    res.status(500).send({ error: 'Error approving accounts' });
   }
 };

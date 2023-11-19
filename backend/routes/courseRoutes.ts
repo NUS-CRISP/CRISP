@@ -1,17 +1,19 @@
 import express from 'express';
 import {
-  createCourse,
-  getAllCourses,
-  getCourseById,
-  updateCourseById,
-  deleteCourseById,
-  addStudents,
-  addTeams,
-  addTAs,
+  addAssessments,
   addMilestone,
   addSprint,
+  addStudents,
+  addStudentsToTeams,
+  addTAs,
+  addTAsToTeams,
   addTeamSet,
-  addAssessment
+  createCourse,
+  deleteCourseById,
+  getAllCourses,
+  getCourseById,
+  getTeachingTeam,
+  updateCourseById,
 } from '../controllers/courseController';
 
 const router = express.Router();
@@ -22,11 +24,13 @@ router.get('/:id', getCourseById);
 router.put('/:id', updateCourseById);
 router.delete('/:id', deleteCourseById);
 router.post('/:id/students', addStudents);
-router.post('/:id/teams', addTeams);
 router.post('/:id/tas', addTAs);
+router.post('/:id/teamsets', addTeamSet);
+router.post('/:id/teams/students', addStudentsToTeams);
+router.post('/:id/teams/tas', addTAsToTeams);
+router.get('/:id/teachingteam', getTeachingTeam);
 router.post('/:id/milestones', addMilestone);
 router.post('/:id/sprints', addSprint);
-router.post('/:id/teamsets', addTeamSet)
-router.post('/:id/assessments', addAssessment)  
+router.post('/:id/assessments', addAssessments);
 
 export default router;

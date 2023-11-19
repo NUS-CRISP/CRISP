@@ -1,14 +1,14 @@
 import express from 'express';
 import {
+  approveAccounts,
   createAccount,
   getPendingAccounts,
-  approveAccount,
 } from '../controllers/accountController';
 
 const router = express.Router();
 
 router.post('/', createAccount);
 router.get('/pending', getPendingAccounts);
-router.post('/:accountId/approve', approveAccount);
+router.post('/approve', approveAccounts);
 
 export default router;

@@ -1,10 +1,13 @@
 import '@mantine/core/styles.css';
+import '@mantine/dates/styles.css';
+import '@mantine/dropzone/styles.css';
+import '@mantine/notifications/styles.css';
 
-import type { AppProps } from 'next/app';
-import Head from 'next/head';
-import { MantineProvider } from '@mantine/core';
 import RootLayout from '@/components/RootLayout';
+import { MantineProvider } from '@mantine/core';
+import { Notifications } from '@mantine/notifications';
 import { SessionProvider } from 'next-auth/react';
+import type { AppProps } from 'next/app';
 
 export default function App(props: AppProps) {
   const {
@@ -13,22 +16,13 @@ export default function App(props: AppProps) {
   } = props;
 
   return (
-    <>
-      <Head>
-        <title>Page title</title>
-        <meta
-          name="viewport"
-          content="minimum-scale=1, initial-scale=1, width=device-width"
-        />
-      </Head>
-
+    <SessionProvider session={session}>
       <MantineProvider>
-        <SessionProvider session={session}>
-          <RootLayout>
-            <Component {...pageProps} />
-          </RootLayout>
-        </SessionProvider>
+        <Notifications />
+        <RootLayout>
+          <Component {...pageProps} />
+        </RootLayout>
       </MantineProvider>
-    </>
+    </SessionProvider>
   );
 }

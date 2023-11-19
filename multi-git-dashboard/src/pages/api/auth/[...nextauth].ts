@@ -1,7 +1,7 @@
+import clientPromise from '@/lib/mongodb';
+import bcrypt from 'bcrypt';
 import NextAuth, { AuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import bcrypt from 'bcrypt';
-import clientPromise from '@/lib/mongodb';
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -30,15 +30,11 @@ export const authOptions: AuthOptions = {
           throw new Error('Account does not exist.');
         }
 
-        console.error(credentials?.password!);
-        console.error(account.password);
-
         // Validate password
         const passwordIsValid = await bcrypt.compare(
           credentials?.password || '',
           account.password || ''
         );
-        //const passwordIsValid = credentials?.password! === account.password;
 
         if (!passwordIsValid) {
           throw new Error('Invalid credentials');
@@ -53,7 +49,7 @@ export const authOptions: AuthOptions = {
           .db(process.env.DB_NAME)
           .collection('users');
 
-        const user = await usersCollection.findOne({ _id: account.userId });
+        const user = await usersCollection.findOne({ _id: account.user });
 
         return {
           id: account._id.toString(),
