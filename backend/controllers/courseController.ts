@@ -550,7 +550,7 @@ export const addAssessments = async (req: Request, res: Response) => {
         // Create a result object for each team
         teamSet.teams.forEach((team: any) => {
           const initialMarks = team.members.map((member: any) => ({
-            userId: member.identifier,
+            user: member.identifier,
             name: member.name,
             mark: 0,
           }));
@@ -572,7 +572,7 @@ export const addAssessments = async (req: Request, res: Response) => {
             marker: null,
             marks: [
               {
-                userId: student.identifier,
+                user: student.identifier,
                 name: student.name,
                 mark: 0,
               },

@@ -3,7 +3,7 @@ import mongoose, { Document, Schema, Types } from 'mongoose';
 
 export interface Result
   extends Omit<SharedResult, '_id' | 'assessment' | 'team' | 'marker'>,
-    Document {
+  Document {
   _id: Types.ObjectId;
   assessment: Types.ObjectId;
   team?: Types.ObjectId;
@@ -18,7 +18,7 @@ export const resultSchema = new Schema<Result>({
   },
   team: { type: Schema.Types.ObjectId, ref: 'Team' },
   marker: { type: Schema.Types.ObjectId, ref: 'User' },
-  marks: [{ userId: String, name: String, mark: Number }],
+  marks: [{ user: String, name: String, mark: Number }],
 });
 
 const ResultModel = mongoose.model<Result>('Result', resultSchema);

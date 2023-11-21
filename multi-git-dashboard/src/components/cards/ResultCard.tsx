@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
 import { Card, Group, Select, Table, Text } from '@mantine/core';
 import { Result } from '@shared/types/Result';
 import { User } from '@shared/types/User';
+import React, { useEffect, useState } from 'react';
 
 interface ResultCardProps {
   result: Result;
@@ -54,9 +54,9 @@ const ResultCard: React.FC<ResultCardProps> = ({
 
   const studentRows = result.marks.map(mark => {
     return (
-      <tr key={mark.userId}>
+      <tr key={mark.user}>
         <td>{mark.name}</td>
-        <td>{mark.userId}</td>
+        <td>{mark.user}</td>
         <td>{mark.mark}</td>
       </tr>
     );
