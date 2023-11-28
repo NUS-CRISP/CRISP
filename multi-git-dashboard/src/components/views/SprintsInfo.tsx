@@ -1,4 +1,4 @@
-import { Button, Container } from '@mantine/core';
+import { Button, Container, Modal } from '@mantine/core';
 import { Course } from '@shared/types/Course';
 import { useState } from 'react';
 import SprintCard from '../cards/SprintCard';
@@ -22,6 +22,10 @@ const SprintsInfo: React.FC<SprintsInfoProps> = ({ course, onUpdate }) => {
     />
   ));
 
+  const toggleForm = () => {
+    setIsCreatingSprint(o => !o);
+  };
+
   const handleSprintCreated = () => {
     setIsCreatingSprint(false);
     onUpdate();
@@ -29,19 +33,23 @@ const SprintsInfo: React.FC<SprintsInfoProps> = ({ course, onUpdate }) => {
 
   return (
     <Container>
-      {sprintCards}
       <Button
-        onClick={() => setIsCreatingSprint(!isCreatingSprint)}
-        style={{ marginTop: '16px' }}
+        onClick={toggleForm}
+        style={{ marginTop: '16px', marginBottom: '16px' }}
       >
-        {isCreatingSprint ? 'Cancel' : 'Create Sprint'}
+        Create Sprint
       </Button>
-      {isCreatingSprint && (
+      <Modal
+        opened={isCreatingSprint}
+        onClose={toggleForm}
+        title="Create Sprint"
+      >
         <SprintForm
           courseId={course._id.toString()}
           onSprintCreated={handleSprintCreated}
         />
-      )}
+      </Modal>
+      {sprintCards}
     </Container>
   );
 };

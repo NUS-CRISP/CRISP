@@ -2,14 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Card, Group, Select, Table, Text } from '@mantine/core';
 import { Result } from '@shared/types/Result';
 import { User } from '@shared/types/User';
+import { getApiUrl } from '@/lib/apiConfig';
 
 interface ResultCardProps {
   result: Result;
   teachingTeam: User[];
   assessmentId: string;
 }
-
-const backendPort = process.env.BACKEND_PORT || 3001;
 
 const ResultCard: React.FC<ResultCardProps> = ({
   result,
@@ -19,6 +18,8 @@ const ResultCard: React.FC<ResultCardProps> = ({
   const [selectedMarker, setSelectedMarker] = useState<string | null>(
     result.marker?._id || null
   );
+  const apiUrl =
+    getApiUrl() + `/assessments/${assessmentId}/results/${result._id}/marker`;
 
   useEffect(() => {
     setSelectedMarker(result.marker?._id || null);
@@ -26,16 +27,13 @@ const ResultCard: React.FC<ResultCardProps> = ({
 
   const handleMarkerChange = async (markerId: string | null) => {
     try {
-      const response = await fetch(
-        `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/assessments/${assessmentId}/results/${result._id}/marker`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ markerId }),
-        }
-      );
+      const response = await fetch(apiUrl, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ markerId }),
+      });
 
       if (!response.ok) {
         throw new Error('Failed to update the team');
@@ -63,7 +61,13 @@ const ResultCard: React.FC<ResultCardProps> = ({
   });
 
   return (
-    <Card shadow="sm" padding="lg" radius="md" withBorder>
+    <Card
+      shadow="sm"
+      padding="lg"
+      radius="md"
+      style={{ marginTop: '6px', marginBottom: '6px' }}
+      withBorder
+    >
       <div
         style={{
           display: 'flex',

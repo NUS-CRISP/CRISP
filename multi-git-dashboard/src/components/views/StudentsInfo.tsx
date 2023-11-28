@@ -1,4 +1,4 @@
-import { Button, Container, Table } from '@mantine/core';
+import { Button, Container, Modal, Table } from '@mantine/core';
 import { Course } from '@shared/types/Course';
 import { useState } from 'react';
 import StudentForm from '../forms/StudentForm';
@@ -11,6 +11,10 @@ interface StudentsInfoProps {
 const StudentsInfo: React.FC<StudentsInfoProps> = ({ course, onUpdate }) => {
   const [isCreatingStudent, setIsCreatingStudent] = useState(false);
 
+  const toggleForm = () => {
+    setIsCreatingStudent(o => !o);
+  };
+
   const handleStudentCreated = () => {
     setIsCreatingStudent(false);
     onUpdate();
@@ -18,6 +22,22 @@ const StudentsInfo: React.FC<StudentsInfoProps> = ({ course, onUpdate }) => {
 
   return (
     <Container>
+      <Button
+        onClick={toggleForm}
+        style={{ marginTop: '16px', marginBottom: '16px' }}
+      >
+        Add Student
+      </Button>
+      <Modal
+        opened={isCreatingStudent}
+        onClose={toggleForm}
+        title="Add Student"
+      >
+        <StudentForm
+          courseId={course._id}
+          onStudentCreated={handleStudentCreated}
+        />
+      </Modal>
       <Table>
         <thead>
           <tr>
@@ -36,18 +56,6 @@ const StudentsInfo: React.FC<StudentsInfoProps> = ({ course, onUpdate }) => {
           ))}
         </tbody>
       </Table>
-      <Button
-        onClick={() => setIsCreatingStudent(!isCreatingStudent)}
-        style={{ marginTop: '16px' }}
-      >
-        {isCreatingStudent ? 'Cancel' : 'Add Student'}
-      </Button>
-      {isCreatingStudent && (
-        <StudentForm
-          courseId={course._id}
-          onStudentCreated={handleStudentCreated}
-        />
-      )}
     </Container>
   );
 };

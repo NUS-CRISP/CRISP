@@ -1,4 +1,4 @@
-import { Button, Container } from '@mantine/core';
+import { Button, Container, Modal } from '@mantine/core';
 import { Course } from '@shared/types/Course';
 import { useState } from 'react';
 import MilestoneCard from '../cards/MilestoneCard';
@@ -24,6 +24,10 @@ const MilestonesInfo: React.FC<MilestonesInfoProps> = ({
     />
   ));
 
+  const toggleForm = () => {
+    setIsCreatingMilestone(o => !o);
+  };
+
   const handleMilestoneCreated = () => {
     setIsCreatingMilestone(false);
     onUpdate();
@@ -31,19 +35,23 @@ const MilestonesInfo: React.FC<MilestonesInfoProps> = ({
 
   return (
     <Container>
-      {milestoneCards}
       <Button
-        onClick={() => setIsCreatingMilestone(!isCreatingMilestone)}
-        style={{ marginTop: '16px' }}
+        onClick={toggleForm}
+        style={{ marginTop: '16px', marginBottom: '16px' }}
       >
-        {isCreatingMilestone ? 'Cancel' : 'Create Milestone'}
+        Create Milestone
       </Button>
-      {isCreatingMilestone && (
+      <Modal
+        opened={isCreatingMilestone}
+        onClose={toggleForm}
+        title="Create Milestone"
+      >
         <MilestoneForm
           courseId={course._id.toString()}
           onMilestoneCreated={handleMilestoneCreated}
         />
-      )}
+      </Modal>
+      {milestoneCards}
     </Container>
   );
 };

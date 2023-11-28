@@ -96,7 +96,12 @@ const AssessmentDetail: React.FC = () => {
           )}
         </Tabs.Panel>
         <Tabs.Panel value="results">
-          <Button onClick={toggleResultForm} style={{ marginTop: '16px', marginBottom: '16px' }}>Upload Results</Button>
+          <Button
+            onClick={toggleResultForm}
+            style={{ marginTop: '16px', marginBottom: '16px' }}
+          >
+            Upload Results
+          </Button>
           <Modal
             opened={isResultFormOpen}
             onClose={toggleResultForm}

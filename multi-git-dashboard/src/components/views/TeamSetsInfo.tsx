@@ -1,4 +1,11 @@
-import { Button, Container, Group, Tabs } from '@mantine/core';
+import {
+  Button,
+  Container,
+  Group,
+  Tabs,
+  Notification,
+  Modal,
+} from '@mantine/core';
 import { Course } from '@shared/types/Course';
 import { TeamSet } from '@shared/types/TeamSet';
 import { useState } from 'react';
@@ -6,6 +13,7 @@ import TeamCard from '../cards/TeamCard';
 import StudentTeamForm from '../forms/StudentTeamForm';
 import TATeamForm from '../forms/TATeamForm';
 import TeamSetForm from '../forms/TeamSetForm';
+import { getApiUrl } from '@/lib/apiConfig';
 
 interface TeamsInfoProps {
   course: Course;
@@ -16,6 +24,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
   const [isCreatingTeamSet, setIsCreatingTeamSet] = useState<boolean>(false);
   const [isAddingStudents, setIsAddingStudents] = useState<boolean>(false);
   const [isAddingTAs, setIsAddingTAs] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const [teamSetId, setTeamSetId] = useState<string | null>(null);
 
@@ -51,14 +60,26 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
     </Tabs.Panel>
   ));
 
+  const toggleTeamSetForm = () => {
+    setIsCreatingTeamSet(o => !o);
+  };
+
   const handleTeamSetCreated = () => {
     setIsCreatingTeamSet(false);
     onUpdate();
   };
 
+  const toggleAddStudentsForm = () => {
+    setIsAddingStudents(o => !o);
+  };
+
   const handleAddStudentsUploaded = () => {
     setIsAddingStudents(false);
     onUpdate();
+  };
+
+  const toggleAddTAsForm = () => {
+    setIsAddingTAs(o => !o);
   };
 
   const handleAddTAsUploaded = () => {
@@ -68,20 +89,24 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
 
   const handleDeleteTeamSet = async () => {
     try {
-      const response = await fetch(
-        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/teamsets/${teamSetId}`,
-        {
-          method: 'DELETE',
-        }
-      );
+      const apiUrl = getApiUrl() + `/teamsets/${teamSetId}`;
+      const response = await fetch(apiUrl, {
+        method: 'DELETE',
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to delete the TeamSet');
+        console.error('Error deleting TeamSet:', response.statusText);
+        setError('Error deleting TeamSet. Please try again.');
       }
-
+      setIsCreatingTeamSet(false);
+      setIsAddingStudents(false);
+      setIsAddingTAs(false);
+      setActiveTab(null);
+      setTeamSetId(null);
       onUpdate();
     } catch (error) {
       console.error('Error deleting TeamSet:', error);
+      setError('Error deleting TeamSet. Please try again.');
     }
   };
 
@@ -91,53 +116,72 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
         <Tabs.List style={{ display: 'flex', justifyContent: 'space-evenly' }}>
           {headers}
         </Tabs.List>
-        {panels}
-      </Tabs>
+        {error && (
+          <Notification
+            title="Error"
+            color="red"
+            onClose={() => setError(null)}
+          >
+            {error}
+          </Notification>
+        )}
+        <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
+          <Group>
+            <Button onClick={toggleTeamSetForm}>Create TeamSet</Button>
+            {activeTab && (
+              <Button onClick={toggleAddStudentsForm}>Add Students</Button>
+            )}
+            {activeTab && <Button onClick={toggleAddTAsForm}>Add TAs</Button>}
+          </Group>
 
-      <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
-        <Group>
-          <Button onClick={() => setIsCreatingTeamSet(!isCreatingTeamSet)}>
-            {isCreatingTeamSet ? 'Cancel' : 'Create TeamSet'}
-          </Button>
-          {activeTab && (
-            <Button onClick={() => setIsAddingStudents(!isAddingStudents)}>
-              {isAddingStudents ? 'Cancel' : 'Add Students'}
-            </Button>
-          )}
-          {activeTab && (
-            <Button onClick={() => setIsAddingTAs(!isAddingTAs)}>
-              {isAddingTAs ? 'Cancel' : 'Add TAs'}
+          {teamSetId && (
+            <Button color="red" onClick={handleDeleteTeamSet}>
+              Delete TeamSet
             </Button>
           )}
         </Group>
 
-        {teamSetId && (
-          <Button color="red" onClick={handleDeleteTeamSet}>
-            Delete TeamSet
-          </Button>
-        )}
-      </Group>
+        <Modal
+          opened={isCreatingTeamSet}
+          onClose={toggleTeamSetForm}
+          title="Create TeamSet"
+        >
+          <TeamSetForm
+            courseId={course._id}
+            onTeamSetCreated={handleTeamSetCreated}
+          />
+        </Modal>
 
-      {isCreatingTeamSet && (
-        <TeamSetForm
-          courseId={course._id}
-          onTeamSetCreated={handleTeamSetCreated}
-        />
-      )}
-      {isAddingStudents && activeTab && (
-        <StudentTeamForm
-          courseId={course._id}
-          teamSet={activeTab}
-          onTeamCreated={handleAddStudentsUploaded}
-        />
-      )}
-      {isAddingTAs && activeTab && (
-        <TATeamForm
-          courseId={course._id}
-          teamSet={activeTab}
-          onTeamCreated={handleAddTAsUploaded}
-        />
-      )}
+        {activeTab && (
+          <Modal
+            opened={isAddingStudents}
+            onClose={toggleAddStudentsForm}
+            title="Add Students"
+          >
+            <StudentTeamForm
+              courseId={course._id}
+              teamSet={activeTab}
+              onTeamCreated={handleAddStudentsUploaded}
+            />
+          </Modal>
+        )}
+
+        {activeTab && (
+          <Modal
+            opened={isAddingTAs}
+            onClose={toggleAddTAsForm}
+            title="Add TAs"
+          >
+            <TATeamForm
+              courseId={course._id}
+              teamSet={activeTab}
+              onTeamCreated={handleAddTAsUploaded}
+            />
+          </Modal>
+        )}
+
+        {panels}
+      </Tabs>
     </Container>
   );
 };

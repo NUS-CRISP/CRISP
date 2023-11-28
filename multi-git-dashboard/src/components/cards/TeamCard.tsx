@@ -81,7 +81,13 @@ const TeamCard: React.FC<TeamCardProps> = ({
   });
 
   return (
-    <Card shadow="sm" padding="lg" radius="md" withBorder>
+    <Card
+      shadow="sm"
+      padding="lg"
+      radius="md"
+      style={{ marginTop: '6px', marginBottom: '6px' }}
+      withBorder
+    >
       <div
         style={{
           display: 'flex',
