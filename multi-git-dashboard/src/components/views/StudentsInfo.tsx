@@ -41,17 +41,17 @@ const StudentsInfo: React.FC<StudentsInfoProps> = ({ course, onUpdate }) => {
       <Table>
         <thead>
           <tr>
-            <th>Name</th>
-            <th>ID</th>
-            <th>Git Handle</th>
+            <th style={{ textAlign: 'left' }}>Name</th>
+            <th style={{ textAlign: 'left' }}>ID</th>
+            <th style={{ textAlign: 'left' }}>Git Handle</th>
           </tr>
         </thead>
         <tbody>
           {course.students.map(student => (
             <tr key={student._id}>
-              <td>{student.name}</td>
-              <td>{student.identifier}</td>
-              <td>{student.gitHandle}</td>
+              <td style={{ textAlign: 'left' }}>{student.name}</td>
+              <td style={{ textAlign: 'left' }}>{student.identifier}</td>
+              <td style={{ textAlign: 'left' }}>{student.gitHandle}</td>
             </tr>
           ))}
         </tbody>

@@ -53,9 +53,9 @@ const ResultCard: React.FC<ResultCardProps> = ({
   const studentRows = result.marks.map(mark => {
     return (
       <tr key={mark.userId}>
-        <td>{mark.name}</td>
-        <td>{mark.userId}</td>
-        <td>{mark.mark}</td>
+        <td style={{ textAlign: 'left' }}>{mark.name}</td>
+        <td style={{ textAlign: 'left' }}>{mark.userId}</td>
+        <td style={{ textAlign: 'left' }}>{mark.mark}</td>
       </tr>
     );
   });
@@ -95,9 +95,9 @@ const ResultCard: React.FC<ResultCardProps> = ({
       <Table>
         <thead>
           <tr>
-            <th>{result.team ? 'Team Member' : 'Student'}</th>
-            <th>ID</th>
-            <th>Score</th>
+            <th style={{ textAlign: 'left' }}>{result.team ? 'Team Member' : 'Student'}</th>
+            <th style={{ textAlign: 'left' }}>ID</th>
+            <th style={{ textAlign: 'left' }}>Score</th>
           </tr>
         </thead>
         <tbody>{studentRows}</tbody>
