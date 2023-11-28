@@ -95,9 +95,8 @@ const AssessmentDetail: React.FC = () => {
             <Text>No form link provided</Text>
           )}
         </Tabs.Panel>
-
         <Tabs.Panel value="results">
-          <Button onClick={toggleResultForm}>Upload Results</Button>
+          <Button onClick={toggleResultForm} style={{ marginTop: '16px', marginBottom: '16px' }}>Upload Results</Button>
           <Modal
             opened={isResultFormOpen}
             onClose={toggleResultForm}
@@ -108,7 +107,6 @@ const AssessmentDetail: React.FC = () => {
               onResultsUploaded={onUpdate}
             />
           </Modal>
-
           {assessment?.results.map(result => (
             <ResultCard
               key={result._id}
