@@ -48,7 +48,7 @@ export const uploadResults = async (req: Request, res: Response) => {
       });
 
       for (const result of assessment.results as unknown as IResult[]) {
-        const userId = result.marks[0]?.userId;
+        const userId = result.marks[0]?.user;
         const mark = resultMap[userId];
         if (mark !== undefined) {
           result.marks[0].mark = mark;
@@ -74,7 +74,7 @@ export const uploadResults = async (req: Request, res: Response) => {
 
         if (teamResults) {
           result.marks.forEach(markEntry => {
-            const mark = teamResults[markEntry.userId];
+            const mark = teamResults[markEntry.user];
             if (mark !== undefined) {
               markEntry.mark = mark;
             }
