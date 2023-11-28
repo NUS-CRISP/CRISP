@@ -9,7 +9,7 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { TeamSet } from '@shared/types/TeamSet';
-import {  useState } from 'react';
+import { useState } from 'react';
 import CSVUpload from './CSVUpload';
 
 const backendPort = process.env.BACKEND_PORT || 3001;
@@ -38,23 +38,22 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
   });
   const [error, setError] = useState<string | null>(null);
   const apiUrl = `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/assessments`;
-  const csvTemplateHeaders = 'assessmentType,markType,frequency,granularity,teamSetName,formLink';
+  const csvTemplateHeaders =
+    'assessmentType,markType,frequency,granularity,teamSetName,formLink';
 
   const handleSubmitForm = async () => {
     console.log('Sending assessment data:', form.values);
 
     try {
-      const response = await fetch(
-        apiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            items: [form.values],
-          }),
-        }
-      );
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          items: [form.values],
+        }),
+      });
       if (response.ok) {
         const data = await response.json();
         console.log('Assessment created:', data);

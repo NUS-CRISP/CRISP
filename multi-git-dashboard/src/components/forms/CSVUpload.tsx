@@ -128,12 +128,8 @@ const CSVUpload: React.FC<CSVUploadProps> = ({
         </Group>
       </Dropzone>
       <Group style={{ marginTop: '16px' }}>
-        <Button onClick={handleSubmitCSV}>
-          {uploadButtonString}
-        </Button>
-        <Button onClick={downloadCsvTemplate}>
-          Download CSV Template
-        </Button>
+        <Button onClick={handleSubmitCSV}>{uploadButtonString}</Button>
+        <Button onClick={downloadCsvTemplate}>Download CSV Template</Button>
       </Group>
     </Box>
   );
