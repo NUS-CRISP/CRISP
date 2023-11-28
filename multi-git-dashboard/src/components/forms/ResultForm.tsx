@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Notification } from '@mantine/core';
 import CSVUpload from './CSVUpload';
-
-const backendPort = process.env.NEXT_PUBLIC_BACKEND_PORT || 3001;
+import { getApiUrl } from '@/lib/apiConfig';
 
 interface ResultFormProps {
   assessmentId: string;
@@ -14,7 +13,7 @@ const ResultForm: React.FC<ResultFormProps> = ({
   onResultsUploaded,
 }) => {
   const [error, setError] = useState<string | null>(null);
-  const apiUrl = `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/assessments/${assessmentId}/results`;
+  const apiUrl = getApiUrl() + `/assessments/${assessmentId}/results`;
   const csvTemplateHeaders = 'teamNumber,studentId,mark';
 
   return (

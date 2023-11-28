@@ -1,4 +1,5 @@
 import CourseCard from '@/components/cards/CourseCard';
+import { getApiUrl } from '@/lib/apiConfig';
 import { Button } from '@mantine/core';
 import { Course } from '@shared/types/Course';
 import Link from 'next/link';
@@ -8,6 +9,7 @@ import { useEffect, useState } from 'react';
 const CourseListPage: React.FC = () => {
   const router = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
+  const apiUrl = getApiUrl() + '/courses';
 
   useEffect(() => {
     fetchCourses();
@@ -15,9 +17,7 @@ const CourseListPage: React.FC = () => {
 
   const fetchCourses = async () => {
     try {
-      const response = await fetch(
-        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses`
-      );
+      const response = await fetch(apiUrl);
       if (response.ok) {
         const data = await response.json();
         setCourses(data);

@@ -5,9 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import ResultCard from '../../../../components/cards/ResultCard';
 import { User } from '@shared/types/User';
 import ResultForm from '@/components/forms/ResultForm';
-
-const backendPort = process.env.BACKEND_PORT || 3001;
-const apiUrl = `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/assessments/`;
+import { getApiUrl } from '@/lib/apiConfig';
 
 const AssessmentDetail: React.FC = () => {
   const router = useRouter();
@@ -18,10 +16,12 @@ const AssessmentDetail: React.FC = () => {
   const [assessment, setAssessment] = useState<Assessment | null>(null);
   const [teachingTeam, setTeachingTeam] = useState<User[]>([]);
   const [isResultFormOpen, setIsResultFormOpen] = useState(false);
+  const assessmentsApiUrl = getApiUrl() + `/assessments/${assessmentId}`;
+  const teachingTeamApiUrl = getApiUrl() + `/courses/${id}/teachingteam`;
 
   const fetchAssessment = useCallback(async () => {
     try {
-      const response = await fetch(`${apiUrl}${assessmentId}`);
+      const response = await fetch(assessmentsApiUrl);
       if (response.ok) {
         const data = await response.json();
         setAssessment(data);
@@ -35,9 +35,7 @@ const AssessmentDetail: React.FC = () => {
 
   const fetchTeachingTeam = useCallback(async () => {
     try {
-      const response = await fetch(
-        `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${id}/teachingteam`
-      );
+      const response = await fetch(teachingTeamApiUrl);
       if (response.ok) {
         const data = await response.json();
         setTeachingTeam(data);

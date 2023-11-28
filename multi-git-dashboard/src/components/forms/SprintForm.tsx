@@ -1,9 +1,8 @@
+import { getApiUrl } from '@/lib/apiConfig';
 import { Box, Button, Notification, TextInput } from '@mantine/core';
 import { DatePicker } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
-
-const backendPort = process.env.NEXT_PUBLIC_BACKEND_PORT || 3001;
 
 interface SprintFormProps {
   courseId: string | string[] | undefined;
@@ -30,21 +29,19 @@ const SprintForm: React.FC<SprintFormProps> = ({
   });
 
   const [error, setError] = useState<string | null>(null);
+  const apiUrl = getApiUrl() + `/courses/${courseId}/sprints`;
 
   const handleSubmit = async () => {
     console.log('Sending sprint data:', form.values);
 
     try {
-      const response = await fetch(
-        `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/sprints`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(form.values),
-        }
-      );
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form.values),
+      });
 
       if (response.ok) {
         const data = await response.json();

@@ -1,3 +1,4 @@
+import { getApiUrl } from '@/lib/apiConfig';
 import {
   Alert,
   Anchor,
@@ -65,17 +66,15 @@ const RegisterPage: React.FC = () => {
 
   const handleRegister = async (values: FormValues) => {
     console.log(values);
+    const apiUrl = getApiUrl() + '/accounts';
 
-    const response = await fetch(
-      `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/accounts`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(form.values),
-      }
-    );
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(form.values),
+    });
 
     if (response.ok) {
       router.push('/auth/signin?success=true');

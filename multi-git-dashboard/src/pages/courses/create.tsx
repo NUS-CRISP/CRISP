@@ -1,3 +1,4 @@
+import { getApiUrl } from '@/lib/apiConfig';
 import {
   Box,
   Button,
@@ -25,6 +26,7 @@ const CreateCoursePage: React.FC = () => {
     'idle' | 'loading' | 'success' | 'error'
   >('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const courseApiUrl = getApiUrl() + '/courses';
 
   const form = useForm({
     initialValues: {
@@ -58,16 +60,15 @@ const CreateCoursePage: React.FC = () => {
     setErrorMessage('');
 
     try {
-      const response = await fetch(
-        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/github/check-installation`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ orgName }),
-        }
-      );
+      const githubInstallationApiUrl =
+        getApiUrl() + '/github/check-installation';
+      const response = await fetch(githubInstallationApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ orgName }),
+      });
 
       if (response.ok) {
         const { installationId } = await response.json();
@@ -85,16 +86,13 @@ const CreateCoursePage: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    const response = await fetch(
-      `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(form.values),
-      }
-    );
+    const response = await fetch(courseApiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(form.values),
+    });
 
     const data = await response.json();
 

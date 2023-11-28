@@ -5,6 +5,7 @@ import SprintsInfo from '@/components/views/SprintsInfo';
 import StaffInfo from '@/components/views/StaffInfo';
 import StudentsInfo from '@/components/views/StudentsInfo';
 import TeamSetsInfo from '@/components/views/TeamSetsInfo';
+import { getApiUrl } from '@/lib/apiConfig';
 import { Container, Loader, Tabs } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { Course, Milestone, Sprint } from '@shared/types/Course';
@@ -18,6 +19,7 @@ const CourseViewPage: React.FC = () => {
   const newCourse = router.query.new === 'true';
   const [course, setCourse] = useState<Course>();
   const [teamsData, setTeamsData] = useState<TeamData[]>([]);
+  const courseApiUrl = getApiUrl() + `/courses/${id}`;
 
   useEffect(() => {
     if (newCourse) {
@@ -30,9 +32,7 @@ const CourseViewPage: React.FC = () => {
 
   const fetchCourse = useCallback(async () => {
     try {
-      const response = await fetch(
-        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${id}`
-      );
+      const response = await fetch(courseApiUrl);
       if (response.ok) {
         const data: Course = await response.json();
         if (data.milestones) {
@@ -63,9 +63,8 @@ const CourseViewPage: React.FC = () => {
 
   const fetchTeamDataForOrg = async (orgName: string) => {
     try {
-      const response = await fetch(
-        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/github/${orgName}`
-      );
+      const githubOrgApiUrl = getApiUrl() + `/github/${orgName}`;
+      const response = await fetch(githubOrgApiUrl);
       if (response.ok) {
         const data = await response.json();
         console.log(orgName);
@@ -88,12 +87,9 @@ const CourseViewPage: React.FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const deleteCourse = async () => {
     try {
-      const response = await fetch(
-        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${id}`,
-        {
-          method: 'DELETE',
-        }
-      );
+      const response = await fetch(courseApiUrl, {
+        method: 'DELETE',
+      });
       if (response.ok) {
         router.push('/courses');
       } else {
