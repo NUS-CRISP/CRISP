@@ -135,45 +135,9 @@ const GithubTeamCard: React.FC<GithubTeamCardProps> = ({
             </Grid.Col>
           </Grid>
         </Grid.Col>
-        {/* <Grid.Col span={6}>
-          <Grid>
-            <Grid.Col span={12}>
-              <Stack w={100}>
-                <Badge color="yellow">Stars: {teamData.stars}</Badge>
-                <Badge color="teal">Forks: {teamData.forks}</Badge>
-              </Stack>
-            </Grid.Col>
-            <Grid.Col span={12}>
-              <Text c="dimmed" fz="sm" mt="md">
-                Issues completed:{' '}
-                <Text span fw={500} c="bright">
-                  {completedIssues}/{totalIssues}
-                </Text>
-              </Text>
-              <RingProgress
-                roundCaps
-                thickness={6}
-                size={150}
-                sections={[
-                  { value: issuesProgress, color: theme.primaryColor },
-                ]}
-                label={
-                  <div>
-                    <Text ta="center" fz="lg">
-                      {issuesProgress.toFixed(0)}%
-                    </Text>
-                    <Text ta="center" fz="xs" c="dimmed">
-                      Completed
-                    </Text>
-                  </div>
-                }
-              />
-            </Grid.Col>
-          </Grid>
-        </Grid.Col> */}
         <Grid.Col span={6}>
           <Text size="xl" fw={700} mb={15}>
-            Contributors
+            Commits
           </Text>
           <Container>
             <BarChart width={300} height={300} data={commitsData}>
@@ -222,45 +186,6 @@ const GithubTeamCard: React.FC<GithubTeamCardProps> = ({
             {stepperSteps}
           </Stepper>
         </Grid.Col>
-
-        {/* <Grid.Col span={6}>
-          <Text size="xl" fw={700} mb={15}>
-            Progress
-          </Text>
-          <Stepper
-            active={active}
-            onStepClick={setActive}
-            orientation="vertical"
-          >
-            {stepperSteps}
-          </Stepper>
-          <Group justify="center" mt="xl">
-            <Button variant="default" onClick={prevStep}>
-              Back
-            </Button>
-            <Button onClick={nextStep}>Next step</Button>
-          </Group>
-        </Grid.Col>
-        <Grid.Col span={6}>
-          <Container>
-            <BarChart width={300} height={250} data={prsData}>
-              <CartesianGrid stroke="#f5f5f5" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="prs" fill="#8884d8" />
-            </BarChart>
-            <BarChart width={300} height={250} data={reviewsData}>
-              <CartesianGrid stroke="#f5f5f5" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="reviews" fill="#8884d8" />
-            </BarChart>
-          </Container>
-        </Grid.Col> */}
       </Grid>
     </Card>
   );
