@@ -15,6 +15,7 @@ const ResultForm: React.FC<ResultFormProps> = ({
 }) => {
   const [error, setError] = useState<string | null>(null);
   const apiUrl = `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/assessments/${assessmentId}/results`;
+  const csvTemplateHeaders = 'teamNumber,studentId,mark';
 
   return (
     <Box>
@@ -24,7 +25,7 @@ const ResultForm: React.FC<ResultFormProps> = ({
         </Notification>
       )}
       <CSVUpload
-        templateHeaders="teamNumber,studentId,mark"
+        templateHeaders={csvTemplateHeaders}
         onProcessComplete={onResultsUploaded}
         onError={setError}
         downloadFilename="results_template.csv"
