@@ -16,10 +16,6 @@ const ResultForm: React.FC<ResultFormProps> = ({
   const [error, setError] = useState<string | null>(null);
   const apiUrl = `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/assessments/${assessmentId}/results`;
 
-  const handleError = (message: string) => {
-    setError(message);
-  };
-
   return (
     <Box>
       {error && (
@@ -30,7 +26,7 @@ const ResultForm: React.FC<ResultFormProps> = ({
       <CSVUpload
         templateHeaders="teamNumber,studentId,mark"
         onProcessComplete={onResultsUploaded}
-        onError={handleError}
+        onError={setError}
         downloadFilename="results_template.csv"
         uploadButtonString="Upload Results"
         urlString={apiUrl}
