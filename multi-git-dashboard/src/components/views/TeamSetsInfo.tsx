@@ -97,12 +97,14 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
       if (!response.ok) {
         console.error('Error deleting TeamSet:', response.statusText);
         setError('Error deleting TeamSet. Please try again.');
+        return;
       }
       setIsCreatingTeamSet(false);
       setIsAddingStudents(false);
       setIsAddingTAs(false);
       setActiveTab(null);
       setTeamSetId(null);
+      console.log('TeamSet deleted');
       onUpdate();
     } catch (error) {
       console.error('Error deleting TeamSet:', error);

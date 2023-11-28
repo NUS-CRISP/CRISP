@@ -76,12 +76,12 @@ const RegisterPage: React.FC = () => {
       body: JSON.stringify(form.values),
     });
 
-    if (response.ok) {
-      router.push('/auth/signin?success=true');
-    } else {
+    if (!response.ok) {
       const { error } = await response.json();
       setErrors({ ...errors, registerError: error });
+      return;
     }
+    router.push('/auth/signin?success=true');
   };
 
   return (

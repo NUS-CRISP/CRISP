@@ -80,14 +80,14 @@ const CSVUpload: React.FC<CSVUploadProps> = ({
         }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Items created:', data);
-        onProcessComplete();
-      } else {
+      if (!response.ok) {
         console.error('Error uploading csv items:', response.statusText);
         onError('Error uploading items. Please try again.');
+        return;
       }
+      const data = await response.json();
+      console.log('Items created:', data);
+      onProcessComplete();
     } catch (error) {
       console.error('Error uploading csv items:', error);
       onError('Error uploading items. Please try again.');

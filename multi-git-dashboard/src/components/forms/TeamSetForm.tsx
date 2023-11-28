@@ -35,14 +35,14 @@ const TeamSetForm: React.FC<TeamSetFormProps> = ({
         body: JSON.stringify(form.values),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('TeamSet created:', data);
-        onTeamSetCreated();
-      } else {
+      if (!response.ok) {
         console.error('Error creating teamset:', response.statusText);
         setError('Error creating teamset. Please try again.');
+        return;
       }
+      const data = await response.json();
+      console.log('TeamSet created:', data);
+      onTeamSetCreated();
     } catch (error) {
       console.error('Error creating teamset:', error);
       setError('Error creating teamset. Please try again.');

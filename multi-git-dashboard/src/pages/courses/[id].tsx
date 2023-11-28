@@ -33,28 +33,28 @@ const CourseViewPage: React.FC = () => {
   const fetchCourse = useCallback(async () => {
     try {
       const response = await fetch(courseApiUrl);
-      if (response.ok) {
-        const data: Course = await response.json();
-        if (data.milestones) {
-          data.milestones = data.milestones.map((milestone: Milestone) => ({
-            ...milestone,
-            dateline: new Date(milestone.dateline),
-          }));
-        }
-        if (data.sprints) {
-          data.sprints = data.sprints.map((sprint: Sprint) => ({
-            ...sprint,
-            startDate: new Date(sprint.startDate),
-            endDate: new Date(sprint.endDate),
-          }));
-        }
-        setCourse(data);
-
-        if (data.courseType === 'GitHubOrg' && data.gitHubOrgName) {
-          fetchTeamDataForOrg(data.gitHubOrgName);
-        }
-      } else {
+      if (!response.ok) {
         console.error('Error fetching course:', response.statusText);
+        return;
+      }
+      const data: Course = await response.json();
+      if (data.milestones) {
+        data.milestones = data.milestones.map((milestone: Milestone) => ({
+          ...milestone,
+          dateline: new Date(milestone.dateline),
+        }));
+      }
+      if (data.sprints) {
+        data.sprints = data.sprints.map((sprint: Sprint) => ({
+          ...sprint,
+          startDate: new Date(sprint.startDate),
+          endDate: new Date(sprint.endDate),
+        }));
+      }
+      setCourse(data);
+
+      if (data.courseType === 'GitHubOrg' && data.gitHubOrgName) {
+        fetchTeamDataForOrg(data.gitHubOrgName);
       }
     } catch (error) {
       console.error('Error fetching course:', error);
@@ -65,14 +65,14 @@ const CourseViewPage: React.FC = () => {
     try {
       const githubOrgApiUrl = getApiUrl() + `/github/${orgName}`;
       const response = await fetch(githubOrgApiUrl);
-      if (response.ok) {
-        const data = await response.json();
-        console.log(orgName);
-        console.log('Team data:', data);
-        setTeamsData(data.teamDatas);
-      } else {
+      if (!response.ok) {
         console.error('Error fetching team data:', response.statusText);
+        return;
       }
+      const data = await response.json();
+      console.log(orgName);
+      console.log('Team data:', data);
+      setTeamsData(data.teamDatas);
     } catch (error) {
       console.error('Error fetching team data:', error);
     }
@@ -90,11 +90,11 @@ const CourseViewPage: React.FC = () => {
       const response = await fetch(courseApiUrl, {
         method: 'DELETE',
       });
-      if (response.ok) {
-        router.push('/courses');
-      } else {
+      if (!response.ok) {
         console.error('Error deleting course:', response.statusText);
+        return;
       }
+      router.push('/courses');
     } catch (error) {
       console.error('Error deleting course:', error);
     }

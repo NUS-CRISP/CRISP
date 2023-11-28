@@ -22,12 +22,12 @@ const AssessmentDetail: React.FC = () => {
   const fetchAssessment = useCallback(async () => {
     try {
       const response = await fetch(assessmentsApiUrl);
-      if (response.ok) {
-        const data = await response.json();
-        setAssessment(data);
-      } else {
+      if (!response.ok) {
         console.error('Error fetching assessment:', response.statusText);
+        return;
       }
+      const data = await response.json();
+      setAssessment(data);
     } catch (error) {
       console.error('Error fetching assessment:', error);
     }
@@ -36,12 +36,12 @@ const AssessmentDetail: React.FC = () => {
   const fetchTeachingTeam = useCallback(async () => {
     try {
       const response = await fetch(teachingTeamApiUrl);
-      if (response.ok) {
-        const data = await response.json();
-        setTeachingTeam(data);
-      } else {
+      if (!response.ok) {
         console.error('Error fetching Teaching Team:', response.statusText);
+        return;
       }
+      const data = await response.json();
+      setTeachingTeam(data);
     } catch (error) {
       console.error('Error fetching Teaching Team:', error);
     }

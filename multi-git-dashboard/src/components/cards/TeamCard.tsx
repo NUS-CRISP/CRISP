@@ -35,7 +35,8 @@ const TeamCard: React.FC<TeamCardProps> = ({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete the team');
+        console.error('Error deleting team:', response.statusText);
+        return;
       }
       console.log('Team deleted');
       onTeamDeleted();
@@ -55,7 +56,8 @@ const TeamCard: React.FC<TeamCardProps> = ({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update the team');
+        console.error('Error updating team:', response.statusText);
+        return;
       }
       console.log('Team updated');
       setSelectedTA(TAId);

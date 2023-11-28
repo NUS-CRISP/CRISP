@@ -18,12 +18,12 @@ const CourseListPage: React.FC = () => {
   const fetchCourses = async () => {
     try {
       const response = await fetch(apiUrl);
-      if (response.ok) {
-        const data = await response.json();
-        setCourses(data);
-      } else {
+      if (!response.ok) {
         console.error('Error fetching courses:', response.statusText);
+        return;
       }
+      const data = await response.json();
+      setCourses(data);
     } catch (error) {
       console.error('Error fetching courses:', error);
     }

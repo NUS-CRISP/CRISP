@@ -41,14 +41,14 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({
         body: JSON.stringify(form.values),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Milestone created:', data);
-        onMilestoneCreated();
-      } else {
+      if (!response.ok) {
         console.error('Error creating milestone:', response.statusText);
         setError('Error creating milestone. Please try again.');
+        return;
       }
+      const data = await response.json();
+      console.log('Milestone created:', data);
+      onMilestoneCreated();
     } catch (error) {
       console.error('Error creating milestone:', error);
       setError('Error creating milestone. Please try again.');

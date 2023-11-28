@@ -152,15 +152,16 @@ const AdminPage: React.FC = () => {
       body: JSON.stringify({ ids }),
     });
 
-    if (response.ok) {
-      // Remove accounts from the list of pending accounts
-      setPendingAccounts(
-        pendingAccounts.filter(account => !ids.includes(account._id))
-      );
-      setFilteredAccounts(
-        filteredAccounts.filter(account => !ids.includes(account._id))
-      );
+    if (!response.ok) {
+      return;
     }
+    // Remove accounts from the list of pending accounts
+    setPendingAccounts(
+      pendingAccounts.filter(account => !ids.includes(account._id))
+    );
+    setFilteredAccounts(
+      filteredAccounts.filter(account => !ids.includes(account._id))
+    );
   };
 
   useEffect(() => {

@@ -59,14 +59,14 @@ const TATeamForm: React.FC<TATeamFormProps> = ({
           ],
         }),
       });
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Team created:', data);
-        onTeamCreated();
-      } else {
+      if (!response.ok) {
         console.error('Error creating team:', response.statusText);
         setError('Error creating team. Please try again.');
+        return;
       }
+      const data = await response.json();
+      console.log('Team created:', data);
+      onTeamCreated();
     } catch (error) {
       console.error('Error creating team:', error);
       setError('Error creating team. Please try again.');
