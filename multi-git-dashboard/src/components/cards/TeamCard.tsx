@@ -31,9 +31,8 @@ const TeamCard: React.FC<TeamCardProps> = ({
   const handleDelete = async () => {
     try {
       const response = await fetch(apiUrl, {
-          method: 'DELETE',
-        }
-      );
+        method: 'DELETE',
+      });
 
       if (!response.ok) {
         throw new Error('Failed to delete the team');
@@ -48,13 +47,12 @@ const TeamCard: React.FC<TeamCardProps> = ({
   const handleTAChange = async (TAId: string | null) => {
     try {
       const response = await fetch(apiUrl, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ TA: TAId }),
-        }
-      );
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ TA: TAId }),
+      });
 
       if (!response.ok) {
         throw new Error('Failed to update the team');

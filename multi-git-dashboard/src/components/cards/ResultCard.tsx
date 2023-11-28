@@ -95,7 +95,9 @@ const ResultCard: React.FC<ResultCardProps> = ({
       <Table>
         <thead>
           <tr>
-            <th style={{ textAlign: 'left' }}>{result.team ? 'Team Member' : 'Student'}</th>
+            <th style={{ textAlign: 'left' }}>
+              {result.team ? 'Team Member' : 'Student'}
+            </th>
             <th style={{ textAlign: 'left' }}>ID</th>
             <th style={{ textAlign: 'left' }}>Score</th>
           </tr>
