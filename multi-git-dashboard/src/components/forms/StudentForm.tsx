@@ -3,6 +3,8 @@ import { useForm } from '@mantine/form';
 import { useState } from 'react';
 import CSVUpload from './CSVUpload';
 
+const backendPort = process.env.NEXT_PUBLIC_BACKEND_PORT || 3001;
+
 interface StudentFormProps {
   courseId: string | string[] | undefined;
   onStudentCreated: () => void;
@@ -21,7 +23,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
     },
   });
   const [error, setError] = useState<string | null>(null);
-  const apiUrl = `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${courseId}/students`;
+  const apiUrl = `${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/students`;
   const csvTemplateHeaders = 'name,identifier,email,gitHandle';
 
   const handleSubmitForm = async () => {

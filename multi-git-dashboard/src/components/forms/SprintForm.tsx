@@ -3,7 +3,7 @@ import { DatePicker } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
 
-const backendPort = process.env.BACKEND_PORT || 3001;
+const backendPort = process.env.NEXT_PUBLIC_BACKEND_PORT || 3001;
 
 interface SprintFormProps {
   courseId: string | string[] | undefined;
@@ -36,7 +36,7 @@ const SprintForm: React.FC<SprintFormProps> = ({
 
     try {
       const response = await fetch(
-        `http://localhost:${backendPort}/api/courses/${courseId}/sprints`,
+        `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/sprints`,
         {
           method: 'POST',
           headers: {

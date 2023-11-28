@@ -14,6 +14,8 @@ import { saveAs } from 'file-saver';
 import Papa, { ParseResult } from 'papaparse';
 import { useCallback, useState } from 'react';
 
+const backendPort = process.env.NEXT_PUBLIC_BACKEND_PORT || 3001;
+
 interface TAFormProps {
   courseId: string | string[] | undefined;
   onTACreated: () => void;

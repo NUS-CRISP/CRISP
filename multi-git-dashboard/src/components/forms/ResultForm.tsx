@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Box, Notification } from '@mantine/core';
 import CSVUpload from './CSVUpload';
 
-const backendPort = process.env.BACKEND_PORT || 3001;
+const backendPort = process.env.NEXT_PUBLIC_BACKEND_PORT || 3001;
 
 interface ResultFormProps {
   assessmentId: string;

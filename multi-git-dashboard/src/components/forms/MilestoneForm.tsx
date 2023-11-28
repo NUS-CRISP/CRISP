@@ -3,6 +3,8 @@ import { DatePicker } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
 
+const backendPort = process.env.NEXT_PUBLIC_BACKEND_PORT || 3001;
+
 interface MilestoneFormProps {
   courseId: string | string[] | undefined;
   onMilestoneCreated: () => void;
@@ -26,14 +28,13 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({
   });
 
   const [error, setError] = useState<string | null>(null);
+  const apiUrl = `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/milestones`;
 
   const handleSubmit = async () => {
     console.log('Sending milestone data:', form.values);
 
     try {
-      const response = await fetch(
-        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${courseId}/milestones`,
-        {
+      const response = await fetch(apiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

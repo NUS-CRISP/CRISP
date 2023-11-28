@@ -3,7 +3,7 @@ import { useForm } from '@mantine/form';
 import { useState } from 'react';
 import CSVUpload from './CSVUpload';
 
-const backendPort = process.env.BACKEND_PORT || 3001;
+const backendPort = process.env.NEXT_PUBLIC_BACKEND_PORT || 3001;
 
 interface TATeamFormProps {
   courseId: string | string[] | undefined;

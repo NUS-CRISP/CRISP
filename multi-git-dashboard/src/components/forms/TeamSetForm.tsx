@@ -2,6 +2,8 @@ import { Box, Button, Notification, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
 
+const backendPort = process.env.NEXT_PUBLIC_BACKEND_PORT || 3001;
+
 interface TeamSetFormProps {
   courseId: string;
   onTeamSetCreated: () => void;
@@ -20,14 +22,13 @@ const TeamSetForm: React.FC<TeamSetFormProps> = ({
   });
 
   const [error, setError] = useState<string | null>(null);
+  const apiURL = `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${courseId}/teamsets`;
 
   const handleSubmit = async () => {
     console.log('Sending teamset data:', form.values);
 
     try {
-      const response = await fetch(
-        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${courseId}/teamsets`,
-        {
+      const response = await fetch(apiURL, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
