@@ -1,4 +1,3 @@
-// CSVUpload.tsx
 import React, { useState, useCallback } from 'react';
 import { Box, Button, Group, Text } from '@mantine/core';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
@@ -13,6 +12,7 @@ interface CSVUploadProps {
   downloadFilename: string;
   uploadButtonString: string;
   urlString: string;
+  transformFunction?: (data: unknown[]) => unknown[];
 }
 
 const CSVUpload: React.FC<CSVUploadProps> = ({
@@ -22,6 +22,7 @@ const CSVUpload: React.FC<CSVUploadProps> = ({
   downloadFilename,
   uploadButtonString,
   urlString,
+  transformFunction,
 }) => {
   const [items, setItems] = useState<unknown[]>([]);
 
@@ -34,7 +35,11 @@ const CSVUpload: React.FC<CSVUploadProps> = ({
             header: true,
             skipEmptyLines: true,
             complete: results => {
-              setItems(results.data);
+              let data = results.data;
+              if (transformFunction) {
+                data = transformFunction(data);
+              }
+              setItems(data);
             },
             error: (error: Error) => {
               console.error('Error parsing CSV:', error.message);
