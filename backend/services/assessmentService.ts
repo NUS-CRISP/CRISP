@@ -9,14 +9,14 @@ interface ResultItem {
   mark: number;
 }
 
-export async function getAssessment(assessmentId: string) {
+export async function getAssessmentById(assessmentId: string) {
   return await Assessment.findById(assessmentId).populate({
     path: 'results',
     populate: ['team', 'marker'],
   });
 }
 
-export async function uploadAssessmentResults(
+export async function uploadAssessmentResultsById(
   assessmentId: string,
   results: ResultItem[]
 ) {
@@ -70,7 +70,7 @@ export async function uploadAssessmentResults(
   }
 }
 
-export async function updateAssessmentResultMarker(
+export async function updateAssessmentResultMarkerById(
   assessmentId: string,
   resultId: string,
   markerId: string

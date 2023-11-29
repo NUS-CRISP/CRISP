@@ -1,13 +1,13 @@
 import express from 'express';
 import {
-  getAssessmentById,
+  getAssessment,
   uploadResults,
   updateResultMarker,
 } from '../controllers/assessmentController';
 
 const router = express.Router();
 
-router.get('/:assessmentId', getAssessmentById);
+router.get('/:assessmentId', getAssessment);
 router.post('/:assessmentId/results/', uploadResults);
 router.patch('/:assessmentId/results/:resultId/marker', updateResultMarker);
 
