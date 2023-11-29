@@ -42,18 +42,14 @@ export const checkInstallation = async (req: Request, res: Response) => {
     res.status(200).json({ installationId });
   } catch (error) {
     if (error instanceof RequestError && error.status === 404) {
-      res
-        .status(404)
-        .json({
-          message:
-            'The GitHub App is not installed on the specified organization.',
-        });
+      res.status(404).json({
+        message:
+          'The GitHub App is not installed on the specified organization.',
+      });
     } else {
-      res
-        .status(500)
-        .json({
-          message: 'An error occurred while checking the installation status.',
-        });
+      res.status(500).json({
+        message: 'An error occurred while checking the installation status.',
+      });
     }
     return false;
   }

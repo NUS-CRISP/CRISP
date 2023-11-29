@@ -531,7 +531,6 @@ export const addAssessments = async (req: Request, res: Response) => {
           populate: ['members', 'TA'],
         });
 
-
         if (!teamSet) continue;
         assessment.teamSet = teamSet._id;
         // Create a result object for each team
