@@ -2,6 +2,7 @@
 import bcrypt from 'bcrypt';
 import Account from '../models/Account';
 import User from '../models/User';
+import { BadRequestError } from './errors';
 
 export const createNewAccount = async (
   identifier: string,
@@ -12,7 +13,7 @@ export const createNewAccount = async (
 ) => {
   const existingAccount = await Account.findOne({ email });
   if (existingAccount) {
-    throw new Error('Account with this email already exists.');
+    throw new BadRequestError('Account with this email already exists.');
   }
   const salt = await bcrypt.genSalt();
   const passwordHash = await bcrypt.hash(password, salt);

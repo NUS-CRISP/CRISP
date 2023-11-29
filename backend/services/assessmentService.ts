@@ -2,6 +2,7 @@ import { ObjectId } from 'mongodb';
 import Assessment from '../models/Assessment';
 import Result, { Result as IResult } from '../models/Result';
 import Team, { Team as ITeam } from '../models/Team';
+import { NotFoundError } from './errors';
 
 interface ResultItem {
   teamNumber: number;
@@ -9,17 +10,21 @@ interface ResultItem {
   mark: number;
 }
 
-export async function getAssessmentById(assessmentId: string) {
-  return await Assessment.findById(assessmentId).populate({
+export const getAssessmentById = async (assessmentId: string) => {
+  const assessment = await Assessment.findById(assessmentId).populate({
     path: 'results',
     populate: ['team', 'marker'],
   });
+  if (!assessment) {
+    throw new NotFoundError('Assessment not found');
+  }
+  return assessment;
 }
 
-export async function uploadAssessmentResultsById(
+export const uploadAssessmentResultsById = async (
   assessmentId: string,
   results: ResultItem[]
-) {
+) => {
   const assessment = await Assessment.findById(assessmentId).populate({
     path: 'results',
     populate: {
@@ -28,7 +33,7 @@ export async function uploadAssessmentResultsById(
     },
   });
   if (!assessment) {
-    throw new Error('Assessment not found');
+    throw new NotFoundError('Assessment not found');
   }
   if (assessment.granularity == 'individual') {
     const resultMap: Record<string, number> = {};
@@ -70,19 +75,19 @@ export async function uploadAssessmentResultsById(
   }
 }
 
-export async function updateAssessmentResultMarkerById(
+export const updateAssessmentResultMarkerById = async (
   assessmentId: string,
   resultId: string,
   markerId: string
-) {
+) => {
   const assessment =
     await Assessment.findById(assessmentId).populate('results');
   if (!assessment) {
-    throw new Error('Assessment not found');
+    throw new NotFoundError('Assessment not found');
   }
   const resultToUpdate = await Result.findById(resultId);
   if (!resultToUpdate || !resultToUpdate.assessment.equals(assessment._id)) {
-    throw new Error('Result not found');
+    throw new NotFoundError('Result not found');
   }
   resultToUpdate.marker = markerId as unknown as ObjectId;
   await resultToUpdate.save();

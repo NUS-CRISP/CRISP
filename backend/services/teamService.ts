@@ -1,11 +1,12 @@
 // teamService.ts
 import Team from '../models/Team';
 import TeamSet from '../models/TeamSet';
+import { NotFoundError } from './errors';
 
 export const deleteTeamById = async (teamId: string) => {
   const team = await Team.findById(teamId);
   if (!team) {
-    throw new Error('Team not found');
+    throw new NotFoundError('Team not found');
   }
   const teamSet = await TeamSet.findById(team.teamSet);
   if (teamSet && teamSet.teams) {
@@ -21,6 +22,6 @@ export const deleteTeamById = async (teamId: string) => {
 export const updateTeamById = async (teamId: string, updateData: any) => {
   const updatedTeam = await Team.findByIdAndUpdate(teamId, updateData, { new: true });
   if (!updatedTeam) {
-    throw new Error('Team not found');
+    throw new NotFoundError('Team not found');
   }
 };

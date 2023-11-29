@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { approveAccountByIds, createNewAccount, getAllPendingAccounts } from '../services/accountService';
+import { BadRequestError } from '../services/errors';
 
 export const createAccount = async (req: Request, res: Response) => {
   const { identifier, name, email, password, role } = req.body;
@@ -8,9 +9,10 @@ export const createAccount = async (req: Request, res: Response) => {
     await createNewAccount(identifier, name, email, password, role);
     res.status(201).send({ message: 'Account created' });
   } catch (error) {
-    if (error instanceof Error && error.message === 'Account with this email already exists.') {
+    if (error instanceof BadRequestError) {
       res.status(400).send({ error: error.message });
     } else {
+      console.error('Error creating account:', error);
       res.status(500).send({ error: 'Error creating account' });
     }
   }
@@ -21,6 +23,7 @@ export const getPendingAccounts = async (req: Request, res: Response) => {
     const accounts = await getAllPendingAccounts();
     res.status(200).send(accounts);
   } catch (error) {
+    console.error('Error getting pending accounts:', error);
     res.status(500).send({ error: 'Error getting pending accounts' });
   }
 };
@@ -32,6 +35,7 @@ export const approveAccounts = async (req: Request, res: Response) => {
     await approveAccountByIds(ids);
     res.status(200).send({ message: 'Accounts approved' });
   } catch (error) {
+    console.error('Error approving accounts:', error);
     res.status(500).send({ error: 'Error approving accounts' });
   }
 };

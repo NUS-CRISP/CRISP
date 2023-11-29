@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { deleteTeamSetById } from '../services/teamSetService';
+import { NotFoundError } from '../services/errors';
 
 export const deleteTeamSet = async (req: Request, res: Response) => {
   const teamSetId = req.params.id;
@@ -7,7 +8,11 @@ export const deleteTeamSet = async (req: Request, res: Response) => {
     await deleteTeamSetById(teamSetId);
     return res.status(200).json({ message: 'TeamSet deleted successfully' });
   } catch (error) {
-    console.error('Error deleting TeamSet:', error);
-    res.status(400).json({ error: 'Failed to delete TeamSet' });
+    if (error instanceof NotFoundError) {
+      res.status(404).send({ error: error.message });
+    } else {
+      console.error('Error deleting TeamSet:', error);
+      res.status(500).json({ error: 'Failed to delete TeamSet' });
+    }
   }
 };
