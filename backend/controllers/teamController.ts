@@ -7,16 +7,18 @@ export const deleteTeam = async (req: Request, res: Response) => {
     await deleteTeamById(teamId);
     return res.status(200).json({ message: 'Team deleted successfully' });
   } catch (error) {
-    res.status(400).json({ error: 'Failed to delete the team' });
+    console.error('Error deleting team:', error);
+    res.status(400).json({ error: 'Failed to delete team' });
   }
 };
 
 export const updateTeam = async (req: Request, res: Response) => {
   const teamId = req.params.id;
   try {
-    const updatedTeam = await updateTeamById(teamId, req.body);
-    res.json(updatedTeam);
+    await updateTeamById(teamId, req.body);
+    res.status(200).json({ message: 'Team updated successfully' });
   } catch (error) {
+    console.error('Error updating team:', error);
     res.status(400).json({ error: 'Failed to update team' });
   }
 };

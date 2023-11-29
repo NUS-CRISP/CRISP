@@ -23,5 +23,4 @@ export const updateTeamById = async (teamId: string, updateData: any) => {
   if (!updatedTeam) {
     throw new Error('Team not found');
   }
-  return updatedTeam;
 };

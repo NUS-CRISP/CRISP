@@ -14,6 +14,7 @@ export const getAssessment = async (req: Request, res: Response) => {
     }
     res.status(200).json(assessment);
   } catch (error) {
+    console.error('Error retrieving assessment:', error);
     res.status(400).json({ error: 'Failed to retrieve assessment' });
   }
 };
