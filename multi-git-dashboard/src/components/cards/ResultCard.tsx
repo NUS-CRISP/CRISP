@@ -53,9 +53,9 @@ const ResultCard: React.FC<ResultCardProps> = ({
 
   const studentRows = result.marks.map(mark => {
     return (
-      <tr key={mark.userId}>
+      <tr key={mark.user}>
         <td style={{ textAlign: 'left' }}>{mark.name}</td>
-        <td style={{ textAlign: 'left' }}>{mark.userId}</td>
+        <td style={{ textAlign: 'left' }}>{mark.user}</td>
         <td style={{ textAlign: 'left' }}>{mark.mark}</td>
       </tr>
     );
