@@ -38,7 +38,7 @@ const CourseListPage: React.FC = () => {
         ) : (
           <div className="course-card-list">
             {courses.map(course => (
-              <Link key={course._id.toString()} href={`/courses/${course._id}`}>
+              <Link key={course._id.toString()} style={{ textDecoration: 'none' }} href={`/courses/${course._id}`} >
                 <CourseCard
                   key={course._id.toString()}
                   name={course.name}

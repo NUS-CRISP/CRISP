@@ -19,6 +19,7 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
   const assessmentCards = course.assessments.map(assessment => (
     <Link
       key={assessment._id}
+      style={{ textDecoration: 'none' }}
       href={`/courses/${course._id}/assessments/${assessment._id}`}
       passHref
     >
