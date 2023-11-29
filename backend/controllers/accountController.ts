@@ -1,5 +1,9 @@
 import { Request, Response } from 'express';
-import { approveAccountByIds, createNewAccount, getAllPendingAccounts } from '../services/accountService';
+import {
+  approveAccountByIds,
+  createNewAccount,
+  getAllPendingAccounts,
+} from '../services/accountService';
 import { BadRequestError } from '../services/errors';
 
 export const createAccount = async (req: Request, res: Response) => {

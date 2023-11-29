@@ -20,7 +20,9 @@ export const deleteTeamById = async (teamId: string) => {
 };
 
 export const updateTeamById = async (teamId: string, updateData: any) => {
-  const updatedTeam = await Team.findByIdAndUpdate(teamId, updateData, { new: true });
+  const updatedTeam = await Team.findByIdAndUpdate(teamId, updateData, {
+    new: true,
+  });
   if (!updatedTeam) {
     throw new NotFoundError('Team not found');
   }

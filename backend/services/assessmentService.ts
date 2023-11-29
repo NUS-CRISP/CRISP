@@ -19,7 +19,7 @@ export const getAssessmentById = async (assessmentId: string) => {
     throw new NotFoundError('Assessment not found');
   }
   return assessment;
-}
+};
 
 export const uploadAssessmentResultsById = async (
   assessmentId: string,
@@ -73,7 +73,7 @@ export const uploadAssessmentResultsById = async (
       await result.save();
     }
   }
-}
+};
 
 export const updateAssessmentResultMarkerById = async (
   assessmentId: string,
@@ -91,4 +91,4 @@ export const updateAssessmentResultMarkerById = async (
   }
   resultToUpdate.marker = markerId as unknown as ObjectId;
   await resultToUpdate.save();
-}
+};
