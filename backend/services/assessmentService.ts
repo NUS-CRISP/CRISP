@@ -2,7 +2,7 @@ import { ObjectId } from 'mongodb';
 import mongoose from 'mongoose';
 import AssessmentModel from '../models/Assessment';
 import ResultModel, { Result } from '../models/Result';
-import TeamModel, { Team } from '../models/Team';
+import { Team } from '../models/Team';
 import CourseModel from '../models/Course';
 import TeamSetModel from '../models/TeamSet';
 import { BadRequestError, NotFoundError } from './errors';
