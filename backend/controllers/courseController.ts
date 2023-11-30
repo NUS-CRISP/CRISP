@@ -141,6 +141,8 @@ export const addTeamSet = async (req: Request, res: Response) => {
   } catch (error) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
+    } else if (error instanceof BadRequestError) {
+      res.status(400).json({ error: error.message });
     } else {
       console.error('Error creating team set:', error);
       res.status(500).json({ error: 'Failed to create team set' });
