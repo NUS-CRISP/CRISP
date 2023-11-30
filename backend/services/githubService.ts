@@ -1,7 +1,7 @@
 import { RequestError } from 'octokit';
 import { getGitHubApp } from '../utils/github';
-import { NotFoundError } from './errors';
 import TeamData from '../models/TeamData';
+import { NotFoundError } from './errors';
 
 export const fetchAllTeamData = async () => {
   return await TeamData.find({});

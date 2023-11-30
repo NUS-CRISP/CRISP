@@ -3,10 +3,10 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose, { ConnectOptions } from 'mongoose';
 import {
   createCourse,
-  deleteCourseById,
-  getAllCourses,
-  getCourseById,
-  updateCourseById,
+  deleteCourse,
+  getCourses,
+  getCourse,
+  updateCourse,
 } from '../../controllers/courseController';
 import CourseModel from '../../models/Course';
 import TeamModel from '../../models/Team';
@@ -90,7 +90,7 @@ describe('Course Controller', () => {
         json: jest.fn(),
       };
 
-      await getAllCourses(req as Request, res as Response);
+      await getCourses(req as Request, res as Response);
 
       // Expect that the response JSON contains the array of courses
       expect(res.json).toHaveBeenCalledWith(mockCourses);
@@ -108,7 +108,7 @@ describe('Course Controller', () => {
         json: jest.fn(),
       };
 
-      await getAllCourses(req as Request, res as Response);
+      await getCourses(req as Request, res as Response);
 
       expect(res.json).toHaveBeenCalledWith({
         error: 'Failed to fetch courses',
@@ -133,7 +133,7 @@ describe('Course Controller', () => {
         json: jest.fn(),
       };
 
-      await getCourseById(req as Request, res as Response);
+      await getCourse(req as Request, res as Response);
 
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining(courseData)
@@ -147,7 +147,7 @@ describe('Course Controller', () => {
         json: jest.fn(),
       };
 
-      await getCourseById(req as Request, res as Response);
+      await getCourse(req as Request, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
@@ -164,7 +164,7 @@ describe('Course Controller', () => {
         json: jest.fn(),
       };
 
-      await getCourseById(req as Request, res as Response);
+      await getCourse(req as Request, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
@@ -194,7 +194,7 @@ describe('Course Controller', () => {
         json: jest.fn(),
       };
 
-      await updateCourseById(req as Request, res as Response);
+      await updateCourse(req as Request, res as Response);
 
       const updatedCourse = await CourseModel.findById(newCourse._id);
 
@@ -212,7 +212,7 @@ describe('Course Controller', () => {
         json: jest.fn(),
       };
 
-      await updateCourseById(req as Request, res as Response);
+      await updateCourse(req as Request, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
@@ -230,7 +230,7 @@ describe('Course Controller', () => {
         json: jest.fn(),
       };
 
-      await updateCourseById(req as Request, res as Response);
+      await updateCourse(req as Request, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
@@ -253,7 +253,7 @@ describe('Course Controller', () => {
         json: jest.fn(),
       };
 
-      await deleteCourseById(req as Request, res as Response);
+      await deleteCourse(req as Request, res as Response);
 
       const deletedCourse = await CourseModel.findById(newCourse._id);
 
@@ -272,7 +272,7 @@ describe('Course Controller', () => {
         json: jest.fn(),
       };
 
-      await deleteCourseById(req as Request, res as Response);
+      await deleteCourse(req as Request, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
@@ -290,7 +290,7 @@ describe('Course Controller', () => {
         json: jest.fn(),
       };
 
-      await deleteCourseById(req as Request, res as Response);
+      await deleteCourse(req as Request, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });

@@ -1,4 +1,3 @@
-// teamSetService.ts
 import Course from '../models/Course';
 import Team from '../models/Team';
 import TeamSet from '../models/TeamSet';
@@ -19,4 +18,15 @@ export const deleteTeamSetById = async (teamSetId: string) => {
     }
   }
   await TeamSet.findByIdAndDelete(teamSetId);
+};
+
+export const createTeamSet = async (courseId: string, name: string) => {
+  const course = await Course.findById(courseId);
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+  const teamSet = new TeamSet({ name, course: courseId });
+  course.teamSets.push(teamSet._id);
+  await teamSet.save();
+  await course.save();
 };
