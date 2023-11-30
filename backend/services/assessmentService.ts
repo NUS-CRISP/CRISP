@@ -1,10 +1,10 @@
 import { ObjectId } from 'mongodb';
 import mongoose from 'mongoose';
-import Assessment from '../models/Assessment';
-import Result, { Result as IResult } from '../models/Result';
-import Team, { Team as ITeam } from '../models/Team';
-import Course from '../models/Course';
-import TeamSet from '../models/TeamSet';
+import AssessmentModel from '../models/Assessment';
+import ResultModel, { Result } from '../models/Result';
+import TeamModel, { Team } from '../models/Team';
+import CourseModel from '../models/Course';
+import TeamSetModel from '../models/TeamSet';
 import { BadRequestError, NotFoundError } from './errors';
 
 interface ResultItem {
@@ -14,12 +14,38 @@ interface ResultItem {
 }
 
 export const getAssessmentById = async (assessmentId: string) => {
-  const assessment = await Assessment.findById(assessmentId).populate({
+  const assessment = await AssessmentModel.findById(assessmentId).populate<{
+    results: Result[];
+  }>({
     path: 'results',
-    populate: ['team', 'marker'],
+    populate: {
+      path: 'team',
+      model: 'Team',
+      populate: {
+        path: 'members',
+        model: 'User',
+      },
+    },
   });
   if (!assessment) {
     throw new NotFoundError('Assessment not found');
+  }
+  if (assessment.granularity === 'individual') {
+    assessment.results.sort((a, b) =>
+      a.marks[0].name.localeCompare(b.marks[0].name)
+    );
+  } else if (assessment.granularity === 'team') {
+    assessment.results.sort((a, b) => {
+      const teamA = a.team as unknown as Team;
+      const teamB = b.team as unknown as Team;
+      if (!teamA && !teamB) return 0;
+      if (!teamA) return -1;
+      if (!teamB) return 1;
+      return teamA.number - teamB.number;
+    });
+    assessment.results.forEach(result => {
+      result.marks.sort((a, b) => a.name.localeCompare(b.name));
+    });
   }
   return assessment;
 };
@@ -28,11 +54,11 @@ export const uploadAssessmentResultsById = async (
   assessmentId: string,
   results: ResultItem[]
 ) => {
-  const assessment = await Assessment.findById(assessmentId).populate({
+  const assessment = await AssessmentModel.findById(assessmentId).populate({
     path: 'results',
     populate: {
       path: 'team',
-      model: Team,
+      model: 'Team',
     },
   });
   if (!assessment) {
@@ -43,7 +69,7 @@ export const uploadAssessmentResultsById = async (
     results.forEach(({ studentId, mark }) => {
       resultMap[studentId] = mark;
     });
-    for (const result of assessment.results as unknown as IResult[]) {
+    for (const result of assessment.results as unknown as Result[]) {
       const userId = result.marks[0]?.user;
       const mark = resultMap[userId];
       if (mark !== undefined) {
@@ -60,8 +86,8 @@ export const uploadAssessmentResultsById = async (
     }
     resultMap[teamNumber][studentId] = mark;
   });
-  for (const result of assessment.results as unknown as IResult[]) {
-    const team = result.team as unknown as ITeam;
+  for (const result of assessment.results as unknown as Result[]) {
+    const team = result.team as unknown as Team;
     if (!team || !team.number) {
       continue;
     }
@@ -84,11 +110,11 @@ export const updateAssessmentResultMarkerById = async (
   markerId: string
 ) => {
   const assessment =
-    await Assessment.findById(assessmentId).populate('results');
+    await AssessmentModel.findById(assessmentId).populate('results');
   if (!assessment) {
     throw new NotFoundError('Assessment not found');
   }
-  const resultToUpdate = await Result.findById(resultId);
+  const resultToUpdate = await ResultModel.findById(resultId);
   if (!resultToUpdate || !resultToUpdate.assessment.equals(assessment._id)) {
     throw new NotFoundError('Result not found');
   }
@@ -112,7 +138,7 @@ export const addAssessmentsToCourse = async (
   if (!Array.isArray(assessmentsData) || assessmentsData.length === 0) {
     throw new BadRequestError('Invalid or empty assessments data');
   }
-  const course = await Course.findById(courseId).populate('students');
+  const course = await CourseModel.findById(courseId).populate('students');
   if (!course) {
     throw new NotFoundError('Course not found');
   }
@@ -126,14 +152,14 @@ export const addAssessmentsToCourse = async (
       teamSetName,
       formLink,
     } = data;
-    const existingAssessment = await Assessment.findOne({
+    const existingAssessment = await AssessmentModel.findOne({
       course: courseId,
       assessmentType,
     });
     if (existingAssessment) {
       continue;
     }
-    const assessment = new Assessment({
+    const assessment = new AssessmentModel({
       course: courseId,
       assessmentType,
       markType,
@@ -146,7 +172,7 @@ export const addAssessmentsToCourse = async (
     await assessment.save();
     const results: mongoose.Document[] = [];
     if (granularity === 'team') {
-      const teamSet = await TeamSet.findOne({
+      const teamSet = await TeamSetModel.findOne({
         course: courseId,
         name: teamSetName,
       }).populate({ path: 'teams', populate: ['members', 'TA'] });
@@ -161,7 +187,7 @@ export const addAssessmentsToCourse = async (
           name: member.name,
           mark: 0,
         }));
-        const result = new Result({
+        const result = new ResultModel({
           assessment: assessment._id,
           team: team._id,
           marker: team.TA?._id,
@@ -172,7 +198,7 @@ export const addAssessmentsToCourse = async (
     } else {
       // Create a result object for each student
       course.students.forEach((student: any) => {
-        const result = new Result({
+        const result = new ResultModel({
           assessment: assessment._id,
           team: null,
           marker: null,

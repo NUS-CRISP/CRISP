@@ -1,7 +1,7 @@
 // accountService.ts
 import bcrypt from 'bcrypt';
-import Account from '../models/Account';
-import User from '../models/User';
+import AccountModel from '../models/Account';
+import UserModel from '../models/User';
 import { BadRequestError } from './errors';
 
 export const createNewAccount = async (
@@ -11,19 +11,19 @@ export const createNewAccount = async (
   password: string,
   role: string
 ) => {
-  const existingAccount = await Account.findOne({ email });
+  const existingAccount = await AccountModel.findOne({ email });
   if (existingAccount) {
     throw new BadRequestError('Account with this email already exists.');
   }
   const salt = await bcrypt.genSalt();
   const passwordHash = await bcrypt.hash(password, salt);
-  const newUser = new User({
+  const newUser = new UserModel({
     identifier: identifier,
     name: name,
     enrolledCourses: [],
     gitHandle: null,
   });
-  const newAccount = new Account({
+  const newAccount = new AccountModel({
     email,
     password: passwordHash,
     role,
@@ -35,11 +35,11 @@ export const createNewAccount = async (
 };
 
 export const getAllPendingAccounts = async () => {
-  return await Account.find({ isApproved: false });
+  return await AccountModel.find({ isApproved: false });
 };
 
 export const approveAccountByIds = async (ids: string[]) => {
-  await Account.updateMany(
+  await AccountModel.updateMany(
     { _id: { $in: ids } },
     { $set: { isApproved: true } }
   );

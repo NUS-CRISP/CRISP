@@ -1,29 +1,30 @@
-import Course from '../models/Course';
-import Team from '../models/Team';
-import TeamSet from '../models/TeamSet';
-import User, { User as IUser } from '../models/User';
-import Account from '../models/Account';
+import CourseModel from '../models/Course';
+import TeamModel, { Team } from '../models/Team';
+import TeamSetModel, { TeamSet } from '../models/TeamSet';
+import UserModel, { User } from '../models/User';
+import AccountModel from '../models/Account';
 import Role from '../../shared/types/auth/Role';
 import { NotFoundError } from './errors';
 
 /*----------------------------------------Course----------------------------------------*/
 export const createNewCourse = async (courseData: any) => {
-  await Course.create(courseData);
+  await CourseModel.create(courseData);
 };
 
 export const getAllCourses = async () => {
-  return await Course.find();
+  return await CourseModel.find();
 };
 
 export const getCourseById = async (courseId: string) => {
-  const course = await Course.findById(courseId)
-    .populate('faculty')
-    .populate('TAs')
-    .populate('students')
-    .populate({
+  const course = await CourseModel.findById(courseId)
+    .populate<{ faculty: User[] }>('faculty')
+    .populate<{ TAs: User[] }>('TAs')
+    .populate<{ students: User[] }>('students')
+    .populate<{ teamSets: TeamSet[] }>({
       path: 'teamSets',
       populate: {
         path: 'teams',
+        model: 'Team',
         populate: ['members', 'TA'],
       },
     })
@@ -36,26 +37,44 @@ export const getCourseById = async (courseId: string) => {
   if (!course) {
     throw new NotFoundError('Course not found');
   }
+  course.faculty.sort((a, b) => a.name.localeCompare(b.name));
+  course.TAs.sort((a, b) => a.name.localeCompare(b.name));
+  course.students.sort((a, b) => a.name.localeCompare(b.name));
+  course.teamSets.forEach((teamSet: TeamSet) => {
+    teamSet.teams.sort(
+      (a: unknown, b: unknown) => (a as Team).number - (b as Team).number
+    );
+  });
+  if (Array.isArray(course.milestones)) {
+    course.milestones.sort((a, b) => a.number - b.number);
+  }
+  if (Array.isArray(course.sprints)) {
+    course.sprints.sort((a, b) => a.number - b.number);
+  }
   return course;
 };
 
 export const updateCourseById = async (courseId: string, updateData: any) => {
-  const updatedCourse = await Course.findByIdAndUpdate(courseId, updateData, {
-    new: true,
-  });
+  const updatedCourse = await CourseModel.findByIdAndUpdate(
+    courseId,
+    updateData,
+    {
+      new: true,
+    }
+  );
   if (!updatedCourse) {
     throw new NotFoundError('Course not found');
   }
 };
 
 export const deleteCourseById = async (courseId: string) => {
-  const deletedCourse = await Course.findByIdAndDelete(courseId);
+  const deletedCourse = await CourseModel.findByIdAndDelete(courseId);
   if (!deletedCourse) {
     throw new NotFoundError('Course not found');
   }
-  await Team.deleteMany({ teamSet: { $in: deletedCourse.teamSets } });
-  await TeamSet.deleteMany({ _id: { $in: deletedCourse.teamSets } });
-  await User.updateMany(
+  await TeamModel.deleteMany({ teamSet: { $in: deletedCourse.teamSets } });
+  await TeamSetModel.deleteMany({ _id: { $in: deletedCourse.teamSets } });
+  await UserModel.updateMany(
     { enrolledCourses: courseId },
     { $pull: { enrolledCourses: courseId } }
   );
@@ -66,24 +85,24 @@ export const addStudentsToCourse = async (
   courseId: string,
   studentDataList: any[]
 ) => {
-  const course = await Course.findById(courseId).populate<{
-    students: IUser[];
+  const course = await CourseModel.findById(courseId).populate<{
+    students: User[];
   }>('students');
   if (!course) {
     throw new NotFoundError('Course not found');
   }
   for (const studentData of studentDataList) {
     const studentId = studentData.identifier;
-    let student = await User.findOne({ identifier: studentId });
+    let student = await UserModel.findOne({ identifier: studentId });
     if (!student) {
-      student = new User({
+      student = new UserModel({
         identifier: studentId,
         name: studentData.name,
         enrolledCourses: [],
         gitHandle: studentData.gitHandle ?? null,
       });
       await student.save();
-      const newAccount = new Account({
+      const newAccount = new AccountModel({
         email: studentData.email,
         role: Role.Student,
         isApproved: false,
@@ -91,7 +110,7 @@ export const addStudentsToCourse = async (
       });
       await newAccount.save();
     } else {
-      const studentAccount = await Account.findOne({ user: student._id });
+      const studentAccount = await AccountModel.findOne({ user: student._id });
       if (studentAccount && studentAccount.role !== Role.Student) {
         continue;
       }
@@ -109,7 +128,7 @@ export const addStudentsToCourse = async (
 
 /*----------------------------------------TA----------------------------------------*/
 export const addTAsToCourse = async (courseId: string, TADataList: any[]) => {
-  const course = await Course.findById(courseId).populate<{ TAs: IUser[] }>(
+  const course = await CourseModel.findById(courseId).populate<{ TAs: User[] }>(
     'TAs'
   );
   if (!course) {
@@ -117,16 +136,16 @@ export const addTAsToCourse = async (courseId: string, TADataList: any[]) => {
   }
   for (const TAData of TADataList) {
     const TAId = TAData.identifier;
-    let TA = await User.findOne({ identifier: TAId });
+    let TA = await UserModel.findOne({ identifier: TAId });
     if (!TA) {
-      TA = new User({
+      TA = new UserModel({
         identifier: TAId,
         name: TAData.name,
         enrolledCourses: [],
         gitHandle: TAData.gitHandle ?? null,
       });
       await TA.save();
-      const newAccount = new Account({
+      const newAccount = new AccountModel({
         email: TAData.email,
         role: Role.TA,
         isApproved: false,
@@ -134,7 +153,7 @@ export const addTAsToCourse = async (courseId: string, TADataList: any[]) => {
       });
       newAccount.save();
     } else {
-      const TAAccount = await Account.findOne({ user: TA._id });
+      const TAAccount = await AccountModel.findOne({ user: TA._id });
       if (TAAccount && TAAccount.role !== 'Teaching assistant') {
         continue;
       }
@@ -151,7 +170,7 @@ export const addTAsToCourse = async (courseId: string, TADataList: any[]) => {
 };
 
 export const getCourseTeachingTeam = async (courseId: string) => {
-  const course = await Course.findById(courseId)
+  const course = await CourseModel.findById(courseId)
     .populate('faculty')
     .populate('TAs');
   if (!course) {
@@ -165,7 +184,7 @@ export const addMilestoneToCourse = async (
   courseId: string,
   milestoneData: { number: number; dateline: Date; description: string }
 ) => {
-  const course = await Course.findById(courseId);
+  const course = await CourseModel.findById(courseId);
   if (!course) {
     throw new NotFoundError('Course not found');
   }
@@ -183,7 +202,7 @@ export const addSprintToCourse = async (
     description: string;
   }
 ) => {
-  const course = await Course.findById(courseId);
+  const course = await CourseModel.findById(courseId);
   if (!course) {
     throw new NotFoundError('Course not found');
   }

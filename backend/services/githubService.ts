@@ -1,14 +1,14 @@
 import { RequestError } from 'octokit';
 import { getGitHubApp } from '../utils/github';
-import TeamData from '../models/TeamData';
+import TeamDataModel from '../models/TeamData';
 import { NotFoundError } from './errors';
 
 export const fetchAllTeamData = async () => {
-  return await TeamData.find({});
+  return await TeamDataModel.find({});
 };
 
 export const fetchAllTeamDataForOrg = async (gitHubOrgName: string) => {
-  const teamDatas = await TeamData.find({
+  const teamDatas = await TeamDataModel.find({
     gitHubOrgName: gitHubOrgName.toLowerCase(),
   });
   if (!teamDatas) {
