@@ -3,7 +3,7 @@ import mongoose, { Document, Schema, Types } from 'mongoose';
 
 export interface Result
   extends Omit<SharedResult, '_id' | 'assessment' | 'team' | 'marker'>,
-  Document {
+    Document {
   _id: Types.ObjectId;
   assessment: Types.ObjectId;
   team?: Types.ObjectId;

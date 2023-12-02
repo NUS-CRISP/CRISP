@@ -1,44 +1,33 @@
 import { Request, Response } from 'express';
-import Team from '../models/Team';
-import TeamSet from '../models/TeamSet';
+import { deleteTeamById, updateTeamById } from '../services/teamService';
+import { NotFoundError } from '../services/errors';
 
 export const deleteTeam = async (req: Request, res: Response) => {
   const teamId = req.params.id;
-
   try {
-    const team = await Team.findById(teamId);
-    if (!team) {
-      return res.status(404).json({ message: 'Team not found' });
-    }
-    const teamSet = await TeamSet.findById(team.teamSet);
-    if (teamSet && teamSet.teams) {
-      const index = teamSet.teams.indexOf(team._id);
-      if (index !== -1) {
-        teamSet.teams.splice(index, 1);
-      }
-      await teamSet.save();
-    }
-
-    await Team.findByIdAndDelete(teamId);
-
+    await deleteTeamById(teamId);
     return res.status(200).json({ message: 'Team deleted successfully' });
   } catch (error) {
-    res.status(400).json({ error: 'Failed to delete the team' });
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error deleting team:', error);
+      res.status(500).json({ error: 'Failed to delete team' });
+    }
   }
 };
 
 export const updateTeam = async (req: Request, res: Response) => {
   const teamId = req.params.id;
   try {
-    const updatedTeam = await Team.findByIdAndUpdate(teamId, req.body, {
-      new: true,
-    });
-    if (updatedTeam) {
-      res.json(updatedTeam);
-    } else {
-      res.status(404).json({ error: 'Team not found' });
-    }
+    await updateTeamById(teamId, req.body);
+    res.status(200).json({ message: 'Team updated successfully' });
   } catch (error) {
-    res.status(400).json({ error: 'Failed to update team' });
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error updating team:', error);
+      res.status(500).json({ error: 'Failed to update team' });
+    }
   }
 };

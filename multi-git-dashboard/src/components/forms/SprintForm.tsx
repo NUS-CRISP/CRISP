@@ -15,13 +15,13 @@ const SprintForm: React.FC<SprintFormProps> = ({
 }) => {
   const form = useForm({
     initialValues: {
-      sprintNumber: 0,
+      number: 0,
       description: '',
       startDate: new Date(),
       endDate: new Date(),
     },
     validate: {
-      sprintNumber: value =>
+      number: value =>
         value >= 1 && value <= 100 ? null : 'Invalid sprint number',
       startDate: value => (value ? null : 'Start date is required'),
       endDate: value => (value ? null : 'End date is required'),
@@ -68,10 +68,10 @@ const SprintForm: React.FC<SprintFormProps> = ({
         <TextInput
           withAsterisk
           label="Sprint Number"
-          {...form.getInputProps('sprintNumber')}
-          value={form.values.sprintNumber}
+          {...form.getInputProps('number')}
+          value={form.values.number}
           onChange={event => {
-            form.setFieldValue('sprintNumber', +event.currentTarget.value);
+            form.setFieldValue('number', +event.currentTarget.value);
           }}
         />
         <DatePicker

@@ -15,12 +15,12 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({
 }) => {
   const form = useForm({
     initialValues: {
-      milestoneNumber: 0,
+      number: 0,
       dateline: new Date(),
       description: '',
     },
     validate: {
-      milestoneNumber: value =>
+      number: value =>
         value >= 1 && value <= 100 ? null : 'Invalid milestone number',
       dateline: value => (value ? null : 'Dateline is required'),
     },
@@ -66,10 +66,10 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({
         <TextInput
           withAsterisk
           label="Milestone Number"
-          {...form.getInputProps('milestoneNumber')}
-          value={form.values.milestoneNumber}
+          {...form.getInputProps('number')}
+          value={form.values.number}
           onChange={event => {
-            form.setFieldValue('milestoneNumber', +event.currentTarget.value);
+            form.setFieldValue('number', +event.currentTarget.value);
           }}
         />
         <DatePicker
