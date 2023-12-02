@@ -9,20 +9,20 @@ import {
   addTAsToTeams,
   addTeamSet,
   createCourse,
-  deleteCourseById,
-  getAllCourses,
-  getCourseById,
+  deleteCourse,
+  getCourses,
+  getCourse,
   getTeachingTeam,
-  updateCourseById,
+  updateCourse,
 } from '../controllers/courseController';
 
 const router = express.Router();
 
 router.post('/', createCourse);
-router.get('/', getAllCourses);
-router.get('/:id', getCourseById);
-router.put('/:id', updateCourseById);
-router.delete('/:id', deleteCourseById);
+router.get('/', getCourses);
+router.get('/:id', getCourse);
+router.put('/:id', updateCourse);
+router.delete('/:id', deleteCourse);
 router.post('/:id/students', addStudents);
 router.post('/:id/tas', addTAs);
 router.post('/:id/teamsets', addTeamSet);

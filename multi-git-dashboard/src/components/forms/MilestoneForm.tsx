@@ -1,3 +1,4 @@
+import { getApiUrl } from '@/lib/apiConfig';
 import { Box, Button, Notification, TextInput } from '@mantine/core';
 import { DatePicker } from '@mantine/dates';
 import { useForm } from '@mantine/form';
@@ -14,42 +15,40 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({
 }) => {
   const form = useForm({
     initialValues: {
-      milestoneNumber: 0,
+      number: 0,
       dateline: new Date(),
       description: '',
     },
     validate: {
-      milestoneNumber: value =>
+      number: value =>
         value >= 1 && value <= 100 ? null : 'Invalid milestone number',
       dateline: value => (value ? null : 'Dateline is required'),
     },
   });
 
   const [error, setError] = useState<string | null>(null);
+  const apiUrl = getApiUrl() + `/courses/${courseId}/milestones`;
 
   const handleSubmit = async () => {
     console.log('Sending milestone data:', form.values);
 
     try {
-      const response = await fetch(
-        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${courseId}/milestones`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(form.values),
-        }
-      );
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form.values),
+      });
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Milestone created:', data);
-        onMilestoneCreated();
-      } else {
+      if (!response.ok) {
         console.error('Error creating milestone:', response.statusText);
         setError('Error creating milestone. Please try again.');
+        return;
       }
+      const data = await response.json();
+      console.log('Milestone created:', data);
+      onMilestoneCreated();
     } catch (error) {
       console.error('Error creating milestone:', error);
       setError('Error creating milestone. Please try again.');
@@ -67,10 +66,10 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({
         <TextInput
           withAsterisk
           label="Milestone Number"
-          {...form.getInputProps('milestoneNumber')}
-          value={form.values.milestoneNumber}
+          {...form.getInputProps('number')}
+          value={form.values.number}
           onChange={event => {
-            form.setFieldValue('milestoneNumber', +event.currentTarget.value);
+            form.setFieldValue('number', +event.currentTarget.value);
           }}
         />
         <DatePicker

@@ -21,6 +21,7 @@ import { GetSessionParams, getSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 
 import classes from '../styles/admin.module.css';
+import { getApiUrl } from '@/lib/apiConfig';
 
 type RowData = Pick<Account, 'email' | 'role'>;
 
@@ -142,33 +143,31 @@ const AdminPage: React.FC = () => {
 
   const handleApprove = async (ids: string[]) => {
     // Approve account
-    const response = await fetch(
-      `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/accounts/approve`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ ids }),
-      }
-    );
+    const apiUrl = getApiUrl() + '/accounts/approve';
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ids }),
+    });
 
-    if (response.ok) {
-      // Remove accounts from the list of pending accounts
-      setPendingAccounts(
-        pendingAccounts.filter(account => !ids.includes(account._id))
-      );
-      setFilteredAccounts(
-        filteredAccounts.filter(account => !ids.includes(account._id))
-      );
+    if (!response.ok) {
+      return;
     }
+    // Remove accounts from the list of pending accounts
+    setPendingAccounts(
+      pendingAccounts.filter(account => !ids.includes(account._id))
+    );
+    setFilteredAccounts(
+      filteredAccounts.filter(account => !ids.includes(account._id))
+    );
   };
 
   useEffect(() => {
     const fetchPendingAccounts = async () => {
-      const response = await fetch(
-        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/accounts/pending`
-      );
+      const apiUrl = getApiUrl() + '/accounts/pending';
+      const response = await fetch(apiUrl);
       const data: Account[] = await response.json();
       console.log(data);
 
@@ -228,13 +227,7 @@ const AdminPage: React.FC = () => {
         value={search}
         onChange={handleSearchChange}
       />
-      <Table
-        horizontalSpacing="md"
-        verticalSpacing="xs"
-        miw={700}
-        mb={20}
-        layout="fixed"
-      >
+      <Table horizontalSpacing="md" verticalSpacing="xs" miw={700} mb={20}>
         <Table.Thead>
           <Table.Tr>
             <Table.Th w={100} />

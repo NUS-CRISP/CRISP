@@ -51,6 +51,9 @@ export const authOptions: AuthOptions = {
 
         const user = await usersCollection.findOne({ _id: account.user });
 
+        console.log('account', account);
+        console.log('user', user);
+
         return {
           id: account._id.toString(),
           name: user?.name || '',

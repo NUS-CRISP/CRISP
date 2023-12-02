@@ -1,9 +1,8 @@
+import { getApiUrl } from '@/lib/apiConfig';
 import { Box, Button, Notification, TextInput } from '@mantine/core';
 import { DatePicker } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
-
-const backendPort = process.env.BACKEND_PORT || 3001;
 
 interface SprintFormProps {
   courseId: string | string[] | undefined;
@@ -16,13 +15,13 @@ const SprintForm: React.FC<SprintFormProps> = ({
 }) => {
   const form = useForm({
     initialValues: {
-      sprintNumber: 0,
+      number: 0,
       description: '',
       startDate: new Date(),
       endDate: new Date(),
     },
     validate: {
-      sprintNumber: value =>
+      number: value =>
         value >= 1 && value <= 100 ? null : 'Invalid sprint number',
       startDate: value => (value ? null : 'Start date is required'),
       endDate: value => (value ? null : 'End date is required'),
@@ -30,30 +29,28 @@ const SprintForm: React.FC<SprintFormProps> = ({
   });
 
   const [error, setError] = useState<string | null>(null);
+  const apiUrl = getApiUrl() + `/courses/${courseId}/sprints`;
 
   const handleSubmit = async () => {
     console.log('Sending sprint data:', form.values);
 
     try {
-      const response = await fetch(
-        `http://localhost:${backendPort}/api/courses/${courseId}/sprints`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(form.values),
-        }
-      );
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form.values),
+      });
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Sprint created:', data);
-        onSprintCreated();
-      } else {
+      if (!response.ok) {
         console.error('Error creating sprint:', response.statusText);
         setError('Error creating sprint. Please try again.');
+        return;
       }
+      const data = await response.json();
+      console.log('Sprint created:', data);
+      onSprintCreated();
     } catch (error) {
       console.error('Error creating sprint:', error);
       setError('Error creating sprint. Please try again.');
@@ -71,10 +68,10 @@ const SprintForm: React.FC<SprintFormProps> = ({
         <TextInput
           withAsterisk
           label="Sprint Number"
-          {...form.getInputProps('sprintNumber')}
-          value={form.values.sprintNumber}
+          {...form.getInputProps('number')}
+          value={form.values.number}
           onChange={event => {
-            form.setFieldValue('sprintNumber', +event.currentTarget.value);
+            form.setFieldValue('number', +event.currentTarget.value);
           }}
         />
         <DatePicker

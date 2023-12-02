@@ -3,7 +3,7 @@ import { Team } from './Team';
 import { User } from './User';
 
 export interface Mark {
-  userId: string;
+  user: string;
   name: string;
   mark: number;
 }

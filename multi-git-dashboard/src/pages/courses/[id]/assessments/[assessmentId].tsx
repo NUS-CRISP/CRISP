@@ -5,9 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import ResultCard from '../../../../components/cards/ResultCard';
 import { User } from '@shared/types/User';
 import ResultForm from '@/components/forms/ResultForm';
-
-const backendPort = process.env.BACKEND_PORT || 3001;
-const apiUrl = `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/assessments/`;
+import { getApiUrl } from '@/lib/apiConfig';
 
 const AssessmentDetail: React.FC = () => {
   const router = useRouter();
@@ -18,16 +16,18 @@ const AssessmentDetail: React.FC = () => {
   const [assessment, setAssessment] = useState<Assessment | null>(null);
   const [teachingTeam, setTeachingTeam] = useState<User[]>([]);
   const [isResultFormOpen, setIsResultFormOpen] = useState(false);
+  const assessmentsApiUrl = getApiUrl() + `/assessments/${assessmentId}`;
+  const teachingTeamApiUrl = getApiUrl() + `/courses/${id}/teachingteam`;
 
   const fetchAssessment = useCallback(async () => {
     try {
-      const response = await fetch(`${apiUrl}${assessmentId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setAssessment(data);
-      } else {
+      const response = await fetch(assessmentsApiUrl);
+      if (!response.ok) {
         console.error('Error fetching assessment:', response.statusText);
+        return;
       }
+      const data = await response.json();
+      setAssessment(data);
     } catch (error) {
       console.error('Error fetching assessment:', error);
     }
@@ -35,15 +35,13 @@ const AssessmentDetail: React.FC = () => {
 
   const fetchTeachingTeam = useCallback(async () => {
     try {
-      const response = await fetch(
-        `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/courses/${id}/teachingteam`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setTeachingTeam(data);
-      } else {
+      const response = await fetch(teachingTeamApiUrl);
+      if (!response.ok) {
         console.error('Error fetching Teaching Team:', response.statusText);
+        return;
       }
+      const data = await response.json();
+      setTeachingTeam(data);
     } catch (error) {
       console.error('Error fetching Teaching Team:', error);
     }
@@ -97,9 +95,13 @@ const AssessmentDetail: React.FC = () => {
             <Text>No form link provided</Text>
           )}
         </Tabs.Panel>
-
         <Tabs.Panel value="results">
-          <Button onClick={toggleResultForm}>Upload Results</Button>
+          <Button
+            onClick={toggleResultForm}
+            style={{ marginTop: '16px', marginBottom: '16px' }}
+          >
+            Upload Results
+          </Button>
           <Modal
             opened={isResultFormOpen}
             onClose={toggleResultForm}
@@ -110,7 +112,6 @@ const AssessmentDetail: React.FC = () => {
               onResultsUploaded={onUpdate}
             />
           </Modal>
-
           {assessment?.results.map(result => (
             <ResultCard
               key={result._id}
