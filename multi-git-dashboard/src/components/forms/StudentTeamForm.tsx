@@ -1,8 +1,8 @@
+import apiBaseUrl from '@/lib/api-config';
 import { Box, Button, Notification, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
 import CSVUpload from './CSVUpload';
-import { getApiUrl } from '@/lib/apiConfig';
 
 interface StudentTeamFormProps {
   courseId: string | string[] | undefined;
@@ -28,7 +28,7 @@ const StudentTeamForm: React.FC<StudentTeamFormProps> = ({
   });
 
   const [error, setError] = useState<string | null>(null);
-  const apiUrl = getApiUrl() + `/courses/${courseId}/teams/students`;
+  const apiUrl = apiBaseUrl + `/courses/${courseId}/teams/students`;
   const csvTemplateHeaders = 'identifier,teamNumber';
 
   const transformStudentData = (data: unknown[]) => {

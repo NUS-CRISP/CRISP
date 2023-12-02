@@ -1,11 +1,11 @@
+import ResultForm from '@/components/forms/ResultForm';
+import apiBaseUrl from '@/lib/api-config';
 import { Button, Container, Modal, Tabs, Text } from '@mantine/core';
 import { Assessment } from '@shared/types/Assessment';
+import { User } from '@shared/types/User';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
 import ResultCard from '../../../../components/cards/ResultCard';
-import { User } from '@shared/types/User';
-import ResultForm from '@/components/forms/ResultForm';
-import { getApiUrl } from '@/lib/apiConfig';
 
 const AssessmentDetail: React.FC = () => {
   const router = useRouter();
@@ -16,8 +16,8 @@ const AssessmentDetail: React.FC = () => {
   const [assessment, setAssessment] = useState<Assessment | null>(null);
   const [teachingTeam, setTeachingTeam] = useState<User[]>([]);
   const [isResultFormOpen, setIsResultFormOpen] = useState(false);
-  const assessmentsApiUrl = getApiUrl() + `/assessments/${assessmentId}`;
-  const teachingTeamApiUrl = getApiUrl() + `/courses/${id}/teachingteam`;
+  const assessmentsApiUrl = apiBaseUrl + `/assessments/${assessmentId}`;
+  const teachingTeamApiUrl = apiBaseUrl + `/courses/${id}/teachingteam`;
 
   const fetchAssessment = useCallback(async () => {
     try {

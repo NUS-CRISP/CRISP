@@ -1,6 +1,8 @@
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express, { Express } from 'express';
+import fs from 'fs';
+import https from 'https';
 import { setupJob } from './jobs/githubJob';
 import accountRoutes from './routes/accountRoutes';
 import assessmentRoutes from './routes/assessmentRoutes';
@@ -11,6 +13,13 @@ import teamSetRoutes from './routes/teamSetRoutes';
 import { connectToDatabase } from './utils/database';
 
 dotenv.config();
+
+const options = {
+  // Using self-signed certificates from Next.js HTTPS feature
+  // See: https://github.com/vercel/next.js/discussions/10935#discussioncomment-7055469
+  key: fs.readFileSync('../multi-git-dashboard/certificates/localhost-key.pem'),
+  cert: fs.readFileSync('../multi-git-dashboard/certificates/localhost.pem'),
+};
 
 const setupApp = async () => {
   await connectToDatabase();
@@ -23,11 +32,7 @@ const port = process.env.PORT;
 const app: Express = express();
 
 app.use(express.json());
-
-const corsOptions = {
-  origin: ['http://localhost:3000', 'http://strand-i.comp.nus.edu.sg:3000'],
-};
-app.use(cors(corsOptions));
+app.use(cors());
 
 app.use('/api/courses', courseRoutes);
 app.use('/api/github', githubRoutes);
@@ -36,6 +41,6 @@ app.use('/api/teams', teamRoutes);
 app.use('/api/teamsets', teamSetRoutes);
 app.use('/api/assessments', assessmentRoutes);
 
-app.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`);
+https.createServer(options, app).listen(port, () => {
+  console.log(`Server is running at https://localhost:${port}`);
 });

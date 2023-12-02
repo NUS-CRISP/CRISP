@@ -1,3 +1,4 @@
+import apiBaseUrl from '@/lib/api-config';
 import {
   Box,
   Button,
@@ -11,7 +12,6 @@ import { useForm } from '@mantine/form';
 import { TeamSet } from '@shared/types/TeamSet';
 import { useState } from 'react';
 import CSVUpload from './CSVUpload';
-import { getApiUrl } from '@/lib/apiConfig';
 
 interface AssessmentFormProps {
   courseId: string | string[] | undefined;
@@ -36,7 +36,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
     validate: {},
   });
   const [error, setError] = useState<string | null>(null);
-  const apiUrl = getApiUrl() + `/courses/${courseId}/assessments`;
+  const apiUrl = apiBaseUrl + `/courses/${courseId}/assessments`;
   const csvTemplateHeaders =
     'assessmentType,markType,frequency,granularity,teamSetName,formLink';
 

@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import apiBaseUrl from '@/lib/api-config';
 import { Card, Group, Select, Table, Text } from '@mantine/core';
 import { Result } from '@shared/types/Result';
 import { User } from '@shared/types/User';
-import { getApiUrl } from '@/lib/apiConfig';
+import React, { useEffect, useState } from 'react';
 
 interface ResultCardProps {
   result: Result;
@@ -19,7 +19,7 @@ const ResultCard: React.FC<ResultCardProps> = ({
     result.marker?._id || null
   );
   const apiUrl =
-    getApiUrl() + `/assessments/${assessmentId}/results/${result._id}/marker`;
+    apiBaseUrl + `/assessments/${assessmentId}/results/${result._id}/marker`;
 
   useEffect(() => {
     setSelectedMarker(result.marker?._id || null);

@@ -1,4 +1,4 @@
-import { getApiUrl } from '@/lib/apiConfig';
+import apiBaseUrl from '@/lib/api-config';
 import {
   Box,
   Button,
@@ -26,7 +26,7 @@ const CreateCoursePage: React.FC = () => {
     'idle' | 'loading' | 'success' | 'error'
   >('idle');
   const [errorMessage, setErrorMessage] = useState('');
-  const courseApiUrl = getApiUrl() + '/courses';
+  const courseApiUrl = apiBaseUrl + '/courses';
 
   const form = useForm({
     initialValues: {
@@ -48,8 +48,8 @@ const CreateCoursePage: React.FC = () => {
       // field should be valid only if courseType is Normal, or if courseType is GitHubOrg and installation check is successful
       gitHubOrgName: (value, values) =>
         values.courseType === CourseType.Normal ||
-        (values.courseType === CourseType.GitHubOrg &&
-          appInstalled === 'success')
+          (values.courseType === CourseType.GitHubOrg &&
+            appInstalled === 'success')
           ? null
           : 'GitHub Org name is required',
     },
@@ -61,7 +61,7 @@ const CreateCoursePage: React.FC = () => {
 
     try {
       const githubInstallationApiUrl =
-        getApiUrl() + '/github/check-installation';
+        apiBaseUrl() + '/github/check-installation';
       const response = await fetch(githubInstallationApiUrl, {
         method: 'POST',
         headers: {
@@ -200,8 +200,8 @@ const CreateCoursePage: React.FC = () => {
                         appInstalled === 'success'
                           ? 'green'
                           : appInstalled === 'error'
-                          ? 'red'
-                          : 'blue'
+                            ? 'red'
+                            : 'blue'
                       }
                       rightSection={
                         appInstalled === 'success' ? (
@@ -215,10 +215,10 @@ const CreateCoursePage: React.FC = () => {
                       {appInstalled === 'success'
                         ? 'Installed'
                         : appInstalled === 'error'
-                        ? 'Try Again'
-                        : appInstalled === 'loading'
-                        ? 'Checking...'
-                        : 'Check Installation'}
+                          ? 'Try Again'
+                          : appInstalled === 'loading'
+                            ? 'Checking...'
+                            : 'Check Installation'}
                     </Button>
                   </List.Item>
                 </List>
