@@ -1,3 +1,4 @@
+import { getApiUrl } from '@/lib/apiConfig';
 import { ActionIcon, Card, Group, Select, Table, Text } from '@mantine/core';
 import { User } from '@shared/types/User';
 import { IconX } from '@tabler/icons-react';
@@ -12,8 +13,6 @@ interface TeamCardProps {
   onTeamDeleted: () => void;
 }
 
-const backendPort = process.env.BACKEND_PORT || 3001;
-
 const TeamCard: React.FC<TeamCardProps> = ({
   teamId,
   number,
@@ -23,6 +22,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
   onTeamDeleted,
 }) => {
   const [selectedTA, setSelectedTA] = useState<string | null>(TA?._id || null);
+  const apiUrl = getApiUrl() + `/teams/${teamId}`;
 
   useEffect(() => {
     setSelectedTA(TA?._id || null);
@@ -30,15 +30,13 @@ const TeamCard: React.FC<TeamCardProps> = ({
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(
-        `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/teams/${teamId}`,
-        {
-          method: 'DELETE',
-        }
-      );
+      const response = await fetch(apiUrl, {
+        method: 'DELETE',
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to delete the team');
+        console.error('Error deleting team:', response.statusText);
+        return;
       }
       console.log('Team deleted');
       onTeamDeleted();
@@ -49,19 +47,17 @@ const TeamCard: React.FC<TeamCardProps> = ({
 
   const handleTAChange = async (TAId: string | null) => {
     try {
-      const response = await fetch(
-        `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/teams/${teamId}`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ TA: TAId }),
-        }
-      );
+      const response = await fetch(apiUrl, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ TA: TAId }),
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to update the team');
+        console.error('Error updating team:', response.statusText);
+        return;
       }
       console.log('Team updated');
       setSelectedTA(TAId);
@@ -74,14 +70,20 @@ const TeamCard: React.FC<TeamCardProps> = ({
   const student_rows = members?.map(member => {
     return (
       <tr key={member._id}>
-        <td>{member.name}</td>
-        <td>{member.gitHandle}</td>
+        <td style={{ textAlign: 'left' }}>{member.name}</td>
+        <td style={{ textAlign: 'left' }}>{member.gitHandle}</td>
       </tr>
     );
   });
 
   return (
-    <Card shadow="sm" padding="lg" radius="md" withBorder>
+    <Card
+      shadow="sm"
+      padding="lg"
+      radius="md"
+      style={{ marginTop: '6px', marginBottom: '6px' }}
+      withBorder
+    >
       <div
         style={{
           display: 'flex',
@@ -116,8 +118,8 @@ const TeamCard: React.FC<TeamCardProps> = ({
       <Table>
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Git Handle</th>
+            <th style={{ textAlign: 'left' }}>Name</th>
+            <th style={{ textAlign: 'left' }}>Git Handle</th>
           </tr>
         </thead>
         <tbody>{student_rows}</tbody>

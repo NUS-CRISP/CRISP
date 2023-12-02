@@ -1,4 +1,4 @@
-import { Button, Container } from '@mantine/core';
+import { Button, Container, Modal } from '@mantine/core';
 import { Course } from '@shared/types/Course';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -19,6 +19,7 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
   const assessmentCards = course.assessments.map(assessment => (
     <Link
       key={assessment._id}
+      style={{ textDecoration: 'none' }}
       href={`/courses/${course._id}/assessments/${assessment._id}`}
       passHref
     >
@@ -34,6 +35,10 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
     </Link>
   ));
 
+  const toggleForm = () => {
+    setIsCreatingAssessment(o => !o);
+  };
+
   const handleAssessmentCreated = () => {
     setIsCreatingAssessment(false);
     onUpdate();
@@ -41,20 +46,24 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
 
   return (
     <Container>
-      {assessmentCards}
       <Button
-        onClick={() => setIsCreatingAssessment(!isCreatingAssessment)}
-        style={{ marginTop: '16px' }}
+        onClick={toggleForm}
+        style={{ marginTop: '16px', marginBottom: '16px' }}
       >
-        {isCreatingAssessment ? 'Cancel' : 'Create Assessment'}
+        Create Assessment
       </Button>
-      {isCreatingAssessment && (
+      <Modal
+        opened={isCreatingAssessment}
+        onClose={toggleForm}
+        title="Create Assessment"
+      >
         <AssessmentForm
           teamSets={course.teamSets}
           courseId={course._id.toString()}
           onAssessmentCreated={handleAssessmentCreated}
         />
-      )}
+      </Modal>
+      {assessmentCards}
     </Container>
   );
 };

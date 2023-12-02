@@ -1,11 +1,4 @@
-import {
-  Badge,
-  Card,
-  Container,
-  Grid,
-  Stepper,
-  Text,
-} from '@mantine/core';
+import { Badge, Card, Container, Grid, Stepper, Text } from '@mantine/core';
 import { Milestone, Sprint, isSprint } from '@shared/types/Course';
 import { TeamData } from '@shared/types/TeamData';
 import { useState } from 'react';
@@ -35,7 +28,6 @@ const GithubTeamCard: React.FC<GithubTeamCardProps> = ({
   milestones,
   sprints,
 }) => {
-
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28'];
 
   const [active, setActive] = useState(1);

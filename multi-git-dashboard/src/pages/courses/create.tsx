@@ -1,3 +1,4 @@
+import { getApiUrl } from '@/lib/apiConfig';
 import {
   Box,
   Button,
@@ -25,6 +26,7 @@ const CreateCoursePage: React.FC = () => {
     'idle' | 'loading' | 'success' | 'error'
   >('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const courseApiUrl = getApiUrl() + '/courses';
 
   const form = useForm({
     initialValues: {
@@ -58,26 +60,25 @@ const CreateCoursePage: React.FC = () => {
     setErrorMessage('');
 
     try {
-      const response = await fetch(
-        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/github/check-installation`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ orgName }),
-        }
-      );
+      const githubInstallationApiUrl =
+        getApiUrl() + '/github/check-installation';
+      const response = await fetch(githubInstallationApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ orgName }),
+      });
 
-      if (response.ok) {
-        const { installationId } = await response.json();
-        form.setFieldValue('installationId', installationId);
-        setAppInstalled('success');
-      } else {
+      if (!response.ok) {
         setAppInstalled('error');
         const errorData = await response.json();
         setErrorMessage(errorData.message || 'An error occurred');
+        return;
       }
+      const { installationId } = await response.json();
+      form.setFieldValue('installationId', installationId);
+      setAppInstalled('success');
     } catch (error) {
       setAppInstalled('error');
       setErrorMessage('Failed to connect to the server');
@@ -85,25 +86,22 @@ const CreateCoursePage: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    const response = await fetch(
-      `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(form.values),
-      }
-    );
+    const response = await fetch(courseApiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(form.values),
+    });
 
     const data = await response.json();
 
-    if (response.ok) {
-      console.log('Course created:', data);
-      router.push(`/courses/${data._id}?new=true`);
-    } else {
+    if (!response.ok) {
       console.error('Error creating course:', data);
+      return;
     }
+    console.log('Course created:', data);
+    router.push(`/courses/${data._id}?new=true`);
   };
 
   return (

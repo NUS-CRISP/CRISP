@@ -1,15 +1,14 @@
+import React, { useEffect, useState } from 'react';
 import { Card, Group, Select, Table, Text } from '@mantine/core';
 import { Result } from '@shared/types/Result';
 import { User } from '@shared/types/User';
-import React, { useEffect, useState } from 'react';
+import { getApiUrl } from '@/lib/apiConfig';
 
 interface ResultCardProps {
   result: Result;
   teachingTeam: User[];
   assessmentId: string;
 }
-
-const backendPort = process.env.BACKEND_PORT || 3001;
 
 const ResultCard: React.FC<ResultCardProps> = ({
   result,
@@ -19,6 +18,8 @@ const ResultCard: React.FC<ResultCardProps> = ({
   const [selectedMarker, setSelectedMarker] = useState<string | null>(
     result.marker?._id || null
   );
+  const apiUrl =
+    getApiUrl() + `/assessments/${assessmentId}/results/${result._id}/marker`;
 
   useEffect(() => {
     setSelectedMarker(result.marker?._id || null);
@@ -26,19 +27,17 @@ const ResultCard: React.FC<ResultCardProps> = ({
 
   const handleMarkerChange = async (markerId: string | null) => {
     try {
-      const response = await fetch(
-        `http://${process.env.NEXT_PUBLIC_DOMAIN}:${backendPort}/api/assessments/${assessmentId}/results/${result._id}/marker`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ markerId }),
-        }
-      );
+      const response = await fetch(apiUrl, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ markerId }),
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to update the team');
+        console.error('Error updating team:', response.statusText);
+        return;
       }
       console.log('Marker updated');
       setSelectedMarker(markerId);
@@ -55,15 +54,21 @@ const ResultCard: React.FC<ResultCardProps> = ({
   const studentRows = result.marks.map(mark => {
     return (
       <tr key={mark.user}>
-        <td>{mark.name}</td>
-        <td>{mark.user}</td>
-        <td>{mark.mark}</td>
+        <td style={{ textAlign: 'left' }}>{mark.name}</td>
+        <td style={{ textAlign: 'left' }}>{mark.user}</td>
+        <td style={{ textAlign: 'left' }}>{mark.mark}</td>
       </tr>
     );
   });
 
   return (
-    <Card shadow="sm" padding="lg" radius="md" withBorder>
+    <Card
+      shadow="sm"
+      padding="lg"
+      radius="md"
+      style={{ marginTop: '6px', marginBottom: '6px' }}
+      withBorder
+    >
       <div
         style={{
           display: 'flex',
@@ -91,9 +96,11 @@ const ResultCard: React.FC<ResultCardProps> = ({
       <Table>
         <thead>
           <tr>
-            <th>{result.team ? 'Team Member' : 'Student'}</th>
-            <th>ID</th>
-            <th>Score</th>
+            <th style={{ textAlign: 'left' }}>
+              {result.team ? 'Team Member' : 'Student'}
+            </th>
+            <th style={{ textAlign: 'left' }}>ID</th>
+            <th style={{ textAlign: 'left' }}>Score</th>
           </tr>
         </thead>
         <tbody>{studentRows}</tbody>

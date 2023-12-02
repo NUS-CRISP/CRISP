@@ -1,3 +1,4 @@
+import { getApiUrl } from '@/lib/apiConfig';
 import { Box, Button, Notification, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
@@ -20,30 +21,28 @@ const TeamSetForm: React.FC<TeamSetFormProps> = ({
   });
 
   const [error, setError] = useState<string | null>(null);
+  const apiUrl = getApiUrl() + `/courses/${courseId}/teamsets`;
 
   const handleSubmit = async () => {
     console.log('Sending teamset data:', form.values);
 
     try {
-      const response = await fetch(
-        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${courseId}/teamsets`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(form.values),
-        }
-      );
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form.values),
+      });
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('TeamSet created:', data);
-        onTeamSetCreated();
-      } else {
+      if (!response.ok) {
         console.error('Error creating teamset:', response.statusText);
         setError('Error creating teamset. Please try again.');
+        return;
       }
+      const data = await response.json();
+      console.log('TeamSet created:', data);
+      onTeamSetCreated();
     } catch (error) {
       console.error('Error creating teamset:', error);
       setError('Error creating teamset. Please try again.');

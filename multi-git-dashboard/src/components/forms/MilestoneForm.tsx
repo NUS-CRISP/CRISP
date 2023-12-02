@@ -1,3 +1,4 @@
+import { getApiUrl } from '@/lib/apiConfig';
 import { Box, Button, Notification, TextInput } from '@mantine/core';
 import { DatePicker } from '@mantine/dates';
 import { useForm } from '@mantine/form';
@@ -26,30 +27,28 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({
   });
 
   const [error, setError] = useState<string | null>(null);
+  const apiUrl = getApiUrl() + `/courses/${courseId}/milestones`;
 
   const handleSubmit = async () => {
     console.log('Sending milestone data:', form.values);
 
     try {
-      const response = await fetch(
-        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses/${courseId}/milestones`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(form.values),
-        }
-      );
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form.values),
+      });
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Milestone created:', data);
-        onMilestoneCreated();
-      } else {
+      if (!response.ok) {
         console.error('Error creating milestone:', response.statusText);
         setError('Error creating milestone. Please try again.');
+        return;
       }
+      const data = await response.json();
+      console.log('Milestone created:', data);
+      onMilestoneCreated();
     } catch (error) {
       console.error('Error creating milestone:', error);
       setError('Error creating milestone. Please try again.');

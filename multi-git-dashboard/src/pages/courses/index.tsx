@@ -1,4 +1,5 @@
 import CourseCard from '@/components/cards/CourseCard';
+import { getApiUrl } from '@/lib/apiConfig';
 import { Button } from '@mantine/core';
 import { Course } from '@shared/types/Course';
 import Link from 'next/link';
@@ -8,6 +9,7 @@ import { useEffect, useState } from 'react';
 const CourseListPage: React.FC = () => {
   const router = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
+  const apiUrl = getApiUrl() + '/courses';
 
   useEffect(() => {
     fetchCourses();
@@ -15,15 +17,13 @@ const CourseListPage: React.FC = () => {
 
   const fetchCourses = async () => {
     try {
-      const response = await fetch(
-        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/courses`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setCourses(data);
-      } else {
+      const response = await fetch(apiUrl);
+      if (!response.ok) {
         console.error('Error fetching courses:', response.statusText);
+        return;
       }
+      const data = await response.json();
+      setCourses(data);
     } catch (error) {
       console.error('Error fetching courses:', error);
     }
@@ -38,7 +38,11 @@ const CourseListPage: React.FC = () => {
         ) : (
           <div className="course-card-list">
             {courses.map(course => (
-              <Link key={course._id.toString()} href={`/courses/${course._id}`}>
+              <Link
+                key={course._id.toString()}
+                style={{ textDecoration: 'none' }}
+                href={`/courses/${course._id}`}
+              >
                 <CourseCard
                   key={course._id.toString()}
                   name={course.name}
