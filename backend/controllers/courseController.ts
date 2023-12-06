@@ -58,9 +58,14 @@ export const getCourses = async (req: Request, res: Response) => {
 };
 
 export const getCourse = async (req: Request, res: Response) => {
+  const accountId = req.headers.authorization;
+    if (!accountId) {
+      res.status(400).json({ error: 'Missing authorization' });
+      return;
+    }
   const courseId = req.params.id;
   try {
-    const course = await getCourseById(courseId);
+    const course = await getCourseById(courseId, accountId);
     res.status(200).json(course);
   } catch (error) {
     if (error instanceof NotFoundError) {

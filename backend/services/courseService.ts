@@ -34,7 +34,11 @@ export const getCoursesForUser = async (accountId: string) => {
   return courses;
 };
 
-export const getCourseById = async (courseId: string) => {
+export const getCourseById = async (courseId: string, accountId: string) => {
+  const account = await AccountModel.findById(accountId);
+  if (!account) {
+    throw new NotFoundError('Account not found');
+  }
   const course = await CourseModel.findById(courseId)
     .populate<{ faculty: User[] }>('faculty')
     .populate<{ TAs: User[] }>('TAs')
@@ -55,6 +59,16 @@ export const getCourseById = async (courseId: string) => {
     });
   if (!course) {
     throw new NotFoundError('Course not found');
+  }
+  const role = account.role;
+  if (role === 'Teaching assistant') {
+    const userId = account.user;
+    course.teamSets.forEach(teamSet => {
+      teamSet.teams = teamSet.teams.filter(team => {
+        const teamObject = team as unknown as Team;
+        if (!teamObject.TA) { return false };
+        return teamObject.TA.equals(userId)});
+    });
   }
   course.faculty.sort((a, b) => a.name.localeCompare(b.name));
   course.TAs.sort((a, b) => a.name.localeCompare(b.name));
