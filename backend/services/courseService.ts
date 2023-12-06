@@ -63,12 +63,12 @@ export const getCourseById = async (courseId: string, accountId: string) => {
   const role = account.role;
   if (role === 'Teaching assistant') {
     const userId = account.user;
-    course.teamSets.forEach(teamSet => {
-      teamSet.teams = teamSet.teams.filter(team => {
-        const teamObject = team as unknown as Team;
-        if (!teamObject.TA) { return false };
-        return teamObject.TA.equals(userId)});
-    });
+    course.teamSets.forEach(
+      teamSet =>
+        (teamSet.teams = teamSet.teams.filter(
+          team => (team as unknown as Team).TA?.equals(userId)
+        ))
+    );
   }
   course.faculty.sort((a, b) => a.name.localeCompare(b.name));
   course.TAs.sort((a, b) => a.name.localeCompare(b.name));
