@@ -7,12 +7,31 @@ import Role from '../../shared/types/auth/Role';
 import { NotFoundError } from './errors';
 
 /*----------------------------------------Course----------------------------------------*/
-export const createNewCourse = async (courseData: any) => {
-  return await CourseModel.create(courseData);
+export const createNewCourse = async (courseData: any, accountId: string) => {
+  const account = await AccountModel.findById(accountId);
+  if (!account) {
+    throw new NotFoundError('Account not found');
+  }
+  const user = await UserModel.findById(account.user);
+  if (!user) {
+    throw new NotFoundError('User not found');
+  }
+  const course = await CourseModel.create(courseData);
+  course.faculty.push(user._id);
+  await course.save();
+  return course;
 };
 
-export const getAllCourses = async () => {
-  return await CourseModel.find();
+export const getCoursesForUser = async (accountId: string) => {
+  const account = await AccountModel.findById(accountId);
+  if (!account) {
+    throw new NotFoundError('Account not found');
+  }
+  const userId = account?.user;
+  const courses = await CourseModel.find({
+    $or: [{ students: userId }, { TAs: userId }, { faculty: userId }],
+  });
+  return courses;
 };
 
 export const getCourseById = async (courseId: string) => {

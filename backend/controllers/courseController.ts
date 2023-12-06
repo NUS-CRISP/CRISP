@@ -6,9 +6,9 @@ import {
   addTAsToCourse,
   createNewCourse,
   deleteCourseById,
-  getAllCourses,
   getCourseById,
   getCourseTeachingTeam,
+  getCoursesForUser,
   updateCourseById,
 } from '../services/courseService';
 import { addAssessmentsToCourse } from '../services/assessmentService';
@@ -19,19 +19,41 @@ import { BadRequestError, NotFoundError } from '../services/errors';
 /*----------------------------------------Course----------------------------------------*/
 export const createCourse = async (req: Request, res: Response) => {
   try {
-    const course = await createNewCourse(req.body);
-    res.status(201).json({ message: 'Course created successfully', _id: course._id });
+    const accountId = req.headers.authorization;
+    if (!accountId) {
+      res.status(400).json({ error: 'Missing authorization' });
+      return;
+    }
+    const course = await createNewCourse(req.body, accountId);
+    res
+      .status(201)
+      .json({ message: 'Course created successfully', _id: course._id });
   } catch (error) {
-    res.status(500).json({ error: `Failed to create course: ${error}` });
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error creating course:', error)
+      res.status(500).json({ error: `Failed to create course` });
+    }
   }
 };
 
-export const getCourses = async (_req: Request, res: Response) => {
+export const getCourses = async (req: Request, res: Response) => {
   try {
-    const courses = await getAllCourses();
+    const accountId = req.headers.authorization;
+    if (!accountId) {
+      res.status(400).json({ error: 'Missing authorization' });
+      return;
+    }
+    const courses = await getCoursesForUser(accountId);
     res.status(200).json(courses);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch courses' });
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error fetching courses:', error);
+      res.status(500).json({ error: 'Failed to fetch courses' });
+    }
   }
 };
 
