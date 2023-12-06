@@ -32,7 +32,7 @@ export const createCourse = async (req: Request, res: Response) => {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
     } else {
-      console.error('Error creating course:', error)
+      console.error('Error creating course:', error);
       res.status(500).json({ error: `Failed to create course` });
     }
   }
