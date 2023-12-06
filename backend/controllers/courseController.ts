@@ -19,8 +19,8 @@ import { BadRequestError, NotFoundError } from '../services/errors';
 /*----------------------------------------Course----------------------------------------*/
 export const createCourse = async (req: Request, res: Response) => {
   try {
-    await createNewCourse(req.body);
-    res.status(201).json({ message: 'Course created successfully' });
+    const course = await createNewCourse(req.body);
+    res.status(201).json({ message: 'Course created successfully', _id: course._id });
   } catch (error) {
     res.status(500).json({ error: `Failed to create course: ${error}` });
   }

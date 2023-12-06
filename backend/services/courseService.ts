@@ -8,7 +8,7 @@ import { NotFoundError } from './errors';
 
 /*----------------------------------------Course----------------------------------------*/
 export const createNewCourse = async (courseData: any) => {
-  await CourseModel.create(courseData);
+  return await CourseModel.create(courseData);
 };
 
 export const getAllCourses = async () => {
