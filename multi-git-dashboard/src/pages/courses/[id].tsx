@@ -40,8 +40,8 @@ const CourseViewPage: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `${accountId}`,
-        }
-        });
+        },
+      });
       if (!response.ok) {
         console.error('Error fetching course:', response.statusText);
         return;
