@@ -144,9 +144,13 @@ export const addStudentsToCourse = async (
       await newAccount.save();
     } else {
       const studentAccount = await AccountModel.findOne({ user: student._id });
-      if (studentAccount && studentAccount.role !== Role.Student) {
+      if (!studentAccount) {
         continue;
       }
+      if (studentAccount.role !== Role.Student || studentData.name !== student.name || studentData.email !== studentAccount.email) {
+        continue;
+      }
+      student.gitHandle = studentData.gitHandle ?? student.gitHandle;
     }
     if (!student.enrolledCourses.includes(course._id)) {
       student.enrolledCourses.push(course._id);
@@ -187,9 +191,13 @@ export const addTAsToCourse = async (courseId: string, TADataList: any[]) => {
       newAccount.save();
     } else {
       const TAAccount = await AccountModel.findOne({ user: TA._id });
-      if (TAAccount && TAAccount.role !== 'Teaching assistant') {
+      if (!TAAccount) {
         continue;
       }
+      if (TAAccount.role !== Role.TA || TAData.name !== TA.name || TAData.email !== TAAccount.email) {
+        continue;
+      }
+      TA.gitHandle = TAData.gitHandle ?? TA.gitHandle;
     }
     if (!TA.enrolledCourses.includes(course._id)) {
       TA.enrolledCourses.push(course._id);
