@@ -6,7 +6,7 @@ import { Team } from '../models/Team';
 import CourseModel from '../models/Course';
 import TeamSetModel from '../models/TeamSet';
 import { BadRequestError, NotFoundError } from './errors';
-import AccountModel from 'models/Account';
+import AccountModel from '../models/Account';
 
 interface ResultItem {
   teamNumber: number;
