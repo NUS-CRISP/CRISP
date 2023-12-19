@@ -8,8 +8,13 @@ import { NotFoundError } from '../services/errors';
 
 export const getAssessment = async (req: Request, res: Response) => {
   try {
+    const accountId = req.headers.authorization;
+    if (!accountId) {
+      res.status(400).json({ error: 'Missing authorization' });
+      return;
+    }
     const { assessmentId } = req.params;
-    const assessment = await getAssessmentById(assessmentId);
+    const assessment = await getAssessmentById(assessmentId, accountId);
     res.status(200).json(assessment);
   } catch (error) {
     if (error instanceof NotFoundError) {

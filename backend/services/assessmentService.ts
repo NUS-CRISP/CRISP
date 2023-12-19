@@ -6,6 +6,7 @@ import { Team } from '../models/Team';
 import CourseModel from '../models/Course';
 import TeamSetModel from '../models/TeamSet';
 import { BadRequestError, NotFoundError } from './errors';
+import AccountModel from '../models/Account';
 
 interface ResultItem {
   teamNumber: number;
@@ -13,7 +14,14 @@ interface ResultItem {
   mark: number;
 }
 
-export const getAssessmentById = async (assessmentId: string) => {
+export const getAssessmentById = async (
+  assessmentId: string,
+  accountId: string
+) => {
+  const account = await AccountModel.findById(accountId);
+  if (!account) {
+    throw new NotFoundError('Account not found');
+  }
   const assessment = await AssessmentModel.findById(assessmentId).populate<{
     results: Result[];
   }>({
@@ -29,6 +37,13 @@ export const getAssessmentById = async (assessmentId: string) => {
   });
   if (!assessment) {
     throw new NotFoundError('Assessment not found');
+  }
+  const role = account.role;
+  if (role === 'Teaching assistant') {
+    const userId = account.user;
+    assessment.results = assessment.results.filter(
+      result => (result.team as unknown as Team).TA?.equals(userId)
+    );
   }
   if (assessment.granularity === 'individual') {
     assessment.results.sort((a, b) =>
