@@ -10,6 +10,7 @@ import { Container, Loader, Tabs } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { Course, Milestone, Sprint } from '@shared/types/Course';
 import { TeamData } from '@shared/types/TeamData';
+import { getSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -32,7 +33,15 @@ const CourseViewPage: React.FC = () => {
 
   const fetchCourse = useCallback(async () => {
     try {
-      const response = await fetch(courseApiUrl);
+      const session = await getSession();
+      const accountId = session?.user?.id;
+      const response = await fetch(courseApiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `${accountId}`,
+        },
+      });
       if (!response.ok) {
         console.error('Error fetching course:', response.statusText);
         return;

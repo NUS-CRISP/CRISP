@@ -6,6 +6,7 @@ import ResultCard from '../../../../components/cards/ResultCard';
 import { User } from '@shared/types/User';
 import ResultForm from '@/components/forms/ResultForm';
 import { getApiUrl } from '@/lib/apiConfig';
+import { getSession } from 'next-auth/react';
 
 const AssessmentDetail: React.FC = () => {
   const router = useRouter();
@@ -21,7 +22,15 @@ const AssessmentDetail: React.FC = () => {
 
   const fetchAssessment = useCallback(async () => {
     try {
-      const response = await fetch(assessmentsApiUrl);
+      const session = await getSession();
+      const accountId = session?.user?.id;
+      const response = await fetch(assessmentsApiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `${accountId}`,
+        },
+      });
       if (!response.ok) {
         console.error('Error fetching assessment:', response.statusText);
         return;

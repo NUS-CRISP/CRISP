@@ -13,6 +13,8 @@ declare module 'next-auth' {
        * - Teaching assistant
        */
       role: Role;
+      /** The user's unique identifier. */
+      id: string;
     } & DefaultSession['user'];
   }
 
@@ -23,6 +25,8 @@ declare module 'next-auth' {
      * - Teaching assistant
      */
     role: Role;
+    /** The user's unique identifier. */
+    id: string;
   }
 }
 
@@ -34,5 +38,7 @@ declare module 'next-auth/jwt' {
      * - Teaching assistant
      */
     role: Role;
+    /** The user's unique identifier. */
+    id: string;
   }
 }

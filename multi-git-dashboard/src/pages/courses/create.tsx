@@ -14,6 +14,7 @@ import {
 import { useForm } from '@mantine/form';
 import { CourseType } from '@shared/types/Course';
 import { IconBrandGithub, IconCheck } from '@tabler/icons-react';
+import { getSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 
@@ -86,10 +87,13 @@ const CreateCoursePage: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    const session = await getSession();
+    const accountId = session?.user?.id;
     const response = await fetch(courseApiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Authorization: `${accountId}`,
       },
       body: JSON.stringify(form.values),
     });
