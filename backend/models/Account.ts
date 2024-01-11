@@ -2,7 +2,7 @@ import mongoose, { Schema, Types } from 'mongoose';
 import { Account as SharedAccount } from '../../shared/types/Account';
 import Role from '../../shared/types/auth/Role';
 
-export interface Account extends Omit<SharedAccount, 'user'> {
+export interface Account extends Omit<SharedAccount, 'user'>, Document {
   user: Types.ObjectId;
 }
 
@@ -11,8 +11,9 @@ const accountSchema = new Schema<Account>({
     type: String,
     unique: true,
     lowercase: true,
+    required: true,
   },
-  password: String,
+  password: { type: String, required: true },
   role: {
     type: String,
     enum: Role,

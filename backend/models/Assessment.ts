@@ -2,7 +2,8 @@ import { Assessment as SharedAssessment } from '@shared/types/Assessment';
 import mongoose, { Schema, Types } from 'mongoose';
 
 export interface Assessment
-  extends Omit<SharedAssessment, '_id' | 'course' | 'results' | 'teamSet'> {
+  extends Omit<SharedAssessment, '_id' | 'course' | 'results' | 'teamSet'>,
+    Document {
   _id: Types.ObjectId;
   course: Types.ObjectId;
   results: Types.ObjectId[];
