@@ -7,7 +7,7 @@
     "build": "npx tsc",
     "start": "node dist/app.js",
     "dev": "nodemon app.ts",
-    "test": "vitest",
+    "test": "jest",
     "prettier-format": "prettier --config .prettierrc.json ./**/*.ts --write"
   },
   "keywords": [],
