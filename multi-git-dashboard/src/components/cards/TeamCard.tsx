@@ -1,8 +1,8 @@
-import { getApiUrl } from '@/lib/apiConfig';
+import apiBaseUrl from '@/lib/api-config';
 import { ActionIcon, Card, Group, Select, Table, Text } from '@mantine/core';
 import { User } from '@shared/types/User';
 import { IconX } from '@tabler/icons-react';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface TeamCardProps {
   teamId: string;
@@ -22,7 +22,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
   onTeamDeleted,
 }) => {
   const [selectedTA, setSelectedTA] = useState<string | null>(TA?._id || null);
-  const apiUrl = getApiUrl() + `/teams/${teamId}`;
+  const apiUrl = apiBaseUrl + `/teams/${teamId}`;
 
   useEffect(() => {
     setSelectedTA(TA?._id || null);

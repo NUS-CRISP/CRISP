@@ -5,7 +5,7 @@ import SprintsInfo from '@/components/views/SprintsInfo';
 import StaffInfo from '@/components/views/StaffInfo';
 import StudentsInfo from '@/components/views/StudentsInfo';
 import TeamSetsInfo from '@/components/views/TeamSetsInfo';
-import { getApiUrl } from '@/lib/apiConfig';
+import apiBaseUrl from '@/lib/api-config';
 import { Container, Loader, Tabs } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { Course, Milestone, Sprint } from '@shared/types/Course';
@@ -20,7 +20,7 @@ const CourseViewPage: React.FC = () => {
   const newCourse = router.query.new === 'true';
   const [course, setCourse] = useState<Course>();
   const [teamsData, setTeamsData] = useState<TeamData[]>([]);
-  const courseApiUrl = getApiUrl() + `/courses/${id}`;
+  const courseApiUrl = apiBaseUrl + `/courses/${id}`;
 
   useEffect(() => {
     if (newCourse) {
@@ -72,7 +72,7 @@ const CourseViewPage: React.FC = () => {
 
   const fetchTeamDataForOrg = async (orgName: string) => {
     try {
-      const githubOrgApiUrl = getApiUrl() + `/github/${orgName}`;
+      const githubOrgApiUrl = apiBaseUrl() + `/github/${orgName}`;
       const response = await fetch(githubOrgApiUrl);
       if (!response.ok) {
         console.error('Error fetching team data:', response.statusText);

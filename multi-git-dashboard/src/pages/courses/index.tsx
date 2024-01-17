@@ -1,5 +1,5 @@
 import CourseCard from '@/components/cards/CourseCard';
-import { getApiUrl } from '@/lib/apiConfig';
+import apiBaseUrl from '@/lib/api-config';
 import { Button } from '@mantine/core';
 import { Course } from '@shared/types/Course';
 import { getSession } from 'next-auth/react';
@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 const CourseListPage: React.FC = () => {
   const router = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
-  const apiUrl = getApiUrl() + '/courses';
+  const apiUrl = apiBaseUrl + '/courses';
 
   useEffect(() => {
     fetchCourses();
