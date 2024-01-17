@@ -63,6 +63,9 @@ const CreateCoursePage: React.FC = () => {
     try {
       const githubInstallationApiUrl =
         getApiUrl() + '/github/check-installation';
+
+      console.log('Sending request to:', githubInstallationApiUrl);
+
       const response = await fetch(githubInstallationApiUrl, {
         method: 'POST',
         headers: {
