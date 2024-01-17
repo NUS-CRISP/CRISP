@@ -43,7 +43,7 @@ describe('createAccount', () => {
     };
     const res = mockResponse();
 
-    (accountService.createNewAccount as jest.Mock).mockResolvedValue(undefined);
+    jest.spyOn(accountService, 'createNewAccount').mockResolvedValue(undefined);
 
     await createAccount(req, res);
 
@@ -62,9 +62,9 @@ describe('createAccount', () => {
     };
     const res = mockResponse();
 
-    (accountService.createNewAccount as jest.Mock).mockRejectedValue(
-      new BadRequestError('Invalid data')
-    );
+    jest
+      .spyOn(accountService, 'createNewAccount')
+      .mockRejectedValue(new BadRequestError('Invalid data'));
 
     await createAccount(req, res);
 
@@ -79,9 +79,9 @@ describe('getPendingAccounts', () => {
     const res = mockResponse();
     const mockAccounts = [{ email: 'pending@example.com', role: 'student' }];
 
-    (accountService.getAllPendingAccounts as jest.Mock).mockResolvedValue(
-      mockAccounts
-    );
+    jest
+      .spyOn(accountService, 'getAllPendingAccounts')
+      .mockResolvedValue(mockAccounts as any);
 
     await getPendingAccounts(req, res);
 
@@ -96,9 +96,9 @@ describe('approveAccounts', () => {
     req.body = { ids: ['123', '456'] };
     const res = mockResponse();
 
-    (accountService.approveAccountByIds as jest.Mock).mockResolvedValue(
-      undefined
-    );
+    jest
+      .spyOn(accountService, 'approveAccountByIds')
+      .mockResolvedValue(undefined);
 
     await approveAccounts(req, res);
 
