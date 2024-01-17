@@ -52,7 +52,6 @@ describe('createCourse', () => {
 
     await createCourse(req, res);
 
-    // Assert
     expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith({
       message: 'Course created successfully',
@@ -60,7 +59,49 @@ describe('createCourse', () => {
     });
   });
 
-  // More test cases for error handling, e.g., missing authorization, service throwing errors
+  it('should handle missing authorization send a 400 status', async () => {
+    const req = mockRequest({}, {}, {});
+    const res = mockResponse();
+
+    jest
+      .spyOn(courseService, 'createNewCourse')
+      .mockRejectedValue(new Error('Missing authorization'));
+
+    await createCourse(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Missing authorization' });
+  });
+
+  it('should handle NotFoundError and send a 404 status', async () => {
+    const req = mockRequest({}, {}, { authorization: 'accountId' });
+    const res = mockResponse();
+
+    jest
+      .spyOn(courseService, 'createNewCourse')
+      .mockRejectedValue(new NotFoundError('Account not found'));
+
+    await createCourse(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Account not found' });
+  });
+
+  it('should handle errors when creating course', async () => {
+    const req = mockRequest({}, {}, { authorization: 'accountId' });
+    const res = mockResponse();
+
+    jest
+      .spyOn(courseService, 'createNewCourse')
+      .mockRejectedValue(new Error('Error creating course'));
+
+    await createCourse(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({
+      error: 'Failed to create course',
+    });
+  });
 });
 
 describe('getCourses', () => {
@@ -79,7 +120,49 @@ describe('getCourses', () => {
     expect(res.json).toHaveBeenCalledWith(mockCourses);
   });
 
-  // More test cases like handling missing authorization, service throwing errors
+  it('should handle missing authorization send a 400 status', async () => {
+    const req = mockRequest({}, {}, {});
+    const res = mockResponse();
+
+    jest
+      .spyOn(courseService, 'getCoursesForUser')
+      .mockRejectedValue(new Error('Missing authorization'));
+
+    await getCourses(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Missing authorization' });
+  });
+
+  it('should handle NotFoundError and send a 404 status', async () => {
+    const req = mockRequest({}, {}, { authorization: 'accountId' });
+    const res = mockResponse();
+
+    jest
+      .spyOn(courseService, 'getCoursesForUser')
+      .mockRejectedValue(new NotFoundError('Course not found'));
+
+    await getCourses(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
+  });
+
+  it('should handle errors when getting courses', async () => {
+    const req = mockRequest({}, {}, { authorization: 'accountId' });
+    const res = mockResponse();
+
+    jest
+      .spyOn(courseService, 'getCoursesForUser')
+      .mockRejectedValue(new Error('Error retrieving courses'));
+
+    await getCourses(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({
+      error: 'Failed to fetch courses',
+    });
+  });
 });
 
 describe('getCourse', () => {
@@ -102,7 +185,57 @@ describe('getCourse', () => {
     expect(res.json).toHaveBeenCalledWith(mockCourse);
   });
 
-  // Additional test cases
+  it('should handle missing authorization send a 400 status', async () => {
+    const req = mockRequest({}, { id: 'courseId' }, {});
+    const res = mockResponse();
+
+    jest
+      .spyOn(courseService, 'getCourseById')
+      .mockRejectedValue(new Error('Missing authorization'));
+
+    await getCourse(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Missing authorization' });
+  });
+
+  it('should handle NotFoundError and send a 404 status', async () => {
+    const req = mockRequest(
+      {},
+      { id: 'courseId' },
+      { authorization: 'accountId' }
+    );
+    const res = mockResponse();
+
+    jest
+      .spyOn(courseService, 'getCourseById')
+      .mockRejectedValue(new NotFoundError('Course not found'));
+
+    await getCourse(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
+  });
+
+  it('should handle errors when getting course', async () => {
+    const req = mockRequest(
+      {},
+      { id: 'courseId' },
+      { authorization: 'accountId' }
+    );
+    const res = mockResponse();
+
+    jest
+      .spyOn(courseService, 'getCourseById')
+      .mockRejectedValue(new Error('Error getting course'));
+
+    await getCourse(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({
+      error: 'Failed to fetch course',
+    });
+  });
 });
 
 // updateCourse Tests
