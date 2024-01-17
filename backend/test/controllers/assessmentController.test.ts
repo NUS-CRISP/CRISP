@@ -66,6 +66,26 @@ describe('getAssessment', () => {
     expect(res.json).toHaveBeenCalledWith({ error: 'Assessment not found' });
   });
 
+  it('should handle errors when getting assessment', async () => {
+    const req = mockRequest(
+      {},
+      { assessmentId: '1' },
+      { authorization: 'user-id' }
+    );
+    const res = mockResponse();
+
+    jest
+      .spyOn(assessmentService, 'getAssessmentById')
+      .mockRejectedValue(new Error('Error retrieving assessment'));
+
+    await getAssessment(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({
+      error: 'Failed to retrieve assessment',
+    });
+  });
+
   it('should handle missing authorization header', async () => {
     const req = mockRequest({}, { assessmentId: '1' }); // No authorization header
     const res = mockResponse();
