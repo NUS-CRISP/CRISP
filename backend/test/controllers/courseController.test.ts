@@ -238,11 +238,105 @@ describe('getCourse', () => {
   });
 });
 
-// updateCourse Tests
-// Similar to getCourse, but test for updating a course
+describe('updateCourse', () => {
+  it('should update a specific course', async () => {
+    const req = mockRequest(
+      { name: 'New Course Name' },
+      { id: 'courseId' },
+      {}
+    );
+    const res = mockResponse();
 
-// deleteCourse Tests
-// Similar to getCourse, but test for deleting a course
+    jest.spyOn(courseService, 'updateCourseById').mockResolvedValue(undefined);
+
+    await updateCourse(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      message: 'Course updated successfully',
+    });
+  });
+
+  it('should handle NotFoundError and send a 404 status', async () => {
+    const req = mockRequest({}, { id: 'courseId' }, {});
+    const res = mockResponse();
+
+    jest
+      .spyOn(courseService, 'updateCourseById')
+      .mockRejectedValue(new NotFoundError('Course not found'));
+
+    await updateCourse(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
+  });
+
+  it('should handle errors when updating course', async () => {
+    const req = mockRequest({}, { id: 'courseId' }, {});
+    const res = mockResponse();
+
+    jest
+      .spyOn(courseService, 'updateCourseById')
+      .mockRejectedValue(new Error('Error updating course'));
+
+    await updateCourse(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({
+      error: 'Failed to update course',
+    });
+  });
+});
+
+describe('deleteCourse', () => {
+  it('should update a specific course', async () => {
+    const req = mockRequest(
+      {},
+      { id: 'courseId' },
+      { authorization: 'accountId' }
+    );
+    const res = mockResponse();
+
+    jest.spyOn(courseService, 'deleteCourseById').mockResolvedValue(undefined);
+
+    await deleteCourse(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      message: 'Course deleted successfully',
+    });
+  });
+
+  it('should handle NotFoundError and send a 404 status', async () => {
+    const req = mockRequest({}, { id: 'courseId' }, {});
+    const res = mockResponse();
+
+    jest
+      .spyOn(courseService, 'deleteCourseById')
+      .mockRejectedValue(new NotFoundError('Course not found'));
+
+    await deleteCourse(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
+  });
+
+  it('should handle errors when updating course', async () => {
+    const req = mockRequest({}, { id: 'courseId' }, {});
+    const res = mockResponse();
+
+    jest
+      .spyOn(courseService, 'deleteCourseById')
+      .mockRejectedValue(new Error('Error updating course'));
+
+    await deleteCourse(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({
+      error: 'Failed to delete course',
+    });
+  });
+});
 
 describe('addStudents', () => {
   it('should add students to a course', async () => {
