@@ -564,11 +564,177 @@ describe('addTeamSet', () => {
   });
 });
 
-// addStudentsToTeams Tests
-// Similar to addStudents, but for adding students to teams
+describe('addStudentsToTeams', () => {
+  it('should add students to team', async () => {
+    const req = mockRequest(
+      [
+        { identifier: 'student1', teamSet: 'teamSet1', teamNumber: 1 },
+        { identifier: 'student2', teamSet: 'teamSet1', teamNumber: 2 },
+      ],
+      { id: 'courseId' }
+    );
+    const res = mockResponse();
 
-// addTAsToTeams Tests
-// Similar to addTAs, but for adding TAs to teams
+    jest.spyOn(teamService, 'addStudentsToTeam').mockResolvedValue(undefined);
+
+    await addStudentsToTeams(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      message: 'Students added to teams successfully',
+    });
+  });
+
+  it('should handle bad request and send a 400 status', async () => {
+    const req = mockRequest(
+      [
+        { identifier: 'student1' },
+        { identifier: 'student2', teamSet: 'teamSet1', teamNumber: 2 },
+      ],
+      { id: 'courseId' }
+    );
+    const res = mockResponse();
+
+    jest
+      .spyOn(teamService, 'addStudentsToTeam')
+      .mockRejectedValue(new BadRequestError('Invalid Student'));
+
+    await addStudentsToTeams(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      error: 'Invalid Student',
+    });
+  });
+
+  it('should handle NotFoundError and send a 404 status', async () => {
+    const req = mockRequest(
+      [
+        { identifier: 'student9090', teamSet: 'teamSet1', teamNumber: 1 },
+        { identifier: 'student2', teamSet: 'teamSet1', teamNumber: 2 },
+      ],
+      { id: 'courseId' }
+    );
+    const res = mockResponse();
+
+    jest
+      .spyOn(teamService, 'addStudentsToTeam')
+      .mockRejectedValue(new NotFoundError('Student not found'));
+
+    await addStudentsToTeams(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Student not found' });
+  });
+
+  it('should handle errors when adding students to team', async () => {
+    const req = mockRequest(
+      [
+        { identifier: 'student1', teamSet: 'teamSet1', teamNumber: 1 },
+        { identifier: 'student2', teamSet: 'teamSet1', teamNumber: 2 },
+      ],
+      { id: 'courseId' }
+    );
+    const res = mockResponse();
+
+    jest
+      .spyOn(teamService, 'addStudentsToTeam')
+      .mockRejectedValue(new Error('Error adding students to team'));
+
+    await addStudentsToTeams(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({
+      error: 'Failed to add students to teams',
+    });
+  });
+});
+
+describe('addTAsToTeams', () => {
+  it('should add TAs to team', async () => {
+    const req = mockRequest(
+      [
+        { identifier: 'ta1', teamSet: 'teamSet1', teamNumber: 1 },
+        { identifier: 'ta2', teamSet: 'teamSet1', teamNumber: 2 },
+      ],
+      { id: 'courseId' }
+    );
+    const res = mockResponse();
+
+    jest.spyOn(teamService, 'addTAsToTeam').mockResolvedValue(undefined);
+
+    await addTAsToTeams(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      message: 'TAs added to teams successfully',
+    });
+  });
+
+  it('should handle bad request and send a 400 status', async () => {
+    const req = mockRequest(
+      [
+        { identifier: 'ta1' },
+        { identifier: 'ta2', teamSet: 'teamSet1', teamNumber: 2 },
+      ],
+      { id: 'courseId' }
+    );
+    const res = mockResponse();
+
+    jest
+      .spyOn(teamService, 'addTAsToTeam')
+      .mockRejectedValue(new BadRequestError('Invalid TA'));
+
+    await addTAsToTeams(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      error: 'Invalid TA',
+    });
+  });
+
+  it('should handle NotFoundError and send a 404 status', async () => {
+    const req = mockRequest(
+      [
+        { identifier: 'ta9090', teamSet: 'teamSet1', teamNumber: 1 },
+        { identifier: 'ta2', teamSet: 'teamSet1', teamNumber: 2 },
+      ],
+      { id: 'courseId' }
+    );
+    const res = mockResponse();
+
+    jest
+      .spyOn(teamService, 'addTAsToTeam')
+      .mockRejectedValue(new NotFoundError('TA not found'));
+
+    await addTAsToTeams(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({ error: 'TA not found' });
+  });
+
+  it('should handle errors when adding students to team', async () => {
+    const req = mockRequest(
+      [
+        { identifier: 'ta1', teamSet: 'teamSet1', teamNumber: 1 },
+        { identifier: 'ta2', teamSet: 'teamSet1', teamNumber: 2 },
+      ],
+      { id: 'courseId' }
+    );
+    const res = mockResponse();
+
+    jest
+      .spyOn(teamService, 'addTAsToTeam')
+      .mockRejectedValue(new Error('Error adding TAs to team'));
+
+    await addTAsToTeams(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({
+      error: 'Failed to add TAs to teams',
+    });
+  });
+});
 
 // addMilestone Tests
 // Test for adding a milestone to a course
