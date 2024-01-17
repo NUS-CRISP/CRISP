@@ -7,7 +7,11 @@ import {
 } from '../../controllers/githubController';
 import { NotFoundError } from '../../services/errors';
 
-jest.mock('../../services/githubService');
+jest.mock('../../services/githubService', () => ({
+  fetchAllTeamData: jest.fn(),
+  fetchAllTeamDataForOrg: jest.fn(),
+  checkGitHubInstallation: jest.fn(),
+}));
 
 beforeEach(() => {
   jest.clearAllMocks();
