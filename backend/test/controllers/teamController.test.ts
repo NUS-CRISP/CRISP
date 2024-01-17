@@ -3,10 +3,7 @@ import * as teamService from '../../services/teamService';
 import { deleteTeam, updateTeam } from '../../controllers/teamController';
 import { NotFoundError } from '../../services/errors';
 
-jest.mock('../../services/teamService', () => ({
-  deleteTeamById: jest.fn(),
-  updateTeamById: jest.fn(),
-}));
+jest.mock('../../services/teamService');
 
 beforeEach(() => {
   jest.clearAllMocks();

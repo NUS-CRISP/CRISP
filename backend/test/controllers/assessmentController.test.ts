@@ -7,11 +7,7 @@ import {
 } from '../../controllers/assessmentController';
 import { NotFoundError } from '../../services/errors';
 
-jest.mock('../../services/assessmentService', () => ({
-  getAssessmentById: jest.fn(),
-  uploadAssessmentResultsById: jest.fn(),
-  updateAssessmentResultMarkerById: jest.fn(),
-}));
+jest.mock('../../services/assessmentService');
 
 beforeEach(() => {
   jest.clearAllMocks();

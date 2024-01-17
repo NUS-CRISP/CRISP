@@ -7,11 +7,7 @@ import {
 } from '../../controllers/accountController';
 import { BadRequestError } from '../../services/errors';
 
-jest.mock('../../services/accountService', () => ({
-  createNewAccount: jest.fn(),
-  approveAccountByIds: jest.fn(),
-  getAllPendingAccounts: jest.fn(),
-}));
+jest.mock('../../services/accountService');
 
 beforeEach(() => {
   jest.clearAllMocks();
