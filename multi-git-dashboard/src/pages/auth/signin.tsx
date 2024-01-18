@@ -1,15 +1,15 @@
 import {
-  TextInput,
-  PasswordInput,
-  Checkbox,
+  Alert,
   Anchor,
-  Paper,
-  Title,
-  Text,
+  Button,
+  Checkbox,
   Container,
   Group,
-  Button,
-  Alert,
+  Paper,
+  PasswordInput,
+  Text,
+  TextInput,
+  Title,
 } from '@mantine/core';
 import { IconInfoCircle } from '@tabler/icons-react';
 import { signIn } from 'next-auth/react';
@@ -74,7 +74,7 @@ const SignInPage: React.FC = () => {
           />
           <Group justify="space-between" mt="lg">
             <Checkbox label="Remember me" />
-            <Anchor component="button" size="sm">
+            <Anchor href='#' size="sm" >
               Forgot password?
             </Anchor>
           </Group>

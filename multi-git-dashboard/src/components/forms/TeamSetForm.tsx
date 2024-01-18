@@ -1,4 +1,4 @@
-import { getApiUrl } from '@/lib/apiConfig';
+import apiBaseUrl from '@/lib/api-config';
 import { Box, Button, Notification, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
@@ -21,7 +21,7 @@ const TeamSetForm: React.FC<TeamSetFormProps> = ({
   });
 
   const [error, setError] = useState<string | null>(null);
-  const apiUrl = getApiUrl() + `/courses/${courseId}/teamsets`;
+  const apiUrl = apiBaseUrl + `/courses/${courseId}/teamsets`;
 
   const handleSubmit = async () => {
     console.log('Sending teamset data:', form.values);

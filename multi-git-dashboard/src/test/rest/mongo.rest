@@ -1,9 +1,0 @@
-# Run with 'REST Client' extension in VSCode
-
-POST http://localhost:3001/createCourse HTTP/1.1
-content-type: application/json 
-
-{
-    "courseName": "Software Engineering Project",
-    "courseCode": "CS3203"
-} 

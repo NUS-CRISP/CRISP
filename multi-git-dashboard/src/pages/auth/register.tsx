@@ -1,4 +1,4 @@
-import { getApiUrl } from '@/lib/apiConfig';
+import apiBaseUrl from '@/lib/api-config';
 import {
   Alert,
   Anchor,
@@ -66,7 +66,7 @@ const RegisterPage: React.FC = () => {
 
   const handleRegister = async (values: FormValues) => {
     console.log(values);
-    const apiUrl = getApiUrl() + '/accounts';
+    const apiUrl = apiBaseUrl + '/accounts';
 
     const response = await fetch(apiUrl, {
       method: 'POST',
