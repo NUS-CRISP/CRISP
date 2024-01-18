@@ -20,8 +20,8 @@ import {
 import { GetSessionParams, getSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 
+import apiBaseUrl from '@/lib/api-config';
 import classes from '../styles/admin.module.css';
-import { getApiUrl } from '@/lib/apiConfig';
 
 type RowData = Pick<Account, 'email' | 'role'>;
 
@@ -51,13 +51,13 @@ const sortData = (
   return !sortBy
     ? filterData(data, search)
     : filterData(
-        [...data].sort((a, b) =>
-          reversed
-            ? b[sortBy].localeCompare(a[sortBy])
-            : a[sortBy].localeCompare(b[sortBy])
-        ),
-        payload.search
-      );
+      [...data].sort((a, b) =>
+        reversed
+          ? b[sortBy].localeCompare(a[sortBy])
+          : a[sortBy].localeCompare(b[sortBy])
+      ),
+      payload.search
+    );
 };
 
 const Th: React.FC<ThProps> = ({
@@ -143,7 +143,7 @@ const AdminPage: React.FC = () => {
 
   const handleApprove = async (ids: string[]) => {
     // Approve account
-    const apiUrl = getApiUrl() + '/accounts/approve';
+    const apiUrl = apiBaseUrl + '/accounts/approve';
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
@@ -166,7 +166,7 @@ const AdminPage: React.FC = () => {
 
   useEffect(() => {
     const fetchPendingAccounts = async () => {
-      const apiUrl = getApiUrl() + '/accounts/pending';
+      const apiUrl = apiBaseUrl + '/accounts/pending';
       const response = await fetch(apiUrl);
       const data: Account[] = await response.json();
       console.log(data);

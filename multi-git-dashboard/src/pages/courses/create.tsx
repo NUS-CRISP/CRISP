@@ -1,4 +1,4 @@
-import { getApiUrl } from '@/lib/apiConfig';
+import apiBaseUrl from '@/lib/api-config';
 import {
   Box,
   Button,
@@ -27,7 +27,7 @@ const CreateCoursePage: React.FC = () => {
     'idle' | 'loading' | 'success' | 'error'
   >('idle');
   const [errorMessage, setErrorMessage] = useState('');
-  const courseApiUrl = getApiUrl() + '/courses';
+  const courseApiUrl = apiBaseUrl + '/courses';
 
   const form = useForm({
     initialValues: {
@@ -62,7 +62,8 @@ const CreateCoursePage: React.FC = () => {
 
     try {
       const githubInstallationApiUrl =
-        getApiUrl() + '/github/check-installation';
+        apiBaseUrl + '/github/check-installation';
+
       const response = await fetch(githubInstallationApiUrl, {
         method: 'POST',
         headers: {

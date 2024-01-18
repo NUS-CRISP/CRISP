@@ -1,10 +1,11 @@
+import apiBaseUrl from '@/lib/api-config';
 import {
   Button,
   Container,
   Group,
-  Tabs,
-  Notification,
   Modal,
+  Notification,
+  Tabs,
 } from '@mantine/core';
 import { Course } from '@shared/types/Course';
 import { TeamSet } from '@shared/types/TeamSet';
@@ -13,7 +14,6 @@ import TeamCard from '../cards/TeamCard';
 import StudentTeamForm from '../forms/StudentTeamForm';
 import TATeamForm from '../forms/TATeamForm';
 import TeamSetForm from '../forms/TeamSetForm';
-import { getApiUrl } from '@/lib/apiConfig';
 
 interface TeamsInfoProps {
   course: Course;
@@ -89,7 +89,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
 
   const handleDeleteTeamSet = async () => {
     try {
-      const apiUrl = getApiUrl() + `/teamsets/${teamSetId}`;
+      const apiUrl = apiBaseUrl + `/teamsets/${teamSetId}`;
       const response = await fetch(apiUrl, {
         method: 'DELETE',
       });

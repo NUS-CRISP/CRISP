@@ -1,8 +1,8 @@
+import apiBaseUrl from '@/lib/api-config';
 import { Box, Button, Notification, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
 import CSVUpload from './CSVUpload';
-import { getApiUrl } from '@/lib/apiConfig';
 
 interface TAFormProps {
   courseId: string | string[] | undefined;
@@ -19,7 +19,7 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
     },
   });
   const [error, setError] = useState<string | null>(null);
-  const apiUrl = getApiUrl() + `/courses/${courseId}/tas`;
+  const apiUrl = apiBaseUrl + `/courses/${courseId}/tas`;
   const csvTemplateHeaders = 'name,identifier,email,gitHandle';
 
   const handleSubmitForm = async () => {

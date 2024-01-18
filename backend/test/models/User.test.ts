@@ -1,7 +1,8 @@
-import { User } from '@shared/types/User';
-import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose, { ConnectOptions, Types } from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
 import UserModel from '../../models/User';
+import CourseModel from '../../models/Course';
+import { CourseType } from '@shared/types/Course';
 
 let mongoServer: MongoMemoryServer;
 
@@ -16,6 +17,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await UserModel.deleteMany({});
+  await CourseModel.deleteMany({});
 });
 
 afterAll(async () => {
@@ -25,83 +27,78 @@ afterAll(async () => {
 
 describe('UserModel', () => {
   it('should create and save a new user', async () => {
-    const userData: User = {
-      _id: new Types.ObjectId().toString(),
-      identifier: 'e1234567',
+    const userData: any = {
+      identifier: 'user001',
       name: 'John Doe',
       enrolledCourses: [],
-      gitHandle: 'johndoe-git',
+      gitHandle: 'johndoe',
     };
 
     const user = new UserModel(userData);
-
     const savedUser = await user.save();
 
+    expect(savedUser.identifier).toEqual(userData.identifier);
     expect(savedUser.name).toEqual(userData.name);
-    expect(savedUser.enrolledCourses).toEqual(userData.enrolledCourses);
     expect(savedUser.gitHandle).toEqual(userData.gitHandle);
   });
 
-  it('should not save a user without required fields', async () => {
-    const userData = {
-      name: 'John Doe',
-      enrolledCourses: [],
-      gitHandle: 'johndoe-git',
-      role: 'Student',
-    };
-
-    const user = new UserModel(userData);
-
-    await expect(user.save()).rejects.toThrow();
-  });
-
   it('should update an existing user', async () => {
-    const existingUser = new UserModel({
-      name: 'Alice',
-      enrolledCourses: [],
-      gitHandle: 'alice-git',
+    const originalUser = new UserModel({
+      identifier: 'user002',
+      name: 'Jane Doe',
     });
+    await originalUser.save();
 
-    await existingUser.save();
-
+    const updatedName = 'Jane Smith';
     const updatedUser = await UserModel.findByIdAndUpdate(
-      existingUser._id,
-      { name: 'Updated Alice' },
+      originalUser._id,
+      { name: updatedName },
       { new: true }
     );
 
-    expect(updatedUser?.name).toStrictEqual('Updated Alice');
+    expect(updatedUser?.name).toEqual(updatedName);
   });
 
-  it('should delete an existing user', async () => {
+  it('should delete a user', async () => {
     const userToDelete = new UserModel({
-      name: 'Bob',
-      enrolledCourses: [],
-      gitHandle: 'bob-git',
+      identifier: 'user003',
+      name: 'Mike Ross',
     });
-
     await userToDelete.save();
 
     const deletedUser = await UserModel.findByIdAndDelete(userToDelete._id);
-
     expect(deletedUser?._id).toStrictEqual(userToDelete._id);
   });
 
-  it('should not save a user with a duplicate id', async () => {
-    const user1 = new UserModel({
-      name: 'John Doe',
-      enrolledCourses: [],
-      gitHandle: 'johndoe-git',
+  it('should not save a user without required fields', async () => {
+    const user = new UserModel({ identifier: 'user004' });
+    await expect(user.save()).rejects.toThrow();
+  });
+
+  it('should enroll a user in courses', async () => {
+    const user = new UserModel({ identifier: 'user005', name: 'Sarah Connor' });
+    await user.save();
+
+    const course1 = new CourseModel({
+      name: 'Math 101',
+      code: 'MATH101',
+      semester: 'Spring 2023',
+      courseType: 'Normal' as CourseType,
     });
-
-    await user1.save();
-
-    const user2 = new UserModel({
-      name: 'Duplicate John',
-      enrolledCourses: [],
-      gitHandle: 'duplicate-git',
+    const course2 = new CourseModel({
+      name: 'Science 102',
+      code: 'SCI102',
+      semester: 'Spring 2023',
+      courseType: 'Normal' as CourseType,
     });
+    await Promise.all([course1.save(), course2.save()]);
 
-    await expect(user2.save()).rejects.toThrow();
+    user.enrolledCourses.push(course1._id, course2._id);
+    const updatedUser = await user.save();
+
+    expect(updatedUser.enrolledCourses).toHaveLength(2);
+    expect(updatedUser.enrolledCourses).toEqual(
+      expect.arrayContaining([course1._id, course2._id])
+    );
   });
 });

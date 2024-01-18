@@ -1,8 +1,8 @@
+import apiBaseUrl from '@/lib/api-config';
 import { Box, Button, Notification, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
 import CSVUpload from './CSVUpload';
-import { getApiUrl } from '@/lib/apiConfig';
 
 interface StudentFormProps {
   courseId: string | string[] | undefined;
@@ -22,7 +22,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
     },
   });
   const [error, setError] = useState<string | null>(null);
-  const apiUrl = getApiUrl() + `/courses/${courseId}/students`;
+  const apiUrl = apiBaseUrl + `/courses/${courseId}/students`;
   const csvTemplateHeaders = 'name,identifier,email,gitHandle';
 
   const handleSubmitForm = async () => {

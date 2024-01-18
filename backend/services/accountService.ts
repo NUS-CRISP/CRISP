@@ -1,4 +1,3 @@
-// accountService.ts
 import bcrypt from 'bcrypt';
 import AccountModel from '../models/Account';
 import UserModel from '../models/User';
@@ -11,27 +10,42 @@ export const createNewAccount = async (
   password: string,
   role: string
 ) => {
-  const existingAccount = await AccountModel.findOne({ email });
+  let existingAccount = await AccountModel.findOne({ email });
+  let newUser;
+
   if (existingAccount) {
-    throw new BadRequestError('Account with this email already exists.');
+    // Check for pre-created account
+    if (!existingAccount.password) {
+      const salt = await bcrypt.genSalt();
+      const passwordHash = await bcrypt.hash(password, salt);
+      existingAccount.password = passwordHash;
+      existingAccount.isApproved = false;
+      await existingAccount.save();
+      return;
+    } else {
+      throw new BadRequestError('Account with this email already exists.');
+    }
+  } else {
+    newUser = new UserModel({
+      identifier: identifier,
+      name: name,
+      enrolledCourses: [],
+      gitHandle: null,
+    });
+
+    const salt = await bcrypt.genSalt();
+    const passwordHash = await bcrypt.hash(password, salt);
+    const newAccount = new AccountModel({
+      email,
+      password: passwordHash,
+      role,
+      isApproved: false,
+      user: newUser._id,
+    });
+
+    await newUser.save();
+    await newAccount.save();
   }
-  const salt = await bcrypt.genSalt();
-  const passwordHash = await bcrypt.hash(password, salt);
-  const newUser = new UserModel({
-    identifier: identifier,
-    name: name,
-    enrolledCourses: [],
-    gitHandle: null,
-  });
-  const newAccount = new AccountModel({
-    email,
-    password: passwordHash,
-    role,
-    isApproved: false,
-    user: newUser._id,
-  });
-  await newUser.save();
-  await newAccount.save();
 };
 
 export const getAllPendingAccounts = async () => {
