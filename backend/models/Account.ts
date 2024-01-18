@@ -13,7 +13,7 @@ const accountSchema = new Schema<Account>({
     lowercase: true,
     required: true,
   },
-  password: { type: String, required: true },
+  password: { type: String },
   role: {
     type: String,
     enum: Role,
