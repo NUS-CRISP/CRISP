@@ -72,7 +72,7 @@ const CourseViewPage: React.FC = () => {
 
   const fetchTeamDataForOrg = async (orgName: string) => {
     try {
-      const githubOrgApiUrl = apiBaseUrl() + `/github/${orgName}`;
+      const githubOrgApiUrl = apiBaseUrl + `/github/${orgName}`;
       const response = await fetch(githubOrgApiUrl);
       if (!response.ok) {
         console.error('Error fetching team data:', response.statusText);
