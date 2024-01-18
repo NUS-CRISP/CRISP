@@ -3,9 +3,10 @@ import mongoose, { Schema, Types } from 'mongoose';
 
 export interface Course
   extends Omit<
-    SharedCourse,
-    '_id' | 'faculty' | 'TAs' | 'students' | 'teamSets' | 'assessments'
-  > {
+      SharedCourse,
+      '_id' | 'faculty' | 'TAs' | 'students' | 'teamSets' | 'assessments'
+    >,
+    Document {
   _id: Types.ObjectId;
   faculty: Types.ObjectId[];
   TAs: Types.ObjectId[];

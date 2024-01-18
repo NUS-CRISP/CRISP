@@ -36,8 +36,8 @@ export const uploadResults = async (req: Request, res: Response) => {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
     } else {
-      console.error('Error retrieving assessment:', error);
-      res.status(500).json({ error: 'Failed to retrieve assessment' });
+      console.error('Error uploading results:', error);
+      res.status(500).json({ error: 'Failed to upload results' });
     }
   }
 };
@@ -52,8 +52,8 @@ export const updateResultMarker = async (req: Request, res: Response) => {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
     } else {
-      console.error('Error retrieving assessment:', error);
-      res.status(500).json({ error: 'Failed to retrieve assessment' });
+      console.error('Error updating result marker:', error);
+      res.status(500).json({ error: 'Failed to update result marker' });
     }
   }
 };

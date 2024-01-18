@@ -153,7 +153,7 @@ export const getTeachingTeam = async (req: Request, res: Response) => {
       res.status(404).json({ error: error.message });
     } else {
       console.error('Error fetching Teaching Team:', error);
-      res.status(500).json({ message: 'Failed to retrieve Teaching Team' });
+      res.status(500).json({ error: 'Failed to retrieve Teaching Team' });
     }
   }
 };
