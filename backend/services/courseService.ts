@@ -7,15 +7,38 @@ import Role from '../../shared/types/auth/Role';
 import { NotFoundError } from './errors';
 
 /*----------------------------------------Course----------------------------------------*/
-export const createNewCourse = async (courseData: any) => {
-  await CourseModel.create(courseData);
+export const createNewCourse = async (courseData: any, accountId: string) => {
+  const account = await AccountModel.findById(accountId);
+  if (!account) {
+    throw new NotFoundError('Account not found');
+  }
+  const user = await UserModel.findById(account.user);
+  if (!user) {
+    throw new NotFoundError('User not found');
+  }
+  const course = await CourseModel.create(courseData);
+  course.faculty.push(user._id);
+  await course.save();
+  return course;
 };
 
-export const getAllCourses = async () => {
-  return await CourseModel.find();
+export const getCoursesForUser = async (accountId: string) => {
+  const account = await AccountModel.findById(accountId);
+  if (!account) {
+    throw new NotFoundError('Account not found');
+  }
+  const userId = account?.user;
+  const courses = await CourseModel.find({
+    $or: [{ students: userId }, { TAs: userId }, { faculty: userId }],
+  });
+  return courses;
 };
 
-export const getCourseById = async (courseId: string) => {
+export const getCourseById = async (courseId: string, accountId: string) => {
+  const account = await AccountModel.findById(accountId);
+  if (!account) {
+    throw new NotFoundError('Account not found');
+  }
   const course = await CourseModel.findById(courseId)
     .populate<{ faculty: User[] }>('faculty')
     .populate<{ TAs: User[] }>('TAs')
@@ -36,6 +59,16 @@ export const getCourseById = async (courseId: string) => {
     });
   if (!course) {
     throw new NotFoundError('Course not found');
+  }
+  const role = account.role;
+  if (role === 'Teaching assistant') {
+    const userId = account.user;
+    course.teamSets.forEach(
+      teamSet =>
+        (teamSet.teams = teamSet.teams.filter(
+          team => (team as unknown as Team).TA?.equals(userId)
+        ))
+    );
   }
   course.faculty.sort((a, b) => a.name.localeCompare(b.name));
   course.TAs.sort((a, b) => a.name.localeCompare(b.name));
@@ -111,9 +144,17 @@ export const addStudentsToCourse = async (
       await newAccount.save();
     } else {
       const studentAccount = await AccountModel.findOne({ user: student._id });
-      if (studentAccount && studentAccount.role !== Role.Student) {
+      if (!studentAccount) {
         continue;
       }
+      if (
+        studentAccount.role !== Role.Student ||
+        studentData.name !== student.name ||
+        studentData.email !== studentAccount.email
+      ) {
+        continue;
+      }
+      student.gitHandle = studentData.gitHandle ?? student.gitHandle;
     }
     if (!student.enrolledCourses.includes(course._id)) {
       student.enrolledCourses.push(course._id);
@@ -154,9 +195,17 @@ export const addTAsToCourse = async (courseId: string, TADataList: any[]) => {
       newAccount.save();
     } else {
       const TAAccount = await AccountModel.findOne({ user: TA._id });
-      if (TAAccount && TAAccount.role !== 'Teaching assistant') {
+      if (!TAAccount) {
         continue;
       }
+      if (
+        TAAccount.role !== Role.TA ||
+        TAData.name !== TA.name ||
+        TAData.email !== TAAccount.email
+      ) {
+        continue;
+      }
+      TA.gitHandle = TAData.gitHandle ?? TA.gitHandle;
     }
     if (!TA.enrolledCourses.includes(course._id)) {
       TA.enrolledCourses.push(course._id);

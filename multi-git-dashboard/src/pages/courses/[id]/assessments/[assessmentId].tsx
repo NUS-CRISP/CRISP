@@ -3,6 +3,7 @@ import apiBaseUrl from '@/lib/api-config';
 import { Button, Container, Modal, Tabs, Text } from '@mantine/core';
 import { Assessment } from '@shared/types/Assessment';
 import { User } from '@shared/types/User';
+import { getSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
 import ResultCard from '../../../../components/cards/ResultCard';
@@ -21,7 +22,15 @@ const AssessmentDetail: React.FC = () => {
 
   const fetchAssessment = useCallback(async () => {
     try {
-      const response = await fetch(assessmentsApiUrl);
+      const session = await getSession();
+      const accountId = session?.user?.id;
+      const response = await fetch(assessmentsApiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `${accountId}`,
+        },
+      });
       if (!response.ok) {
         console.error('Error fetching assessment:', response.statusText);
         return;

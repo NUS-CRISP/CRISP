@@ -14,6 +14,7 @@ import {
 import { useForm } from '@mantine/form';
 import { CourseType } from '@shared/types/Course';
 import { IconBrandGithub, IconCheck } from '@tabler/icons-react';
+import { getSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 
@@ -48,8 +49,8 @@ const CreateCoursePage: React.FC = () => {
       // field should be valid only if courseType is Normal, or if courseType is GitHubOrg and installation check is successful
       gitHubOrgName: (value, values) =>
         values.courseType === CourseType.Normal ||
-          (values.courseType === CourseType.GitHubOrg &&
-            appInstalled === 'success')
+        (values.courseType === CourseType.GitHubOrg &&
+          appInstalled === 'success')
           ? null
           : 'GitHub Org name is required',
     },
@@ -61,7 +62,8 @@ const CreateCoursePage: React.FC = () => {
 
     try {
       const githubInstallationApiUrl =
-        apiBaseUrl() + '/github/check-installation';
+        apiBaseUrl + '/github/check-installation';
+
       const response = await fetch(githubInstallationApiUrl, {
         method: 'POST',
         headers: {
@@ -86,10 +88,13 @@ const CreateCoursePage: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    const session = await getSession();
+    const accountId = session?.user?.id;
     const response = await fetch(courseApiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Authorization: `${accountId}`,
       },
       body: JSON.stringify(form.values),
     });
@@ -200,8 +205,8 @@ const CreateCoursePage: React.FC = () => {
                         appInstalled === 'success'
                           ? 'green'
                           : appInstalled === 'error'
-                            ? 'red'
-                            : 'blue'
+                          ? 'red'
+                          : 'blue'
                       }
                       rightSection={
                         appInstalled === 'success' ? (
@@ -215,10 +220,10 @@ const CreateCoursePage: React.FC = () => {
                       {appInstalled === 'success'
                         ? 'Installed'
                         : appInstalled === 'error'
-                          ? 'Try Again'
-                          : appInstalled === 'loading'
-                            ? 'Checking...'
-                            : 'Check Installation'}
+                        ? 'Try Again'
+                        : appInstalled === 'loading'
+                        ? 'Checking...'
+                        : 'Check Installation'}
                     </Button>
                   </List.Item>
                 </List>

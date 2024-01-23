@@ -2,6 +2,7 @@ import CourseCard from '@/components/cards/CourseCard';
 import apiBaseUrl from '@/lib/api-config';
 import { Button } from '@mantine/core';
 import { Course } from '@shared/types/Course';
+import { getSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
@@ -17,7 +18,15 @@ const CourseListPage: React.FC = () => {
 
   const fetchCourses = async () => {
     try {
-      const response = await fetch(apiUrl);
+      const session = await getSession();
+      const accountId = session?.user?.id;
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `${accountId}`,
+        },
+      });
       if (!response.ok) {
         console.error('Error fetching courses:', response.statusText);
         return;
