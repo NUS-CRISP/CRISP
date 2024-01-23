@@ -63,7 +63,7 @@ const CourseViewPage: React.FC = () => {
 
   const fetchTeamDataForOrg = async (orgName: string) => {
     try {
-      const githubOrgApiUrl = apiBaseUrl() + `/github/${orgName}`;
+      const githubOrgApiUrl = apiBaseUrl + `/github/${orgName}`;
       const response = await fetch(githubOrgApiUrl);
       if (!response.ok) {
         console.error('Error fetching team data:', response.statusText);
@@ -104,18 +104,10 @@ const CourseViewPage: React.FC = () => {
     fetchCourse();
   };
 
-  if (!course) {
-    return (
-      <Container size="md">
-        <Loader size="md" />
-      </Container>
-    );
-  }
-
   return (
-    <Container size="md">
+    <Container style={{ height: 'calc(100dvh - 2 * 20px)', display: 'flex', flexDirection: 'column' }}>
       {course ? (
-        <Tabs defaultValue="overview">
+        <Tabs defaultValue="overview" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
           <Tabs.List
             style={{ display: 'flex', justifyContent: 'space-evenly' }}
           >
@@ -127,41 +119,41 @@ const CourseViewPage: React.FC = () => {
             <Tabs.Tab value="sprints">Sprints</Tabs.Tab>
             <Tabs.Tab value="assessments">Assessments</Tabs.Tab>
           </Tabs.List>
-          <Tabs.Panel value="overview">
-            <div>
+          <div style={{ overflow: 'auto', flexGrow: 1 }}>
+            <Tabs.Panel value="overview">
               <Overview course={course} teamsData={teamsData} />
-            </div>
-          </Tabs.Panel>
-          <Tabs.Panel value="students">
-            <div>
-              <StudentsInfo course={course} onUpdate={handleUpdate} />
-            </div>
-          </Tabs.Panel>
-          <Tabs.Panel value="staff">
-            <div>
-              <StaffInfo course={course} onUpdate={handleUpdate} />
-            </div>
-          </Tabs.Panel>
-          <Tabs.Panel value="teams">
-            <div>
-              <TeamSetsInfo course={course} onUpdate={handleUpdate} />
-            </div>
-          </Tabs.Panel>
-          <Tabs.Panel value="milestones">
-            <div>
-              <MilestonesInfo course={course} onUpdate={handleUpdate} />
-            </div>
-          </Tabs.Panel>
-          <Tabs.Panel value="sprints">
-            <div>
-              <SprintsInfo course={course} onUpdate={handleUpdate} />
-            </div>
-          </Tabs.Panel>
-          <Tabs.Panel value="assessments">
-            <div>
-              <AssessmentsInfo course={course} onUpdate={handleUpdate} />
-            </div>
-          </Tabs.Panel>
+            </Tabs.Panel>
+            <Tabs.Panel value="students">
+              <div>
+                <StudentsInfo course={course} onUpdate={handleUpdate} />
+              </div>
+            </Tabs.Panel>
+            <Tabs.Panel value="staff">
+              <div>
+                <StaffInfo course={course} onUpdate={handleUpdate} />
+              </div>
+            </Tabs.Panel>
+            <Tabs.Panel value="teams">
+              <div>
+                <TeamSetsInfo course={course} onUpdate={handleUpdate} />
+              </div>
+            </Tabs.Panel>
+            <Tabs.Panel value="milestones">
+              <div>
+                <MilestonesInfo course={course} onUpdate={handleUpdate} />
+              </div>
+            </Tabs.Panel>
+            <Tabs.Panel value="sprints">
+              <div>
+                <SprintsInfo course={course} onUpdate={handleUpdate} />
+              </div>
+            </Tabs.Panel>
+            <Tabs.Panel value="assessments">
+              <div>
+                <AssessmentsInfo course={course} onUpdate={handleUpdate} />
+              </div>
+            </Tabs.Panel>
+          </div>
         </Tabs>
       ) : (
         <Loader size="md" />
