@@ -1,4 +1,3 @@
-// assessmentService.test.ts
 import mongoose from 'mongoose';
 import {
   getAssessmentById,
@@ -10,7 +9,7 @@ import AssessmentModel from '../../models/Assessment';
 import ResultModel from '../../models/Result';
 import CourseModel from '../../models/Course';
 import AccountModel from '../../models/Account';
-import { BadRequestError, NotFoundError } from '../../services/errors';
+import { NotFoundError } from '../../services/errors';
 
 jest.mock('../../models/Assessment', () => ({
   findById: jest.fn(),
