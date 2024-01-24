@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import apiBaseUrl from '@/lib/api-config';
 import { Box, Notification } from '@mantine/core';
+import React, { useState } from 'react';
 import CSVUpload from './CSVUpload';
-import { getApiUrl } from '@/lib/apiConfig';
 
 interface ResultFormProps {
   assessmentId: string;
@@ -13,7 +13,7 @@ const ResultForm: React.FC<ResultFormProps> = ({
   onResultsUploaded,
 }) => {
   const [error, setError] = useState<string | null>(null);
-  const apiUrl = getApiUrl() + `/assessments/${assessmentId}/results`;
+  const apiUrl = apiBaseUrl + `/assessments/${assessmentId}/results`;
   const csvTemplateHeaders = 'teamNumber,studentId,mark';
 
   return (

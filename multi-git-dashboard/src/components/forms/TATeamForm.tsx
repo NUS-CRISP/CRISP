@@ -1,8 +1,8 @@
+import apiBaseUrl from '@/lib/api-config';
 import { Box, Button, Notification, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
 import CSVUpload from './CSVUpload';
-import { getApiUrl } from '@/lib/apiConfig';
 
 interface TATeamFormProps {
   courseId: string | string[] | undefined;
@@ -28,7 +28,7 @@ const TATeamForm: React.FC<TATeamFormProps> = ({
   });
 
   const [error, setError] = useState<string | null>(null);
-  const apiUrl = getApiUrl() + `/courses/${courseId}/teams/tas`;
+  const apiUrl = apiBaseUrl + `/courses/${courseId}/teams/tas`;
   const csvTemplateHeaders = 'identifier,teamNumber';
 
   const transformTAData = (data: unknown[]) => {

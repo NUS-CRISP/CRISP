@@ -2,5 +2,9 @@
 .scannerwork
 sonar-project.properties
 
+# JMeter
+load-test/results
+load-test/jmeter.log
+
 # MacOS
 .DS_Store
