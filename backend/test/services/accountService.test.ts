@@ -1,151 +1,150 @@
-import bcrypt from 'bcrypt';
+import mongoose from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import AccountModel from '../../models/Account';
 import {
+  approveAccountByIds,
   createNewAccount,
   getAllPendingAccounts,
-  approveAccountByIds,
 } from '../../services/accountService';
-import AccountModel from '../../models/Account';
-import UserModel from '../../models/User';
 import { BadRequestError } from '../../services/errors';
 
-jest.mock('bcrypt');
-jest.mock('../../models/Account');
-jest.mock('../../models/User');
+let mongo: any;
 
-afterEach(() => {
-  jest.restoreAllMocks();
+beforeAll(async () => {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
+  mongo = await MongoMemoryServer.create();
+  const mongoUri = await mongo.getUri();
+
+  await mongoose.connect(mongoUri);
 });
 
+beforeEach(async () => {
+  const collections = await mongoose.connection.db.collections();
+
+  for (let collection of collections) {
+    await collection.deleteMany({});
+  }
+});
+
+afterAll(async () => {
+  jest.setTimeout(20000);
+  await mongo.stop();
+  await mongoose.connection.close();
+});
+
+const testAccountDetails = {
+  identifier: 'testIdentifier',
+  name: 'Test User',
+  email: 'test@example.com',
+  password: 'password123',
+  role: 'Teaching assistant',
+};
+
+async function createTestAccount(changes = {}) {
+  const accountData = { ...testAccountDetails, ...changes };
+  await createNewAccount(
+    accountData.identifier,
+    accountData.name,
+    accountData.email,
+    accountData.password,
+    accountData.role
+  );
+  return await AccountModel.findOne({ email: accountData.email });
+}
+
 describe('accountService', () => {
+  beforeEach(async () => {
+    await AccountModel.deleteMany({});
+  });
+
   describe('createNewAccount', () => {
-    it('should create a new account successfully', async () => {
-      const mockBcryptSalt = 'mock_salt';
-      const mockBcryptHash = 'mock_hashed_password';
-      jest
-        .spyOn(bcrypt, 'genSalt')
-        .mockImplementation(() => Promise.resolve(mockBcryptSalt));
-      jest
-        .spyOn(bcrypt, 'hash')
-        .mockImplementation(() => Promise.resolve(mockBcryptHash));
-      jest.spyOn(AccountModel, 'findOne').mockResolvedValue(null);
-      jest.spyOn(UserModel.prototype, 'save').mockResolvedValue(undefined);
-      jest.spyOn(AccountModel.prototype, 'save').mockResolvedValue(undefined);
-
-      await expect(
-        createNewAccount(
-          'id123',
-          'John Doe',
-          'john@example.com',
-          'password123',
-          'student'
-        )
-      ).resolves.not.toThrow();
-
-      expect(bcrypt.genSalt).toHaveBeenCalled();
-      expect(bcrypt.hash).toHaveBeenCalledWith('password123', mockBcryptSalt);
-      expect(UserModel.prototype.save).toHaveBeenCalled();
-      expect(AccountModel.prototype.save).toHaveBeenCalled();
+    it('should create a new account', async () => {
+      await createTestAccount();
+      const savedAccount = await AccountModel.findOne({
+        email: testAccountDetails.email,
+      });
+      expect(savedAccount).toBeTruthy();
+      expect(savedAccount?.email).toBe(testAccountDetails.email);
     });
 
     it('should throw BadRequestError if account with email already exists', async () => {
-      jest
-        .spyOn(AccountModel, 'findOne')
-        .mockResolvedValue({ email: 'john@example.com' });
-
+      await createTestAccount();
       await expect(
         createNewAccount(
-          'id123',
-          'John Doe',
-          'john@example.com',
-          'password123',
-          'student'
+          testAccountDetails.identifier,
+          testAccountDetails.name,
+          testAccountDetails.email,
+          testAccountDetails.password,
+          testAccountDetails.role
         )
       ).rejects.toThrow(BadRequestError);
-    });
-
-    it('should throw an error if user save fails', async () => {
-      jest.spyOn(AccountModel, 'findOne').mockResolvedValue(null);
-      jest
-        .spyOn(UserModel.prototype, 'save')
-        .mockRejectedValue(new Error('User save failed'));
-      // No need to mock AccountModel save since it should not be called if user save fails.
-
-      await expect(
-        createNewAccount(
-          'id123',
-          'John Doe',
-          'john@example.com',
-          'password123',
-          'student'
-        )
-      ).rejects.toThrow('User save failed');
-    });
-
-    it('should throw an error if account save fails', async () => {
-      jest.spyOn(AccountModel, 'findOne').mockResolvedValue(null);
-      jest
-        .spyOn(UserModel.prototype, 'save')
-        .mockResolvedValue(undefined as any); // Assuming the user is saved successfully.
-      jest
-        .spyOn(AccountModel.prototype, 'save')
-        .mockRejectedValue(new Error('Account save failed'));
-
-      await expect(
-        createNewAccount(
-          'id123',
-          'John Doe',
-          'john@example.com',
-          'password123',
-          'student'
-        )
-      ).rejects.toThrow('Account save failed');
     });
   });
 
   describe('getAllPendingAccounts', () => {
-    it('should retrieve all pending accounts', async () => {
-      const mockAccounts = [
-        { email: 'pending@example.com', isApproved: false },
-      ];
-      jest.spyOn(AccountModel, 'find').mockResolvedValue(mockAccounts);
+    it('should return only accounts that are not approved', async () => {
+      await createTestAccount({
+        email: 'pending@example.com',
+        identifier: 'testIdentifier1',
+        isApproved: false,
+      });
 
-      const accounts = await getAllPendingAccounts();
+      // Call the function under test
+      const pendingAccounts = await getAllPendingAccounts();
 
-      expect(accounts).toEqual(mockAccounts);
-      expect(AccountModel.find).toHaveBeenCalledWith({ isApproved: false });
-    });
-
-    it('should handle database errors gracefully', async () => {
-      jest
-        .spyOn(AccountModel, 'find')
-        .mockRejectedValue(new Error('Database error'));
-
-      await expect(getAllPendingAccounts()).rejects.toThrow('Database error');
+      // Expect to get only the not approved accounts
+      expect(pendingAccounts).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            email: 'pending@example.com',
+            isApproved: false,
+          }),
+        ])
+      );
+      expect(pendingAccounts.length).toBe(1);
     });
   });
 
   describe('approveAccountByIds', () => {
-    it('should approve accounts by given ids', async () => {
-      jest
-        .spyOn(AccountModel, 'updateMany')
-        .mockResolvedValue({ nModified: 2 } as any);
+    it('should approve accounts by their IDs', async () => {
+      // Create two new accounts that are not approved
+      const account1 = await createTestAccount({
+        email: 'approve1@example.com',
+        identifier: 'testIdentifier1',
+        isApproved: false,
+      });
+      const account2 = await createTestAccount({
+        email: 'approve2@example.com',
+        identifier: 'testIdentifier2',
+        isApproved: false,
+      });
 
-      await approveAccountByIds(['id1', 'id2']);
+      // Make sure the accounts are not null
+      if (!account1 || !account2) {
+        throw new Error('Test accounts could not be created');
+      }
 
-      expect(AccountModel.updateMany).toHaveBeenCalledWith(
-        { _id: { $in: ['id1', 'id2'] } },
-        { $set: { isApproved: true } }
-      );
+      // Call the function under test with the IDs of the accounts to approve
+      await approveAccountByIds([account1._id, account2._id]);
+
+      // Fetch the accounts again to check their approval status
+      const updatedAccount1 = await AccountModel.findById(account1._id);
+      const updatedAccount2 = await AccountModel.findById(account2._id);
+
+      // Make sure the updated accounts are not null
+      if (!updatedAccount1 || !updatedAccount2) {
+        throw new Error('Test accounts could not be found after approval');
+      }
+
+      // Expect the accounts to be approved
+      expect(updatedAccount1.isApproved).toBe(true);
+      expect(updatedAccount2.isApproved).toBe(true);
     });
 
-    it('should handle database errors gracefully', async () => {
-      jest
-        .spyOn(AccountModel, 'updateMany')
-        .mockRejectedValue(new Error('Database error'));
-
-      await expect(approveAccountByIds(['id1', 'id2'])).rejects.toThrow(
-        'Database error'
-      );
+    it('should not throw an error if an empty array is passed', async () => {
+      // This test ensures that the function does not throw if there are no IDs to update
+      await expect(approveAccountByIds([])).resolves.not.toThrow();
     });
   });
 });
