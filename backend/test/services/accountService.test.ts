@@ -11,8 +11,6 @@ import { BadRequestError } from '../../services/errors';
 let mongo: any;
 
 beforeAll(async () => {
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-
   mongo = await MongoMemoryServer.create();
   const mongoUri = await mongo.getUri();
 
@@ -28,7 +26,6 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  jest.setTimeout(20000);
   await mongo.stop();
   await mongoose.connection.close();
 });
