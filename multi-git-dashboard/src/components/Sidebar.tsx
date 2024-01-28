@@ -59,7 +59,7 @@ const Sidebar: React.FC = () => {
       <div className={classes.footer}>
         <a
           href="#"
-          className={classes.link}
+          className={`${classes.link} no-hover`}
           onClick={event => event.preventDefault()}
         >
           <IconUserCircle className={classes.linkIcon} stroke={1.5} />

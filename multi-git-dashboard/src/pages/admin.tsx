@@ -51,13 +51,13 @@ const sortData = (
   return !sortBy
     ? filterData(data, search)
     : filterData(
-      [...data].sort((a, b) =>
-        reversed
-          ? b[sortBy].localeCompare(a[sortBy])
-          : a[sortBy].localeCompare(b[sortBy])
-      ),
-      payload.search
-    );
+        [...data].sort((a, b) =>
+          reversed
+            ? b[sortBy].localeCompare(a[sortBy])
+            : a[sortBy].localeCompare(b[sortBy])
+        ),
+        payload.search
+      );
 };
 
 const Th: React.FC<ThProps> = ({
@@ -164,6 +164,28 @@ const AdminPage: React.FC = () => {
     );
   };
 
+  const handleReject = async (ids: string[]) => {
+    const apiUrl = apiBaseUrl + '/accounts/reject';
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ids }),
+    });
+
+    if (!response.ok) {
+      return;
+    }
+    // Remove accounts from the list of pending accounts
+    setPendingAccounts(
+      pendingAccounts.filter(account => !ids.includes(account._id))
+    );
+    setFilteredAccounts(
+      filteredAccounts.filter(account => !ids.includes(account._id))
+    );
+  };
+
   useEffect(() => {
     const fetchPendingAccounts = async () => {
       const apiUrl = apiBaseUrl + '/accounts/pending';
@@ -207,7 +229,9 @@ const AdminPage: React.FC = () => {
       <Table.Td>
         <Group>
           <Button onClick={() => handleApprove([account._id])}>Approve</Button>
-          <Button color="red">Delete</Button>
+          <Button onClick={() => handleReject([account._id])} color="red">
+            Reject
+          </Button>
         </Group>
       </Table.Td>
     </Table.Tr>
@@ -270,7 +294,7 @@ const AdminPage: React.FC = () => {
           Approve selected
         </Button>
         <Button color="red" disabled={selectedRows.length === 0}>
-          Delete selected
+          Reject selected
         </Button>
       </Group>
     </ScrollArea>
