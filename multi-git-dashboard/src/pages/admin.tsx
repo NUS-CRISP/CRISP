@@ -51,13 +51,13 @@ const sortData = (
   return !sortBy
     ? filterData(data, search)
     : filterData(
-      [...data].sort((a, b) =>
-        reversed
-          ? b[sortBy].localeCompare(a[sortBy])
-          : a[sortBy].localeCompare(b[sortBy])
-      ),
-      payload.search
-    );
+        [...data].sort((a, b) =>
+          reversed
+            ? b[sortBy].localeCompare(a[sortBy])
+            : a[sortBy].localeCompare(b[sortBy])
+        ),
+        payload.search
+      );
 };
 
 const Th: React.FC<ThProps> = ({
