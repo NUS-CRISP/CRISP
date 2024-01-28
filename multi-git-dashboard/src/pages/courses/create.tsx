@@ -30,7 +30,7 @@ const CreateCoursePage: React.FC = () => {
     SUCCESS = 'success',
     ERROR = 'error',
   }
-  const [AppInstallationStatus, setAppInstallationStatus] = useState<InstallationStatus>(InstallationStatus.IDLE);
+  const [appInstallationStatus, setAppInstallationStatus] = useState<InstallationStatus>(InstallationStatus.IDLE);
 
   const [errorMessage, setErrorMessage] = useState('');
   const courseApiUrl = apiBaseUrl + '/courses';
@@ -56,7 +56,7 @@ const CreateCoursePage: React.FC = () => {
       gitHubOrgName: (value, values) =>
         values.courseType === CourseType.Normal ||
         (values.courseType === CourseType.GitHubOrg &&
-          AppInstallationStatus === InstallationStatus.SUCCESS)
+          appInstallationStatus === InstallationStatus.SUCCESS)
           ? null
           : 'GitHub Org name is required',
     },
@@ -203,19 +203,19 @@ const CreateCoursePage: React.FC = () => {
                     )}
                     <Button
                       type="button"
-                      loading={AppInstallationStatus === InstallationStatus.LOADING}
+                      loading={appInstallationStatus === InstallationStatus.LOADING}
                       variant={
-                        AppInstallationStatus === InstallationStatus.SUCCESS ? 'filled' : 'outline'
+                        appInstallationStatus === InstallationStatus.SUCCESS ? 'filled' : 'outline'
                       }
                       color={
-                        AppInstallationStatus === InstallationStatus.SUCCESS
+                        appInstallationStatus === InstallationStatus.SUCCESS
                           ? 'green'
-                          : AppInstallationStatus === InstallationStatus.ERROR
+                          : appInstallationStatus === InstallationStatus.ERROR
                           ? 'red'
                           : 'blue'
                       }
                       rightSection={
-                        AppInstallationStatus === InstallationStatus.SUCCESS ? (
+                        appInstallationStatus === InstallationStatus.SUCCESS ? (
                           <IconCheck size={14} />
                         ) : null
                       }
@@ -223,11 +223,11 @@ const CreateCoursePage: React.FC = () => {
                         checkAppInstallation(form.values.gitHubOrgName)
                       }
                     >
-                      {AppInstallationStatus === InstallationStatus.SUCCESS
+                      {appInstallationStatus === InstallationStatus.SUCCESS
                         ? 'Installed'
-                        : AppInstallationStatus === InstallationStatus.ERROR
+                        : appInstallationStatus === InstallationStatus.ERROR
                         ? 'Try Again'
-                        : AppInstallationStatus === InstallationStatus.LOADING
+                        : appInstallationStatus === InstallationStatus.LOADING
                         ? 'Checking...'
                         : 'Check Installation'}
                     </Button>
