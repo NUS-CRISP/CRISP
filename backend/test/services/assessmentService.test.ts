@@ -1,220 +1,292 @@
 import mongoose from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import AssessmentModel from '../../models/Assessment';
+import ResultModel, { Result } from '../../models/Result';
+import CourseModel from '../../models/Course';
+import AccountModel from '../../models/Account';
+import UserModel from '../../models/User';
 import {
   getAssessmentById,
   uploadAssessmentResultsById,
   updateAssessmentResultMarkerById,
   addAssessmentsToCourse,
 } from '../../services/assessmentService';
-import AssessmentModel from '../../models/Assessment';
-import ResultModel from '../../models/Result';
-import CourseModel from '../../models/Course';
-import AccountModel from '../../models/Account';
-import { NotFoundError } from '../../services/errors';
+import { NotFoundError, BadRequestError } from '../../services/errors';
 
-jest.mock('../../models/Assessment', () => ({
-  findById: jest.fn(),
-  findOne: jest.fn(),
-  __esModule: true,
-  default: function () {
-    return {
-      save: jest.fn().mockResolvedValue({ _id: new mongoose.Types.ObjectId() }),
-    };
-  },
-}));
+let mongo: MongoMemoryServer;
 
-jest.mock('../../models/Result', () => ({
-  __esModule: true,
-  default: function () {
-    return {
-      save: jest.fn().mockResolvedValue({ _id: new mongoose.Types.ObjectId() }),
-    };
-  },
-}));
-
-jest.mock('../../models/Course', () => ({
-  findById: jest.fn(),
-}));
-
-jest.mock('../../models/Account', () => ({
-  findById: jest.fn(),
-}));
-
-beforeEach(() => {
-  jest.clearAllMocks();
+beforeAll(async () => {
+  mongo = await MongoMemoryServer.create();
+  const mongoUri = mongo.getUri();
+  await mongoose.connect(mongoUri);
 });
 
-describe('accountService', () => {
-  const mockTA = {
-    _id: new mongoose.Types.ObjectId(),
+beforeEach(async () => {
+  const collections = await mongoose.connection.db.collections();
+  for (const collection of collections) {
+    await collection.deleteMany({});
+  }
+});
+
+afterAll(async () => {
+  if (mongo) {
+    await mongo.stop();
+  }
+  await mongoose.connection.close();
+});
+
+const commonCourseDetails = {
+  name: 'Introduction to Computer Science',
+  code: 'CS101',
+  semester: 'Fall 2024',
+  courseType: 'Normal',
+};
+
+const commonStudentDetails = {
+  identifier: 'uniqueuserid',
+  name: 'John Doe',
+  gitHandle: 'johndoe',
+};
+
+const commonTADetails = {
+  identifier: 'uniquetaid',
+  name: 'John Doe ta',
+  gitHandle: 'johndoeta',
+};
+
+async function createTestCourse(courseData: any) {
+  const course = new CourseModel(courseData);
+  await course.save();
+  return course;
+}
+
+async function createStudentUser(userData: any) {
+  const user = new UserModel({
+    ...userData,
+    enrolledCourses: [],
+  });
+  await user.save();
+
+  const account = new AccountModel({
+    email: `${userData.identifier}@example.com`,
+    password: 'hashedpassword',
+    role: 'Student',
+    user: user._id,
+    isApproved: true,
+  });
+  await account.save();
+
+  return user;
+}
+
+async function createTAUser(userData: any) {
+  const user = new UserModel({
+    ...userData,
+    enrolledCourses: [],
+  });
+  await user.save();
+
+  const account = new AccountModel({
+    email: `${userData.identifier}@example.com`,
+    password: 'hashedpassword',
     role: 'Teaching assistant',
-    user: new mongoose.Types.ObjectId(),
-  };
-  const mockFaculty = {
-    _id: new mongoose.Types.ObjectId(),
-    role: 'Faculty',
-    user: new mongoose.Types.ObjectId(),
-  };
-  const mockIndividualAssessment = {
-    _id: new mongoose.Types.ObjectId(),
-    results: [],
-    granularity: 'individual',
-  };
-  const mockTeamAssessment = {
-    _id: new mongoose.Types.ObjectId(),
-    results: [],
-    granularity: 'team',
-  };
+    user: user._id,
+    isApproved: true,
+  });
+  await account.save();
+
+  return { user, account };
+}
+
+describe('assessmentService', () => {
+  let courseId: string;
+  let assessmentId: string;
+  let taId: string;
+  let taAccountId: string;
+  let studentId: string;
+  let resultId: string;
+
+  beforeEach(async () => {
+    const course = await createTestCourse(commonCourseDetails);
+    courseId = course._id.toHexString();
+
+    const student = await createStudentUser(commonStudentDetails);
+    studentId = student._id.toHexString();
+    const pair = await createTAUser(commonTADetails);
+    const ta = pair.user;
+    const account = pair.account;
+    taId = ta._id.toHexString();
+    taAccountId = account._id;
+
+    const assessment = new AssessmentModel({
+      course: course._id,
+      assessmentType: 'Exam',
+      markType: 'Percentage',
+      results: [],
+      frequency: 'Once',
+      granularity: 'individual',
+    });
+    await assessment.save();
+    assessmentId = assessment._id.toHexString();
+
+    const result = new ResultModel({
+      assessment: assessment._id,
+      marker: null,
+      marks: [
+        {
+          user: student._id,
+          name: student.name,
+          mark: 0,
+        },
+      ],
+    });
+    await result.save();
+    resultId = result._id.toHexString();
+    assessment.results.push(result._id);
+    await assessment.save();
+  });
 
   describe('getAssessmentById', () => {
-    it('should retrieve the assessment if it exists', async () => {
-      AssessmentModel.findById = jest.fn().mockReturnValue({
-        populate: jest.fn().mockResolvedValue(mockIndividualAssessment),
-      });
-      AccountModel.findById = jest.fn().mockResolvedValue(mockFaculty);
-
-      const assessment = await getAssessmentById(
-        mockIndividualAssessment._id.toString(),
-        mockFaculty._id.toString()
+    it('should retrieve an assessment by id', async () => {
+      const retrievedAssessment = await getAssessmentById(
+        assessmentId,
+        taAccountId
       );
-
-      expect(assessment).toEqual(mockIndividualAssessment);
-      expect(AssessmentModel.findById).toHaveBeenCalledWith(
-        mockIndividualAssessment._id.toString()
-      );
+      expect(retrievedAssessment).toBeDefined();
+      expect(retrievedAssessment._id.toString()).toEqual(assessmentId);
     });
 
-    it('should filter results for teaching assistant', async () => {
-      // Mock a TA-specific assessment result...
-      const assessmentWithTA = {
-        ...mockTeamAssessment,
-        results: [
-          {
-            team: {
-              TA: mockTA.user,
-            },
-            marks: [{ mark: 80 }],
-          },
-          {
-            team: {
-              TA: new mongoose.Types.ObjectId(),
-            },
-            marks: [{ mark: 90 }],
-          },
-        ],
-      };
-
-      AssessmentModel.findById = jest.fn().mockReturnValue({
-        populate: jest.fn().mockResolvedValue(assessmentWithTA),
-      });
-      AccountModel.findById = jest.fn().mockResolvedValue(mockTA);
-
-      const assessment = await getAssessmentById(
-        mockTeamAssessment._id.toString(),
-        mockTA._id.toString()
+    it('should throw NotFoundError for invalid assessmentId', async () => {
+      const invalidId = new mongoose.Types.ObjectId().toHexString();
+      await expect(getAssessmentById(invalidId, taAccountId)).rejects.toThrow(
+        NotFoundError
       );
-
-      // Expect to only see results for teams associated with this TA
-      expect(assessment.results.length).toBe(1);
-      expect(assessment.results[0].marks[0].mark).toBe(80);
     });
   });
 
   describe('uploadAssessmentResultsById', () => {
-    const assessmentId = new mongoose.Types.ObjectId().toString();
-    const mockResults = [
-      { teamNumber: 1, studentId: 'student1', mark: 85 },
-      { teamNumber: 1, studentId: 'student2', mark: 86 },
-      { teamNumber: 2, studentId: 'student3', mark: 87 },
-    ];
-
-    beforeEach(() => {
-      jest.clearAllMocks();
-    });
-
-    it('should upload results for an individual assessment successfully', async () => {
-      // Setup the mock implementation
-      const mockAssessment = {
-        _id: assessmentId,
-        granularity: 'individual',
-        results: mockResults.map((result, index) => ({
-          marks: [{ user: result.studentId, mark: 0 }],
-          save: jest.fn().mockResolvedValue({ ...result, mark: result.mark }),
-        })),
-      };
-
-      AssessmentModel.findById = jest.fn().mockReturnValue({
-        populate: jest.fn().mockResolvedValue(mockAssessment),
-      });
-
-      // Call the function under test
+    it('should upload assessment results', async () => {
+      const mockResults = [{ teamNumber: 1, studentId: studentId, mark: 90 }];
       await uploadAssessmentResultsById(assessmentId, mockResults);
 
-      // Verify that save was called for each result
-      for (const result of mockAssessment.results) {
-        expect(result.save).toHaveBeenCalledTimes(1);
+      const updatedAssessment = await AssessmentModel.findById(
+        assessmentId
+      ).populate({
+        path: 'results',
+        populate: {
+          path: 'marks',
+        },
+      });
+      const updatedResults = updatedAssessment?.results;
+      let isResultUploaded = false;
+
+      for (const result of updatedResults as unknown as Result[]) {
+        const marks = result.marks;
+        if (!marks || marks.length < 1) {
+          continue;
+        }
+        if (marks[0].mark === 90 && marks[0].user === studentId) {
+          isResultUploaded = true;
+        }
       }
+      expect(isResultUploaded).toBe(true);
     });
 
-    it('should throw NotFoundError if the assessment does not exist', async () => {
-      AssessmentModel.findById = jest.fn().mockReturnValue({
-        populate: jest.fn().mockResolvedValue(null),
-      });
-
-      // Assert that a NotFoundError is thrown
+    it('should throw NotFoundError for invalid assessmentId', async () => {
+      const invalidId = new mongoose.Types.ObjectId().toHexString();
+      const mockResults = [{ teamNumber: 1, studentId: studentId, mark: 85 }];
       await expect(
-        uploadAssessmentResultsById(assessmentId, mockResults)
+        uploadAssessmentResultsById(invalidId, mockResults)
       ).rejects.toThrow(NotFoundError);
-    });
-
-    it('should handle errors during result saving', async () => {
-      const mockAssessment = {
-        _id: assessmentId,
-        granularity: 'individual',
-        results: mockResults.map((result, index) => ({
-          marks: [{ user: result.studentId, mark: 0 }],
-          save: jest.fn().mockRejectedValue(new Error('Database error')),
-        })),
-      };
-
-      AssessmentModel.findById = jest.fn().mockReturnValue({
-        populate: jest.fn().mockResolvedValue(mockAssessment),
-      });
-
-      // Assert that an error is thrown when save fails
-      await expect(
-        uploadAssessmentResultsById(assessmentId, mockResults)
-      ).rejects.toThrow('Database error');
     });
   });
 
   describe('updateAssessmentResultMarkerById', () => {
     it('should update the marker for a result', async () => {
-      // Mock a result that will be updated...
-      const mockResult = {
-        _id: new mongoose.Types.ObjectId(),
-        assessment: mockIndividualAssessment._id,
-        marker: mockTA._id,
-        save: jest.fn().mockImplementation(() => Promise.resolve()),
-      };
-
-      // Setup the mocks...
-      AssessmentModel.findById = jest.fn().mockReturnValue({
-        populate: jest.fn().mockResolvedValue(mockIndividualAssessment),
+      const ta = await UserModel.findOne({
+        identifier: commonTADetails.identifier,
       });
-      ResultModel.findById = jest.fn().mockResolvedValue(mockResult);
-
-      // Perform the update...
+      if (!ta) {
+        throw new Error('Student not found');
+      }
+      const newMarkerId = ta._id.toHexString();
       await updateAssessmentResultMarkerById(
-        mockIndividualAssessment._id.toString(),
-        mockResult._id.toString(),
-        mockTA._id.toString()
+        assessmentId,
+        resultId,
+        newMarkerId
       );
 
-      // Expect the marker to be updated and the result to be saved...
-      expect(mockResult.marker.toString()).toEqual(mockTA._id.toString());
-      expect(mockResult.save).toHaveBeenCalled();
+      const updatedResult = await ResultModel.findById(resultId);
+      expect(updatedResult).toBeDefined();
+      expect(updatedResult?.marker?.toString()).toEqual(taId);
+    });
+
+    it('should throw NotFoundError for invalid resultId', async () => {
+      const invalidId = new mongoose.Types.ObjectId().toHexString();
+      const newMarkerId = new mongoose.Types.ObjectId().toHexString();
+      await expect(
+        updateAssessmentResultMarkerById(assessmentId, invalidId, newMarkerId)
+      ).rejects.toThrow(NotFoundError);
     });
   });
 
-  describe('addAssessmentsToCourse', () => {});
+  describe('addAssessmentsToCourse', () => {
+    it('should add assessments to a course', async () => {
+      const assessmentsData = [
+        {
+          assessmentType: 'Exam2',
+          markType: 'Percentage',
+          frequency: 'Once',
+          granularity: 'individual',
+        },
+      ];
+      await addAssessmentsToCourse(courseId, assessmentsData);
+
+      const createdAssessment = await AssessmentModel.findOne({
+        assessmentType: 'Exam2',
+      });
+      const updatedCourse = await CourseModel.findById(courseId);
+
+      expect(createdAssessment).toBeDefined();
+      expect(updatedCourse?.assessments).toContainEqual(createdAssessment?._id);
+    });
+
+    it('should throw BadRequestError for invalid assessmentsData', async () => {
+      await expect(addAssessmentsToCourse(courseId, [])).rejects.toThrow(
+        BadRequestError
+      );
+    });
+
+    it('should throw NotFoundError for invalid courseId', async () => {
+      const invalidCourseId = new mongoose.Types.ObjectId().toHexString();
+      const assessmentsData = [
+        {
+          assessmentType: 'Exam2',
+          markType: 'Percentage',
+          frequency: 'Once',
+          granularity: 'individual',
+        },
+      ];
+
+      await expect(
+        addAssessmentsToCourse(invalidCourseId, assessmentsData)
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should not add duplicate assessments to the course', async () => {
+      const assessmentsData = [
+        {
+          assessmentType: 'Exam',
+          markType: 'Percentage',
+          results: [],
+          frequency: 'Once',
+          granularity: 'individual',
+        },
+      ];
+
+      await expect(
+        addAssessmentsToCourse(courseId, assessmentsData)
+      ).rejects.toThrow(BadRequestError);
+    });
+  });
 });

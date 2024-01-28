@@ -87,10 +87,8 @@ describe('accountService', () => {
         isApproved: false,
       });
 
-      // Call the function under test
       const pendingAccounts = await getAllPendingAccounts();
 
-      // Expect to get only the not approved accounts
       expect(pendingAccounts).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -105,7 +103,6 @@ describe('accountService', () => {
 
   describe('approveAccountByIds', () => {
     it('should approve accounts by their IDs', async () => {
-      // Create two new accounts that are not approved
       const account1 = await createTestAccount({
         email: 'approve1@example.com',
         identifier: 'testIdentifier1',
@@ -117,30 +114,24 @@ describe('accountService', () => {
         isApproved: false,
       });
 
-      // Make sure the accounts are not null
       if (!account1 || !account2) {
         throw new Error('Test accounts could not be created');
       }
 
-      // Call the function under test with the IDs of the accounts to approve
       await approveAccountByIds([account1._id, account2._id]);
 
-      // Fetch the accounts again to check their approval status
       const updatedAccount1 = await AccountModel.findById(account1._id);
       const updatedAccount2 = await AccountModel.findById(account2._id);
 
-      // Make sure the updated accounts are not null
       if (!updatedAccount1 || !updatedAccount2) {
         throw new Error('Test accounts could not be found after approval');
       }
 
-      // Expect the accounts to be approved
       expect(updatedAccount1.isApproved).toBe(true);
       expect(updatedAccount2.isApproved).toBe(true);
     });
 
     it('should not throw an error if an empty array is passed', async () => {
-      // This test ensures that the function does not throw if there are no IDs to update
       await expect(approveAccountByIds([])).resolves.not.toThrow();
     });
   });

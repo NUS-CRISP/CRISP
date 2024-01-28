@@ -35,7 +35,6 @@ afterAll(async () => {
   await mongoose.connection.close();
 });
 
-// Common Course Details
 const commonCourseDetails = {
   name: 'Introduction to Computer Science',
   code: 'CS101',
@@ -43,70 +42,60 @@ const commonCourseDetails = {
   courseType: 'Normal',
 };
 
-// Common Team Details
 const commonTeamDetails = {
   number: 1,
 };
 
-// Common User Details
 const commonUserDetails = {
   identifier: 'uniqueuserid',
   name: 'John Doe',
   gitHandle: 'johndoe',
 };
 
-// Util function to create a test course
 async function createTestCourse(courseData: any) {
   const course = new CourseModel(courseData);
   await course.save();
   return course;
 }
 
-// Util function to create a test team
 async function createTestTeam(teamData: any) {
   const team = new TeamModel(teamData);
   await team.save();
   return team;
 }
 
-// Utility function to create a test student user and an associated account
 async function createStudentUser(userData: any) {
-  // Create and save the user
   const user = new UserModel({
-    ...userData, // Correctly spread the user data
-    enrolledCourses: [], // Initialize with no enrolled courses
+    ...userData,
+    enrolledCourses: [],
   });
   await user.save();
 
-  // Create and save the associated account
   const account = new AccountModel({
-    email: `${userData.identifier}@example.com`, // Example email generation
-    password: 'hashedpassword', // Assume the password is hashed
+    email: `${userData.identifier}@example.com`,
+    password: 'hashedpassword',
     role: 'Student',
-    user: user._id, // Link the account to the user
-    isApproved: true, // Set account approval status
+    user: user._id,
+    isApproved: true,
   });
   await account.save();
 
   return user;
 }
 
-// Utility function to create a test TA user and an associated account
 async function createTAUser(userData: any) {
-  // Create and save the user
   const user = new UserModel({
-    ...userData, // Correctly spread the user data
-    enrolledCourses: [], // Initialize with no enrolled courses
+    ...userData,
+    enrolledCourses: [],
   });
   await user.save();
 
-  // Create and save the associated account
   const account = new AccountModel({
-    email: `${userData.identifier}@example.com`, // Example email generation
-    password: 'hashedpassword', // Assume the password is hashed
+    email: `${userData.identifier}@example.com`,
+    password: 'hashedpassword',
     role: 'Teaching assistant',
-    user: user._id, // Link the account to the user
-    isApproved: true, // Set account approval status
+    user: user._id,
+    isApproved: true,
   });
   await account.save();
 
@@ -114,7 +103,6 @@ async function createTAUser(userData: any) {
 }
 
 describe('teamService', () => {
-  // Test cases for deleteTeamById
   describe('deleteTeamById', () => {
     it('should delete a team by id', async () => {
       const team = await createTestTeam(commonTeamDetails);
@@ -131,7 +119,6 @@ describe('teamService', () => {
     });
   });
 
-  // Test cases for updateTeamById
   describe('updateTeamById', () => {
     it('should update a team by id', async () => {
       const team = await createTestTeam(commonTeamDetails);
@@ -153,7 +140,6 @@ describe('teamService', () => {
     });
   });
 
-  // Test cases for addStudentsToTeam
   describe('addStudentsToTeam', () => {
     it('should add students to a team in a course', async () => {
       const course = await createTestCourse(commonCourseDetails);
@@ -183,7 +169,6 @@ describe('teamService', () => {
     });
   });
 
-  // Test cases for addTAsToTeam
   describe('addTAsToTeam', () => {
     it('should assign TAs to a team in a course', async () => {
       const course = await createTestCourse(commonCourseDetails);
