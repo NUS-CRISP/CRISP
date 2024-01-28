@@ -8,7 +8,7 @@ import {
 } from '../../services/accountService';
 import { BadRequestError } from '../../services/errors';
 
-let mongo: any;
+let mongo: MongoMemoryServer;
 
 beforeAll(async () => {
   mongo = await MongoMemoryServer.create();
