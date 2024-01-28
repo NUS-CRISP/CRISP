@@ -85,7 +85,7 @@ describe('teamSetService', () => {
     });
 
     it('should throw BadRequestError if team set name already exists in the course', async () => {
-        const course = await createTestCourse(commonCourseDetails);
+      const course = await createTestCourse(commonCourseDetails);
       const teamSetName = 'Existing TeamSet';
 
       // First call to create the team set
