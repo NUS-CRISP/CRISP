@@ -3,6 +3,7 @@ import TeamModel, { Team } from '../models/Team';
 import TeamSetModel, { TeamSet } from '../models/TeamSet';
 import UserModel, { User } from '../models/User';
 import AccountModel from '../models/Account';
+import AssessmentModel, { Assessment } from '../models/Assessment';
 import Role from '../../shared/types/auth/Role';
 import { NotFoundError } from './errors';
 
@@ -39,6 +40,7 @@ export const getCourseById = async (courseId: string, accountId: string) => {
   if (!account) {
     throw new NotFoundError('Account not found');
   }
+  AssessmentModel;
   const course = await CourseModel.findById(courseId)
     .populate<{ faculty: User[] }>('faculty')
     .populate<{ TAs: User[] }>('TAs')
@@ -51,7 +53,7 @@ export const getCourseById = async (courseId: string, accountId: string) => {
         populate: ['members', 'TA'],
       },
     })
-    .populate({
+    .populate<{ assessments: Assessment[] }>({
       path: 'assessments',
       populate: {
         path: 'teamSet',
