@@ -2,7 +2,8 @@ import { Team as SharedTeam } from '@shared/types/Team';
 import mongoose, { Schema, Types } from 'mongoose';
 
 export interface Team
-  extends Omit<SharedTeam, '_id' | 'teamSet' | 'TA' | 'members'> {
+  extends Omit<SharedTeam, '_id' | 'teamSet' | 'TA' | 'members'>,
+    Document {
   _id: Types.ObjectId;
   teamSet: Types.ObjectId;
   TA?: Types.ObjectId;

@@ -1,7 +1,7 @@
 import { TeamData as SharedTeamData } from '@shared/types/TeamData';
 import mongoose, { Schema, Types } from 'mongoose';
 
-export interface TeamData extends Omit<SharedTeamData, '_id'> {
+export interface TeamData extends Omit<SharedTeamData, '_id'>, Document {
   _id: Types.ObjectId;
 }
 

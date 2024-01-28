@@ -2,7 +2,8 @@ import { TeamSet as SharedTeamSet } from '@shared/types/TeamSet';
 import mongoose, { Schema, Types } from 'mongoose';
 
 export interface TeamSet
-  extends Omit<SharedTeamSet, '_id' | 'course' | 'teams'> {
+  extends Omit<SharedTeamSet, '_id' | 'course' | 'teams'>,
+    Document {
   _id: Types.ObjectId;
   course: Types.ObjectId;
   teams: Types.ObjectId[];
