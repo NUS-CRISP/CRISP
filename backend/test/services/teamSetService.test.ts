@@ -28,7 +28,6 @@ afterAll(async () => {
   await mongoose.connection.close();
 });
 
-// Common Course Details
 const commonCourseDetails = {
   name: 'Introduction to Computer Science',
   code: 'CS101',
@@ -36,7 +35,6 @@ const commonCourseDetails = {
   courseType: 'Normal',
 };
 
-// Util function to create a test course
 async function createTestCourse(courseData: any) {
   const course = new CourseModel(courseData);
   await course.save();
@@ -88,10 +86,8 @@ describe('teamSetService', () => {
       const course = await createTestCourse(commonCourseDetails);
       const teamSetName = 'Existing TeamSet';
 
-      // First call to create the team set
       await createTeamSet(course._id.toHexString(), teamSetName);
 
-      // Second call should throw BadRequestError
       await expect(
         createTeamSet(course._id.toHexString(), teamSetName)
       ).rejects.toThrow(BadRequestError);
