@@ -1,6 +1,7 @@
 import { Button, Container, Modal } from '@mantine/core';
 import { Course } from '@shared/types/Course';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import AssessmentCard from '../cards/AssessmentCard';
 import AssessmentForm from '../forms/AssessmentForm';
@@ -15,6 +16,9 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
   onUpdate,
 }) => {
   const [isCreatingAssessment, setIsCreatingAssessment] = useState(false);
+
+  const { data: session } = useSession();
+  const userRole = session?.user?.role;
 
   const assessmentCards = course.assessments.map(assessment => (
     <Link
@@ -44,14 +48,18 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
     onUpdate();
   };
 
+  const hasPermission = ['admin', 'Faculty member'].includes(userRole);
+
   return (
     <Container>
-      <Button
-        onClick={toggleForm}
-        style={{ marginTop: '16px', marginBottom: '16px' }}
-      >
-        Create Assessment
-      </Button>
+      {hasPermission && (
+        <Button
+          onClick={toggleForm}
+          style={{ marginTop: '16px', marginBottom: '16px' }}
+        >
+          Create Assessment
+        </Button>
+      )}
       <Modal
         opened={isCreatingAssessment}
         onClose={toggleForm}

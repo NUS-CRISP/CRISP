@@ -9,6 +9,7 @@ import {
 } from '@mantine/core';
 import { Course } from '@shared/types/Course';
 import { TeamSet } from '@shared/types/TeamSet';
+import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import TeamCard from '../cards/TeamCard';
 import StudentTeamForm from '../forms/StudentTeamForm';
@@ -27,6 +28,9 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const [teamSetId, setTeamSetId] = useState<string | null>(null);
+
+  const { data: session } = useSession();
+  const userRole = session?.user?.role;
 
   const teamCards = (teamSet: TeamSet) =>
     teamSet.teams.map(team => (
@@ -112,6 +116,8 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
     }
   };
 
+  const hasPermission = ['admin', 'Faculty member'].includes(userRole);
+
   return (
     <Container>
       <Tabs value={activeTab}>
@@ -127,22 +133,23 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
             {error}
           </Notification>
         )}
-        <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
-          <Group>
-            <Button onClick={toggleTeamSetForm}>Create TeamSet</Button>
-            {activeTab && (
-              <Button onClick={toggleAddStudentsForm}>Add Students</Button>
+        {hasPermission && (
+          <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
+            <Group>
+              <Button onClick={toggleTeamSetForm}>Create TeamSet</Button>
+              {activeTab && (
+                <Button onClick={toggleAddStudentsForm}>Add Students</Button>
+              )}
+              {activeTab && <Button onClick={toggleAddTAsForm}>Add TAs</Button>}
+            </Group>
+
+            {teamSetId && (
+              <Button color="red" onClick={handleDeleteTeamSet}>
+                Delete TeamSet
+              </Button>
             )}
-            {activeTab && <Button onClick={toggleAddTAsForm}>Add TAs</Button>}
           </Group>
-
-          {teamSetId && (
-            <Button color="red" onClick={handleDeleteTeamSet}>
-              Delete TeamSet
-            </Button>
-          )}
-        </Group>
-
+        )}
         <Modal
           opened={isCreatingTeamSet}
           onClose={toggleTeamSetForm}
