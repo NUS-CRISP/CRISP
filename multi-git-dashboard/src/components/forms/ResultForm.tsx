@@ -1,7 +1,7 @@
 import apiBaseUrl from '@/lib/api-config';
 import { Box, Notification } from '@mantine/core';
 import React, { useState } from 'react';
-import CSVUpload from './CSVUpload';
+import CSVUpload from '../csv/CSVUpload';
 
 interface ResultFormProps {
   assessmentId: string;

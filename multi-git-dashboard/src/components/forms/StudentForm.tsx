@@ -2,7 +2,7 @@ import apiBaseUrl from '@/lib/api-config';
 import { Box, Button, Notification, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
-import CSVUpload from './CSVUpload';
+import CSVUpload from '../csv/CSVUpload';
 
 interface StudentFormProps {
   courseId: string | string[] | undefined;

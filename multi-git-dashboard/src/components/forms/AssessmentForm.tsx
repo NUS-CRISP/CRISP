@@ -11,7 +11,7 @@ import {
 import { useForm } from '@mantine/form';
 import { TeamSet } from '@shared/types/TeamSet';
 import { useState } from 'react';
-import CSVUpload from './CSVUpload';
+import CSVUpload from '../csv/CSVUpload';
 
 interface AssessmentFormProps {
   courseId: string | string[] | undefined;
