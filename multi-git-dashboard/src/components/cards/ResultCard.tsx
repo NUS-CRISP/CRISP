@@ -2,6 +2,7 @@ import apiBaseUrl from '@/lib/api-config';
 import { Card, Group, Select, Table, Text } from '@mantine/core';
 import { Result } from '@shared/types/Result';
 import { User } from '@shared/types/User';
+import { useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
 
 interface ResultCardProps {
@@ -20,6 +21,9 @@ const ResultCard: React.FC<ResultCardProps> = ({
   );
   const apiUrl =
     apiBaseUrl + `/assessments/${assessmentId}/results/${result._id}/marker`;
+
+  const { data: session } = useSession();
+  const userRole = session?.user?.role;
 
   useEffect(() => {
     setSelectedMarker(result.marker?._id || null);
@@ -61,6 +65,8 @@ const ResultCard: React.FC<ResultCardProps> = ({
     );
   });
 
+  const hasPermission = ['admin', 'Faculty member'].includes(userRole);
+
   return (
     <Card
       shadow="sm"
@@ -85,13 +91,18 @@ const ResultCard: React.FC<ResultCardProps> = ({
         </Group>
       </div>
 
-      <Select
-        value={selectedMarker}
-        onChange={handleMarkerChange}
-        data={taOptions}
-        placeholder="Assign Marker"
-        style={{ flex: 1 }}
-      />
+      {hasPermission ? (
+        <Select
+          value={selectedMarker}
+          onChange={handleMarkerChange}
+          data={taOptions}
+          placeholder="Assign Marker"
+        />
+      ) : (
+        <Text>
+          Marker: {result.marker ? result.marker.name : 'None assigned'}
+        </Text>
+      )}
 
       <Table>
         <thead>
