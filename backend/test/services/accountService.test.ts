@@ -50,6 +50,18 @@ async function createTestAccount(changes = {}) {
   return await AccountModel.findOne({ email: accountData.email });
 }
 
+async function createTestAccountWithoutPassword(changes = {}) {
+  const accountData = { ...testAccountDetails, ...changes };
+  const newAccount = new AccountModel({
+    email: accountData.email,
+    role: accountData.role,
+    isApproved: false,
+  });
+
+  await newAccount.save();
+  return await AccountModel.findOne({ email: accountData.email });
+}
+
 describe('accountService', () => {
   beforeEach(async () => {
     await AccountModel.deleteMany({});
@@ -76,6 +88,25 @@ describe('accountService', () => {
           testAccountDetails.role
         )
       ).rejects.toThrow(BadRequestError);
+    });
+
+    it('should update existing account if existing account has no password', async () => {
+      const existingAccount = await createTestAccountWithoutPassword();
+      expect(existingAccount?.password).toBeFalsy();
+
+      await createNewAccount(
+        testAccountDetails.identifier,
+        testAccountDetails.name,
+        testAccountDetails.email,
+        testAccountDetails.password,
+        testAccountDetails.role
+      );
+      const savedAccount = await AccountModel.findOne({
+        email: testAccountDetails.email,
+      });
+      expect(savedAccount).toBeTruthy();
+      expect(savedAccount?.email).toBe(testAccountDetails.email);
+      expect(savedAccount?.password).toBeTruthy();
     });
   });
 
