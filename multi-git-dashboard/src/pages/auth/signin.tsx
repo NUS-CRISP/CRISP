@@ -74,7 +74,7 @@ const SignInPage: React.FC = () => {
           />
           <Group justify="space-between" mt="lg">
             <Checkbox label="Remember me" />
-            <Anchor href='#' size="sm" >
+            <Anchor href="#" size="sm">
               Forgot password?
             </Anchor>
           </Group>
