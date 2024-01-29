@@ -1,5 +1,6 @@
 import { Button, Container, Modal, Table } from '@mantine/core';
 import { Course } from '@shared/types/Course';
+import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import TAForm from '../forms/TAForm';
 
@@ -11,6 +12,9 @@ interface StaffInfoProps {
 const StaffInfo: React.FC<StaffInfoProps> = ({ course, onUpdate }) => {
   const [isCreatingTA, setIsCreatingTA] = useState(false);
 
+  const { data: session } = useSession();
+  const userRole = session?.user?.role;
+
   const toggleForm = () => {
     setIsCreatingTA(o => !o);
   };
@@ -20,14 +24,18 @@ const StaffInfo: React.FC<StaffInfoProps> = ({ course, onUpdate }) => {
     onUpdate();
   };
 
+  const hasPermission = ['admin', 'Faculty member'].includes(userRole);
+
   return (
     <Container>
-      <Button
-        onClick={toggleForm}
-        style={{ marginTop: '16px', marginBottom: '16px' }}
-      >
-        {isCreatingTA ? 'Cancel' : 'Add TA'}
-      </Button>
+      {hasPermission && (
+        <Button
+          onClick={toggleForm}
+          style={{ marginTop: '16px', marginBottom: '16px' }}
+        >
+          {isCreatingTA ? 'Cancel' : 'Add TA'}
+        </Button>
+      )}
       <Modal opened={isCreatingTA} onClose={toggleForm} title="Add TA">
         <TAForm courseId={course._id} onTACreated={handleTACreated} />
       </Modal>

@@ -2,7 +2,7 @@ import CourseCard from '@/components/cards/CourseCard';
 import apiBaseUrl from '@/lib/api-config';
 import { Button } from '@mantine/core';
 import { Course } from '@shared/types/Course';
-import { getSession } from 'next-auth/react';
+import { getSession, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
@@ -11,6 +11,9 @@ const CourseListPage: React.FC = () => {
   const router = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
   const apiUrl = apiBaseUrl + '/courses';
+
+  const { data: session } = useSession();
+  const userRole = session?.user?.role;
 
   useEffect(() => {
     fetchCourses();
@@ -38,6 +41,8 @@ const CourseListPage: React.FC = () => {
     }
   };
 
+  const hasPermission = ['admin', 'Faculty member'].includes(userRole);
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <div>
@@ -63,14 +68,16 @@ const CourseListPage: React.FC = () => {
           </div>
         )}
       </div>
-      <div>
-        <Button
-          onClick={() => router.push('/courses/create')}
-          style={{ marginTop: '16px' }}
-        >
-          Create Course
-        </Button>
-      </div>
+      {hasPermission && (
+        <div>
+          <Button
+            onClick={() => router.push('/courses/create')}
+            style={{ marginTop: '16px' }}
+          >
+            Create Course
+          </Button>
+        </div>
+      )}
     </main>
   );
 };

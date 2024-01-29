@@ -2,6 +2,7 @@ import apiBaseUrl from '@/lib/api-config';
 import { ActionIcon, Card, Group, Select, Table, Text } from '@mantine/core';
 import { User } from '@shared/types/User';
 import { IconX } from '@tabler/icons-react';
+import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 
 interface TeamCardProps {
@@ -23,6 +24,9 @@ const TeamCard: React.FC<TeamCardProps> = ({
 }) => {
   const [selectedTA, setSelectedTA] = useState<string | null>(TA?._id || null);
   const apiUrl = apiBaseUrl + `/teams/${teamId}`;
+
+  const { data: session } = useSession();
+  const userRole = session?.user?.role;
 
   useEffect(() => {
     setSelectedTA(TA?._id || null);
@@ -76,6 +80,8 @@ const TeamCard: React.FC<TeamCardProps> = ({
     );
   });
 
+  const hasPermission = ['admin', 'Faculty member'].includes(userRole);
+
   return (
     <Card
       shadow="sm"
@@ -94,26 +100,31 @@ const TeamCard: React.FC<TeamCardProps> = ({
         <Group mt="md" mb="xs">
           <Text> Team {number.toString()}</Text>
         </Group>
-
-        <ActionIcon
-          variant="transparent"
-          color="red"
-          size="sm"
-          onClick={handleDelete}
-          title="Delete Team"
-        >
-          <IconX size={16} />
-        </ActionIcon>
+        {hasPermission && (
+          <ActionIcon
+            variant="transparent"
+            color="red"
+            size="sm"
+            onClick={handleDelete}
+            title="Delete Team"
+          >
+            <IconX size={16} />
+          </ActionIcon>
+        )}
       </div>
 
       <Group style={{ alignItems: 'center' }}>
         <Text>Teaching Assistant:</Text>
-        <Select
-          data={taOptions}
-          value={selectedTA}
-          onChange={e => handleTAChange(e)}
-          placeholder="Assign TA"
-        />
+        {hasPermission ? (
+          <Select
+            data={taOptions}
+            value={selectedTA}
+            onChange={e => handleTAChange(e)}
+            placeholder="Assign TA"
+          />
+        ) : (
+          <Text>{TA ? TA.name : 'None'}</Text>
+        )}
       </Group>
       <Table>
         <thead>

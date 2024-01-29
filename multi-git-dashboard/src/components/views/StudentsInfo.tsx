@@ -1,5 +1,6 @@
 import { Button, Container, Modal, Table } from '@mantine/core';
 import { Course } from '@shared/types/Course';
+import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import StudentForm from '../forms/StudentForm';
 import CSVExport from '../csv/CSVExport';
@@ -11,6 +12,9 @@ interface StudentsInfoProps {
 
 const StudentsInfo: React.FC<StudentsInfoProps> = ({ course, onUpdate }) => {
   const [isCreatingStudent, setIsCreatingStudent] = useState(false);
+
+  const { data: session } = useSession();
+  const userRole = session?.user?.role;
 
   const toggleForm = () => {
     setIsCreatingStudent(o => !o);
@@ -30,14 +34,18 @@ const StudentsInfo: React.FC<StudentsInfoProps> = ({ course, onUpdate }) => {
 
   const csvHeaders = ['identifier', 'name', 'gitHandle']; // 'email'];
 
+  const hasPermission = ['admin', 'Faculty member'].includes(userRole);
+
   return (
     <Container>
-      <Button
-        onClick={toggleForm}
-        style={{ marginTop: '16px', marginBottom: '16px' }}
-      >
-        Add Student
-      </Button>
+      {hasPermission && (
+        <Button
+          onClick={toggleForm}
+          style={{ marginTop: '16px', marginBottom: '16px' }}
+        >
+          Add Student
+        </Button>
+      )}
       <Modal
         opened={isCreatingStudent}
         onClose={toggleForm}
@@ -48,11 +56,13 @@ const StudentsInfo: React.FC<StudentsInfoProps> = ({ course, onUpdate }) => {
           onStudentCreated={handleStudentCreated}
         />
       </Modal>
-      <CSVExport
-        data={studentData}
-        headers={csvHeaders}
-        filename="students.csv"
-      />
+      {hasPermission && (
+        <CSVExport
+          data={studentData}
+          headers={csvHeaders}
+          filename="students.csv"
+        />
+      )}
       <Table>
         <thead>
           <tr>
