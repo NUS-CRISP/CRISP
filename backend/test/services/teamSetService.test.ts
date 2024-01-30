@@ -50,6 +50,8 @@ describe('teamSetService', () => {
         course: course._id,
       });
       await teamSet.save();
+      course.teamSets.push(teamSet._id);
+      await course.save();
 
       await deleteTeamSetById(teamSet._id.toHexString());
 
@@ -80,6 +82,14 @@ describe('teamSetService', () => {
 
       expect(createdTeamSet).toBeDefined();
       expect(updatedCourse?.teamSets).toContainEqual(createdTeamSet?._id);
+    });
+
+    it('should throw NotFoundError if team set does not exists in the course', async () => {
+      const teamSetName = 'This TeamSet does not exist';
+      const invalidCourseId = new mongoose.Types.ObjectId().toString();
+      await expect(
+        createTeamSet(invalidCourseId, teamSetName)
+      ).rejects.toThrow(NotFoundError);
     });
 
     it('should throw BadRequestError if team set name already exists in the course', async () => {
