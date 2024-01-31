@@ -23,7 +23,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
   });
   const [error, setError] = useState<string | null>(null);
   const apiUrl = apiBaseUrl + `/courses/${courseId}/students`;
-  const csvTemplateHeaders = 'name,identifier,email,gitHandle';
+  const csvTemplateHeaders = ['name', 'identifier', 'email', 'gitHandle'];
 
   const handleSubmitForm = async () => {
     console.log('Sending student data:', form.values);
@@ -69,7 +69,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
         />
         <TextInput
           withAsterisk
-          label="Student ID"
+          label="Student ID (NUS Net)"
           {...form.getInputProps('identifier')}
           value={form.values.identifier}
           onChange={event => {
@@ -98,10 +98,10 @@ const StudentForm: React.FC<StudentFormProps> = ({
         </Button>
       </form>
       <CSVUpload
-        templateHeaders={csvTemplateHeaders}
+        headers={csvTemplateHeaders}
         onProcessComplete={onStudentCreated}
         onError={setError}
-        downloadFilename="students_template.csv"
+        filename="students_template.csv"
         uploadButtonString="Upload Students"
         urlString={apiUrl}
       />

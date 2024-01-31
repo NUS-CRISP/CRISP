@@ -10,14 +10,15 @@ interface CSVExportProps {
 
 const CSVExport: React.FC<CSVExportProps> = ({ data, headers, filename }) => {
   const downloadCsv = () => {
-    const csvData = [
-      headers + '\n',
+    const csvContent = [
+      headers,
       ...data.map(row =>
-        headers.map(header => `"${row[header] || ''}"`).join(',')
+        headers.map(field => JSON.stringify(row[field] ?? '')).join(',')
       ),
     ].join('\n');
 
-    const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+
     saveAs(blob, filename);
   };
 

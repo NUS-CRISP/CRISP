@@ -1,4 +1,4 @@
-import { Button, Container, Modal, Table } from '@mantine/core';
+import { Button, Container, Group, Modal, Table } from '@mantine/core';
 import { Course } from '@shared/types/Course';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
@@ -38,14 +38,17 @@ const StudentsInfo: React.FC<StudentsInfoProps> = ({ course, onUpdate }) => {
 
   return (
     <Container>
-      {hasPermission && (
-        <Button
-          onClick={toggleForm}
-          style={{ marginTop: '16px', marginBottom: '16px' }}
-        >
-          Add Student
-        </Button>
-      )}
+      <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
+        {hasPermission && <Button onClick={toggleForm}>Add Student</Button>}
+        {hasPermission && (
+          <CSVExport
+            data={studentData}
+            headers={csvHeaders}
+            filename="students.csv"
+          />
+        )}
+      </Group>
+
       <Modal
         opened={isCreatingStudent}
         onClose={toggleForm}
@@ -56,13 +59,7 @@ const StudentsInfo: React.FC<StudentsInfoProps> = ({ course, onUpdate }) => {
           onStudentCreated={handleStudentCreated}
         />
       </Modal>
-      {hasPermission && (
-        <CSVExport
-          data={studentData}
-          headers={csvHeaders}
-          filename="students.csv"
-        />
-      )}
+
       <Table>
         <thead>
           <tr>

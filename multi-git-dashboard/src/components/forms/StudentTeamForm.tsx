@@ -29,7 +29,7 @@ const StudentTeamForm: React.FC<StudentTeamFormProps> = ({
 
   const [error, setError] = useState<string | null>(null);
   const apiUrl = apiBaseUrl + `/courses/${courseId}/teams/students`;
-  const csvTemplateHeaders = 'identifier,teamNumber';
+  const csvTemplateHeaders = ['identifier', 'teamNumber'];
 
   const transformStudentData = (data: unknown[]) => {
     const students = data as StudentTeamFormUser[];
@@ -83,7 +83,7 @@ const StudentTeamForm: React.FC<StudentTeamFormProps> = ({
       <form onSubmit={form.onSubmit(handleSubmitForm)}>
         <TextInput
           withAsterisk
-          label="Student ID"
+          label="Student ID (NUS Net)"
           {...form.getInputProps('identifier')}
           value={form.values.identifier}
           onChange={event => {
@@ -104,10 +104,10 @@ const StudentTeamForm: React.FC<StudentTeamFormProps> = ({
         </Button>
       </form>
       <CSVUpload
-        templateHeaders={csvTemplateHeaders}
+        headers={csvTemplateHeaders}
         onProcessComplete={onTeamCreated}
         onError={setError}
-        downloadFilename="students_team_template.csv"
+        filename="students_team_template.csv"
         uploadButtonString="Upload Students"
         urlString={apiUrl}
         transformFunction={transformStudentData}
