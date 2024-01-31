@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import TeamModel from '../../models/Team';
 import TeamSetModel from '../../models/TeamSet';
@@ -52,6 +52,10 @@ const commonUserDetails = {
   gitHandle: 'johndoe',
 };
 
+const commonTeamSetDetails = {
+  name: 'Team Set Name',
+};
+
 async function createTestCourse(courseData: any) {
   const course = new CourseModel(courseData);
   await course.save();
@@ -102,6 +106,16 @@ async function createTAUser(userData: any) {
   return user;
 }
 
+async function createTestTeamSet(teamSetData: any, course: Types.ObjectId, teams: Types.ObjectId[]) {
+  const teamSet = new TeamSetModel({
+    ...teamSetData,
+    course: course,
+    teams: teams,
+  });
+  await teamSet.save();
+  return teamSet;
+}
+
 describe('teamService', () => {
   describe('deleteTeamById', () => {
     it('should delete a team by id', async () => {
@@ -109,6 +123,20 @@ describe('teamService', () => {
       await deleteTeamById(team._id.toHexString());
       const foundTeam = await TeamModel.findById(team._id);
       expect(foundTeam).toBeNull();
+    });
+
+    it('should delete a team by id and delete team from teamset', async () => {
+      const course = await createTestCourse(commonCourseDetails);
+      const team = await createTestTeam(commonTeamDetails);
+      const teamSet = await createTestTeamSet(commonTeamSetDetails, course._id, [team._id]);
+      team.teamSet = teamSet._id;
+      await team.save();
+
+      await deleteTeamById(team._id.toHexString());
+      const foundTeam = await TeamModel.findById(team._id);
+      expect(foundTeam).toBeNull();
+      const foundTeamSet = await TeamSetModel.findById(teamSet._id);
+      expect(foundTeamSet?.teams.indexOf(team._id)).toBe(-1);
     });
 
     it('should throw NotFoundError if team does not exist', async () => {
