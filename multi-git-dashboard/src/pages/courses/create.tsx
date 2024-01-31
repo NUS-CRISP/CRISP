@@ -23,9 +23,15 @@ const CARD_W = '210px';
 
 const CreateCoursePage: React.FC = () => {
   const router = useRouter();
-  const [appInstalled, setAppInstalled] = useState<
-    'idle' | 'loading' | 'success' | 'error'
-  >('idle');
+
+  enum InstallationStatus {
+    IDLE = 'idle',
+    LOADING = 'loading',
+    SUCCESS = 'success',
+    ERROR = 'error',
+  }
+  const [appInstallationStatus, setAppInstallationStatus] = useState<InstallationStatus>(InstallationStatus.IDLE);
+
   const [errorMessage, setErrorMessage] = useState('');
   const courseApiUrl = apiBaseUrl + '/courses';
 
@@ -50,14 +56,14 @@ const CreateCoursePage: React.FC = () => {
       gitHubOrgName: (value, values) =>
         values.courseType === CourseType.Normal ||
         (values.courseType === CourseType.GitHubOrg &&
-          appInstalled === 'success')
+          appInstallationStatus === InstallationStatus.SUCCESS)
           ? null
           : 'GitHub Org name is required',
     },
   });
 
   const checkAppInstallation = async (orgName: string) => {
-    setAppInstalled('loading');
+    setAppInstallationStatus(InstallationStatus.LOADING);
     setErrorMessage('');
 
     try {
@@ -73,16 +79,16 @@ const CreateCoursePage: React.FC = () => {
       });
 
       if (!response.ok) {
-        setAppInstalled('error');
+        setAppInstallationStatus(InstallationStatus.ERROR);
         const errorData = await response.json();
         setErrorMessage(errorData.message || 'An error occurred');
         return;
       }
       const { installationId } = await response.json();
       form.setFieldValue('installationId', installationId);
-      setAppInstalled('success');
+      setAppInstallationStatus(InstallationStatus.SUCCESS);
     } catch (error) {
-      setAppInstalled('error');
+      setAppInstallationStatus(InstallationStatus.ERROR);
       setErrorMessage('Failed to connect to the server');
     }
   };
@@ -180,7 +186,7 @@ const CreateCoursePage: React.FC = () => {
                           event.currentTarget.value
                         );
                         form.setFieldValue('installationId', '');
-                        setAppInstalled('idle');
+                        setAppInstallationStatus(InstallationStatus.IDLE);
                         setErrorMessage('');
                       }}
                     />
@@ -197,19 +203,19 @@ const CreateCoursePage: React.FC = () => {
                     )}
                     <Button
                       type="button"
-                      loading={appInstalled === 'loading'}
+                      loading={appInstallationStatus === InstallationStatus.LOADING}
                       variant={
-                        appInstalled === 'success' ? 'filled' : 'outline'
+                        appInstallationStatus === InstallationStatus.SUCCESS ? 'filled' : 'outline'
                       }
                       color={
-                        appInstalled === 'success'
+                        appInstallationStatus === InstallationStatus.SUCCESS
                           ? 'green'
-                          : appInstalled === 'error'
+                          : appInstallationStatus === InstallationStatus.ERROR
                           ? 'red'
                           : 'blue'
                       }
                       rightSection={
-                        appInstalled === 'success' ? (
+                        appInstallationStatus === InstallationStatus.SUCCESS ? (
                           <IconCheck size={14} />
                         ) : null
                       }
@@ -217,11 +223,11 @@ const CreateCoursePage: React.FC = () => {
                         checkAppInstallation(form.values.gitHubOrgName)
                       }
                     >
-                      {appInstalled === 'success'
+                      {appInstallationStatus === InstallationStatus.SUCCESS
                         ? 'Installed'
-                        : appInstalled === 'error'
+                        : appInstallationStatus === InstallationStatus.ERROR
                         ? 'Try Again'
-                        : appInstalled === 'loading'
+                        : appInstallationStatus === InstallationStatus.LOADING
                         ? 'Checking...'
                         : 'Check Installation'}
                     </Button>

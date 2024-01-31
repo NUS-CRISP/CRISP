@@ -70,6 +70,29 @@ describe('accountController', () => {
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.send).toHaveBeenCalledWith({ error: 'Invalid data' });
     });
+
+    it('should handle error and send a 500 status', async () => {
+      const req = mockRequest();
+      req.body = {
+        identifier: 'user001',
+        name: 'John Doe',
+        email: 'john@example.com',
+        password: 'password123',
+        role: 'student',
+      };
+      const res = mockResponse();
+
+      jest
+        .spyOn(accountService, 'createNewAccount')
+        .mockRejectedValue(new Error('Error creating account'));
+
+      await createAccount(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.send).toHaveBeenCalledWith({
+        error: 'Error creating account',
+      });
+    });
   });
 
   describe('getPendingAccounts', () => {
@@ -87,6 +110,22 @@ describe('accountController', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.send).toHaveBeenCalledWith(mockAccounts);
     });
+
+    it('should handle error and send a 500 status', async () => {
+      const req = mockRequest();
+      const res = mockResponse();
+
+      jest
+        .spyOn(accountService, 'getAllPendingAccounts')
+        .mockRejectedValue(new Error('Error getting pending accounts'));
+
+      await getPendingAccounts(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.send).toHaveBeenCalledWith({
+        error: 'Error getting pending accounts',
+      });
+    });
   });
 
   describe('approveAccounts', () => {
@@ -103,6 +142,23 @@ describe('accountController', () => {
 
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.send).toHaveBeenCalledWith({ message: 'Accounts approved' });
+    });
+
+    it('should handle error and send a 500 status', async () => {
+      const req = mockRequest();
+      req.body = { ids: ['123', '456'] };
+      const res = mockResponse();
+
+      jest
+        .spyOn(accountService, 'approveAccountByIds')
+        .mockRejectedValue(new Error('Error approving accounts'));
+
+      await approveAccounts(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.send).toHaveBeenCalledWith({
+        error: 'Error approving accounts',
+      });
     });
   });
 });

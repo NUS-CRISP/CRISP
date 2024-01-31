@@ -199,6 +199,13 @@ describe('assessmentService', () => {
         uploadAssessmentResultsById(invalidId, mockResults)
       ).rejects.toThrow(NotFoundError);
     });
+
+    it('should throw NotFoundError for invalid accountId', async () => {
+      const invalidId = new mongoose.Types.ObjectId().toHexString();
+      await expect(getAssessmentById(assessmentId, invalidId)).rejects.toThrow(
+        NotFoundError
+      );
+    });
   });
 
   describe('updateAssessmentResultMarkerById', () => {
@@ -219,6 +226,14 @@ describe('assessmentService', () => {
       const updatedResult = await ResultModel.findById(resultId);
       expect(updatedResult).toBeDefined();
       expect(updatedResult?.marker?.toString()).toEqual(taId);
+    });
+
+    it('should throw NotFoundError for invalid assignmentId', async () => {
+      const invalidId = new mongoose.Types.ObjectId().toHexString();
+      const newMarkerId = new mongoose.Types.ObjectId().toHexString();
+      await expect(
+        updateAssessmentResultMarkerById(invalidId, resultId, newMarkerId)
+      ).rejects.toThrow(NotFoundError);
     });
 
     it('should throw NotFoundError for invalid resultId', async () => {

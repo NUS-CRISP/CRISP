@@ -178,9 +178,15 @@ describe('courseService', () => {
 
     it('should throw NotFoundError for an invalid account', async () => {
       const invalidAccountId = new mongoose.Types.ObjectId().toString();
-      const courseData = commonCourseDetails;
       await expect(
-        createNewCourse(courseData, invalidAccountId)
+        createNewCourse(commonCourseDetails, invalidAccountId)
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should throw NotFoundError for an invalid user', async () => {
+      jest.spyOn(UserModel, 'findById').mockResolvedValue(null);
+      await expect(
+        createNewCourse(commonCourseDetails, facultyAccountId)
       ).rejects.toThrow(NotFoundError);
     });
   });
@@ -205,6 +211,13 @@ describe('courseService', () => {
       const retrievedCourse = await getCourseById(courseId, facultyAccountId);
       expect(retrievedCourse).toBeDefined();
       expect(retrievedCourse._id.toString()).toEqual(courseId);
+    });
+
+    it('should throw NotFoundError for invalid accountId', async () => {
+      const invalidAccountId = new mongoose.Types.ObjectId().toString();
+      await expect(
+        getCourseById(courseId, invalidAccountId)
+      ).rejects.toThrow(NotFoundError);
     });
 
     it('should throw NotFoundError for invalid courseId', async () => {
