@@ -16,7 +16,7 @@ const Overview: React.FC<OverviewProps> = ({ course, teamsData }) => {
 
   const [opened, { open, close }] = useDisclosure(false);
   const [selectedMetrics, setSelectedMetrics] = useState(['Commits', 'Issues', 'PRs']); // Example initial metrics
-  const [availableMetricsValue, setAvailableMetricsValue] = useState<string | null>(null);
+  const [availableMetricsValue] = useState<string | null>(null);
 
   const removeMetric = (metricToRemove: string) => {
     setSelectedMetrics(selectedMetrics.filter(metric => metric !== metricToRemove));
