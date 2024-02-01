@@ -42,7 +42,7 @@ export const getAssessmentById = async (
   if (role === 'Teaching assistant') {
     const userId = account.user;
     assessment.results = assessment.results.filter(
-      result => (result.team as unknown as Team).TA?.equals(userId)
+      result => result.marker?.equals(userId)
     );
   }
   if (assessment.granularity === 'individual') {

@@ -94,6 +94,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
           }}
         />
         <TextInput
+          withAsterisk
           label="Frequency"
           {...form.getInputProps('frequency')}
           value={form.values.frequency}

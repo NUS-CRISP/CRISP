@@ -27,78 +27,138 @@ const mockResponse = () => {
   return res;
 };
 
-describe('createAccount', () => {
-  it('should create a new account and send a 201 status', async () => {
-    const req = mockRequest();
-    req.body = {
-      identifier: 'user001',
-      name: 'John Doe',
-      email: 'john@example.com',
-      password: 'password123',
-      role: 'student',
-    };
-    const res = mockResponse();
+describe('accountController', () => {
+  describe('createAccount', () => {
+    it('should create a new account and send a 201 status', async () => {
+      const req = mockRequest();
+      req.body = {
+        identifier: 'user001',
+        name: 'John Doe',
+        email: 'john@example.com',
+        password: 'password123',
+        role: 'student',
+      };
+      const res = mockResponse();
 
-    jest.spyOn(accountService, 'createNewAccount').mockResolvedValue(undefined);
+      jest
+        .spyOn(accountService, 'createNewAccount')
+        .mockResolvedValue(undefined);
 
-    await createAccount(req, res);
+      await createAccount(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(201);
-    expect(res.send).toHaveBeenCalledWith({ message: 'Account created' });
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.send).toHaveBeenCalledWith({ message: 'Account created' });
+    });
+
+    it('should handle BadRequestError and send a 400 status', async () => {
+      const req = mockRequest();
+      req.body = {
+        identifier: 'user001',
+        name: 'John Doe',
+        email: 'john@example.com',
+        password: 'password123',
+        role: 'student',
+      };
+      const res = mockResponse();
+
+      jest
+        .spyOn(accountService, 'createNewAccount')
+        .mockRejectedValue(new BadRequestError('Invalid data'));
+
+      await createAccount(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.send).toHaveBeenCalledWith({ error: 'Invalid data' });
+    });
+
+    it('should handle error and send a 500 status', async () => {
+      const req = mockRequest();
+      req.body = {
+        identifier: 'user001',
+        name: 'John Doe',
+        email: 'john@example.com',
+        password: 'password123',
+        role: 'student',
+      };
+      const res = mockResponse();
+
+      jest
+        .spyOn(accountService, 'createNewAccount')
+        .mockRejectedValue(new Error('Error creating account'));
+
+      await createAccount(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.send).toHaveBeenCalledWith({
+        error: 'Error creating account',
+      });
+    });
   });
 
-  it('should handle BadRequestError and send a 400 status', async () => {
-    const req = mockRequest();
-    req.body = {
-      identifier: 'user001',
-      name: 'John Doe',
-      email: 'john@example.com',
-      password: 'password123',
-      role: 'student',
-    };
-    const res = mockResponse();
+  describe('getPendingAccounts', () => {
+    it('should retrieve pending accounts and send a 200 status', async () => {
+      const req = mockRequest();
+      const res = mockResponse();
+      const mockAccounts = [{ email: 'pending@example.com', role: 'student' }];
 
-    jest
-      .spyOn(accountService, 'createNewAccount')
-      .mockRejectedValue(new BadRequestError('Invalid data'));
+      jest
+        .spyOn(accountService, 'getAllPendingAccounts')
+        .mockResolvedValue(mockAccounts as any);
 
-    await createAccount(req, res);
+      await getPendingAccounts(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.send).toHaveBeenCalledWith({ error: 'Invalid data' });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.send).toHaveBeenCalledWith(mockAccounts);
+    });
+
+    it('should handle error and send a 500 status', async () => {
+      const req = mockRequest();
+      const res = mockResponse();
+
+      jest
+        .spyOn(accountService, 'getAllPendingAccounts')
+        .mockRejectedValue(new Error('Error getting pending accounts'));
+
+      await getPendingAccounts(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.send).toHaveBeenCalledWith({
+        error: 'Error getting pending accounts',
+      });
+    });
   });
-});
 
-describe('getPendingAccounts', () => {
-  it('should retrieve pending accounts and send a 200 status', async () => {
-    const req = mockRequest();
-    const res = mockResponse();
-    const mockAccounts = [{ email: 'pending@example.com', role: 'student' }];
+  describe('approveAccounts', () => {
+    it('should approve accounts and send a 200 status', async () => {
+      const req = mockRequest();
+      req.body = { ids: ['123', '456'] };
+      const res = mockResponse();
 
-    jest
-      .spyOn(accountService, 'getAllPendingAccounts')
-      .mockResolvedValue(mockAccounts as any);
+      jest
+        .spyOn(accountService, 'approveAccountByIds')
+        .mockResolvedValue(undefined);
 
-    await getPendingAccounts(req, res);
+      await approveAccounts(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.send).toHaveBeenCalledWith(mockAccounts);
-  });
-});
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.send).toHaveBeenCalledWith({ message: 'Accounts approved' });
+    });
 
-describe('approveAccounts', () => {
-  it('should approve accounts and send a 200 status', async () => {
-    const req = mockRequest();
-    req.body = { ids: ['123', '456'] };
-    const res = mockResponse();
+    it('should handle error and send a 500 status', async () => {
+      const req = mockRequest();
+      req.body = { ids: ['123', '456'] };
+      const res = mockResponse();
 
-    jest
-      .spyOn(accountService, 'approveAccountByIds')
-      .mockResolvedValue(undefined);
+      jest
+        .spyOn(accountService, 'approveAccountByIds')
+        .mockRejectedValue(new Error('Error approving accounts'));
 
-    await approveAccounts(req, res);
+      await approveAccounts(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.send).toHaveBeenCalledWith({ message: 'Accounts approved' });
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.send).toHaveBeenCalledWith({
+        error: 'Error approving accounts',
+      });
+    });
   });
 });

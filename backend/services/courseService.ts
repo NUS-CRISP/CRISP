@@ -39,6 +39,7 @@ export const getCourseById = async (courseId: string, accountId: string) => {
   if (!account) {
     throw new NotFoundError('Account not found');
   }
+  AssessmentModel;
   const course = await CourseModel.findById(courseId)
     .populate<{ faculty: User[] }>('faculty')
     .populate<{ TAs: User[] }>('TAs')
@@ -51,7 +52,7 @@ export const getCourseById = async (courseId: string, accountId: string) => {
         populate: ['members', 'TA'],
       },
     })
-    .populate({
+    .populate<{ assessments: Assessment[] }>({
       path: 'assessments',
       populate: {
         path: 'teamSet',
@@ -65,8 +66,8 @@ export const getCourseById = async (courseId: string, accountId: string) => {
     const userId = account.user;
     course.teamSets.forEach(
       teamSet =>
-        (teamSet.teams = teamSet.teams.filter(
-          team => (team as unknown as Team).TA?.equals(userId)
+        (teamSet.teams = teamSet.teams.filter(team =>
+          (team as unknown as Team).TA?.equals(userId)
         ))
     );
   }

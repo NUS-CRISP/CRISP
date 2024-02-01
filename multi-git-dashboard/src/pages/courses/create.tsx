@@ -25,13 +25,20 @@ import { useState } from 'react';
 const CARD_W = '210px';
 // TODO: Setup webhook receiver to automatically get the org name where user installed GH app
 
+enum InstallationStatus {
+  IDLE = 'idle',
+  LOADING = 'loading',
+  SUCCESS = 'success',
+  ERROR = 'error',
+}
+
 const CreateCoursePage: React.FC = () => {
   const router = useRouter();
   const courseApiUrl = apiBaseUrl + '/courses';
 
-  const [appInstalled, setAppInstalled] = useState<
-    'idle' | 'loading' | 'success' | 'error'
-  >('idle');
+  const [appInstallationStatus, setAppInstallationStatus] =
+    useState<InstallationStatus>(InstallationStatus.IDLE);
+
   const [repoList, setRepoList] = useState([] as string[]);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -56,14 +63,14 @@ const CreateCoursePage: React.FC = () => {
       gitHubOrgName: (value, values) =>
         values.courseType === CourseType.Normal ||
         (values.courseType === CourseType.GitHubOrg &&
-          appInstalled === 'success')
+          appInstallationStatus === InstallationStatus.SUCCESS)
           ? null
           : 'GitHub Org name is required',
     },
   });
 
   const checkAppInstallation = async (orgName: string) => {
-    setAppInstalled('loading');
+    setAppInstallationStatus(InstallationStatus.LOADING);
     setErrorMessage('');
 
     try {
@@ -77,7 +84,7 @@ const CreateCoursePage: React.FC = () => {
       });
 
       if (!response.ok) {
-        setAppInstalled('error');
+        setAppInstallationStatus(InstallationStatus.ERROR);
         const errorData = await response.json();
         setErrorMessage(errorData.message || 'An error occurred');
         return;
@@ -102,9 +109,9 @@ const CreateCoursePage: React.FC = () => {
       const teamDatas: TeamData[] = await reposResponse.json();
       setRepoList(teamDatas.map(teamData => teamData.repoName));
 
-      setAppInstalled('success');
+      setAppInstallationStatus(InstallationStatus.SUCCESS);
     } catch (error) {
-      setAppInstalled('error');
+      setAppInstallationStatus(InstallationStatus.ERROR);
       setErrorMessage('Failed to connect to the server');
     }
   };
@@ -190,7 +197,10 @@ const CreateCoursePage: React.FC = () => {
                       Install our GitHub App
                     </Button>
                   </List.Item>
-                  <Collapse in={appInstalled !== 'success'} mt="md">
+                  <Collapse
+                    in={appInstallationStatus !== InstallationStatus.SUCCESS}
+                    mt="md"
+                  >
                     <List.Item>
                       <TextInput
                         withAsterisk
@@ -203,7 +213,7 @@ const CreateCoursePage: React.FC = () => {
                             event.currentTarget.value
                           );
                           form.setFieldValue('installationId', '');
-                          setAppInstalled('idle');
+                          setAppInstallationStatus(InstallationStatus.IDLE);
                           setErrorMessage('');
                         }}
                       />
@@ -220,19 +230,24 @@ const CreateCoursePage: React.FC = () => {
                       )}
                       <Button
                         type="button"
-                        loading={appInstalled === 'loading'}
+                        loading={
+                          appInstallationStatus === InstallationStatus.LOADING
+                        }
                         variant={
-                          appInstalled === 'success' ? 'filled' : 'outline'
+                          appInstallationStatus === InstallationStatus.SUCCESS
+                            ? 'filled'
+                            : 'outline'
                         }
                         color={
-                          appInstalled === 'success'
+                          appInstallationStatus === InstallationStatus.SUCCESS
                             ? 'green'
-                            : appInstalled === 'error'
+                            : appInstallationStatus === InstallationStatus.ERROR
                               ? 'red'
                               : 'blue'
                         }
                         rightSection={
-                          appInstalled === 'success' ? (
+                          appInstallationStatus ===
+                          InstallationStatus.SUCCESS ? (
                             <IconCheck size={14} />
                           ) : null
                         }
@@ -240,13 +255,16 @@ const CreateCoursePage: React.FC = () => {
                           checkAppInstallation(form.values.gitHubOrgName)
                         }
                       >
-                        {appInstalled === 'error'
+                        {appInstallationStatus === InstallationStatus.ERROR
                           ? 'Try Again'
                           : 'Check Installation'}
                       </Button>
                     </List.Item>
                   </Collapse>
-                  <Collapse in={appInstalled === 'success'} mt="md">
+                  <Collapse
+                    in={appInstallationStatus === InstallationStatus.SUCCESS}
+                    mt="md"
+                  >
                     <List.Item>
                       <Badge
                         variant="outline"
@@ -256,7 +274,7 @@ const CreateCoursePage: React.FC = () => {
                           <CloseButton
                             style={{ color: '#40c057' }} // open-color, green 6
                             onClick={() => {
-                              setAppInstalled('idle');
+                              setAppInstallationStatus(InstallationStatus.IDLE);
                               setErrorMessage('');
                               form.setFieldValue('gitHubOrgName', '');
                             }}
