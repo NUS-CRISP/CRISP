@@ -1,9 +1,9 @@
+import Role from '../../shared/types/auth/Role';
+import AccountModel from '../models/Account';
 import CourseModel from '../models/Course';
 import TeamModel, { Team } from '../models/Team';
 import TeamSetModel, { TeamSet } from '../models/TeamSet';
 import UserModel, { User } from '../models/User';
-import AccountModel from '../models/Account';
-import Role from '../../shared/types/auth/Role';
 import { NotFoundError } from './errors';
 
 /*----------------------------------------Course----------------------------------------*/
@@ -65,8 +65,8 @@ export const getCourseById = async (courseId: string, accountId: string) => {
     const userId = account.user;
     course.teamSets.forEach(
       teamSet =>
-        (teamSet.teams = teamSet.teams.filter(
-          team => (team as unknown as Team).TA?.equals(userId)
+        (teamSet.teams = teamSet.teams.filter(team =>
+          (team as unknown as Team).TA?.equals(userId)
         ))
     );
   }
