@@ -11,7 +11,7 @@ import {
 import { useForm } from '@mantine/form';
 import { TeamSet } from '@shared/types/TeamSet';
 import { useState } from 'react';
-import CSVUpload from './CSVUpload';
+import CSVUpload from '../csv/CSVUpload';
 
 interface AssessmentFormProps {
   courseId: string | string[] | undefined;
@@ -37,8 +37,14 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
   });
   const [error, setError] = useState<string | null>(null);
   const apiUrl = apiBaseUrl + `/courses/${courseId}/assessments`;
-  const csvTemplateHeaders =
-    'assessmentType,markType,frequency,granularity,teamSetName,formLink';
+  const csvTemplateHeaders = [
+    'assessmentType',
+    'markType',
+    'frequency',
+    'granularity',
+    'teamSetName',
+    'formLink',
+  ];
 
   const handleSubmitForm = async () => {
     console.log('Sending assessment data:', form.values);
@@ -147,10 +153,10 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
         </Button>
       </form>
       <CSVUpload
-        templateHeaders={csvTemplateHeaders}
+        headers={csvTemplateHeaders}
         onProcessComplete={onAssessmentCreated}
         onError={setError}
-        downloadFilename="assessments_template.csv"
+        filename="assessments_template.csv"
         uploadButtonString="Upload Assessments"
         urlString={apiUrl}
       />
