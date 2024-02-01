@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
+import { NotFoundError } from '../services/errors';
 import {
   checkGitHubInstallation,
   fetchAllTeamData,
   fetchAllTeamDataForOrg,
 } from '../services/githubService';
-import { NotFoundError } from '../services/errors';
 
 export const getAllTeamData = async (req: Request, res: Response) => {
   try {
@@ -33,7 +33,6 @@ export const getAllTeamDataForOrg = async (req: Request, res: Response) => {
 };
 
 export const checkInstallation = async (req: Request, res: Response) => {
-  // get request body; json with one field containing org name
   const { orgName } = req.body;
   try {
     const installationId = await checkGitHubInstallation(orgName);

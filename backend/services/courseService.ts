@@ -1,10 +1,10 @@
+import AssessmentModel, { Assessment } from 'models/Assessment';
+import Role from '../../shared/types/auth/Role';
+import AccountModel from '../models/Account';
 import CourseModel from '../models/Course';
 import TeamModel, { Team } from '../models/Team';
 import TeamSetModel, { TeamSet } from '../models/TeamSet';
 import UserModel, { User } from '../models/User';
-import AccountModel from '../models/Account';
-import AssessmentModel, { Assessment } from '../models/Assessment';
-import Role from '../../shared/types/auth/Role';
 import { NotFoundError } from './errors';
 
 /*----------------------------------------Course----------------------------------------*/
@@ -67,8 +67,8 @@ export const getCourseById = async (courseId: string, accountId: string) => {
     const userId = account.user;
     course.teamSets.forEach(
       teamSet =>
-        (teamSet.teams = teamSet.teams.filter(
-          team => (team as unknown as Team).TA?.equals(userId)
+        (teamSet.teams = teamSet.teams.filter(team =>
+          (team as unknown as Team).TA?.equals(userId)
         ))
     );
   }
@@ -103,7 +103,9 @@ export const updateCourseById = async (courseId: string, updateData: any) => {
 };
 
 export const deleteCourseById = async (courseId: string) => {
-  const deletedCourse = await CourseModel.findByIdAndDelete(courseId);
+  const deletedCourse = await CourseModel.findByIdAndDelete(courseId, {
+    new: false,
+  });
   if (!deletedCourse) {
     throw new NotFoundError('Course not found');
   }

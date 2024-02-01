@@ -65,15 +65,14 @@ const RegisterPage: React.FC = () => {
   });
 
   const handleRegister = async (values: FormValues) => {
-    console.log(values);
-    const apiUrl = apiBaseUrl + '/accounts';
+    const apiUrl = apiBaseUrl + '/accounts/';
 
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(form.values),
+      body: JSON.stringify(values),
     });
 
     if (!response.ok) {

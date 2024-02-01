@@ -6,6 +6,7 @@ import accountRoutes from './routes/accountRoutes';
 import assessmentRoutes from './routes/assessmentRoutes';
 import courseRoutes from './routes/courseRoutes';
 import githubRoutes from './routes/githubRoutes';
+import teamDataRoutes from './routes/teamDataRoutes';
 import teamRoutes from './routes/teamRoutes';
 import teamSetRoutes from './routes/teamSetRoutes';
 import { connectToDatabase } from './utils/database';
@@ -24,15 +25,13 @@ const app: Express = express();
 
 app.use(express.json());
 
-const corsOptions = {
-  origin: ['http://localhost:3000', 'http://strand-i.comp.nus.edu.sg:3000'],
-};
-app.use(cors(corsOptions));
+app.use(cors());
 
 app.use('/api/courses', courseRoutes);
 app.use('/api/github', githubRoutes);
 app.use('/api/accounts', accountRoutes);
 app.use('/api/teams', teamRoutes);
+app.use('/api/teamdatas', teamDataRoutes);
 app.use('/api/teamsets', teamSetRoutes);
 app.use('/api/assessments', assessmentRoutes);
 

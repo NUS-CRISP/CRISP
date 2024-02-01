@@ -15,12 +15,24 @@ import { IconInfoCircle } from '@tabler/icons-react';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const SignInPage: React.FC = () => {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showAlert, setShowAlert] = useState(!!router.query.success);
+
+  useEffect(() => {
+    if (showAlert) {
+      const timer = setTimeout(() => {
+        setShowAlert(false);
+        router.push('/auth/signin');
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [showAlert, router]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +50,10 @@ const SignInPage: React.FC = () => {
           variant="light"
           color="green"
           withCloseButton
-          onClose={() => router.push('/auth/signin')}
+          onClose={() => {
+            setShowAlert(false);
+            router.push('/auth/signin');
+          }}
           title="Alert title"
           icon={<IconInfoCircle />}
         >
@@ -49,7 +64,7 @@ const SignInPage: React.FC = () => {
 
       <Title ta="center">Welcome back!</Title>
       <Text c="dimmed" size="sm" ta="center" mt={5}>
-        Do not have an account yet?{' '}
+        Don't have an account yet?{' '}
         <Anchor size="sm" component={Link} href="/auth/register">
           Create account
         </Anchor>
