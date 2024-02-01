@@ -58,3 +58,7 @@ export const approveAccountByIds = async (ids: string[]) => {
     { $set: { isApproved: true } }
   );
 };
+
+export const rejectAccountByIds = async (ids: string[]) => {
+  await AccountModel.deleteMany({ _id: { $in: ids } });
+};

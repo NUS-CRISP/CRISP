@@ -22,96 +22,97 @@ const mockResponse = () => {
   res.json = jest.fn().mockReturnValue(res);
   return res;
 };
+describe('teamController', () => {
+  describe('deleteTeam', () => {
+    it('should delete a team and return a success response', async () => {
+      const req = mockRequest({ id: 'teamId' });
+      const res = mockResponse();
 
-describe('deleteTeam', () => {
-  it('should delete a team and return a success response', async () => {
-    const req = mockRequest({ id: 'teamId' });
-    const res = mockResponse();
+      jest.spyOn(teamService, 'deleteTeamById').mockResolvedValue(undefined);
 
-    jest.spyOn(teamService, 'deleteTeamById').mockResolvedValue(undefined);
+      await deleteTeam(req, res);
 
-    await deleteTeam(req, res);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Team deleted successfully',
+      });
+    });
 
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
-      message: 'Team deleted successfully',
+    it('should return a 404 error when the team is not found', async () => {
+      const req = mockRequest({ id: 'nonExistentTeamId' });
+      const res = mockResponse();
+
+      jest
+        .spyOn(teamService, 'deleteTeamById')
+        .mockRejectedValue(new NotFoundError('Team not found'));
+
+      await deleteTeam(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Team not found' });
+    });
+
+    it('should handle server errors during team deletion', async () => {
+      const req = mockRequest({ id: 'teamId' });
+      const res = mockResponse();
+      const error = new Error('Server error');
+
+      jest.spyOn(teamService, 'deleteTeamById').mockRejectedValue(error);
+
+      await deleteTeam(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to delete team',
+      });
     });
   });
 
-  it('should return a 404 error when the team is not found', async () => {
-    const req = mockRequest({ id: 'nonExistentTeamId' });
-    const res = mockResponse();
+  describe('updateTeam', () => {
+    it('should update a team and return a success response', async () => {
+      const req = mockRequest({ id: 'teamId' }, { name: 'Updated Team Name' });
+      const res = mockResponse();
 
-    jest
-      .spyOn(teamService, 'deleteTeamById')
-      .mockRejectedValue(new NotFoundError('Team not found'));
+      jest.spyOn(teamService, 'updateTeamById').mockResolvedValue(undefined);
 
-    await deleteTeam(req, res);
+      await updateTeam(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Team not found' });
-  });
-
-  it('should handle server errors during team deletion', async () => {
-    const req = mockRequest({ id: 'teamId' });
-    const res = mockResponse();
-    const error = new Error('Server error');
-
-    jest.spyOn(teamService, 'deleteTeamById').mockRejectedValue(error);
-
-    await deleteTeam(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.json).toHaveBeenCalledWith({
-      error: 'Failed to delete team',
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Team updated successfully',
+      });
     });
-  });
-});
 
-describe('updateTeam', () => {
-  it('should update a team and return a success response', async () => {
-    const req = mockRequest({ id: 'teamId' }, { name: 'Updated Team Name' });
-    const res = mockResponse();
+    it('should return a 404 error when the team to update is not found', async () => {
+      const req = mockRequest(
+        { id: 'nonExistentTeamId' },
+        { name: 'Updated Team Name' }
+      );
+      const res = mockResponse();
 
-    jest.spyOn(teamService, 'updateTeamById').mockResolvedValue(undefined);
+      jest
+        .spyOn(teamService, 'updateTeamById')
+        .mockRejectedValue(new NotFoundError('Team not found'));
 
-    await updateTeam(req, res);
+      await updateTeam(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
-      message: 'Team updated successfully',
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Team not found' });
     });
-  });
 
-  it('should return a 404 error when the team to update is not found', async () => {
-    const req = mockRequest(
-      { id: 'nonExistentTeamId' },
-      { name: 'Updated Team Name' }
-    );
-    const res = mockResponse();
+    it('should handle server errors during team update', async () => {
+      const req = mockRequest({ id: 'teamId' }, { name: 'Updated Team Name' });
+      const res = mockResponse();
+      const error = new Error('Server error');
 
-    jest
-      .spyOn(teamService, 'updateTeamById')
-      .mockRejectedValue(new NotFoundError('Team not found'));
+      jest.spyOn(teamService, 'updateTeamById').mockRejectedValue(error);
 
-    await updateTeam(req, res);
+      await updateTeam(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Team not found' });
-  });
-
-  it('should handle server errors during team update', async () => {
-    const req = mockRequest({ id: 'teamId' }, { name: 'Updated Team Name' });
-    const res = mockResponse();
-    const error = new Error('Server error');
-
-    jest.spyOn(teamService, 'updateTeamById').mockRejectedValue(error);
-
-    await updateTeam(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.json).toHaveBeenCalledWith({
-      error: 'Failed to update team',
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to update team',
+      });
     });
   });
 });

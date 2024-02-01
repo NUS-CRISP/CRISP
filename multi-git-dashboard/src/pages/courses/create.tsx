@@ -1,10 +1,13 @@
 import apiBaseUrl from '@/lib/api-config';
 import {
+  Badge,
   Box,
   Button,
   Card,
+  CloseButton,
   Collapse,
   List,
+  MultiSelect,
   SegmentedControl,
   Space,
   Text,
@@ -13,6 +16,7 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { CourseType } from '@shared/types/Course';
+import { TeamData } from '@shared/types/TeamData';
 import { IconBrandGithub, IconCheck } from '@tabler/icons-react';
 import { getSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
@@ -21,13 +25,22 @@ import { useState } from 'react';
 const CARD_W = '210px';
 // TODO: Setup webhook receiver to automatically get the org name where user installed GH app
 
+enum InstallationStatus {
+  IDLE = 'idle',
+  LOADING = 'loading',
+  SUCCESS = 'success',
+  ERROR = 'error',
+}
+
 const CreateCoursePage: React.FC = () => {
   const router = useRouter();
-  const [appInstalled, setAppInstalled] = useState<
-    'idle' | 'loading' | 'success' | 'error'
-  >('idle');
-  const [errorMessage, setErrorMessage] = useState('');
   const courseApiUrl = apiBaseUrl + '/courses';
+
+  const [appInstallationStatus, setAppInstallationStatus] =
+    useState<InstallationStatus>(InstallationStatus.IDLE);
+
+  const [repoList, setRepoList] = useState([] as string[]);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const form = useForm({
     initialValues: {
@@ -50,14 +63,14 @@ const CreateCoursePage: React.FC = () => {
       gitHubOrgName: (value, values) =>
         values.courseType === CourseType.Normal ||
         (values.courseType === CourseType.GitHubOrg &&
-          appInstalled === 'success')
+          appInstallationStatus === InstallationStatus.SUCCESS)
           ? null
           : 'GitHub Org name is required',
     },
   });
 
   const checkAppInstallation = async (orgName: string) => {
-    setAppInstalled('loading');
+    setAppInstallationStatus(InstallationStatus.LOADING);
     setErrorMessage('');
 
     try {
@@ -71,7 +84,7 @@ const CreateCoursePage: React.FC = () => {
       });
 
       if (!response.ok) {
-        setAppInstalled('error');
+        setAppInstallationStatus(InstallationStatus.ERROR);
         const errorData = await response.json();
         setErrorMessage(errorData.message || 'An error occurred');
         return;
@@ -98,7 +111,7 @@ const CreateCoursePage: React.FC = () => {
 
       setAppInstallationStatus(InstallationStatus.SUCCESS);
     } catch (error) {
-      setAppInstalled('error');
+      setAppInstallationStatus(InstallationStatus.ERROR);
       setErrorMessage('Failed to connect to the server');
     }
   };

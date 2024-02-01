@@ -1,6 +1,8 @@
-import { Flex, ScrollArea } from '@mantine/core';
+import { ActionIcon, Button, Card, Container, Drawer, ScrollArea, Select, Text } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
 import { Course } from '@shared/types/Course';
 import { TeamData } from '@shared/types/TeamData';
+import { useState } from 'react';
 import GithubTeamCard from '../cards/GithubTeamCard';
 
 interface OverviewProps {
@@ -8,24 +10,67 @@ interface OverviewProps {
   teamsData: TeamData[];
 }
 
-const Overview: React.FC<OverviewProps> = ({ course, teamsData }) => (
-  <Flex direction={'column'} h={'100dvh'}>
-    {/* <Container>
-      <Text variant="h1">Course Name: {course.name}</Text>
-      <Text variant="h1">Course Code: {course.code}</Text>
-      <Text variant="h1">Semester: {course.semester}</Text>
-    </Container> */}
-    <ScrollArea style={{ flex: 1, overflowY: 'auto' }}>
-      {teamsData.map((team, index) => (
-        <GithubTeamCard
-          key={index}
-          teamData={team}
-          milestones={course.milestones}
-          sprints={course.sprints}
-        />
-      ))}
-    </ScrollArea>
-  </Flex>
-);
+const Overview: React.FC<OverviewProps> = ({ course, teamsData }) => {
+  const FOOTER_HEIGHT = 60;
+  const allMetrics = ['Commits', 'Issues', 'PRs', 'Reviews', 'Contributions']; // All possible metrics
+
+  const [opened, { open, close }] = useDisclosure(false);
+  const [selectedMetrics, setSelectedMetrics] = useState(['Commits', 'Issues', 'PRs']); // Example initial metrics
+  const [availableMetricsValue] = useState<string | null>(null);
+
+  const removeMetric = (metricToRemove: string) => {
+    setSelectedMetrics(selectedMetrics.filter(metric => metric !== metricToRemove));
+  };
+
+  const addMetric = (metricToAdd: string | null) => {
+    if (!metricToAdd) return;
+    if (!selectedMetrics.includes(metricToAdd)) {
+      setSelectedMetrics([...selectedMetrics, metricToAdd]);
+      // setAvailableMetricsValue(null);
+    }
+  };
+
+  // Filter out the selected metrics from the list of all possible metrics
+  const availableMetrics = allMetrics.filter(metric => !selectedMetrics.includes(metric));
+
+  return (
+    <>
+      <Drawer opened={opened} onClose={close} title="Customisation" position='right'>
+        <div>
+          {selectedMetrics.map(metric => (
+            <Card key={metric} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', borderRadius: '20px' }}>
+              <Text>{metric}</Text>
+              <ActionIcon onClick={() => removeMetric(metric)}>
+                <span>X</span> {/* Replace with appropriate icon */}
+              </ActionIcon>
+            </Card>
+          ))}
+          <Select
+            data={availableMetrics}
+            value={availableMetricsValue}
+            placeholder="Add metric"
+            withCheckIcon={false}
+            searchable
+            clearable
+            onChange={addMetric}
+          />
+        </div>
+      </Drawer>
+      <ScrollArea.Autosize mah={`calc(100dvh - 4 * 20px - ${FOOTER_HEIGHT}px)`}>
+        {teamsData.map((team, index) => (
+          <GithubTeamCard
+            key={index}
+            teamData={team}
+            milestones={course.milestones}
+            sprints={course.sprints}
+          />
+        ))}
+      </ScrollArea.Autosize >
+      <Container h={FOOTER_HEIGHT}>
+        <Button onClick={open} mt={20}>Customise</Button>
+      </Container>
+    </>
+  );
+};
 
 export default Overview;
