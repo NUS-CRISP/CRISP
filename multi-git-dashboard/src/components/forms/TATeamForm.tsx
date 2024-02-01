@@ -2,7 +2,7 @@ import apiBaseUrl from '@/lib/api-config';
 import { Box, Button, Notification, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
-import CSVUpload from './CSVUpload';
+import CSVUpload from '../csv/CSVUpload';
 
 interface TATeamFormProps {
   courseId: string | string[] | undefined;
@@ -29,7 +29,7 @@ const TATeamForm: React.FC<TATeamFormProps> = ({
 
   const [error, setError] = useState<string | null>(null);
   const apiUrl = apiBaseUrl + `/courses/${courseId}/teams/tas`;
-  const csvTemplateHeaders = 'identifier,teamNumber';
+  const csvTemplateHeaders = ['identifier', 'teamNumber'];
 
   const transformTAData = (data: unknown[]) => {
     const TAs = data as TATeamFormUser[];
@@ -83,7 +83,7 @@ const TATeamForm: React.FC<TATeamFormProps> = ({
       <form onSubmit={form.onSubmit(handleSubmitForm)}>
         <TextInput
           withAsterisk
-          label="TA ID"
+          label="TA ID (NUS Net)"
           {...form.getInputProps('identifier')}
           value={form.values.identifier}
           onChange={event => {
@@ -104,10 +104,10 @@ const TATeamForm: React.FC<TATeamFormProps> = ({
         </Button>
       </form>
       <CSVUpload
-        templateHeaders={csvTemplateHeaders}
+        headers={csvTemplateHeaders}
         onProcessComplete={onTeamCreated}
         onError={setError}
-        downloadFilename="tas_team_template.csv"
+        filename="tas_team_template.csv"
         uploadButtonString="Upload TAs"
         urlString={apiUrl}
         transformFunction={transformTAData}

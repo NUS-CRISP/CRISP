@@ -17,7 +17,7 @@ export default function App(props: AppProps) {
 
   return (
     <SessionProvider session={session}>
-      <MantineProvider>
+      <MantineProvider defaultColorScheme="auto">
         <Notifications />
         <RootLayout>
           <Component {...pageProps} />

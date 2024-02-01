@@ -3,6 +3,7 @@ import {
   approveAccountByIds,
   createNewAccount,
   getAllPendingAccounts,
+  rejectAccountByIds,
 } from '../services/accountService';
 import { BadRequestError } from '../services/errors';
 
@@ -41,5 +42,17 @@ export const approveAccounts = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error approving accounts:', error);
     res.status(500).send({ error: 'Error approving accounts' });
+  }
+};
+
+export const rejectAccounts = async (req: Request, res: Response) => {
+  const { ids }: { ids: string[] } = req.body;
+
+  try {
+    await rejectAccountByIds(ids);
+    res.status(200).send({ message: 'Accounts rejected' });
+  } catch (error) {
+    console.error('Error rejecting accounts:', error);
+    res.status(500).send({ error: 'Error rejecting accounts' });
   }
 };

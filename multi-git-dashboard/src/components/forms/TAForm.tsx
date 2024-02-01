@@ -2,7 +2,7 @@ import apiBaseUrl from '@/lib/api-config';
 import { Box, Button, Notification, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
-import CSVUpload from './CSVUpload';
+import CSVUpload from '../csv/CSVUpload';
 
 interface TAFormProps {
   courseId: string | string[] | undefined;
@@ -20,7 +20,7 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
   });
   const [error, setError] = useState<string | null>(null);
   const apiUrl = apiBaseUrl + `/courses/${courseId}/tas`;
-  const csvTemplateHeaders = 'name,identifier,email,gitHandle';
+  const csvTemplateHeaders = ['name', 'identifier', 'email', 'gitHandle'];
 
   const handleSubmitForm = async () => {
     console.log('Sending ta data:', form.values);
@@ -66,7 +66,7 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
         />
         <TextInput
           withAsterisk
-          label="TA ID"
+          label="TA ID (NUS Net)"
           {...form.getInputProps('identifier')}
           value={form.values.identifier}
           onChange={event => {
@@ -95,10 +95,10 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
         </Button>
       </form>
       <CSVUpload
-        templateHeaders={csvTemplateHeaders}
+        headers={csvTemplateHeaders}
         onProcessComplete={onTACreated}
         onError={setError}
-        downloadFilename="students_template.csv"
+        filename="students_template.csv"
         uploadButtonString="Upload Students"
         urlString={apiUrl}
       />

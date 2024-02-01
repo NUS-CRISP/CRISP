@@ -6,20 +6,20 @@ import { saveAs } from 'file-saver';
 import { IconPhoto, IconUpload, IconX } from '@tabler/icons-react';
 
 interface CSVUploadProps {
-  templateHeaders: string;
+  headers: string[];
   onProcessComplete: () => void;
   onError: (message: string) => void;
-  downloadFilename: string;
+  filename: string;
   uploadButtonString: string;
   urlString: string;
   transformFunction?: (data: unknown[]) => unknown[];
 }
 
 const CSVUpload: React.FC<CSVUploadProps> = ({
-  templateHeaders,
+  headers,
   onProcessComplete,
   onError,
-  downloadFilename,
+  filename,
   uploadButtonString,
   urlString,
   transformFunction,
@@ -54,10 +54,10 @@ const CSVUpload: React.FC<CSVUploadProps> = ({
   );
 
   const downloadCsvTemplate = () => {
-    const blob = new Blob([templateHeaders], {
+    const blob = new Blob([headers.join(',')], {
       type: 'text/csv;charset=utf-8',
     });
-    saveAs(blob, downloadFilename);
+    saveAs(blob, filename);
   };
 
   const handleSubmitCSV = async () => {

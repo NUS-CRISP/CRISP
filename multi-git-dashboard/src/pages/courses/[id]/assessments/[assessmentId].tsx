@@ -3,7 +3,7 @@ import apiBaseUrl from '@/lib/api-config';
 import { Button, Container, Modal, Tabs, Text } from '@mantine/core';
 import { Assessment } from '@shared/types/Assessment';
 import { User } from '@shared/types/User';
-import { getSession } from 'next-auth/react';
+import { getSession, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
 import ResultCard from '../../../../components/cards/ResultCard';
@@ -19,6 +19,9 @@ const AssessmentDetail: React.FC = () => {
   const [isResultFormOpen, setIsResultFormOpen] = useState(false);
   const assessmentsApiUrl = apiBaseUrl + `/assessments/${assessmentId}`;
   const teachingTeamApiUrl = apiBaseUrl + `/courses/${id}/teachingteam`;
+
+  const { data: session } = useSession();
+  const userRole = session?.user?.role;
 
   const fetchAssessment = useCallback(async () => {
     try {
@@ -78,6 +81,8 @@ const AssessmentDetail: React.FC = () => {
     }
   }, [id, fetchTeachingTeam]);
 
+  const hasPermission = ['admin', 'Faculty member'].includes(userRole);
+
   return (
     <Container>
       <Tabs defaultValue="overview">
@@ -105,12 +110,14 @@ const AssessmentDetail: React.FC = () => {
           )}
         </Tabs.Panel>
         <Tabs.Panel value="results">
-          <Button
-            onClick={toggleResultForm}
-            style={{ marginTop: '16px', marginBottom: '16px' }}
-          >
-            Upload Results
-          </Button>
+          {hasPermission && (
+            <Button
+              onClick={toggleResultForm}
+              style={{ marginTop: '16px', marginBottom: '16px' }}
+            >
+              Upload Results
+            </Button>
+          )}
           <Modal
             opened={isResultFormOpen}
             onClose={toggleResultForm}

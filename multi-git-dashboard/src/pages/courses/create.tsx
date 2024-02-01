@@ -1,10 +1,13 @@
 import apiBaseUrl from '@/lib/api-config';
 import {
+  Badge,
   Box,
   Button,
   Card,
+  CloseButton,
   Collapse,
   List,
+  MultiSelect,
   SegmentedControl,
   Space,
   Text,
@@ -13,6 +16,7 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { CourseType } from '@shared/types/Course';
+import { TeamData } from '@shared/types/TeamData';
 import { IconBrandGithub, IconCheck } from '@tabler/icons-react';
 import { getSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
@@ -21,13 +25,22 @@ import { useState } from 'react';
 const CARD_W = '210px';
 // TODO: Setup webhook receiver to automatically get the org name where user installed GH app
 
+enum InstallationStatus {
+  IDLE = 'idle',
+  LOADING = 'loading',
+  SUCCESS = 'success',
+  ERROR = 'error',
+}
+
 const CreateCoursePage: React.FC = () => {
   const router = useRouter();
-  const [appInstalled, setAppInstalled] = useState<
-    'idle' | 'loading' | 'success' | 'error'
-  >('idle');
-  const [errorMessage, setErrorMessage] = useState('');
   const courseApiUrl = apiBaseUrl + '/courses';
+
+  const [appInstallationStatus, setAppInstallationStatus] =
+    useState<InstallationStatus>(InstallationStatus.IDLE);
+
+  const [repoList, setRepoList] = useState([] as string[]);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const form = useForm({
     initialValues: {
@@ -50,21 +63,19 @@ const CreateCoursePage: React.FC = () => {
       gitHubOrgName: (value, values) =>
         values.courseType === CourseType.Normal ||
         (values.courseType === CourseType.GitHubOrg &&
-          appInstalled === 'success')
+          appInstallationStatus === InstallationStatus.SUCCESS)
           ? null
           : 'GitHub Org name is required',
     },
   });
 
   const checkAppInstallation = async (orgName: string) => {
-    setAppInstalled('loading');
+    setAppInstallationStatus(InstallationStatus.LOADING);
     setErrorMessage('');
 
     try {
-      const githubInstallationApiUrl =
-        apiBaseUrl + '/github/check-installation';
-
-      const response = await fetch(githubInstallationApiUrl, {
+      // Check if the app is installed on the org
+      const response = await fetch(`${apiBaseUrl}/github/check-installation`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -73,16 +84,34 @@ const CreateCoursePage: React.FC = () => {
       });
 
       if (!response.ok) {
-        setAppInstalled('error');
+        setAppInstallationStatus(InstallationStatus.ERROR);
         const errorData = await response.json();
         setErrorMessage(errorData.message || 'An error occurred');
         return;
       }
       const { installationId } = await response.json();
       form.setFieldValue('installationId', installationId);
-      setAppInstalled('success');
+
+      // Fetch the list of repositories
+      const reposResponse = await fetch(`${apiBaseUrl}/teamdatas/${orgName}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ orgName }),
+      });
+
+      if (!reposResponse.ok) {
+        throw new Error('Failed to fetch repositories');
+      }
+
+      // response is an array of team data objects
+      const teamDatas: TeamData[] = await reposResponse.json();
+      setRepoList(teamDatas.map(teamData => teamData.repoName));
+
+      setAppInstallationStatus(InstallationStatus.SUCCESS);
     } catch (error) {
-      setAppInstalled('error');
+      setAppInstallationStatus(InstallationStatus.ERROR);
       setErrorMessage('Failed to connect to the server');
     }
   };
@@ -168,64 +197,103 @@ const CreateCoursePage: React.FC = () => {
                       Install our GitHub App
                     </Button>
                   </List.Item>
-                  <List.Item>
-                    <TextInput
-                      withAsterisk
-                      label="GitHub Org Name"
-                      placeholder="e.g. nus-crisp"
-                      {...form.getInputProps('gitHubOrgName')}
-                      onChange={event => {
-                        form.setFieldValue(
-                          'gitHubOrgName',
-                          event.currentTarget.value
-                        );
-                        form.setFieldValue('installationId', '');
-                        setAppInstalled('idle');
-                        setErrorMessage('');
-                      }}
-                    />
-                    <Space h="sm" />
-                    {errorMessage && (
-                      <Text
-                        style={{
-                          maxWidth: CARD_W,
+                  <Collapse
+                    in={appInstallationStatus !== InstallationStatus.SUCCESS}
+                    mt="md"
+                  >
+                    <List.Item>
+                      <TextInput
+                        withAsterisk
+                        label="GitHub Org Name"
+                        placeholder="e.g. nus-crisp"
+                        {...form.getInputProps('gitHubOrgName')}
+                        onChange={event => {
+                          form.setFieldValue(
+                            'gitHubOrgName',
+                            event.currentTarget.value
+                          );
+                          form.setFieldValue('installationId', '');
+                          setAppInstallationStatus(InstallationStatus.IDLE);
+                          setErrorMessage('');
                         }}
-                        c="red"
+                      />
+                      <Space h="sm" />
+                      {errorMessage && (
+                        <Text
+                          style={{
+                            maxWidth: CARD_W,
+                          }}
+                          c="red"
+                        >
+                          {errorMessage}
+                        </Text>
+                      )}
+                      <Button
+                        type="button"
+                        loading={
+                          appInstallationStatus === InstallationStatus.LOADING
+                        }
+                        variant={
+                          appInstallationStatus === InstallationStatus.SUCCESS
+                            ? 'filled'
+                            : 'outline'
+                        }
+                        color={
+                          appInstallationStatus === InstallationStatus.SUCCESS
+                            ? 'green'
+                            : appInstallationStatus === InstallationStatus.ERROR
+                              ? 'red'
+                              : 'blue'
+                        }
+                        rightSection={
+                          appInstallationStatus ===
+                          InstallationStatus.SUCCESS ? (
+                            <IconCheck size={14} />
+                          ) : null
+                        }
+                        onClick={() =>
+                          checkAppInstallation(form.values.gitHubOrgName)
+                        }
                       >
-                        {errorMessage}
-                      </Text>
-                    )}
-                    <Button
-                      type="button"
-                      loading={appInstalled === 'loading'}
-                      variant={
-                        appInstalled === 'success' ? 'filled' : 'outline'
-                      }
-                      color={
-                        appInstalled === 'success'
-                          ? 'green'
-                          : appInstalled === 'error'
-                          ? 'red'
-                          : 'blue'
-                      }
-                      rightSection={
-                        appInstalled === 'success' ? (
-                          <IconCheck size={14} />
-                        ) : null
-                      }
-                      onClick={() =>
-                        checkAppInstallation(form.values.gitHubOrgName)
-                      }
-                    >
-                      {appInstalled === 'success'
-                        ? 'Installed'
-                        : appInstalled === 'error'
-                        ? 'Try Again'
-                        : appInstalled === 'loading'
-                        ? 'Checking...'
-                        : 'Check Installation'}
-                    </Button>
-                  </List.Item>
+                        {appInstallationStatus === InstallationStatus.ERROR
+                          ? 'Try Again'
+                          : 'Check Installation'}
+                      </Button>
+                    </List.Item>
+                  </Collapse>
+                  <Collapse
+                    in={appInstallationStatus === InstallationStatus.SUCCESS}
+                    mt="md"
+                  >
+                    <List.Item>
+                      <Badge
+                        variant="outline"
+                        color="green"
+                        size="lg"
+                        rightSection={
+                          <CloseButton
+                            style={{ color: '#40c057' }} // open-color, green 6
+                            onClick={() => {
+                              setAppInstallationStatus(InstallationStatus.IDLE);
+                              setErrorMessage('');
+                              form.setFieldValue('gitHubOrgName', '');
+                            }}
+                            size={14}
+                          />
+                        }
+                      >
+                        {form.values.gitHubOrgName}
+                      </Badge>
+                      <MultiSelect
+                        mt="sm"
+                        label="Repositories"
+                        placeholder="Pick repos..."
+                        data={repoList} // TODO: list repos from org
+                        hidePickedOptions
+                        searchable
+                      />
+                    </List.Item>
+                  </Collapse>
                 </List>
               </Card>
             </Box>
