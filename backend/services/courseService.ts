@@ -1,4 +1,4 @@
-import AssessmentModel, { Assessment } from 'models/Assessment';
+import AssessmentModel, { Assessment } from '../models/Assessment';
 import Role from '../../shared/types/auth/Role';
 import AccountModel from '../models/Account';
 import CourseModel from '../models/Course';
