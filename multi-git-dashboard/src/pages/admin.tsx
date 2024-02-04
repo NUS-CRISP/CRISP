@@ -20,7 +20,6 @@ import {
 import { GetSessionParams, getSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 
-import apiBaseUrl from '@/lib/api-config';
 import classes from '../styles/admin.module.css';
 
 type RowData = Pick<Account, 'email' | 'role'>;
@@ -142,9 +141,8 @@ const AdminPage: React.FC = () => {
   };
 
   const handleApprove = async (ids: string[]) => {
-    // Approve account
-    const apiUrl = apiBaseUrl + '/accounts/approve';
-    const response = await fetch(apiUrl, {
+    const apiRoute = '/accounts/approve';
+    const response = await fetch(apiRoute, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -155,7 +153,7 @@ const AdminPage: React.FC = () => {
     if (!response.ok) {
       return;
     }
-    // Remove accounts from the list of pending accounts
+
     setPendingAccounts(
       pendingAccounts.filter(account => !ids.includes(account._id))
     );
@@ -165,8 +163,8 @@ const AdminPage: React.FC = () => {
   };
 
   const handleReject = async (ids: string[]) => {
-    const apiUrl = apiBaseUrl + '/accounts/reject';
-    const response = await fetch(apiUrl, {
+    const apiRoute = '/accounts/reject';
+    const response = await fetch(apiRoute, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -177,7 +175,7 @@ const AdminPage: React.FC = () => {
     if (!response.ok) {
       return;
     }
-    // Remove accounts from the list of pending accounts
+
     setPendingAccounts(
       pendingAccounts.filter(account => !ids.includes(account._id))
     );
@@ -188,10 +186,10 @@ const AdminPage: React.FC = () => {
 
   useEffect(() => {
     const fetchPendingAccounts = async () => {
-      const apiUrl = apiBaseUrl + '/accounts/pending';
-      const response = await fetch(apiUrl);
+      const apiRoute = '/accounts/pending';
+      const response = await fetch(apiRoute);
+
       const data: Account[] = await response.json();
-      console.log(data);
 
       setPendingAccounts(data);
       setFilteredAccounts(

@@ -1,4 +1,3 @@
-import apiBaseUrl from '@/lib/api-config';
 import { Box, Button, Notification, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
@@ -10,6 +9,9 @@ interface TAFormProps {
 }
 
 const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
+  const apiRoute = `/courses/${courseId}/tas`;
+  const csvTemplateHeaders = ['name', 'identifier', 'email', 'gitHandle'];
+
   const form = useForm({
     initialValues: {
       identifier: '',
@@ -19,13 +21,9 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
     },
   });
   const [error, setError] = useState<string | null>(null);
-  const apiUrl = apiBaseUrl + `/courses/${courseId}/tas`;
-  const csvTemplateHeaders = ['name', 'identifier', 'email', 'gitHandle'];
 
   const handleSubmitForm = async () => {
-    console.log('Sending ta data:', form.values);
-
-    const response = await fetch(apiUrl, {
+    const response = await fetch(apiRoute, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -100,7 +98,7 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
         onError={setError}
         filename="students_template.csv"
         uploadButtonString="Upload Students"
-        urlString={apiUrl}
+        urlString={apiRoute}
       />
     </Box>
   );

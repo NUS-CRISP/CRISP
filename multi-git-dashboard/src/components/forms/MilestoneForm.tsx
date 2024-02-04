@@ -1,4 +1,3 @@
-import apiBaseUrl from '@/lib/api-config';
 import { Box, Button, Notification, TextInput } from '@mantine/core';
 import { DatePicker } from '@mantine/dates';
 import { useForm } from '@mantine/form';
@@ -27,13 +26,13 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({
   });
 
   const [error, setError] = useState<string | null>(null);
-  const apiUrl = apiBaseUrl + `/courses/${courseId}/milestones`;
+  const apiRoute = `/courses/${courseId}/milestones`;
 
   const handleSubmit = async () => {
     console.log('Sending milestone data:', form.values);
 
     try {
-      const response = await fetch(apiUrl, {
+      const response = await fetch(apiRoute, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

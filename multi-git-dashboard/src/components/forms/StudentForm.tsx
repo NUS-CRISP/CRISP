@@ -1,4 +1,3 @@
-import apiBaseUrl from '@/lib/api-config';
 import { Box, Button, Notification, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
@@ -13,6 +12,9 @@ const StudentForm: React.FC<StudentFormProps> = ({
   courseId,
   onStudentCreated,
 }) => {
+  const apiRoute = `/courses/${courseId}/students`;
+  const csvTemplateHeaders = ['name', 'identifier', 'email', 'gitHandle'];
+
   const form = useForm({
     initialValues: {
       identifier: '',
@@ -22,13 +24,9 @@ const StudentForm: React.FC<StudentFormProps> = ({
     },
   });
   const [error, setError] = useState<string | null>(null);
-  const apiUrl = apiBaseUrl + `/courses/${courseId}/students`;
-  const csvTemplateHeaders = ['name', 'identifier', 'email', 'gitHandle'];
 
   const handleSubmitForm = async () => {
-    console.log('Sending student data:', form.values);
-
-    const response = await fetch(apiUrl, {
+    const response = await fetch(apiRoute, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -45,8 +43,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
       }),
     });
 
-    const data = await response.json();
-    console.log('Student created:', data);
+    await response.json();
     onStudentCreated();
   };
 
@@ -103,7 +100,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
         onError={setError}
         filename="students_template.csv"
         uploadButtonString="Upload Students"
-        urlString={apiUrl}
+        urlString={apiRoute}
       />
     </Box>
   );

@@ -1,4 +1,3 @@
-import apiBaseUrl from '@/lib/api-config';
 import { Box, Button, Notification, TextInput } from '@mantine/core';
 import { DatePicker } from '@mantine/dates';
 import { useForm } from '@mantine/form';
@@ -29,13 +28,13 @@ const SprintForm: React.FC<SprintFormProps> = ({
   });
 
   const [error, setError] = useState<string | null>(null);
-  const apiUrl = apiBaseUrl + `/courses/${courseId}/sprints`;
+  const apiRoute = `/courses/${courseId}/sprints`;
 
   const handleSubmit = async () => {
     console.log('Sending sprint data:', form.values);
 
     try {
-      const response = await fetch(apiUrl, {
+      const response = await fetch(apiRoute, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

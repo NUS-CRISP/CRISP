@@ -1,5 +1,4 @@
 import CourseCard from '@/components/cards/CourseCard';
-import apiBaseUrl from '@/lib/api-config';
 import { Button } from '@mantine/core';
 import { Course } from '@shared/types/Course';
 import { getSession, useSession } from 'next-auth/react';
@@ -10,7 +9,7 @@ import { useEffect, useState } from 'react';
 const CourseListPage: React.FC = () => {
   const router = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
-  const apiUrl = apiBaseUrl + '/courses';
+  const apiRoute = '/courses';
 
   const { data: session } = useSession();
   const userRole = session?.user?.role;
@@ -23,7 +22,7 @@ const CourseListPage: React.FC = () => {
     try {
       const session = await getSession();
       const accountId = session?.user?.id;
-      const response = await fetch(apiUrl, {
+      const response = await fetch(apiRoute, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

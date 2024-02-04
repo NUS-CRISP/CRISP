@@ -1,4 +1,3 @@
-import apiBaseUrl from '@/lib/api-config';
 import { Box, Button, Notification, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
@@ -20,16 +19,16 @@ const StudentTeamForm: React.FC<StudentTeamFormProps> = ({
   teamSet,
   onTeamCreated,
 }) => {
+  const apiRoute = `/courses/${courseId}/teams/students`;
+  const csvTemplateHeaders = ['identifier', 'teamNumber'];
+
   const form = useForm({
     initialValues: {
       identifier: '',
       teamNumber: 0,
     },
   });
-
   const [error, setError] = useState<string | null>(null);
-  const apiUrl = apiBaseUrl + `/courses/${courseId}/teams/students`;
-  const csvTemplateHeaders = ['identifier', 'teamNumber'];
 
   const transformStudentData = (data: unknown[]) => {
     const students = data as StudentTeamFormUser[];
@@ -41,10 +40,8 @@ const StudentTeamForm: React.FC<StudentTeamFormProps> = ({
   };
 
   const handleSubmitForm = async () => {
-    console.log('Sending teams data:', form.values);
-
     try {
-      const response = await fetch(apiUrl, {
+      const response = await fetch(apiRoute, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -109,7 +106,7 @@ const StudentTeamForm: React.FC<StudentTeamFormProps> = ({
         onError={setError}
         filename="students_team_template.csv"
         uploadButtonString="Upload Students"
-        urlString={apiUrl}
+        urlString={apiRoute}
         transformFunction={transformStudentData}
       />
     </Box>

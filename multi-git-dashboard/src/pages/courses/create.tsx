@@ -1,4 +1,3 @@
-import apiBaseUrl from '@/lib/api-config';
 import {
   Badge,
   Box,
@@ -24,6 +23,8 @@ import { useState } from 'react';
 
 const CARD_W = '210px';
 // TODO: Setup webhook receiver to automatically get the org name where user installed GH app
+const gitHubNewInstallationUrl =
+  'https://github.com/apps/NUS-CRISP/installations/new';
 
 enum InstallationStatus {
   IDLE = 'idle',
@@ -34,7 +35,7 @@ enum InstallationStatus {
 
 const CreateCoursePage: React.FC = () => {
   const router = useRouter();
-  const courseApiUrl = apiBaseUrl + '/courses';
+  const apiRoute = '/courses';
 
   const [appInstallationStatus, setAppInstallationStatus] =
     useState<InstallationStatus>(InstallationStatus.IDLE);
@@ -70,12 +71,14 @@ const CreateCoursePage: React.FC = () => {
   });
 
   const checkAppInstallation = async (orgName: string) => {
+    const checkAppInstallationApiRoute = '/api/github/check-installation';
+    const reposApiRoute = `/api/teamdatas/${orgName}`;
+
     setAppInstallationStatus(InstallationStatus.LOADING);
     setErrorMessage('');
 
     try {
-      // Check if the app is installed on the org
-      const response = await fetch('/api/github/check-installation', {
+      const response = await fetch(checkAppInstallationApiRoute, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -92,8 +95,7 @@ const CreateCoursePage: React.FC = () => {
       const { installationId } = await response.json();
       form.setFieldValue('installationId', installationId);
 
-      // Fetch the list of repositories
-      const reposResponse = await fetch(`/api/teamdatas/${orgName}`, {
+      const reposResponse = await fetch(reposApiRoute, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -105,7 +107,6 @@ const CreateCoursePage: React.FC = () => {
         throw new Error('Failed to fetch repositories');
       }
 
-      // response is an array of team data objects
       const teamDatas: TeamData[] = await reposResponse.json();
       setRepoList(teamDatas.map(teamData => teamData.repoName));
 
@@ -119,7 +120,8 @@ const CreateCoursePage: React.FC = () => {
   const handleSubmit = async () => {
     const session = await getSession();
     const accountId = session?.user?.id;
-    const response = await fetch(courseApiUrl, {
+
+    const response = await fetch(apiRoute, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -134,7 +136,7 @@ const CreateCoursePage: React.FC = () => {
       console.error('Error creating course:', data);
       return;
     }
-    console.log('Course created:', data);
+
     router.push(`/courses/${data._id}?new=true`);
   };
 
@@ -191,7 +193,7 @@ const CreateCoursePage: React.FC = () => {
                       leftSection={<IconBrandGithub size={14} />}
                       variant="default"
                       component="a"
-                      href="https://github.com/apps/NUS-CRISP/installations/new"
+                      href={gitHubNewInstallationUrl}
                       target="_blank"
                     >
                       Install our GitHub App
@@ -288,7 +290,7 @@ const CreateCoursePage: React.FC = () => {
                         mt="sm"
                         label="Repositories"
                         placeholder="Pick repos..."
-                        data={repoList} // TODO: list repos from org
+                        data={repoList}
                         hidePickedOptions
                         searchable
                         clearable
