@@ -106,7 +106,11 @@ async function createTAUser(userData: any) {
   return user;
 }
 
-async function createTestTeamSet(teamSetData: any, course: Types.ObjectId, teams: Types.ObjectId[]) {
+async function createTestTeamSet(
+  teamSetData: any,
+  course: Types.ObjectId,
+  teams: Types.ObjectId[]
+) {
   const teamSet = new TeamSetModel({
     ...teamSetData,
     course: course,
@@ -128,7 +132,11 @@ describe('teamService', () => {
     it('should delete a team by id and delete team from teamset', async () => {
       const course = await createTestCourse(commonCourseDetails);
       const team = await createTestTeam(commonTeamDetails);
-      const teamSet = await createTestTeamSet(commonTeamSetDetails, course._id, [team._id]);
+      const teamSet = await createTestTeamSet(
+        commonTeamSetDetails,
+        course._id,
+        [team._id]
+      );
       team.teamSet = teamSet._id;
       await team.save();
 

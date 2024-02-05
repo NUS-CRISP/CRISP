@@ -215,9 +215,9 @@ describe('courseService', () => {
 
     it('should throw NotFoundError for invalid accountId', async () => {
       const invalidAccountId = new mongoose.Types.ObjectId().toString();
-      await expect(
-        getCourseById(courseId, invalidAccountId)
-      ).rejects.toThrow(NotFoundError);
+      await expect(getCourseById(courseId, invalidAccountId)).rejects.toThrow(
+        NotFoundError
+      );
     });
 
     it('should throw NotFoundError for invalid courseId', async () => {

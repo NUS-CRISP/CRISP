@@ -80,7 +80,7 @@ describe('CourseModel', () => {
     });
 
     await courseToDelete.save();
-    
+
     await CourseModel.deleteOne({ _id: courseToDelete._id });
     const deletedCourse = await CourseModel.findById(courseToDelete._id);
 
