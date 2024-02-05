@@ -51,6 +51,10 @@ export const authOptions: AuthOptions = {
 
         const user = await usersCollection.findOne({ _id: account.user });
 
+        if (!user) {
+          throw new Error('User not found.');
+        }
+
         return {
           id: account._id.toString(),
           name: user?.name || '',
