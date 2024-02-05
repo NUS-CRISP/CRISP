@@ -107,10 +107,10 @@ describe('AssessmentModel', () => {
     });
     await assessment.save();
 
-    const deletedAssessment = await AssessmentModel.findByIdAndDelete(
-      assessment._id
-    );
-    expect(deletedAssessment?._id).toStrictEqual(assessment._id);
+    await AssessmentModel.deleteOne({ _id: assessment._id });
+    const deletedAssessment = await AssessmentModel.findById(assessment._id);
+
+    expect(deletedAssessment).toBeNull();
   });
 
   it('should not save an assessment without required fields', async () => {

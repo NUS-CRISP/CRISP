@@ -81,8 +81,10 @@ describe('AccountModel', () => {
     });
     await account.save();
 
-    const deletedAccount = await AccountModel.findByIdAndDelete(account._id);
-    expect(deletedAccount?._id).toStrictEqual(account._id);
+    await AccountModel.deleteOne({ _id: account._id });
+    const deletedAccount = await AccountModel.findById(account._id);
+
+    expect(deletedAccount).toBeNull();
   });
 
   it('should not allow duplicate emails', async () => {
