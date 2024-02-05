@@ -81,11 +81,10 @@ describe('CourseModel', () => {
 
     await courseToDelete.save();
 
-    const deletedCourse = await CourseModel.findByIdAndDelete(
-      courseToDelete._id
-    );
+    await CourseModel.deleteOne({ _id: courseToDelete._id });
+    const deletedCourse = await CourseModel.findById(courseToDelete._id);
 
-    expect(deletedCourse?._id).toStrictEqual(courseToDelete._id);
+    expect(deletedCourse).toBeNull();
   });
 
   it('should not save a course without required fields', async () => {

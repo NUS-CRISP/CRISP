@@ -98,8 +98,10 @@ describe('TeamModel', () => {
     });
     await team.save();
 
-    const deletedTeam = await TeamModel.findByIdAndDelete(team._id);
-    expect(deletedTeam?._id).toStrictEqual(team._id);
+    await TeamModel.deleteOne({ _id: team._id });
+    const deletedTeam = await TeamModel.findById(team._id);
+
+    expect(deletedTeam).toBeNull();
   });
 
   it('should not save a team without required fields', async () => {

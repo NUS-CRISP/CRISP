@@ -87,9 +87,9 @@ describe('teamSetService', () => {
     it('should throw NotFoundError if team set does not exists in the course', async () => {
       const teamSetName = 'This TeamSet does not exist';
       const invalidCourseId = new mongoose.Types.ObjectId().toString();
-      await expect(
-        createTeamSet(invalidCourseId, teamSetName)
-      ).rejects.toThrow(NotFoundError);
+      await expect(createTeamSet(invalidCourseId, teamSetName)).rejects.toThrow(
+        NotFoundError
+      );
     });
 
     it('should throw BadRequestError if team set name already exists in the course', async () => {
