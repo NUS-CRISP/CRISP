@@ -77,10 +77,10 @@ describe('TeamSetModel', () => {
     });
     await teamSetToDelete.save();
 
-    const deletedTeamSet = await TeamSetModel.findByIdAndDelete(
-      teamSetToDelete._id
-    );
-    expect(deletedTeamSet?._id).toStrictEqual(teamSetToDelete._id);
+    await TeamSetModel.deleteOne({ _id: teamSetToDelete._id });
+    const deletedTeamSet = await TeamSetModel.findById(teamSetToDelete._id);
+
+    expect(deletedTeamSet).toBeNull();
   });
 
   it('should not save a team set without required fields', async () => {
