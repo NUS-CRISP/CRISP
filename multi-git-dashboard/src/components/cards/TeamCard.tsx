@@ -1,5 +1,6 @@
 import apiBaseUrl from '@/lib/api-config';
 import { ActionIcon, Card, Group, Select, Table, Text } from '@mantine/core';
+import { TeamData } from '@shared/types/TeamData';
 import { User } from '@shared/types/User';
 import { IconX } from '@tabler/icons-react';
 import { useSession } from 'next-auth/react';
@@ -11,6 +12,8 @@ interface TeamCardProps {
   members: User[];
   TA: User | null;
   TAs: User[];
+  teamData: TeamData | null;
+  teamDataList: TeamData[];
   onTeamDeleted: () => void;
 }
 
@@ -20,9 +23,13 @@ const TeamCard: React.FC<TeamCardProps> = ({
   members,
   TA,
   TAs,
+  teamData,
+  teamDataList,
   onTeamDeleted,
 }) => {
   const [selectedTA, setSelectedTA] = useState<string | null>(TA?._id || null);
+  const [selectedTeamData, setSelectedTeamData] = useState<string | null>(null);
+
   const apiUrl = apiBaseUrl + `/teams/${teamId}`;
 
   const { data: session } = useSession();
@@ -30,6 +37,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
 
   useEffect(() => {
     setSelectedTA(TA?._id || null);
+    setSelectedTeamData(teamData?._id || null);
   }, [TA]);
 
   const handleDelete = async () => {
@@ -70,7 +78,33 @@ const TeamCard: React.FC<TeamCardProps> = ({
     }
   };
 
+  const handleRepoNameChange = async (teamDataId: string | null) => {
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ teamData: teamDataId }),
+      });
+
+      if (!response.ok) {
+        console.error('Error updating team:', response.statusText);
+        return;
+      }
+      console.log('Team updated');
+      setSelectedTeamData(teamDataId);
+    } catch (error) {
+      console.error('Error updating team:', error);
+    }
+  };
+
   const taOptions = TAs.map(ta => ({ value: ta._id, label: ta.name }));
+  const repoOptions = teamDataList.map(teamData => ({
+    value: teamData._id,
+    label: teamData.repoName,
+  }));
+
   const student_rows = members?.map(member => {
     return (
       <tr key={member._id}>
@@ -123,7 +157,20 @@ const TeamCard: React.FC<TeamCardProps> = ({
             placeholder="Assign TA"
           />
         ) : (
-          <Text>{TA ? TA.name : 'None'}</Text>
+          <Text>{ TA ? TA.name : 'None' }</Text>
+        )}
+      </Group>
+      <Group style={{ alignItems: 'center' }}>
+        <Text>Repository:</Text>
+        {hasPermission ? (
+          <Select
+            data={repoOptions}
+            value={selectedTeamData}
+            onChange={e => handleRepoNameChange(e)}
+            placeholder="Select Repository"
+          />
+        ) : (
+          <Text>{ teamData ? teamData.repoName : 'None' }</Text>
         )}
       </Group>
       <Table>
