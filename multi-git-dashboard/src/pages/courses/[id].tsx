@@ -114,9 +114,18 @@ const CourseViewPage: React.FC = () => {
   };
 
   return (
-    <Container style={{ height: 'calc(100dvh - 2 * 20px)', display: 'flex', flexDirection: 'column' }}>
+    <Container
+      style={{
+        height: 'calc(100dvh - 2 * 20px)',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
       {course ? (
-        <Tabs defaultValue="overview" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <Tabs
+          defaultValue="overview"
+          style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
+        >
           <Tabs.List
             style={{ display: 'flex', justifyContent: 'space-evenly' }}
           >

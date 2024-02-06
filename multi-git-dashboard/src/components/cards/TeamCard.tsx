@@ -157,7 +157,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
             placeholder="Assign TA"
           />
         ) : (
-          <Text>{ TA ? TA.name : 'None' }</Text>
+          <Text>{TA ? TA.name : 'None'}</Text>
         )}
       </Group>
       <Group style={{ alignItems: 'center' }}>
@@ -170,7 +170,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
             placeholder="Select Repository"
           />
         ) : (
-          <Text>{ teamData ? teamData.repoName : 'None' }</Text>
+          <Text>{teamData ? teamData.repoName : 'None'}</Text>
         )}
       </Group>
       <Table>

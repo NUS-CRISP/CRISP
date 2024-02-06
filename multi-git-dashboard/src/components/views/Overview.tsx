@@ -1,4 +1,13 @@
-import { ActionIcon, Button, Card, Container, Drawer, ScrollArea, Select, Text } from '@mantine/core';
+import {
+  ActionIcon,
+  Button,
+  Card,
+  Container,
+  Drawer,
+  ScrollArea,
+  Select,
+  Text,
+} from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Course } from '@shared/types/Course';
 import { TeamData } from '@shared/types/TeamData';
@@ -15,11 +24,17 @@ const Overview: React.FC<OverviewProps> = ({ course, teamsData }) => {
   const allMetrics = ['Commits', 'Issues', 'PRs', 'Reviews', 'Contributions']; // All possible metrics
 
   const [opened, { open, close }] = useDisclosure(false);
-  const [selectedMetrics, setSelectedMetrics] = useState(['Commits', 'Issues', 'PRs']); // Example initial metrics
+  const [selectedMetrics, setSelectedMetrics] = useState([
+    'Commits',
+    'Issues',
+    'PRs',
+  ]); // Example initial metrics
   const [availableMetricsValue] = useState<string | null>(null);
 
   const removeMetric = (metricToRemove: string) => {
-    setSelectedMetrics(selectedMetrics.filter(metric => metric !== metricToRemove));
+    setSelectedMetrics(
+      selectedMetrics.filter(metric => metric !== metricToRemove)
+    );
   };
 
   const addMetric = (metricToAdd: string | null) => {
@@ -31,14 +46,30 @@ const Overview: React.FC<OverviewProps> = ({ course, teamsData }) => {
   };
 
   // Filter out the selected metrics from the list of all possible metrics
-  const availableMetrics = allMetrics.filter(metric => !selectedMetrics.includes(metric));
+  const availableMetrics = allMetrics.filter(
+    metric => !selectedMetrics.includes(metric)
+  );
 
   return (
     <>
-      <Drawer opened={opened} onClose={close} title="Customisation" position='right'>
+      <Drawer
+        opened={opened}
+        onClose={close}
+        title="Customisation"
+        position="right"
+      >
         <div>
           {selectedMetrics.map(metric => (
-            <Card key={metric} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', borderRadius: '20px' }}>
+            <Card
+              key={metric}
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '10px',
+                borderRadius: '20px',
+              }}
+            >
               <Text>{metric}</Text>
               <ActionIcon onClick={() => removeMetric(metric)}>
                 <span>X</span> {/* Replace with appropriate icon */}
@@ -65,9 +96,11 @@ const Overview: React.FC<OverviewProps> = ({ course, teamsData }) => {
             sprints={course.sprints}
           />
         ))}
-      </ScrollArea.Autosize >
+      </ScrollArea.Autosize>
       <Container h={FOOTER_HEIGHT}>
-        <Button onClick={open} mt={20}>Customise</Button>
+        <Button onClick={open} mt={20}>
+          Customise
+        </Button>
       </Container>
     </>
   );
