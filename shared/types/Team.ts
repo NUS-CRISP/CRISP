@@ -1,3 +1,4 @@
+import { TeamData } from './TeamData';
 import { TeamSet } from './TeamSet';
 import { User } from './User';
 
@@ -7,4 +8,5 @@ export interface Team {
   number: number;
   TA: User;
   members: User[];
+  teamData: TeamData;
 }
