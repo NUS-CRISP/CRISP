@@ -40,6 +40,8 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
         number={team.number}
         TA={team.TA}
         TAs={course.TAs}
+        teamData={team.teamData}
+        teamDataList={course.teamData}
         members={team.members}
         onTeamDeleted={onUpdate}
       />
