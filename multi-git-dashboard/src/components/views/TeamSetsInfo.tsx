@@ -10,11 +10,12 @@ import {
 import { Course } from '@shared/types/Course';
 import { TeamSet } from '@shared/types/TeamSet';
 import { useSession } from 'next-auth/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import TeamCard from '../cards/TeamCard';
 import StudentTeamForm from '../forms/StudentTeamForm';
 import TATeamForm from '../forms/TATeamForm';
 import TeamSetForm from '../forms/TeamSetForm';
+import { TeamData } from '@shared/types/TeamData';
 
 interface TeamsInfoProps {
   course: Course;
@@ -28,9 +29,28 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const [teamSetId, setTeamSetId] = useState<string | null>(null);
+  const [teamDataList, setTeamDataList] = useState<TeamData[]>([]);
 
   const { data: session } = useSession();
   const userRole = session?.user?.role;
+
+  const fetchTeamData = async () => {
+    const apiUrl = `${apiBaseUrl}/teamdatas/${course.gitHubOrgName}`;
+    try {
+      const response = await fetch(apiUrl);
+      if (!response.ok) {
+        throw new Error('Failed to fetch team data.');
+      }
+      const data: TeamData[] = await response.json();
+      setTeamDataList(data);
+    } catch (error) {
+      console.error('Error fetching team data:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchTeamData();
+  }, [course._id]);
 
   const teamCards = (teamSet: TeamSet) =>
     teamSet.teams.map(team => (
@@ -41,7 +61,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
         TA={team.TA}
         TAs={course.TAs}
         teamData={team.teamData}
-        teamDataList={course.teamData}
+        teamDataList={teamDataList}
         members={team.members}
         onTeamDeleted={onUpdate}
       />
