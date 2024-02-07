@@ -12,7 +12,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
   courseId,
   onStudentCreated,
 }) => {
-  const apiRoute = `/courses/${courseId}/students`;
+  const apiRoute = `/api/courses/${courseId}/students`;
   const csvTemplateHeaders = ['name', 'identifier', 'email', 'gitHandle'];
 
   const form = useForm({

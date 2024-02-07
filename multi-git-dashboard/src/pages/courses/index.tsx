@@ -1,18 +1,20 @@
 import CourseCard from '@/components/cards/CourseCard';
+import { hasPermission } from '@/lib/utils';
 import { Button } from '@mantine/core';
 import { Course } from '@shared/types/Course';
-import { getSession, useSession } from 'next-auth/react';
+import Roles from '@shared/types/auth/Role';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 const CourseListPage: React.FC = () => {
-  const router = useRouter();
-  const [courses, setCourses] = useState<Course[]>([]);
-  const apiRoute = '/courses';
+  const apiRoute = '/api/courses';
 
+  const router = useRouter();
   const { data: session } = useSession();
-  const userRole = session?.user?.role;
+
+  const [courses, setCourses] = useState<Course[]>([]);
 
   useEffect(() => {
     fetchCourses();
@@ -20,27 +22,23 @@ const CourseListPage: React.FC = () => {
 
   const fetchCourses = async () => {
     try {
-      const session = await getSession();
-      const accountId = session?.user?.id;
       const response = await fetch(apiRoute, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `${accountId}`,
         },
       });
+
       if (!response.ok) {
         console.error('Error fetching courses:', response.statusText);
-        return;
+      } else {
+        const data = await response.json();
+        setCourses(data);
       }
-      const data = await response.json();
-      setCourses(data);
     } catch (error) {
       console.error('Error fetching courses:', error);
     }
   };
-
-  const hasPermission = ['admin', 'Faculty member'].includes(userRole);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
@@ -67,7 +65,7 @@ const CourseListPage: React.FC = () => {
           </div>
         )}
       </div>
-      {hasPermission && (
+      {hasPermission(session, Roles.Admin, Roles.Faculty) && (
         <div>
           <Button
             onClick={() => router.push('/courses/create')}

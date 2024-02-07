@@ -76,7 +76,6 @@ const SignInPage: React.FC = () => {
               setShowAlert(false);
               router.push('/auth/signin');
             }}
-            title="Alert title"
             icon={<IconInfoCircle />}
             mb={15}
           >

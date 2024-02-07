@@ -23,7 +23,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
   onAssessmentCreated,
   teamSets,
 }) => {
-  const apiRoute = `/courses/${courseId}/assessments`;
+  const apiRoute = `/api/courses/${courseId}/assessments`;
   const csvTemplateHeaders = [
     'assessmentType',
     'markType',

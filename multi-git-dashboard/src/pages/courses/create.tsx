@@ -35,7 +35,7 @@ enum InstallationStatus {
 
 const CreateCoursePage: React.FC = () => {
   const router = useRouter();
-  const apiRoute = '/courses';
+  const apiRoute = '/api/courses';
 
   const [appInstallationStatus, setAppInstallationStatus] =
     useState<InstallationStatus>(InstallationStatus.IDLE);

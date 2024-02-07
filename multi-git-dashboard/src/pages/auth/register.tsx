@@ -64,7 +64,7 @@ const RegisterPage: React.FC = () => {
   });
 
   const handleRegister = async (values: FormValues) => {
-    const apiRoute = '/accounts/';
+    const apiRoute = '/api/accounts/register';
 
     const response = await fetch(apiRoute, {
       method: 'POST',
@@ -79,6 +79,7 @@ const RegisterPage: React.FC = () => {
       setErrors({ ...errors, registerError: error });
       return;
     }
+
     router.push('/auth/signin?success=true');
   };
 

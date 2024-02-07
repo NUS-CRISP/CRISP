@@ -15,7 +15,7 @@ const ResultCard: React.FC<ResultCardProps> = ({
   teachingTeam,
   assessmentId,
 }) => {
-  const apiRoute = `/assessments/${assessmentId}/results/${result._id}/marker`;
+  const apiRoute = `/api/assessments/${assessmentId}/results/${result._id}/marker`;
 
   const [selectedMarker, setSelectedMarker] = useState<string | null>(
     result.marker?._id || null

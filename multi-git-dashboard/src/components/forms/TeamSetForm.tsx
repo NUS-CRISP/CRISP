@@ -11,7 +11,7 @@ const TeamSetForm: React.FC<TeamSetFormProps> = ({
   courseId,
   onTeamSetCreated,
 }) => {
-  const apiRoute = `/courses/${courseId}/teamsets`;
+  const apiRoute = `/api/courses/${courseId}/teamsets`;
 
   const form = useForm({
     initialValues: {

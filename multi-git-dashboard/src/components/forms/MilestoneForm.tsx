@@ -26,7 +26,7 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({
   });
 
   const [error, setError] = useState<string | null>(null);
-  const apiRoute = `/courses/${courseId}/milestones`;
+  const apiRoute = `/api/courses/${courseId}/milestones`;
 
   const handleSubmit = async () => {
     console.log('Sending milestone data:', form.values);

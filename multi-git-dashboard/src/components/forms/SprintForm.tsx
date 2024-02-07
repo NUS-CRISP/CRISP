@@ -28,11 +28,9 @@ const SprintForm: React.FC<SprintFormProps> = ({
   });
 
   const [error, setError] = useState<string | null>(null);
-  const apiRoute = `/courses/${courseId}/sprints`;
+  const apiRoute = `/api/courses/${courseId}/sprints`;
 
   const handleSubmit = async () => {
-    console.log('Sending sprint data:', form.values);
-
     try {
       const response = await fetch(apiRoute, {
         method: 'POST',

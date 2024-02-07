@@ -1,3 +1,6 @@
+import { Role } from '@shared/types/auth/Role';
+import { Session } from 'next-auth';
+
 /**
  * Adds a delay to function execution (remember to await)
  * @param ms Number of milliseconds to delay
@@ -12,4 +15,7 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 const epochToDateString = (epoch: number) =>
   new Date(epoch * 1000).toLocaleDateString();
 
-export { delay, epochToDateString };
+const hasPermission = (session: Session | null, ...roles: Role[]) =>
+  session?.user.role && roles.includes(session.user.role);
+
+export { delay, epochToDateString, hasPermission };

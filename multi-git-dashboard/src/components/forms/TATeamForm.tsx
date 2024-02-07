@@ -19,7 +19,7 @@ const TATeamForm: React.FC<TATeamFormProps> = ({
   teamSet,
   onTeamCreated,
 }) => {
-  const apiRoute = `/courses/${courseId}/teams/tas`;
+  const apiRoute = `/api/courses/${courseId}/teams/tas`;
   const csvTemplateHeaders = ['identifier', 'teamNumber'];
 
   const form = useForm({

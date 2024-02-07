@@ -1,6 +1,6 @@
 import clientPromise from '@/lib/mongodb';
 import bcrypt from 'bcrypt';
-import NextAuth, { AuthOptions } from 'next-auth';
+import NextAuth, { AuthOptions, User } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 
 export const authOptions: AuthOptions = {
@@ -17,7 +17,7 @@ export const authOptions: AuthOptions = {
           type: 'password',
         },
       },
-      async authorize(credentials) {
+      async authorize(credentials): Promise<User> {
         const client = await clientPromise;
         const accountsCollection = client
           .db(process.env.DB_NAME)
@@ -58,7 +58,6 @@ export const authOptions: AuthOptions = {
         return {
           id: account._id.toString(),
           name: user?.name || '',
-          email: account.email,
           role: account.role,
         };
       },
@@ -76,7 +75,9 @@ export const authOptions: AuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      session.user.id = token.id;
+      if (token.name) {
+        session.user.name = token.name;
+      }
       session.user.role = token.role;
       return session;
     },

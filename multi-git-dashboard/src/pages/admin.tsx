@@ -101,24 +101,19 @@ const AdminPage: React.FC = () => {
 
     if (sortBy === field) {
       if (reverseSortDirection) {
-        // Disable sorting if it's currently in descending order
         newSortBy = null;
         newReverseSortDirection = false;
       } else {
-        // Set to descending order
         newReverseSortDirection = true;
       }
     } else {
-      // Set to ascending order on a new column
       newSortBy = field;
       newReverseSortDirection = false;
     }
 
-    // Update the state
     setSortBy(newSortBy);
     setReverseSortDirection(newReverseSortDirection);
 
-    // Use the new values for sorting
     setFilteredAccounts(
       sortData(pendingAccounts, {
         sortBy: newSortBy,
@@ -141,7 +136,7 @@ const AdminPage: React.FC = () => {
   };
 
   const handleApprove = async (ids: string[]) => {
-    const apiRoute = '/accounts/approve';
+    const apiRoute = '/api/accounts/approve';
     const response = await fetch(apiRoute, {
       method: 'POST',
       headers: {
@@ -163,7 +158,7 @@ const AdminPage: React.FC = () => {
   };
 
   const handleReject = async (ids: string[]) => {
-    const apiRoute = '/accounts/reject';
+    const apiRoute = '/api/accounts/reject';
     const response = await fetch(apiRoute, {
       method: 'POST',
       headers: {
@@ -186,7 +181,7 @@ const AdminPage: React.FC = () => {
 
   useEffect(() => {
     const fetchPendingAccounts = async () => {
-      const apiRoute = '/accounts/pending';
+      const apiRoute = '/api/accounts/pending';
       const response = await fetch(apiRoute);
 
       const data: Account[] = await response.json();

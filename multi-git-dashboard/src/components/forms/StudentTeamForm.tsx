@@ -19,7 +19,7 @@ const StudentTeamForm: React.FC<StudentTeamFormProps> = ({
   teamSet,
   onTeamCreated,
 }) => {
-  const apiRoute = `/courses/${courseId}/teams/students`;
+  const apiRoute = `/api/courses/${courseId}/teams/students`;
   const csvTemplateHeaders = ['identifier', 'teamNumber'];
 
   const form = useForm({

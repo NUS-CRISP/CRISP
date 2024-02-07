@@ -9,7 +9,7 @@ interface TAFormProps {
 }
 
 const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
-  const apiRoute = `/courses/${courseId}/tas`;
+  const apiRoute = `/api/courses/${courseId}/tas`;
   const csvTemplateHeaders = ['name', 'identifier', 'email', 'gitHandle'];
 
   const form = useForm({

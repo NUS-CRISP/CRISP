@@ -22,7 +22,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
   onTeamDeleted,
 }) => {
   const [selectedTA, setSelectedTA] = useState<string | null>(TA?._id || null);
-  const apiRoute = `/teams/${teamId}`;
+  const apiRoute = `/api/teams/${teamId}`;
 
   const { data: session } = useSession();
   const userRole = session?.user?.role;

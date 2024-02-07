@@ -12,7 +12,7 @@ const ResultForm: React.FC<ResultFormProps> = ({
   onResultsUploaded,
 }) => {
   const [error, setError] = useState<string | null>(null);
-  const apiRoute = `/assessments/${assessmentId}/results`;
+  const apiRoute = `/api/assessments/${assessmentId}/results`;
   const csvTemplateHeaders = ['teamNumber', 'studentId', 'mark'];
 
   return (
