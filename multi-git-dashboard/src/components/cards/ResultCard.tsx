@@ -64,7 +64,7 @@ const ResultCard: React.FC<ResultCardProps> = ({
     );
   });
 
-  const hasPermission = ['admin', 'Faculty member'].includes(userRole);
+  const hasPermission = ['admin', 'Faculty member'].includes(userRole || '');
 
   return (
     <Card

@@ -82,7 +82,7 @@ const AssessmentDetail: React.FC = () => {
     }
   }, [id, fetchTeachingTeam]);
 
-  const hasPermission = ['admin', 'Faculty member'].includes(userRole);
+  const hasPermission = ['admin', 'Faculty member'].includes(userRole || '');
 
   return (
     <Container>

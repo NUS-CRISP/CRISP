@@ -37,7 +37,7 @@ const MilestonesInfo: React.FC<MilestonesInfoProps> = ({
     onUpdate();
   };
 
-  const hasPermission = ['admin', 'Faculty member'].includes(userRole);
+  const hasPermission = ['admin', 'Faculty member'].includes(userRole || '');
 
   return (
     <Container>

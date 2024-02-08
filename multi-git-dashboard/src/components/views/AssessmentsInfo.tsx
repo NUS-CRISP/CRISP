@@ -48,7 +48,7 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
     onUpdate();
   };
 
-  const hasPermission = ['admin', 'Faculty member'].includes(userRole);
+  const hasPermission = ['admin', 'Faculty member'].includes(userRole || '');
 
   return (
     <Container>

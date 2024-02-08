@@ -34,9 +34,8 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
   const userRole = session?.user?.role;
 
   const fetchTeamData = async () => {
-    const apiUrl = `${apiBaseUrl}/teamdatas/${course.gitHubOrgName}`;
     try {
-      const response = await fetch(apiUrl);
+      const response = await fetch(`/teamsets/${teamSetId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch team data.');
       }
@@ -136,7 +135,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
     }
   };
 
-  const hasPermission = ['admin', 'Faculty member'].includes(userRole);
+  const hasPermission = ['admin', 'Faculty member'].includes(userRole || '');
 
   return (
     <Container>

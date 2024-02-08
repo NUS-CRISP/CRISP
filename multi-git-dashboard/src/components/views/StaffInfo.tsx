@@ -24,7 +24,7 @@ const StaffInfo: React.FC<StaffInfoProps> = ({ course, onUpdate }) => {
     onUpdate();
   };
 
-  const hasPermission = ['admin', 'Faculty member'].includes(userRole);
+  const hasPermission = ['admin', 'Faculty member'].includes(userRole || '');
 
   return (
     <Container>

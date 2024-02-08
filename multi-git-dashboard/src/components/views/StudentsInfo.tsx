@@ -34,7 +34,7 @@ const StudentsInfo: React.FC<StudentsInfoProps> = ({ course, onUpdate }) => {
 
   const csvHeaders = ['identifier', 'name', 'gitHandle']; // 'email'];
 
-  const hasPermission = ['admin', 'Faculty member'].includes(userRole);
+  const hasPermission = ['admin', 'Faculty member'].includes(userRole || '');
 
   return (
     <Container>
