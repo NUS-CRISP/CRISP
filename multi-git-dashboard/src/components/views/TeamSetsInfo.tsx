@@ -9,7 +9,7 @@ import {
 import { Course } from '@shared/types/Course';
 import { TeamSet } from '@shared/types/TeamSet';
 import { useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import TeamCard from '../cards/TeamCard';
 import StudentTeamForm from '../forms/StudentTeamForm';
 import TATeamForm from '../forms/TATeamForm';
@@ -19,37 +19,23 @@ import { hasFacultyPermission } from '@/lib/utils';
 
 interface TeamsInfoProps {
   course: Course;
+  teamsData: TeamData[];
   onUpdate: () => void;
 }
 
-const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
+const TeamsInfo: React.FC<TeamsInfoProps> = ({
+  course,
+  teamsData,
+  onUpdate,
+}) => {
   const [isCreatingTeamSet, setIsCreatingTeamSet] = useState<boolean>(false);
   const [isAddingStudents, setIsAddingStudents] = useState<boolean>(false);
   const [isAddingTAs, setIsAddingTAs] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const [teamSetId, setTeamSetId] = useState<string | null>(null);
-  const [teamDataList, setTeamDataList] = useState<TeamData[]>([]);
 
   const { data: session } = useSession();
-
-  const fetchTeamData = async () => {
-    try {
-      const apiRoute = `/api/github/${course.gitHubOrgName}`;
-      const response = await fetch(apiRoute);
-      if (!response.ok) {
-        throw new Error('Failed to fetch team data.');
-      }
-      const data: TeamData[] = await response.json();
-      setTeamDataList(data);
-    } catch (error) {
-      console.error('Error fetching team data:', error);
-    }
-  };
-
-  useEffect(() => {
-    fetchTeamData();
-  }, [course._id]);
 
   const teamCards = (teamSet: TeamSet) =>
     teamSet.teams.map(team => (
@@ -60,7 +46,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
         TA={team.TA}
         TAs={course.TAs}
         teamData={team.teamData}
-        teamDataList={teamDataList}
+        teamDataList={teamsData}
         members={team.members}
         onTeamDeleted={onUpdate}
       />
