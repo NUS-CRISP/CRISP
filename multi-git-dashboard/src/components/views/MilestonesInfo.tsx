@@ -1,10 +1,9 @@
+import { hasFacultyPermission } from '@/lib/auth/utils';
 import { Button, Container, Modal } from '@mantine/core';
 import { Course } from '@shared/types/Course';
-import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import MilestoneCard from '../cards/MilestoneCard';
 import MilestoneForm from '../forms/MilestoneForm';
-import { hasFacultyPermission } from '@/lib/utils';
 
 interface MilestonesInfoProps {
   course: Course;
@@ -16,8 +15,6 @@ const MilestonesInfo: React.FC<MilestonesInfoProps> = ({
   onUpdate,
 }) => {
   const [isCreatingMilestone, setIsCreatingMilestone] = useState(false);
-
-  const { data: session } = useSession();
 
   const milestoneCards = course.milestones.map(milestone => (
     <MilestoneCard
@@ -39,7 +36,7 @@ const MilestonesInfo: React.FC<MilestonesInfoProps> = ({
 
   return (
     <Container>
-      {hasFacultyPermission(session) && (
+      {hasFacultyPermission() && (
         <Button
           onClick={toggleForm}
           style={{ marginTop: '16px', marginBottom: '16px' }}

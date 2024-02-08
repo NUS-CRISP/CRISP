@@ -8,7 +8,6 @@ import TeamSetsInfo from '@/components/views/TeamSetsInfo';
 import { Container, Loader, Tabs } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { Course, Milestone, Sprint } from '@shared/types/Course';
-import { TeamData } from '@shared/types/TeamData';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -20,7 +19,6 @@ const CourseViewPage: React.FC = () => {
   const courseApiRoute = `/api/courses/${courseId}`;
 
   const [course, setCourse] = useState<Course>();
-  const [teamsData, setTeamsData] = useState<TeamData[]>([]);
 
   useEffect(() => {
     if (isNewCourse) {
@@ -58,32 +56,10 @@ const CourseViewPage: React.FC = () => {
         }));
       }
       setCourse(data);
-
-      if (data.courseType === 'GitHubOrg' && data.gitHubOrgName) {
-        fetchTeamDataForOrg(data.gitHubOrgName);
-      }
     } catch (error) {
       console.error('Error fetching course:', error);
     }
   }, [courseId]);
-
-  const fetchTeamDataForOrg = async (orgName: string) => {
-    try {
-      const gitHubApiRoute = `/api/github/${orgName}`;
-      const response = await fetch(gitHubApiRoute);
-
-      if (!response.ok) {
-        console.error('Error fetching team data:', response.statusText);
-        return;
-      }
-
-      const data = await response.json();
-
-      setTeamsData(data.teamDatas);
-    } catch (error) {
-      console.error('Error fetching team data:', error);
-    }
-  };
 
   useEffect(() => {
     if (courseId) {
@@ -137,7 +113,7 @@ const CourseViewPage: React.FC = () => {
           </Tabs.List>
           <div style={{ overflow: 'auto', flexGrow: 1 }}>
             <Tabs.Panel value="overview">
-              <Overview course={course} teamsData={teamsData} />
+              <Overview course={course} />
             </Tabs.Panel>
             <Tabs.Panel value="students">
               <div>
@@ -151,11 +127,7 @@ const CourseViewPage: React.FC = () => {
             </Tabs.Panel>
             <Tabs.Panel value="teams">
               <div>
-                <TeamSetsInfo
-                  course={course}
-                  teamsData={teamsData}
-                  onUpdate={handleUpdate}
-                />
+                <TeamSetsInfo course={course} onUpdate={handleUpdate} />
               </div>
             </Tabs.Panel>
             <Tabs.Panel value="milestones">

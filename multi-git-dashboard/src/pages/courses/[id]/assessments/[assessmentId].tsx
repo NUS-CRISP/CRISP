@@ -1,12 +1,11 @@
 import ResultForm from '@/components/forms/ResultForm';
+import { hasFacultyPermission } from '@/lib/auth/utils';
 import { Button, Container, Modal, Tabs, Text } from '@mantine/core';
 import { Assessment } from '@shared/types/Assessment';
 import { User } from '@shared/types/User';
-import { getSession, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
 import ResultCard from '../../../../components/cards/ResultCard';
-import { hasFacultyPermission } from '@/lib/utils';
 
 const AssessmentDetail: React.FC = () => {
   const router = useRouter();
@@ -22,17 +21,12 @@ const AssessmentDetail: React.FC = () => {
   const [teachingTeam, setTeachingTeam] = useState<User[]>([]);
   const [isResultFormOpen, setIsResultFormOpen] = useState(false);
 
-  const { data: session } = useSession();
-
   const fetchAssessment = useCallback(async () => {
     try {
-      const session = await getSession();
-      const accountId = session?.user?.id;
       const response = await fetch(assessmentsApiRoute, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `${accountId}`,
         },
       });
       if (!response.ok) {
@@ -109,7 +103,7 @@ const AssessmentDetail: React.FC = () => {
           )}
         </Tabs.Panel>
         <Tabs.Panel value="results">
-          {hasFacultyPermission(session) && (
+          {hasFacultyPermission() && (
             <Button
               onClick={toggleResultForm}
               style={{ marginTop: '16px', marginBottom: '16px' }}

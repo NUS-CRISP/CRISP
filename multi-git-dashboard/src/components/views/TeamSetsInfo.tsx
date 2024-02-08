@@ -1,3 +1,4 @@
+import { hasFacultyPermission } from '@/lib/auth/utils';
 import {
   Button,
   Container,
@@ -8,26 +9,18 @@ import {
 } from '@mantine/core';
 import { Course } from '@shared/types/Course';
 import { TeamSet } from '@shared/types/TeamSet';
-import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import TeamCard from '../cards/TeamCard';
 import StudentTeamForm from '../forms/StudentTeamForm';
 import TATeamForm from '../forms/TATeamForm';
 import TeamSetForm from '../forms/TeamSetForm';
-import { TeamData } from '@shared/types/TeamData';
-import { hasFacultyPermission } from '@/lib/utils';
 
 interface TeamsInfoProps {
   course: Course;
-  teamsData: TeamData[];
   onUpdate: () => void;
 }
 
-const TeamsInfo: React.FC<TeamsInfoProps> = ({
-  course,
-  teamsData,
-  onUpdate,
-}) => {
+const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
   const [isCreatingTeamSet, setIsCreatingTeamSet] = useState<boolean>(false);
   const [isAddingStudents, setIsAddingStudents] = useState<boolean>(false);
   const [isAddingTAs, setIsAddingTAs] = useState<boolean>(false);
@@ -35,10 +28,8 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const [teamSetId, setTeamSetId] = useState<string | null>(null);
 
-  const { data: session } = useSession();
-
-  const teamCards = (teamSet: TeamSet) =>
-    teamSet.teams.map(team => (
+  const teamCards = (teamSet: TeamSet) => {
+    return teamSet.teams.map(team => (
       <TeamCard
         key={team._id}
         teamId={team._id}
@@ -46,11 +37,12 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({
         TA={team.TA}
         TAs={course.TAs}
         teamData={team.teamData}
-        teamDataList={teamsData}
+        teamDataList={teamSet.teams.map(t => t.teamData).filter(Boolean)}
         members={team.members}
         onTeamDeleted={onUpdate}
       />
     ));
+  };
 
   const headers = course.teamSets.map((teamSet, index) => (
     <Tabs.Tab
@@ -138,7 +130,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({
             {error}
           </Notification>
         )}
-        {hasFacultyPermission(session) && (
+        {hasFacultyPermission() && (
           <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
             <Group>
               <Button onClick={toggleTeamSetForm}>Create TeamSet</Button>

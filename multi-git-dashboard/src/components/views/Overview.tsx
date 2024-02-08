@@ -1,3 +1,4 @@
+import { mergeDedupe } from '@/lib/utils';
 import {
   ActionIcon,
   Button,
@@ -10,18 +11,21 @@ import {
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Course } from '@shared/types/Course';
-import { TeamData } from '@shared/types/TeamData';
 import { useState } from 'react';
 import GithubTeamCard from '../cards/GithubTeamCard';
 
 interface OverviewProps {
   course: Course;
-  teamsData: TeamData[];
 }
 
-const Overview: React.FC<OverviewProps> = ({ course, teamsData }) => {
+const Overview: React.FC<OverviewProps> = ({ course }) => {
   const FOOTER_HEIGHT = 60;
   const allMetrics = ['Commits', 'Issues', 'PRs', 'Reviews', 'Contributions']; // All possible metrics
+
+  const allTeams = mergeDedupe(
+    (r1, r2) => r1._id === r2._id,
+    ...course.teamSets.map(ts => ts.teams)
+  ).filter(team => team.teamData);
 
   const [opened, { open, close }] = useDisclosure(false);
   const [selectedMetrics, setSelectedMetrics] = useState([
@@ -88,14 +92,17 @@ const Overview: React.FC<OverviewProps> = ({ course, teamsData }) => {
         </div>
       </Drawer>
       <ScrollArea.Autosize mah={`calc(100dvh - 4 * 20px - ${FOOTER_HEIGHT}px)`}>
-        {teamsData.map((team, index) => (
-          <GithubTeamCard
-            key={index}
-            teamData={team}
-            milestones={course.milestones}
-            sprints={course.sprints}
-          />
-        ))}
+        {allTeams.map((team, index) => {
+          console.log('team', team);
+          return (
+            <GithubTeamCard
+              key={index}
+              teamData={team.teamData}
+              milestones={course.milestones}
+              sprints={course.sprints}
+            />
+          );
+        })}
       </ScrollArea.Autosize>
       <Container h={FOOTER_HEIGHT}>
         <Button onClick={open} mt={20}>

@@ -1,9 +1,7 @@
 import CourseCard from '@/components/cards/CourseCard';
-import { hasPermission } from '@/lib/utils';
+import { hasFacultyPermission } from '@/lib/auth/utils';
 import { Button } from '@mantine/core';
 import { Course } from '@shared/types/Course';
-import Roles from '@shared/types/auth/Role';
-import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
@@ -12,7 +10,6 @@ const CourseListPage: React.FC = () => {
   const apiRoute = '/api/courses';
 
   const router = useRouter();
-  const { data: session } = useSession();
 
   const [courses, setCourses] = useState<Course[]>([]);
 
@@ -65,7 +62,7 @@ const CourseListPage: React.FC = () => {
           </div>
         )}
       </div>
-      {hasPermission(session, Roles.Admin, Roles.Faculty) && (
+      {hasFacultyPermission() && (
         <div>
           <Button
             onClick={() => router.push('/courses/create')}

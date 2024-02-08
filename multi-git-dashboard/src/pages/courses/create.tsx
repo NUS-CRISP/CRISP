@@ -72,7 +72,7 @@ const CreateCoursePage: React.FC = () => {
 
   const checkAppInstallation = async (orgName: string) => {
     const checkAppInstallationApiRoute = '/api/github/check-installation';
-    const reposApiRoute = `/api/teamdatas/${orgName}`;
+    const reposApiRoute = `/api/github/${orgName}`;
 
     setAppInstallationStatus(InstallationStatus.LOADING);
     setErrorMessage('');

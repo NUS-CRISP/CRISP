@@ -62,8 +62,9 @@ export const getCourseById = async (courseId: string, accountId: string) => {
   if (!course) {
     throw new NotFoundError('Course not found');
   }
+
   const role = account.role;
-  if (role === 'Teaching assistant') {
+  if (role === Role.TA) {
     const userId = account.user;
     course.teamSets.forEach(
       teamSet =>
@@ -72,6 +73,7 @@ export const getCourseById = async (courseId: string, accountId: string) => {
         ))
     );
   }
+
   course.faculty.sort((a, b) => a.name.localeCompare(b.name));
   course.TAs.sort((a, b) => a.name.localeCompare(b.name));
   course.students.sort((a, b) => a.name.localeCompare(b.name));
