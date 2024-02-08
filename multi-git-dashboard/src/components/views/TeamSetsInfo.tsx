@@ -35,7 +35,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
 
   const fetchTeamData = async () => {
     try {
-      const apiRoute = `/api/teamsets/${teamSetId}`;
+      const apiRoute = `/api/teamdatas/${course.gitHubOrgName}`;
       const response = await fetch(apiRoute);
       if (!response.ok) {
         throw new Error('Failed to fetch team data.');
