@@ -151,7 +151,11 @@ const CourseViewPage: React.FC = () => {
             </Tabs.Panel>
             <Tabs.Panel value="teams">
               <div>
-                <TeamSetsInfo course={course} onUpdate={handleUpdate} />
+                <TeamSetsInfo
+                  course={course}
+                  teamsData={teamsData}
+                  onUpdate={handleUpdate}
+                />
               </div>
             </Tabs.Panel>
             <Tabs.Panel value="milestones">
