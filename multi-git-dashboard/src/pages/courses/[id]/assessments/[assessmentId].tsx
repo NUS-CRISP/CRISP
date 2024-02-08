@@ -6,6 +6,7 @@ import { getSession, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
 import ResultCard from '../../../../components/cards/ResultCard';
+import { hasFacultyPermission } from '@/lib/utils';
 
 const AssessmentDetail: React.FC = () => {
   const router = useRouter();
@@ -22,7 +23,6 @@ const AssessmentDetail: React.FC = () => {
   const [isResultFormOpen, setIsResultFormOpen] = useState(false);
 
   const { data: session } = useSession();
-  const userRole = session?.user?.role;
 
   const fetchAssessment = useCallback(async () => {
     try {
@@ -82,8 +82,6 @@ const AssessmentDetail: React.FC = () => {
     }
   }, [id, fetchTeachingTeam]);
 
-  const hasPermission = ['admin', 'Faculty member'].includes(userRole || '');
-
   return (
     <Container>
       <Tabs defaultValue="overview">
@@ -111,7 +109,7 @@ const AssessmentDetail: React.FC = () => {
           )}
         </Tabs.Panel>
         <Tabs.Panel value="results">
-          {hasPermission && (
+          {hasFacultyPermission(session) && (
             <Button
               onClick={toggleResultForm}
               style={{ marginTop: '16px', marginBottom: '16px' }}

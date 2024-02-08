@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import MilestoneCard from '../cards/MilestoneCard';
 import MilestoneForm from '../forms/MilestoneForm';
+import { hasFacultyPermission } from '@/lib/utils';
 
 interface MilestonesInfoProps {
   course: Course;
@@ -17,7 +18,6 @@ const MilestonesInfo: React.FC<MilestonesInfoProps> = ({
   const [isCreatingMilestone, setIsCreatingMilestone] = useState(false);
 
   const { data: session } = useSession();
-  const userRole = session?.user?.role;
 
   const milestoneCards = course.milestones.map(milestone => (
     <MilestoneCard
@@ -37,11 +37,9 @@ const MilestonesInfo: React.FC<MilestonesInfoProps> = ({
     onUpdate();
   };
 
-  const hasPermission = ['admin', 'Faculty member'].includes(userRole || '');
-
   return (
     <Container>
-      {hasPermission && (
+      {hasFacultyPermission(session) && (
         <Button
           onClick={toggleForm}
           style={{ marginTop: '16px', marginBottom: '16px' }}

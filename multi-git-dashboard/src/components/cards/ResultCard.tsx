@@ -1,3 +1,4 @@
+import { hasFacultyPermission } from '@/lib/utils';
 import { Card, Group, Select, Table, Text } from '@mantine/core';
 import { Result } from '@shared/types/Result';
 import { User } from '@shared/types/User';
@@ -22,7 +23,6 @@ const ResultCard: React.FC<ResultCardProps> = ({
   );
 
   const { data: session } = useSession();
-  const userRole = session?.user?.role;
 
   useEffect(() => {
     setSelectedMarker(result.marker?._id || null);
@@ -64,8 +64,6 @@ const ResultCard: React.FC<ResultCardProps> = ({
     );
   });
 
-  const hasPermission = ['admin', 'Faculty member'].includes(userRole || '');
-
   return (
     <Card
       shadow="sm"
@@ -90,7 +88,7 @@ const ResultCard: React.FC<ResultCardProps> = ({
         </Group>
       </div>
 
-      {hasPermission ? (
+      {hasFacultyPermission(session) ? (
         <Select
           value={selectedMarker}
           onChange={handleMarkerChange}

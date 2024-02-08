@@ -15,6 +15,7 @@ import StudentTeamForm from '../forms/StudentTeamForm';
 import TATeamForm from '../forms/TATeamForm';
 import TeamSetForm from '../forms/TeamSetForm';
 import { TeamData } from '@shared/types/TeamData';
+import { hasFacultyPermission } from '@/lib/utils';
 
 interface TeamsInfoProps {
   course: Course;
@@ -31,7 +32,6 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
   const [teamDataList, setTeamDataList] = useState<TeamData[]>([]);
 
   const { data: session } = useSession();
-  const userRole = session?.user?.role;
 
   const fetchTeamData = async () => {
     try {
@@ -135,8 +135,6 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
     }
   };
 
-  const hasPermission = ['admin', 'Faculty member'].includes(userRole || '');
-
   return (
     <Container>
       <Tabs value={activeTab}>
@@ -152,7 +150,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
             {error}
           </Notification>
         )}
-        {hasPermission && (
+        {hasFacultyPermission(session) && (
           <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
             <Group>
               <Button onClick={toggleTeamSetForm}>Create TeamSet</Button>
