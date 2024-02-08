@@ -96,8 +96,8 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
         headers={csvTemplateHeaders}
         onProcessComplete={onTACreated}
         onError={setError}
-        filename="students_template.csv"
-        uploadButtonString="Upload Students"
+        filename="tas_template.csv"
+        uploadButtonString="Upload TAs"
         urlString={apiRoute}
       />
     </Box>
