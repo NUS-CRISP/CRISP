@@ -15,8 +15,8 @@ const AssessmentDetail: React.FC = () => {
     assessmentId: string;
   };
 
-  const assessmentsApiRoute = `/assessments/${assessmentId}`;
-  const teachingTeamApiRoute = `/courses/${id}/teachingteam`;
+  const assessmentsApiRoute = `/api/assessments/${assessmentId}`;
+  const teachingTeamApiRoute = `/api/courses/${id}/teachingteam`;
 
   const [assessment, setAssessment] = useState<Assessment | null>(null);
   const [teachingTeam, setTeachingTeam] = useState<User[]>([]);
