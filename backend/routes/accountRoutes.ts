@@ -8,7 +8,7 @@ import {
 
 const router = express.Router();
 
-router.post('/', createAccount);
+router.post('/register', createAccount);
 router.get('/pending', getPendingAccounts);
 router.post('/approve', approveAccounts);
 router.post('/reject', rejectAccounts);

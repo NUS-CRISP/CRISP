@@ -1,4 +1,3 @@
-import apiBaseUrl from '@/lib/api-config';
 import {
   Box,
   Button,
@@ -24,6 +23,16 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
   onAssessmentCreated,
   teamSets,
 }) => {
+  const apiRoute = `/api/courses/${courseId}/assessments`;
+  const csvTemplateHeaders = [
+    'assessmentType',
+    'markType',
+    'frequency',
+    'granularity',
+    'teamSetName',
+    'formLink',
+  ];
+
   const form = useForm({
     initialValues: {
       assessmentType: '',
@@ -35,22 +44,12 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
     },
     validate: {},
   });
+
   const [error, setError] = useState<string | null>(null);
-  const apiUrl = apiBaseUrl + `/courses/${courseId}/assessments`;
-  const csvTemplateHeaders = [
-    'assessmentType',
-    'markType',
-    'frequency',
-    'granularity',
-    'teamSetName',
-    'formLink',
-  ];
 
   const handleSubmitForm = async () => {
-    console.log('Sending assessment data:', form.values);
-
     try {
-      const response = await fetch(apiUrl, {
+      const response = await fetch(apiRoute, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -158,7 +157,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
         onError={setError}
         filename="assessments_template.csv"
         uploadButtonString="Upload Assessments"
-        urlString={apiUrl}
+        urlString={apiRoute}
       />
     </Box>
   );

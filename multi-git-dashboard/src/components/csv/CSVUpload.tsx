@@ -1,9 +1,9 @@
-import React, { useState, useCallback } from 'react';
 import { Box, Button, Group, Text } from '@mantine/core';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
-import Papa from 'papaparse';
-import { saveAs } from 'file-saver';
 import { IconPhoto, IconUpload, IconX } from '@tabler/icons-react';
+import { saveAs } from 'file-saver';
+import Papa from 'papaparse';
+import React, { useCallback, useState } from 'react';
 
 interface CSVUploadProps {
   headers: string[];
@@ -67,8 +67,6 @@ const CSVUpload: React.FC<CSVUploadProps> = ({
       return;
     }
 
-    console.log('Sending csv data:', items);
-
     try {
       const response = await fetch(urlString, {
         method: 'POST',
@@ -85,8 +83,7 @@ const CSVUpload: React.FC<CSVUploadProps> = ({
         onError('Error uploading items. Please try again.');
         return;
       }
-      const data = await response.json();
-      console.log('Items created:', data);
+      await response.json();
       onProcessComplete();
     } catch (error) {
       console.error('Error uploading csv items:', error);
