@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import StudentForm from '../forms/StudentForm';
 import CSVExport from '../csv/CSVExport';
+import { hasFacultyPermission } from '@/lib/utils';
 
 interface StudentsInfoProps {
   course: Course;
@@ -14,7 +15,6 @@ const StudentsInfo: React.FC<StudentsInfoProps> = ({ course, onUpdate }) => {
   const [isCreatingStudent, setIsCreatingStudent] = useState(false);
 
   const { data: session } = useSession();
-  const userRole = session?.user?.role;
 
   const toggleForm = () => {
     setIsCreatingStudent(o => !o);
@@ -34,13 +34,13 @@ const StudentsInfo: React.FC<StudentsInfoProps> = ({ course, onUpdate }) => {
 
   const csvHeaders = ['identifier', 'name', 'gitHandle']; // 'email'];
 
-  const hasPermission = ['admin', 'Faculty member'].includes(userRole);
-
   return (
     <Container>
       <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
-        {hasPermission && <Button onClick={toggleForm}>Add Student</Button>}
-        {hasPermission && (
+        {hasFacultyPermission(session) && (
+          <Button onClick={toggleForm}>Add Student</Button>
+        )}
+        {hasFacultyPermission(session) && (
           <CSVExport
             data={studentData}
             headers={csvHeaders}

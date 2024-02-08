@@ -18,4 +18,7 @@ const epochToDateString = (epoch: number) =>
 const hasPermission = (session: Session | null, ...roles: Role[]) =>
   session?.user.role && roles.includes(session.user.role);
 
-export { delay, epochToDateString, hasPermission };
+const hasFacultyPermission = (session: Session | null) =>
+  hasPermission(session, 'admin', 'Faculty member');
+
+export { delay, epochToDateString, hasPermission, hasFacultyPermission };

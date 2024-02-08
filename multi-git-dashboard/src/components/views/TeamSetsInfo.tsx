@@ -9,11 +9,13 @@ import {
 import { Course } from '@shared/types/Course';
 import { TeamSet } from '@shared/types/TeamSet';
 import { useSession } from 'next-auth/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import TeamCard from '../cards/TeamCard';
 import StudentTeamForm from '../forms/StudentTeamForm';
 import TATeamForm from '../forms/TATeamForm';
 import TeamSetForm from '../forms/TeamSetForm';
+import { TeamData } from '@shared/types/TeamData';
+import { hasFacultyPermission } from '@/lib/utils';
 
 interface TeamsInfoProps {
   course: Course;
@@ -27,9 +29,27 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const [teamSetId, setTeamSetId] = useState<string | null>(null);
+  const [teamDataList, setTeamDataList] = useState<TeamData[]>([]);
 
   const { data: session } = useSession();
-  const userRole = session?.user?.role;
+  const apiRoute = `/api/teamsets/${teamSetId}`;
+
+  const fetchTeamData = async () => {
+    try {
+      const response = await fetch(apiRoute);
+      if (!response.ok) {
+        throw new Error('Failed to fetch team data.');
+      }
+      const data: TeamData[] = await response.json();
+      setTeamDataList(data);
+    } catch (error) {
+      console.error('Error fetching team data:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchTeamData();
+  }, [course._id]);
 
   const teamCards = (teamSet: TeamSet) =>
     teamSet.teams.map(team => (
@@ -39,6 +59,8 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
         number={team.number}
         TA={team.TA}
         TAs={course.TAs}
+        teamData={team.teamData}
+        teamDataList={teamDataList}
         members={team.members}
         onTeamDeleted={onUpdate}
       />
@@ -92,7 +114,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
 
   const handleDeleteTeamSet = async () => {
     try {
-      const response = await fetch(`/teamsets/${teamSetId}`, {
+      const response = await fetch(apiRoute, {
         method: 'DELETE',
       });
 
@@ -114,8 +136,6 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
     }
   };
 
-  const hasPermission = ['admin', 'Faculty member'].includes(userRole);
-
   return (
     <Container>
       <Tabs value={activeTab}>
@@ -131,7 +151,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
             {error}
           </Notification>
         )}
-        {hasPermission && (
+        {hasFacultyPermission(session) && (
           <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
             <Group>
               <Button onClick={toggleTeamSetForm}>Create TeamSet</Button>

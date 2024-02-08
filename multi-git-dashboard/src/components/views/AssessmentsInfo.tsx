@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import AssessmentCard from '../cards/AssessmentCard';
 import AssessmentForm from '../forms/AssessmentForm';
+import { hasFacultyPermission } from '@/lib/utils';
 
 interface AssessmentInfoProps {
   course: Course;
@@ -18,7 +19,6 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
   const [isCreatingAssessment, setIsCreatingAssessment] = useState(false);
 
   const { data: session } = useSession();
-  const userRole = session?.user?.role;
 
   const assessmentCards = course.assessments.map(assessment => (
     <Link
@@ -48,11 +48,9 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
     onUpdate();
   };
 
-  const hasPermission = ['admin', 'Faculty member'].includes(userRole);
-
   return (
     <Container>
-      {hasPermission && (
+      {hasFacultyPermission(session) && (
         <Button
           onClick={toggleForm}
           style={{ marginTop: '16px', marginBottom: '16px' }}

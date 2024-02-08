@@ -50,7 +50,7 @@ export const getCourseById = async (courseId: string, accountId: string) => {
       populate: {
         path: 'teams',
         model: 'Team',
-        populate: ['members', 'TA'],
+        populate: ['members', 'TA', 'teamData'],
       },
     })
     .populate<{ assessments: Assessment[] }>({
