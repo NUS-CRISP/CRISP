@@ -32,10 +32,10 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
   const [teamDataList, setTeamDataList] = useState<TeamData[]>([]);
 
   const { data: session } = useSession();
-  const apiRoute = `/api/teamsets/${teamSetId}`;
 
   const fetchTeamData = async () => {
     try {
+      const apiRoute = `/api/teamsets/${teamSetId}`;
       const response = await fetch(apiRoute);
       if (!response.ok) {
         throw new Error('Failed to fetch team data.');
@@ -114,6 +114,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
 
   const handleDeleteTeamSet = async () => {
     try {
+      const apiRoute = `/api/teamsets/${teamSetId}`;
       const response = await fetch(apiRoute, {
         method: 'DELETE',
       });
