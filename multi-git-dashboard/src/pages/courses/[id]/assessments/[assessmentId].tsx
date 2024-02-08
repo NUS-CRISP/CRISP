@@ -1,5 +1,4 @@
 import ResultForm from '@/components/forms/ResultForm';
-import apiBaseUrl from '@/lib/api-config';
 import { Button, Container, Modal, Tabs, Text } from '@mantine/core';
 import { Assessment } from '@shared/types/Assessment';
 import { User } from '@shared/types/User';
@@ -14,11 +13,13 @@ const AssessmentDetail: React.FC = () => {
     id: string;
     assessmentId: string;
   };
+
+  const assessmentsApiRoute = `/assessments/${assessmentId}`;
+  const teachingTeamApiRoute = `/courses/${id}/teachingteam`;
+
   const [assessment, setAssessment] = useState<Assessment | null>(null);
   const [teachingTeam, setTeachingTeam] = useState<User[]>([]);
   const [isResultFormOpen, setIsResultFormOpen] = useState(false);
-  const assessmentsApiUrl = apiBaseUrl + `/assessments/${assessmentId}`;
-  const teachingTeamApiUrl = apiBaseUrl + `/courses/${id}/teachingteam`;
 
   const { data: session } = useSession();
   const userRole = session?.user?.role;
@@ -27,7 +28,7 @@ const AssessmentDetail: React.FC = () => {
     try {
       const session = await getSession();
       const accountId = session?.user?.id;
-      const response = await fetch(assessmentsApiUrl, {
+      const response = await fetch(assessmentsApiRoute, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -47,7 +48,7 @@ const AssessmentDetail: React.FC = () => {
 
   const fetchTeachingTeam = useCallback(async () => {
     try {
-      const response = await fetch(teachingTeamApiUrl);
+      const response = await fetch(teachingTeamApiRoute);
       if (!response.ok) {
         console.error('Error fetching Teaching Team:', response.statusText);
         return;

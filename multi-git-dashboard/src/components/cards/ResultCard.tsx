@@ -1,4 +1,3 @@
-import apiBaseUrl from '@/lib/api-config';
 import { Card, Group, Select, Table, Text } from '@mantine/core';
 import { Result } from '@shared/types/Result';
 import { User } from '@shared/types/User';
@@ -16,11 +15,11 @@ const ResultCard: React.FC<ResultCardProps> = ({
   teachingTeam,
   assessmentId,
 }) => {
+  const apiRoute = `/api/assessments/${assessmentId}/results/${result._id}/marker`;
+
   const [selectedMarker, setSelectedMarker] = useState<string | null>(
     result.marker?._id || null
   );
-  const apiUrl =
-    apiBaseUrl + `/assessments/${assessmentId}/results/${result._id}/marker`;
 
   const { data: session } = useSession();
   const userRole = session?.user?.role;
@@ -31,7 +30,7 @@ const ResultCard: React.FC<ResultCardProps> = ({
 
   const handleMarkerChange = async (markerId: string | null) => {
     try {
-      const response = await fetch(apiUrl, {
+      const response = await fetch(apiRoute, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

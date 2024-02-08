@@ -1,4 +1,3 @@
-import apiBaseUrl from '@/lib/api-config';
 import { ActionIcon, Card, Group, Select, Table, Text } from '@mantine/core';
 import { User } from '@shared/types/User';
 import { IconX } from '@tabler/icons-react';
@@ -23,7 +22,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
   onTeamDeleted,
 }) => {
   const [selectedTA, setSelectedTA] = useState<string | null>(TA?._id || null);
-  const apiUrl = apiBaseUrl + `/teams/${teamId}`;
+  const apiRoute = `/api/teams/${teamId}`;
 
   const { data: session } = useSession();
   const userRole = session?.user?.role;
@@ -34,7 +33,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(apiUrl, {
+      const response = await fetch(apiRoute, {
         method: 'DELETE',
       });
 
@@ -51,7 +50,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
 
   const handleTAChange = async (TAId: string | null) => {
     try {
-      const response = await fetch(apiUrl, {
+      const response = await fetch(apiRoute, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

@@ -1,4 +1,3 @@
-import apiBaseUrl from '@/lib/api-config';
 import {
   Button,
   Container,
@@ -93,8 +92,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
 
   const handleDeleteTeamSet = async () => {
     try {
-      const apiUrl = apiBaseUrl + `/teamsets/${teamSetId}`;
-      const response = await fetch(apiUrl, {
+      const response = await fetch(`/teamsets/${teamSetId}`, {
         method: 'DELETE',
       });
 

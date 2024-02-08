@@ -61,11 +61,6 @@
   }
 }
 
-.link.no-hover:hover {
-  background-color: inherit;
-  color: inherit;
-}
-
 .linkIcon {
   color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
   margin-right: var(--mantine-spacing-sm);

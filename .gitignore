@@ -1,4 +1,5 @@
 .env
+.env*.local
 .scannerwork
 sonar-project.properties
 

@@ -7,8 +7,5 @@ export default withAuth({
 });
 
 export const config = {
-  matcher: [
-    // Match all paths except /auth/signin and /auth/register
-    '/((?!auth/signin|auth/register).*)',
-  ],
+  matcher: ['/((?!auth/signin|auth/register|api/accounts/register).*)'],
 };
