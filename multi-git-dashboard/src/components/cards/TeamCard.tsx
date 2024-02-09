@@ -1,9 +1,8 @@
-import { hasFacultyPermission } from '@/lib/utils';
+import { hasFacultyPermission } from '@/lib/auth/utils';
 import { ActionIcon, Card, Group, Select, Table, Text } from '@mantine/core';
 import { TeamData } from '@shared/types/TeamData';
 import { User } from '@shared/types/User';
 import { IconX } from '@tabler/icons-react';
-import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 
 interface TeamCardProps {
@@ -30,8 +29,6 @@ const TeamCard: React.FC<TeamCardProps> = ({
   const [selectedTA, setSelectedTA] = useState<string | null>(TA?._id || null);
   const [selectedTeamData, setSelectedTeamData] = useState<string | null>(null);
   const apiRoute = `/api/teams/${teamId}`;
-
-  const { data: session } = useSession();
 
   useEffect(() => {
     setSelectedTA(TA?._id || null);
@@ -130,7 +127,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
         <Group mt="md" mb="xs">
           <Text> Team {number.toString()}</Text>
         </Group>
-        {hasFacultyPermission(session) && (
+        {hasFacultyPermission() && (
           <ActionIcon
             variant="transparent"
             color="red"
@@ -145,7 +142,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
 
       <Group style={{ alignItems: 'center' }}>
         <Text>Teaching Assistant:</Text>
-        {hasFacultyPermission(session) ? (
+        {hasFacultyPermission() ? (
           <Select
             data={taOptions}
             value={selectedTA}
@@ -158,7 +155,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
       </Group>
       <Group style={{ alignItems: 'center' }}>
         <Text>Repository:</Text>
-        {hasFacultyPermission(session) ? (
+        {hasFacultyPermission() ? (
           <Select
             data={repoOptions}
             value={selectedTeamData}

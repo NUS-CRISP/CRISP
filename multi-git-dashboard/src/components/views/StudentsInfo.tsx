@@ -1,10 +1,9 @@
+import { hasFacultyPermission } from '@/lib/auth/utils';
 import { Button, Container, Group, Modal, Table } from '@mantine/core';
 import { Course } from '@shared/types/Course';
-import { useSession } from 'next-auth/react';
 import { useState } from 'react';
-import StudentForm from '../forms/StudentForm';
 import CSVExport from '../csv/CSVExport';
-import { hasFacultyPermission } from '@/lib/utils';
+import StudentForm from '../forms/StudentForm';
 
 interface StudentsInfoProps {
   course: Course;
@@ -13,8 +12,6 @@ interface StudentsInfoProps {
 
 const StudentsInfo: React.FC<StudentsInfoProps> = ({ course, onUpdate }) => {
   const [isCreatingStudent, setIsCreatingStudent] = useState(false);
-
-  const { data: session } = useSession();
 
   const toggleForm = () => {
     setIsCreatingStudent(o => !o);
@@ -37,10 +34,10 @@ const StudentsInfo: React.FC<StudentsInfoProps> = ({ course, onUpdate }) => {
   return (
     <Container>
       <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
-        {hasFacultyPermission(session) && (
+        {hasFacultyPermission() && (
           <Button onClick={toggleForm}>Add Student</Button>
         )}
-        {hasFacultyPermission(session) && (
+        {hasFacultyPermission() && (
           <CSVExport
             data={studentData}
             headers={csvHeaders}

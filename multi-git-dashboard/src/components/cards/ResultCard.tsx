@@ -1,8 +1,7 @@
-import { hasFacultyPermission } from '@/lib/utils';
+import { hasFacultyPermission } from '@/lib/auth/utils';
 import { Card, Group, Select, Table, Text } from '@mantine/core';
 import { Result } from '@shared/types/Result';
 import { User } from '@shared/types/User';
-import { useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
 
 interface ResultCardProps {
@@ -21,8 +20,6 @@ const ResultCard: React.FC<ResultCardProps> = ({
   const [selectedMarker, setSelectedMarker] = useState<string | null>(
     result.marker?._id || null
   );
-
-  const { data: session } = useSession();
 
   useEffect(() => {
     setSelectedMarker(result.marker?._id || null);
@@ -88,7 +85,7 @@ const ResultCard: React.FC<ResultCardProps> = ({
         </Group>
       </div>
 
-      {hasFacultyPermission(session) ? (
+      {hasFacultyPermission() ? (
         <Select
           value={selectedMarker}
           onChange={handleMarkerChange}

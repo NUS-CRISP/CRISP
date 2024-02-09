@@ -1,9 +1,8 @@
+import { hasFacultyPermission } from '@/lib/auth/utils';
 import { Button, Container, Modal, Table } from '@mantine/core';
 import { Course } from '@shared/types/Course';
-import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import TAForm from '../forms/TAForm';
-import { hasFacultyPermission } from '@/lib/utils';
 
 interface StaffInfoProps {
   course: Course;
@@ -12,8 +11,6 @@ interface StaffInfoProps {
 
 const StaffInfo: React.FC<StaffInfoProps> = ({ course, onUpdate }) => {
   const [isCreatingTA, setIsCreatingTA] = useState(false);
-
-  const { data: session } = useSession();
 
   const toggleForm = () => {
     setIsCreatingTA(o => !o);
@@ -26,7 +23,7 @@ const StaffInfo: React.FC<StaffInfoProps> = ({ course, onUpdate }) => {
 
   return (
     <Container>
-      {hasFacultyPermission(session) && (
+      {hasFacultyPermission() && (
         <Button
           onClick={toggleForm}
           style={{ marginTop: '16px', marginBottom: '16px' }}
