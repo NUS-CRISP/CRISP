@@ -15,13 +15,12 @@ import {
 import { BadRequestError, NotFoundError } from '../services/errors';
 import { addStudentsToTeam, addTAsToTeam } from '../services/teamService';
 import { createTeamSet } from '../services/teamSetService';
-import { getToken } from '../utils/auth';
+import { getAccountId } from '../utils/auth';
 
 /*----------------------------------------Course----------------------------------------*/
 export const createCourse = async (req: Request, res: Response) => {
   try {
-    const token = await getToken(req);
-    const accountId = token.sub;
+    const accountId = await getAccountId(req);
 
     if (!accountId) {
       res.status(400).json({ error: 'Missing authorization' });
@@ -37,15 +36,14 @@ export const createCourse = async (req: Request, res: Response) => {
       res.status(404).json({ error: error.message });
     } else {
       console.error('Error creating course:', error);
-      res.status(500).json({ error: `Failed to create course` });
+      res.status(500).json({ error: 'Failed to create course' });
     }
   }
 };
 
 export const getCourses = async (req: Request, res: Response) => {
   try {
-    const token = await getToken(req);
-    const accountId = token.sub;
+    const accountId = await getAccountId(req);
 
     if (!accountId) {
       res.status(400).json({ error: 'Missing authorization' });
@@ -64,10 +62,7 @@ export const getCourses = async (req: Request, res: Response) => {
 };
 
 export const getCourse = async (req: Request, res: Response) => {
-  const token = await getToken(req);
-  const accountId = token.sub;
-
-  console.log('accountId', accountId);
+  const accountId = await getAccountId(req);
 
   if (!accountId) {
     res.status(400).json({ error: 'Missing authorization' });

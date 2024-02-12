@@ -39,7 +39,6 @@ const ResultCard: React.FC<ResultCardProps> = ({
         console.error('Error updating team:', response.statusText);
         return;
       }
-      console.log('Marker updated');
       setSelectedMarker(markerId);
     } catch (error) {
       console.error('Error updating team:', error);

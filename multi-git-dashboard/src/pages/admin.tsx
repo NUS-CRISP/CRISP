@@ -17,10 +17,11 @@ import {
   IconSearch,
   IconSelector,
 } from '@tabler/icons-react';
-import { GetSessionParams, getSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 
+import { GetServerSideProps } from 'next';
 import classes from '../styles/admin.module.css';
+import { getServerSessionHelper } from './api/auth/[...nextauth]';
 
 type RowData = Pick<Account, 'email' | 'role'>;
 
@@ -294,8 +295,8 @@ const AdminPage: React.FC = () => {
   );
 };
 
-export async function getServerSideProps(context: GetSessionParams) {
-  const session = await getSession(context);
+export const getServerSideProps: GetServerSideProps = async context => {
+  const session = await getServerSessionHelper(context.req, context.res);
 
   if (!session || session.user.role !== 'admin') {
     return {
@@ -307,8 +308,10 @@ export async function getServerSideProps(context: GetSessionParams) {
   }
 
   return {
-    props: {},
+    props: {
+      session,
+    },
   };
-}
+};
 
 export default AdminPage;

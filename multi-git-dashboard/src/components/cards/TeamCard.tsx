@@ -45,7 +45,6 @@ const TeamCard: React.FC<TeamCardProps> = ({
         console.error('Error deleting team:', response.statusText);
         return;
       }
-      console.log('Team deleted');
       onTeamDeleted();
     } catch (error) {
       console.error('Error deleting team:', error);
@@ -66,7 +65,6 @@ const TeamCard: React.FC<TeamCardProps> = ({
         console.error('Error updating team:', response.statusText);
         return;
       }
-      console.log('Team updated');
       setSelectedTA(TAId);
     } catch (error) {
       console.error('Error updating team:', error);
@@ -87,7 +85,6 @@ const TeamCard: React.FC<TeamCardProps> = ({
         console.error('Error updating team:', response.statusText);
         return;
       }
-      console.log('Team updated');
       setSelectedTeamData(teamDataId);
     } catch (error) {
       console.error('Error updating team:', error);

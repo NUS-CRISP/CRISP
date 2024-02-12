@@ -45,8 +45,7 @@ const SprintForm: React.FC<SprintFormProps> = ({
         setError('Error creating sprint. Please try again.');
         return;
       }
-      const data = await response.json();
-      console.log('Sprint created:', data);
+      await response.json();
       onSprintCreated();
     } catch (error) {
       console.error('Error creating sprint:', error);

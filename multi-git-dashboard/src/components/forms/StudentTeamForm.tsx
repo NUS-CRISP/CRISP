@@ -61,8 +61,7 @@ const StudentTeamForm: React.FC<StudentTeamFormProps> = ({
         setError('Error creating team. Please try again.');
         return;
       }
-      const data = await response.json();
-      console.log('Team created:', data);
+      await response.json();
       onTeamCreated();
     } catch (error) {
       console.error('Error creating team:', error);

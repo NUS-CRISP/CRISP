@@ -1,5 +1,5 @@
 import cors from 'cors';
-import dotenv from 'dotenv';
+import { config } from 'dotenv';
 import express, { Express } from 'express';
 import { setupJob } from './jobs/githubJob';
 import accountRoutes from './routes/accountRoutes';
@@ -10,13 +10,13 @@ import teamRoutes from './routes/teamRoutes';
 import teamSetRoutes from './routes/teamSetRoutes';
 import { connectToDatabase } from './utils/database';
 
-dotenv.config();
+const env = process.env.NODE_ENV ?? 'development';
+config({ path: `.env.${env}` });
 
 const setupApp = async () => {
   await connectToDatabase();
   setupJob();
 };
-
 setupApp();
 
 const port = process.env.PORT;

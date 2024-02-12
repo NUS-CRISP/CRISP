@@ -92,17 +92,14 @@ const Overview: React.FC<OverviewProps> = ({ course }) => {
         </div>
       </Drawer>
       <ScrollArea.Autosize mah={`calc(100dvh - 4 * 20px - ${FOOTER_HEIGHT}px)`}>
-        {allTeams.map((team, index) => {
-          console.log('team', team);
-          return (
-            <GithubTeamCard
-              key={index}
-              teamData={team.teamData}
-              milestones={course.milestones}
-              sprints={course.sprints}
-            />
-          );
-        })}
+        {allTeams.map((team, index) => (
+          <GithubTeamCard
+            key={index}
+            teamData={team.teamData}
+            milestones={course.milestones}
+            sprints={course.sprints}
+          />
+        ))}
       </ScrollArea.Autosize>
       <Container h={FOOTER_HEIGHT}>
         <Button onClick={open} mt={20}>
