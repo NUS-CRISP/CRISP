@@ -1,7 +1,7 @@
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express, { Express } from 'express';
-import { setupJob } from './jobs/githubJob';
+import { setupJob } from './jobs/jiraJob';
 import accountRoutes from './routes/accountRoutes';
 import assessmentRoutes from './routes/assessmentRoutes';
 import courseRoutes from './routes/courseRoutes';
