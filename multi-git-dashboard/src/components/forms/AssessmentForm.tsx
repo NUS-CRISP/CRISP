@@ -63,8 +63,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
         setError('Error creating assessment. Please try again.');
         return;
       }
-      const data = await response.json();
-      console.log('Assessment created:', data);
+      await response.json();
       onAssessmentCreated();
     } catch (error) {
       console.error('Error creating assessment:', error);

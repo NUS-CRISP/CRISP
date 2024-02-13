@@ -40,8 +40,6 @@ const TATeamForm: React.FC<TATeamFormProps> = ({
   };
 
   const handleSubmitForm = async () => {
-    console.log('Sending teams data:', form.values);
-
     try {
       const response = await fetch(apiRoute, {
         method: 'POST',
@@ -63,8 +61,7 @@ const TATeamForm: React.FC<TATeamFormProps> = ({
         setError('Error creating team. Please try again.');
         return;
       }
-      const data = await response.json();
-      console.log('Team created:', data);
+      await response.json();
       onTeamCreated();
     } catch (error) {
       console.error('Error creating team:', error);

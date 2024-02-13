@@ -29,8 +29,6 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({
   const apiRoute = `/api/courses/${courseId}/milestones`;
 
   const handleSubmit = async () => {
-    console.log('Sending milestone data:', form.values);
-
     try {
       const response = await fetch(apiRoute, {
         method: 'POST',
@@ -45,8 +43,7 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({
         setError('Error creating milestone. Please try again.');
         return;
       }
-      const data = await response.json();
-      console.log('Milestone created:', data);
+      await response.json();
       onMilestoneCreated();
     } catch (error) {
       console.error('Error creating milestone:', error);

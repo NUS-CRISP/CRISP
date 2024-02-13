@@ -21,7 +21,6 @@ const Sidebar: React.FC = () => {
     { link: '/', label: 'Home', icon: IconHome },
     { link: '/courses', label: 'View Courses', icon: IconListDetails },
   ];
-
   if (session && session.user && session.user.role === 'admin') {
     linksData.push({ link: '/admin', label: 'Admin', icon: IconSettings2 });
   }

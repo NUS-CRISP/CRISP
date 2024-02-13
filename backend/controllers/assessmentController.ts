@@ -5,12 +5,11 @@ import {
   uploadAssessmentResultsById,
 } from '../services/assessmentService';
 import { NotFoundError } from '../services/errors';
-import { getToken } from '../utils/auth';
+import { getAccountId } from '../utils/auth';
 
 export const getAssessment = async (req: Request, res: Response) => {
   try {
-    const token = await getToken(req);
-    const accountId = token.sub;
+    const accountId = await getAccountId(req);
 
     if (!accountId) {
       res.status(400).json({ error: 'Missing authorization' });
