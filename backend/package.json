@@ -6,7 +6,7 @@
   "scripts": {
     "build": "npx tsc",
     "start": "NODE_ENV=production node dist/backend/app.js",
-    "dev": "nodemon app.ts",
+    "dev": "PORT=3003 nodemon app.ts",
     "test": "jest",
     "prettier-format": "prettier --config .prettierrc.json ./**/*.ts --write"
   },
