@@ -33,4 +33,8 @@ To run the development server:
 npm run dev
 ```
 
-Open [http://localhost:3002](http://localhost:3000) with your browser to access the app.
+Open [http://localhost:3002](http://localhost:3002) with your browser to access the app.
+
+### Notes
+
+- By default, `prod` runs on ports `3000` & `3001`, `dev` runs on ports `3002` & `3003` (frontend and backend ports respectively).
