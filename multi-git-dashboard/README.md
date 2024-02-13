@@ -37,4 +37,4 @@ Open [http://localhost:3002](http://localhost:3002) with your browser to access 
 
 ### Notes
 
-- By default, `prod` runs on ports `3000` & `3001`, `dev` runs on ports `3002` & `3003` (frontend and backend ports respectively).
+- By default, `prod` runs on ports `3000` & `3001`, `dev` runs on ports `3002` & `3003` (frontend and backend ports respectively). Remember to update the ports in your `.env` files.
