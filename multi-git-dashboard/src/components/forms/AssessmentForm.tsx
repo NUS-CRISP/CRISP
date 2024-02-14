@@ -31,6 +31,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
     'granularity',
     'teamSetName',
     'formLink',
+    'sheetID',
   ];
 
   const form = useForm({
@@ -41,6 +42,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
       granularity: 'individual',
       teamSetName: '',
       formLink: '',
+      sheetID: '',
     },
     validate: {},
   });
@@ -145,6 +147,14 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
           value={form.values.formLink}
           onChange={event => {
             form.setFieldValue('formLink', event.currentTarget.value);
+          }}
+        />
+        <TextInput
+          label="Sheet ID"
+          {...form.getInputProps('sheetID')}
+          value={form.values.sheetID}
+          onChange={event => {
+            form.setFieldValue('sheetID', event.currentTarget.value);
           }}
         />
         <Button type="submit" style={{ marginTop: '16px' }}>
