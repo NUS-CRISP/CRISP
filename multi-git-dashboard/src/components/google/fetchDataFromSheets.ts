@@ -10,9 +10,12 @@ const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY?.replace(
 
 type SheetRow = Record<string, string>;
 type SheetDataType = SheetRow[];
-type JoinedDataType = Record<string, Record<string, string>>;
+export type TransformedData = string[][];
 
-export const fetchDataFromSheets = async (sheetIds: string[]) => {
+export const fetchDataFromSheets = async (
+  sheetIds: string[],
+  joinOnColumn: string
+): Promise<TransformedData> => {
   try {
     const sheets = await authenticateGoogleSheets();
 
@@ -22,11 +25,15 @@ export const fetchDataFromSheets = async (sheetIds: string[]) => {
     const sheetDataArray: SheetDataType[] =
       await Promise.all(sheetDataPromises);
 
-    const joinedData: JoinedDataType = transformFunction(sheetDataArray);
+    const data: TransformedData = transformFunction(
+      sheetDataArray,
+      joinOnColumn
+    );
 
-    return { data: joinedData };
+    return data;
   } catch (error) {
-    return { error: (error as Error).message };
+    console.error((error as Error).message);
+    return [[]];
   }
 };
 
@@ -72,31 +79,62 @@ const getSheetData = async (
   return sheetData;
 };
 
-const transformFunction = (sheetsData: SheetDataType[]): JoinedDataType => {
-  const combinedData: JoinedDataType = {};
+const initializeRowArray = (
+  headers: string[],
+  initialData?: SheetRow
+): string[] => {
+  const rowArray = new Array(headers.length).fill('');
+  if (initialData) {
+    headers.forEach((header, index) => {
+      if (initialData[header] !== undefined) {
+        rowArray[index] = initialData[header];
+      }
+    });
+  }
+  return rowArray;
+};
+
+const transformFunction = (
+  sheetsData: SheetDataType[],
+  joinOnColumn: string
+): TransformedData => {
+  const combinedData: Record<string, SheetRow> = {};
+  const headersSet = new Set<string>();
+
+  sheetsData.forEach(sheet => {
+    Object.keys(sheet[0]).forEach(header => headersSet.add(header));
+  });
+
+  const headers = [
+    joinOnColumn,
+    ...Array.from(headersSet).filter(header => header !== joinOnColumn),
+  ];
 
   sheetsData.forEach(sheetData => {
     sheetData.forEach(row => {
-      const identifier = row['identifier'];
-      if (!identifier) {
-        return;
-      }
+      const identifier = row[joinOnColumn];
+      if (!identifier) return;
+
       if (!combinedData[identifier]) {
-        combinedData[identifier] = { ...row };
-      } else {
-        Object.keys(row).forEach(key => {
-          if (key === 'Comments') {
-            const existingComments = combinedData[identifier][key];
-            combinedData[identifier][key] = existingComments
-              ? `${existingComments};${row[key]}`
-              : row[key];
-          } else if (!combinedData[identifier][key]) {
-            combinedData[identifier][key] = row[key];
-          }
-        });
+        combinedData[identifier] = {};
       }
+
+      headers.forEach(header => {
+        if (header === 'Comments' && combinedData[identifier][header]) {
+          combinedData[identifier][header] += `; ${row[header] || ''}`;
+        } else if (
+          !combinedData[identifier][header] ||
+          header === joinOnColumn
+        ) {
+          combinedData[identifier][header] = row[header] || '';
+        }
+      });
     });
   });
 
-  return combinedData;
+  const rows: TransformedData = Object.values(combinedData).map(row =>
+    initializeRowArray(headers, row)
+  );
+
+  return [headers, ...rows];
 };
