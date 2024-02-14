@@ -67,8 +67,8 @@ export const getCourseById = async (courseId: string, accountId: string) => {
     const userId = account.user;
     course.teamSets.forEach(
       teamSet =>
-        (teamSet.teams = teamSet.teams.filter(team =>
-          (team as unknown as Team).TA?.equals(userId)
+        (teamSet.teams = teamSet.teams.filter(
+          team => (team as unknown as Team).TA?.equals(userId)
         ))
     );
   }

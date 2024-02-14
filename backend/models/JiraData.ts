@@ -1,21 +1,5 @@
-import { JiraBoard, JiraEpic, JiraIssue, JiraSprint } from '@shared/types/JiraData';
+import { JiraBoard, JiraIssue, JiraSprint } from '@shared/types/JiraData';
 import mongoose, { Schema } from 'mongoose';
-
-const epicSchema: Schema = new Schema<JiraEpic>({
-  id: { type: Number, required: true },
-  key: { type: String, required: true },
-  self: { type: String, required: true },
-  name: { type: String, required: true },
-  summary: { type: String, required: true },
-  color: {
-    key: { type: String, required: true }
-  },
-  issueColor: {
-    key: { type: String, required: true }
-  },
-  done: { type: Boolean, required: true },
-  jiraBoard: { type: Schema.Types.ObjectId, required: true }
-});
 
 const sprintSchema: Schema = new Schema<JiraSprint>({
   id: { type: Number, required: true },
@@ -27,22 +11,26 @@ const sprintSchema: Schema = new Schema<JiraSprint>({
   createdDate: { type: Date, required: true },
   originBoardId: { type: Number, required: true },
   goal: { type: String, required: true },
-  jiraBoard: { type: Schema.Types.ObjectId, required: true }
+  jiraBoard: { type: Schema.Types.ObjectId, ref: 'Board' },
+  jiraIssues: [{ type: Schema.Types.ObjectId, ref: 'JiraIssue' }],
 });
 
 const issueSchema: Schema = new Schema<JiraIssue>({
   id: { type: String, required: true },
   self: { type: String, required: true },
   key: { type: String, required: true },
-  statuscategorychangedate: { type: Date, required: true },
-  issuetype: {
-    name: { type: String, required: true },
-    subtask: { type: Boolean, required: true }
+  fields: {
+    statuscategorychangedate: { type: Date, required: true },
+    issuetype: {
+      name: { type: String, required: true },
+      subtask: { type: Boolean, required: true },
+    },
+    status: {
+      name: { type: String, required: true },
+    },
   },
   jiraSprint: { type: Schema.Types.ObjectId, ref: 'Sprint' }, // Reference to Sprint
-  jiraEpic: { type: Schema.Types.ObjectId, ref: 'Epic' }, // Reference to Epic
-  jiraBoard: { type: Schema.Types.ObjectId, ref: 'Board' } // Reference to Board
-  // Other fields...
+  jiraBoard: { type: Schema.Types.ObjectId, ref: 'Board' }, // Reference to Board
 });
 
 const boardSchema: Schema = new Schema<JiraBoard>({
@@ -57,16 +45,14 @@ const boardSchema: Schema = new Schema<JiraBoard>({
     projectKey: { type: String, required: true },
     projectTypeKey: { type: String, required: true },
     avatarURI: { type: String, required: true },
-    name: { type: String, required: true }
+    name: { type: String, required: true },
   },
-  jiraEpics: [{ type: Schema.Types.ObjectId, ref: 'JiraEpic' }],
   jiraSprints: [{ type: Schema.Types.ObjectId, ref: 'JiraSprint' }],
-  jiraIssues: [{ type: Schema.Types.ObjectId, ref: 'JiraIssue' }]
+  jiraIssues: [{ type: Schema.Types.ObjectId, ref: 'JiraIssue' }],
 });
 
-const JiraEpicModel = mongoose.model<JiraEpic>('JiraEpic', epicSchema);
 const JiraSprintModel = mongoose.model<JiraSprint>('JiraSprint', sprintSchema);
 const JiraIssueModel = mongoose.model<JiraIssue>('JiraIssue', issueSchema);
 const JiraBoardModel = mongoose.model<JiraBoard>('JiraBoard', boardSchema);
 
-export {JiraEpicModel, JiraSprintModel, JiraIssueModel, JiraBoardModel};
+export { JiraSprintModel, JiraIssueModel, JiraBoardModel };

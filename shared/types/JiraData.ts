@@ -1,22 +1,5 @@
 import { Schema } from "mongoose";
 
-export interface JiraEpic extends Document {
-  _id: string;
-  id: number;
-  key: string;
-  self: string;
-  name: string;
-  summary: string;
-  color: {
-    key: string;
-  };
-  issueColor: {
-    key: string;
-  };
-  done: boolean;
-  jiraBoard: Schema.Types.ObjectId; // Reference to Board
-}
-
 export interface JiraSprint extends Document {
   _id: string;
   id: number;
@@ -29,6 +12,7 @@ export interface JiraSprint extends Document {
   originBoardId: number;
   goal: string;
   jiraBoard: Schema.Types.ObjectId; // Reference to Board
+  jiraIssues: Schema.Types.ObjectId[];
 }
 
 export interface JiraIssue extends Document {
@@ -36,13 +20,17 @@ export interface JiraIssue extends Document {
   id: string;
   self: string;
   key: string;
-  statuscategorychangedate: Date;
-  issuetype: {
-    name: string;
-    subtask: boolean;
+  fields: {
+    statuscategorychangedate: Date;
+    issuetype: {
+      name: string;
+      subtask: boolean;
+    };
+    status: {
+      name: string;
+    };
   };
   jiraSprint?: Schema.Types.ObjectId; // Reference to Sprint
-  jiraEpic?: Schema.Types.ObjectId; // Reference to Epic
   jiraBoard: Schema.Types.ObjectId; // Reference to Board
 }
 
@@ -61,7 +49,6 @@ export interface JiraBoard extends Document {
     avatarURI: string;
     name: string;
   };
-  jiraEpics: Schema.Types.ObjectId[];
   jiraSprints: Schema.Types.ObjectId[];
   jiraIssues: Schema.Types.ObjectId[];
 }

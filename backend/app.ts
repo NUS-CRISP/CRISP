@@ -1,7 +1,8 @@
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express, { Express } from 'express';
-import { setupJob } from './jobs/jiraJob';
+import setupGitHubJob from './jobs/githubJob';
+import setupJiraJob from './jobs/jiraJob';
 import accountRoutes from './routes/accountRoutes';
 import assessmentRoutes from './routes/assessmentRoutes';
 import courseRoutes from './routes/courseRoutes';
@@ -15,7 +16,8 @@ dotenv.config();
 
 const setupApp = async () => {
   await connectToDatabase();
-  setupJob();
+  setupGitHubJob();
+  setupJiraJob();
 };
 
 setupApp();
