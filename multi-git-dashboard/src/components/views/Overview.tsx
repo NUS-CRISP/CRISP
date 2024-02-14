@@ -1,9 +1,7 @@
 import { mergeDedupe } from '@/lib/utils';
 import {
   ActionIcon,
-  Button,
   Card,
-  Container,
   Drawer,
   ScrollArea,
   Select,
@@ -12,7 +10,7 @@ import {
 import { useDisclosure } from '@mantine/hooks';
 import { Course } from '@shared/types/Course';
 import { useState } from 'react';
-import GithubTeamCard from '../cards/GithubTeamCard';
+import GitHubTeamCardNew from '../cards/new-github-card/GitHubTeamCardNew';
 
 interface OverviewProps {
   course: Course;
@@ -91,21 +89,23 @@ const Overview: React.FC<OverviewProps> = ({ course }) => {
           />
         </div>
       </Drawer>
-      <ScrollArea.Autosize mah={`calc(100dvh - 4 * 20px - ${FOOTER_HEIGHT}px)`}>
+      {/* <ScrollArea.Autosize mah={`calc(100dvh - 4 * 20px - ${FOOTER_HEIGHT}px)`}> */}
+      <ScrollArea.Autosize>
         {allTeams.map((team, index) => (
-          <GithubTeamCard
-            key={index}
-            teamData={team.teamData}
-            milestones={course.milestones}
-            sprints={course.sprints}
-          />
+          // <GithubTeamCard
+          //   key={index}
+          //   teamData={team.teamData}
+          //   milestones={course.milestones}
+          //   sprints={course.sprints}
+          // />
+          <GitHubTeamCardNew key={index} teamData={team.teamData} />
         ))}
       </ScrollArea.Autosize>
-      <Container h={FOOTER_HEIGHT}>
+      {/* <Container h={FOOTER_HEIGHT}>
         <Button onClick={open} mt={20}>
           Customise
         </Button>
-      </Container>
+      </Container> */}
     </>
   );
 };

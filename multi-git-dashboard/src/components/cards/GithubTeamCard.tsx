@@ -55,7 +55,7 @@ const GithubTeamCard: React.FC<GithubTeamCardProps> = ({
     });
     reviewsData.push({
       name: contributor,
-      reviews: contribution.reviews,
+      reviews: contribution.codeReviews,
     });
     issuesData.push({
       name: contributor,

@@ -1,12 +1,13 @@
 import { Request, Response } from 'express';
 import { logLogin } from '../services/metricService';
+import { getAccountId } from '../utils/auth';
 
-export const logLoginEvent = async (
-  req: Request<{}, {}, { userId: string }>,
-  res: Response
-) => {
+export const logLoginEvent = async (req: Request, res: Response) => {
   try {
-    const userId = req.body.userId;
+    const userId = await getAccountId(req);
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
     await logLogin(userId);
     res.status(200).json({ message: 'Login event logged successfully' });
   } catch (error) {
