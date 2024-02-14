@@ -144,6 +144,7 @@ interface AssessmentData {
   granularity: string;
   teamSetName?: string;
   formLink?: string;
+  sheetID?: string;
 }
 
 export const addAssessmentsToCourse = async (
@@ -166,6 +167,7 @@ export const addAssessmentsToCourse = async (
       granularity,
       teamSetName,
       formLink,
+      sheetID,
     } = data;
     const existingAssessment = await AssessmentModel.findOne({
       course: courseId,
@@ -183,6 +185,7 @@ export const addAssessmentsToCourse = async (
       granularity,
       teamSet: null,
       formLink,
+      sheetID,
     });
     await assessment.save();
     const results: mongoose.Document[] = [];

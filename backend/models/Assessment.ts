@@ -23,6 +23,7 @@ const assessmentSchema = new Schema<Assessment>({
   },
   teamSet: { type: Schema.Types.ObjectId, ref: 'TeamSet' },
   formLink: { type: String },
+  sheetID: { type: String },
 });
 
 const AssessmentModel = mongoose.model<Assessment>(

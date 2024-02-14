@@ -12,4 +12,5 @@ export interface Assessment {
   granularity: 'individual' | 'team';
   teamSet: TeamSet;
   formLink: string;
+  sheetID: string;
 }
