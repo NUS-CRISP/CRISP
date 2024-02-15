@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import {
   checkInstallation,
-  getTeamData,
-  getTeamDataByOrg,
+  getAllTeamData,
+  getAllTeamDataByOrg,
 } from '../../controllers/githubController';
 import { NotFoundError } from '../../services/errors';
 import * as githubService from '../../services/githubService';
@@ -39,7 +39,7 @@ describe('gitHubController', () => {
         .spyOn(githubService, 'fetchAllTeamData')
         .mockResolvedValue(mockTeamData as any);
 
-      await getTeamData(req, res);
+      await getAllTeamData(req, res);
 
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ teamData: mockTeamData });
@@ -52,7 +52,7 @@ describe('gitHubController', () => {
 
       jest.spyOn(githubService, 'fetchAllTeamData').mockRejectedValue(error);
 
-      await getTeamData(req, res);
+      await getAllTeamData(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
@@ -71,7 +71,7 @@ describe('gitHubController', () => {
         .spyOn(githubService, 'fetchAllTeamDataForOrg')
         .mockResolvedValue(mockTeamDatas as any);
 
-      await getTeamDataByOrg(req, res);
+      await getAllTeamDataByOrg(req, res);
 
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ teamDatas: mockTeamDatas });
@@ -86,7 +86,7 @@ describe('gitHubController', () => {
         .spyOn(githubService, 'fetchAllTeamDataForOrg')
         .mockRejectedValue(error);
 
-      await getTeamDataByOrg(req, res);
+      await getAllTeamDataByOrg(req, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ message: error.message });
@@ -101,7 +101,7 @@ describe('gitHubController', () => {
         .spyOn(githubService, 'fetchAllTeamDataForOrg')
         .mockRejectedValue(error);
 
-      await getTeamDataByOrg(req, res);
+      await getAllTeamDataByOrg(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
