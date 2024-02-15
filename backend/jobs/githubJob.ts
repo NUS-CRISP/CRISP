@@ -1,11 +1,11 @@
 import { Review, TeamContribution, TeamPR } from '@shared/types/TeamData';
 import cron from 'node-cron';
-import { Octokit } from 'octokit';
+import { App, Octokit } from 'octokit';
 import TeamData from '../models/TeamData';
 import { getGitHubApp } from '../utils/github';
 
 const fetchAndSaveTeamData = async () => {
-  const app = getGitHubApp();
+  const app: App = getGitHubApp();
   const octokit = app.octokit;
 
   const response = await octokit.rest.apps.listInstallations();
@@ -15,7 +15,7 @@ const fetchAndSaveTeamData = async () => {
   if (process.env.RUN_JOB_NOW === 'true') {
     const installation = installations.find(
       installation =>
-        installation.account && installation.account.login === 'NUS-CRISP'
+        installation.account && installation.account.login === 'nus-cs3203'
     );
 
     if (
@@ -50,9 +50,19 @@ const getOrgData = async (octokit: Octokit, gitHubOrgName: string) => {
 
   const repos = await octokit.rest.repos.listForOrg({
     org: gitHubOrgName,
+    sort: 'updated',
+    per_page: 100,
+    direction: 'desc',
   });
+  let allRepos = repos.data;
 
-  for (const repo of repos.data) {
+  // for testing only
+  if (process.env.RUN_JOB_NOW === 'true') {
+    allRepos = allRepos.filter(repo => repo.name.includes('23s2'));
+    console.log('Filtered repos:', allRepos);
+  }
+
+  for (const repo of allRepos) {
     const [commits, issues, prs, contributors] = await Promise.all([
       octokit.rest.repos.listCommits({ owner: gitHubOrgName, repo: repo.name }),
       octokit.rest.issues.listForRepo({

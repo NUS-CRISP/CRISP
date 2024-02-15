@@ -95,23 +95,18 @@ const CreateCoursePage: React.FC = () => {
       const { installationId } = await response.json();
       form.setFieldValue('installationId', installationId);
 
-      const reposResponse = await fetch(reposApiRoute, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ orgName }),
-      });
-
-      if (!reposResponse.ok) {
+      const reposResponse = await fetch(reposApiRoute);
+      if (!reposResponse.ok && reposResponse.status !== 304) {
         throw new Error('Failed to fetch repositories');
       }
-
       const teamDatas: TeamData[] = await reposResponse.json();
+      console.log(teamDatas);
+
       setRepoList(teamDatas.map(teamData => teamData.repoName));
 
       setAppInstallationStatus(InstallationStatus.SUCCESS);
     } catch (error) {
+      console.error('Error checking app installation:', error);
       setAppInstallationStatus(InstallationStatus.ERROR);
       setErrorMessage('Failed to connect to the server');
     }
@@ -287,6 +282,7 @@ const CreateCoursePage: React.FC = () => {
                         {form.values.gitHubOrgName}
                       </Badge>
                       <MultiSelect
+                        disabled
                         mt="sm"
                         label="Repositories"
                         placeholder="Pick repos..."

@@ -1,4 +1,4 @@
-import { Accordion, Card, Divider, Text, useMantineTheme } from '@mantine/core';
+import { Accordion, Box, Divider, Text, useMantineTheme } from '@mantine/core';
 import { TeamData } from '@shared/types/TeamData';
 import classes from '@styles/pr-details.module.css';
 import { IconPlus } from '@tabler/icons-react';
@@ -22,7 +22,7 @@ const PRDetails: React.FC<PRDetailsProps> = ({ pr }) => {
     ][5];
 
   return (
-    <Card>
+    <Box>
       <Text fw={500}>{pr.title}</Text>
       <Text size="sm">Status: {pr.state}</Text>
       <Text size="sm">
@@ -81,7 +81,7 @@ const PRDetails: React.FC<PRDetailsProps> = ({ pr }) => {
           </Accordion.Item>
         ))}
       </Accordion>
-    </Card>
+    </Box>
   );
 };
 
