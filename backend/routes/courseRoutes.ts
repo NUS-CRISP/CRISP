@@ -10,8 +10,10 @@ import {
   addTeamSet,
   createCourse,
   deleteCourse,
+  fetchNewSheetsData,
   getCourses,
   getCourse,
+  getSheetsData,
   getTeachingTeam,
   updateCourse,
 } from '../controllers/courseController';
@@ -32,5 +34,7 @@ router.get('/:id/teachingteam', getTeachingTeam);
 router.post('/:id/milestones', addMilestone);
 router.post('/:id/sprints', addSprint);
 router.post('/:id/assessments', addAssessments);
+router.get('/:id/googlesheets', getSheetsData);
+router.post('/:id/googlesheets', fetchNewSheetsData);
 
 export default router;
