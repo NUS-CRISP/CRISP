@@ -104,6 +104,7 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
           onAssessmentCreated={handleAssessmentCreated}
         />
       </Modal>
+      {assessmentCards}
       {sheetsData ? (
         <SheetsDataTable data={sheetsData} />
       ) : (
@@ -113,7 +114,6 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
           </tr>
         </Table>
       )}
-      {assessmentCards}
     </Container>
   );
 };
