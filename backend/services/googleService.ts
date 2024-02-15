@@ -29,8 +29,9 @@ export const fetchAndSaveSheetsData = async (
     throw new NotFoundError('Course not found');
   }
 
-  const sheetsId: string[] = course.assessments.map(assessment => 
-    (assessment as unknown as Assessment).sheetID);
+  const sheetsId: string[] = course.assessments.map(
+    assessment => (assessment as unknown as Assessment).sheetID
+  );
 
   const transformedData: TransformedData = await fetchDataFromSheets(
     sheetsId,
