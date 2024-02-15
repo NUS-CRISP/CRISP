@@ -1,5 +1,10 @@
 {
-  "extends": ["eslint:recommended", "plugin:node/recommended", "prettier"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:node/recommended",
+    "prettier",
+    "plugin:@next/next/recommended"
+  ],
   "plugins": ["node", "prettier"],
   "rules": {
     "block-scoped-var": "error",
@@ -45,10 +50,6 @@
         "node/shebang": "off",
         "no-dupe-class-members": "off",
         "require-atomic-updates": "off"
-      },
-      "parserOptions": {
-        "ecmaVersion": 2018,
-        "sourceType": "module"
       }
     }
   ]

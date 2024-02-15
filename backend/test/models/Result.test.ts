@@ -108,8 +108,10 @@ describe('ResultModel', () => {
     });
     await result.save();
 
-    const deletedResult = await ResultModel.findByIdAndDelete(result._id);
-    expect(deletedResult?._id).toStrictEqual(result._id);
+    await ResultModel.deleteOne({ _id: result._id });
+    const deletedResult = await ResultModel.findById(result._id);
+
+    expect(deletedResult).toBeNull();
   });
 
   it('should not save a result without required fields', async () => {

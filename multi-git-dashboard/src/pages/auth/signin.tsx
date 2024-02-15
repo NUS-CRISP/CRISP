@@ -2,7 +2,6 @@ import {
   Alert,
   Anchor,
   Button,
-  Checkbox,
   Container,
   Group,
   Paper,
@@ -22,6 +21,7 @@ const SignInPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showAlert, setShowAlert] = useState(!!router.query.success);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (showAlert) {
@@ -36,32 +36,27 @@ const SignInPage: React.FC = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    await signIn('credentials', {
+
+    const res = await signIn('credentials', {
       email,
       password,
-      callbackUrl: '/',
+      redirect: false,
     });
+
+    if (res?.error) {
+      showError(res.error);
+    } else {
+      router.push('/');
+    }
+  };
+
+  const showError = (message: string) => {
+    setError(message);
+    setTimeout(() => setError(''), 5000);
   };
 
   return (
     <Container size={420} my={40}>
-      {router.query.success && (
-        <Alert
-          variant="light"
-          color="green"
-          withCloseButton
-          onClose={() => {
-            setShowAlert(false);
-            router.push('/auth/signin');
-          }}
-          title="Alert title"
-          icon={<IconInfoCircle />}
-        >
-          Account created successfully! Please wait for your account to be
-          approved.
-        </Alert>
-      )}
-
       <Title ta="center">Welcome back!</Title>
       <Text c="dimmed" size="sm" ta="center" mt={5}>
         Don't have an account yet?{' '}
@@ -69,8 +64,28 @@ const SignInPage: React.FC = () => {
           Create account
         </Anchor>
       </Text>
-
       <Paper withBorder shadow="md" p={30} mt={30} radius="md">
+        {router.query.success && (
+          <Alert
+            variant="light"
+            color="green"
+            withCloseButton
+            onClose={() => {
+              setShowAlert(false);
+              router.push('/auth/signin');
+            }}
+            icon={<IconInfoCircle />}
+            mb={15}
+          >
+            Account created successfully! Please wait for your account to be
+            approved.
+          </Alert>
+        )}
+        {error && (
+          <Alert variant="light" color="red" icon={<IconInfoCircle />} mb={15}>
+            {error}
+          </Alert>
+        )}
         <form onSubmit={handleSignIn}>
           <TextInput
             label="Email"
@@ -88,7 +103,7 @@ const SignInPage: React.FC = () => {
             mt="md"
           />
           <Group justify="space-between" mt="lg">
-            <Checkbox label="Remember me" />
+            {/* <Checkbox label="Remember me" /> */}
             <Anchor href="#" size="sm">
               Forgot password?
             </Anchor>

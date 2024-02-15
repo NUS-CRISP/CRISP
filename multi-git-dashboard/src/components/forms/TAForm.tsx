@@ -1,4 +1,3 @@
-import apiBaseUrl from '@/lib/api-config';
 import { Box, Button, Notification, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
@@ -10,6 +9,9 @@ interface TAFormProps {
 }
 
 const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
+  const apiRoute = `/api/courses/${courseId}/tas`;
+  const csvTemplateHeaders = ['name', 'identifier', 'email', 'gitHandle'];
+
   const form = useForm({
     initialValues: {
       identifier: '',
@@ -19,13 +21,9 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
     },
   });
   const [error, setError] = useState<string | null>(null);
-  const apiUrl = apiBaseUrl + `/courses/${courseId}/tas`;
-  const csvTemplateHeaders = ['name', 'identifier', 'email', 'gitHandle'];
 
   const handleSubmitForm = async () => {
-    console.log('Sending ta data:', form.values);
-
-    const response = await fetch(apiUrl, {
+    const response = await fetch(apiRoute, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -42,8 +40,7 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
       }),
     });
 
-    const data = await response.json();
-    console.log('TA created:', data);
+    await response.json();
     onTACreated();
   };
 
@@ -98,9 +95,9 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
         headers={csvTemplateHeaders}
         onProcessComplete={onTACreated}
         onError={setError}
-        filename="students_template.csv"
-        uploadButtonString="Upload Students"
-        urlString={apiUrl}
+        filename="tas_template.csv"
+        uploadButtonString="Upload TAs"
+        urlString={apiRoute}
       />
     </Box>
   );

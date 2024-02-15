@@ -1,4 +1,3 @@
-import apiBaseUrl from '@/lib/api-config';
 import {
   Alert,
   Anchor,
@@ -65,9 +64,9 @@ const RegisterPage: React.FC = () => {
   });
 
   const handleRegister = async (values: FormValues) => {
-    const apiUrl = apiBaseUrl + '/accounts/';
+    const apiRoute = '/api/accounts/register';
 
-    const response = await fetch(apiUrl, {
+    const response = await fetch(apiRoute, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -80,6 +79,7 @@ const RegisterPage: React.FC = () => {
       setErrors({ ...errors, registerError: error });
       return;
     }
+
     router.push('/auth/signin?success=true');
   };
 

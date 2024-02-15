@@ -10,16 +10,17 @@ import {
   addTeamSet,
   createCourse,
   deleteCourse,
-  getCourses,
   getCourse,
+  getCourses,
   getTeachingTeam,
   updateCourse,
 } from '../controllers/courseController';
+import { noCache } from '../middleware/noCache';
 
 const router = express.Router();
 
 router.post('/', createCourse);
-router.get('/', getCourses);
+router.get('/', noCache, getCourses);
 router.get('/:id', getCourse);
 router.put('/:id', updateCourse);
 router.delete('/:id', deleteCourse);

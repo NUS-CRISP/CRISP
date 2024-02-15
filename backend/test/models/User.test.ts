@@ -66,8 +66,10 @@ describe('UserModel', () => {
     });
     await userToDelete.save();
 
-    const deletedUser = await UserModel.findByIdAndDelete(userToDelete._id);
-    expect(deletedUser?._id).toStrictEqual(userToDelete._id);
+    await UserModel.deleteOne({ _id: userToDelete._id });
+    const deletedUser = await UserModel.findById(userToDelete._id);
+
+    expect(deletedUser).toBeNull();
   });
 
   it('should not save a user without required fields', async () => {

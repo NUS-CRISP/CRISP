@@ -41,8 +41,8 @@ export const getAssessmentById = async (
   const role = account.role;
   if (role === 'Teaching assistant') {
     const userId = account.user;
-    assessment.results = assessment.results.filter(
-      result => result.marker?.equals(userId)
+    assessment.results = assessment.results.filter(result =>
+      result.marker?.equals(userId)
     );
   }
   if (assessment.granularity === 'individual') {

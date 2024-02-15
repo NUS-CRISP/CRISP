@@ -1,4 +1,3 @@
-import apiBaseUrl from '@/lib/api-config';
 import { Box, Button, Notification, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
@@ -20,16 +19,16 @@ const TATeamForm: React.FC<TATeamFormProps> = ({
   teamSet,
   onTeamCreated,
 }) => {
+  const apiRoute = `/api/courses/${courseId}/teams/tas`;
+  const csvTemplateHeaders = ['identifier', 'teamNumber'];
+
   const form = useForm({
     initialValues: {
       identifier: '',
       teamNumber: 0,
     },
   });
-
   const [error, setError] = useState<string | null>(null);
-  const apiUrl = apiBaseUrl + `/courses/${courseId}/teams/tas`;
-  const csvTemplateHeaders = ['identifier', 'teamNumber'];
 
   const transformTAData = (data: unknown[]) => {
     const TAs = data as TATeamFormUser[];
@@ -41,10 +40,8 @@ const TATeamForm: React.FC<TATeamFormProps> = ({
   };
 
   const handleSubmitForm = async () => {
-    console.log('Sending teams data:', form.values);
-
     try {
-      const response = await fetch(apiUrl, {
+      const response = await fetch(apiRoute, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -64,8 +61,7 @@ const TATeamForm: React.FC<TATeamFormProps> = ({
         setError('Error creating team. Please try again.');
         return;
       }
-      const data = await response.json();
-      console.log('Team created:', data);
+      await response.json();
       onTeamCreated();
     } catch (error) {
       console.error('Error creating team:', error);
@@ -109,7 +105,7 @@ const TATeamForm: React.FC<TATeamFormProps> = ({
         onError={setError}
         filename="tas_team_template.csv"
         uploadButtonString="Upload TAs"
-        urlString={apiUrl}
+        urlString={apiRoute}
         transformFunction={transformTAData}
       />
     </Box>
