@@ -1,5 +1,4 @@
 import { Carousel } from '@mantine/carousel';
-import { TeamData } from '@shared/types/TeamData';
 import {
   Cell,
   Legend,
@@ -13,26 +12,38 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from 'recharts';
+import { TeamAnalyticsViewProps } from './TeamAnalyticsView';
 
-const TeamCharts: React.FC<{ teamData: TeamData }> = ({ teamData }) => {
-  // Aggregate data for team-level charts, e.g., total commits, issues, pull requests
+const TeamCharts: React.FC<TeamAnalyticsViewProps> = ({
+  teamData,
+  cohortAverages,
+}) => {
   const chartsData = [
     {
       title: 'Overall Activity',
       data: [
-        { metric: 'Commits', team: teamData.commits, cohort: 40 },
-        { metric: 'Issues', team: teamData.issues, cohort: 10 },
-        { metric: 'Pull Requests', team: teamData.pullRequests, cohort: 20 },
-        // Add other metrics as needed
+        {
+          metric: 'Commits',
+          team: teamData.commits,
+          cohort: cohortAverages.commits,
+        },
+        {
+          metric: 'Issues',
+          team: teamData.issues,
+          cohort: cohortAverages.issues,
+        },
+        {
+          metric: 'Pull Requests',
+          team: teamData.pullRequests,
+          cohort: cohortAverages.pullRequests,
+        },
       ],
     },
-    // Add more charts as needed
-    // Example: Team Contributions by Category
     {
       title: 'Contributions Breakdown',
       data: Object.entries(teamData.teamContributions).map(([key, value]) => ({
         name: key,
-        value: value.commits + value.pullRequests, // Simplified, adjust according to your data structure
+        value: value.commits + value.pullRequests,
       })),
     },
   ];
@@ -71,6 +82,7 @@ const TeamCharts: React.FC<{ teamData: TeamData }> = ({ teamData }) => {
                     fillOpacity={0.6}
                   />
                   <Legend />
+                  <Tooltip />
                 </RadarChart>
               </ResponsiveContainer>
             </>

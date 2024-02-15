@@ -4,11 +4,16 @@ import classes from '@styles/team-analytics-view.module.css';
 import IndividualCharts from './IndividualCharts';
 import TeamCharts from './TeamCharts';
 
-interface TeamAnalyticsViewProps {
+export interface TeamAnalyticsViewProps {
   teamData: TeamData;
+  cohortAverages: {
+    commits: number;
+    issues: number;
+    pullRequests: number;
+  };
 }
 
-const TeamAnalyticsView: React.FC<TeamAnalyticsViewProps> = ({ teamData }) => {
+const TeamAnalyticsView: React.FC<TeamAnalyticsViewProps> = props => {
   const datas = [
     {
       key: 'Team',
@@ -25,9 +30,7 @@ const TeamAnalyticsView: React.FC<TeamAnalyticsViewProps> = ({ teamData }) => {
   ));
 
   const contents = datas.map(data => (
-    <Tabs.Panel value={data.key}>
-      {data.value({ teamData: teamData })}
-    </Tabs.Panel>
+    <Tabs.Panel value={data.key}>{data.value(props)}</Tabs.Panel>
   ));
 
   return (

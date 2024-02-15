@@ -16,12 +16,37 @@ const Overview: React.FC<OverviewProps> = ({ course }) => {
   };
 
   const [teamDatas, setTeamDatas] = useState<TeamData[]>([]);
+  const [cohortAverages, setCohortAverages] = useState({
+    commits: 0,
+    issues: 0,
+    pullRequests: 0,
+  });
 
   useEffect(() => {
-    getTeamDatas().then(teamDatas => {
-      setTeamDatas(teamDatas);
-    });
-  }, []);
+    async function getData() {
+      const res = await getTeamDatas();
+      setTeamDatas(res);
+
+      // Calculate cohort averages for commits, issues, and PRs
+      // TODO: do this in backend instead
+      const red = teamDatas.reduce(
+        (acc, teamData) => {
+          acc.commits += teamData.commits;
+          acc.issues += teamData.issues;
+          acc.pullRequests += teamData.pullRequests;
+          return acc;
+        },
+        { commits: 0, issues: 0, pullRequests: 0 }
+      );
+      setCohortAverages({
+        commits: Math.floor(red.commits / teamDatas.length),
+        issues: Math.floor(red.issues / teamDatas.length),
+        pullRequests: Math.floor(red.pullRequests / teamDatas.length),
+      });
+    }
+
+    getData();
+  }, [course._id, teamDatas]);
 
   if (teamDatas.length === 0) {
     return <div>No teams found</div>;
@@ -34,7 +59,11 @@ const Overview: React.FC<OverviewProps> = ({ course }) => {
           <Accordion.Item key={teamData._id} value={teamData._id}>
             <Accordion.Control>{teamData.repoName}</Accordion.Control>
             <Accordion.Panel>
-              <GitHubTeamCardNew key={teamData._id} teamData={teamData} />
+              <GitHubTeamCardNew
+                key={teamData._id}
+                teamData={teamData}
+                cohortAverages={cohortAverages}
+              />
             </Accordion.Panel>
           </Accordion.Item>
         ))}

@@ -7,9 +7,17 @@ import TeamAnalyticsView from './TeamAnalyticsView';
 
 interface GitHubTeamCardNewProps {
   teamData: TeamData;
+  cohortAverages: {
+    commits: number;
+    issues: number;
+    pullRequests: number;
+  };
 }
 
-const GitHubTeamCardNew: React.FC<GitHubTeamCardNewProps> = ({ teamData }) => {
+const GitHubTeamCardNew: React.FC<GitHubTeamCardNewProps> = ({
+  teamData,
+  cohortAverages,
+}) => {
   const [selectedPR, setSelectedPR] = useState<number | null>(
     teamData.teamPRs[0]?.id || null
   );
@@ -17,7 +25,10 @@ const GitHubTeamCardNew: React.FC<GitHubTeamCardNewProps> = ({ teamData }) => {
   return (
     <Container>
       <Box mb={20}>
-        <TeamAnalyticsView teamData={teamData} />
+        <TeamAnalyticsView
+          teamData={teamData}
+          cohortAverages={cohortAverages}
+        />
       </Box>
       <Box
         style={{
