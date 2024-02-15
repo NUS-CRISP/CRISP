@@ -22,6 +22,8 @@
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "gaxios": "^6.2.0",
+    "googleapis": "^133.0.0",
     "jose": "^5.2.1",
     "mongodb": "^5.7.0",
     "node-cron": "^3.0.2",

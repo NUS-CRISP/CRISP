@@ -39,8 +39,6 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^5.0.0",
     "file-saver": "^2.0.5",
-    "gaxios": "^6.2.0",
-    "googleapis": "^133.0.0",
     "mongodb": "^6.0.0",
     "next": "^14.0.0",
     "next-auth": "^4.24.4",
