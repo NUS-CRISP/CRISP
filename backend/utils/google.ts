@@ -16,25 +16,16 @@ export const fetchDataFromSheets = async (
   sheetIds: string[],
   joinOnColumn: string
 ): Promise<TransformedData> => {
-  try {
-    const sheets = await authenticateGoogleSheets();
+  const sheets = await authenticateGoogleSheets();
 
-    const sheetDataPromises = sheetIds.map(sheetId =>
-      getSheetData(sheets, sheetId)
-    );
-    const sheetDataArray: SheetDataType[] =
-      await Promise.all(sheetDataPromises);
+  const sheetDataPromises = sheetIds.map(sheetId =>
+    getSheetData(sheets, sheetId)
+  );
+  const sheetDataArray: SheetDataType[] = await Promise.all(sheetDataPromises);
 
-    const data: TransformedData = transformFunction(
-      sheetDataArray,
-      joinOnColumn
-    );
+  const data: TransformedData = transformFunction(sheetDataArray, joinOnColumn);
 
-    return data;
-  } catch (error) {
-    console.error((error as Error).message);
-    return [[]];
-  }
+  return data;
 };
 
 const authenticateGoogleSheets = async (): Promise<sheets_v4.Sheets> => {
