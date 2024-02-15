@@ -13,10 +13,8 @@ const SheetsDataTable: React.FC<SheetsDataTableProps> = ({ data }) => {
 
   return (
     <>
+      <Text size="sm">Data fetched on: {fetchedAt}</Text>
       <Table striped highlightOnHover>
-        <tr>
-          <Text size="sm">Data fetched on: {fetchedAt}</Text>
-        </tr>
         <thead>
           <tr>
             {headers.map((header, index) => (
