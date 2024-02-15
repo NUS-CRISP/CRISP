@@ -301,10 +301,7 @@ export const fetchNewSheetsData = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   const { joinOnColumn } = req.body;
   try {
-    await fetchAndSaveSheetsData(
-      courseId,
-      joinOnColumn
-    );
+    await fetchAndSaveSheetsData(courseId, joinOnColumn);
     res.status(201).json({ message: 'Sheets Updated successfully' });
   } catch (error) {
     if (error instanceof NotFoundError) {
