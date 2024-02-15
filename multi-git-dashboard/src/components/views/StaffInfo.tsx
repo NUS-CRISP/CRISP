@@ -28,7 +28,7 @@ const StaffInfo: React.FC<StaffInfoProps> = ({ course, onUpdate }) => {
           onClick={toggleForm}
           style={{ marginTop: '16px', marginBottom: '16px' }}
         >
-          {isCreatingTA ? 'Cancel' : 'Add TA'}
+          {isCreatingTA ? 'Cancel' : 'Add TAs'}
         </Button>
       )}
       <Modal opened={isCreatingTA} onClose={toggleForm} title="Add TA">

@@ -35,7 +35,7 @@ const StudentsInfo: React.FC<StudentsInfoProps> = ({ course, onUpdate }) => {
     <Container>
       <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
         {hasFacultyPermission() && (
-          <Button onClick={toggleForm}>Add Student</Button>
+          <Button onClick={toggleForm}>Add Students</Button>
         )}
         {hasFacultyPermission() && (
           <CSVExport
