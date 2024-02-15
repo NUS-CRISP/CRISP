@@ -100,7 +100,6 @@ const CreateCoursePage: React.FC = () => {
         throw new Error('Failed to fetch repositories');
       }
       const teamDatas: TeamData[] = await reposResponse.json();
-      console.log(teamDatas);
 
       setRepoList(teamDatas.map(teamData => teamData.repoName));
 

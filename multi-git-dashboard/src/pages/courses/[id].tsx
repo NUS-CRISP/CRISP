@@ -25,6 +25,9 @@ const CourseViewPage: React.FC = () => {
       notifications.show({
         title: 'Course created',
         message: 'Course created successfully',
+        autoClose: 3000,
+        onClose: () =>
+          router.push(router.pathname, undefined, { shallow: true }),
       });
     }
   }, [isNewCourse]);

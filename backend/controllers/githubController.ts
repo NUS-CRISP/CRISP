@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import { getAccountId } from 'utils/auth';
 import { NotFoundError } from '../services/errors';
 import {
   checkGitHubInstallation,
@@ -7,6 +6,7 @@ import {
   fetchAllTeamDataForOrg,
   getAuthorizedTeamDataByCourse,
 } from '../services/githubService';
+import { getAccountId } from '../utils/auth';
 
 export const getAllTeamData = async (req: Request, res: Response) => {
   try {
