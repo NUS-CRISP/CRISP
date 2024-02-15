@@ -3,12 +3,6 @@ import { GaxiosResponse } from 'gaxios';
 import { sheets_v4 } from 'googleapis/build/src/apis/sheets/v4';
 import { TransformedData } from '@shared/types/SheetsData';
 
-const GOOGLE_CLIENT_EMAIL = process.env.GOOGLE_CLIENT_EMAIL;
-const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY?.replace(
-  /\\n/g,
-  '\n'
-);
-
 type SheetRow = Record<string, string>;
 type SheetDataType = SheetRow[];
 
@@ -29,6 +23,11 @@ export const fetchDataFromSheets = async (
 };
 
 const authenticateGoogleSheets = async (): Promise<sheets_v4.Sheets> => {
+  const GOOGLE_CLIENT_EMAIL = process.env.GOOGLE_CLIENT_EMAIL;
+  const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY?.replace(
+    /\\n/g,
+    '\n'
+  );
   const auth = new google.auth.JWT(
     GOOGLE_CLIENT_EMAIL,
     undefined,
@@ -44,11 +43,14 @@ const authenticateGoogleSheets = async (): Promise<sheets_v4.Sheets> => {
 
 const getSheetData = async (
   sheets: sheets_v4.Sheets,
-  sheetId: string
+  sheetId: string,
+  range: string = 'Form Responses 1'
 ): Promise<SheetDataType> => {
+  console.log(sheetId, range);
   const response: GaxiosResponse<sheets_v4.Schema$ValueRange> =
     await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
+      range: range,
       valueRenderOption: 'FORMATTED_VALUE',
       majorDimension: 'ROWS',
     });
