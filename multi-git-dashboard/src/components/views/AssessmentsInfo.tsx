@@ -2,11 +2,11 @@ import { hasFacultyPermission } from '@/lib/auth/utils';
 import { Button, Container, Modal, Text } from '@mantine/core';
 import { Course } from '@shared/types/Course';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import AssessmentCard from '../cards/AssessmentCard';
 import AssessmentForm from '../forms/AssessmentForm';
-import { fetchDataFromSheets } from '../google/fetchDataFromSheets';
 import SheetsDataTable from '../google/SheetsDataTable ';
+import { SheetsData } from '@shared/types/SheetsData';
 
 interface AssessmentInfoProps {
   course: Course;
@@ -18,8 +18,44 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = async ({
   onUpdate,
 }) => {
   const [isCreatingAssessment, setIsCreatingAssessment] = useState(false);
-  const sheetIds = course.assessments.map(assessment => assessment.sheetID);
-  const compiledData = await fetchDataFromSheets(sheetIds, 'Student Matric no');
+  const [sheetsData, setSheetsData] = useState<SheetsData | null>(null);
+
+  const getSheetsData = async () => {
+    try {
+      const response = await fetch(`/api/courses/${course._id}/googlesheets`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch sheets data');
+      }
+      const data = await response.json();
+      setSheetsData(data);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  const fetchNewSheetsData = async () => {
+    try {
+      const response = await fetch(`/api/courses/${course._id}/googlesheets`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          joinOnColumn: 'Student Matric no',
+        }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch new sheets data');
+      }
+      onUpdate();
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  useEffect(() => {
+    getSheetsData();
+  });
 
   const assessmentCards = course.assessments.map(assessment => (
     <Link
@@ -52,12 +88,20 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = async ({
   return (
     <Container>
       {hasFacultyPermission() && (
-        <Button
-          onClick={toggleForm}
-          style={{ marginTop: '16px', marginBottom: '16px' }}
-        >
-          Create Assessment
-        </Button>
+        <>
+          <Button
+            onClick={toggleForm}
+            style={{ marginTop: '16px', marginBottom: '16px' }}
+          >
+            Create Assessment
+          </Button>
+          <Button
+            onClick={fetchNewSheetsData}
+            style={{ marginTop: '16px', marginBottom: '16px' }}
+          >
+            Update Sheets Data
+          </Button>
+        </>
       )}
       <Modal
         opened={isCreatingAssessment}
@@ -70,12 +114,11 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = async ({
           onAssessmentCreated={handleAssessmentCreated}
         />
       </Modal>
-      {compiledData.length > 0 ? (
-        <SheetsDataTable data={compiledData} />
+      {sheetsData ? (
+        <SheetsDataTable data={sheetsData} />
       ) : (
         <Text>No data available</Text>
       )}
-
       {assessmentCards}
     </Container>
   );
