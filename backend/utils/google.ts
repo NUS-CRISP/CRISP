@@ -94,9 +94,17 @@ const transformFunction = (
   const combinedData: Record<string, SheetRow> = {};
   const headersSet = new Set<string>();
 
+  /*
   sheetsData.forEach(sheet => {
-    Object.keys(sheet[0]).forEach(header => headersSet.add(header));
+    sheet.forEach(row => {
+      Object.keys(row).forEach(header => headersSet.add(header));
+    });
   });
+  */
+  headersSet.add('Student Matric no');
+  headersSet.add('Name of student');
+  headersSet.add('Team Number');
+  headersSet.add('Comments');
 
   const headers = [
     joinOnColumn,
