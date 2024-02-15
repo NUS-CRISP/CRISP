@@ -13,7 +13,7 @@ interface AssessmentInfoProps {
   onUpdate: () => void;
 }
 
-const AssessmentInfo: React.FC<AssessmentInfoProps> = async ({
+const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
   course,
   onUpdate,
 }) => {
