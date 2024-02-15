@@ -1,5 +1,5 @@
 import { hasFacultyPermission } from '@/lib/auth/utils';
-import { Button, Container, Group, Modal, Text } from '@mantine/core';
+import { Button, Container, Group, Modal, Table, Text } from '@mantine/core';
 import { Course } from '@shared/types/Course';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -107,7 +107,11 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
       {sheetsData ? (
         <SheetsDataTable data={sheetsData} />
       ) : (
-        <Text>No data available</Text>
+        <Table striped highlightOnHover>
+          <tr>
+            <Text>No data available</Text>
+          </tr>
+        </Table>
       )}
       {assessmentCards}
     </Container>
