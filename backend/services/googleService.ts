@@ -32,7 +32,6 @@ export const fetchAndSaveSheetsData = async (
   const sheetsId: string[] = course.assessments.map(
     assessment => (assessment as unknown as Assessment).sheetID
   );
-
   const transformedData: TransformedData = await fetchDataFromSheets(
     sheetsId,
     joinOnColumn
