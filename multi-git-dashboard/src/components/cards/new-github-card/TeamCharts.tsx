@@ -14,6 +14,12 @@ import {
 } from 'recharts';
 import { TeamAnalyticsViewProps } from './TeamAnalyticsView';
 
+export interface TeamPolarChartData {
+  commits: number;
+  issues: number;
+  pullRequests: number;
+}
+
 const TeamCharts: React.FC<TeamAnalyticsViewProps> = ({
   teamData,
   cohortAverages,
