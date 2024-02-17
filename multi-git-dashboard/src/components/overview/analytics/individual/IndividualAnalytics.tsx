@@ -1,4 +1,3 @@
-import { TeamData } from '@shared/types/TeamData';
 import {
   Bar,
   BarChart,
@@ -8,8 +7,11 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { AnalyticsProps } from '../Analytics';
 
-const IndividualCharts: React.FC<{ teamData: TeamData }> = ({ teamData }) => {
+interface IndividualChartsProps extends AnalyticsProps {}
+
+const IndividualCharts: React.FC<IndividualChartsProps> = ({ teamData }) => {
   const data = Object.entries(teamData.teamContributions).map(
     ([key, value]) => ({
       name: key,

@@ -11,7 +11,7 @@ interface PRListProps {
 
 const PRList: React.FC<PRListProps> = ({ teamPRs, selectedPR, onSelectPR }) => {
   return (
-    <ScrollArea h={300} scrollbars="y">
+    <ScrollArea scrollbars="y">
       {teamPRs.map(pr => (
         <Box<'a'>
           component="a"
