@@ -7,11 +7,17 @@ interface PRListProps {
   teamPRs: TeamData['teamPRs'];
   selectedPR: number | null;
   onSelectPR: (prId: number) => void;
+  maxHeight: number;
 }
 
-const PRList: React.FC<PRListProps> = ({ teamPRs, selectedPR, onSelectPR }) => {
+const PRList: React.FC<PRListProps> = ({
+  teamPRs,
+  selectedPR,
+  onSelectPR,
+  maxHeight,
+}) => {
   return (
-    <ScrollArea scrollbars="y">
+    <ScrollArea.Autosize mah={maxHeight} scrollbars="y">
       {teamPRs.map(pr => (
         <Box<'a'>
           component="a"
@@ -25,7 +31,7 @@ const PRList: React.FC<PRListProps> = ({ teamPRs, selectedPR, onSelectPR }) => {
           {pr.title}
         </Box>
       ))}
-    </ScrollArea>
+    </ScrollArea.Autosize>
   );
 };
 
