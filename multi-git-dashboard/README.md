@@ -10,13 +10,13 @@ Built on the MERN stack.
 In the `backend` directory, run:
 
 ```bash
-npm i
+pnpm i
 ```
 
 To run the development server:
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 ### 2. Frontend
@@ -24,13 +24,13 @@ npm run dev
 In the `multi-git-dashboard` directory, run:
 
 ```bash
-npm i
+pnpm i
 ```
 
 To run the development server:
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 Open [http://localhost:3002](http://localhost:3002) with your browser to access the app.
