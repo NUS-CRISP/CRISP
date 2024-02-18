@@ -46,6 +46,9 @@ export const courseSchema = new Schema<Course>({
   },
   gitHubOrgName: String,
   installationId: String,
+  cloudId: {type: String},
+  accessToken: {type: String},
+  refreshToken: {type: String},
 });
 
 const CourseModel = mongoose.model<Course>('Course', courseSchema);

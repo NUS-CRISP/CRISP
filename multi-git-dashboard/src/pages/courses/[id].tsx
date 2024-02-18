@@ -4,6 +4,7 @@ import Overview from '@/components/views/Overview';
 import SprintsInfo from '@/components/views/SprintsInfo';
 import StaffInfo from '@/components/views/StaffInfo';
 import StudentsInfo from '@/components/views/StudentsInfo';
+import JiraInfo from '@/components/views/JiraInfo';
 import TeamSetsInfo from '@/components/views/TeamSetsInfo';
 import apiBaseUrl from '@/lib/api-config';
 import { Container, Loader, Tabs } from '@mantine/core';
@@ -127,6 +128,7 @@ const CourseViewPage: React.FC = () => {
             <Tabs.Tab value="milestones">Timeline</Tabs.Tab>
             <Tabs.Tab value="sprints">Sprints</Tabs.Tab>
             <Tabs.Tab value="assessments">Assessments</Tabs.Tab>
+            <Tabs.Tab value="project management">Project Management</Tabs.Tab>
           </Tabs.List>
           <div style={{ overflow: 'auto', flexGrow: 1 }}>
             <Tabs.Panel value="overview">
@@ -160,6 +162,11 @@ const CourseViewPage: React.FC = () => {
             <Tabs.Panel value="assessments">
               <div>
                 <AssessmentsInfo course={course} onUpdate={handleUpdate} />
+              </div>
+            </Tabs.Panel>
+            <Tabs.Panel value="project management">
+              <div>
+                <JiraInfo course={course} onUpdate={handleUpdate} />
               </div>
             </Tabs.Panel>
           </div>

@@ -164,7 +164,7 @@ const fetchAndSaveJiraData = async () => {
       return response.json();
     })
     .then(async data => {
-      console.log('Response data:', data);
+      // console.log('Response data:', data);
       const boards = data.values;
 
       await JiraBoardModel.deleteMany({});
