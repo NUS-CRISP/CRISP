@@ -5,6 +5,8 @@ import {
   JiraSprintModel,
 } from '../models/JiraData';
 import cron from 'node-cron';
+import { Course } from '../models/Course';
+import CourseModel from '../models/Course';
 
 /**
  * Jira Cloud REST API Documentation: https://developer.atlassian.com/cloud/jira/software/rest/api-group-board/
@@ -19,6 +21,9 @@ const email = 'e0725104@u.nus.edu';
 const apiToken =
   'ATATT3xFfGF0MU7KvTMw3qkr7I695_p2yZXuUVGl3TvwJwwo48IxWJrcLwv6afXVsFVMHnsZlM085txmR9WwlH8dbHOIeHgl2-2CsJMANPvu3M6ADJ1t6XJQ3fpV0T-WV9ELYVtXP76sxyNVMgJpD-p1dfGWFYEm7mxiqgvH12_U0PHYbNroPTk=D7392AC5';
 const credentials = btoa(`${email}:${apiToken}`);
+
+const clientId = 'PYNndw5d9EUdU7zvkTb5nR74aZFWJqbw';
+const clientSecret = 'ATOA57k51aSrtFcBDw0Qf13nWpgBg8Z69A14PE0xlqbcd2_cHrV54sGWujy2F9Ka9x15764FDA10';
 
 async function findJiraBoardId(id: number): Promise<String | null> {
   try {
@@ -46,15 +51,15 @@ async function findJiraSprintId(id: number): Promise<String | null> {
   }
 }
 
-async function fetchSprints(boardId: number): Promise<any> {
-  const jiraSprintUri = `https://nus-crisp.atlassian.net/rest/agile/1.0/board/${boardId}/sprint`;
+async function fetchSprints(boardId: number, cloudId: string, accessToken: string): Promise<any> {
+  const jiraSprintUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board/${boardId}/sprint`;
 
   try {
     const response = await fetch(jiraSprintUri, {
       method: 'GET',
       headers: {
-        Authorization: `Basic ${credentials}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+        Accept: 'application/json',
       },
     });
 
@@ -93,15 +98,15 @@ async function fetchSprints(boardId: number): Promise<any> {
   }
 }
 
-async function fetchIssues(boardId: number): Promise<any> {
-  const jiraIssuesUri = `https://nus-crisp.atlassian.net/rest/agile/1.0/board/${boardId}/backlog`;
+async function fetchIssues(boardId: number, cloudId: string, accessToken: string): Promise<any> {
+  const jiraIssuesUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board/${boardId}/backlog`;
 
   try {
     const response = await fetch(jiraIssuesUri, {
       method: 'GET',
       headers: {
-        Authorization: `Basic ${credentials}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`, // Use the access token here
+        Accept: 'application/json',
       },
     });
 
@@ -147,48 +152,99 @@ async function fetchIssues(boardId: number): Promise<any> {
   }
 }
 
-const fetchAndSaveJiraData = async () => {
-  const jiraBoardUri = 'https://nus-crisp.atlassian.net/rest/agile/1.0/board/';
+export const fetchAndSaveJiraData = async () => {
+  const courses: Course[] = await CourseModel.find();
+  for (const course of courses) {
+    let { accessToken, refreshToken, cloudId } = course;
 
-  fetch(jiraBoardUri, {
-    method: 'GET',
-    headers: {
-      Authorization: `Basic ${credentials}`,
-      'Content-Type': 'application/json',
-    },
-  })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      return response.json();
-    })
-    .then(async data => {
-      // console.log('Response data:', data);
-      const boards = data.values;
+    if (!refreshToken) {
+      continue;
+    }
 
-      await JiraBoardModel.deleteMany({});
-      await JiraIssueModel.deleteMany({});
-      await JiraSprintModel.deleteMany({});
+    // Define the token endpoint URL
+    const tokenUrl = `https://auth.atlassian.com/oauth/token`;
+    const jiraBoardUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board`;
 
-      boards.forEach(async (boardData: any) => {
-        const jiraBoard: Omit<JiraBoard, '_id'> = {
-          ...boardData,
-          jiraLocation: boardData.location,
-          location: undefined, // To remove the original location property
-        };
+    // Define the request parameters
+    const tokenParams = {
+      grant_type: 'refresh_token',
+      client_id: clientId,
+      client_secret: clientSecret,
+      refresh_token: refreshToken,
+    };
 
-        await JiraBoardModel.findOneAndUpdate({ id: jiraBoard.id }, jiraBoard, {
-          upsert: true,
-        });
-
-        await fetchSprints(jiraBoard.id);
-        await fetchIssues(jiraBoard.id);
-      });
-    })
-    .catch(error => {
-      console.error('There was a problem with your fetch operation:', error);
+    // Make a POST request to the token endpoint
+    const response = await fetch(tokenUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(tokenParams),
     });
+
+    // Check if the request was successful
+    if (response.ok) {
+      const data = await response.json();
+      accessToken = data.access_token;
+      refreshToken = data.refresh_token;
+
+      // Update the access token in the database
+      await CourseModel.findByIdAndUpdate(course._id, {
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+      });
+      console.log(`Access token refreshed for course with cloudId: ${cloudId}`);
+    } else {
+      console.error(
+        `Failed to refresh access token for course with cloudId: ${cloudId}`
+      );
+    }
+
+    fetch(jiraBoardUri, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`, // Use the access token here
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(async data => {
+        console.log('Response data:', data);
+        const boards = data.values;
+
+        await JiraBoardModel.deleteMany({});
+        await JiraIssueModel.deleteMany({});
+        await JiraSprintModel.deleteMany({});
+
+        boards.forEach(async (boardData: any) => {
+          const jiraBoard: Omit<JiraBoard, '_id'> = {
+            ...boardData,
+            jiraLocation: boardData.location,
+            location: undefined, // To remove the original location property
+          };
+
+          await JiraBoardModel.findOneAndUpdate(
+            { id: jiraBoard.id },
+            jiraBoard,
+            {
+              upsert: true,
+            }
+          );
+
+          await fetchSprints(jiraBoard.id, cloudId, accessToken);
+          await fetchIssues(jiraBoard.id, cloudId, accessToken);
+        });
+      })
+      .catch(error => {
+        console.error('There was a problem with your fetch operation:', error);
+      });
+  }
 };
 
 const setupJiraJob = () => {
