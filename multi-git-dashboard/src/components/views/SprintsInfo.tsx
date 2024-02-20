@@ -1,6 +1,6 @@
+import { hasFacultyPermission } from '@/lib/auth/utils';
 import { Button, Container, Modal } from '@mantine/core';
 import { Course } from '@shared/types/Course';
-import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import SprintCard from '../cards/SprintCard';
 import SprintForm from '../forms/SprintForm';
@@ -12,9 +12,6 @@ interface SprintsInfoProps {
 
 const SprintsInfo: React.FC<SprintsInfoProps> = ({ course, onUpdate }) => {
   const [isCreatingSprint, setIsCreatingSprint] = useState(false);
-
-  const { data: session } = useSession();
-  const userRole = session?.user?.role;
 
   const sprintCards = course.sprints.map(sprint => (
     <SprintCard
@@ -35,11 +32,9 @@ const SprintsInfo: React.FC<SprintsInfoProps> = ({ course, onUpdate }) => {
     onUpdate();
   };
 
-  const hasPermission = ['admin', 'Faculty member'].includes(userRole);
-
   return (
     <Container>
-      {hasPermission && (
+      {hasFacultyPermission() && (
         <Button
           onClick={toggleForm}
           style={{ marginTop: '16px', marginBottom: '16px' }}

@@ -1,8 +1,7 @@
-import apiBaseUrl from '@/lib/api-config';
+import { hasFacultyPermission } from '@/lib/auth/utils';
 import { Card, Group, Select, Table, Text } from '@mantine/core';
 import { Result } from '@shared/types/Result';
 import { User } from '@shared/types/User';
-import { useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
 
 interface ResultCardProps {
@@ -16,14 +15,11 @@ const ResultCard: React.FC<ResultCardProps> = ({
   teachingTeam,
   assessmentId,
 }) => {
+  const apiRoute = `/api/assessments/${assessmentId}/results/${result._id}/marker`;
+
   const [selectedMarker, setSelectedMarker] = useState<string | null>(
     result.marker?._id || null
   );
-  const apiUrl =
-    apiBaseUrl + `/assessments/${assessmentId}/results/${result._id}/marker`;
-
-  const { data: session } = useSession();
-  const userRole = session?.user?.role;
 
   useEffect(() => {
     setSelectedMarker(result.marker?._id || null);
@@ -31,7 +27,7 @@ const ResultCard: React.FC<ResultCardProps> = ({
 
   const handleMarkerChange = async (markerId: string | null) => {
     try {
-      const response = await fetch(apiUrl, {
+      const response = await fetch(apiRoute, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -43,7 +39,6 @@ const ResultCard: React.FC<ResultCardProps> = ({
         console.error('Error updating team:', response.statusText);
         return;
       }
-      console.log('Marker updated');
       setSelectedMarker(markerId);
     } catch (error) {
       console.error('Error updating team:', error);
@@ -64,8 +59,6 @@ const ResultCard: React.FC<ResultCardProps> = ({
       </tr>
     );
   });
-
-  const hasPermission = ['admin', 'Faculty member'].includes(userRole);
 
   return (
     <Card
@@ -91,7 +84,7 @@ const ResultCard: React.FC<ResultCardProps> = ({
         </Group>
       </div>
 
-      {hasPermission ? (
+      {hasFacultyPermission() ? (
         <Select
           value={selectedMarker}
           onChange={handleMarkerChange}

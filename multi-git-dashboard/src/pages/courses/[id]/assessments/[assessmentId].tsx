@@ -1,9 +1,8 @@
 import ResultForm from '@/components/forms/ResultForm';
-import apiBaseUrl from '@/lib/api-config';
+import { hasFacultyPermission } from '@/lib/auth/utils';
 import { Button, Container, Modal, Tabs, Text } from '@mantine/core';
 import { Assessment } from '@shared/types/Assessment';
 import { User } from '@shared/types/User';
-import { getSession, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
 import ResultCard from '../../../../components/cards/ResultCard';
@@ -14,24 +13,20 @@ const AssessmentDetail: React.FC = () => {
     id: string;
     assessmentId: string;
   };
+
+  const assessmentsApiRoute = `/api/assessments/${assessmentId}`;
+  const teachingTeamApiRoute = `/api/courses/${id}/teachingteam`;
+
   const [assessment, setAssessment] = useState<Assessment | null>(null);
   const [teachingTeam, setTeachingTeam] = useState<User[]>([]);
   const [isResultFormOpen, setIsResultFormOpen] = useState(false);
-  const assessmentsApiUrl = apiBaseUrl + `/assessments/${assessmentId}`;
-  const teachingTeamApiUrl = apiBaseUrl + `/courses/${id}/teachingteam`;
-
-  const { data: session } = useSession();
-  const userRole = session?.user?.role;
 
   const fetchAssessment = useCallback(async () => {
     try {
-      const session = await getSession();
-      const accountId = session?.user?.id;
-      const response = await fetch(assessmentsApiUrl, {
+      const response = await fetch(assessmentsApiRoute, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `${accountId}`,
         },
       });
       if (!response.ok) {
@@ -47,7 +42,7 @@ const AssessmentDetail: React.FC = () => {
 
   const fetchTeachingTeam = useCallback(async () => {
     try {
-      const response = await fetch(teachingTeamApiUrl);
+      const response = await fetch(teachingTeamApiRoute);
       if (!response.ok) {
         console.error('Error fetching Teaching Team:', response.statusText);
         return;
@@ -81,8 +76,6 @@ const AssessmentDetail: React.FC = () => {
     }
   }, [id, fetchTeachingTeam]);
 
-  const hasPermission = ['admin', 'Faculty member'].includes(userRole);
-
   return (
     <Container>
       <Tabs defaultValue="overview">
@@ -110,7 +103,7 @@ const AssessmentDetail: React.FC = () => {
           )}
         </Tabs.Panel>
         <Tabs.Panel value="results">
-          {hasPermission && (
+          {hasFacultyPermission() && (
             <Button
               onClick={toggleResultForm}
               style={{ marginTop: '16px', marginBottom: '16px' }}

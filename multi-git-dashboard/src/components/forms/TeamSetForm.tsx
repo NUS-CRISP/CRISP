@@ -1,4 +1,3 @@
-import apiBaseUrl from '@/lib/api-config';
 import { Box, Button, Notification, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
@@ -12,6 +11,8 @@ const TeamSetForm: React.FC<TeamSetFormProps> = ({
   courseId,
   onTeamSetCreated,
 }) => {
+  const apiRoute = `/api/courses/${courseId}/teamsets`;
+
   const form = useForm({
     initialValues: {
       course: courseId,
@@ -19,15 +20,11 @@ const TeamSetForm: React.FC<TeamSetFormProps> = ({
       teams: [],
     },
   });
-
   const [error, setError] = useState<string | null>(null);
-  const apiUrl = apiBaseUrl + `/courses/${courseId}/teamsets`;
 
   const handleSubmit = async () => {
-    console.log('Sending teamset data:', form.values);
-
     try {
-      const response = await fetch(apiUrl, {
+      const response = await fetch(apiRoute, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -40,8 +37,7 @@ const TeamSetForm: React.FC<TeamSetFormProps> = ({
         setError('Error creating teamset. Please try again.');
         return;
       }
-      const data = await response.json();
-      console.log('TeamSet created:', data);
+      await response.json();
       onTeamSetCreated();
     } catch (error) {
       console.error('Error creating teamset:', error);

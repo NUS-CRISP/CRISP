@@ -21,7 +21,6 @@ const Sidebar: React.FC = () => {
     { link: '/', label: 'Home', icon: IconHome },
     { link: '/courses', label: 'View Courses', icon: IconListDetails },
   ];
-
   if (session && session.user && session.user.role === 'admin') {
     linksData.push({ link: '/admin', label: 'Admin', icon: IconSettings2 });
   }
@@ -59,7 +58,8 @@ const Sidebar: React.FC = () => {
       <div className={classes.footer}>
         <a
           href="#"
-          className={`${classes.link} no-hover`}
+          className={classes.link}
+          style={{ pointerEvents: 'none' }}
           onClick={event => event.preventDefault()}
         >
           <IconUserCircle className={classes.linkIcon} stroke={1.5} />

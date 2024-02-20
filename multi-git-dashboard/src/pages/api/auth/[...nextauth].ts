@@ -1,6 +1,11 @@
 import clientPromise from '@/lib/mongodb';
 import bcrypt from 'bcrypt';
-import NextAuth, { AuthOptions } from 'next-auth';
+import {
+  GetServerSidePropsContext,
+  NextApiRequest,
+  NextApiResponse,
+} from 'next';
+import NextAuth, { AuthOptions, getServerSession } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 
 export const authOptions: AuthOptions = {
@@ -51,10 +56,13 @@ export const authOptions: AuthOptions = {
 
         const user = await usersCollection.findOne({ _id: account.user });
 
+        if (!user) {
+          throw new Error('User not found.');
+        }
+
         return {
           id: account._id.toString(),
           name: user?.name || '',
-          email: account.email,
           role: account.role,
         };
       },
@@ -72,11 +80,23 @@ export const authOptions: AuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      session.user.id = token.id;
+      if (token.name) {
+        session.user.name = token.name;
+      }
       session.user.role = token.role;
       return session;
     },
   },
 };
 
-export default NextAuth(authOptions);
+export const getServerSessionHelper = (
+  ...args:
+    | [GetServerSidePropsContext['req'], GetServerSidePropsContext['res']]
+    | [NextApiRequest, NextApiResponse]
+    | []
+) => getServerSession(...args, authOptions);
+
+export default async function (req: NextApiRequest, res: NextApiResponse) {
+  res.setHeader('Cache-Control', 'no-store, max-age=0');
+  return NextAuth(req, res, authOptions);
+}

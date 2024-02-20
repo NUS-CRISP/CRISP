@@ -17,11 +17,11 @@ import {
   IconSearch,
   IconSelector,
 } from '@tabler/icons-react';
-import { GetSessionParams, getSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 
-import apiBaseUrl from '@/lib/api-config';
+import { GetServerSideProps } from 'next';
 import classes from '../styles/admin.module.css';
+import { getServerSessionHelper } from './api/auth/[...nextauth]';
 
 type RowData = Pick<Account, 'email' | 'role'>;
 
@@ -102,24 +102,19 @@ const AdminPage: React.FC = () => {
 
     if (sortBy === field) {
       if (reverseSortDirection) {
-        // Disable sorting if it's currently in descending order
         newSortBy = null;
         newReverseSortDirection = false;
       } else {
-        // Set to descending order
         newReverseSortDirection = true;
       }
     } else {
-      // Set to ascending order on a new column
       newSortBy = field;
       newReverseSortDirection = false;
     }
 
-    // Update the state
     setSortBy(newSortBy);
     setReverseSortDirection(newReverseSortDirection);
 
-    // Use the new values for sorting
     setFilteredAccounts(
       sortData(pendingAccounts, {
         sortBy: newSortBy,
@@ -142,9 +137,8 @@ const AdminPage: React.FC = () => {
   };
 
   const handleApprove = async (ids: string[]) => {
-    // Approve account
-    const apiUrl = apiBaseUrl + '/accounts/approve';
-    const response = await fetch(apiUrl, {
+    const apiRoute = '/api/accounts/approve';
+    const response = await fetch(apiRoute, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -155,7 +149,7 @@ const AdminPage: React.FC = () => {
     if (!response.ok) {
       return;
     }
-    // Remove accounts from the list of pending accounts
+
     setPendingAccounts(
       pendingAccounts.filter(account => !ids.includes(account._id))
     );
@@ -165,8 +159,8 @@ const AdminPage: React.FC = () => {
   };
 
   const handleReject = async (ids: string[]) => {
-    const apiUrl = apiBaseUrl + '/accounts/reject';
-    const response = await fetch(apiUrl, {
+    const apiRoute = '/api/accounts/reject';
+    const response = await fetch(apiRoute, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -177,7 +171,7 @@ const AdminPage: React.FC = () => {
     if (!response.ok) {
       return;
     }
-    // Remove accounts from the list of pending accounts
+
     setPendingAccounts(
       pendingAccounts.filter(account => !ids.includes(account._id))
     );
@@ -188,10 +182,10 @@ const AdminPage: React.FC = () => {
 
   useEffect(() => {
     const fetchPendingAccounts = async () => {
-      const apiUrl = apiBaseUrl + '/accounts/pending';
-      const response = await fetch(apiUrl);
+      const apiRoute = '/api/accounts/pending';
+      const response = await fetch(apiRoute);
+
       const data: Account[] = await response.json();
-      console.log(data);
 
       setPendingAccounts(data);
       setFilteredAccounts(
@@ -301,8 +295,8 @@ const AdminPage: React.FC = () => {
   );
 };
 
-export async function getServerSideProps(context: GetSessionParams) {
-  const session = await getSession(context);
+export const getServerSideProps: GetServerSideProps = async context => {
+  const session = await getServerSessionHelper(context.req, context.res);
 
   if (!session || session.user.role !== 'admin') {
     return {
@@ -314,8 +308,10 @@ export async function getServerSideProps(context: GetSessionParams) {
   }
 
   return {
-    props: {},
+    props: {
+      session,
+    },
   };
-}
+};
 
 export default AdminPage;

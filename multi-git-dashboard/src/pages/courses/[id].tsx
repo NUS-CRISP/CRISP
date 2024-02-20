@@ -6,41 +6,36 @@ import StaffInfo from '@/components/views/StaffInfo';
 import StudentsInfo from '@/components/views/StudentsInfo';
 import JiraInfo from '@/components/views/JiraInfo';
 import TeamSetsInfo from '@/components/views/TeamSetsInfo';
-import apiBaseUrl from '@/lib/api-config';
 import { Container, Loader, Tabs } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { Course, Milestone, Sprint } from '@shared/types/Course';
-import { TeamData } from '@shared/types/TeamData';
-import { getSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
 
 const CourseViewPage: React.FC = () => {
   const router = useRouter();
-  const id = router.query.id as string;
-  const newCourse = router.query.new === 'true';
+  const isNewCourse = router.query.new === 'true';
+
+  const courseId = router.query.id as string;
+  const courseApiRoute = `/api/courses/${courseId}`;
+
   const [course, setCourse] = useState<Course>();
-  const [teamsData, setTeamsData] = useState<TeamData[]>([]);
-  const courseApiUrl = apiBaseUrl + `/courses/${id}`;
 
   useEffect(() => {
-    if (newCourse) {
+    if (isNewCourse) {
       notifications.show({
         title: 'Course created',
         message: 'Course created successfully',
       });
     }
-  }, [newCourse]);
+  }, [isNewCourse]);
 
   const fetchCourse = useCallback(async () => {
     try {
-      const session = await getSession();
-      const accountId = session?.user?.id;
-      const response = await fetch(courseApiUrl, {
+      const response = await fetch(courseApiRoute, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `${accountId}`,
         },
       });
       if (!response.ok) {
@@ -62,42 +57,21 @@ const CourseViewPage: React.FC = () => {
         }));
       }
       setCourse(data);
-
-      if (data.courseType === 'GitHubOrg' && data.gitHubOrgName) {
-        fetchTeamDataForOrg(data.gitHubOrgName);
-      }
     } catch (error) {
       console.error('Error fetching course:', error);
     }
-  }, [id]);
-
-  const fetchTeamDataForOrg = async (orgName: string) => {
-    try {
-      const githubOrgApiUrl = apiBaseUrl + `/github/${orgName}`;
-      const response = await fetch(githubOrgApiUrl);
-      if (!response.ok) {
-        console.error('Error fetching team data:', response.statusText);
-        return;
-      }
-      const data = await response.json();
-      console.log(orgName);
-      console.log('Team data:', data);
-      setTeamsData(data.teamDatas);
-    } catch (error) {
-      console.error('Error fetching team data:', error);
-    }
-  };
+  }, [courseId]);
 
   useEffect(() => {
-    if (id) {
+    if (courseId) {
       fetchCourse();
     }
-  }, [id, fetchCourse]);
+  }, [courseId, fetchCourse]);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const deleteCourse = async () => {
     try {
-      const response = await fetch(courseApiUrl, {
+      const response = await fetch(courseApiRoute, {
         method: 'DELETE',
       });
       if (!response.ok) {
@@ -115,9 +89,18 @@ const CourseViewPage: React.FC = () => {
   };
 
   return (
-    <Container style={{ height: 'calc(100dvh - 2 * 20px)', display: 'flex', flexDirection: 'column' }}>
+    <Container
+      style={{
+        height: 'calc(100dvh - 2 * 20px)',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
       {course ? (
-        <Tabs defaultValue="overview" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <Tabs
+          defaultValue="overview"
+          style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
+        >
           <Tabs.List
             style={{ display: 'flex', justifyContent: 'space-evenly' }}
           >
@@ -132,7 +115,7 @@ const CourseViewPage: React.FC = () => {
           </Tabs.List>
           <div style={{ overflow: 'auto', flexGrow: 1 }}>
             <Tabs.Panel value="overview">
-              <Overview course={course} teamsData={teamsData} />
+              <Overview course={course} />
             </Tabs.Panel>
             <Tabs.Panel value="students">
               <div>

@@ -1,8 +1,8 @@
-import apiBaseUrl from '@/lib/api-config';
+import { hasFacultyPermission } from '@/lib/auth/utils';
 import { ActionIcon, Card, Group, Select, Table, Text } from '@mantine/core';
+import { TeamData } from '@shared/types/TeamData';
 import { User } from '@shared/types/User';
 import { IconX } from '@tabler/icons-react';
-import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 
 interface TeamCardProps {
@@ -11,6 +11,8 @@ interface TeamCardProps {
   members: User[];
   TA: User | null;
   TAs: User[];
+  teamData: TeamData | null;
+  teamDataList: TeamData[];
   onTeamDeleted: () => void;
 }
 
@@ -20,21 +22,22 @@ const TeamCard: React.FC<TeamCardProps> = ({
   members,
   TA,
   TAs,
+  teamData,
+  teamDataList,
   onTeamDeleted,
 }) => {
   const [selectedTA, setSelectedTA] = useState<string | null>(TA?._id || null);
-  const apiUrl = apiBaseUrl + `/teams/${teamId}`;
-
-  const { data: session } = useSession();
-  const userRole = session?.user?.role;
+  const [selectedTeamData, setSelectedTeamData] = useState<string | null>(null);
+  const apiRoute = `/api/teams/${teamId}`;
 
   useEffect(() => {
     setSelectedTA(TA?._id || null);
+    setSelectedTeamData(teamData?._id || null);
   }, [TA]);
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(apiUrl, {
+      const response = await fetch(apiRoute, {
         method: 'DELETE',
       });
 
@@ -42,7 +45,6 @@ const TeamCard: React.FC<TeamCardProps> = ({
         console.error('Error deleting team:', response.statusText);
         return;
       }
-      console.log('Team deleted');
       onTeamDeleted();
     } catch (error) {
       console.error('Error deleting team:', error);
@@ -51,7 +53,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
 
   const handleTAChange = async (TAId: string | null) => {
     try {
-      const response = await fetch(apiUrl, {
+      const response = await fetch(apiRoute, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -63,14 +65,38 @@ const TeamCard: React.FC<TeamCardProps> = ({
         console.error('Error updating team:', response.statusText);
         return;
       }
-      console.log('Team updated');
       setSelectedTA(TAId);
     } catch (error) {
       console.error('Error updating team:', error);
     }
   };
 
+  const handleRepoNameChange = async (teamDataId: string | null) => {
+    try {
+      const response = await fetch(apiRoute, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ teamData: teamDataId }),
+      });
+
+      if (!response.ok) {
+        console.error('Error updating team:', response.statusText);
+        return;
+      }
+      setSelectedTeamData(teamDataId);
+    } catch (error) {
+      console.error('Error updating team:', error);
+    }
+  };
+
   const taOptions = TAs.map(ta => ({ value: ta._id, label: ta.name }));
+  const repoOptions = teamDataList.map(teamData => ({
+    value: teamData._id,
+    label: teamData.repoName,
+  }));
+
   const student_rows = members?.map(member => {
     return (
       <tr key={member._id}>
@@ -79,8 +105,6 @@ const TeamCard: React.FC<TeamCardProps> = ({
       </tr>
     );
   });
-
-  const hasPermission = ['admin', 'Faculty member'].includes(userRole);
 
   return (
     <Card
@@ -100,7 +124,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
         <Group mt="md" mb="xs">
           <Text> Team {number.toString()}</Text>
         </Group>
-        {hasPermission && (
+        {hasFacultyPermission() && (
           <ActionIcon
             variant="transparent"
             color="red"
@@ -115,7 +139,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
 
       <Group style={{ alignItems: 'center' }}>
         <Text>Teaching Assistant:</Text>
-        {hasPermission ? (
+        {hasFacultyPermission() ? (
           <Select
             data={taOptions}
             value={selectedTA}
@@ -124,6 +148,19 @@ const TeamCard: React.FC<TeamCardProps> = ({
           />
         ) : (
           <Text>{TA ? TA.name : 'None'}</Text>
+        )}
+      </Group>
+      <Group style={{ alignItems: 'center' }}>
+        <Text>Repository:</Text>
+        {hasFacultyPermission() ? (
+          <Select
+            data={repoOptions}
+            value={selectedTeamData}
+            onChange={e => handleRepoNameChange(e)}
+            placeholder="Select Repository"
+          />
+        ) : (
+          <Text>{teamData ? teamData.repoName : 'None'}</Text>
         )}
       </Group>
       <Table>

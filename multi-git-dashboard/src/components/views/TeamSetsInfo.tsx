@@ -1,4 +1,4 @@
-import apiBaseUrl from '@/lib/api-config';
+import { hasFacultyPermission } from '@/lib/auth/utils';
 import {
   Button,
   Container,
@@ -9,7 +9,6 @@ import {
 } from '@mantine/core';
 import { Course } from '@shared/types/Course';
 import { TeamSet } from '@shared/types/TeamSet';
-import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import TeamCard from '../cards/TeamCard';
 import StudentTeamForm from '../forms/StudentTeamForm';
@@ -29,21 +28,21 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const [teamSetId, setTeamSetId] = useState<string | null>(null);
 
-  const { data: session } = useSession();
-  const userRole = session?.user?.role;
-
-  const teamCards = (teamSet: TeamSet) =>
-    teamSet.teams.map(team => (
+  const teamCards = (teamSet: TeamSet) => {
+    return teamSet.teams.map(team => (
       <TeamCard
         key={team._id}
         teamId={team._id}
         number={team.number}
         TA={team.TA}
         TAs={course.TAs}
+        teamData={team.teamData}
+        teamDataList={teamSet.teams.map(t => t.teamData).filter(Boolean)}
         members={team.members}
         onTeamDeleted={onUpdate}
       />
     ));
+  };
 
   const headers = course.teamSets.map((teamSet, index) => (
     <Tabs.Tab
@@ -93,8 +92,8 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
 
   const handleDeleteTeamSet = async () => {
     try {
-      const apiUrl = apiBaseUrl + `/teamsets/${teamSetId}`;
-      const response = await fetch(apiUrl, {
+      const apiRoute = `/api/teamsets/${teamSetId}`;
+      const response = await fetch(apiRoute, {
         method: 'DELETE',
       });
 
@@ -116,8 +115,6 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
     }
   };
 
-  const hasPermission = ['admin', 'Faculty member'].includes(userRole);
-
   return (
     <Container>
       <Tabs value={activeTab}>
@@ -133,7 +130,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
             {error}
           </Notification>
         )}
-        {hasPermission && (
+        {hasFacultyPermission() && (
           <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
             <Group>
               <Button onClick={toggleTeamSetForm}>Create TeamSet</Button>

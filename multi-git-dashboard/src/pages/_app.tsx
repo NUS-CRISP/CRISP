@@ -7,14 +7,12 @@ import RootLayout from '@/components/RootLayout';
 import { MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import { SessionProvider } from 'next-auth/react';
-import type { AppProps } from 'next/app';
+import { AppProps } from 'next/app';
 
-export default function App(props: AppProps) {
-  const {
-    Component,
-    pageProps: { session, ...pageProps },
-  } = props;
-
+export default function App({
+  Component,
+  pageProps: { session, ...pageProps },
+}: AppProps) {
   return (
     <SessionProvider session={session}>
       <MantineProvider defaultColorScheme="auto">
