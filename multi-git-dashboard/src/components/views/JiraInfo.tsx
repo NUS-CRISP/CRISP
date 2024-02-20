@@ -19,7 +19,6 @@
 // import { useRouter } from 'next/router';
 // import { useState } from 'react';
 
-import apiBaseUrl from '@/lib/api-config';
 import { Course } from '@shared/types/Course';
 
 interface JiraInfoProps {
@@ -30,7 +29,8 @@ interface JiraInfoProps {
 const JiraInfo: React.FC<JiraInfoProps> = ({ course, onUpdate }) => {
   const handleOAuthButtonClick = () => {
     // Redirect the user to the backend /jira/authorize endpoint
-    window.location.href = `${apiBaseUrl}/jira/authorize?course=${course._id}`; // Update with your backend URL
+    const apiRoute = `/api/jira/authorize?course=${course._id}`;
+    window.location.href = apiRoute; // Update with your backend URL
   };
 
   return (
