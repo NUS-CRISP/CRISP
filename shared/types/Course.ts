@@ -40,7 +40,10 @@ export interface Course {
   gitHubOrgName?: string;
   installationId?: string;
   // end 'GitHubOrg' fields
-  cloudId: string;
-  accessToken: string;
-  refreshToken: string;
+  jira: {
+    isRegistered: boolean;
+    cloudId: string;
+    accessToken: string;
+    refreshToken: string;
+  }
 }

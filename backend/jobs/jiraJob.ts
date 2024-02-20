@@ -10,20 +10,8 @@ import CourseModel from '../models/Course';
 
 /**
  * Jira Cloud REST API Documentation: https://developer.atlassian.com/cloud/jira/software/rest/api-group-board/
- *
- * Get all boards: https://your-domain.atlassian.com/rest/agile/1.0/board
- * Get epics: https://your-domain.atlassian.com/rest/agile/1.0/board/{boardId}/epic
- * Get issues: https://your-domain.atlassian.com/rest/agile/1.0/board/{boardId}/backlog
- * Get sprints: https://your-domain.atlassian.com/rest/agile/1.0/board/{boardId}/sprint
+ * Atlassian OAuth 2.0 Documentation: https://developer.atlassian.com/cloud/jira/platform/oauth-2-3lo-apps/
  */
-
-const email = 'e0725104@u.nus.edu';
-const apiToken =
-  'ATATT3xFfGF0MU7KvTMw3qkr7I695_p2yZXuUVGl3TvwJwwo48IxWJrcLwv6afXVsFVMHnsZlM085txmR9WwlH8dbHOIeHgl2-2CsJMANPvu3M6ADJ1t6XJQ3fpV0T-WV9ELYVtXP76sxyNVMgJpD-p1dfGWFYEm7mxiqgvH12_U0PHYbNroPTk=D7392AC5';
-const credentials = btoa(`${email}:${apiToken}`);
-
-const clientId = 'PYNndw5d9EUdU7zvkTb5nR74aZFWJqbw';
-const clientSecret = 'ATOA57k51aSrtFcBDw0Qf13nWpgBg8Z69A14PE0xlqbcd2_cHrV54sGWujy2F9Ka9x15764FDA10';
 
 async function findJiraBoardId(id: number): Promise<String | null> {
   try {
@@ -51,7 +39,11 @@ async function findJiraSprintId(id: number): Promise<String | null> {
   }
 }
 
-async function fetchSprints(boardId: number, cloudId: string, accessToken: string): Promise<any> {
+async function fetchSprints(
+  boardId: number,
+  cloudId: string,
+  accessToken: string
+): Promise<any> {
   const jiraSprintUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board/${boardId}/sprint`;
 
   try {
@@ -98,7 +90,11 @@ async function fetchSprints(boardId: number, cloudId: string, accessToken: strin
   }
 }
 
-async function fetchIssues(boardId: number, cloudId: string, accessToken: string): Promise<any> {
+async function fetchIssues(
+  boardId: number,
+  cloudId: string,
+  accessToken: string
+): Promise<any> {
   const jiraIssuesUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board/${boardId}/backlog`;
 
   try {
@@ -153,11 +149,14 @@ async function fetchIssues(boardId: number, cloudId: string, accessToken: string
 }
 
 export const fetchAndSaveJiraData = async () => {
+  const clientId = process.env.CLIENT_ID;
+  const clientSecret = process.env.CLIENT_SECRET;
   const courses: Course[] = await CourseModel.find();
-  for (const course of courses) {
-    let { accessToken, refreshToken, cloudId } = course;
 
-    if (!refreshToken) {
+  for (const course of courses) {
+    let { isRegistered, accessToken, refreshToken, cloudId } = course.jira;
+
+    if (!isRegistered) {
       continue;
     }
 

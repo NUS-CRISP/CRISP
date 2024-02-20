@@ -1,32 +1,23 @@
 import { Request, Response } from 'express';
-import { NotFoundError } from '../services/errors';
-import {
-  checkGitHubInstallation,
-  fetchAllTeamData,
-  fetchAllTeamDataForOrg,
-} from '../services/githubService';
-import CourseModel from '../models/Course';
 import { fetchAndSaveJiraData } from '../jobs/jiraJob';
+import CourseModel from '../models/Course';
 
 // Define OAuth 2.0 configuration
 const authorizationUrl = 'https://auth.atlassian.com/authorize';
 const tokenUrl = 'https://auth.atlassian.com/oauth/token';
 const cloudUrl = 'https://api.atlassian.com/oauth/token/accessible-resources';
 
-
 // Handle authorization flow
-export const authorizeJiraAccount = (req: Request, res: Response) => {
-  // Redirect users to the authorization URL
-
+export const authorizeJiraAccount = async (req: Request, res: Response) => {
   const clientId = process.env.CLIENT_ID;
-  const clientSecret = process.env.CLIENT_SECRET;
-  const redirectUri = `${process.env.BACKEND_URI}:${process.env.PORT}/callback`;
+  const redirectUri = `${process.env.BACKEND_URI}:${process.env.PORT}/api/jira/callback`;
   const courseId = req.query.course as string;
 
   const authParams = new URLSearchParams({
     audience: 'api.atlassian.com',
     client_id: clientId as string,
-    scope: 'offline_access read:issue-details:jira read:project:jira read:board-scope:jira-software read:sprint:jira-software',
+    scope:
+      'offline_access read:issue-details:jira read:project:jira read:board-scope:jira-software read:sprint:jira-software',
     redirect_uri: redirectUri,
     state: courseId,
     response_type: 'code',
@@ -37,12 +28,11 @@ export const authorizeJiraAccount = (req: Request, res: Response) => {
 };
 
 // Handle redirect from Jira after authorization
-export const callbackJiraAccount =  async (req: Request, res: Response) => {
+export const callbackJiraAccount = async (req: Request, res: Response) => {
   const { state, code } = req.query;
-
-const clientId = process.env.CLIENT_ID;
-const clientSecret = process.env.CLIENT_SECRET;
-const redirectUri = `${process.env.BACKEND_URI}:${process.env.PORT}/callback`;
+  const clientId = process.env.CLIENT_ID;
+  const clientSecret = process.env.CLIENT_SECRET;
+  const redirectUri = `${process.env.BACKEND_URI}:${process.env.PORT}/api/jira/callback`;
 
   // Exchange authorization code for access token
   try {
@@ -61,12 +51,9 @@ const redirectUri = `${process.env.BACKEND_URI}:${process.env.PORT}/callback`;
     });
 
     const data = await response.json();
-    console.log(data);
     const accessToken = data.access_token;
     const refreshToken = data.refresh_token;
 
-    // Store access token securely and use it for API requests
-    // Implement your token storage logic here
     const headers = {
       Authorization: `Bearer ${accessToken}`,
       Accept: 'application/json',
@@ -78,10 +65,16 @@ const redirectUri = `${process.env.BACKEND_URI}:${process.env.PORT}/callback`;
       .then(async data => {
         // Extract the cloudId from the response
         const cloudId = data[0].id; // Assuming the cloudId is in the first element of the response
-        console.log('Cloud ID:', cloudId);
         await CourseModel.findOneAndUpdate(
           { _id: state },
-          { cloudId: cloudId, accessToken: accessToken, refreshToken: refreshToken },
+          {
+            jira: {
+              isRegistered: true,
+              cloudId: cloudId,
+              accessToken: accessToken,
+              refreshToken: refreshToken,
+            },
+          },
           {}
         );
       })
@@ -89,10 +82,8 @@ const redirectUri = `${process.env.BACKEND_URI}:${process.env.PORT}/callback`;
         console.error('Error:', error);
       });
 
-    // res.send('Authorization successful!');
     res.redirect(`http://localhost:3000/courses/${state}`);
     await fetchAndSaveJiraData();
-
   } catch (error) {
     console.error(
       'Error exchanging authorization code for access token:',
