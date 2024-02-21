@@ -66,7 +66,7 @@ export const checkInstallation = async (req: Request, res: Response) => {
     if (error instanceof NotFoundError) {
       res.status(404).json({ message: error.message });
     } else {
-      console.error('Error checking github installation:', error);
+      console.error('Error checking GitHub installation:', error);
       res.status(500).json({
         message: 'An error occurred while checking the installation status.',
       });

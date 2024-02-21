@@ -1,0 +1,15 @@
+.git/
+.gitignore
+.dockerignore
+Dockerfile
+docker-compose.yml
+
+# backend specific
+backend/node_modules/
+backend/dist/
+backend/.env.development
+backend/test/
+
+# frontend specific
+multi-git-dashboard/node_modules/
+multi-git-dashboard/.next/

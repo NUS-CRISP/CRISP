@@ -50,6 +50,7 @@ const CreateCoursePage: React.FC = () => {
       semester: '',
       courseType: CourseType.Normal,
       gitHubOrgName: '',
+      repoNameFilter: '',
       installationId: '',
     },
     validate: {
@@ -67,6 +68,12 @@ const CreateCoursePage: React.FC = () => {
           appInstallationStatus === InstallationStatus.SUCCESS)
           ? null
           : 'GitHub Org name is required',
+      repoNameFilter: (value, values) =>
+        values.courseType === CourseType.Normal ||
+        (values.courseType === CourseType.GitHubOrg &&
+          appInstallationStatus === InstallationStatus.SUCCESS)
+          ? null
+          : 'Repo name filter is required',
     },
   });
 
@@ -290,6 +297,18 @@ const CreateCoursePage: React.FC = () => {
                         searchable
                         clearable
                         leftSectionWidth={100}
+                      />
+                      <TextInput
+                        withAsterisk
+                        label="Repo Name Filter"
+                        placeholder="e.g. 23s2"
+                        {...form.getInputProps('repoNameFilter')}
+                        onChange={event =>
+                          form.setFieldValue(
+                            'repoNameFilter',
+                            event.currentTarget.value
+                          )
+                        }
                       />
                     </List.Item>
                   </Collapse>

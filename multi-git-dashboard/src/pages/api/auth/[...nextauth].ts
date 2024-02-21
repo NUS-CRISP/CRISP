@@ -84,7 +84,10 @@ export const authOptions: AuthOptions = {
         session.user.name = token.name;
       }
       session.user.role = token.role;
-      return session;
+      return {
+        user: { name: token.name, role: token.role },
+        expires: session.expires,
+      };
     },
   },
 };

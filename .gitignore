@@ -8,3 +8,6 @@ load-test/jmeter.log
 
 # MacOS
 .DS_Store
+
+# mongo
+data/

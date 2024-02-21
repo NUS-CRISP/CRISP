@@ -1,4 +1,6 @@
+import CourseModel, { Course } from '@models/Course';
 import { Review, TeamContribution, TeamPR } from '@shared/types/TeamData';
+import { Document, Types } from 'mongoose';
 import cron from 'node-cron';
 import { App, Octokit } from 'octokit';
 import TeamData from '../models/TeamData';
@@ -9,57 +11,49 @@ const fetchAndSaveTeamData = async () => {
   const octokit = app.octokit;
 
   const response = await octokit.rest.apps.listInstallations();
-  const installations = response.data;
+  const installationIds = response.data.map(installation => installation.id);
 
-  // Testing only
-  if (process.env.RUN_JOB_NOW === 'true') {
-    const installation = installations.find(
-      installation =>
-        installation.account && installation.account.login === 'nus-cs3203'
-    );
-
-    if (
-      installation &&
-      installation.account &&
-      'login' in installation.account
-    ) {
-      const installationOctokit = await app.getInstallationOctokit(
-        installation.id
-      );
-      await getOrgData(installationOctokit, installation.account.login);
-    }
-
-    return;
-  }
+  const courses = await CourseModel.find({
+    installationId: { $in: installationIds },
+  });
 
   await Promise.all(
-    installations.map(
-      async installation =>
-        installation.account &&
-        'login' in installation.account &&
-        getOrgData(
-          await app.getInstallationOctokit(installation.id),
-          installation.account.login
-        )
-    )
+    courses.map(async course => {
+      if (course && course.installationId) {
+        const installationOctokit = await app.getInstallationOctokit(
+          course.installationId
+        );
+        await getCourseData(installationOctokit, course);
+      }
+    })
   );
+
+  console.log('fetchAndSaveTeamData job done');
 };
 
-const getOrgData = async (octokit: Octokit, gitHubOrgName: string) => {
+const getCourseData = async (
+  octokit: Octokit,
+  course: Document<unknown, {}, Course> &
+    Course &
+    Required<{ _id: Types.ObjectId }>
+) => {
   const teamContributions: Record<string, TeamContribution> = {};
+  if (!course.gitHubOrgName) return;
+  const gitHubOrgName = course.gitHubOrgName;
 
+  // TODO: Add pagination
   const repos = await octokit.rest.repos.listForOrg({
-    org: gitHubOrgName,
+    org: course.gitHubOrgName,
     sort: 'updated',
-    per_page: 100,
+    per_page: 300,
     direction: 'desc',
   });
   let allRepos = repos.data;
 
-  // for testing only
-  if (process.env.RUN_JOB_NOW === 'true') {
-    allRepos = allRepos.filter(repo => repo.name.includes('23s2'));
-    console.log('Filtered repos:', allRepos);
+  if (course.repoNameFilter) {
+    allRepos = allRepos.filter(repo =>
+      repo.name.includes(course.repoNameFilter as string)
+    );
   }
 
   for (const repo of allRepos) {
