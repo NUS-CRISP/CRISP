@@ -37,9 +37,9 @@ const Overview: React.FC<OverviewProps> = ({ course }) => {
 
   return (
     <ScrollArea.Autosize>
-      <Accordion defaultValue={teamDatas[0]?._id.toString()}>
+      <Accordion defaultValue={[teamDatas[0]._id]} multiple>
         {teamDatas.map(teamData => (
-          <Accordion.Item key={teamData._id} value={teamData._id.toString()}>
+          <Accordion.Item key={teamData._id} value={teamData._id}>
             <Accordion.Control>{teamData.repoName}</Accordion.Control>
             <Accordion.Panel>
               <OverviewCard teamData={teamData} teamDatas={teamDatas} />

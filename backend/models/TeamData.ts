@@ -36,8 +36,6 @@ const reviewSchema = new Schema<Review>(
 const teamContributionSchema = new Schema<TeamContribution>(
   {
     commits: { type: Number, required: true },
-    additions: { type: Number, required: true },
-    deletions: { type: Number, required: true },
     createdIssues: { type: Number, required: true },
     openIssues: { type: Number, required: true },
     closedIssues: { type: Number, required: true },
@@ -52,6 +50,7 @@ const teamPRSchema = new Schema<TeamPR>(
   {
     id: { type: Number, required: true },
     title: { type: String, required: true },
+    user: { type: String, required: true },
     url: { type: String, required: true },
     state: { type: String, required: true },
     createdAt: { type: Date, required: true },
@@ -66,9 +65,8 @@ const teamDataSchema = new Schema<TeamData>({
   gitHubOrgName: { type: String, required: true },
   repoName: { type: String, required: true },
   commits: { type: Number, required: true },
+  weeklyCommits: { type: [[Number]], required: true },
   issues: { type: Number, required: true },
-  stars: { type: Number, required: true },
-  forks: { type: Number, required: true },
   pullRequests: { type: Number, required: true },
   updatedIssues: { type: [String], required: true },
   teamContributions: {

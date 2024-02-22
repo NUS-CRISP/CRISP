@@ -4,7 +4,7 @@ import { Document, Types } from 'mongoose';
 import cron from 'node-cron';
 import { App, Octokit } from 'octokit';
 import TeamData from '../models/TeamData';
-import { getGitHubApp } from '../utils/github';
+import { filterTeamContributions, getGitHubApp } from '../utils/github';
 
 const fetchAndSaveTeamData = async () => {
   const app: App = getGitHubApp();
@@ -37,7 +37,6 @@ const getCourseData = async (
     Course &
     Required<{ _id: Types.ObjectId }>
 ) => {
-  const teamContributions: Record<string, TeamContribution> = {};
   if (!course.gitHubOrgName) return;
   const gitHubOrgName = course.gitHubOrgName;
 
@@ -57,8 +56,13 @@ const getCourseData = async (
   }
 
   for (const repo of allRepos) {
+    const teamContributions: Record<string, TeamContribution> = {};
+
     const [commits, issues, prs, contributors] = await Promise.all([
-      octokit.rest.repos.listCommits({ owner: gitHubOrgName, repo: repo.name }),
+      octokit.rest.repos.listCommits({
+        owner: gitHubOrgName,
+        repo: repo.name,
+      }),
       octokit.rest.issues.listForRepo({
         owner: gitHubOrgName,
         repo: repo.name,
@@ -74,37 +78,19 @@ const getCourseData = async (
       }),
     ]);
 
+    let codeFrequencyStats: number[][] = [];
+    try {
+      codeFrequencyStats = await fetchCodeFrequencyStats(
+        octokit,
+        gitHubOrgName,
+        repo.name
+      );
+    } catch (err) {
+      console.error('Error fetching code frequency stats:', err);
+    }
+
     const teamPRs: TeamPR[] = await Promise.all(
       prs.data.map(async pr => {
-        // Get addition and deletion counts for each PR
-        const prData = await octokit.rest.pulls.get({
-          owner: gitHubOrgName,
-          repo: repo.name,
-          pull_number: pr.number,
-        });
-
-        const additions = prData.data.additions;
-        const deletions = prData.data.deletions;
-
-        if (pr.user && pr.user.login) {
-          if (pr.user.login in teamContributions) {
-            teamContributions[pr.user.login].additions += additions;
-            teamContributions[pr.user.login].deletions += deletions;
-          } else {
-            teamContributions[pr.user.login] = {
-              commits: 0,
-              additions: additions,
-              deletions: deletions,
-              createdIssues: 0,
-              openIssues: 0,
-              closedIssues: 0,
-              pullRequests: 0,
-              codeReviews: 0,
-              comments: 0,
-            };
-          }
-        }
-
         const reviews = await octokit.rest.pulls.listReviews({
           owner: gitHubOrgName,
           repo: repo.name,
@@ -136,6 +122,7 @@ const getCourseData = async (
         return {
           id: pr.id,
           title: pr.title,
+          user: pr.user?.login || '',
           url: pr.html_url,
           state: pr.state,
           createdAt: new Date(pr.created_at),
@@ -184,42 +171,33 @@ const getCourseData = async (
         pr => pr.user && pr.user.login === contributor.login
       ).length;
 
-      let codeReviews = 0;
-      let comments = 0;
-      teamPRs.forEach(pr => {
-        pr.reviews.forEach(review => {
-          if (review.user === contributor.login) {
-            codeReviews++;
-            comments += review.comments.length;
-          }
-        });
-      });
-
       teamContributions[contributor.login] = {
         commits: contributorCommits,
-        additions: teamContributions[contributor.login]
-          ? teamContributions[contributor.login].additions
-          : 0,
-        deletions: teamContributions[contributor.login]
-          ? teamContributions[contributor.login].deletions
-          : 0,
         createdIssues: createdIssues,
         openIssues: openIssues,
         closedIssues: closedIssues,
         pullRequests: contributorPRs,
-        codeReviews: codeReviews,
-        comments: comments,
+        codeReviews: 0,
+        comments: 0,
       };
     }
+
+    for (const teamPR of teamPRs) {
+      for (const review of teamPR.reviews) {
+        if (!review.user || !(review.user in teamContributions)) continue;
+        teamContributions[review.user].codeReviews++;
+        teamContributions[review.user].comments += review.comments.length;
+      }
+    }
+    filterTeamContributions(teamContributions);
 
     const teamData = {
       gitHubOrgName: gitHubOrgName.toLowerCase(),
       teamId: repo.id,
       repoName: repo.name,
       commits: commits.data.length,
+      weeklyCommits: codeFrequencyStats,
       issues: issues.data.length,
-      stars: repo.stargazers_count ?? 0,
-      forks: repo.forks_count ?? 0,
       pullRequests: prs.data.length,
       updatedIssues: issues.data.map(issue => issue.updated_at),
       teamContributions,
@@ -232,6 +210,45 @@ const getCourseData = async (
       upsert: true,
     });
   }
+};
+
+const fetchCodeFrequencyStats = async (
+  octokit: Octokit,
+  owner: string,
+  repo: string
+) => {
+  let attempt = 0;
+  const maxAttempts = 10; // Maximum number of attempts
+  const delayBetweenAttempts = 2000; // Delay in milliseconds
+
+  while (attempt < maxAttempts) {
+    try {
+      const response = await octokit.rest.repos.getCodeFrequencyStats({
+        owner,
+        repo,
+      });
+
+      if (response.status === 200) {
+        // Data is ready
+        return response.data;
+      } else if (response.status === 202) {
+        // Data is not ready yet, wait and try again
+        await new Promise(resolve => setTimeout(resolve, delayBetweenAttempts));
+        attempt++;
+      } else {
+        // Handle other HTTP statuses
+        throw new Error('Failed to fetch code frequency stats');
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(
+          `Error fetching code frequency stats: ${error.message}`
+        );
+      }
+    }
+  }
+
+  throw new Error('Max attempts reached. Data may not be available yet.');
 };
 
 export const setupJob = () => {

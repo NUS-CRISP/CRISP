@@ -1,3 +1,4 @@
+import { TeamContribution } from '@shared/types/TeamData';
 import { App } from 'octokit';
 
 export const getGitHubApp = (): App => {
@@ -9,3 +10,18 @@ export const getGitHubApp = (): App => {
     privateKey: PRIVATE_KEY,
   });
 };
+
+/**
+ * Deletes keys from a record
+ */
+const filterRecord = <T>(record: Record<string, T>, ...keys: string[]) => {
+  for (const key of keys) {
+    if (key in record) delete record[key];
+  }
+};
+
+const FILTER_LIST = ['github-classroom[bot]'];
+
+export const filterTeamContributions = (
+  teamContributions: Record<string, TeamContribution>
+) => filterRecord(teamContributions, ...FILTER_LIST);

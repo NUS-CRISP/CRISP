@@ -1,7 +1,5 @@
 export interface TeamContribution {
   commits: number;
-  additions: number;
-  deletions: number;
   createdIssues: number;
   openIssues: number;
   closedIssues: number;
@@ -13,6 +11,7 @@ export interface TeamContribution {
 export interface TeamPR {
   id: number; // PR id
   title: string;
+  user: string;
   url: string;
   state: string;
   createdAt: Date;
@@ -42,9 +41,8 @@ export interface TeamData {
   teamId: number;
   repoName: string;
   commits: number;
+  weeklyCommits: number[][];
   issues: number;
-  stars: number;
-  forks: number;
   pullRequests: number;
   updatedIssues: string[];
   teamContributions: Record<string, TeamContribution>;
