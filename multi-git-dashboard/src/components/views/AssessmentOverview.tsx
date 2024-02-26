@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Card, Space, Table, Text } from '@mantine/core';
 import { Assessment } from '@shared/types/Assessment';
 import { SheetData } from '@shared/types/SheetData';
 import SheetDataTable from '../google/SheetDataTable ';
+import { MarkItem, Result } from '@shared/types/Result';
 
 interface AssessmentOverviewProps {
   assessment: Assessment | null;
@@ -15,6 +16,8 @@ const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
   sheetData,
   onUpdateSheetData,
 }) => {
+  const [pendingSubmissions, setPendingSubmissions] = useState<string[][]>([]);
+
   const assessmentSheetApiRoute = `/api/assessments/${assessment?._id}/googlesheets`;
 
   const fetchNewSheetData = async () => {
@@ -33,6 +36,36 @@ const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
       console.error('Error:', error);
     }
   };
+
+  const calculatePendingSubmissions = async () => {
+    if (!assessment || !sheetData) return;
+
+    const results: Result[] = await assessment.results;
+    const pending: string[][] = [];
+
+    results.forEach((result: Result) => {
+      result.marks.forEach((item: MarkItem) => {
+        const isSubmitted = sheetData.rows.some(row => row.includes(item.user));
+        if (!isSubmitted) {
+          const pendingRow = [
+            item.user,
+            item.name,
+            result.team?.number?.toString() || 'EMPTY',
+            result.marker?.name || 'EMPTY',
+          ];
+          console.log(pendingRow);
+          pending.push(pendingRow);
+        }
+      });
+    });
+
+    setPendingSubmissions(pending);
+  };
+
+  useEffect(() => {
+    calculatePendingSubmissions();
+  }, [assessment, sheetData]);
+
   return (
     <div>
       <Card style={{ marginBottom: '20px' }}>
@@ -57,7 +90,10 @@ const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
       <Space h="md" />
       <Button onClick={fetchNewSheetData}>Update Sheets Data</Button>
       {sheetData ? (
-        <SheetDataTable data={sheetData} />
+        <SheetDataTable
+          data={sheetData}
+          pendingSubmissions={pendingSubmissions}
+        />
       ) : (
         <Table striped highlightOnHover>
           <tbody>
