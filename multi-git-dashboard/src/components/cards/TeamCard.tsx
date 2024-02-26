@@ -102,10 +102,10 @@ const TeamCard: React.FC<TeamCardProps> = ({
 
   const student_rows = members?.map(member => {
     return (
-      <tr key={member._id}>
-        <td style={{ textAlign: 'left' }}>{member.name}</td>
-        <td style={{ textAlign: 'left' }}>{member.gitHandle}</td>
-      </tr>
+      <Table.Tr key={member._id}>
+        <Table.Td style={{ textAlign: 'left' }}>{member.name}</Table.Td>
+        <Table.Td style={{ textAlign: 'left' }}>{member.gitHandle}</Table.Td>
+      </Table.Tr>
     );
   });
 
@@ -167,13 +167,13 @@ const TeamCard: React.FC<TeamCardProps> = ({
         )}
       </Group>
       <Table>
-        <thead>
-          <tr>
-            <th style={{ textAlign: 'left' }}>Name</th>
-            <th style={{ textAlign: 'left' }}>Git Handle</th>
-          </tr>
-        </thead>
-        <tbody>{student_rows}</tbody>
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th style={{ textAlign: 'left', width: '60%' }}>Name</Table.Th>
+            <Table.Th style={{ textAlign: 'left', width: '40%' }}>Git Handle</Table.Th>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>{student_rows}</Table.Tbody>
       </Table>
     </Card>
   );

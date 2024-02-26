@@ -14,6 +14,7 @@ const SheetDataTable: React.FC<SheetDataTableProps> = ({
   const headers = data.headers;
   const rows = data.rows;
   const fetchedAt = data.fetchedAt.toLocaleString();
+  const headerWidths = ['10%', '35%', '10%', '45%'];
 
   return (
     <div>
@@ -23,22 +24,22 @@ const SheetDataTable: React.FC<SheetDataTableProps> = ({
           Pending Submissions
         </Text>
         <Table>
-          <thead>
-            <tr>
+          <Table.Thead>
+            <Table.Tr>
               {headers.map((header, index) => (
-                <th key={index}>{header}</th>
+                <Table.Th style={{ textAlign: 'left', width: headerWidths[index]}} key={index}>{header}</Table.Th>
               ))}
-            </tr>
-          </thead>
-          <tbody>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
             {pendingSubmissions.map((row, rowIndex) => (
-              <tr key={rowIndex}>
+              <Table.Tr key={rowIndex}>
                 {row.map((cell, cellIndex) => (
-                  <td key={`${rowIndex}-${cellIndex}`}>{cell}</td>
+                  <Table.Td key={`${rowIndex}-${cellIndex}`}>{cell}</Table.Td>
                 ))}
-              </tr>
+              </Table.Tr>
             ))}
-          </tbody>
+          </Table.Tbody>
         </Table>
       </Card>
       <Card style={{ marginTop: '20px' }}>
@@ -46,22 +47,22 @@ const SheetDataTable: React.FC<SheetDataTableProps> = ({
           Completed Submissions
         </Text>
         <Table striped highlightOnHover>
-          <thead>
-            <tr>
+          <Table.Thead>
+            <Table.Tr>
               {headers.map((header, index) => (
-                <th key={index}>{header}</th>
+                <Table.Th style={{ textAlign: 'left', width: headerWidths[index]}} key={index}>{header}</Table.Th>
               ))}
-            </tr>
-          </thead>
-          <tbody>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
             {rows.map((row, rowIndex) => (
-              <tr key={rowIndex}>
+              <Table.Tr key={rowIndex}>
                 {row.map((cell, cellIndex) => (
-                  <td key={`${rowIndex}-${cellIndex}`}>{cell}</td>
+                  <Table.Td key={`${rowIndex}-${cellIndex}`}>{cell}</Table.Td>
                 ))}
-              </tr>
+              </Table.Tr>
             ))}
-          </tbody>
+          </Table.Tbody>
         </Table>
       </Card>
     </div>

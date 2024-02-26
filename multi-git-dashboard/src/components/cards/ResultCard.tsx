@@ -1,5 +1,5 @@
 import { hasFacultyPermission } from '@/lib/auth/utils';
-import { Card, Group, Select, Table, Text } from '@mantine/core';
+import { Card, Grid, Group, Select, Space, Table, Text } from '@mantine/core';
 import { Result } from '@shared/types/Result';
 import { User } from '@shared/types/User';
 import React, { useEffect, useState } from 'react';
@@ -53,64 +53,48 @@ const ResultCard: React.FC<ResultCardProps> = ({
 
   const studentRows = result.marks.map(mark => {
     return (
-      <tr key={mark.user}>
-        <td style={{ textAlign: 'left' }}>{mark.name}</td>
-        <td style={{ textAlign: 'left' }}>{mark.user}</td>
-        <td style={{ textAlign: 'left' }}>{mark.mark}</td>
-      </tr>
+      <Table.Tr key={mark.user}>
+        <Table.Td style={{ textAlign: 'left' }}>{mark.name}</Table.Td>
+        <Table.Td style={{ textAlign: 'left' }}>{mark.user}</Table.Td>
+        <Table.Td style={{ textAlign: 'left' }}>{mark.mark}</Table.Td>
+      </Table.Tr>
     );
   });
 
   return (
-    <Card
-      shadow="sm"
-      padding="lg"
-      radius="md"
-      style={{ marginTop: '6px', marginBottom: '6px' }}
-      withBorder
-    >
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'start',
-        }}
-      >
-        <Group mt="md" mb="xs">
-          <Text>
-            {result.team
-              ? `Team ${result.team.number}`
-              : 'Individual Assessment'}
+    <Card shadow="sm" padding="lg" radius="md" withBorder style={{ marginTop: '6px', marginBottom: '6px' }}>
+    <Grid>
+      <Grid.Col span={12}>
+        <Group>
+          <Text >
+            {result.team ? `Team ${result.team.number}` : 'Individual Assessment'}
           </Text>
+          {hasFacultyPermission() && (
+            <Select
+              value={selectedMarker}
+              onChange={handleMarkerChange}
+              data={taOptions}
+              placeholder={result.marker ? result.marker.name : 'None assigned'}
+            />
+          )}
+          {!hasFacultyPermission() && (
+            <Text>Marker: {result.marker ? result.marker.name : 'None assigned'}</Text>
+          )}
         </Group>
-      </div>
-
-      {hasFacultyPermission() ? (
-        <Select
-          value={selectedMarker}
-          onChange={handleMarkerChange}
-          data={taOptions}
-          placeholder={result.marker ? result.marker.name : 'None assigned'}
-        />
-      ) : (
-        <Text>
-          Marker: {result.marker ? result.marker.name : 'None assigned'}
-        </Text>
-      )}
-
-      <Table>
-        <thead>
-          <tr>
-            <th style={{ textAlign: 'left' }}>
-              {result.team ? 'Team Member' : 'Student'}
-            </th>
-            <th style={{ textAlign: 'left' }}>ID</th>
-            <th style={{ textAlign: 'left' }}>Score</th>
-          </tr>
-        </thead>
-        <tbody>{studentRows}</tbody>
-      </Table>
-    </Card>
+      </Grid.Col>
+    </Grid>
+    <Space h="md" />
+    <Table>
+      <Table.Thead>
+        <Table.Tr>
+          <Table.Th style={{ textAlign: 'left', width: '60%'}}>{result.team ? 'Team Member' : 'Student'}</Table.Th>
+          <Table.Th style={{ textAlign: 'left', width: '25%' }}>ID</Table.Th>
+          <Table.Th style={{ textAlign: 'left', width: '15%' }}>Score</Table.Th>
+        </Table.Tr>
+      </Table.Thead>
+      <Table.Tbody>{studentRows}</Table.Tbody>
+    </Table>
+  </Card>
   );
 };
 
