@@ -18,7 +18,7 @@ const AssessmentDetail: React.FC = () => {
 
   const assessmentsApiRoute = `/api/assessments/${assessmentId}`;
   const teachingTeamApiRoute = `/api/courses/${id}/teachingteam`;
-  const assessmentSheetApiRoute = `/api/assessment/${assessmentId}/googlesheets`;
+  const assessmentSheetApiRoute = `/api/assessments/${assessmentId}/googlesheets`;
 
   const [assessment, setAssessment] = useState<Assessment | null>(null);
   const [teachingTeam, setTeachingTeam] = useState<User[]>([]);
@@ -78,7 +78,6 @@ const AssessmentDetail: React.FC = () => {
   const onUpdate = () => {
     fetchAssessment();
     fetchTeachingTeam();
-    getSheetData();
     setIsResultFormOpen(o => !o);
   };
 
@@ -90,9 +89,14 @@ const AssessmentDetail: React.FC = () => {
     if (assessmentId && id) {
       fetchAssessment();
       fetchTeachingTeam();
+    }
+  }, [assessmentId, id, fetchAssessment, fetchTeachingTeam]);
+
+  useEffect(() => {
+    if (assessmentId) {
       getSheetData();
     }
-  }, [assessmentId, id, fetchAssessment, fetchTeachingTeam, getSheetData]);
+  }, [assessmentId]);
 
   return (
     <Container>

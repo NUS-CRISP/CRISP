@@ -73,21 +73,20 @@ const transformFunction = (sheetData: SheetDataType): TransformedData => {
   const rows: string[][] = [];
 
   sheetData.forEach(row => {
-    const identifier = row['Identifier'];
-    if (!identifier) return;
+    const Identifier = row['Identifier'];
+    if (!Identifier) return;
 
-    const Name = row['Name'].toUpperCase( ) || 'EMPTY';
+    const Name = row['Name'].toUpperCase() || 'EMPTY';
     let Team = row['Team'] || '';
     try {
-        const teamInt = parseInt(Team);
-        Team = teamInt.toString();
+      const teamInt = parseInt(Team);
+      Team = teamInt.toString();
     } catch (error) {
       Team = 'EMPTY';
     }
     const Comments = row['Comments'] || 'EMPTY';
-    rows.push([identifier, Name, Team, Comments]);
+    rows.push([Identifier, Name, Team, Comments]);
   });
-
 
   return [headers, ...rows];
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Group, Table, Text } from '@mantine/core';
+import { Button, Card, Space, Table, Text } from '@mantine/core';
 import { Assessment } from '@shared/types/Assessment';
 import { SheetData } from '@shared/types/SheetData';
 import SheetDataTable from '../google/SheetDataTable ';
@@ -15,7 +15,7 @@ const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
   sheetData,
   onUpdateSheetData,
 }) => {
-  const assessmentSheetApiRoute = `/api/assessment/${assessment?._id}/googlesheets`;
+  const assessmentSheetApiRoute = `/api/assessments/${assessment?._id}/googlesheets`;
 
   const fetchNewSheetData = async () => {
     try {
@@ -35,14 +35,16 @@ const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
   };
   return (
     <div>
-      <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
-        <Button onClick={fetchNewSheetData}>Update Sheets Data</Button>
-      </Group>
-      <Text>Assessment Type: {assessment?.assessmentType}</Text>
-      <Text>Mark Type: {assessment?.markType}</Text>
-      <Text>Frequency: {assessment?.frequency}</Text>
-      <Text>Granularity: {assessment?.granularity}</Text>
-      <Text>Form Link: {assessment?.formLink}</Text>
+      <Card shadow="sm" padding="lg" style={{ marginBottom: '20px' }}>
+        <Text size="lg" style={{ marginBottom: '10px' }}>Assessment Details</Text>
+        <Text>Assessment Type: {assessment?.assessmentType}</Text>
+        <Text>Mark Type: {assessment?.markType}</Text>
+        <Text>Frequency: {assessment?.frequency}</Text>
+        <Text>Granularity: {assessment?.granularity}</Text>
+        <Text>Form Link: <a href={assessment?.formLink} target="_blank" rel="noopener noreferrer">{assessment?.formLink}</a></Text>
+      </Card>
+      <Space h="md" />
+      <Button onClick={fetchNewSheetData}>Update Sheets Data</Button>
       {sheetData ? (
         <SheetDataTable data={sheetData} />
       ) : (

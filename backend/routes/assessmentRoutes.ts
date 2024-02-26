@@ -12,7 +12,7 @@ const router = express.Router();
 router.get('/:assessmentId', getAssessment);
 router.post('/:assessmentId/results/', uploadResults);
 router.patch('/:assessmentId/results/:resultId/marker', updateResultMarker);
-router.get('/:id/googlesheets', getSheetData);
-router.post('/:id/googlesheets', fetchNewSheetData);
+router.get('/:assessmentId/googlesheets', getSheetData);
+router.post('/:assessmentId/googlesheets', fetchNewSheetData);
 
 export default router;

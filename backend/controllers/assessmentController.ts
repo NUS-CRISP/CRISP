@@ -9,7 +9,7 @@ import { getToken } from '../utils/auth';
 import {
   fetchAndSaveSheetData,
   getAssessmentSheetData,
-} from 'services/googleService';
+} from '../services/googleService';
 
 export const getAssessment = async (req: Request, res: Response) => {
   try {

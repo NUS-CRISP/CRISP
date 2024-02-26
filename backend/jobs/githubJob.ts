@@ -143,7 +143,7 @@ const getOrgData = async (app: App, installation: Installation) => {
       teamContributions,
     };
 
-    console.log('Saving team data:', teamData);
+    //console.log('Saving team data:', teamData);
 
     await TeamData.findOneAndUpdate({ teamId: teamData.teamId }, teamData, {
       upsert: true,

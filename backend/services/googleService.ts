@@ -1,7 +1,7 @@
 import SheetDataModel, { SheetData } from '../models/SheetData';
 import { fetchDataFromSheet } from '../utils/google';
 import { NotFoundError } from './errors';
-import AssessmentModel from 'models/Assessment';
+import AssessmentModel from '../models/Assessment';
 
 export const getAssessmentSheetData = async (
   assessmentId: string
@@ -24,6 +24,8 @@ export const fetchAndSaveSheetData = async (assessmentId: string) => {
     throw new NotFoundError('Assessment not found');
   }
 
+  console.log('Fetching new sheet data')
+
   const sheetId = assessment.sheetID;
   const transformedData = await fetchDataFromSheet(sheetId);
   const [headers, ...rows] = transformedData;
@@ -37,4 +39,5 @@ export const fetchAndSaveSheetData = async (assessmentId: string) => {
   await newSheetData.save();
   assessment.sheetData = newSheetData._id;
   await assessment.save();
+  console.log('Saved new sheet data')
 };
