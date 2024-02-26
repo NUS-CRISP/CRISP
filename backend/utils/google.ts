@@ -88,5 +88,17 @@ const transformFunction = (sheetData: SheetDataType): TransformedData => {
     rows.push([Identifier, Name, Team, Comments]);
   });
 
+  rows.sort((a, b) => {
+    const teamA = parseInt(a[2]) || Number.MAX_SAFE_INTEGER;
+    const teamB = parseInt(b[2]) || Number.MAX_SAFE_INTEGER;
+    const nameA = a[1];
+    const nameB = b[1];
+
+    if (teamA !== teamB) {
+      return teamA - teamB;
+    }
+    return nameA.localeCompare(nameB);
+  });
+
   return [headers, ...rows];
 };
