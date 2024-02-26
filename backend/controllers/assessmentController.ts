@@ -68,8 +68,10 @@ export const updateResultMarker = async (req: Request, res: Response) => {
 /*----------------------------------------Google Sheets----------------------------------------*/
 export const getSheetData = async (req: Request, res: Response) => {
   const { assessmentId } = req.params;
+  const token = await getToken(req);
+  const accountId = token.sub;
   try {
-    const sheetsData = await getAssessmentSheetData(assessmentId);
+    const sheetsData = await getAssessmentSheetData(assessmentId, accountId);
     res.status(200).json(sheetsData);
   } catch (error) {
     if (error instanceof NotFoundError) {

@@ -214,22 +214,43 @@ export const addAssessmentsToCourse = async (
         results.push(result);
       });
     } else {
-      // Create a result object for each student
-      course.students.forEach((student: any) => {
-        const result = new ResultModel({
-          assessment: assessment._id,
-          team: null,
-          marker: null,
-          marks: [
-            {
-              user: student.identifier,
-              name: student.name,
-              mark: 0,
-            },
-          ],
+      const teamSet = await TeamSetModel.findOne({ course: courseId }).populate(
+        {
+          path: 'teams',
+          populate: { path: 'members TA' },
+        }
+      );
+      if (teamSet) {
+        course.students.forEach((student: any) => {
+          const teams: Team[] = teamSet.teams as unknown as Team[];
+          const team = teams.find(t =>
+            t?.members?.some(member => member._id.equals(student._id))
+          );
+          const marker = team?.TA?._id || null;
+          const result = new ResultModel({
+            assessment: assessment._id,
+            marker,
+            marks: [{ user: student.identifier, name: student.name, mark: 0 }],
+          });
+          results.push(result);
         });
-        results.push(result);
-      });
+      } else {
+        course.students.forEach((student: any) => {
+          const result = new ResultModel({
+            assessment: assessment._id,
+            team: null,
+            marker: null,
+            marks: [
+              {
+                user: student.identifier,
+                name: student.name,
+                mark: 0,
+              },
+            ],
+          });
+          results.push(result);
+        });
+      }
     }
     assessment.results = results.map(result => result._id);
     course.assessments.push(assessment._id);
