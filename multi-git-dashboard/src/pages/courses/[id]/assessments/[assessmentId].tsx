@@ -6,6 +6,8 @@ import { User } from '@shared/types/User';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
 import ResultCard from '../../../../components/cards/ResultCard';
+import AssessmentOverview from '@/components/views/AssessmentOverview';
+import { SheetData } from '@shared/types/SheetData';
 
 const AssessmentDetail: React.FC = () => {
   const router = useRouter();
@@ -16,10 +18,12 @@ const AssessmentDetail: React.FC = () => {
 
   const assessmentsApiRoute = `/api/assessments/${assessmentId}`;
   const teachingTeamApiRoute = `/api/courses/${id}/teachingteam`;
+  const assessmentSheetApiRoute = `/api/assessment/${assessmentId}/googlesheets`;
 
   const [assessment, setAssessment] = useState<Assessment | null>(null);
   const [teachingTeam, setTeachingTeam] = useState<User[]>([]);
-  const [isResultFormOpen, setIsResultFormOpen] = useState(false);
+  const [isResultFormOpen, setIsResultFormOpen] = useState<boolean>(false);
+  const [sheetData, setSheetData] = useState<SheetData | null>(null);
 
   const fetchAssessment = useCallback(async () => {
     try {
@@ -54,6 +58,19 @@ const AssessmentDetail: React.FC = () => {
     }
   }, [id]);
 
+  const getSheetData = async () => {
+    try {
+      const response = await fetch(assessmentSheetApiRoute);
+      if (!response.ok) {
+        throw new Error('Failed to fetch sheets data');
+      }
+      const data = await response.json();
+      setSheetData(data);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
   const toggleResultForm = () => {
     setIsResultFormOpen(o => !o);
   };
@@ -61,20 +78,21 @@ const AssessmentDetail: React.FC = () => {
   const onUpdate = () => {
     fetchAssessment();
     fetchTeachingTeam();
+    getSheetData();
     setIsResultFormOpen(o => !o);
+  };
+
+  const onUpdateSheet = () => {
+    getSheetData();
   };
 
   useEffect(() => {
     if (assessmentId && id) {
       fetchAssessment();
-    }
-  }, [assessmentId, id, fetchAssessment]);
-
-  useEffect(() => {
-    if (id) {
       fetchTeachingTeam();
+      getSheetData();
     }
-  }, [id, fetchTeachingTeam]);
+  }, [assessmentId, id, fetchAssessment, fetchTeachingTeam, getSheetData]);
 
   return (
     <Container>
@@ -86,11 +104,11 @@ const AssessmentDetail: React.FC = () => {
         </Tabs.List>
 
         <Tabs.Panel value="overview">
-          <Text>Assessment Type: {assessment?.assessmentType}</Text>
-          <Text>Mark Type: {assessment?.markType}</Text>
-          <Text>Frequency: {assessment?.frequency}</Text>
-          <Text>Granularity: {assessment?.granularity}</Text>
-          <Text>Form Link: {assessment?.formLink}</Text>
+          <AssessmentOverview
+            assessment={assessment}
+            sheetData={sheetData}
+            onUpdateSheetData={onUpdateSheet}
+          />
         </Tabs.Panel>
 
         <Tabs.Panel value="form">

@@ -69,29 +69,25 @@ const getSheetData = async (
 };
 
 const transformFunction = (sheetData: SheetDataType): TransformedData => {
-  const combinedData: Record<string, string[]> = {};
   const headers = ['Identifier', 'Name', 'Team', 'Comments'];
+  const rows: string[][] = [];
 
   sheetData.forEach(row => {
     const identifier = row['Identifier'];
     if (!identifier) return;
 
-    if (!combinedData[identifier]) {
-      combinedData[identifier] = headers.map(header => row[header] || '');
-    } else {
-      headers.forEach((header, index) => {
-        if (header === 'Comments') {
-          combinedData[identifier][index] += combinedData[identifier][index]
-            ? `; ${row[header]}`
-            : row[header];
-        } else {
-          combinedData[identifier][index] = row[header] || '';
-        }
-      });
+    const Name = row['Name'].toUpperCase( ) || 'EMPTY';
+    let Team = row['Team'] || '';
+    try {
+        const teamInt = parseInt(Team);
+        Team = teamInt.toString();
+    } catch (error) {
+      Team = 'EMPTY';
     }
+    const Comments = row['Comments'] || 'EMPTY';
+    rows.push([identifier, Name, Team, Comments]);
   });
 
-  const rows: string[][] = Object.values(combinedData);
 
   return [headers, ...rows];
 };

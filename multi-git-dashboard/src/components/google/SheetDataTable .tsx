@@ -1,12 +1,12 @@
 import React from 'react';
 import { Table, Text } from '@mantine/core';
-import { SheetsData } from '@shared/types/SheetsData';
+import { SheetData } from '@shared/types/SheetData';
 
-interface SheetsDataTableProps {
-  data: SheetsData;
+interface SheetDataTableProps {
+  data: SheetData;
 }
 
-const SheetsDataTable: React.FC<SheetsDataTableProps> = ({ data }) => {
+const SheetDataTable: React.FC<SheetDataTableProps> = ({ data }) => {
   const headers = data.headers;
   const rows = data.rows;
   const fetchedAt = data.fetchedAt.toLocaleString();
@@ -36,4 +36,4 @@ const SheetsDataTable: React.FC<SheetsDataTableProps> = ({ data }) => {
   );
 };
 
-export default SheetsDataTable;
+export default SheetDataTable;
