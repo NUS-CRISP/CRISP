@@ -27,7 +27,12 @@ const SheetDataTable: React.FC<SheetDataTableProps> = ({
           <Table.Thead>
             <Table.Tr>
               {headers.map((header, index) => (
-                <Table.Th style={{ textAlign: 'left', width: headerWidths[index]}} key={index}>{header}</Table.Th>
+                <Table.Th
+                  style={{ textAlign: 'left', width: headerWidths[index] }}
+                  key={index}
+                >
+                  {header}
+                </Table.Th>
               ))}
             </Table.Tr>
           </Table.Thead>
@@ -50,7 +55,12 @@ const SheetDataTable: React.FC<SheetDataTableProps> = ({
           <Table.Thead>
             <Table.Tr>
               {headers.map((header, index) => (
-                <Table.Th style={{ textAlign: 'left', width: headerWidths[index]}} key={index}>{header}</Table.Th>
+                <Table.Th
+                  style={{ textAlign: 'left', width: headerWidths[index] }}
+                  key={index}
+                >
+                  {header}
+                </Table.Th>
               ))}
             </Table.Tr>
           </Table.Thead>

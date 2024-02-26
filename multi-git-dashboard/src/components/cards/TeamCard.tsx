@@ -169,8 +169,12 @@ const TeamCard: React.FC<TeamCardProps> = ({
       <Table>
         <Table.Thead>
           <Table.Tr>
-            <Table.Th style={{ textAlign: 'left', width: '60%' }}>Name</Table.Th>
-            <Table.Th style={{ textAlign: 'left', width: '40%' }}>Git Handle</Table.Th>
+            <Table.Th style={{ textAlign: 'left', width: '60%' }}>
+              Name
+            </Table.Th>
+            <Table.Th style={{ textAlign: 'left', width: '40%' }}>
+              Git Handle
+            </Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>{student_rows}</Table.Tbody>
