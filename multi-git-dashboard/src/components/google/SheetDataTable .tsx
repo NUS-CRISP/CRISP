@@ -11,8 +11,9 @@ const SheetDataTable: React.FC<SheetDataTableProps> = ({
   data,
   pendingSubmissions,
 }) => {
-  const headers = data.headers;
-  const rows = data.rows;
+  const dataHeaders = data.headers;
+  const dataRows = data.rows;
+  const pendingHeaders = ['Identifier', 'Name', 'Team', 'Marker'];
   const fetchedAt = data.fetchedAt.toLocaleString();
   const headerWidths = ['10%', '35%', '10%', '45%'];
 
@@ -26,7 +27,7 @@ const SheetDataTable: React.FC<SheetDataTableProps> = ({
         <Table>
           <Table.Thead>
             <Table.Tr>
-              {headers.map((header, index) => (
+              {pendingHeaders.map((header, index) => (
                 <Table.Th
                   style={{ textAlign: 'left', width: headerWidths[index] }}
                   key={index}
@@ -54,7 +55,7 @@ const SheetDataTable: React.FC<SheetDataTableProps> = ({
         <Table striped highlightOnHover>
           <Table.Thead>
             <Table.Tr>
-              {headers.map((header, index) => (
+              {dataHeaders.map((header, index) => (
                 <Table.Th
                   style={{ textAlign: 'left', width: headerWidths[index] }}
                   key={index}
@@ -65,7 +66,7 @@ const SheetDataTable: React.FC<SheetDataTableProps> = ({
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {rows.map((row, rowIndex) => (
+            {dataRows.map((row, rowIndex) => (
               <Table.Tr key={rowIndex}>
                 {row.map((cell, cellIndex) => (
                   <Table.Td key={`${rowIndex}-${cellIndex}`}>{cell}</Table.Td>

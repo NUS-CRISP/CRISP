@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Card, Space, Table, Text } from '@mantine/core';
+import { Button, Card, Group, Select, Table, Text } from '@mantine/core';
 import { Assessment } from '@shared/types/Assessment';
 import { SheetData } from '@shared/types/SheetData';
 import SheetDataTable from '../google/SheetDataTable ';
 import { MarkItem, Result } from '@shared/types/Result';
+import { hasFacultyPermission } from '@/lib/auth/utils';
 
 interface AssessmentOverviewProps {
   assessment: Assessment | null;
@@ -17,16 +18,37 @@ const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
   onUpdateSheetData,
 }) => {
   const [pendingSubmissions, setPendingSubmissions] = useState<string[][]>([]);
+  const [teamFilter, setTeamFilter] = useState<string>('All Teams');
 
   const assessmentSheetApiRoute = `/api/assessments/${assessment?._id}/googlesheets`;
 
-  const fetchNewSheetData = async () => {
+  const fetchNewSheetDataInd = async () => {
     try {
       const response = await fetch(assessmentSheetApiRoute, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ team: false }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch new sheet data');
+      }
+      onUpdateSheetData();
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const fetchNewSheetDataTeam = async () => {
+    try {
+      const response = await fetch(assessmentSheetApiRoute, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ team: true }),
       });
       if (!response.ok) {
         throw new Error('Failed to fetch new sheet data');
@@ -62,13 +84,44 @@ const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
     setPendingSubmissions(pending);
   };
 
+  const handleFilterChange = (value: string | null) => {
+    setTeamFilter(value || 'All Teams');
+  };
+
   useEffect(() => {
     calculatePendingSubmissions();
   }, [assessment, sheetData]);
 
+  const teamOptions = [
+    'All Teams',
+    ...new Set(sheetData?.rows.map(row => row[2])),
+  ]
+    .filter(team => team !== 'EMPTY')
+    .map(team => ({ value: team, label: `${team}` }));
+
+  const filteredSheetData: SheetData = sheetData
+    ? {
+        ...sheetData,
+        rows: sheetData.rows.filter(row =>
+          teamFilter === 'All Teams' ? true : row[2] === teamFilter
+        ),
+      }
+    : {
+        _id: '',
+        fetchedAt: '' as unknown as Date,
+        headers: [],
+        rows: [[]],
+      };
+
+  const filteredPendingSubmissions: string[][] = pendingSubmissions
+    ? pendingSubmissions.filter(row =>
+        teamFilter === 'All Teams' ? true : row[2] === teamFilter
+      )
+    : [[]];
+
   return (
     <div>
-      <Card style={{ marginBottom: '20px' }}>
+      <Card style={{ marginBottom: '16px', marginTop: '16px' }}>
         <Text size="lg" style={{ marginBottom: '10px' }}>
           Assessment Details
         </Text>
@@ -87,12 +140,23 @@ const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
           </a>
         </Text>
       </Card>
-      <Space h="md" />
-      <Button onClick={fetchNewSheetData}>Update Sheets Data</Button>
+      {hasFacultyPermission() && (
+        <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
+          <Button onClick={fetchNewSheetDataInd}>Update Sheets Data</Button>
+          <Select
+            label="Filter by Team"
+            placeholder="Select a team"
+            data={teamOptions}
+            value={teamFilter}
+            onChange={handleFilterChange}
+            style={{ marginBottom: '20px' }}
+          />
+        </Group>
+      )}
       {sheetData ? (
         <SheetDataTable
-          data={sheetData}
-          pendingSubmissions={pendingSubmissions}
+          data={filteredSheetData}
+          pendingSubmissions={filteredPendingSubmissions}
         />
       ) : (
         <Table striped highlightOnHover>
