@@ -22,33 +22,14 @@ const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
 
   const assessmentSheetApiRoute = `/api/assessments/${assessment?._id}/googlesheets`;
 
-  const fetchNewSheetDataInd = async () => {
+  const fetchNewSheetData = async () => {
     try {
       const response = await fetch(assessmentSheetApiRoute, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ team: false }),
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch new sheet data');
-      }
-      onUpdateSheetData();
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const fetchNewSheetDataTeam = async () => {
-    try {
-      const response = await fetch(assessmentSheetApiRoute, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ team: true }),
+        body: JSON.stringify({ isTeam: assessment?.granularity === 'team' }),
       });
       if (!response.ok) {
         throw new Error('Failed to fetch new sheet data');
@@ -142,7 +123,7 @@ const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
       </Card>
       {hasFacultyPermission() && (
         <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
-          <Button onClick={fetchNewSheetDataInd}>Update Sheets Data</Button>
+          <Button onClick={fetchNewSheetData}>Update Sheets Data</Button>
           <Select
             label="Filter by Team"
             placeholder="Select a team"

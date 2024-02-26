@@ -40,13 +40,13 @@ export const getAssessmentSheetData = async (
       });
     });
 
-    sheetData.rows = sheetData.rows.filter(row => studentIds.has(row[0])); // Assuming the first column contains student IDs
+    sheetData.rows = sheetData.rows.filter(row => studentIds.has(row[0]));
   }
 
   return sheetData;
 };
 
-export const fetchAndSaveSheetData = async (assessmentId: string) => {
+export const fetchAndSaveSheetData = async (assessmentId: string, isTeam: boolean) => {
   const assessment = await AssessmentModel.findById(assessmentId);
   if (!assessment) {
     throw new NotFoundError('Assessment not found');
@@ -55,7 +55,7 @@ export const fetchAndSaveSheetData = async (assessmentId: string) => {
   console.log('Fetching new sheet data');
 
   const sheetId = assessment.sheetID;
-  const transformedData = await fetchDataFromSheet(sheetId);
+  const transformedData = await fetchDataFromSheet(sheetId, isTeam);
   const [headers, ...rows] = transformedData;
 
   const newSheetData = new SheetDataModel({

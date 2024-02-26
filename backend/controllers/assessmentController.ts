@@ -89,8 +89,9 @@ export const getSheetData = async (req: Request, res: Response) => {
 
 export const fetchNewSheetData = async (req: Request, res: Response) => {
   const { assessmentId } = req.params;
+  const isTeam = req.body.isTeam === 'true';
   try {
-    await fetchAndSaveSheetData(assessmentId);
+    await fetchAndSaveSheetData(assessmentId, isTeam);
     res.status(201).json({ message: 'Sheets Updated successfully' });
   } catch (error) {
     if (error instanceof NotFoundError) {
