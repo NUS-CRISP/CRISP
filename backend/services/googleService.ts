@@ -1,50 +1,40 @@
-import { TransformedData } from '@shared/types/SheetsData';
-import SheetsDataModel, { SheetsData } from '../models/SheetsData';
-import { fetchDataFromSheets } from '../utils/google';
-import CourseModel from '../models/Course';
+import SheetDataModel, { SheetData } from '../models/SheetData';
+import { fetchDataFromSheet } from '../utils/google';
 import { NotFoundError } from './errors';
-import { Assessment } from 'models/Assessment';
+import AssessmentModel from 'models/Assessment';
 
-export const getCourseSheetsData = async (
-  courseId: string
-): Promise<SheetsData | null> => {
-  const course = await CourseModel.findById(courseId);
-  if (!course) {
-    throw new NotFoundError('Course not found');
+export const getAssessmentSheetData = async (
+  assessmentId: string
+): Promise<SheetData | null> => {
+  const assessment = await AssessmentModel.findById(assessmentId);
+  if (!assessment) {
+    throw new NotFoundError('Assessment not found');
   }
-  const sheetsId = course.sheetsData;
-  const latestData = await SheetsDataModel.findById(sheetsId);
+  const sheetId = assessment.sheetData;
+  const latestData = await SheetDataModel.findById(sheetId);
   if (!latestData) {
     throw new NotFoundError('Sheets data not found');
   }
   return latestData;
 };
 
-export const fetchAndSaveSheetsData = async (
-  courseId: string,
-  joinOnColumn: string
-) => {
-  const course = await CourseModel.findById(courseId).populate('assessments');
-  if (!course) {
-    throw new NotFoundError('Course not found');
+export const fetchAndSaveSheetData = async (assessmentId: string) => {
+  const assessment = await AssessmentModel.findById(assessmentId);
+  if (!assessment) {
+    throw new NotFoundError('Assessment not found');
   }
 
-  const sheetsId: string[] = course.assessments.map(
-    assessment => (assessment as unknown as Assessment).sheetID
-  );
-  const transformedData: TransformedData = await fetchDataFromSheets(
-    sheetsId,
-    joinOnColumn
-  );
+  const sheetId = assessment.sheetID;
+  const transformedData = await fetchDataFromSheet(sheetId);
   const [headers, ...rows] = transformedData;
 
-  const newSheetsData = new SheetsDataModel({
+  const newSheetData = new SheetDataModel({
     fetchedAt: new Date(),
     headers,
     rows,
   });
 
-  await newSheetsData.save();
-  course.sheetsData = newSheetsData._id;
-  await course.save();
+  await newSheetData.save();
+  assessment.sheetData = newSheetData._id;
+  await assessment.save();
 };

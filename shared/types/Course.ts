@@ -1,5 +1,4 @@
 import { Assessment } from './Assessment';
-import { SheetsData } from './SheetsData';
 import { TeamSet } from './TeamSet';
 import { User } from './User';
 
@@ -41,5 +40,4 @@ export interface Course {
   gitHubOrgName?: string;
   installationId?: string;
   // end 'GitHubOrg' fields
-  sheetsData: SheetsData;
 }

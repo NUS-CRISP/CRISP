@@ -1,23 +1,19 @@
 import { google } from 'googleapis';
 import { GaxiosResponse } from 'gaxios';
 import { sheets_v4 } from 'googleapis/build/src/apis/sheets/v4';
-import { TransformedData } from '@shared/types/SheetsData';
+import { TransformedData } from '@shared/types/SheetData';
 
 type SheetRow = Record<string, string>;
 type SheetDataType = SheetRow[];
 
-export const fetchDataFromSheets = async (
-  sheetIds: string[],
-  joinOnColumn: string
+export const fetchDataFromSheet = async (
+  sheetId: string
 ): Promise<TransformedData> => {
   const sheets = await authenticateGoogleSheets();
 
-  const sheetDataPromises = sheetIds.map(sheetId =>
-    getSheetData(sheets, sheetId)
-  );
-  const sheetDataArray: SheetDataType[] = await Promise.all(sheetDataPromises);
+  const sheetData = await getSheetData(sheets, sheetId);
 
-  const data: TransformedData = transformFunction(sheetDataArray, joinOnColumn);
+  const data: TransformedData = transformFunction(sheetData);
 
   return data;
 };
@@ -62,7 +58,7 @@ const getSheetData = async (
     const rowObject: SheetRow = {};
     rowArray.forEach((value, index) => {
       const key = headers[index];
-      if (key) {
+      if (key && ['Identifier', 'Name', 'Team', 'Comments'].includes(key)) {
         rowObject[key] = value;
       }
     });
@@ -72,70 +68,30 @@ const getSheetData = async (
   return sheetData;
 };
 
-const initializeRowArray = (
-  headers: string[],
-  initialData?: SheetRow
-): string[] => {
-  const rowArray = new Array(headers.length).fill('');
-  if (initialData) {
-    headers.forEach((header, index) => {
-      if (initialData[header] !== undefined) {
-        rowArray[index] = initialData[header];
-      }
-    });
-  }
-  return rowArray;
-};
+const transformFunction = (sheetData: SheetDataType): TransformedData => {
+  const combinedData: Record<string, string[]> = {};
+  const headers = ['Identifier', 'Name', 'Team', 'Comments'];
 
-const transformFunction = (
-  sheetsData: SheetDataType[],
-  joinOnColumn: string
-): TransformedData => {
-  const combinedData: Record<string, SheetRow> = {};
-  const headersSet = new Set<string>();
+  sheetData.forEach(row => {
+    const identifier = row['Identifier'];
+    if (!identifier) return;
 
-  /*
-  sheetsData.forEach(sheet => {
-    sheet.forEach(row => {
-      Object.keys(row).forEach(header => headersSet.add(header));
-    });
-  });
-  */
-  headersSet.add('Student Matric no');
-  headersSet.add('Name of student');
-  headersSet.add('Team Number');
-  headersSet.add('Comments');
-
-  const headers = [
-    joinOnColumn,
-    ...Array.from(headersSet).filter(header => header !== joinOnColumn),
-  ];
-
-  sheetsData.forEach(sheetData => {
-    sheetData.forEach(row => {
-      const identifier = row[joinOnColumn];
-      if (!identifier) return;
-
-      if (!combinedData[identifier]) {
-        combinedData[identifier] = {};
-      }
-
-      headers.forEach(header => {
-        if (header === 'Comments' && combinedData[identifier][header]) {
-          combinedData[identifier][header] += `; ${row[header] || ''}`;
-        } else if (
-          !combinedData[identifier][header] ||
-          header === joinOnColumn
-        ) {
-          combinedData[identifier][header] = row[header] || '';
+    if (!combinedData[identifier]) {
+      combinedData[identifier] = headers.map(header => row[header] || '');
+    } else {
+      headers.forEach((header, index) => {
+        if (header === 'Comments') {
+          combinedData[identifier][index] += combinedData[identifier][index]
+            ? `; ${row[header]}`
+            : row[header];
+        } else {
+          combinedData[identifier][index] = row[header] || '';
         }
       });
-    });
+    }
   });
 
-  const rows: TransformedData = Object.values(combinedData).map(row =>
-    initializeRowArray(headers, row)
-  );
+  const rows: string[][] = Object.values(combinedData);
 
   return [headers, ...rows];
 };

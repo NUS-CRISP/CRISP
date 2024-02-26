@@ -6,6 +6,10 @@ import {
 } from '../services/assessmentService';
 import { NotFoundError } from '../services/errors';
 import { getToken } from '../utils/auth';
+import {
+  fetchAndSaveSheetData,
+  getAssessmentSheetData,
+} from 'services/googleService';
 
 export const getAssessment = async (req: Request, res: Response) => {
   try {
@@ -57,6 +61,37 @@ export const updateResultMarker = async (req: Request, res: Response) => {
     } else {
       console.error('Error updating result marker:', error);
       res.status(500).json({ error: 'Failed to update result marker' });
+    }
+  }
+};
+
+/*----------------------------------------Google Sheets----------------------------------------*/
+export const getSheetData = async (req: Request, res: Response) => {
+  const { assessmentId } = req.params;
+  try {
+    const sheetsData = await getAssessmentSheetData(assessmentId);
+    res.status(200).json(sheetsData);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error getting sheets data:', error);
+      res.status(500).json({ error: 'Failed to get sheets data' });
+    }
+  }
+};
+
+export const fetchNewSheetData = async (req: Request, res: Response) => {
+  const { assessmentId } = req.params;
+  try {
+    await fetchAndSaveSheetData(assessmentId);
+    res.status(201).json({ message: 'Sheets Updated successfully' });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error fetching new sheets data:', error);
+      res.status(500).json({ error: 'Failed to fetch new sheets data' });
     }
   }
 };

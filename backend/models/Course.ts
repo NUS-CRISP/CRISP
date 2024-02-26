@@ -4,13 +4,7 @@ import mongoose, { Schema, Types } from 'mongoose';
 export interface Course
   extends Omit<
       SharedCourse,
-      | '_id'
-      | 'faculty'
-      | 'TAs'
-      | 'students'
-      | 'teamSets'
-      | 'assessments'
-      | 'sheetsData'
+      '_id' | 'faculty' | 'TAs' | 'students' | 'teamSets' | 'assessments'
     >,
     Document {
   _id: Types.ObjectId;
@@ -19,7 +13,6 @@ export interface Course
   students: Types.ObjectId[];
   teamSets: Types.ObjectId[];
   assessments: Types.ObjectId[];
-  sheetsData: Types.ObjectId;
 }
 
 export const courseSchema = new Schema<Course>({
@@ -53,7 +46,6 @@ export const courseSchema = new Schema<Course>({
   },
   gitHubOrgName: String,
   installationId: String,
-  sheetsData: { type: Schema.Types.ObjectId, ref: 'SheetsData' },
 });
 
 const CourseModel = mongoose.model<Course>('Course', courseSchema);

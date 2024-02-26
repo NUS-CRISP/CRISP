@@ -14,10 +14,6 @@ import {
 } from '../services/courseService';
 import { BadRequestError, NotFoundError } from '../services/errors';
 import { addStudentsToTeam, addTAsToTeam } from '../services/teamService';
-import {
-  getCourseSheetsData,
-  fetchAndSaveSheetsData,
-} from '../services/googleService';
 import { createTeamSet } from '../services/teamSetService';
 import { getToken } from '../utils/auth';
 
@@ -277,38 +273,6 @@ export const addAssessments = async (req: Request, res: Response) => {
     } else {
       console.error('Error adding assessments:', error);
       res.status(500).json({ error: 'Failed to add assessments' });
-    }
-  }
-};
-
-/*----------------------------------------Google Sheets----------------------------------------*/
-export const getSheetsData = async (req: Request, res: Response) => {
-  const courseId = req.params.id;
-  try {
-    const sheetsData = await getCourseSheetsData(courseId);
-    res.status(200).json(sheetsData);
-  } catch (error) {
-    if (error instanceof NotFoundError) {
-      res.status(404).json({ error: error.message });
-    } else {
-      console.error('Error getting sheets data:', error);
-      res.status(500).json({ error: 'Failed to get sheets data' });
-    }
-  }
-};
-
-export const fetchNewSheetsData = async (req: Request, res: Response) => {
-  const courseId = req.params.id;
-  const { joinOnColumn } = req.body;
-  try {
-    await fetchAndSaveSheetsData(courseId, joinOnColumn);
-    res.status(201).json({ message: 'Sheets Updated successfully' });
-  } catch (error) {
-    if (error instanceof NotFoundError) {
-      res.status(404).json({ error: error.message });
-    } else {
-      console.error('Error fetching new sheets data:', error);
-      res.status(500).json({ error: 'Failed to fetch new sheets data' });
     }
   }
 };
