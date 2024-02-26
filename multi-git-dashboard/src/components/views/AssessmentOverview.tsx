@@ -43,7 +43,7 @@ const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
   const calculatePendingSubmissions = async () => {
     if (!assessment || !sheetData) return;
 
-    const results: Result[] = await assessment.results;
+    const results: Result[] = assessment.results;
     const pending: string[][] = [];
 
     results.forEach((result: Result) => {
