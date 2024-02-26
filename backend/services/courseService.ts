@@ -1,10 +1,10 @@
-import Role from '../../shared/types/auth/Role';
-import AccountModel from '../models/Account';
-import AssessmentModel, { Assessment } from '../models/Assessment';
-import CourseModel from '../models/Course';
-import TeamModel, { Team } from '../models/Team';
-import TeamSetModel, { TeamSet } from '../models/TeamSet';
-import UserModel, { User } from '../models/User';
+import AccountModel from '@models/Account';
+import AssessmentModel, { Assessment } from '@models/Assessment';
+import CourseModel from '@models/Course';
+import TeamModel, { Team } from '@models/Team';
+import TeamSetModel, { TeamSet } from '@models/TeamSet';
+import UserModel, { User } from '@models/User';
+import Role from '@shared/types/auth/Role';
 import { NotFoundError } from './errors';
 
 /*----------------------------------------Course----------------------------------------*/

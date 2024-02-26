@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
-import * as githubService from '../../services/githubService';
 import {
-  getAllTeamData,
-  getAllTeamDataForOrg,
   checkInstallation,
+  getAllTeamData,
+  getAllTeamDataByOrg,
 } from '../../controllers/githubController';
 import { NotFoundError } from '../../services/errors';
+import * as githubService from '../../services/githubService';
 
 jest.mock('../../services/githubService');
 
@@ -71,7 +71,7 @@ describe('gitHubController', () => {
         .spyOn(githubService, 'fetchAllTeamDataForOrg')
         .mockResolvedValue(mockTeamDatas as any);
 
-      await getAllTeamDataForOrg(req, res);
+      await getAllTeamDataByOrg(req, res);
 
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ teamDatas: mockTeamDatas });
@@ -86,7 +86,7 @@ describe('gitHubController', () => {
         .spyOn(githubService, 'fetchAllTeamDataForOrg')
         .mockRejectedValue(error);
 
-      await getAllTeamDataForOrg(req, res);
+      await getAllTeamDataByOrg(req, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ message: error.message });
@@ -101,7 +101,7 @@ describe('gitHubController', () => {
         .spyOn(githubService, 'fetchAllTeamDataForOrg')
         .mockRejectedValue(error);
 
-      await getAllTeamDataForOrg(req, res);
+      await getAllTeamDataByOrg(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({

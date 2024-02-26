@@ -6,6 +6,7 @@ import accountRoutes from './routes/accountRoutes';
 import assessmentRoutes from './routes/assessmentRoutes';
 import courseRoutes from './routes/courseRoutes';
 import githubRoutes from './routes/githubRoutes';
+import metricRoutes from './routes/metricRoutes';
 import teamRoutes from './routes/teamRoutes';
 import teamSetRoutes from './routes/teamSetRoutes';
 import { connectToDatabase } from './utils/database';
@@ -32,6 +33,7 @@ app.use('/api/accounts', accountRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/teamsets', teamSetRoutes);
 app.use('/api/assessments', assessmentRoutes);
+app.use('/api/metrics', metricRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);

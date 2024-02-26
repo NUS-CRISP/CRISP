@@ -45,7 +45,8 @@ export const courseSchema = new Schema<Course>({
     required: true,
   },
   gitHubOrgName: String,
-  installationId: String,
+  repoNameFilter: String,
+  installationId: Number,
 });
 
 const CourseModel = mongoose.model<Course>('Course', courseSchema);
