@@ -67,8 +67,6 @@ export const getCourse = async (req: Request, res: Response) => {
   const token = await getToken(req);
   const accountId = token.sub;
 
-  console.log('accountId', accountId);
-
   if (!accountId) {
     res.status(400).json({ error: 'Missing authorization' });
     return;

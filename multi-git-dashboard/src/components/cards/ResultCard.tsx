@@ -90,7 +90,7 @@ const ResultCard: React.FC<ResultCardProps> = ({
           value={selectedMarker}
           onChange={handleMarkerChange}
           data={taOptions}
-          placeholder="Assign Marker"
+          placeholder={result.marker ? result.marker.name : 'None assigned'}
         />
       ) : (
         <Text>

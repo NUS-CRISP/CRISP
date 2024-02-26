@@ -70,6 +70,10 @@ export const getSheetData = async (req: Request, res: Response) => {
   const { assessmentId } = req.params;
   const token = await getToken(req);
   const accountId = token.sub;
+  if (!accountId) {
+    res.status(400).json({ error: 'Missing authorization' });
+    return;
+  }
   try {
     const sheetsData = await getAssessmentSheetData(assessmentId, accountId);
     res.status(200).json(sheetsData);

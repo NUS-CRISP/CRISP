@@ -35,13 +35,24 @@ const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
   };
   return (
     <div>
-      <Card shadow="sm" padding="lg" style={{ marginBottom: '20px' }}>
-        <Text size="lg" style={{ marginBottom: '10px' }}>Assessment Details</Text>
+      <Card style={{ marginBottom: '20px' }}>
+        <Text size="lg" style={{ marginBottom: '10px' }}>
+          Assessment Details
+        </Text>
         <Text>Assessment Type: {assessment?.assessmentType}</Text>
         <Text>Mark Type: {assessment?.markType}</Text>
         <Text>Frequency: {assessment?.frequency}</Text>
         <Text>Granularity: {assessment?.granularity}</Text>
-        <Text>Form Link: <a href={assessment?.formLink} target="_blank" rel="noopener noreferrer">{assessment?.formLink}</a></Text>
+        <Text>
+          Form Link:{' '}
+          <a
+            href={assessment?.formLink}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {assessment?.formLink}
+          </a>
+        </Text>
       </Card>
       <Space h="md" />
       <Button onClick={fetchNewSheetData}>Update Sheets Data</Button>

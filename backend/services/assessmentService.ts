@@ -26,14 +26,20 @@ export const getAssessmentById = async (
     results: Result[];
   }>({
     path: 'results',
-    populate: {
-      path: 'team',
-      model: 'Team',
-      populate: {
-        path: 'members',
+    populate: [
+      {
+        path: 'team',
+        model: 'Team',
+        populate: {
+          path: 'members',
+          model: 'User',
+        },
+      },
+      {
+        path: 'marker',
         model: 'User',
       },
-    },
+    ],
   });
   if (!assessment) {
     throw new NotFoundError('Assessment not found');
@@ -222,17 +228,21 @@ export const addAssessmentsToCourse = async (
       );
       if (teamSet) {
         course.students.forEach((student: any) => {
+          console.log('student', student);
           const teams: Team[] = teamSet.teams as unknown as Team[];
           const team = teams.find(t =>
             t?.members?.some(member => member._id.equals(student._id))
           );
+          console.log('team', team);
           const marker = team?.TA?._id || null;
+          console.log('marker', marker);
           const result = new ResultModel({
             assessment: assessment._id,
             marker,
             marks: [{ user: student.identifier, name: student.name, mark: 0 }],
           });
           results.push(result);
+          console.log(result);
         });
       } else {
         course.students.forEach((student: any) => {
