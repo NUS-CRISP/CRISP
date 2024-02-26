@@ -1,8 +1,8 @@
 import AccountModel from '../models/Account';
+import CourseModel from '../models/Course';
 import TeamModel from '../models/Team';
 import TeamSetModel from '../models/TeamSet';
 import UserModel from '../models/User';
-import CourseModel from '../models/Course';
 import { BadRequestError, NotFoundError } from './errors';
 
 export const deleteTeamById = async (teamId: string) => {
@@ -52,7 +52,7 @@ export const addStudentsToTeam = async (courseId: string, students: any[]) => {
     ) {
       throw new BadRequestError('Invalid Student');
     }
-    let teamSet = await TeamSetModel.findOne({
+    const teamSet = await TeamSetModel.findOne({
       course: course._id,
       name: studentData.teamSet,
     });
@@ -105,7 +105,7 @@ export const addTAsToTeam = async (courseId: string, tas: any[]) => {
     ) {
       throw new BadRequestError('Invalid TA');
     }
-    let teamSet = await TeamSetModel.findOne({
+    const teamSet = await TeamSetModel.findOne({
       course: course._id,
       name: taData.teamSet,
     });

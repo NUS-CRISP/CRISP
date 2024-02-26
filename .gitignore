@@ -1,5 +1,4 @@
 .env*
-.env*.local
 .scannerwork
 sonar-project.properties
 
@@ -9,3 +8,6 @@ load-test/jmeter.log
 
 # MacOS
 .DS_Store
+
+# mongo
+data/

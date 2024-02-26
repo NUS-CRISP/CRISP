@@ -1,3 +1,4 @@
+import { logLogin } from '@/lib/auth/utils';
 import {
   Alert,
   Anchor,
@@ -46,6 +47,7 @@ const SignInPage: React.FC = () => {
     if (res?.error) {
       showError(res.error);
     } else {
+      logLogin();
       router.push('/');
     }
   };

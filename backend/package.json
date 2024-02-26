@@ -4,9 +4,9 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "build": "npx tsc",
+    "build": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json",
     "start": "NODE_ENV=production node dist/backend/app.js",
-    "dev": "nodemon app.ts",
+    "dev": "PORT=3003 nodemon -e ts,js --exec ts-node app.ts",
     "test": "jest",
     "prettier-format": "prettier --config .prettierrc.json ./**/*.ts --write"
   },
@@ -26,7 +26,8 @@
     "mongodb": "^5.7.0",
     "mongoose": "^7.5.0",
     "node-cron": "^3.0.2",
-    "octokit": "^3.1.0"
+    "octokit": "^3.1.0",
+    "tsc-alias": "^1.8.8"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.0",
@@ -51,7 +52,8 @@
     "nodemon": "^3.0.1",
     "prettier": "^3.0.3",
     "ts-jest": "^29.1.1",
-    "ts-node": "^10.9.1",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.2.2"
   }
 }
