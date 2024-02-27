@@ -1,9 +1,8 @@
 import AssessmentsInfo from '@/components/views/AssessmentsInfo';
 import MilestonesInfo from '@/components/views/MilestonesInfo';
 import Overview from '@/components/views/Overview';
+import PeopleInfo from '@/components/views/PeopleInfo';
 import SprintsInfo from '@/components/views/SprintsInfo';
-import StaffInfo from '@/components/views/StaffInfo';
-import StudentsInfo from '@/components/views/StudentsInfo';
 import TeamSetsInfo from '@/components/views/TeamSetsInfo';
 import { Container, Loader, Tabs } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
@@ -109,8 +108,7 @@ const CourseViewPage: React.FC = () => {
             style={{ display: 'flex', justifyContent: 'space-evenly' }}
           >
             <Tabs.Tab value="overview">Overview</Tabs.Tab>
-            <Tabs.Tab value="students">Students</Tabs.Tab>
-            <Tabs.Tab value="staff">Staff</Tabs.Tab>
+            <Tabs.Tab value="people">People</Tabs.Tab>
             <Tabs.Tab value="teams">Teams</Tabs.Tab>
             <Tabs.Tab value="milestones">Timeline</Tabs.Tab>
             <Tabs.Tab value="sprints">Sprints</Tabs.Tab>
@@ -120,14 +118,9 @@ const CourseViewPage: React.FC = () => {
             <Tabs.Panel value="overview">
               <Overview course={course} />
             </Tabs.Panel>
-            <Tabs.Panel value="students">
+            <Tabs.Panel value="people">
               <div>
-                <StudentsInfo course={course} onUpdate={handleUpdate} />
-              </div>
-            </Tabs.Panel>
-            <Tabs.Panel value="staff">
-              <div>
-                <StaffInfo course={course} onUpdate={handleUpdate} />
+                <PeopleInfo course={course} onUpdate={handleUpdate} />
               </div>
             </Tabs.Panel>
             <Tabs.Panel value="teams">

@@ -234,6 +234,68 @@ export const getCourseTeachingTeam = async (courseId: string) => {
   return [...course.faculty, ...course.TAs];
 };
 
+/*----------------------------------------Faculty----------------------------------------*/
+
+export const addFacultyToCourse = async (
+  courseId: string,
+  facultyDataList: any[]
+) => {
+  const course = await CourseModel.findById(courseId).populate<{
+    faculty: User[];
+  }>('faculty');
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+  for (const facultyData of facultyDataList) {
+    const facultyId = facultyData.identifier;
+    let facultyMember = await UserModel.findOne({ identifier: facultyId });
+    if (!facultyMember) {
+      facultyMember = new UserModel({
+        identifier: facultyId,
+        name: facultyData.name,
+        enrolledCourses: [],
+        gitHandle: facultyData.gitHandle ?? null,
+      });
+      await facultyMember.save();
+      const newAccount = new AccountModel({
+        email: facultyData.email,
+        role: Role.Faculty,
+        isApproved: false,
+        user: facultyMember._id,
+      });
+      newAccount.save();
+    } else {
+      const facultyAccount = await AccountModel.findOne({
+        user: facultyMember._id,
+      });
+      if (!facultyAccount) {
+        continue;
+      }
+      if (
+        facultyAccount.role !== Role.Faculty ||
+        facultyData.name !== facultyMember.name ||
+        facultyData.email !== facultyAccount.email
+      ) {
+        continue;
+      }
+      facultyMember.gitHandle =
+        facultyData.gitHandle ?? facultyMember.gitHandle;
+    }
+    if (!facultyMember.enrolledCourses.includes(course._id)) {
+      facultyMember.enrolledCourses.push(course._id);
+    }
+    await facultyMember.save();
+    if (
+      !course.faculty.some(
+        faculty => faculty.identifier === facultyMember?.identifier
+      )
+    ) {
+      course.faculty.push(facultyMember);
+    }
+  }
+  await course.save();
+};
+
 /*----------------------------------------Milestone----------------------------------------*/
 export const addMilestoneToCourse = async (
   courseId: string,

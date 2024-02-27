@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   addAssessments,
+  addFaculty,
   addMilestone,
   addSprint,
   addStudents,
@@ -24,6 +25,7 @@ router.get('/', noCache, getCourses);
 router.get('/:id', getCourse);
 router.put('/:id', updateCourse);
 router.delete('/:id', deleteCourse);
+router.post('/:id/faculty', addFaculty);
 router.post('/:id/students', addStudents);
 router.post('/:id/tas', addTAs);
 router.post('/:id/teamsets', addTeamSet);

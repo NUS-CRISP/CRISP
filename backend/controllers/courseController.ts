@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { addAssessmentsToCourse } from '../services/assessmentService';
 import {
+  addFacultyToCourse,
   addMilestoneToCourse,
   addSprintToCourse,
   addStudentsToCourse,
@@ -159,6 +160,25 @@ export const getTeachingTeam = async (req: Request, res: Response) => {
     } else {
       console.error('Error fetching Teaching Team:', error);
       res.status(500).json({ error: 'Failed to retrieve Teaching Team' });
+    }
+  }
+};
+
+/*----------------------------------------Faculty----------------------------------------*/
+export const addFaculty = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  const faculty = req.body.items;
+  try {
+    await addFacultyToCourse(courseId, faculty);
+    res
+      .status(200)
+      .json({ message: 'Faculty added to the course successfully' });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error adding Faculty:', error);
+      res.status(500).json({ error: 'Failed to add Faculty' });
     }
   }
 };
