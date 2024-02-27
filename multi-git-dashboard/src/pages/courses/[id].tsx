@@ -1,9 +1,8 @@
 import AssessmentsInfo from '@/components/views/AssessmentsInfo';
-import MilestonesInfo from '@/components/views/MilestonesInfo';
 import Overview from '@/components/views/Overview';
 import PeopleInfo from '@/components/views/PeopleInfo';
-import SprintsInfo from '@/components/views/SprintsInfo';
 import TeamSetsInfo from '@/components/views/TeamSetsInfo';
+import TimelineInfo from '@/components/views/TimelineInfo';
 import { Container, Loader, Tabs } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { Course, Milestone, Sprint } from '@shared/types/Course';
@@ -110,8 +109,7 @@ const CourseViewPage: React.FC = () => {
             <Tabs.Tab value="overview">Overview</Tabs.Tab>
             <Tabs.Tab value="people">People</Tabs.Tab>
             <Tabs.Tab value="teams">Teams</Tabs.Tab>
-            <Tabs.Tab value="milestones">Timeline</Tabs.Tab>
-            <Tabs.Tab value="sprints">Sprints</Tabs.Tab>
+            <Tabs.Tab value="timeline">Timeline</Tabs.Tab>
             <Tabs.Tab value="assessments">Assessments</Tabs.Tab>
           </Tabs.List>
           <div style={{ overflow: 'auto', flexGrow: 1 }}>
@@ -128,14 +126,9 @@ const CourseViewPage: React.FC = () => {
                 <TeamSetsInfo course={course} onUpdate={handleUpdate} />
               </div>
             </Tabs.Panel>
-            <Tabs.Panel value="milestones">
+            <Tabs.Panel value="timeline">
               <div>
-                <MilestonesInfo course={course} onUpdate={handleUpdate} />
-              </div>
-            </Tabs.Panel>
-            <Tabs.Panel value="sprints">
-              <div>
-                <SprintsInfo course={course} onUpdate={handleUpdate} />
+                <TimelineInfo course={course} onUpdate={handleUpdate} />
               </div>
             </Tabs.Panel>
             <Tabs.Panel value="assessments">
