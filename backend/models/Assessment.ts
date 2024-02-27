@@ -2,12 +2,16 @@ import { Assessment as SharedAssessment } from '@shared/types/Assessment';
 import mongoose, { Schema, Types } from 'mongoose';
 
 export interface Assessment
-  extends Omit<SharedAssessment, '_id' | 'course' | 'results' | 'teamSet'>,
+  extends Omit<
+      SharedAssessment,
+      '_id' | 'course' | 'results' | 'teamSet' | 'sheetData'
+    >,
     Document {
   _id: Types.ObjectId;
   course: Types.ObjectId;
   results: Types.ObjectId[];
   teamSet?: Types.ObjectId;
+  sheetData: Types.ObjectId;
 }
 
 const assessmentSchema = new Schema<Assessment>({
@@ -23,6 +27,8 @@ const assessmentSchema = new Schema<Assessment>({
   },
   teamSet: { type: Schema.Types.ObjectId, ref: 'TeamSet' },
   formLink: { type: String },
+  sheetID: { type: String },
+  sheetData: { type: Schema.Types.ObjectId, ref: 'SheetData' },
 });
 
 const AssessmentModel = mongoose.model<Assessment>(

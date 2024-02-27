@@ -1,5 +1,5 @@
 import { hasFacultyPermission } from '@/lib/auth/utils';
-import { Button, Container, Modal } from '@mantine/core';
+import { Button, Container, Group, Modal } from '@mantine/core';
 import { Course } from '@shared/types/Course';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -48,12 +48,9 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
   return (
     <Container>
       {hasFacultyPermission() && (
-        <Button
-          onClick={toggleForm}
-          style={{ marginTop: '16px', marginBottom: '16px' }}
-        >
-          Create Assessment
-        </Button>
+        <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
+          <Button onClick={toggleForm}>Create Assessment</Button>
+        </Group>
       )}
       <Modal
         opened={isCreatingAssessment}

@@ -135,9 +135,11 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
             <Group>
               <Button onClick={toggleTeamSetForm}>Create TeamSet</Button>
               {activeTab && (
-                <Button onClick={toggleAddStudentsForm}>Add Students</Button>
+                <Button onClick={toggleAddStudentsForm}>Assign Students</Button>
               )}
-              {activeTab && <Button onClick={toggleAddTAsForm}>Add TAs</Button>}
+              {activeTab && (
+                <Button onClick={toggleAddTAsForm}>Assign TAs</Button>
+              )}
             </Group>
 
             {teamSetId && (
@@ -162,7 +164,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
           <Modal
             opened={isAddingStudents}
             onClose={toggleAddStudentsForm}
-            title="Add Students"
+            title="Assign Students"
           >
             <StudentTeamForm
               courseId={course._id}
@@ -176,7 +178,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
           <Modal
             opened={isAddingTAs}
             onClose={toggleAddTAsForm}
-            title="Add TAs"
+            title="Assign TAs"
           >
             <TATeamForm
               courseId={course._id}

@@ -5,6 +5,11 @@ import {
   uploadAssessmentResultsById,
 } from '../services/assessmentService';
 import { NotFoundError } from '../services/errors';
+
+import {
+  fetchAndSaveSheetData,
+  getAssessmentSheetData,
+} from '../services/googleService';
 import { getAccountId } from '../utils/auth';
 
 export const getAssessment = async (req: Request, res: Response) => {
@@ -56,6 +61,44 @@ export const updateResultMarker = async (req: Request, res: Response) => {
     } else {
       console.error('Error updating result marker:', error);
       res.status(500).json({ error: 'Failed to update result marker' });
+    }
+  }
+};
+
+/*----------------------------------------Google Sheets----------------------------------------*/
+export const getSheetData = async (req: Request, res: Response) => {
+  const { assessmentId } = req.params;
+  const accountId = await getAccountId(req);
+  if (!accountId) {
+    res.status(400).json({ error: 'Missing authorization' });
+    return;
+  }
+  try {
+    const sheetsData = await getAssessmentSheetData(assessmentId, accountId);
+    res.status(200).json(sheetsData);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error getting sheets data:', error);
+      res.status(500).json({ error: 'Failed to get sheets data' });
+    }
+  }
+};
+
+export const fetchNewSheetData = async (req: Request, res: Response) => {
+  const { assessmentId } = req.params;
+  const isTeam = req.body.isTeam;
+
+  try {
+    await fetchAndSaveSheetData(assessmentId, isTeam);
+    res.status(201).json({ message: 'Sheets Updated successfully' });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error fetching new sheets data:', error);
+      res.status(500).json({ error: 'Failed to fetch new sheets data' });
     }
   }
 };

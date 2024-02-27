@@ -31,6 +31,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
     'granularity',
     'teamSetName',
     'formLink',
+    'sheetID',
   ];
 
   const form = useForm({
@@ -41,6 +42,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
       granularity: 'individual',
       teamSetName: '',
       formLink: '',
+      sheetID: '',
     },
     validate: {},
   });
@@ -120,30 +122,36 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
             </Radio.Group>
           </div>
         </div>
-        {form.values.granularity === 'team' && (
-          <Select
-            label="Team Set Name"
-            data={teamSets.map((teamSet: TeamSet) => ({
-              value: teamSet.name,
-              label: teamSet.name,
-            }))}
-            {...form.getInputProps('teamSetName')}
-            value={teamSets.length > 0 ? form.values.teamSetName : null}
-            onChange={value => {
-              if (teamSets.length === 0 || value === null) {
-                form.setFieldValue('teamSetName', '');
-              } else {
-                form.setFieldValue('teamSetName', value);
-              }
-            }}
-          />
-        )}
+        <Select
+          label="Team Set Name"
+          data={teamSets.map((teamSet: TeamSet) => ({
+            value: teamSet.name,
+            label: teamSet.name,
+          }))}
+          {...form.getInputProps('teamSetName')}
+          value={teamSets.length > 0 ? form.values.teamSetName : null}
+          onChange={value => {
+            if (teamSets.length === 0 || value === null) {
+              form.setFieldValue('teamSetName', '');
+            } else {
+              form.setFieldValue('teamSetName', value);
+            }
+          }}
+        />
         <TextInput
           label="Form Link"
           {...form.getInputProps('formLink')}
           value={form.values.formLink}
           onChange={event => {
             form.setFieldValue('formLink', event.currentTarget.value);
+          }}
+        />
+        <TextInput
+          label="Sheet ID"
+          {...form.getInputProps('sheetID')}
+          value={form.values.sheetID}
+          onChange={event => {
+            form.setFieldValue('sheetID', event.currentTarget.value);
           }}
         />
         <Button type="submit" style={{ marginTop: '16px' }}>
