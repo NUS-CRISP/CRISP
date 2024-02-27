@@ -22,25 +22,33 @@ export const getAssessmentById = async (
   if (!account) {
     throw new NotFoundError('Account not found');
   }
-  const assessment = await AssessmentModel.findById(assessmentId).populate<{
-    results: Result[];
-  }>({
-    path: 'results',
-    populate: [
-      {
-        path: 'team',
-        model: 'Team',
-        populate: {
-          path: 'members',
+  const assessment = await AssessmentModel.findById(assessmentId)
+    .populate<{
+      results: Result[];
+    }>({
+      path: 'results',
+      populate: [
+        {
+          path: 'team',
+          model: 'Team',
+          populate: {
+            path: 'members',
+            model: 'User',
+          },
+        },
+        {
+          path: 'marker',
           model: 'User',
         },
+      ],
+    })
+    .populate({
+      path: 'teamSet',
+      populate: {
+        path: 'teams',
+        model: 'Team',
       },
-      {
-        path: 'marker',
-        model: 'User',
-      },
-    ],
-  });
+    });
   if (!assessment) {
     throw new NotFoundError('Assessment not found');
   }

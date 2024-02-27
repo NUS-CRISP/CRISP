@@ -14,13 +14,7 @@ const SprintCard: React.FC<SprintCardProps> = ({
   description,
 }) => {
   return (
-    <Card
-      shadow="sm"
-      padding="lg"
-      radius="md"
-      style={{ marginTop: '6px', marginBottom: '6px' }}
-      withBorder
-    >
+    <Card shadow="sm" padding="lg" radius="md" my={6} withBorder>
       <Text size="lg">Sprint {sprintNumber}</Text>
       <Text size="sm" c="dimmed">
         Start Date: {startDate.toLocaleDateString()}
