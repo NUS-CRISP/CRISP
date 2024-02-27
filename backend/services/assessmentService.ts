@@ -195,16 +195,15 @@ export const addAssessmentsToCourse = async (
     });
     await assessment.save();
     const results: mongoose.Document[] = [];
+    const teamSet = await TeamSetModel.findOne({
+      course: courseId,
+      name: teamSetName,
+    }).populate({ path: 'teams', populate: ['members', 'TA'] });
     if (granularity === 'team') {
-      const teamSet = await TeamSetModel.findOne({
-        course: courseId,
-        name: teamSetName,
-      }).populate({ path: 'teams', populate: ['members', 'TA'] });
       if (!teamSet) {
         continue;
       }
       assessment.teamSet = teamSet._id;
-      // Create a result object for each team
       teamSet.teams.forEach((team: any) => {
         const initialMarks = team.members.map((member: any) => ({
           user: member.identifier,
@@ -220,29 +219,20 @@ export const addAssessmentsToCourse = async (
         results.push(result);
       });
     } else {
-      const teamSet = await TeamSetModel.findOne({ course: courseId }).populate(
-        {
-          path: 'teams',
-          populate: { path: 'members TA' },
-        }
-      );
       if (teamSet) {
+        assessment.teamSet = teamSet._id;
         course.students.forEach((student: any) => {
-          console.log('student', student);
           const teams: Team[] = teamSet.teams as unknown as Team[];
           const team = teams.find(t =>
             t?.members?.some(member => member._id.equals(student._id))
           );
-          console.log('team', team);
           const marker = team?.TA?._id || null;
-          console.log('marker', marker);
           const result = new ResultModel({
             assessment: assessment._id,
             marker,
             marks: [{ user: student.identifier, name: student.name, mark: 0 }],
           });
           results.push(result);
-          console.log(result);
         });
       } else {
         course.students.forEach((student: any) => {

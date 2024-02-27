@@ -123,24 +123,22 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
             </Radio.Group>
           </div>
         </div>
-        {form.values.granularity === 'team' && (
-          <Select
-            label="Team Set Name"
-            data={teamSets.map((teamSet: TeamSet) => ({
-              value: teamSet.name,
-              label: teamSet.name,
-            }))}
-            {...form.getInputProps('teamSetName')}
-            value={teamSets.length > 0 ? form.values.teamSetName : null}
-            onChange={value => {
-              if (teamSets.length === 0 || value === null) {
-                form.setFieldValue('teamSetName', '');
-              } else {
-                form.setFieldValue('teamSetName', value);
-              }
-            }}
-          />
-        )}
+        <Select
+          label="Team Set Name"
+          data={teamSets.map((teamSet: TeamSet) => ({
+            value: teamSet.name,
+            label: teamSet.name,
+          }))}
+          {...form.getInputProps('teamSetName')}
+          value={teamSets.length > 0 ? form.values.teamSetName : null}
+          onChange={value => {
+            if (teamSets.length === 0 || value === null) {
+              form.setFieldValue('teamSetName', '');
+            } else {
+              form.setFieldValue('teamSetName', value);
+            }
+          }}
+        />
         <TextInput
           label="Form Link"
           {...form.getInputProps('formLink')}
