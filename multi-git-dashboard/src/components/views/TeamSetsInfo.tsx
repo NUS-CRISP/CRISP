@@ -67,9 +67,10 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
     setIsCreatingTeamSet(o => !o);
   };
 
-  const handleTeamSetCreated = () => {
+  const handleTeamSetCreated = (teamSetName: string) => {
     setIsCreatingTeamSet(false);
     onUpdate();
+    setActiveTab(teamSetName);
   };
 
   const toggleAddStudentsForm = () => {
