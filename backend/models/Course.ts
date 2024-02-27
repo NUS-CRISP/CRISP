@@ -45,13 +45,14 @@ export const courseSchema = new Schema<Course>({
     required: true,
   },
   gitHubOrgName: String,
-  installationId: String,
   jira: {
     isRegistered: { type: Boolean, required: true, default: false },
     cloudId: { type: String },
     accessToken: { type: String },
     refreshToken: { type: String },
   },
+  repoNameFilter: String,
+  installationId: Number,
 });
 
 const CourseModel = mongoose.model<Course>('Course', courseSchema);

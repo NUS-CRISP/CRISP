@@ -50,6 +50,7 @@ const CreateCoursePage: React.FC = () => {
       semester: '',
       courseType: CourseType.Normal,
       gitHubOrgName: '',
+      repoNameFilter: '',
       installationId: '',
     },
     validate: {
@@ -67,6 +68,12 @@ const CreateCoursePage: React.FC = () => {
           appInstallationStatus === InstallationStatus.SUCCESS)
           ? null
           : 'GitHub Org name is required',
+      repoNameFilter: (value, values) =>
+        values.courseType === CourseType.Normal ||
+        (values.courseType === CourseType.GitHubOrg &&
+          appInstallationStatus === InstallationStatus.SUCCESS)
+          ? null
+          : 'Repo name filter is required',
     },
   });
 
@@ -95,23 +102,17 @@ const CreateCoursePage: React.FC = () => {
       const { installationId } = await response.json();
       form.setFieldValue('installationId', installationId);
 
-      const reposResponse = await fetch(reposApiRoute, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ orgName }),
-      });
-
-      if (!reposResponse.ok) {
+      const reposResponse = await fetch(reposApiRoute);
+      if (!reposResponse.ok && reposResponse.status !== 304) {
         throw new Error('Failed to fetch repositories');
       }
-
       const teamDatas: TeamData[] = await reposResponse.json();
+
       setRepoList(teamDatas.map(teamData => teamData.repoName));
 
       setAppInstallationStatus(InstallationStatus.SUCCESS);
     } catch (error) {
+      console.error('Error checking app installation:', error);
       setAppInstallationStatus(InstallationStatus.ERROR);
       setErrorMessage('Failed to connect to the server');
     }
@@ -287,6 +288,7 @@ const CreateCoursePage: React.FC = () => {
                         {form.values.gitHubOrgName}
                       </Badge>
                       <MultiSelect
+                        disabled
                         mt="sm"
                         label="Repositories"
                         placeholder="Pick repos..."
@@ -295,6 +297,18 @@ const CreateCoursePage: React.FC = () => {
                         searchable
                         clearable
                         leftSectionWidth={100}
+                      />
+                      <TextInput
+                        withAsterisk
+                        label="Repo Name Filter"
+                        placeholder="e.g. 23s2"
+                        {...form.getInputProps('repoNameFilter')}
+                        onChange={event =>
+                          form.setFieldValue(
+                            'repoNameFilter',
+                            event.currentTarget.value
+                          )
+                        }
                       />
                     </List.Item>
                   </Collapse>

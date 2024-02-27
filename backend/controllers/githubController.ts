@@ -4,7 +4,9 @@ import {
   checkGitHubInstallation,
   fetchAllTeamData,
   fetchAllTeamDataForOrg,
+  getAuthorizedTeamDataByCourse,
 } from '../services/githubService';
+import { getAccountId } from '../utils/auth';
 
 export const getAllTeamData = async (req: Request, res: Response) => {
   try {
@@ -16,10 +18,10 @@ export const getAllTeamData = async (req: Request, res: Response) => {
   }
 };
 
-export const getAllTeamDataForOrg = async (req: Request, res: Response) => {
+export const getAllTeamDataByOrg = async (req: Request, res: Response) => {
   try {
     const teamDatas = await fetchAllTeamDataForOrg(req.params.gitHubOrgName);
-    return res.status(200).json({ teamDatas });
+    return res.status(200).json(teamDatas);
   } catch (error) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ message: error.message });
@@ -32,6 +34,29 @@ export const getAllTeamDataForOrg = async (req: Request, res: Response) => {
   }
 };
 
+export const getAllTeamDataByCourse = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+
+  const accountId = await getAccountId(req);
+  if (!accountId) {
+    res.status(400).json({ error: 'Missing authorization' });
+    return;
+  }
+
+  try {
+    const teams = await getAuthorizedTeamDataByCourse(accountId, courseId);
+    res.status(200).json(teams);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error fetching teams:', error);
+      res.status(500).json({ error: 'Failed to fetch teams' });
+    }
+  }
+};
+
+// TODO: Refactor this to separate gitHubController file; rest should be in teamDataController
 export const checkInstallation = async (req: Request, res: Response) => {
   const { orgName } = req.body;
   try {
@@ -41,7 +66,7 @@ export const checkInstallation = async (req: Request, res: Response) => {
     if (error instanceof NotFoundError) {
       res.status(404).json({ message: error.message });
     } else {
-      console.error('Error checking github installation:', error);
+      console.error('Error checking GitHub installation:', error);
       res.status(500).json({
         message: 'An error occurred while checking the installation status.',
       });

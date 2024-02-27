@@ -38,7 +38,8 @@ export interface Course {
   courseType: CourseType;
   // start 'GitHubOrg' fields
   gitHubOrgName?: string;
-  installationId?: string;
+  repoNameFilter?: string;
+  installationId?: number;
   // end 'GitHubOrg' fields
   jira: {
     isRegistered: boolean;

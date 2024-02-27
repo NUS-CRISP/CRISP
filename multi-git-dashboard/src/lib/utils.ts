@@ -6,6 +6,12 @@
 export const epochToDateString = (epoch: number) =>
   new Date(epoch * 1000).toLocaleDateString();
 
+/**
+ * Merge arrays without duplicates
+ * @param compareFn Comparison function
+ * @param arrays Arrays to merge
+ * @returns Merged array
+ */
 export const mergeDedupe = <T>(
   compareFn: (a: T, b: T) => boolean,
   ...arrays: T[][]

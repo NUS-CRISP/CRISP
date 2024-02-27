@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { deleteTeamById, updateTeamById } from '../services/teamService';
 import { NotFoundError } from '../services/errors';
+import { deleteTeamById, updateTeamById } from '../services/teamService';
 
 export const deleteTeam = async (req: Request, res: Response) => {
   const teamId = req.params.id;
