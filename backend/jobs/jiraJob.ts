@@ -190,10 +190,14 @@ export const fetchAndSaveJiraData = async () => {
       refreshToken = data.refresh_token;
 
       // Update the access token in the database
-      await CourseModel.findByIdAndUpdate(course._id, {
-        accessToken: accessToken,
-        refreshToken: refreshToken,
-      });
+      await CourseModel.findByIdAndUpdate(course._id,
+        {
+          jira: {
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+          }
+        }
+      );
       console.log(`Access token refreshed for course with cloudId: ${cloudId}`);
     } else {
       console.error(
