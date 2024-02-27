@@ -46,22 +46,41 @@ const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
     const results: Result[] = assessment.results;
     const pending: string[][] = [];
 
-    results.forEach((result: Result) => {
-      result.marks.forEach((item: MarkItem) => {
-        const isSubmitted = sheetData.rows.some(row => row.includes(item.user));
+    if (assessment.granularity === 'individual') {
+      results.forEach((result: Result) => {
+        result.marks.forEach((item: MarkItem) => {
+          const isSubmitted = sheetData.rows.some(row =>
+            row.includes(item.user)
+          );
+          if (!isSubmitted) {
+            const pendingRow = [
+              item.user,
+              item.name,
+              result.team?.number?.toString() || 'EMPTY',
+              result.marker?.name || 'EMPTY',
+            ];
+            pending.push(pendingRow);
+          }
+        });
+      });
+    } else if (assessment.granularity === 'team') {
+      const teamNumbers = new Set(
+        results.map(result => result.team?.number?.toString())
+      );
+      teamNumbers.forEach(teamNumber => {
+        const isSubmitted = sheetData.rows.some(row =>
+          row.includes(teamNumber)
+        );
         if (!isSubmitted) {
-          const pendingRow = [
-            item.user,
-            item.name,
-            result.team?.number?.toString() || 'EMPTY',
-            result.marker?.name || 'EMPTY',
-          ];
-          console.log(pendingRow);
+          const markerName =
+            results.find(
+              result => result.team?.number?.toString() === teamNumber
+            )?.marker?.name || 'EMPTY';
+          const pendingRow = [teamNumber, markerName];
           pending.push(pendingRow);
         }
       });
-    });
-
+    }
     setPendingSubmissions(pending);
   };
 
@@ -75,7 +94,11 @@ const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
 
   const teamOptions = [
     'All Teams',
-    ...new Set(sheetData?.rows.map(row => row[2])),
+    ...new Set(
+      sheetData?.rows.map(row =>
+        assessment?.granularity === 'individual' ? row[2] : row[0]
+      )
+    ),
   ]
     .filter(team => team !== 'EMPTY')
     .map(team => ({ value: team, label: `${team}` }));
@@ -84,7 +107,11 @@ const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
     ? {
         ...sheetData,
         rows: sheetData.rows.filter(row =>
-          teamFilter === 'All Teams' ? true : row[2] === teamFilter
+          teamFilter === 'All Teams'
+            ? true
+            : assessment?.granularity === 'individual'
+              ? row[2] === teamFilter
+              : row[0] === teamFilter
         ),
       }
     : {
@@ -94,11 +121,11 @@ const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
         rows: [[]],
       };
 
-  const filteredPendingSubmissions: string[][] = pendingSubmissions
-    ? pendingSubmissions.filter(row =>
-        teamFilter === 'All Teams' ? true : row[2] === teamFilter
-      )
-    : [[]];
+  useEffect(() => {
+    console.log('SheetData: ', sheetData);
+    console.log('Filtered SheetData: ', filteredSheetData);
+    console.log('Pending Submissions: ', pendingSubmissions);
+  }, [sheetData, filteredSheetData, pendingSubmissions]);
 
   return (
     <div>
@@ -137,7 +164,8 @@ const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
       {sheetData ? (
         <SheetDataTable
           data={filteredSheetData}
-          pendingSubmissions={filteredPendingSubmissions}
+          pendingSubmissions={pendingSubmissions}
+          isTeam={assessment?.granularity === 'team'}
         />
       ) : (
         <Table striped highlightOnHover>

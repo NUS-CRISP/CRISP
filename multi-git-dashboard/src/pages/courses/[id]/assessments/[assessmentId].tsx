@@ -66,6 +66,7 @@ const AssessmentDetail: React.FC = () => {
       }
       const data = await response.json();
       setSheetData(data);
+      console.log('Sheet data 1:', data);
     } catch (error) {
       console.error('Error:', error);
     }
@@ -117,7 +118,7 @@ const AssessmentDetail: React.FC = () => {
 
         <Tabs.Panel value="form">
           {assessment?.formLink ? (
-            <iframe src={assessment.formLink} width="100%" height="600">
+            <iframe src={assessment.formLink} width="100%" height="1200">
               Loading…
             </iframe>
           ) : (

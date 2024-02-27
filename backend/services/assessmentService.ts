@@ -229,6 +229,7 @@ export const addAssessmentsToCourse = async (
           const marker = team?.TA?._id || null;
           const result = new ResultModel({
             assessment: assessment._id,
+            team: team?._id,
             marker,
             marks: [{ user: student.identifier, name: student.name, mark: 0 }],
           });

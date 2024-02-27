@@ -5,17 +5,25 @@ import { SheetData } from '@shared/types/SheetData';
 interface SheetDataTableProps {
   data: SheetData;
   pendingSubmissions: string[][];
+  isTeam: boolean;
 }
 
 const SheetDataTable: React.FC<SheetDataTableProps> = ({
   data,
   pendingSubmissions,
+  isTeam,
 }) => {
   const dataHeaders = data.headers;
   const dataRows = data.rows;
-  const pendingHeaders = ['Identifier', 'Name', 'Team', 'Marker'];
-  const fetchedAt = data.fetchedAt.toLocaleString();
-  const headerWidths = ['10%', '35%', '10%', '45%'];
+  const fetchedAt: string = data.fetchedAt.toLocaleString();
+
+  const pendingHeadersInd: string[] = ['Identifier', 'Name', 'Team', 'Marker'];
+  const pendingHeadersTeam: string[] = ['Team', 'Marker'];
+  const headerWidthsInd: string[] = ['10%', '35%', '10%', '45%'];
+  const headerWidthsTeam: string[] = ['50%', '50%'];
+
+  const pendingHeaders = isTeam ? pendingHeadersTeam : pendingHeadersInd;
+  const headerWidths = isTeam ? headerWidthsTeam : headerWidthsInd;
 
   return (
     <div>

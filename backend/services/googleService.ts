@@ -30,23 +30,35 @@ export const getAssessmentSheetData = async (
   if (account.role === 'Teaching assistant') {
     const results = await ResultModel.find({
       assessment: assessmentId,
-      marker: accountId,
-    });
-
-    const studentIds = new Set<string>();
-    results.forEach(result => {
-      result.marks.forEach(mark => {
-        studentIds.add(mark.user);
+      marker: account.user,
+    }).populate('team');
+    if (assessment.granularity === 'individual') {
+      const studentIds = new Set<string>();
+      results.forEach(result => {
+        result.marks.forEach(mark => {
+          studentIds.add(mark.user);
+        });
       });
-    });
-
-    sheetData.rows = sheetData.rows.filter(row => studentIds.has(row[0]));
+      sheetData.rows = sheetData.rows.filter(row => studentIds.has(row[0]));
+    } else if (assessment.granularity === 'team') {
+      const teamNumbers = new Set<string>();
+      await results.forEach((result: any) => {
+        const teamNum = result.team?.number?.toString();
+        console.log(teamNum);
+        if (teamNum) {
+          teamNumbers.add(teamNum);
+        }
+      });
+      sheetData.rows = sheetData.rows.filter(row => teamNumbers.has(row[0]));
+    }
   }
-
   return sheetData;
 };
 
-export const fetchAndSaveSheetData = async (assessmentId: string, isTeam: boolean) => {
+export const fetchAndSaveSheetData = async (
+  assessmentId: string,
+  isTeam: boolean
+) => {
   const assessment = await AssessmentModel.findById(assessmentId);
   if (!assessment) {
     throw new NotFoundError('Assessment not found');

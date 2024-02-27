@@ -7,27 +7,27 @@ type SheetRow = Record<string, string>;
 type SheetDataType = SheetRow[];
 
 const authenticateGoogleSheets = async (): Promise<sheets_v4.Sheets> => {
-    const GOOGLE_CLIENT_EMAIL = process.env.GOOGLE_CLIENT_EMAIL;
-    const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY?.replace(
-      /\\n/g,
-      '\n'
-    );
-    const auth = new google.auth.JWT(
-      GOOGLE_CLIENT_EMAIL,
-      undefined,
-      GOOGLE_PRIVATE_KEY,
-      ['https://www.googleapis.com/auth/spreadsheets.readonly']
-    );
-  
-    await auth.authorize();
-  
-    const sheets = google.sheets({ version: 'v4', auth });
-    return sheets;
-  };
+  const GOOGLE_CLIENT_EMAIL = process.env.GOOGLE_CLIENT_EMAIL;
+  const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY?.replace(
+    /\\n/g,
+    '\n'
+  );
+  const auth = new google.auth.JWT(
+    GOOGLE_CLIENT_EMAIL,
+    undefined,
+    GOOGLE_PRIVATE_KEY,
+    ['https://www.googleapis.com/auth/spreadsheets.readonly']
+  );
+
+  await auth.authorize();
+
+  const sheets = google.sheets({ version: 'v4', auth });
+  return sheets;
+};
 
 export const fetchDataFromSheet = async (
   sheetId: string,
-  isTeam: boolean = false,
+  isTeam: boolean = false
 ): Promise<TransformedData> => {
   const sheets = await authenticateGoogleSheets();
 
@@ -41,7 +41,7 @@ const getSheetData = async (
   sheets: sheets_v4.Sheets,
   sheetId: string,
   isTeam: boolean = false,
-  range: string = 'Form Responses 1',
+  range: string = 'Form Responses 1'
 ): Promise<SheetDataType> => {
   console.log(sheetId, range);
   const response: GaxiosResponse<sheets_v4.Schema$ValueRange> =
@@ -62,7 +62,10 @@ const getSheetData = async (
       if (!key) return;
       if (isTeam && ['Team', 'Comments'].includes(key)) {
         rowObject[key] = value;
-      } else if (!isTeam && ['Identifier', 'Name', 'Team', 'Comments'].includes(key)) {
+      } else if (
+        !isTeam &&
+        ['Identifier', 'Name', 'Team', 'Comments'].includes(key)
+      ) {
         rowObject[key] = value;
       }
     });
@@ -72,59 +75,67 @@ const getSheetData = async (
   return sheetData;
 };
 
-const transformFunction = (sheetData: SheetDataType, isTeam: boolean = false,): TransformedData => {
-  const headers = ['Identifier', 'Name', 'Team', 'Comments'];
+const transformFunction = (
+  sheetData: SheetDataType,
+  isTeam: boolean = false
+): TransformedData => {
+  const headers = [];
+  if (isTeam) {
+    headers.push('Team', 'Comments');
+  } else {
+    headers.push('Identifier', 'Name', 'Team', 'Comments');
+  }
   const rows: string[][] = [];
-
+  console.log(isTeam);
   if (isTeam) {
     sheetData.forEach(row => {
-        let Team = row['Team'];
-        if (!Team) return;
-        try {
-            const teamInt = parseInt(Team);
-            Team = teamInt.toString();
-        } catch (error) {
-            return;
-        }
-        const Comments = row['Comments'] || 'EMPTY';
-        rows.push([Team, Comments]);
+      let Team = row['Team'];
+      if (!Team) return;
+      try {
+        const teamInt = parseInt(Team);
+        Team = teamInt.toString();
+      } catch (error) {
+        return;
+      }
+      const Comments = row['Comments'] || 'EMPTY';
+      rows.push([Team, Comments]);
     });
 
     rows.sort((a, b) => {
-        const teamA = parseInt(a[2]) || Number.MAX_SAFE_INTEGER;
-        const teamB = parseInt(b[2]) || Number.MAX_SAFE_INTEGER;
+      const teamA = parseInt(a[2]) || Number.MAX_SAFE_INTEGER;
+      const teamB = parseInt(b[2]) || Number.MAX_SAFE_INTEGER;
 
-        return teamA - teamB;
+      return teamA - teamB;
     });
   } else {
     sheetData.forEach(row => {
-        const Identifier = row['Identifier'];
-        if (!Identifier) return;
+      const Identifier = row['Identifier'];
+      if (!Identifier) return;
 
-        const Name = row['Name'].toUpperCase() || 'EMPTY';
-        let Team = row['Team'] || '';
-        try {
+      const Name = row['Name'].toUpperCase() || 'EMPTY';
+      let Team = row['Team'] || '';
+      try {
         const teamInt = parseInt(Team);
         Team = teamInt.toString();
-        } catch (error) {
+      } catch (error) {
         Team = 'EMPTY';
-        }
-        const Comments = row['Comments'] || 'EMPTY';
-        rows.push([Identifier, Name, Team, Comments]);
+      }
+      const Comments = row['Comments'] || 'EMPTY';
+      rows.push([Identifier, Name, Team, Comments]);
     });
 
     rows.sort((a, b) => {
-        const teamA = parseInt(a[2]) || Number.MAX_SAFE_INTEGER;
-        const teamB = parseInt(b[2]) || Number.MAX_SAFE_INTEGER;
-        const nameA = a[1];
-        const nameB = b[1];
+      const teamA = parseInt(a[2]) || Number.MAX_SAFE_INTEGER;
+      const teamB = parseInt(b[2]) || Number.MAX_SAFE_INTEGER;
+      const nameA = a[1];
+      const nameB = b[1];
 
-        if (teamA !== teamB) {
+      if (teamA !== teamB) {
         return teamA - teamB;
-        }
-        return nameA.localeCompare(nameB);
+      }
+      return nameA.localeCompare(nameB);
     });
-    }
+  }
 
   return [headers, ...rows];
 };
