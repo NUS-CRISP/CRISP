@@ -1,5 +1,5 @@
 import { Course } from '@shared/types/Course';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Button,
   Container,
@@ -32,9 +32,14 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
   const [isEditingUser, setIsEditingUser] = useState(false);
   const [selectedUser, setSelectedUser] = useState('');
 
+  const [accountStatusRecord, setAccountStatusRecord] = useState<
+    Record<string, boolean>
+  >({});
+
   const apiRouteFaculty = `/api/courses/${course._id}/faculty/`;
   const apiRouteTAs = `/api/courses/${course._id}/tas/`;
   const apiRouteStudents = `/api/courses/${course._id}/students/`;
+  const apiRouteAccountStatus = '/api/accounts/status';
 
   const toggleAddFaculty = () => setIsAddingFaculty(!isAddingFaculty);
   const toggleAddTA = () => setIsAddingTA(!isAddingTA);
@@ -70,6 +75,34 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
       console.error('Error deleting user:', error);
     }
   };
+
+  const getAccountStatuses = async () => {
+    try {
+      const userIds: string[] = [];
+      course.faculty.forEach(faculty => userIds.push(faculty._id));
+      course.TAs.forEach(ta => userIds.push(ta._id));
+
+      const idsQueryParam = userIds.join(',');
+
+      const response = await fetch(
+        `${apiRouteAccountStatus}?ids=${encodeURIComponent(idsQueryParam)}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      const data = await response.json();
+      setAccountStatusRecord(data);
+    } catch (error) {
+      console.error('Error getting account statuses:', error);
+    }
+  };
+
+  useEffect(() => {
+    getAccountStatuses();
+  }, []);
 
   const openEditModal = (user: string) => {
     setSelectedUser(user);
@@ -188,6 +221,9 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
               <Table.Tr key={facultyMember._id}>
                 <Table.Td style={{ textAlign: 'left' }}>
                   {facultyMember.name}
+                  {hasFacultyPermission() &&
+                    accountStatusRecord[facultyMember._id] === false &&
+                    '*'}
                 </Table.Td>
                 <Table.Td style={{ textAlign: 'left' }}>
                   {facultyMember.identifier}
@@ -247,7 +283,12 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
           <Table.Tbody>
             {course.TAs.map(TA => (
               <Table.Tr key={TA._id}>
-                <Table.Td style={{ textAlign: 'left' }}>{TA.name}</Table.Td>
+                <Table.Td style={{ textAlign: 'left' }}>
+                  {TA.name}
+                  {hasFacultyPermission() &&
+                    accountStatusRecord[TA._id] === false &&
+                    '*'}
+                </Table.Td>
                 <Table.Td style={{ textAlign: 'left' }}>
                   {TA.identifier}
                 </Table.Td>
