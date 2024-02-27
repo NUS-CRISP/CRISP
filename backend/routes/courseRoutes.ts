@@ -14,6 +14,9 @@ import {
   getCourse,
   getCourses,
   getTeachingTeam,
+  removeFaculty,
+  removeStudents,
+  removeTAs,
   updateCourse,
 } from '../controllers/courseController';
 import { noCache } from '../middleware/noCache';
@@ -26,8 +29,11 @@ router.get('/:id', getCourse);
 router.put('/:id', updateCourse);
 router.delete('/:id', deleteCourse);
 router.post('/:id/faculty', addFaculty);
+router.delete('/:id/faculty/:userId', removeFaculty);
 router.post('/:id/students', addStudents);
+router.delete('/:id/students/:userId', removeStudents);
 router.post('/:id/tas', addTAs);
+router.delete('/:id/tas/:userId', removeTAs);
 router.post('/:id/teamsets', addTeamSet);
 router.post('/:id/teams/students', addStudentsToTeams);
 router.post('/:id/teams/tas', addTAsToTeams);

@@ -15,6 +15,7 @@ import TAForm from '../forms/TAForm';
 import StudentForm from '../forms/StudentForm';
 import CSVExport from '../csv/CSVExport';
 import UpdateUserForm from '../forms/UpdateUserForm';
+import Role from '@shared/types/auth/Role';
 
 interface PeopleInfoProps {
   course: Course;
@@ -27,14 +28,48 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
   const [isAddingStudent, setIsAddingStudent] = useState(false);
   const [isExportingData, setIsExportingData] = useState(false);
 
+  const [isEditing, setIsEditing] = useState(false);
   const [isEditingUser, setIsEditingUser] = useState(false);
   const [selectedUser, setSelectedUser] = useState('');
+
+  const apiRouteFaculty = `/api/courses/${course._id}/faculty/`;
+  const apiRouteTAs = `/api/courses/${course._id}/tas/`;
+  const apiRouteStudents = `/api/courses/${course._id}/students/`;
 
   const toggleAddFaculty = () => setIsAddingFaculty(!isAddingFaculty);
   const toggleAddTA = () => setIsAddingTA(!isAddingTA);
   const toggleAddStudent = () => setIsAddingStudent(!isAddingStudent);
   const toggleIsExportingData = () => setIsExportingData(!isExportingData);
+
+  const toggleIsEditing = () => setIsEditing(!isEditing);
   const toggleEditUser = () => setIsEditingUser(!isEditingUser);
+
+  const handleDeleteUser = async (userId: string, role: string) => {
+    try {
+      let apiRoute = '';
+      if (role === Role.Faculty) {
+        apiRoute = `${apiRouteFaculty}${userId}`;
+      } else if (role === Role.TA) {
+        apiRoute = `${apiRouteTAs}${userId}`;
+      } else if (role === Role.Student) {
+        apiRoute = `${apiRouteStudents}${userId}`;
+      } else {
+        console.error('Invalid role:', role);
+        return;
+      }
+      const response = await fetch(apiRoute, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      await response.json();
+      onUpdate();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+    }
+  };
 
   const openEditModal = (user: string) => {
     setSelectedUser(user);
@@ -76,9 +111,12 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
       {hasFacultyPermission() && (
         <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
           <Button onClick={toggleAddFaculty}>Add Faculty</Button>
-          <Button onClick={toggleAddTA}>Add Teaching Assistant</Button>
+          <Button onClick={toggleAddTA}>Add TA</Button>
           <Button onClick={toggleAddStudent}>Add Student</Button>
           <Button onClick={toggleIsExportingData}>Export Data</Button>
+          <Button onClick={toggleIsEditing}>
+            {isEditing ? 'Cancel Edit' : 'Edit Details'}
+          </Button>
         </Group>
       )}
       <Modal
@@ -132,15 +170,17 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
         <Table>
           <Table.Thead>
             <Table.Tr>
-              <Table.Th style={{ textAlign: 'left', width: '50%' }}>
+              <Table.Th style={{ textAlign: 'left', width: '43%' }}>
                 Name
               </Table.Th>
-              <Table.Th style={{ textAlign: 'left', width: '25%' }}>
+              <Table.Th style={{ textAlign: 'left', width: '20%' }}>
                 ID
               </Table.Th>
-              <Table.Th style={{ textAlign: 'left', width: '25%' }}>
+              <Table.Th style={{ textAlign: 'left', width: '20%' }}>
                 Git Handle
               </Table.Th>
+              <Table.Th style={{ textAlign: 'left', width: '7%' }} />
+              <Table.Th style={{ textAlign: 'left', width: '10%' }} />
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -155,11 +195,31 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
                 <Table.Td style={{ textAlign: 'left' }}>
                   {facultyMember.gitHandle}
                 </Table.Td>
-                <Table.Td>
-                  <Button onClick={() => openEditModal(facultyMember._id)}>
-                    Edit Details
-                  </Button>
-                </Table.Td>
+                {isEditing && (
+                  <Table.Td>
+                    <Button
+                      size="compact-xs"
+                      variant="light"
+                      onClick={() => openEditModal(facultyMember._id)}
+                    >
+                      Edit
+                    </Button>
+                  </Table.Td>
+                )}
+                {isEditing && (
+                  <Table.Td>
+                    <Button
+                      size="compact-xs"
+                      variant="light"
+                      color="red"
+                      onClick={() =>
+                        handleDeleteUser(facultyMember._id, Role.Faculty)
+                      }
+                    >
+                      Remove
+                    </Button>
+                  </Table.Td>
+                )}
               </Table.Tr>
             ))}
           </Table.Tbody>
@@ -171,15 +231,17 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
         <Table>
           <Table.Thead>
             <Table.Tr>
-              <Table.Th style={{ textAlign: 'left', width: '50%' }}>
+              <Table.Th style={{ textAlign: 'left', width: '43%' }}>
                 Name
               </Table.Th>
-              <Table.Th style={{ textAlign: 'left', width: '25%' }}>
+              <Table.Th style={{ textAlign: 'left', width: '20%' }}>
                 ID
               </Table.Th>
-              <Table.Th style={{ textAlign: 'left', width: '25%' }}>
+              <Table.Th style={{ textAlign: 'left', width: '20%' }}>
                 Git Handle
               </Table.Th>
+              <Table.Th style={{ textAlign: 'left', width: '7%' }} />
+              <Table.Th style={{ textAlign: 'left', width: '10%' }} />
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -192,6 +254,29 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
                 <Table.Td style={{ textAlign: 'left' }}>
                   {TA.gitHandle}
                 </Table.Td>
+                {isEditing && (
+                  <Table.Td>
+                    <Button
+                      size="compact-xs"
+                      variant="light"
+                      onClick={() => openEditModal(TA._id)}
+                    >
+                      Edit
+                    </Button>
+                  </Table.Td>
+                )}
+                {isEditing && (
+                  <Table.Td>
+                    <Button
+                      size="compact-xs"
+                      variant="light"
+                      color="red"
+                      onClick={() => handleDeleteUser(TA._id, Role.TA)}
+                    >
+                      Remove
+                    </Button>
+                  </Table.Td>
+                )}
               </Table.Tr>
             ))}
           </Table.Tbody>
@@ -203,15 +288,17 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
         <Table>
           <Table.Thead>
             <Table.Tr>
-              <Table.Th style={{ textAlign: 'left', width: '50%' }}>
+              <Table.Th style={{ textAlign: 'left', width: '43%' }}>
                 Name
               </Table.Th>
-              <Table.Th style={{ textAlign: 'left', width: '25%' }}>
+              <Table.Th style={{ textAlign: 'left', width: '20%' }}>
                 ID
               </Table.Th>
-              <Table.Th style={{ textAlign: 'left', width: '25%' }}>
+              <Table.Th style={{ textAlign: 'left', width: '20%' }}>
                 Git Handle
               </Table.Th>
+              <Table.Th style={{ textAlign: 'left', width: '7%' }} />
+              <Table.Th style={{ textAlign: 'left', width: '10%' }} />
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -226,6 +313,31 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
                 <Table.Td style={{ textAlign: 'left' }}>
                   {student.gitHandle}
                 </Table.Td>
+                {isEditing && (
+                  <Table.Td>
+                    <Button
+                      size="compact-xs"
+                      variant="light"
+                      onClick={() => openEditModal(student._id)}
+                    >
+                      Edit
+                    </Button>
+                  </Table.Td>
+                )}
+                {isEditing && (
+                  <Table.Td>
+                    <Button
+                      size="compact-xs"
+                      variant="light"
+                      color="red"
+                      onClick={() =>
+                        handleDeleteUser(student._id, Role.Student)
+                      }
+                    >
+                      Remove
+                    </Button>
+                  </Table.Td>
+                )}
               </Table.Tr>
             ))}
           </Table.Tbody>

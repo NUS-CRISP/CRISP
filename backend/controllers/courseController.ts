@@ -11,6 +11,9 @@ import {
   getCourseById,
   getCourseTeachingTeam,
   getCoursesForUser,
+  removeFacultyFromCourse,
+  removeStudentsFromCourse,
+  removeTAsFromCourse,
   updateCourseById,
 } from '../services/courseService';
 import { BadRequestError, NotFoundError } from '../services/errors';
@@ -132,6 +135,23 @@ export const addStudents = async (req: Request, res: Response) => {
   }
 };
 
+export const removeStudents = async (req: Request, res: Response) => {
+  const { id, userId } = req.params;
+  try {
+    await removeStudentsFromCourse(id, userId);
+    res
+      .status(200)
+      .json({ message: 'Students removed from the course successfully' });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error removing students:', error);
+      res.status(500).json({ error: 'Failed to remove students' });
+    }
+  }
+};
+
 /*----------------------------------------TA----------------------------------------*/
 export const addTAs = async (req: Request, res: Response) => {
   const courseId = req.params.id;
@@ -164,6 +184,23 @@ export const getTeachingTeam = async (req: Request, res: Response) => {
   }
 };
 
+export const removeTAs = async (req: Request, res: Response) => {
+  const { id, userId } = req.params;
+  try {
+    await removeTAsFromCourse(id, userId);
+    res
+      .status(200)
+      .json({ message: 'TAs removed from the course successfully' });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error removing tas:', error);
+      res.status(500).json({ error: 'Failed to remove tas' });
+    }
+  }
+};
+
 /*----------------------------------------Faculty----------------------------------------*/
 export const addFaculty = async (req: Request, res: Response) => {
   const courseId = req.params.id;
@@ -179,6 +216,23 @@ export const addFaculty = async (req: Request, res: Response) => {
     } else {
       console.error('Error adding Faculty:', error);
       res.status(500).json({ error: 'Failed to add Faculty' });
+    }
+  }
+};
+
+export const removeFaculty = async (req: Request, res: Response) => {
+  const { id, userId } = req.params;
+  try {
+    await removeFacultyFromCourse(id, userId);
+    res
+      .status(200)
+      .json({ message: 'Faculty removed from the course successfully' });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error removing faculty:', error);
+      res.status(500).json({ error: 'Failed to remove faculty' });
     }
   }
 };
