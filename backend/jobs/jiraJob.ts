@@ -44,7 +44,7 @@ async function fetchSprints(
   boardId: number,
   cloudId: string,
   accessToken: string
-): Promise<any> {
+) {
   const jiraSprintUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board/${boardId}/sprint`;
 
   try {
@@ -155,7 +155,8 @@ export const fetchAndSaveJiraData = async () => {
   const courses: Course[] = await CourseModel.find();
 
   for (const course of courses) {
-    const { isRegistered, accessToken, refreshToken, cloudId } = course.jira;
+    const { isRegistered, cloudId } = course.jira
+    let { accessToken, refreshToken } = course.jira;
 
     if (!isRegistered) {
       continue;
@@ -185,13 +186,13 @@ export const fetchAndSaveJiraData = async () => {
     // Check if the request was successful
     if (response.ok) {
       const data = await response.json();
-      const newAccessToken = data.access_token;
-      const newRefreshToken = data.refresh_token;
+      accessToken = data.access_token;
+      refreshToken = data.refresh_token;
 
       // Update the access token in the database
       await CourseModel.findByIdAndUpdate(course._id, {
-        accessToken: newAccessToken,
-        refreshToken: newRefreshToken,
+        accessToken: accessToken,
+        refreshToken: refreshToken,
       });
       console.log(`Access token refreshed for course with cloudId: ${cloudId}`);
     } else {
