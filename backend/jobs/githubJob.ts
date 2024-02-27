@@ -204,7 +204,7 @@ const getCourseData = async (
       teamPRs,
     };
 
-    //console.log('Saving team data:', teamData);
+    console.log('Saving team data:', teamData);
 
     await TeamData.findOneAndUpdate({ teamId: teamData.teamId }, teamData, {
       upsert: true,

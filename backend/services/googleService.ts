@@ -44,7 +44,6 @@ export const getAssessmentSheetData = async (
       const teamNumbers = new Set<string>();
       await results.forEach((result: any) => {
         const teamNum = result.team?.number?.toString();
-        console.log(teamNum);
         if (teamNum) {
           teamNumbers.add(teamNum);
         }

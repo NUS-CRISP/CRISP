@@ -66,7 +66,6 @@ const AssessmentDetail: React.FC = () => {
       }
       const data = await response.json();
       setSheetData(data);
-      console.log('Sheet data 1:', data);
     } catch (error) {
       console.error('Error:', error);
     }

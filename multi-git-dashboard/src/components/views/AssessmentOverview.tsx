@@ -121,12 +121,6 @@ const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
         rows: [[]],
       };
 
-  useEffect(() => {
-    console.log('SheetData: ', sheetData);
-    console.log('Filtered SheetData: ', filteredSheetData);
-    console.log('Pending Submissions: ', pendingSubmissions);
-  }, [sheetData, filteredSheetData, pendingSubmissions]);
-
   return (
     <div>
       <Card style={{ marginBottom: '16px', marginTop: '16px' }}>

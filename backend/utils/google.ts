@@ -43,7 +43,6 @@ const getSheetData = async (
   isTeam: boolean = false,
   range: string = 'Form Responses 1'
 ): Promise<SheetDataType> => {
-  console.log(sheetId, range);
   const response: GaxiosResponse<sheets_v4.Schema$ValueRange> =
     await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
@@ -86,7 +85,6 @@ const transformFunction = (
     headers.push('Identifier', 'Name', 'Team', 'Comments');
   }
   const rows: string[][] = [];
-  console.log(isTeam);
   if (isTeam) {
     sheetData.forEach(row => {
       let Team = row['Team'];
