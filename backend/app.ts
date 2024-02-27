@@ -10,6 +10,7 @@ import metricRoutes from './routes/metricRoutes';
 import teamRoutes from './routes/teamRoutes';
 import teamSetRoutes from './routes/teamSetRoutes';
 import { connectToDatabase } from './utils/database';
+import userRoutes from './routes/userRoutes';
 
 const env = process.env.NODE_ENV ?? 'development';
 config({ path: `.env.${env}` });
@@ -34,6 +35,7 @@ app.use('/api/teams', teamRoutes);
 app.use('/api/teamsets', teamSetRoutes);
 app.use('/api/assessments', assessmentRoutes);
 app.use('/api/metrics', metricRoutes);
+app.use('/api/user', userRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
