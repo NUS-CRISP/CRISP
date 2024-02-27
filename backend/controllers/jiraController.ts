@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { URLSearchParams } from 'url';
 import { fetchAndSaveJiraData } from '../jobs/jiraJob';
 import CourseModel from '../models/Course';
 

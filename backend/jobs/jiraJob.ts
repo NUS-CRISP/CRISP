@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { JiraBoard, JiraIssue, JiraSprint } from '@shared/types/JiraData';
 import {
   JiraBoardModel,
@@ -154,7 +155,7 @@ export const fetchAndSaveJiraData = async () => {
   const courses: Course[] = await CourseModel.find();
 
   for (const course of courses) {
-    let { isRegistered, accessToken, refreshToken, cloudId } = course.jira;
+    const { isRegistered, accessToken, refreshToken, cloudId } = course.jira;
 
     if (!isRegistered) {
       continue;
@@ -184,13 +185,13 @@ export const fetchAndSaveJiraData = async () => {
     // Check if the request was successful
     if (response.ok) {
       const data = await response.json();
-      accessToken = data.access_token;
-      refreshToken = data.refresh_token;
+      const newAccessToken = data.access_token;
+      const newRefreshToken = data.refresh_token;
 
       // Update the access token in the database
       await CourseModel.findByIdAndUpdate(course._id, {
-        accessToken: accessToken,
-        refreshToken: refreshToken,
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
       });
       console.log(`Access token refreshed for course with cloudId: ${cloudId}`);
     } else {
