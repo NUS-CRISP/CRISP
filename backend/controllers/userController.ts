@@ -11,16 +11,14 @@ export const updateUser = async (req: Request, res: Response) => {
   }
   try {
     const { userId } = req.params;
-    const { updateData } = req.body;
+    const updateData = req.body;
     await editUser(accountId, userId, updateData);
     res.status(200).json({ message: 'User updated successfully' });
   } catch (error) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
-      return;
     } else if (error instanceof BadRequestError) {
       res.status(400).json({ error: error.message });
-      return;
     } else {
       console.error('Error updating user:', error);
       res.status(500).json({ error: 'Failed to update user' });

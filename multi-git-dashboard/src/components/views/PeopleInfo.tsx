@@ -14,6 +14,7 @@ import FacultyForm from '../forms/FacultyForm';
 import TAForm from '../forms/TAForm';
 import StudentForm from '../forms/StudentForm';
 import CSVExport from '../csv/CSVExport';
+import UpdateUserForm from '../forms/UpdateUserForm';
 
 interface PeopleInfoProps {
   course: Course;
@@ -26,16 +27,27 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
   const [isAddingStudent, setIsAddingStudent] = useState(false);
   const [isExportingData, setIsExportingData] = useState(false);
 
+  const [isEditingUser, setIsEditingUser] = useState(false);
+  const [selectedUser, setSelectedUser] = useState('');
+
   const toggleAddFaculty = () => setIsAddingFaculty(!isAddingFaculty);
   const toggleAddTA = () => setIsAddingTA(!isAddingTA);
   const toggleAddStudent = () => setIsAddingStudent(!isAddingStudent);
   const toggleIsExportingData = () => setIsExportingData(!isExportingData);
+  const toggleEditUser = () => setIsEditingUser(!isEditingUser);
+
+  const openEditModal = (user: string) => {
+    setSelectedUser(user);
+    setIsEditingUser(true);
+  };
 
   const handleUpdate = () => {
     setIsAddingFaculty(false);
     setIsAddingTA(false);
     setIsAddingStudent(false);
     setIsExportingData(false);
+    setIsEditingUser(false);
+    setSelectedUser('');
     onUpdate();
   };
 
@@ -112,6 +124,9 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
           />
         </Group>
       </Modal>
+      <Modal opened={isEditingUser} onClose={toggleEditUser} title="Edit User">
+        <UpdateUserForm userId={selectedUser} onUserUpdated={handleUpdate} />
+      </Modal>
       <Divider label="Faculty Members" size="lg" />
       {course.faculty && course.faculty.length > 0 && (
         <Table>
@@ -139,6 +154,11 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
                 </Table.Td>
                 <Table.Td style={{ textAlign: 'left' }}>
                   {facultyMember.gitHandle}
+                </Table.Td>
+                <Table.Td>
+                  <Button onClick={() => openEditModal(facultyMember._id)}>
+                    Edit Details
+                  </Button>
                 </Table.Td>
               </Table.Tr>
             ))}
