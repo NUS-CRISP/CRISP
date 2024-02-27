@@ -131,9 +131,13 @@ const CSVUpload: React.FC<CSVUploadProps> = ({
           </Text>
         </Group>
       </Dropzone>
-      {uploadedFileName && (
+      {uploadedFileName ? (
         <Text size="md" style={{ marginTop: '4px' }}>
           Selected file: {uploadedFileName}
+        </Text>
+      ) : (
+        <Text size="md" style={{ marginTop: '4px' }}>
+          No file selected
         </Text>
       )}
       <Group style={{ marginTop: '16px' }}>
