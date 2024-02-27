@@ -3,7 +3,7 @@ import {
   JiraBoardModel,
   JiraIssueModel,
   JiraSprintModel,
-} from '../models/JiraData';
+} from '@models/JiraData';
 import cron from 'node-cron';
 import { Course } from '../models/Course';
 import CourseModel from '../models/Course';
@@ -161,7 +161,7 @@ export const fetchAndSaveJiraData = async () => {
     }
 
     // Define the token endpoint URL
-    const tokenUrl = `https://auth.atlassian.com/oauth/token`;
+    const tokenUrl = 'https://auth.atlassian.com/oauth/token';
     const jiraBoardUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board`;
 
     // Define the request parameters

@@ -82,7 +82,7 @@ export const callbackJiraAccount = async (req: Request, res: Response) => {
         console.error('Error:', error);
       });
 
-    res.redirect(`http://localhost:3000/courses/${state}`);
+    res.redirect(`http://localhost:3002/courses/${state}`);
     await fetchAndSaveJiraData();
   } catch (error) {
     console.error(

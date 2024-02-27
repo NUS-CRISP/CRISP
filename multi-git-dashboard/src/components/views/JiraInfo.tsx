@@ -37,7 +37,13 @@ const JiraInfo: React.FC<JiraInfoProps> = ({ course, onUpdate }) => {
     <div>
       <h1>Welcome to Your App</h1>
       {/* Render button if Atlassian account is not registered */}
-      {course.jira.isRegistered || <button onClick={handleOAuthButtonClick}>Authorize with Jira</button>}
+      {course.jira.isRegistered ? (
+        <button onClick={handleOAuthButtonClick}>
+          Reauthorize with another Jira account
+        </button>
+      ) : (
+        <button onClick={handleOAuthButtonClick}>Authorize with Jira</button>
+      )}
     </div>
   );
 };
