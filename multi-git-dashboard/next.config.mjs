@@ -1,9 +1,10 @@
-import { PHASE_DEVELOPMENT_SERVER } from 'next/constants.js'
+import { PHASE_DEVELOPMENT_SERVER } from 'next/constants.js';
 
 /**
  * @type {import('next').NextConfig}
  * */
 const nextConfig = (phase) => {
+  // Dev config
   if (phase === PHASE_DEVELOPMENT_SERVER) {
     return {
       transpilePackages: ['shared'],
@@ -16,13 +17,14 @@ const nextConfig = (phase) => {
           },
           {
             source: '/api/:path*',
-            destination: 'http://localhost:3001/api/:path*',
+            destination: 'http://localhost:3003/api/:path*',
           },
         ];
       }
     };
   }
 
+  // Prod config
   return {
     transpilePackages: ['shared'],
   }

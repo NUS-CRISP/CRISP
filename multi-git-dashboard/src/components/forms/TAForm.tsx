@@ -40,8 +40,7 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
       }),
     });
 
-    const data = await response.json();
-    console.log('TA created:', data);
+    await response.json();
     onTACreated();
   };
 

@@ -1,9 +1,9 @@
-import mongoose, { ConnectOptions, Types } from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
-import CourseModel from '../../models/Course';
-import UserModel from '../../models/User';
-import TeamSetModel from '../../models/TeamSet';
 import { Course, CourseType } from '@shared/types/Course';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import mongoose, { ConnectOptions } from 'mongoose';
+import CourseModel from '../../models/Course';
+import TeamSetModel from '../../models/TeamSet';
+import UserModel from '../../models/User';
 
 let mongoServer: MongoMemoryServer;
 

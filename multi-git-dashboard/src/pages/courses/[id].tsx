@@ -13,9 +13,10 @@ import { useCallback, useEffect, useState } from 'react';
 
 const CourseViewPage: React.FC = () => {
   const router = useRouter();
-  const isNewCourse = router.query.new === 'true';
+  const { pathname, query } = router;
+  const isNewCourse = query.new === 'true';
 
-  const courseId = router.query.id as string;
+  const courseId = query.id as string;
   const courseApiRoute = `/api/courses/${courseId}`;
 
   const [course, setCourse] = useState<Course>();
@@ -25,6 +26,10 @@ const CourseViewPage: React.FC = () => {
       notifications.show({
         title: 'Course created',
         message: 'Course created successfully',
+        autoClose: 3000,
+        onClose: () =>
+          delete query.new &&
+          router.replace({ pathname, query }, undefined, { shallow: true }),
       });
     }
   }, [isNewCourse]);

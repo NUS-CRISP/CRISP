@@ -1,12 +1,12 @@
 import { ObjectId } from 'mongodb';
 import mongoose from 'mongoose';
+import AccountModel from '../models/Account';
 import AssessmentModel from '../models/Assessment';
+import CourseModel from '../models/Course';
 import ResultModel, { Result } from '../models/Result';
 import { Team } from '../models/Team';
-import CourseModel from '../models/Course';
 import TeamSetModel from '../models/TeamSet';
 import { BadRequestError, NotFoundError } from './errors';
-import AccountModel from '../models/Account';
 
 interface ResultItem {
   teamNumber: number;
@@ -85,7 +85,7 @@ export const uploadAssessmentResultsById = async (
   if (!assessment) {
     throw new NotFoundError('Assessment not found');
   }
-  if (assessment.granularity == 'individual') {
+  if (assessment.granularity === 'individual') {
     const resultMap: Record<string, number> = {};
     results.forEach(({ studentId, mark }) => {
       resultMap[studentId] = mark;

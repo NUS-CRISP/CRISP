@@ -1,8 +1,8 @@
+import { logLogin } from '@/lib/auth/utils';
 import {
   Alert,
   Anchor,
   Button,
-  Checkbox,
   Container,
   Group,
   Paper,
@@ -41,13 +41,13 @@ const SignInPage: React.FC = () => {
     const res = await signIn('credentials', {
       email,
       password,
-      callbackUrl: '/',
       redirect: false,
     });
 
     if (res?.error) {
       showError(res.error);
     } else {
+      logLogin();
       router.push('/');
     }
   };
@@ -105,7 +105,7 @@ const SignInPage: React.FC = () => {
             mt="md"
           />
           <Group justify="space-between" mt="lg">
-            <Checkbox label="Remember me" />
+            {/* <Checkbox label="Remember me" /> */}
             <Anchor href="#" size="sm">
               Forgot password?
             </Anchor>

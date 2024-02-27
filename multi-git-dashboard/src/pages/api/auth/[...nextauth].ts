@@ -1,6 +1,11 @@
 import clientPromise from '@/lib/mongodb';
 import bcrypt from 'bcrypt';
-import NextAuth, { AuthOptions, User } from 'next-auth';
+import {
+  GetServerSidePropsContext,
+  NextApiRequest,
+  NextApiResponse,
+} from 'next';
+import NextAuth, { AuthOptions, getServerSession } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 
 export const authOptions: AuthOptions = {
@@ -17,7 +22,7 @@ export const authOptions: AuthOptions = {
           type: 'password',
         },
       },
-      async authorize(credentials): Promise<User> {
+      async authorize(credentials) {
         const client = await clientPromise;
         const accountsCollection = client
           .db(process.env.DB_NAME)
@@ -79,9 +84,22 @@ export const authOptions: AuthOptions = {
         session.user.name = token.name;
       }
       session.user.role = token.role;
-      return session;
+      return {
+        user: { name: token.name, role: token.role },
+        expires: session.expires,
+      };
     },
   },
 };
 
-export default NextAuth(authOptions);
+export const getServerSessionHelper = (
+  ...args:
+    | [GetServerSidePropsContext['req'], GetServerSidePropsContext['res']]
+    | [NextApiRequest, NextApiResponse]
+    | []
+) => getServerSession(...args, authOptions);
+
+export default async function (req: NextApiRequest, res: NextApiResponse) {
+  res.setHeader('Cache-Control', 'no-store, max-age=0');
+  return NextAuth(req, res, authOptions);
+}
