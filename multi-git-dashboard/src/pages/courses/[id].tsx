@@ -1,13 +1,9 @@
-import AssessmentsInfo from '@/components/views/AssessmentsInfo';
 import Overview from '@/components/views/Overview';
-import PeopleInfo from '@/components/views/PeopleInfo';
-import TeamSetsInfo from '@/components/views/TeamSetsInfo';
-import TimelineInfo from '@/components/views/TimelineInfo';
-import { Container, Loader, Tabs } from '@mantine/core';
+import { Container, Loader } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { Course, Milestone, Sprint } from '@shared/types/Course';
+import { Course } from '@shared/types/Course';
 import { useRouter } from 'next/router';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const CourseViewPage: React.FC = () => {
   const router = useRouter();
@@ -32,63 +28,25 @@ const CourseViewPage: React.FC = () => {
     }
   }, [isNewCourse]);
 
-  const fetchCourse = useCallback(async () => {
+  const fetchCourse = async () => {
     try {
-      const response = await fetch(courseApiRoute, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(courseApiRoute);
       if (!response.ok) {
         console.error('Error fetching course:', response.statusText);
         return;
       }
-      const data: Course = await response.json();
-      if (data.milestones) {
-        data.milestones = data.milestones.map((milestone: Milestone) => ({
-          ...milestone,
-          dateline: new Date(milestone.dateline),
-        }));
-      }
-      if (data.sprints) {
-        data.sprints = data.sprints.map((sprint: Sprint) => ({
-          ...sprint,
-          startDate: new Date(sprint.startDate),
-          endDate: new Date(sprint.endDate),
-        }));
-      }
+      const data = await response.json();
       setCourse(data);
     } catch (error) {
       console.error('Error fetching course:', error);
     }
-  }, [courseId]);
+  };
 
   useEffect(() => {
     if (courseId) {
       fetchCourse();
     }
   }, [courseId, fetchCourse]);
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const deleteCourse = async () => {
-    try {
-      const response = await fetch(courseApiRoute, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        console.error('Error deleting course:', response.statusText);
-        return;
-      }
-      router.push('/courses');
-    } catch (error) {
-      console.error('Error deleting course:', error);
-    }
-  };
-
-  const handleUpdate = () => {
-    fetchCourse();
-  };
 
   return (
     <Container
@@ -98,49 +56,7 @@ const CourseViewPage: React.FC = () => {
         flexDirection: 'column',
       }}
     >
-      {course ? (
-        <Tabs
-          defaultValue="overview"
-          style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
-        >
-          <Tabs.List
-            style={{ display: 'flex', justifyContent: 'space-evenly' }}
-          >
-            <Tabs.Tab value="overview">Overview</Tabs.Tab>
-            <Tabs.Tab value="people">People</Tabs.Tab>
-            <Tabs.Tab value="teams">Teams</Tabs.Tab>
-            <Tabs.Tab value="timeline">Timeline</Tabs.Tab>
-            <Tabs.Tab value="assessments">Assessments</Tabs.Tab>
-          </Tabs.List>
-          <div style={{ overflow: 'auto', flexGrow: 1 }}>
-            <Tabs.Panel value="overview">
-              <Overview course={course} />
-            </Tabs.Panel>
-            <Tabs.Panel value="people">
-              <div>
-                <PeopleInfo course={course} onUpdate={handleUpdate} />
-              </div>
-            </Tabs.Panel>
-            <Tabs.Panel value="teams">
-              <div>
-                <TeamSetsInfo course={course} onUpdate={handleUpdate} />
-              </div>
-            </Tabs.Panel>
-            <Tabs.Panel value="timeline">
-              <div>
-                <TimelineInfo course={course} onUpdate={handleUpdate} />
-              </div>
-            </Tabs.Panel>
-            <Tabs.Panel value="assessments">
-              <div>
-                <AssessmentsInfo course={course} onUpdate={handleUpdate} />
-              </div>
-            </Tabs.Panel>
-          </div>
-        </Tabs>
-      ) : (
-        <Loader size="md" />
-      )}
+      {course ? <Overview courseId={courseId} /> : <Loader size="md" />}
     </Container>
   );
 };

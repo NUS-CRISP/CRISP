@@ -1,4 +1,3 @@
-import { hasFacultyPermission } from '@/lib/auth/utils';
 import {
   Button,
   Container,
@@ -7,20 +6,32 @@ import {
   Notification,
   Tabs,
 } from '@mantine/core';
-import { Course } from '@shared/types/Course';
 import { TeamSet } from '@shared/types/TeamSet';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import TeamCard from '../cards/TeamCard';
 import StudentTeamForm from '../forms/StudentTeamForm';
 import TATeamForm from '../forms/TATeamForm';
 import TeamSetForm from '../forms/TeamSetForm';
+import { User } from '@shared/types/User';
+import { TeamData } from '@shared/types/TeamData';
 
 interface TeamsInfoProps {
-  course: Course;
+  courseId: string;
+  teamSets: TeamSet[];
+  teachingTeam: User[];
+  teamDatas: TeamData[];
+  hasFacultyPermission: boolean;
   onUpdate: () => void;
 }
 
-const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
+const TeamsInfo: React.FC<TeamsInfoProps> = ({
+  courseId,
+  teamSets,
+  teachingTeam,
+  teamDatas,
+  hasFacultyPermission,
+  onUpdate,
+}) => {
   const [isCreatingTeamSet, setIsCreatingTeamSet] = useState<boolean>(false);
   const [isAddingStudents, setIsAddingStudents] = useState<boolean>(false);
   const [isAddingTAs, setIsAddingTAs] = useState<boolean>(false);
@@ -28,45 +39,9 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
 
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string | null>(
-    course.teamSets ? course.teamSets[0].name : null
+    teamSets ? teamSets[0]?.name : null
   );
   const [teamSetId, setTeamSetId] = useState<string | null>(null);
-
-  const teamCards = (teamSet: TeamSet) => {
-    return teamSet.teams.map(team => (
-      <TeamCard
-        key={team._id}
-        teamId={team._id}
-        number={team.number}
-        TA={team.TA}
-        TAs={course.TAs}
-        teamData={team.teamData}
-        teamDataList={teamSet.teams.map(t => t.teamData).filter(Boolean)}
-        members={team.members}
-        onUpdate={onUpdate}
-        isEditing={isEditing}
-      />
-    ));
-  };
-
-  const headers = course.teamSets.map((teamSet, index) => (
-    <Tabs.Tab
-      key={index}
-      value={teamSet.name}
-      onClick={() => {
-        setActiveTab(teamSet.name);
-        setTeamSetId(teamSet._id);
-      }}
-    >
-      {teamSet.name}
-    </Tabs.Tab>
-  ));
-
-  const panels = course.teamSets.map(teamSet => (
-    <Tabs.Panel key={teamSet._id} value={teamSet.name}>
-      {teamCards(teamSet)}
-    </Tabs.Panel>
-  ));
 
   const toggleTeamSetForm = () => {
     setIsCreatingTeamSet(o => !o);
@@ -75,7 +50,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
   const handleTeamSetCreated = (teamSetName: string) => {
     setIsCreatingTeamSet(false);
     onUpdate();
-    setActiveTab(teamSetName);
+    setActiveTabAndSave(teamSetName);
   };
 
   const toggleAddStudentsForm = () => {
@@ -97,6 +72,18 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
     setIsAddingTAs(false);
     onUpdate();
   };
+
+  const setActiveTabAndSave = (tabName: string) => {
+    setActiveTab(tabName);
+    localStorage.setItem(`activeTeamSetTab_${courseId}`, tabName);
+  };
+
+  useEffect(() => {
+    const savedTab = localStorage.getItem(`activeTeamSetTab_${courseId}`);
+    if (savedTab && teamSets.some(teamSet => teamSet.name === savedTab)) {
+      setActiveTab(savedTab);
+    }
+  }, [teamSets]);
 
   const handleDeleteTeamSet = async () => {
     try {
@@ -122,6 +109,42 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
     }
   };
 
+  const teamCards = (teamSet: TeamSet) => {
+    return teamSet.teams.map(team => (
+      <TeamCard
+        key={team._id}
+        teamId={team._id}
+        number={team.number}
+        TA={team.TA}
+        teachingTeam={teachingTeam}
+        teamData={team.teamData}
+        teamDataList={teamDatas}
+        members={team.members}
+        onUpdate={onUpdate}
+        isEditing={isEditing}
+      />
+    ));
+  };
+
+  const headers = teamSets.map((teamSet, index) => (
+    <Tabs.Tab
+      key={index}
+      value={teamSet.name}
+      onClick={() => {
+        setActiveTabAndSave(teamSet.name);
+        setTeamSetId(teamSet._id);
+      }}
+    >
+      {teamSet.name}
+    </Tabs.Tab>
+  ));
+
+  const panels = teamSets.map(teamSet => (
+    <Tabs.Panel key={teamSet._id} value={teamSet.name}>
+      {teamCards(teamSet)}
+    </Tabs.Panel>
+  ));
+
   return (
     <Container>
       <Tabs value={activeTab}>
@@ -137,7 +160,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
             {error}
           </Notification>
         )}
-        {hasFacultyPermission() && (
+        {hasFacultyPermission && (
           <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
             <Group>
               <Button onClick={toggleTeamSetForm}>Create TeamSet</Button>
@@ -149,7 +172,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
               )}
               {activeTab && (
                 <Button onClick={toggleIsEditing}>
-                  {isEditing ? 'Cancel Edit' : 'Edit Teams'}
+                  {isEditing ? 'Finish Edit' : 'Edit Teams'}
                 </Button>
               )}
             </Group>
@@ -167,7 +190,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
           title="Create TeamSet"
         >
           <TeamSetForm
-            courseId={course._id}
+            courseId={courseId}
             onTeamSetCreated={handleTeamSetCreated}
           />
         </Modal>
@@ -179,7 +202,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
             title="Assign Students"
           >
             <StudentTeamForm
-              courseId={course._id}
+              courseId={courseId}
               teamSet={activeTab}
               onTeamCreated={handleAddStudentsUploaded}
             />
@@ -193,7 +216,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
             title="Assign TAs"
           >
             <TATeamForm
-              courseId={course._id}
+              courseId={courseId}
               teamSet={activeTab}
               onTeamCreated={handleAddTAsUploaded}
             />

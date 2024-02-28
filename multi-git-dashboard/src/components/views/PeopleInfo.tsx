@@ -1,5 +1,4 @@
-import { Course } from '@shared/types/Course';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   Button,
   Container,
@@ -9,20 +8,33 @@ import {
   Space,
   Table,
 } from '@mantine/core';
-import { hasFacultyPermission } from '@/lib/auth/utils';
 import FacultyForm from '../forms/FacultyForm';
 import TAForm from '../forms/TAForm';
 import StudentForm from '../forms/StudentForm';
 import CSVExport from '../csv/CSVExport';
 import UpdateUserForm from '../forms/UpdateUserForm';
 import Role from '@shared/types/auth/Role';
+import { User } from '@shared/types/User';
 
 interface PeopleInfoProps {
-  course: Course;
+  courseId: string;
+  faculty: User[];
+  TAs: User[];
+  students: User[];
+  hasFacultyPermission: boolean;
+  accountStatusRecord: Record<string, boolean>;
   onUpdate: () => void;
 }
 
-const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
+const PeopleInfo: React.FC<PeopleInfoProps> = ({
+  courseId,
+  faculty,
+  TAs,
+  students,
+  hasFacultyPermission,
+  accountStatusRecord,
+  onUpdate,
+}) => {
   const [isAddingFaculty, setIsAddingFaculty] = useState(false);
   const [isAddingTA, setIsAddingTA] = useState(false);
   const [isAddingStudent, setIsAddingStudent] = useState(false);
@@ -30,16 +42,11 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
 
   const [isEditing, setIsEditing] = useState(false);
   const [isEditingUser, setIsEditingUser] = useState(false);
-  const [selectedUser, setSelectedUser] = useState('');
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
-  const [accountStatusRecord, setAccountStatusRecord] = useState<
-    Record<string, boolean>
-  >({});
-
-  const apiRouteFaculty = `/api/courses/${course._id}/faculty/`;
-  const apiRouteTAs = `/api/courses/${course._id}/tas/`;
-  const apiRouteStudents = `/api/courses/${course._id}/students/`;
-  const apiRouteAccountStatus = '/api/accounts/status';
+  const apiRouteFaculty = `/api/courses/${courseId}/faculty/`;
+  const apiRouteTAs = `/api/courses/${courseId}/tas/`;
+  const apiRouteStudents = `/api/courses/${courseId}/students/`;
 
   const toggleAddFaculty = () => setIsAddingFaculty(!isAddingFaculty);
   const toggleAddTA = () => setIsAddingTA(!isAddingTA);
@@ -76,35 +83,7 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
     }
   };
 
-  const getAccountStatuses = async () => {
-    try {
-      const userIds: string[] = [];
-      course.faculty.forEach(faculty => userIds.push(faculty._id));
-      course.TAs.forEach(ta => userIds.push(ta._id));
-
-      const idsQueryParam = userIds.join(',');
-
-      const response = await fetch(
-        `${apiRouteAccountStatus}?ids=${encodeURIComponent(idsQueryParam)}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-      const data = await response.json();
-      setAccountStatusRecord(data);
-    } catch (error) {
-      console.error('Error getting account statuses:', error);
-    }
-  };
-
-  useEffect(() => {
-    getAccountStatuses();
-  }, []);
-
-  const openEditModal = (user: string) => {
+  const openEditModal = (user: User) => {
     setSelectedUser(user);
     setIsEditingUser(true);
   };
@@ -115,23 +94,23 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
     setIsAddingStudent(false);
     setIsExportingData(false);
     setIsEditingUser(false);
-    setSelectedUser('');
+    setSelectedUser(null);
     onUpdate();
   };
 
-  const facultyData = course.faculty.map(faculty => ({
+  const facultyData = faculty.map(faculty => ({
     identifier: faculty.identifier,
     name: faculty.name,
     gitHandle: faculty.gitHandle,
   }));
 
-  const taData = course.TAs.map(ta => ({
+  const taData = TAs.map(ta => ({
     identifier: ta.identifier,
     name: ta.name,
     gitHandle: ta.gitHandle,
   }));
 
-  const studentData = course.students.map(student => ({
+  const studentData = students.map(student => ({
     identifier: student.identifier,
     name: student.name,
     gitHandle: student.gitHandle,
@@ -141,14 +120,14 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
 
   return (
     <Container>
-      {hasFacultyPermission() && (
-        <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
+      {hasFacultyPermission && (
+        <Group my={16}>
           <Button onClick={toggleAddFaculty}>Add Faculty</Button>
           <Button onClick={toggleAddTA}>Add TA</Button>
           <Button onClick={toggleAddStudent}>Add Student</Button>
           <Button onClick={toggleIsExportingData}>Export Data</Button>
           <Button onClick={toggleIsEditing}>
-            {isEditing ? 'Cancel Edit' : 'Edit Details'}
+            {isEditing ? 'Finish Edit' : 'Edit Details'}
           </Button>
         </Group>
       )}
@@ -157,24 +136,24 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
         onClose={toggleAddFaculty}
         title="Add Faculty"
       >
-        <FacultyForm courseId={course._id} onFacultyCreated={handleUpdate} />
+        <FacultyForm courseId={courseId} onFacultyCreated={handleUpdate} />
       </Modal>
       <Modal opened={isAddingTA} onClose={toggleAddTA} title="Add TA">
-        <TAForm courseId={course._id} onTACreated={handleUpdate} />
+        <TAForm courseId={courseId} onTACreated={handleUpdate} />
       </Modal>
       <Modal
         opened={isAddingStudent}
         onClose={toggleAddStudent}
         title="Add Student"
       >
-        <StudentForm courseId={course._id} onStudentCreated={handleUpdate} />
+        <StudentForm courseId={courseId} onStudentCreated={handleUpdate} />
       </Modal>
       <Modal
         opened={isExportingData}
         onClose={toggleIsExportingData}
         title="Export Data"
       >
-        <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
+        <Group my={16}>
           <CSVExport
             data={facultyData}
             headers={csvHeaders}
@@ -196,10 +175,10 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
         </Group>
       </Modal>
       <Modal opened={isEditingUser} onClose={toggleEditUser} title="Edit User">
-        <UpdateUserForm userId={selectedUser} onUserUpdated={handleUpdate} />
+        <UpdateUserForm user={selectedUser} onUserUpdated={handleUpdate} />
       </Modal>
       <Divider label="Faculty Members" size="lg" />
-      {course.faculty && course.faculty.length > 0 && (
+      {faculty && faculty.length > 0 && (
         <Table>
           <Table.Thead>
             <Table.Tr>
@@ -217,11 +196,11 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {course.faculty.map(facultyMember => (
+            {faculty.map(facultyMember => (
               <Table.Tr key={facultyMember._id}>
                 <Table.Td style={{ textAlign: 'left' }}>
                   {facultyMember.name}
-                  {hasFacultyPermission() &&
+                  {hasFacultyPermission &&
                     accountStatusRecord[facultyMember._id] === false &&
                     '*'}
                 </Table.Td>
@@ -236,7 +215,7 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
                     <Button
                       size="compact-xs"
                       variant="light"
-                      onClick={() => openEditModal(facultyMember._id)}
+                      onClick={() => openEditModal(facultyMember)}
                     >
                       Edit
                     </Button>
@@ -263,7 +242,7 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
       )}
       <Space h="md" />
       <Divider label="Teaching Assistants" size="lg" />
-      {course.TAs && course.TAs.length > 0 && (
+      {TAs && TAs.length > 0 && (
         <Table>
           <Table.Thead>
             <Table.Tr>
@@ -281,11 +260,11 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {course.TAs.map(TA => (
+            {TAs.map(TA => (
               <Table.Tr key={TA._id}>
                 <Table.Td style={{ textAlign: 'left' }}>
                   {TA.name}
-                  {hasFacultyPermission() &&
+                  {hasFacultyPermission &&
                     accountStatusRecord[TA._id] === false &&
                     '*'}
                 </Table.Td>
@@ -300,7 +279,7 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
                     <Button
                       size="compact-xs"
                       variant="light"
-                      onClick={() => openEditModal(TA._id)}
+                      onClick={() => openEditModal(TA)}
                     >
                       Edit
                     </Button>
@@ -325,7 +304,7 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
       )}
       <Space h="md" />
       <Divider label="Students" size="lg" />
-      {course.students && course.students.length > 0 && (
+      {students && students.length > 0 && (
         <Table>
           <Table.Thead>
             <Table.Tr>
@@ -343,7 +322,7 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {course.students.map(student => (
+            {students.map(student => (
               <Table.Tr key={student._id}>
                 <Table.Td style={{ textAlign: 'left' }}>
                   {student.name}
@@ -359,7 +338,7 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({ course, onUpdate }) => {
                     <Button
                       size="compact-xs"
                       variant="light"
-                      onClick={() => openEditModal(student._id)}
+                      onClick={() => openEditModal(student)}
                     >
                       Edit
                     </Button>

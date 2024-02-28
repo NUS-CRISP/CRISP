@@ -1,16 +1,15 @@
 import { Accordion, ScrollArea } from '@mantine/core';
-import { Course } from '@shared/types/Course';
 import { TeamData } from '@shared/types/TeamData';
 import { useEffect, useState } from 'react';
 import OverviewCard from '../overview/OverviewCard';
 
 interface OverviewProps {
-  course: Course;
+  courseId: string;
 }
 
-const Overview: React.FC<OverviewProps> = ({ course }) => {
+const Overview: React.FC<OverviewProps> = ({ courseId }) => {
   const getTeamDatas = async () => {
-    const res = await fetch(`/api/github/course/${course._id}`);
+    const res = await fetch(`/api/github/course/${courseId}`);
     if (!res.ok) throw new Error('Failed to fetch team data');
     const teamDatas: TeamData[] = await res.json();
     return teamDatas;
@@ -29,7 +28,7 @@ const Overview: React.FC<OverviewProps> = ({ course }) => {
     };
 
     fetchData();
-  }, [course._id]);
+  }, [courseId]);
 
   if (teamDatas.length === 0) {
     return <div>No teams found</div>;

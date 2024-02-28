@@ -8,20 +8,19 @@ import {
   TextInput,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { TeamSet } from '@shared/types/TeamSet';
 import { useState } from 'react';
 import CSVUpload from '../csv/CSVUpload';
 
 interface AssessmentFormProps {
   courseId: string | string[] | undefined;
   onAssessmentCreated: () => void;
-  teamSets: TeamSet[];
+  teamSetNames: string[];
 }
 
 const AssessmentForm: React.FC<AssessmentFormProps> = ({
   courseId,
   onAssessmentCreated,
-  teamSets,
+  teamSetNames,
 }) => {
   const apiRoute = `/api/courses/${courseId}/assessments`;
   const csvTemplateHeaders = [
@@ -32,6 +31,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
     'teamSetName',
     'formLink',
     'sheetID',
+    'sheetTab',
   ];
 
   const form = useForm({
@@ -43,6 +43,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
       teamSetName: '',
       formLink: '',
       sheetID: '',
+      sheetTab: '',
     },
     validate: {},
   });
@@ -124,14 +125,14 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
         </div>
         <Select
           label="Team Set Name"
-          data={teamSets.map((teamSet: TeamSet) => ({
-            value: teamSet.name,
-            label: teamSet.name,
+          data={teamSetNames.map((teamSetName: string) => ({
+            value: teamSetName,
+            label: teamSetName,
           }))}
           {...form.getInputProps('teamSetName')}
-          value={teamSets.length > 0 ? form.values.teamSetName : null}
+          value={teamSetNames.length > 0 ? form.values.teamSetName : null}
           onChange={value => {
-            if (teamSets.length === 0 || value === null) {
+            if (teamSetNames.length === 0 || value === null) {
               form.setFieldValue('teamSetName', '');
             } else {
               form.setFieldValue('teamSetName', value);
@@ -152,6 +153,14 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
           value={form.values.sheetID}
           onChange={event => {
             form.setFieldValue('sheetID', event.currentTarget.value);
+          }}
+        />
+        <TextInput
+          label="Sheet Tab"
+          {...form.getInputProps('sheetTab')}
+          value={form.values.sheetTab}
+          onChange={event => {
+            form.setFieldValue('sheetTab', event.currentTarget.value);
           }}
         />
         <Button type="submit" style={{ marginTop: '16px' }}>

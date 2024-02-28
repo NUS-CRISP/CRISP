@@ -25,6 +25,10 @@ const AssessmentDetail: React.FC = () => {
   const [isResultFormOpen, setIsResultFormOpen] = useState<boolean>(false);
   const [sheetData, setSheetData] = useState<SheetData | null>(null);
 
+  const [activeTab, setActiveTab] = useState<string>('Overview');
+
+  const permission = hasFacultyPermission();
+
   const fetchAssessment = useCallback(async () => {
     try {
       const response = await fetch(assessmentsApiRoute, {
@@ -75,47 +79,84 @@ const AssessmentDetail: React.FC = () => {
     setIsResultFormOpen(o => !o);
   };
 
-  const onUpdate = () => {
+  const onResultsUploaded = () => {
     fetchAssessment();
-    fetchTeachingTeam();
     setIsResultFormOpen(o => !o);
+  };
+
+  const onUpdateAssessment = () => {
+    fetchAssessment();
   };
 
   const onUpdateSheet = () => {
     getSheetData();
   };
 
+  const setActiveTabAndSave = (tabName: string) => {
+    setActiveTab(tabName);
+    localStorage.setItem(`activeAssessmentTab_${assessmentId}`, tabName);
+  };
+
   useEffect(() => {
-    if (assessmentId && id) {
+    const savedTab = localStorage.getItem(
+      `activeAssessmentTab_${assessmentId}`
+    );
+    if (
+      savedTab &&
+      ['Overview', 'Form', 'Results'].some(label => label === savedTab)
+    ) {
+      setActiveTab(savedTab);
+    }
+  });
+
+  useEffect(() => {
+    if (router.isReady) {
       fetchAssessment();
       fetchTeachingTeam();
     }
-  }, [assessmentId, id, fetchAssessment, fetchTeachingTeam]);
+  }, [router.isReady]);
 
   useEffect(() => {
-    if (assessmentId) {
+    if (router.isReady) {
       getSheetData();
     }
-  }, [assessmentId]);
+  }, [router.isReady]);
 
   return (
     <Container>
-      <Tabs defaultValue="overview">
+      <Tabs value={activeTab}>
         <Tabs.List>
-          <Tabs.Tab value="overview">Overview</Tabs.Tab>
-          <Tabs.Tab value="form">Google Form</Tabs.Tab>
-          <Tabs.Tab value="results">Results</Tabs.Tab>
+          <Tabs.Tab
+            value="Overview"
+            onClick={() => setActiveTabAndSave('Overview')}
+          >
+            Overview
+          </Tabs.Tab>
+          <Tabs.Tab value="Form" onClick={() => setActiveTabAndSave('Form')}>
+            Google Form
+          </Tabs.Tab>
+          <Tabs.Tab
+            value="Results"
+            onClick={() => setActiveTabAndSave('Results')}
+          >
+            Results
+          </Tabs.Tab>
         </Tabs.List>
 
-        <Tabs.Panel value="overview">
-          <AssessmentOverview
-            assessment={assessment}
-            sheetData={sheetData}
-            onUpdateSheetData={onUpdateSheet}
-          />
+        <Tabs.Panel value="Overview">
+          {id && (
+            <AssessmentOverview
+              courseId={id}
+              assessment={assessment}
+              sheetData={sheetData}
+              hasFacultyPermission={permission}
+              onUpdateSheetData={onUpdateSheet}
+              onUpdateAssessment={onUpdateAssessment}
+            />
+          )}
         </Tabs.Panel>
 
-        <Tabs.Panel value="form">
+        <Tabs.Panel value="Form">
           {assessment?.formLink ? (
             <iframe src={assessment.formLink} width="100%" height="1200">
               Loading…
@@ -124,7 +165,7 @@ const AssessmentDetail: React.FC = () => {
             <Text>No form link provided</Text>
           )}
         </Tabs.Panel>
-        <Tabs.Panel value="results">
+        <Tabs.Panel value="Results">
           {hasFacultyPermission() && (
             <Button onClick={toggleResultForm} my={16}>
               Upload Results
@@ -137,7 +178,7 @@ const AssessmentDetail: React.FC = () => {
           >
             <ResultForm
               assessmentId={assessmentId}
-              onResultsUploaded={onUpdate}
+              onResultsUploaded={onResultsUploaded}
             />
           </Modal>
           {assessment?.results.map(result => (
