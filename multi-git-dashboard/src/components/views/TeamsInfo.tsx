@@ -7,7 +7,7 @@ import {
   Tabs,
 } from '@mantine/core';
 import { TeamSet } from '@shared/types/TeamSet';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import TeamCard from '../cards/TeamCard';
 import StudentTeamForm from '../forms/StudentTeamForm';
 import TATeamForm from '../forms/TATeamForm';
@@ -40,42 +40,6 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({
   );
   const [teamSetId, setTeamSetId] = useState<string | null>(null);
 
-  const teamCards = (teamSet: TeamSet) => {
-    return teamSet.teams.map(team => (
-      <TeamCard
-        key={team._id}
-        teamId={team._id}
-        number={team.number}
-        TA={team.TA}
-        teachingTeam={teachingTeam}
-        teamData={team.teamData}
-        teamDataList={teamSet.teams.map(t => t.teamData).filter(Boolean)}
-        members={team.members}
-        onUpdate={onUpdate}
-        isEditing={isEditing}
-      />
-    ));
-  };
-
-  const headers = teamSets.map((teamSet, index) => (
-    <Tabs.Tab
-      key={index}
-      value={teamSet.name}
-      onClick={() => {
-        setActiveTab(teamSet.name);
-        setTeamSetId(teamSet._id);
-      }}
-    >
-      {teamSet.name}
-    </Tabs.Tab>
-  ));
-
-  const panels = teamSets.map(teamSet => (
-    <Tabs.Panel key={teamSet._id} value={teamSet.name}>
-      {teamCards(teamSet)}
-    </Tabs.Panel>
-  ));
-
   const toggleTeamSetForm = () => {
     setIsCreatingTeamSet(o => !o);
   };
@@ -83,7 +47,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({
   const handleTeamSetCreated = (teamSetName: string) => {
     setIsCreatingTeamSet(false);
     onUpdate();
-    setActiveTab(teamSetName);
+    setActiveTabAndSave(teamSetName);
   };
 
   const toggleAddStudentsForm = () => {
@@ -105,6 +69,18 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({
     setIsAddingTAs(false);
     onUpdate();
   };
+
+  const setActiveTabAndSave = (tabName: string) => {
+    setActiveTab(tabName);
+    localStorage.setItem(`activeTeamSetTab_${courseId}`, tabName);
+  };
+
+  useEffect(() => {
+    const savedTab = localStorage.getItem(`activeTeamSetTab_${courseId}`);
+    if (savedTab && teamSets.some(teamSet => teamSet.name === savedTab)) {
+      setActiveTab(savedTab);
+    }
+  }, [teamSets]);
 
   const handleDeleteTeamSet = async () => {
     try {
@@ -129,6 +105,42 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({
       setError('Error deleting TeamSet. Please try again.');
     }
   };
+
+  const teamCards = (teamSet: TeamSet) => {
+    return teamSet.teams.map(team => (
+      <TeamCard
+        key={team._id}
+        teamId={team._id}
+        number={team.number}
+        TA={team.TA}
+        teachingTeam={teachingTeam}
+        teamData={team.teamData}
+        teamDataList={teamSet.teams.map(t => t.teamData).filter(Boolean)}
+        members={team.members}
+        onUpdate={onUpdate}
+        isEditing={isEditing}
+      />
+    ));
+  };
+
+  const headers = teamSets.map((teamSet, index) => (
+    <Tabs.Tab
+      key={index}
+      value={teamSet.name}
+      onClick={() => {
+        setActiveTabAndSave(teamSet.name);
+        setTeamSetId(teamSet._id);
+      }}
+    >
+      {teamSet.name}
+    </Tabs.Tab>
+  ));
+
+  const panels = teamSets.map(teamSet => (
+    <Tabs.Panel key={teamSet._id} value={teamSet.name}>
+      {teamCards(teamSet)}
+    </Tabs.Panel>
+  ));
 
   return (
     <Container>

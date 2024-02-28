@@ -16,34 +16,37 @@ const CourseNavBar: React.FC<CourseNavBarProps> = ({
   const [active, setActive] = useState('Overview');
 
   const linksData = [
-    { link: `/courses/${courseId}`, label: 'Overview', path: '/courses/[id]' },
+    { link: `/courses/${courseId}`, label: 'Overview' },
     {
       link: `/courses/${courseId}/people`,
       label: 'People',
-      path: '/courses/[id]/people',
     },
     {
       link: `/courses/${courseId}/teams`,
       label: 'Teams',
-      path: '/courses/[id]/teams',
     },
     {
       link: `/courses/${courseId}/timeline`,
       label: 'Timeline',
-      path: '/courses/[id]/timeline',
     },
     {
       link: `/courses/${courseId}/assessments`,
       label: 'Assessments',
-      path: '/courses/[id]/assessments',
     },
   ];
 
   useEffect(() => {
     const path = router.pathname;
-    const match = linksData.find(item => path.endsWith(item.path));
-    if (match) {
-      setActive(match.label);
+    if (path.startsWith('/courses/[id]/people')) {
+      setActive('People');
+    } else if (path.startsWith('/courses/[id]/teams')) {
+      setActive('Teams');
+    } else if (path.startsWith('/courses/[id]/timeline')) {
+      setActive('Timeline');
+    } else if (path.startsWith('/courses/[id]/assessments')) {
+      setActive('Assessments');
+    } else if (path.startsWith('/courses/[id]')) {
+      setActive('Overview');
     }
   }, [router.pathname]);
 

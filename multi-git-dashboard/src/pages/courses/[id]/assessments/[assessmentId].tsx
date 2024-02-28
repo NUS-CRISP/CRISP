@@ -25,6 +25,8 @@ const AssessmentDetail: React.FC = () => {
   const [isResultFormOpen, setIsResultFormOpen] = useState<boolean>(false);
   const [sheetData, setSheetData] = useState<SheetData | null>(null);
 
+  const [activeTab, setActiveTab] = useState<string>('Overview');
+
   const fetchAssessment = useCallback(async () => {
     try {
       const response = await fetch(assessmentsApiRoute, {
@@ -85,6 +87,23 @@ const AssessmentDetail: React.FC = () => {
     getSheetData();
   };
 
+  const setActiveTabAndSave = (tabName: string) => {
+    setActiveTab(tabName);
+    localStorage.setItem(`activeAssessmentTab_${assessmentId}`, tabName);
+  };
+
+  useEffect(() => {
+    const savedTab = localStorage.getItem(
+      `activeAssessmentTab_${assessmentId}`
+    );
+    if (
+      savedTab &&
+      ['Overview', 'Form', 'Results'].some(label => label === savedTab)
+    ) {
+      setActiveTab(savedTab);
+    }
+  });
+
   useEffect(() => {
     if (assessmentId && id) {
       fetchAssessment();
@@ -100,14 +119,26 @@ const AssessmentDetail: React.FC = () => {
 
   return (
     <Container>
-      <Tabs defaultValue="overview">
+      <Tabs value={activeTab}>
         <Tabs.List>
-          <Tabs.Tab value="overview">Overview</Tabs.Tab>
-          <Tabs.Tab value="form">Google Form</Tabs.Tab>
-          <Tabs.Tab value="results">Results</Tabs.Tab>
+          <Tabs.Tab
+            value="Overview"
+            onClick={() => setActiveTabAndSave('Overview')}
+          >
+            Overview
+          </Tabs.Tab>
+          <Tabs.Tab value="Form" onClick={() => setActiveTabAndSave('Form')}>
+            Google Form
+          </Tabs.Tab>
+          <Tabs.Tab
+            value="Results"
+            onClick={() => setActiveTabAndSave('Results')}
+          >
+            Results
+          </Tabs.Tab>
         </Tabs.List>
 
-        <Tabs.Panel value="overview">
+        <Tabs.Panel value="Overview">
           <AssessmentOverview
             assessment={assessment}
             sheetData={sheetData}
@@ -115,7 +146,7 @@ const AssessmentDetail: React.FC = () => {
           />
         </Tabs.Panel>
 
-        <Tabs.Panel value="form">
+        <Tabs.Panel value="Form">
           {assessment?.formLink ? (
             <iframe src={assessment.formLink} width="100%" height="1200">
               Loading…
@@ -124,7 +155,7 @@ const AssessmentDetail: React.FC = () => {
             <Text>No form link provided</Text>
           )}
         </Tabs.Panel>
-        <Tabs.Panel value="results">
+        <Tabs.Panel value="Results">
           {hasFacultyPermission() && (
             <Button onClick={toggleResultForm} my={16}>
               Upload Results
