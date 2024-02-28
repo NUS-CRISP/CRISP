@@ -1,7 +1,6 @@
 import { Code, Group } from '@mantine/core';
 import {
   IconGitBranch,
-  IconHome,
   IconListDetails,
   IconLogout,
   IconSettings2,
@@ -18,7 +17,6 @@ const Sidebar: React.FC = () => {
   const [active, setActive] = useState('Home');
 
   const linksData = [
-    { link: '/', label: 'Home', icon: IconHome },
     { link: '/courses', label: 'View Courses', icon: IconListDetails },
   ];
   if (session && session.user && session.user.role === 'admin') {
@@ -27,11 +25,12 @@ const Sidebar: React.FC = () => {
 
   useEffect(() => {
     const path = router.pathname;
-    const match = linksData.find(item => path.endsWith(item.link));
+    const match = linksData.find(item => path.startsWith(item.link));
     if (match) {
       setActive(match.label);
     }
   }, [router.pathname]);
+
 
   const links = linksData.map(item => (
     <a
