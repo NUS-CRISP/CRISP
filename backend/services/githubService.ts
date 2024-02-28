@@ -70,24 +70,42 @@ export const getAuthorizedTeamDataByCourse = async (
     if (!course.gitHubOrgName) {
       throw new NotFoundError('Course GitHub organization not found');
     }
-    return await TeamDataModel.find({
+    const teamDatas = await TeamDataModel.find({
       gitHubOrgName: course.gitHubOrgName,
-    }).sort('repoName');
+    });
+    if (!teamDatas) {
+      throw new NotFoundError('No team data found for course');
+    }
+    const sortedDatas = teamDatas.sort((a, b) => {
+      if (a.repoName < b.repoName) return -1;
+      if (a.repoName > b.repoName) return 1;
+      return 0;
+    });
+    return sortedDatas;
   } else if (role === Role.TA) {
     const teamSets = await TeamSetModel.find({ course: courseId });
     if (!teamSets) {
       throw new NotFoundError('No team sets found for course');
     }
-
-    return (
-      await TeamModel.find({
-        teamSet: { $in: teamSets.map(ts => ts._id) },
-        TA: user,
-      }).populate<{ teamData: TeamData }>({
-        path: 'teamData',
-        options: { sort: { repoName: 1 } },
-      })
-    ).map(team => team.teamData);
+    const teams = await TeamModel.find({
+      teamSet: { $in: teamSets.map(ts => ts._id) },
+      TA: user,
+    }).populate<{ teamData: TeamData }>({
+      path: 'teamData',
+      options: { sort: { repoName: 1 } },
+    });
+    if (!teams) {
+      throw new NotFoundError('No teams found for course');
+    }
+    const sortedDatas = teams
+      .map(team => team.teamData)
+      .filter((teamData): teamData is TeamData => teamData !== null && teamData !== undefined)
+      .sort((a, b) => {
+        if (a.repoName < b.repoName) return -1;
+        if (a.repoName > b.repoName) return 1;
+        return 0;
+      });
+    return sortedDatas;
   }
 };
 
