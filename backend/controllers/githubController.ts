@@ -5,6 +5,7 @@ import {
   fetchAllTeamData,
   fetchAllTeamDataForOrg,
   getAuthorizedTeamDataByCourse,
+  getAuthorizedTeamDataNamesByCourse,
 } from '../services/githubService';
 import { getAccountId } from '../utils/auth';
 
@@ -70,6 +71,31 @@ export const checkInstallation = async (req: Request, res: Response) => {
       res.status(500).json({
         message: 'An error occurred while checking the installation status.',
       });
+    }
+  }
+};
+
+export const getAllTeamDataNamesByCourse = async (
+  req: Request,
+  res: Response
+) => {
+  const courseId = req.params.id;
+
+  const accountId = await getAccountId(req);
+  if (!accountId) {
+    res.status(400).json({ error: 'Missing authorization' });
+    return;
+  }
+
+  try {
+    const teams = await getAuthorizedTeamDataNamesByCourse(accountId, courseId);
+    res.status(200).json(teams);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error fetching teams:', error);
+      res.status(500).json({ error: 'Failed to fetch teams' });
     }
   }
 };

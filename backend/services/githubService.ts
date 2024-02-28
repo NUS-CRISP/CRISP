@@ -64,29 +64,62 @@ export const getAuthorizedTeamDataByCourse = async (
 
   const role = account.role;
 
-  if (role === Role.Faculty) {
+  if (role === Role.Faculty || role === Role.Admin) {
     // Faculty can view all teams in the course; return all TeamData with same orgName as course
     // TODO: Temp. solution; adjust schema so we have a way to get all teams in a course
     if (!course.gitHubOrgName) {
       throw new NotFoundError('Course GitHub organization not found');
     }
-    return await TeamDataModel.find({
+    const teamDatas = await TeamDataModel.find({
       gitHubOrgName: course.gitHubOrgName,
-    }).sort('repoName');
+    });
+    if (!teamDatas) {
+      throw new NotFoundError('No team data found for course');
+    }
+    const sortedDatas = teamDatas.sort((a, b) => {
+      if (a.repoName < b.repoName) return -1;
+      if (a.repoName > b.repoName) return 1;
+      return 0;
+    });
+    return sortedDatas;
   } else if (role === Role.TA) {
     const teamSets = await TeamSetModel.find({ course: courseId });
     if (!teamSets) {
       throw new NotFoundError('No team sets found for course');
     }
-
-    return (
-      await TeamModel.find({
-        teamSet: { $in: teamSets.map(ts => ts._id) },
-        TA: user,
-      }).populate<{ teamData: TeamData }>({
-        path: 'teamData',
-        options: { sort: { repoName: 1 } },
-      })
-    ).map(team => team.teamData);
+    const teams = await TeamModel.find({
+      teamSet: { $in: teamSets.map(ts => ts._id) },
+      TA: user,
+    }).populate<{ teamData: TeamData }>({
+      path: 'teamData',
+      options: { sort: { repoName: 1 } },
+    });
+    if (!teams) {
+      throw new NotFoundError('No teams found for course');
+    }
+    const sortedDatas = teams
+      .map(team => team.teamData)
+      .filter((teamData): teamData is TeamData => teamData !== null && teamData !== undefined)
+      .sort((a, b) => {
+        if (a.repoName < b.repoName) return -1;
+        if (a.repoName > b.repoName) return 1;
+        return 0;
+      });
+    return sortedDatas;
   }
+};
+
+export const getAuthorizedTeamDataNamesByCourse = async (
+  accountId: string,
+  courseId: string
+) => {
+  const teamDatas = await getAuthorizedTeamDataByCourse(accountId, courseId);
+  if (!teamDatas) {
+    throw new NotFoundError('No team datas found for course');
+  }
+  const teamDataNames = teamDatas.map(teamData => ({
+    _id: teamData._id,
+    repoName: teamData.repoName,
+  }));
+  return teamDataNames;
 };

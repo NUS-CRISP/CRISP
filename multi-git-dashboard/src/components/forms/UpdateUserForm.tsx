@@ -1,23 +1,24 @@
 import { Box, Button, Group, Notification, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
+import { User } from '@shared/types/User';
 import { useState } from 'react';
 
 interface UpdateUserFormProps {
-  userId: string | string[] | undefined;
+  user: User | null;
   onUserUpdated: () => void;
 }
 
 const UpdateUserForm: React.FC<UpdateUserFormProps> = ({
-  userId,
+  user,
   onUserUpdated,
 }) => {
-  const apiRoute = `/api/user/${userId}`;
+  const apiRoute = `/api/user/${user?._id}`;
 
   const form = useForm({
     initialValues: {
-      identifier: '',
-      name: '',
-      gitHandle: '',
+      identifier: user?.identifier || '',
+      name: user?.name || '',
+      gitHandle: user?.gitHandle || '',
     },
   });
   const [error, setError] = useState<string | null>(null);
@@ -31,9 +32,7 @@ const UpdateUserForm: React.FC<UpdateUserFormProps> = ({
     if (form.values.name) {
       requestBody.name = form.values.name;
     }
-    if (form.values.gitHandle) {
-      requestBody.gitHandle = form.values.gitHandle;
-    }
+    requestBody.gitHandle = form.values.gitHandle;
 
     const response = await fetch(apiRoute, {
       method: 'PATCH',
@@ -79,7 +78,7 @@ const UpdateUserForm: React.FC<UpdateUserFormProps> = ({
             form.setFieldValue('gitHandle', event.currentTarget.value);
           }}
         />
-        <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
+        <Group my={16}>
           <Button type="submit" style={{ marginTop: '16px' }}>
             Update User
           </Button>

@@ -17,7 +17,7 @@ interface TeamCardProps {
   number: number;
   members: User[];
   TA: User | null;
-  TAs: User[];
+  teachingTeam: User[];
   teamData: TeamData | null;
   teamDataList: TeamData[];
   onUpdate: () => void;
@@ -29,7 +29,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
   number,
   members,
   TA,
-  TAs,
+  teachingTeam,
   teamData,
   teamDataList,
   onUpdate,
@@ -76,7 +76,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
     }
   };
 
-  const handleTAChange = async (TAId: string | null) => {
+  const handleTeamTAChange = async (TAId: string | null) => {
     try {
       const response = await fetch(apiRoute, {
         method: 'PATCH',
@@ -91,6 +91,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
         return;
       }
       setSelectedTA(TAId);
+      onUpdate();
     } catch (error) {
       console.error('Error updating team:', error);
     }
@@ -111,12 +112,16 @@ const TeamCard: React.FC<TeamCardProps> = ({
         return;
       }
       setSelectedTeamData(teamDataId);
+      onUpdate();
     } catch (error) {
       console.error('Error updating team:', error);
     }
   };
 
-  const taOptions = TAs.map(ta => ({ value: ta._id, label: ta.name }));
+  const taOptions = teachingTeam.map(user => ({
+    value: user._id,
+    label: user.name,
+  }));
   const repoOptions = teamDataList.map(teamData => ({
     value: teamData._id,
     label: teamData.repoName,
@@ -174,7 +179,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
           <Select
             data={taOptions}
             value={selectedTA}
-            onChange={e => handleTAChange(e)}
+            onChange={e => handleTeamTAChange(e)}
             placeholder="Assign TA"
           />
         ) : (

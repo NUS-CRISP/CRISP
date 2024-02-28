@@ -5,7 +5,7 @@ import AccountModel from '@models/Account';
 export const editUser = async (
   accountId: string,
   userId: string,
-  updateData: any
+  updateData: Record<string, unknown>
 ) => {
   const account = await AccountModel.findById(accountId);
   if (!account) {

@@ -79,6 +79,45 @@ export const getAssessmentById = async (
   return assessment;
 };
 
+export const updateAssessmentById = async (
+  assessmentId: string,
+  accountId: string,
+  updateData: Record<string, unknown>
+) => {
+  const account = await AccountModel.findById(accountId);
+  if (!account) {
+    throw new NotFoundError('Account not found');
+  }
+  if (account.role !== 'admin' && account.role !== 'Faculty member') {
+    throw new BadRequestError('Unauthorized');
+  }
+  const updatedAssessment = await AssessmentModel.findByIdAndUpdate(
+    assessmentId,
+    updateData,
+    { new: true }
+  );
+  if (!updatedAssessment) {
+    throw new NotFoundError('Assessment not found');
+  }
+};
+
+export const deleteAssessmentById = async (assessmentId: string) => {
+  const assessment = await AssessmentModel.findById(assessmentId);
+  if (!assessment) {
+    throw new NotFoundError('Assessment not found');
+  }
+  await ResultModel.deleteMany({ assessment: assessmentId });
+  const course = await CourseModel.findById(assessment.course);
+  if (course && course.assessments) {
+    const index = course.assessments.indexOf(assessment._id);
+    if (index !== -1) {
+      course.assessments.splice(index, 1);
+      await course.save();
+    }
+  }
+  await AssessmentModel.findByIdAndDelete(assessmentId);
+};
+
 export const uploadAssessmentResultsById = async (
   assessmentId: string,
   results: ResultItem[]

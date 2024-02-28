@@ -8,13 +8,19 @@ import {
   addTAsToCourse,
   createNewCourse,
   deleteCourseById,
+  getAssessmentsFromCourse,
   getCourseById,
+  getCourseCodeById,
   getCourseTeachingTeam,
+  getCourseTimeline,
   getCoursesForUser,
+  getTeamSetsFromCourse,
+  getTeamSetNamesFromCourse,
   removeFacultyFromCourse,
   removeStudentsFromCourse,
   removeTAsFromCourse,
   updateCourseById,
+  getPeopleFromCourse,
 } from '../services/courseService';
 import { BadRequestError, NotFoundError } from '../services/errors';
 import { addStudentsToTeam, addTAsToTeam } from '../services/teamService';
@@ -25,12 +31,10 @@ import { getAccountId } from '../utils/auth';
 export const createCourse = async (req: Request, res: Response) => {
   try {
     const accountId = await getAccountId(req);
-
     if (!accountId) {
       res.status(400).json({ error: 'Missing authorization' });
       return;
     }
-
     const course = await createNewCourse(req.body, accountId);
     res
       .status(201)
@@ -48,7 +52,6 @@ export const createCourse = async (req: Request, res: Response) => {
 export const getCourses = async (req: Request, res: Response) => {
   try {
     const accountId = await getAccountId(req);
-
     if (!accountId) {
       res.status(400).json({ error: 'Missing authorization' });
       return;
@@ -67,7 +70,6 @@ export const getCourses = async (req: Request, res: Response) => {
 
 export const getCourse = async (req: Request, res: Response) => {
   const accountId = await getAccountId(req);
-
   if (!accountId) {
     res.status(400).json({ error: 'Missing authorization' });
     return;
@@ -112,6 +114,21 @@ export const deleteCourse = async (req: Request, res: Response) => {
     } else {
       console.error('Error deleting course:', error);
       res.status(500).json({ error: 'Failed to delete course' });
+    }
+  }
+};
+
+export const getCourseCode = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  try {
+    const courseCode = await getCourseCodeById(courseId);
+    res.status(200).json(courseCode);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error getting course code:', error);
+      res.status(500).json({ error: 'Failed to get course code' });
     }
   }
 };
@@ -237,6 +254,22 @@ export const removeFaculty = async (req: Request, res: Response) => {
   }
 };
 
+/*----------------------------------------People----------------------------------------*/
+export const getPeople = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  try {
+    const people = await getPeopleFromCourse(courseId);
+    res.status(200).json(people);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error fetching people:', error);
+      res.status(500).json({ error: 'Failed to retrieve people' });
+    }
+  }
+};
+
 /*----------------------------------------TeamSet----------------------------------------*/
 export const addTeamSet = async (req: Request, res: Response) => {
   const courseId = req.params.id;
@@ -252,6 +285,41 @@ export const addTeamSet = async (req: Request, res: Response) => {
     } else {
       console.error('Error creating team set:', error);
       res.status(500).json({ error: 'Failed to create team set' });
+    }
+  }
+};
+
+export const getTeamSets = async (req: Request, res: Response) => {
+  const accountId = await getAccountId(req);
+  if (!accountId) {
+    res.status(400).json({ error: 'Missing authorization' });
+    return;
+  }
+  const courseId = req.params.id;
+  try {
+    const teamSets = await getTeamSetsFromCourse(accountId, courseId);
+    res.status(200).json(teamSets);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error getting team sets:', error);
+      res.status(500).json({ error: 'Failed to get team sets' });
+    }
+  }
+};
+
+export const getTeamSetsNames = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  try {
+    const teamSetNames = await getTeamSetNamesFromCourse(courseId);
+    res.status(200).json(teamSetNames);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error getting team sets name:', error);
+      res.status(500).json({ error: 'Failed to get team set names' });
     }
   }
 };
@@ -327,6 +395,22 @@ export const addSprint = async (req: Request, res: Response) => {
   }
 };
 
+/*----------------------------------------Timeline----------------------------------------*/
+export const getTimeline = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  try {
+    const timeline = await getCourseTimeline(courseId);
+    res.status(200).json(timeline);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error fetching timeline:', error);
+      res.status(500).json({ error: 'Failed to retrieve timeline' });
+    }
+  }
+};
+
 /*----------------------------------------Assessment----------------------------------------*/
 export const addAssessments = async (req: Request, res: Response) => {
   const courseId = req.params.id;
@@ -342,6 +426,21 @@ export const addAssessments = async (req: Request, res: Response) => {
     } else {
       console.error('Error adding assessments:', error);
       res.status(500).json({ error: 'Failed to add assessments' });
+    }
+  }
+};
+
+export const getAssessments = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  try {
+    const assessments = await getAssessmentsFromCourse(courseId);
+    res.status(200).json(assessments);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error getting assessments:', error);
+      res.status(500).json({ error: 'Failed to get assessments' });
     }
   }
 };

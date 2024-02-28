@@ -28,6 +28,7 @@ const assessmentSchema = new Schema<Assessment>({
   teamSet: { type: Schema.Types.ObjectId, ref: 'TeamSet' },
   formLink: { type: String },
   sheetID: { type: String },
+  sheetTab: { type: String },
   sheetData: { type: Schema.Types.ObjectId, ref: 'SheetData' },
 });
 
