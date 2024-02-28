@@ -23,7 +23,7 @@ const CourseNavBar: React.FC<CourseNavBarProps> = ({
       path: '/courses/[id]/people',
     },
     {
-      link: `/courses/${courseId}/`,
+      link: `/courses/${courseId}/teams`,
       label: 'Teams',
       path: '/courses/[id]/teams',
     },

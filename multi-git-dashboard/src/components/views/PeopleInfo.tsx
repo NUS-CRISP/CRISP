@@ -127,7 +127,7 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
           <Button onClick={toggleAddStudent}>Add Student</Button>
           <Button onClick={toggleIsExportingData}>Export Data</Button>
           <Button onClick={toggleIsEditing}>
-            {isEditing ? 'Cancel Edit' : 'Edit Details'}
+            {isEditing ? 'Finish Edit' : 'Edit Details'}
           </Button>
         </Group>
       )}

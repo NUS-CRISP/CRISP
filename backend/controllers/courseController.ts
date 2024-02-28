@@ -262,9 +262,7 @@ export const removeFaculty = async (req: Request, res: Response) => {
 export const getPeople = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   try {
-    console.log(req.params);
     const people = await getPeopleFromCourse(courseId);
-    console.log(people);
     res.status(200).json(people);
   } catch (error) {
     if (error instanceof NotFoundError) {
