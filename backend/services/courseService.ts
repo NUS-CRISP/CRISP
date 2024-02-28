@@ -1,5 +1,5 @@
 import AccountModel from '@models/Account';
-import AssessmentModel, { Assessment } from '@models/Assessment';
+import { Assessment } from '@models/Assessment';
 import CourseModel from '@models/Course';
 import TeamModel, { Team } from '@models/Team';
 import TeamSetModel, { TeamSet } from '@models/TeamSet';
@@ -41,53 +41,9 @@ export const getCourseById = async (courseId: string, accountId: string) => {
   if (!account) {
     throw new NotFoundError('Account not found');
   }
-  AssessmentModel;
-  const course = await CourseModel.findById(courseId)
-    .populate<{ faculty: User[] }>('faculty')
-    .populate<{ TAs: User[] }>('TAs')
-    .populate<{ students: User[] }>('students')
-    .populate<{ teamSets: TeamSet[] }>({
-      path: 'teamSets',
-      populate: {
-        path: 'teams',
-        model: 'Team',
-        populate: ['members', 'TA', 'teamData'],
-      },
-    })
-    .populate<{ assessments: Assessment[] }>({
-      path: 'assessments',
-      populate: {
-        path: 'teamSet',
-      },
-    });
+  const course = await CourseModel.findById(courseId);
   if (!course) {
     throw new NotFoundError('Course not found');
-  }
-
-  const role = account.role;
-  if (role === Role.TA) {
-    const userId = account.user;
-    course.teamSets.forEach(
-      teamSet =>
-        (teamSet.teams = teamSet.teams.filter(team =>
-          (team as unknown as Team).TA?.equals(userId)
-        ))
-    );
-  }
-
-  course.faculty.sort((a, b) => a.name.localeCompare(b.name));
-  course.TAs.sort((a, b) => a.name.localeCompare(b.name));
-  course.students.sort((a, b) => a.name.localeCompare(b.name));
-  course.teamSets.forEach((teamSet: TeamSet) => {
-    teamSet.teams.sort(
-      (a: unknown, b: unknown) => (a as Team).number - (b as Team).number
-    );
-  });
-  if (Array.isArray(course.milestones)) {
-    course.milestones.sort((a, b) => a.number - b.number);
-  }
-  if (Array.isArray(course.sprints)) {
-    course.sprints.sort((a, b) => a.number - b.number);
   }
   return course;
 };
@@ -256,11 +212,13 @@ export const addTAsToCourse = async (courseId: string, TADataList: any[]) => {
 
 export const getCourseTeachingTeam = async (courseId: string) => {
   const course = await CourseModel.findById(courseId)
-    .populate('faculty')
-    .populate('TAs');
+    .populate<{ faculty: User[] }>('faculty')
+    .populate<{ TAs: User[] }>('TAs');
   if (!course) {
     throw new NotFoundError('Course not found');
   }
+  course.faculty.sort((a, b) => a.name.localeCompare(b.name));
+  course.TAs.sort((a, b) => a.name.localeCompare(b.name));
   return [...course.faculty, ...course.TAs];
 };
 
@@ -368,12 +326,15 @@ export const removeFacultyFromCourse = async (
 /*----------------------------------------People----------------------------------------*/
 export const getPeopleFromCourse = async (courseId: string) => {
   const course = await CourseModel.findById(courseId)
-    .populate('faculty')
-    .populate('TAs')
-    .populate('students');
+    .populate<{ faculty: User[] }>('faculty')
+    .populate<{ TAs: User[] }>('TAs')
+    .populate<{ students: User[] }>('students');
   if (!course) {
     throw new NotFoundError('Course not found');
   }
+  course.faculty.sort((a, b) => a.name.localeCompare(b.name));
+  course.TAs.sort((a, b) => a.name.localeCompare(b.name));
+  course.students.sort((a, b) => a.name.localeCompare(b.name));
   return {
     faculty: course.faculty,
     TAs: course.TAs,
@@ -382,7 +343,14 @@ export const getPeopleFromCourse = async (courseId: string) => {
 };
 
 /*----------------------------------------TeamSet----------------------------------------*/
-export const getTeamSetsFromCourse = async (courseId: string) => {
+export const getTeamSetsFromCourse = async (
+  accountId: string,
+  courseId: string
+) => {
+  const account = await AccountModel.findById(accountId);
+  if (!account) {
+    throw new NotFoundError('Account not found');
+  }
   const course = await CourseModel.findById(courseId).populate<{
     teamSets: TeamSet[];
   }>({
@@ -396,6 +364,21 @@ export const getTeamSetsFromCourse = async (courseId: string) => {
   if (!course) {
     throw new NotFoundError('Course not found');
   }
+  const role = account.role;
+  if (role === Role.TA) {
+    const userId = account.user;
+    course.teamSets.forEach(
+      teamSet =>
+        (teamSet.teams = teamSet.teams.filter(team =>
+          (team as unknown as Team).TA?.equals(userId)
+        ))
+    );
+  }
+  course.teamSets.forEach((teamSet: TeamSet) => {
+    teamSet.teams.sort(
+      (a: unknown, b: unknown) => (a as Team).number - (b as Team).number
+    );
+  });
   return course.teamSets;
 };
 
@@ -445,6 +428,12 @@ export const getCourseTimeline = async (courseId: string) => {
   const course = await CourseModel.findById(courseId);
   if (!course) {
     throw new NotFoundError('Course not found');
+  }
+  if (Array.isArray(course.milestones)) {
+    course.milestones.sort((a, b) => a.number - b.number);
+  }
+  if (Array.isArray(course.sprints)) {
+    course.sprints.sort((a, b) => a.number - b.number);
   }
   return { milestones: course.milestones, sprints: course.sprints };
 };
