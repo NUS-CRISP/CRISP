@@ -2,6 +2,7 @@ import express from 'express';
 import {
   addAssessments,
   getCourseCode,
+  getAssessments,
   addFaculty,
   addMilestone,
   addSprint,
@@ -10,6 +11,8 @@ import {
   addTAs,
   addTAsToTeams,
   addTeamSet,
+  getTeamSets,
+  getTeamSetsNames,
   createCourse,
   deleteCourse,
   getCourse,
@@ -29,6 +32,7 @@ router.get('/', noCache, getCourses);
 router.get('/:id', getCourse);
 router.put('/:id', updateCourse);
 router.delete('/:id', deleteCourse);
+router.get('/:id/assessments', getAssessments);
 router.get('/:id/code', getCourseCode);
 router.post('/:id/faculty', addFaculty);
 router.delete('/:id/faculty/:userId', removeFaculty);
@@ -36,7 +40,9 @@ router.post('/:id/students', addStudents);
 router.delete('/:id/students/:userId', removeStudents);
 router.post('/:id/tas', addTAs);
 router.delete('/:id/tas/:userId', removeTAs);
+router.get('/:id/teamsets', getTeamSets);
 router.post('/:id/teamsets', addTeamSet);
+router.get('/:id/teamsets/names', getTeamSetsNames);
 router.post('/:id/teams/students', addStudentsToTeams);
 router.post('/:id/teams/tas', addTAsToTeams);
 router.get('/:id/teachingteam', getTeachingTeam);

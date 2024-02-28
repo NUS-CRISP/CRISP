@@ -1,4 +1,3 @@
-import AssessmentsInfo from '@/components/views/AssessmentsInfo';
 import Overview from '@/components/views/Overview';
 import PeopleInfo from '@/components/views/PeopleInfo';
 import TeamSetsInfo from '@/components/views/TeamSetsInfo';
@@ -70,22 +69,6 @@ const CourseViewPage: React.FC = () => {
     }
   }, [courseId, fetchCourse]);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const deleteCourse = async () => {
-    try {
-      const response = await fetch(courseApiRoute, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        console.error('Error deleting course:', response.statusText);
-        return;
-      }
-      router.push('/courses');
-    } catch (error) {
-      console.error('Error deleting course:', error);
-    }
-  };
-
   const handleUpdate = () => {
     fetchCourse();
   };
@@ -110,7 +93,6 @@ const CourseViewPage: React.FC = () => {
             <Tabs.Tab value="people">People</Tabs.Tab>
             <Tabs.Tab value="teams">Teams</Tabs.Tab>
             <Tabs.Tab value="timeline">Timeline</Tabs.Tab>
-            <Tabs.Tab value="assessments">Assessments</Tabs.Tab>
           </Tabs.List>
           <div style={{ overflow: 'auto', flexGrow: 1 }}>
             <Tabs.Panel value="overview">
@@ -129,11 +111,6 @@ const CourseViewPage: React.FC = () => {
             <Tabs.Panel value="timeline">
               <div>
                 <TimelineInfo course={course} onUpdate={handleUpdate} />
-              </div>
-            </Tabs.Panel>
-            <Tabs.Panel value="assessments">
-              <div>
-                <AssessmentsInfo course={course} onUpdate={handleUpdate} />
               </div>
             </Tabs.Panel>
           </div>

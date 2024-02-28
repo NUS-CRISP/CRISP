@@ -26,17 +26,12 @@ const Sidebar: React.FC = () => {
   }
 
   useEffect(() => {
-    const storedActiveTab = localStorage.getItem('activeTab');
-    if (storedActiveTab) {
-      setActive(storedActiveTab);
+    const path = router.pathname;
+    const match = linksData.find(item => path.endsWith(item.link));
+    if (match) {
+      setActive(match.label);
     }
-  }, []);
-
-  const handleLinkClick = (label: string, link: string) => {
-    setActive(label);
-    localStorage.setItem('activeTab', label);
-    router.push(link);
-  };
+  }, [router.pathname]);
 
   const links = linksData.map(item => (
     <a
@@ -46,7 +41,8 @@ const Sidebar: React.FC = () => {
       key={item.label}
       onClick={event => {
         event.preventDefault();
-        handleLinkClick(item.label, item.link);
+        setActive(item.label);
+        router.push(item.link);
       }}
     >
       <item.icon className={classes.linkIcon} stroke={1.5} />

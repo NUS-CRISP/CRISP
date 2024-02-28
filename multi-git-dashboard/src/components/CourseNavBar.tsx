@@ -16,25 +16,24 @@ const CourseNavBar: React.FC<CourseNavBarProps> = ({
   const [active, setActive] = useState('Overview');
 
   const linksData = [
-    { link: `/courses/${courseId}/`, label: 'Overview' },
-    { link: `/courses/${courseId}/`, label: 'People' },
-    { link: `/courses/${courseId}/`, label: 'Teams' },
-    { link: `/courses/${courseId}/`, label: 'Timeline' },
-    { link: `/courses/${courseId}/`, label: 'Assessments' },
+    { link: `/courses/${courseId}/`, label: 'Overview', path: '/courses/[id]' },
+    { link: `/courses/${courseId}/`, label: 'People', path: '/courses/[id]' },
+    { link: `/courses/${courseId}/`, label: 'Teams', path: '/courses/[id]' },
+    { link: `/courses/${courseId}/`, label: 'Timeline', path: '/courses/[id]' },
+    {
+      link: `/courses/${courseId}/assessments`,
+      label: 'Assessments',
+      path: '/courses/[id]/assessments',
+    },
   ];
 
   useEffect(() => {
-    const storedActiveTab = localStorage.getItem('activeTabCourse');
-    if (storedActiveTab) {
-      setActive(storedActiveTab);
+    const path = router.pathname;
+    const match = linksData.find(item => path.endsWith(item.path));
+    if (match) {
+      setActive(match.label);
     }
-  }, []);
-
-  const handleLinkClick = (label: string, link: string) => {
-    setActive(label);
-    localStorage.setItem('activeTabCourse', label);
-    router.push(link);
-  };
+  }, [router.pathname]);
 
   const links = linksData.map(item => (
     <a
@@ -44,7 +43,8 @@ const CourseNavBar: React.FC<CourseNavBarProps> = ({
       key={item.label}
       onClick={event => {
         event.preventDefault();
-        handleLinkClick(item.label, item.link);
+        setActive(item.label);
+        router.push(item.link);
       }}
     >
       <span>{item.label}</span>

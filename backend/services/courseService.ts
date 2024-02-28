@@ -365,6 +365,34 @@ export const removeFacultyFromCourse = async (
   await facultyMember.save();
 };
 
+/*----------------------------------------TeamSet----------------------------------------*/
+export const getTeamSetsFromCourse = async (courseId: string) => {
+  const course = await CourseModel.findById(courseId).populate<{
+    teamSets: TeamSet[];
+  }>({
+    path: 'teamSets',
+    populate: {
+      path: 'teams',
+      model: 'Team',
+      populate: ['members', 'TA', 'teamData'],
+    },
+  });
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+  return course.teamSets;
+};
+
+export const getTeamSetNamesFromCourse = async (courseId: string) => {
+  const course = await CourseModel.findById(courseId).populate<{
+    teamSets: TeamSet[];
+  }>('teamSets');
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+  return course.teamSets.map((teamSet: TeamSet) => teamSet.name);
+};
+
 /*----------------------------------------Milestone----------------------------------------*/
 export const addMilestoneToCourse = async (
   courseId: string,
@@ -394,4 +422,13 @@ export const addSprintToCourse = async (
   }
   course.sprints.push(sprintData);
   await course.save();
+};
+
+/*----------------------------------------Assessments----------------------------------------*/
+export const getAssessmentsFromCourse = async (courseId: string) => {
+  const course = await CourseModel.findById(courseId).populate('assessments');
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+  return course.assessments;
 };

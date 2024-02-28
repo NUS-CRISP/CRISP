@@ -8,10 +8,13 @@ import {
   addTAsToCourse,
   createNewCourse,
   deleteCourseById,
+  getAssessmentsFromCourse,
   getCourseById,
   getCourseCodeById,
   getCourseTeachingTeam,
   getCoursesForUser,
+  getTeamSetsFromCourse,
+  getTeamSetNamesFromCourse,
   removeFacultyFromCourse,
   removeStudentsFromCourse,
   removeTAsFromCourse,
@@ -272,6 +275,36 @@ export const addTeamSet = async (req: Request, res: Response) => {
   }
 };
 
+export const getTeamSets = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  try {
+    const teamSets = await getTeamSetsFromCourse(courseId);
+    res.status(200).json(teamSets);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error getting team sets:', error);
+      res.status(500).json({ error: 'Failed to get team sets' });
+    }
+  }
+};
+
+export const getTeamSetsNames = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  try {
+    const teamSetNames = await getTeamSetNamesFromCourse(courseId);
+    res.status(200).json(teamSetNames);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error getting team sets name:', error);
+      res.status(500).json({ error: 'Failed to get team set names' });
+    }
+  }
+};
+
 /*----------------------------------------Team----------------------------------------*/
 export const addStudentsToTeams = async (req: Request, res: Response) => {
   const courseId = req.params.id;
@@ -358,6 +391,21 @@ export const addAssessments = async (req: Request, res: Response) => {
     } else {
       console.error('Error adding assessments:', error);
       res.status(500).json({ error: 'Failed to add assessments' });
+    }
+  }
+};
+
+export const getAssessments = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  try {
+    const assessments = await getAssessmentsFromCourse(courseId);
+    res.status(200).json(assessments);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error getting assessments:', error);
+      res.status(500).json({ error: 'Failed to get assessments' });
     }
   }
 };
