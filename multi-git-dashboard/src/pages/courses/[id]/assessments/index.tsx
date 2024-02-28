@@ -21,9 +21,11 @@ const AssessmentListPage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchAssessments();
-    fetchTeamSetNames();
-  }, []);
+    if (router.isReady) {
+        fetchAssessments();
+        fetchTeamSetNames();
+    }
+  }, [router.isReady]);
 
   const fetchAssessments = async () => {
     try {
