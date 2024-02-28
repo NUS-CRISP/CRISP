@@ -9,6 +9,7 @@ import {
   createNewCourse,
   deleteCourseById,
   getCourseById,
+  getCourseCodeById,
   getCourseTeachingTeam,
   getCoursesForUser,
   removeFacultyFromCourse,
@@ -112,6 +113,21 @@ export const deleteCourse = async (req: Request, res: Response) => {
     } else {
       console.error('Error deleting course:', error);
       res.status(500).json({ error: 'Failed to delete course' });
+    }
+  }
+};
+
+export const getCourseCode = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  try {
+    const courseCode = await getCourseCodeById(courseId);
+    res.status(200).json(courseCode);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error getting course code:', error);
+      res.status(500).json({ error: 'Failed to get course code' });
     }
   }
 };

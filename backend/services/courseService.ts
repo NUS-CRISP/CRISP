@@ -120,6 +120,14 @@ export const deleteCourseById = async (courseId: string) => {
   );
 };
 
+export const getCourseCodeById = async (courseId: string) => {
+  const course = await CourseModel.findById(courseId);
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+  return course.code;
+};
+
 /*----------------------------------------Student----------------------------------------*/
 export const addStudentsToCourse = async (
   courseId: string,
