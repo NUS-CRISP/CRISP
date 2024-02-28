@@ -35,7 +35,7 @@ const PeopleListPage: React.FC = () => {
   }, [router.isReady]);
 
   useEffect(() => {
-    if (faculty.length > 0 && TAs.length > 0) {
+    if (permission && faculty.length > 0 && TAs.length > 0) {
       getAccountStatuses();
     }
   }, [faculty, TAs]);
@@ -89,7 +89,7 @@ const PeopleListPage: React.FC = () => {
 
   return (
     <Container>
-      {id && permission && (
+      {id && (
         <PeopleInfo
           courseId={id}
           faculty={faculty}

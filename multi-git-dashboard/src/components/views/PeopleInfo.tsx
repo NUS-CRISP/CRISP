@@ -121,7 +121,7 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
   return (
     <Container>
       {hasFacultyPermission && (
-        <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
+        <Group my={16}>
           <Button onClick={toggleAddFaculty}>Add Faculty</Button>
           <Button onClick={toggleAddTA}>Add TA</Button>
           <Button onClick={toggleAddStudent}>Add Student</Button>
@@ -153,7 +153,7 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
         onClose={toggleIsExportingData}
         title="Export Data"
       >
-        <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
+        <Group my={16}>
           <CSVExport
             data={facultyData}
             headers={csvHeaders}
