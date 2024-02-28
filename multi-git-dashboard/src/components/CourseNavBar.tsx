@@ -16,10 +16,22 @@ const CourseNavBar: React.FC<CourseNavBarProps> = ({
   const [active, setActive] = useState('Overview');
 
   const linksData = [
-    { link: `/courses/${courseId}/`, label: 'Overview', path: '/courses/[id]' },
-    { link: `/courses/${courseId}/`, label: 'People', path: '/courses/[id]' },
-    { link: `/courses/${courseId}/`, label: 'Teams', path: '/courses/[id]' },
-    { link: `/courses/${courseId}/`, label: 'Timeline', path: '/courses/[id]' },
+    { link: `/courses/${courseId}`, label: 'Overview', path: '/courses/[id]' },
+    {
+      link: `/courses/${courseId}/people`,
+      label: 'People',
+      path: '/courses/[id]/people',
+    },
+    {
+      link: `/courses/${courseId}/`,
+      label: 'Teams',
+      path: '/courses/[id]/teams',
+    },
+    {
+      link: `/courses/${courseId}/`,
+      label: 'Timeline',
+      path: '/courses/[id]/timeline',
+    },
     {
       link: `/courses/${courseId}/assessments`,
       label: 'Assessments',

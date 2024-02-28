@@ -1,5 +1,4 @@
 import Overview from '@/components/views/Overview';
-import PeopleInfo from '@/components/views/PeopleInfo';
 import TeamSetsInfo from '@/components/views/TeamSetsInfo';
 import TimelineInfo from '@/components/views/TimelineInfo';
 import { Container, Loader, Tabs } from '@mantine/core';
@@ -90,18 +89,12 @@ const CourseViewPage: React.FC = () => {
             style={{ display: 'flex', justifyContent: 'space-evenly' }}
           >
             <Tabs.Tab value="overview">Overview</Tabs.Tab>
-            <Tabs.Tab value="people">People</Tabs.Tab>
             <Tabs.Tab value="teams">Teams</Tabs.Tab>
             <Tabs.Tab value="timeline">Timeline</Tabs.Tab>
           </Tabs.List>
           <div style={{ overflow: 'auto', flexGrow: 1 }}>
             <Tabs.Panel value="overview">
               <Overview course={course} />
-            </Tabs.Panel>
-            <Tabs.Panel value="people">
-              <div>
-                <PeopleInfo course={course} onUpdate={handleUpdate} />
-              </div>
             </Tabs.Panel>
             <Tabs.Panel value="teams">
               <div>

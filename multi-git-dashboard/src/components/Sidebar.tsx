@@ -31,7 +31,6 @@ const Sidebar: React.FC = () => {
     }
   }, [router.pathname]);
 
-
   const links = linksData.map(item => (
     <a
       className={classes.link}

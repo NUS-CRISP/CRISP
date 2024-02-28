@@ -22,8 +22,8 @@ const AssessmentListPage: React.FC = () => {
 
   useEffect(() => {
     if (router.isReady) {
-        fetchAssessments();
-        fetchTeamSetNames();
+      fetchAssessments();
+      fetchTeamSetNames();
     }
   }, [router.isReady]);
 

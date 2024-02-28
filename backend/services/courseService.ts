@@ -442,8 +442,7 @@ export const addSprintToCourse = async (
 
 /*----------------------------------------Assessments----------------------------------------*/
 export const getAssessmentsFromCourse = async (courseId: string) => {
-  const course = await CourseModel.findById(courseId)
-  .populate<{
+  const course = await CourseModel.findById(courseId).populate<{
     assessments: Assessment[];
   }>({
     path: 'assessments',
