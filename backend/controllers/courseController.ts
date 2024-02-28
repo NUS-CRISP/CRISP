@@ -12,6 +12,7 @@ import {
   getCourseById,
   getCourseCodeById,
   getCourseTeachingTeam,
+  getCourseTimeline,
   getCoursesForUser,
   getTeamSetsFromCourse,
   getTeamSetNamesFromCourse,
@@ -391,6 +392,22 @@ export const addSprint = async (req: Request, res: Response) => {
     } else {
       console.error('Error adding sprint:', error);
       res.status(500).json({ error: 'Failed to add sprint' });
+    }
+  }
+};
+
+/*----------------------------------------Timeline----------------------------------------*/
+export const getTimeline = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  try {
+    const timeline = await getCourseTimeline(courseId);
+    res.status(200).json(timeline);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error fetching timeline:', error);
+      res.status(500).json({ error: 'Failed to retrieve timeline' });
     }
   }
 };

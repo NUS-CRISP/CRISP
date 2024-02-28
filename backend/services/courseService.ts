@@ -440,6 +440,15 @@ export const addSprintToCourse = async (
   await course.save();
 };
 
+/*----------------------------------------Timeline----------------------------------------*/
+export const getCourseTimeline = async (courseId: string) => {
+  const course = await CourseModel.findById(courseId);
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+  return { milestones: course.milestones, sprints: course.sprints };
+};
+
 /*----------------------------------------Assessments----------------------------------------*/
 export const getAssessmentsFromCourse = async (courseId: string) => {
   const course = await CourseModel.findById(courseId).populate<{

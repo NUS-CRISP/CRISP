@@ -1,6 +1,5 @@
 import Overview from '@/components/views/Overview';
 import TeamSetsInfo from '@/components/views/TeamSetsInfo';
-import TimelineInfo from '@/components/views/TimelineInfo';
 import { Container, Loader, Tabs } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { Course, Milestone, Sprint } from '@shared/types/Course';
@@ -90,7 +89,6 @@ const CourseViewPage: React.FC = () => {
           >
             <Tabs.Tab value="overview">Overview</Tabs.Tab>
             <Tabs.Tab value="teams">Teams</Tabs.Tab>
-            <Tabs.Tab value="timeline">Timeline</Tabs.Tab>
           </Tabs.List>
           <div style={{ overflow: 'auto', flexGrow: 1 }}>
             <Tabs.Panel value="overview">
@@ -99,11 +97,6 @@ const CourseViewPage: React.FC = () => {
             <Tabs.Panel value="teams">
               <div>
                 <TeamSetsInfo course={course} onUpdate={handleUpdate} />
-              </div>
-            </Tabs.Panel>
-            <Tabs.Panel value="timeline">
-              <div>
-                <TimelineInfo course={course} onUpdate={handleUpdate} />
               </div>
             </Tabs.Panel>
           </div>

@@ -18,6 +18,7 @@ import {
   getCourse,
   getCourses,
   getTeachingTeam,
+  getTimeline,
   getPeople,
   removeFaculty,
   removeStudents,
@@ -48,6 +49,7 @@ router.get('/:id/teamsets/names', getTeamSetsNames);
 router.post('/:id/teams/students', addStudentsToTeams);
 router.post('/:id/teams/tas', addTAsToTeams);
 router.get('/:id/teachingteam', getTeachingTeam);
+router.get('/:id/timeline', getTimeline);
 router.post('/:id/milestones', addMilestone);
 router.post('/:id/sprints', addSprint);
 router.post('/:id/assessments', addAssessments);
