@@ -21,7 +21,7 @@ const setupApp = async () => {
 };
 setupApp();
 
-const port = process.env.PORT;
+const port = process.env.PORT || 3001;
 const app: Express = express();
 
 app.use(express.json());
