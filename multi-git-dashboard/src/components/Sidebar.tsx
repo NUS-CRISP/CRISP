@@ -1,6 +1,7 @@
 import { Code, Group } from '@mantine/core';
 import {
   IconGitBranch,
+  IconHelp,
   IconHome,
   IconListDetails,
   IconLogout,
@@ -77,6 +78,11 @@ const Sidebar: React.FC = () => {
           <span>
             Hello, {session && session.user ? session.user.name : 'user'}
           </span>
+        </a>
+
+        <a href={'https://forms.gle/41KcH8gFh3uDfzQGA'} target='_blank' className={classes.link}>
+          <IconHelp className={classes.linkIcon} stroke={1.5} />
+          <span>Report an issue</span>
         </a>
 
         <a href="#" className={classes.link} onClick={() => signOut()}>
