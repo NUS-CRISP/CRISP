@@ -24,8 +24,12 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
   const [isCreatingTeamSet, setIsCreatingTeamSet] = useState<boolean>(false);
   const [isAddingStudents, setIsAddingStudents] = useState<boolean>(false);
   const [isAddingTAs, setIsAddingTAs] = useState<boolean>(false);
+  const [isEditing, setIsEditing] = useState(false);
+
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string | null>(
+    course.teamSets ? course.teamSets[0].name : null
+  );
   const [teamSetId, setTeamSetId] = useState<string | null>(null);
 
   const teamCards = (teamSet: TeamSet) => {
@@ -39,7 +43,8 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
         teamData={team.teamData}
         teamDataList={teamSet.teams.map(t => t.teamData).filter(Boolean)}
         members={team.members}
-        onTeamDeleted={onUpdate}
+        onUpdate={onUpdate}
+        isEditing={isEditing}
       />
     ));
   };
@@ -67,9 +72,10 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
     setIsCreatingTeamSet(o => !o);
   };
 
-  const handleTeamSetCreated = () => {
+  const handleTeamSetCreated = (teamSetName: string) => {
     setIsCreatingTeamSet(false);
     onUpdate();
+    setActiveTab(teamSetName);
   };
 
   const toggleAddStudentsForm = () => {
@@ -84,6 +90,8 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
   const toggleAddTAsForm = () => {
     setIsAddingTAs(o => !o);
   };
+
+  const toggleIsEditing = () => setIsEditing(!isEditing);
 
   const handleAddTAsUploaded = () => {
     setIsAddingTAs(false);
@@ -107,7 +115,6 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
       setIsAddingTAs(false);
       setActiveTab(null);
       setTeamSetId(null);
-      console.log('TeamSet deleted');
       onUpdate();
     } catch (error) {
       console.error('Error deleting TeamSet:', error);
@@ -140,9 +147,14 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
               {activeTab && (
                 <Button onClick={toggleAddTAsForm}>Assign TAs</Button>
               )}
+              {activeTab && (
+                <Button onClick={toggleIsEditing}>
+                  {isEditing ? 'Cancel Edit' : 'Edit Teams'}
+                </Button>
+              )}
             </Group>
 
-            {teamSetId && (
+            {teamSetId && isEditing && (
               <Button color="red" onClick={handleDeleteTeamSet}>
                 Delete TeamSet
               </Button>
@@ -187,7 +199,6 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({ course, onUpdate }) => {
             />
           </Modal>
         )}
-
         {panels}
       </Tabs>
     </Container>

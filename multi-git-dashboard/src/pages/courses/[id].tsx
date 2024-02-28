@@ -1,10 +1,8 @@
 import AssessmentsInfo from '@/components/views/AssessmentsInfo';
-import MilestonesInfo from '@/components/views/MilestonesInfo';
 import Overview from '@/components/views/Overview';
-import SprintsInfo from '@/components/views/SprintsInfo';
-import StaffInfo from '@/components/views/StaffInfo';
-import StudentsInfo from '@/components/views/StudentsInfo';
+import PeopleInfo from '@/components/views/PeopleInfo';
 import TeamSetsInfo from '@/components/views/TeamSetsInfo';
+import TimelineInfo from '@/components/views/TimelineInfo';
 import { Container, Loader, Tabs } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { Course, Milestone, Sprint } from '@shared/types/Course';
@@ -109,25 +107,18 @@ const CourseViewPage: React.FC = () => {
             style={{ display: 'flex', justifyContent: 'space-evenly' }}
           >
             <Tabs.Tab value="overview">Overview</Tabs.Tab>
-            <Tabs.Tab value="students">Students</Tabs.Tab>
-            <Tabs.Tab value="staff">Staff</Tabs.Tab>
+            <Tabs.Tab value="people">People</Tabs.Tab>
             <Tabs.Tab value="teams">Teams</Tabs.Tab>
-            <Tabs.Tab value="milestones">Timeline</Tabs.Tab>
-            <Tabs.Tab value="sprints">Sprints</Tabs.Tab>
+            <Tabs.Tab value="timeline">Timeline</Tabs.Tab>
             <Tabs.Tab value="assessments">Assessments</Tabs.Tab>
           </Tabs.List>
           <div style={{ overflow: 'auto', flexGrow: 1 }}>
             <Tabs.Panel value="overview">
               <Overview course={course} />
             </Tabs.Panel>
-            <Tabs.Panel value="students">
+            <Tabs.Panel value="people">
               <div>
-                <StudentsInfo course={course} onUpdate={handleUpdate} />
-              </div>
-            </Tabs.Panel>
-            <Tabs.Panel value="staff">
-              <div>
-                <StaffInfo course={course} onUpdate={handleUpdate} />
+                <PeopleInfo course={course} onUpdate={handleUpdate} />
               </div>
             </Tabs.Panel>
             <Tabs.Panel value="teams">
@@ -135,14 +126,9 @@ const CourseViewPage: React.FC = () => {
                 <TeamSetsInfo course={course} onUpdate={handleUpdate} />
               </div>
             </Tabs.Panel>
-            <Tabs.Panel value="milestones">
+            <Tabs.Panel value="timeline">
               <div>
-                <MilestonesInfo course={course} onUpdate={handleUpdate} />
-              </div>
-            </Tabs.Panel>
-            <Tabs.Panel value="sprints">
-              <div>
-                <SprintsInfo course={course} onUpdate={handleUpdate} />
+                <TimelineInfo course={course} onUpdate={handleUpdate} />
               </div>
             </Tabs.Panel>
             <Tabs.Panel value="assessments">

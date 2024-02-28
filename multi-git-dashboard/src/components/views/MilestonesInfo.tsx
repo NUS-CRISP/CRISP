@@ -37,10 +37,7 @@ const MilestonesInfo: React.FC<MilestonesInfoProps> = ({
   return (
     <Container>
       {hasFacultyPermission() && (
-        <Button
-          onClick={toggleForm}
-          style={{ marginTop: '16px', marginBottom: '16px' }}
-        >
+        <Button onClick={toggleForm} my={16}>
           Create Milestone
         </Button>
       )}

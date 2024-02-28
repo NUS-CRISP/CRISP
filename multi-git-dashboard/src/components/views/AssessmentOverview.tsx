@@ -94,13 +94,14 @@ const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
 
   const teamOptions = [
     'All Teams',
-    ...new Set(
-      sheetData?.rows.map(row =>
-        assessment?.granularity === 'individual' ? row[2] : row[0]
-      )
-    ),
+    ...new Set(assessment?.teamSet.teams?.map(team => team.number.toString())),
   ]
-    .filter(team => team !== 'EMPTY')
+    .sort((a, b) => {
+      if (a === 'All Teams') return -1;
+      if (b === 'All Teams') return 1;
+
+      return parseInt(a, 10) - parseInt(b, 10);
+    })
     .map(team => ({ value: team, label: `${team}` }));
 
   const filteredSheetData: SheetData = sheetData
@@ -116,7 +117,7 @@ const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
       }
     : {
         _id: '',
-        fetchedAt: '' as unknown as Date,
+        fetchedAt: new Date(),
         headers: [],
         rows: [[]],
       };

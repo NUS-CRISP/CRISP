@@ -6,6 +6,7 @@ import TeamSetModel, { TeamSet } from '@models/TeamSet';
 import UserModel, { User } from '@models/User';
 import Role from '@shared/types/auth/Role';
 import { NotFoundError } from './errors';
+import { Types } from 'mongoose';
 
 /*----------------------------------------Course----------------------------------------*/
 export const createNewCourse = async (courseData: any, accountId: string) => {
@@ -173,6 +174,27 @@ export const addStudentsToCourse = async (
   await course.save();
 };
 
+export const removeStudentsFromCourse = async (
+  courseId: string,
+  studentId: string
+) => {
+  const course = await CourseModel.findById(courseId).populate('students');
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+  const student =
+    await UserModel.findById(studentId).populate('enrolledCourses');
+  if (!student) {
+    throw new NotFoundError('Student not found');
+  }
+
+  (course.students as Types.Array<Types.ObjectId>).pull(student._id);
+  await course.save();
+
+  (student.enrolledCourses as Types.Array<Types.ObjectId>).pull(course._id);
+  await student.save();
+};
+
 /*----------------------------------------TA----------------------------------------*/
 export const addTAsToCourse = async (courseId: string, TADataList: any[]) => {
   const course = await CourseModel.findById(courseId).populate<{ TAs: User[] }>(
@@ -232,6 +254,107 @@ export const getCourseTeachingTeam = async (courseId: string) => {
     throw new NotFoundError('Course not found');
   }
   return [...course.faculty, ...course.TAs];
+};
+
+export const removeTAsFromCourse = async (courseId: string, taId: string) => {
+  const course = await CourseModel.findById(courseId).populate('TAs');
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+  const ta = await UserModel.findById(taId).populate('enrolledCourses');
+  if (!ta) {
+    throw new NotFoundError('TA not found');
+  }
+
+  (course.TAs as Types.Array<Types.ObjectId>).pull(ta._id);
+  await course.save();
+
+  (ta.enrolledCourses as Types.Array<Types.ObjectId>).pull(course._id);
+  await ta.save();
+};
+
+/*----------------------------------------Faculty----------------------------------------*/
+export const addFacultyToCourse = async (
+  courseId: string,
+  facultyDataList: any[]
+) => {
+  const course = await CourseModel.findById(courseId).populate<{
+    faculty: User[];
+  }>('faculty');
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+  for (const facultyData of facultyDataList) {
+    const facultyId = facultyData.identifier;
+    let facultyMember = await UserModel.findOne({ identifier: facultyId });
+    if (!facultyMember) {
+      facultyMember = new UserModel({
+        identifier: facultyId,
+        name: facultyData.name,
+        enrolledCourses: [],
+        gitHandle: facultyData.gitHandle ?? null,
+      });
+      await facultyMember.save();
+      const newAccount = new AccountModel({
+        email: facultyData.email,
+        role: Role.Faculty,
+        isApproved: false,
+        user: facultyMember._id,
+      });
+      newAccount.save();
+    } else {
+      const facultyAccount = await AccountModel.findOne({
+        user: facultyMember._id,
+      });
+      if (!facultyAccount) {
+        continue;
+      }
+      if (
+        facultyAccount.role !== Role.Faculty ||
+        facultyData.name !== facultyMember.name ||
+        facultyData.email !== facultyAccount.email
+      ) {
+        continue;
+      }
+      facultyMember.gitHandle =
+        facultyData.gitHandle ?? facultyMember.gitHandle;
+    }
+    if (!facultyMember.enrolledCourses.includes(course._id)) {
+      facultyMember.enrolledCourses.push(course._id);
+    }
+    await facultyMember.save();
+    if (
+      !course.faculty.some(
+        faculty => faculty.identifier === facultyMember?.identifier
+      )
+    ) {
+      course.faculty.push(facultyMember);
+    }
+  }
+  await course.save();
+};
+
+export const removeFacultyFromCourse = async (
+  courseId: string,
+  facultyId: string
+) => {
+  const course = await CourseModel.findById(courseId).populate('faculty');
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+  const facultyMember =
+    await UserModel.findById(facultyId).populate('enrolledCourses');
+  if (!facultyMember) {
+    throw new NotFoundError('Faculty Member not found');
+  }
+
+  (course.faculty as Types.Array<Types.ObjectId>).pull(facultyMember._id);
+  await course.save();
+
+  (facultyMember.enrolledCourses as Types.Array<Types.ObjectId>).pull(
+    course._id
+  );
+  await facultyMember.save();
 };
 
 /*----------------------------------------Milestone----------------------------------------*/

@@ -35,10 +35,7 @@ const SprintsInfo: React.FC<SprintsInfoProps> = ({ course, onUpdate }) => {
   return (
     <Container>
       {hasFacultyPermission() && (
-        <Button
-          onClick={toggleForm}
-          style={{ marginTop: '16px', marginBottom: '16px' }}
-        >
+        <Button onClick={toggleForm} my={16}>
           Create Sprint
         </Button>
       )}

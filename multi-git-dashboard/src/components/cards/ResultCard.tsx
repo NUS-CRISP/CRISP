@@ -61,13 +61,7 @@ const ResultCard: React.FC<ResultCardProps> = ({
   });
 
   return (
-    <Card
-      shadow="sm"
-      padding="lg"
-      radius="md"
-      withBorder
-      style={{ marginTop: '6px', marginBottom: '6px' }}
-    >
+    <Card shadow="sm" padding="lg" radius="md" my={6} withBorder>
       <Grid>
         <Grid.Col span={12}>
           <Group>

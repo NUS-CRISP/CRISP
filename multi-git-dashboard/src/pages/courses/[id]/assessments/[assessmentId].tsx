@@ -126,10 +126,7 @@ const AssessmentDetail: React.FC = () => {
         </Tabs.Panel>
         <Tabs.Panel value="results">
           {hasFacultyPermission() && (
-            <Button
-              onClick={toggleResultForm}
-              style={{ marginTop: '16px', marginBottom: '16px' }}
-            >
+            <Button onClick={toggleResultForm} my={16}>
               Upload Results
             </Button>
           )}
