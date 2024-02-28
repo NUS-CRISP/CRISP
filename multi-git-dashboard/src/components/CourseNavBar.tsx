@@ -1,6 +1,6 @@
 import { Title } from '@mantine/core';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import classes from '../styles/Sidebar.module.css';
 
 interface CourseNavBarProps {
@@ -13,15 +13,28 @@ const CourseNavBar: React.FC<CourseNavBarProps> = ({
   courseCode,
 }) => {
   const router = useRouter();
-  const [active, setActive] = useState('Home');
+  const [active, setActive] = useState('Overview');
 
   const linksData = [
-    { link: `/courses/${courseId}`, label: 'Overview' },
-    { link: `/courses/${courseId}/people`, label: 'People' },
-    { link: `/courses/${courseId}/teams`, label: 'Teams' },
-    { link: `/courses/${courseId}/timeline`, label: 'Timeline' },
-    { link: `/courses/${courseId}/assessments`, label: 'Assessments' },
+    { link: `/courses/${courseId}/`, label: 'Overview' },
+    { link: `/courses/${courseId}/`, label: 'People' },
+    { link: `/courses/${courseId}/`, label: 'Teams' },
+    { link: `/courses/${courseId}/`, label: 'Timeline' },
+    { link: `/courses/${courseId}/`, label: 'Assessments' },
   ];
+
+  useEffect(() => {
+    const storedActiveTab = localStorage.getItem('activeTabCourse');
+    if (storedActiveTab) {
+      setActive(storedActiveTab);
+    }
+  }, []);
+
+  const handleLinkClick = (label: string, link: string) => {
+    setActive(label);
+    localStorage.setItem('activeTabCourse', label);
+    router.push(link);
+  };
 
   const links = linksData.map(item => (
     <a
@@ -31,8 +44,7 @@ const CourseNavBar: React.FC<CourseNavBarProps> = ({
       key={item.label}
       onClick={event => {
         event.preventDefault();
-        setActive(item.label);
-        router.push(item.link);
+        handleLinkClick(item.label, item.link);
       }}
     >
       <span>{item.label}</span>

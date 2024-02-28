@@ -9,7 +9,7 @@ import {
 } from '@tabler/icons-react';
 import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import classes from '../styles/Sidebar.module.css';
 
 const Sidebar: React.FC = () => {
@@ -25,6 +25,19 @@ const Sidebar: React.FC = () => {
     linksData.push({ link: '/admin', label: 'Admin', icon: IconSettings2 });
   }
 
+  useEffect(() => {
+    const storedActiveTab = localStorage.getItem('activeTab');
+    if (storedActiveTab) {
+      setActive(storedActiveTab);
+    }
+  }, []);
+
+  const handleLinkClick = (label: string, link: string) => {
+    setActive(label);
+    localStorage.setItem('activeTab', label);
+    router.push(link);
+  };
+
   const links = linksData.map(item => (
     <a
       className={classes.link}
@@ -33,8 +46,7 @@ const Sidebar: React.FC = () => {
       key={item.label}
       onClick={event => {
         event.preventDefault();
-        setActive(item.label);
-        router.push(item.link);
+        handleLinkClick(item.label, item.link);
       }}
     >
       <item.icon className={classes.linkIcon} stroke={1.5} />
