@@ -112,6 +112,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
         return;
       }
       setSelectedTeamData(teamDataId);
+      onUpdate();
     } catch (error) {
       console.error('Error updating team:', error);
     }

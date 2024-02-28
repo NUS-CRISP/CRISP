@@ -5,6 +5,7 @@ import { TeamSet } from '@shared/types/TeamSet';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { User } from '@shared/types/User';
+import { TeamData } from '@shared/types/TeamData';
 
 const TimelineListPage: React.FC = () => {
   const router = useRouter();
@@ -14,21 +15,25 @@ const TimelineListPage: React.FC = () => {
 
   const teamSetsApiRoute = `/api/courses/${id}/teamsets`;
   const teachingTeamApiRoute = `/api/courses/${id}/teachingteam`;
+  const teamDatasApiRoute = `/api/github/course/${id}/names`;
 
   const [teamSets, setTeamSets] = useState<TeamSet[]>([]);
   const [teachingTeam, setTeachingTeam] = useState<User[]>([]);
+  const [teamDatas, setTeamDatas] = useState<TeamData[]>([]);
 
   const permission = hasFacultyPermission();
 
   const onUpdate = () => {
     fetchTeamSets();
     fetchTeachingTeam();
+    fetchTeamDatas();
   };
 
   useEffect(() => {
     if (router.isReady) {
       fetchTeamSets();
       fetchTeachingTeam();
+      fetchTeamDatas();
     }
   }, [router.isReady]);
 
@@ -60,6 +65,20 @@ const TimelineListPage: React.FC = () => {
     }
   };
 
+  const fetchTeamDatas = async () => {
+    try {
+      const response = await fetch(teamDatasApiRoute);
+      if (!response.ok) {
+        console.error('Error fetching team datas:', response.statusText);
+        return;
+      }
+      const data = await response.json();
+      setTeamDatas(data);
+    } catch (error) {
+      console.error('Error fetching team datas:', error);
+    }
+  };
+
   return (
     <Container>
       {id && (
@@ -67,6 +86,7 @@ const TimelineListPage: React.FC = () => {
           courseId={id}
           teamSets={teamSets}
           teachingTeam={teachingTeam}
+          teamDatas={teamDatas}
           hasFacultyPermission={permission}
           onUpdate={onUpdate}
         />

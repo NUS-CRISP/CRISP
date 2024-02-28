@@ -64,7 +64,7 @@ export const getAuthorizedTeamDataByCourse = async (
 
   const role = account.role;
 
-  if (role === Role.Faculty) {
+  if (role === Role.Faculty || role === Role.Admin) {
     // Faculty can view all teams in the course; return all TeamData with same orgName as course
     // TODO: Temp. solution; adjust schema so we have a way to get all teams in a course
     if (!course.gitHubOrgName) {
@@ -89,4 +89,19 @@ export const getAuthorizedTeamDataByCourse = async (
       })
     ).map(team => team.teamData);
   }
+};
+
+export const getAuthorizedTeamDataNamesByCourse = async (
+  accountId: string,
+  courseId: string
+) => {
+  const teamDatas = await getAuthorizedTeamDataByCourse(accountId, courseId);
+  if (!teamDatas) {
+    throw new NotFoundError('No team datas found for course');
+  }
+  const teamDataNames = teamDatas.map(teamData => ({
+    _id: teamData._id,
+    repoName: teamData.repoName,
+  }));
+  return teamDataNames;
 };

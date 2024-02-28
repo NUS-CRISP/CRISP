@@ -13,11 +13,13 @@ import StudentTeamForm from '../forms/StudentTeamForm';
 import TATeamForm from '../forms/TATeamForm';
 import TeamSetForm from '../forms/TeamSetForm';
 import { User } from '@shared/types/User';
+import { TeamData } from '@shared/types/TeamData';
 
 interface TeamsInfoProps {
   courseId: string;
   teamSets: TeamSet[];
   teachingTeam: User[];
+  teamDatas: TeamData[];
   hasFacultyPermission: boolean;
   onUpdate: () => void;
 }
@@ -26,6 +28,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({
   courseId,
   teamSets,
   teachingTeam,
+  teamDatas,
   hasFacultyPermission,
   onUpdate,
 }) => {
@@ -115,7 +118,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({
         TA={team.TA}
         teachingTeam={teachingTeam}
         teamData={team.teamData}
-        teamDataList={teamSet.teams.map(t => t.teamData).filter(Boolean)}
+        teamDataList={teamDatas}
         members={team.members}
         onUpdate={onUpdate}
         isEditing={isEditing}
