@@ -34,7 +34,7 @@ export const fetchDataFromSheet = async (
 ): Promise<TransformedData> => {
   const sheets = await authenticateGoogleSheets();
   const range = sheetTab || DEFAULT_SHEET_TAB;
-  const sheetData = await getSheetData(sheets, sheetId, isTeam, range);
+  const sheetData = await getSheetData(sheets, sheetId, range, isTeam);
   const data: TransformedData = transformFunction(sheetData, isTeam);
 
   return data;
@@ -43,8 +43,8 @@ export const fetchDataFromSheet = async (
 const getSheetData = async (
   sheets: sheets_v4.Sheets,
   sheetId: string,
-  isTeam: boolean = false,
-  range: string
+  range: string,
+  isTeam: boolean = false
 ): Promise<SheetDataType> => {
   const response: GaxiosResponse<sheets_v4.Schema$ValueRange> =
     await sheets.spreadsheets.values.get({
