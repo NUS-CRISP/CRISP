@@ -1,26 +1,37 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Card, Group, Select, Table, Text } from '@mantine/core';
+import { Button, Card, Group, Modal, Select, Table, Text } from '@mantine/core';
 import { Assessment } from '@shared/types/Assessment';
 import { SheetData } from '@shared/types/SheetData';
 import SheetDataTable from '../google/SheetDataTable ';
 import { MarkItem, Result } from '@shared/types/Result';
-import { hasFacultyPermission } from '@/lib/auth/utils';
+import router from 'next/router';
+import UpdateAssessmentForm from '../forms/UpdateAssessmentForm';
 
 interface AssessmentOverviewProps {
+  courseId: string;
   assessment: Assessment | null;
   sheetData: SheetData | null;
+  hasFacultyPermission: boolean;
   onUpdateSheetData: () => void;
+  onUpdateAssessment: () => void;
 }
 
 const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
+  courseId,
   assessment,
   sheetData,
+  hasFacultyPermission,
   onUpdateSheetData,
+  onUpdateAssessment,
 }) => {
   const [pendingSubmissions, setPendingSubmissions] = useState<string[][]>([]);
   const [teamFilter, setTeamFilter] = useState<string>('All Teams');
 
+  const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
+
   const assessmentSheetApiRoute = `/api/assessments/${assessment?._id}/googlesheets`;
+  const assessmentApiRoute = `/api/assessments/${assessment?._id}`;
 
   const fetchNewSheetData = async () => {
     try {
@@ -35,6 +46,23 @@ const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
         throw new Error('Failed to fetch new sheet data');
       }
       onUpdateSheetData();
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  const deleteAssessment = async () => {
+    try {
+      const response = await fetch(assessmentApiRoute, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch delete assessment');
+      }
+      router.push(`/courses/${courseId}/assessments`);
     } catch (error) {
       console.error('Error:', error);
     }
@@ -88,6 +116,14 @@ const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
     setTeamFilter(value || 'All Teams');
   };
 
+  const toggleEditModal = () => setIsEditModalOpen(o => !o);
+  const toggleDeleteModal = () => setIsDeleteModalOpen(o => !o);
+
+  const onUpdate = () => {
+    onUpdateAssessment();
+    toggleEditModal();
+  };
+
   useEffect(() => {
     calculatePendingSubmissions();
   }, [assessment, sheetData]);
@@ -124,6 +160,41 @@ const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
 
   return (
     <div>
+      {hasFacultyPermission && (
+        <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
+          <Button variant="outline" onClick={toggleEditModal}>
+            Edit Assessment
+          </Button>
+          <Button color="red" onClick={toggleDeleteModal}>
+            Delete Assessment
+          </Button>
+        </Group>
+      )}
+      <Modal
+        opened={isEditModalOpen}
+        onClose={toggleEditModal}
+        title="Edit Assessment"
+      >
+        <UpdateAssessmentForm
+          assessment={assessment}
+          onAssessmentUpdated={onUpdate}
+        />
+      </Modal>
+      <Modal
+        opened={isDeleteModalOpen}
+        onClose={toggleDeleteModal}
+        title="Confirm Delete"
+      >
+        <Text>Are you sure you want to delete this assessment?</Text>
+        <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
+          <Button variant="outline" onClick={toggleDeleteModal}>
+            Cancel
+          </Button>
+          <Button color="red" onClick={deleteAssessment}>
+            Delete
+          </Button>
+        </Group>
+      </Modal>
       <Card style={{ marginBottom: '16px', marginTop: '16px' }}>
         <Text size="lg" style={{ marginBottom: '10px' }}>
           Assessment Details
@@ -143,7 +214,7 @@ const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
           </a>
         </Text>
       </Card>
-      {hasFacultyPermission() && (
+      {hasFacultyPermission && (
         <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
           <Button onClick={fetchNewSheetData}>Update Sheets Data</Button>
           <Select

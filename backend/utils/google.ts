@@ -6,6 +6,8 @@ import { TransformedData } from '@shared/types/SheetData';
 type SheetRow = Record<string, string>;
 type SheetDataType = SheetRow[];
 
+const DEFAULT_SHEET_TAB = 'Form Responses 1';
+
 const authenticateGoogleSheets = async (): Promise<sheets_v4.Sheets> => {
   const GOOGLE_CLIENT_EMAIL = process.env.GOOGLE_CLIENT_EMAIL;
   const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY?.replace(
@@ -27,11 +29,12 @@ const authenticateGoogleSheets = async (): Promise<sheets_v4.Sheets> => {
 
 export const fetchDataFromSheet = async (
   sheetId: string,
+  sheetTab: string,
   isTeam: boolean = false
 ): Promise<TransformedData> => {
   const sheets = await authenticateGoogleSheets();
-
-  const sheetData = await getSheetData(sheets, sheetId, isTeam);
+  const range = sheetTab || DEFAULT_SHEET_TAB;
+  const sheetData = await getSheetData(sheets, sheetId, isTeam, range);
   const data: TransformedData = transformFunction(sheetData, isTeam);
 
   return data;
@@ -41,7 +44,7 @@ const getSheetData = async (
   sheets: sheets_v4.Sheets,
   sheetId: string,
   isTeam: boolean = false,
-  range: string = 'Form Responses 1'
+  range: string
 ): Promise<SheetDataType> => {
   const response: GaxiosResponse<sheets_v4.Schema$ValueRange> =
     await sheets.spreadsheets.values.get({
@@ -110,7 +113,7 @@ const transformFunction = (
       const Identifier = row['Identifier'];
       if (!Identifier) return;
 
-      const Name = row['Name'].toUpperCase() || 'EMPTY';
+      const Name = row['Name']?.toUpperCase() || 'EMPTY';
       let Team = row['Team'] || '';
       try {
         const teamInt = parseInt(Team);

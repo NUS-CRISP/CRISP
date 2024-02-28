@@ -31,6 +31,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
     'teamSetName',
     'formLink',
     'sheetID',
+    'sheetTab',
   ];
 
   const form = useForm({
@@ -42,6 +43,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
       teamSetName: '',
       formLink: '',
       sheetID: '',
+      sheetTab: '',
     },
     validate: {},
   });
@@ -151,6 +153,14 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
           value={form.values.sheetID}
           onChange={event => {
             form.setFieldValue('sheetID', event.currentTarget.value);
+          }}
+        />
+        <TextInput
+          label="Sheet Tab"
+          {...form.getInputProps('sheetTab')}
+          value={form.values.sheetTab}
+          onChange={event => {
+            form.setFieldValue('sheetTab', event.currentTarget.value);
           }}
         />
         <Button type="submit" style={{ marginTop: '16px' }}>

@@ -20,7 +20,7 @@ export const getAssessmentSheetData = async (
     throw new NotFoundError('Assessment not found');
   }
 
-  let sheetData: SheetData | null = await SheetDataModel.findById(
+  const sheetData: SheetData | null = await SheetDataModel.findById(
     assessment.sheetData
   );
   if (!sheetData) {
@@ -66,7 +66,8 @@ export const fetchAndSaveSheetData = async (
   console.log('Fetching new sheet data');
 
   const sheetId = assessment.sheetID;
-  const transformedData = await fetchDataFromSheet(sheetId, isTeam);
+  const sheetTab = assessment.sheetTab;
+  const transformedData = await fetchDataFromSheet(sheetId, sheetTab, isTeam);
   const [headers, ...rows] = transformedData;
 
   const newSheetData = new SheetDataModel({

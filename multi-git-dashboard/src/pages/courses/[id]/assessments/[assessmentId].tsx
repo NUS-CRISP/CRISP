@@ -27,6 +27,8 @@ const AssessmentDetail: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<string>('Overview');
 
+  const permission = hasFacultyPermission();
+
   const fetchAssessment = useCallback(async () => {
     try {
       const response = await fetch(assessmentsApiRoute, {
@@ -77,10 +79,13 @@ const AssessmentDetail: React.FC = () => {
     setIsResultFormOpen(o => !o);
   };
 
-  const onUpdate = () => {
+  const onResultsUploaded = () => {
     fetchAssessment();
-    fetchTeachingTeam();
     setIsResultFormOpen(o => !o);
+  };
+
+  const onUpdateAssessment = () => {
+    fetchAssessment();
   };
 
   const onUpdateSheet = () => {
@@ -105,17 +110,17 @@ const AssessmentDetail: React.FC = () => {
   });
 
   useEffect(() => {
-    if (assessmentId && id) {
+    if (router.isReady) {
       fetchAssessment();
       fetchTeachingTeam();
     }
-  }, [assessmentId, id, fetchAssessment, fetchTeachingTeam]);
+  }, [router.isReady]);
 
   useEffect(() => {
-    if (assessmentId) {
+    if (router.isReady) {
       getSheetData();
     }
-  }, [assessmentId]);
+  }, [router.isReady]);
 
   return (
     <Container>
@@ -139,11 +144,16 @@ const AssessmentDetail: React.FC = () => {
         </Tabs.List>
 
         <Tabs.Panel value="Overview">
-          <AssessmentOverview
-            assessment={assessment}
-            sheetData={sheetData}
-            onUpdateSheetData={onUpdateSheet}
-          />
+          {id && (
+            <AssessmentOverview
+              courseId={id}
+              assessment={assessment}
+              sheetData={sheetData}
+              hasFacultyPermission={permission}
+              onUpdateSheetData={onUpdateSheet}
+              onUpdateAssessment={onUpdateAssessment}
+            />
+          )}
         </Tabs.Panel>
 
         <Tabs.Panel value="Form">
@@ -168,7 +178,7 @@ const AssessmentDetail: React.FC = () => {
           >
             <ResultForm
               assessmentId={assessmentId}
-              onResultsUploaded={onUpdate}
+              onResultsUploaded={onResultsUploaded}
             />
           </Modal>
           {assessment?.results.map(result => (

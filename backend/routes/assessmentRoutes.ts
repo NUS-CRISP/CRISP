@@ -1,6 +1,8 @@
 import express from 'express';
 import {
   getAssessment,
+  updateAssessment,
+  deleteAssessment,
   uploadResults,
   updateResultMarker,
   getSheetData,
@@ -10,6 +12,8 @@ import {
 const router = express.Router();
 
 router.get('/:assessmentId', getAssessment);
+router.patch('/:assessmentId', updateAssessment);
+router.delete('/:assessmentId', deleteAssessment);
 router.post('/:assessmentId/results/', uploadResults);
 router.patch('/:assessmentId/results/:resultId/marker', updateResultMarker);
 router.get('/:assessmentId/googlesheets', getSheetData);

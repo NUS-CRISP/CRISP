@@ -14,5 +14,6 @@ export interface Assessment {
   teamSet: TeamSet;
   formLink: string;
   sheetID: string;
+  sheetTab: string;
   sheetData: SheetData;
 }

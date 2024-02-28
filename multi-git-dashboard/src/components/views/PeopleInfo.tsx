@@ -42,7 +42,7 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
 
   const [isEditing, setIsEditing] = useState(false);
   const [isEditingUser, setIsEditingUser] = useState(false);
-  const [selectedUser, setSelectedUser] = useState('');
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   const apiRouteFaculty = `/api/courses/${courseId}/faculty/`;
   const apiRouteTAs = `/api/courses/${courseId}/tas/`;
@@ -83,7 +83,7 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
     }
   };
 
-  const openEditModal = (user: string) => {
+  const openEditModal = (user: User) => {
     setSelectedUser(user);
     setIsEditingUser(true);
   };
@@ -94,7 +94,7 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
     setIsAddingStudent(false);
     setIsExportingData(false);
     setIsEditingUser(false);
-    setSelectedUser('');
+    setSelectedUser(null);
     onUpdate();
   };
 
@@ -175,7 +175,7 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
         </Group>
       </Modal>
       <Modal opened={isEditingUser} onClose={toggleEditUser} title="Edit User">
-        <UpdateUserForm userId={selectedUser} onUserUpdated={handleUpdate} />
+        <UpdateUserForm user={selectedUser} onUserUpdated={handleUpdate} />
       </Modal>
       <Divider label="Faculty Members" size="lg" />
       {faculty && faculty.length > 0 && (
@@ -215,7 +215,7 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
                     <Button
                       size="compact-xs"
                       variant="light"
-                      onClick={() => openEditModal(facultyMember._id)}
+                      onClick={() => openEditModal(facultyMember)}
                     >
                       Edit
                     </Button>
@@ -279,7 +279,7 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
                     <Button
                       size="compact-xs"
                       variant="light"
-                      onClick={() => openEditModal(TA._id)}
+                      onClick={() => openEditModal(TA)}
                     >
                       Edit
                     </Button>
@@ -338,7 +338,7 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
                     <Button
                       size="compact-xs"
                       variant="light"
-                      onClick={() => openEditModal(student._id)}
+                      onClick={() => openEditModal(student)}
                     >
                       Edit
                     </Button>
