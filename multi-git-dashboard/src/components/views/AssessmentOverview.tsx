@@ -94,7 +94,7 @@ const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
 
   const teamOptions = [
     'All Teams',
-    ...new Set(assessment?.teamSet.teams?.map(team => team.number.toString())),
+    ...new Set(assessment?.teamSet?.teams?.map(team => team.number.toString())),
   ]
     .sort((a, b) => {
       if (a === 'All Teams') return -1;
