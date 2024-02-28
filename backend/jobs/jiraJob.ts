@@ -192,9 +192,9 @@ export const fetchAndSaveJiraData = async () => {
       // Update the access token in the database
       await CourseModel.findByIdAndUpdate(course._id,
         {
-          jira: {
-            accessToken: accessToken,
-            refreshToken: refreshToken,
+          $set: {
+            'jira.accessToken': accessToken,
+            'jira.refreshToken': refreshToken,
           }
         }
       );
@@ -226,20 +226,33 @@ export const fetchAndSaveJiraData = async () => {
         await JiraBoardModel.deleteMany({});
         await JiraIssueModel.deleteMany({});
         await JiraSprintModel.deleteMany({});
+        await CourseModel.findOneAndUpdate(
+          { _id: course._id },
+          { boards: [] },
+          { upsert: true }
+        );
 
         boards.forEach(async (boardData: any) => {
           const jiraBoard: Omit<JiraBoard, '_id'> = {
             ...boardData,
+            course: course._id,
             jiraLocation: boardData.location,
             location: undefined, // To remove the original location property
           };
 
-          await JiraBoardModel.findOneAndUpdate(
+          const board = await JiraBoardModel.findOneAndUpdate(
             { id: jiraBoard.id },
             jiraBoard,
             {
               upsert: true,
+              new: true
             }
+          );
+
+          await CourseModel.findOneAndUpdate(
+            { _id: course._id },
+            { $push: { boards: board?._id } },
+            { new: true }
           );
 
           await fetchSprints(jiraBoard.id, cloudId, accessToken);

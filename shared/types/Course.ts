@@ -1,4 +1,5 @@
 import { Assessment } from './Assessment';
+import { JiraBoard } from './JiraData';
 import { TeamSet } from './TeamSet';
 import { User } from './User';
 
@@ -46,5 +47,6 @@ export interface Course {
     cloudId: string;
     accessToken: string;
     refreshToken: string;
-  }
+  };
+  boards: JiraBoard[];
 }
