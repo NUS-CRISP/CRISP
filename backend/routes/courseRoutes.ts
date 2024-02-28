@@ -18,6 +18,7 @@ import {
   getCourse,
   getCourses,
   getTeachingTeam,
+  getPeople,
   removeFaculty,
   removeStudents,
   removeTAs,
@@ -40,6 +41,7 @@ router.post('/:id/students', addStudents);
 router.delete('/:id/students/:userId', removeStudents);
 router.post('/:id/tas', addTAs);
 router.delete('/:id/tas/:userId', removeTAs);
+router.get('/:id/people', getPeople);
 router.get('/:id/teamsets', getTeamSets);
 router.post('/:id/teamsets', addTeamSet);
 router.get('/:id/teamsets/names', getTeamSetsNames);

@@ -365,6 +365,22 @@ export const removeFacultyFromCourse = async (
   await facultyMember.save();
 };
 
+/*----------------------------------------People----------------------------------------*/
+export const getPeopleFromCourse = async (courseId: string) => {
+  const course = await CourseModel.findById(courseId)
+    .populate('faculty')
+    .populate('TAs')
+    .populate('students');
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+  return {
+    faculty: course.faculty,
+    TAs: course.TAs,
+    students: course.students,
+  };
+};
+
 /*----------------------------------------TeamSet----------------------------------------*/
 export const getTeamSetsFromCourse = async (courseId: string) => {
   const course = await CourseModel.findById(courseId).populate<{
@@ -426,7 +442,18 @@ export const addSprintToCourse = async (
 
 /*----------------------------------------Assessments----------------------------------------*/
 export const getAssessmentsFromCourse = async (courseId: string) => {
-  const course = await CourseModel.findById(courseId).populate('assessments');
+  const course = await CourseModel.findById(courseId)
+  .populate<{
+    assessments: Assessment[];
+  }>({
+    path: 'assessments',
+    populate: [
+      {
+        path: 'teamSet',
+        model: 'TeamSet',
+      },
+    ],
+  });
   if (!course) {
     throw new NotFoundError('Course not found');
   }

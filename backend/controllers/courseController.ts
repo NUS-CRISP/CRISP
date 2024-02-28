@@ -19,6 +19,7 @@ import {
   removeStudentsFromCourse,
   removeTAsFromCourse,
   updateCourseById,
+  getPeopleFromCourse,
 } from '../services/courseService';
 import { BadRequestError, NotFoundError } from '../services/errors';
 import { addStudentsToTeam, addTAsToTeam } from '../services/teamService';
@@ -252,6 +253,24 @@ export const removeFaculty = async (req: Request, res: Response) => {
     } else {
       console.error('Error removing faculty:', error);
       res.status(500).json({ error: 'Failed to remove faculty' });
+    }
+  }
+};
+
+/*----------------------------------------People----------------------------------------*/
+export const getPeople = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  try {
+    console.log(req.params);
+    const people = await getPeopleFromCourse(courseId);
+    console.log(people);
+    res.status(200).json(people);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error fetching people:', error);
+      res.status(500).json({ error: 'Failed to retrieve people' });
     }
   }
 };
