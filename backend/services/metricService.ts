@@ -27,7 +27,8 @@ export const logTabSessionById = async (
     !tabSessionData.tab ||
     !tabSessionData.sessionStartTime ||
     !tabSessionData.sessionEndTime ||
-    !tabSessionData.sessionDuration
+    !tabSessionData.sessionDuration ||
+    !tabSessionData.sessionId
   ) {
     throw new BadRequestError('Tab session data not found');
   }
@@ -38,6 +39,7 @@ export const logTabSessionById = async (
     sessionStartTime: tabSessionData.sessionStartTime,
     sessionEndTime: tabSessionData.sessionEndTime,
     sessionDuration: tabSessionData.sessionDuration,
+    sessionId: tabSessionData.sessionId,
   });
   await tabSession.save();
 };

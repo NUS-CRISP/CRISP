@@ -1,6 +1,7 @@
 import { Title } from '@mantine/core';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import classes from '../styles/Sidebar.module.css';
 
 interface CourseNavBarProps {
@@ -15,6 +16,7 @@ const CourseNavBar: React.FC<CourseNavBarProps> = ({
   const router = useRouter();
   const [active, setActive] = useState('Overview');
   const [startTime, setStartTime] = useState<Date>(new Date());
+  const [sessionId] = useState(() => uuidv4());
 
   const logSessionTime = async (newTab: string, isTabClosing: boolean) => {
     if (newTab === active && !isTabClosing) return;
@@ -33,6 +35,7 @@ const CourseNavBar: React.FC<CourseNavBarProps> = ({
           sessionStartTime: startTime,
           sessionEndTime: endTime,
           sessionDuration: sessionTime,
+          sessionId: sessionId,
         },
       }),
     });
