@@ -101,11 +101,17 @@ const AssessmentDetail: React.FC = () => {
     const savedTab = localStorage.getItem(
       `activeAssessmentTab_${assessmentId}`
     );
-    if (
-      savedTab &&
-      ['Overview', 'Form', 'Results'].some(label => label === savedTab)
-    ) {
-      setActiveTab(savedTab);
+    if (permission) {
+      if (
+        savedTab &&
+        ['Overview', 'Form', 'Results'].some(label => label === savedTab)
+      ) {
+        setActiveTab(savedTab);
+      }
+    } else {
+      if (savedTab && ['Overview', 'Form'].some(label => label === savedTab)) {
+        setActiveTab(savedTab);
+      }
     }
   });
 
@@ -133,14 +139,16 @@ const AssessmentDetail: React.FC = () => {
             Overview
           </Tabs.Tab>
           <Tabs.Tab value="Form" onClick={() => setActiveTabAndSave('Form')}>
-            Google Form
+            Evaluate
           </Tabs.Tab>
-          <Tabs.Tab
-            value="Results"
-            onClick={() => setActiveTabAndSave('Results')}
-          >
-            Results
-          </Tabs.Tab>
+          {hasFacultyPermission() && (
+            <Tabs.Tab
+              value="Results"
+              onClick={() => setActiveTabAndSave('Results')}
+            >
+              Results
+            </Tabs.Tab>
+          )}
         </Tabs.List>
 
         <Tabs.Panel value="Overview">
@@ -165,31 +173,31 @@ const AssessmentDetail: React.FC = () => {
             <Text>No form link provided</Text>
           )}
         </Tabs.Panel>
-        <Tabs.Panel value="Results">
-          {hasFacultyPermission() && (
+        {hasFacultyPermission() && (
+          <Tabs.Panel value="Results">
             <Button onClick={toggleResultForm} my={16}>
               Upload Results
             </Button>
-          )}
-          <Modal
-            opened={isResultFormOpen}
-            onClose={toggleResultForm}
-            title="Upload Results"
-          >
-            <ResultForm
-              assessmentId={assessmentId}
-              onResultsUploaded={onResultsUploaded}
-            />
-          </Modal>
-          {assessment?.results.map(result => (
-            <ResultCard
-              key={result._id}
-              result={result}
-              teachingTeam={teachingTeam}
-              assessmentId={assessmentId}
-            />
-          ))}
-        </Tabs.Panel>
+            <Modal
+              opened={isResultFormOpen}
+              onClose={toggleResultForm}
+              title="Upload Results"
+            >
+              <ResultForm
+                assessmentId={assessmentId}
+                onResultsUploaded={onResultsUploaded}
+              />
+            </Modal>
+            {assessment?.results.map(result => (
+              <ResultCard
+                key={result._id}
+                result={result}
+                teachingTeam={teachingTeam}
+                assessmentId={assessmentId}
+              />
+            ))}
+          </Tabs.Panel>
+        )}
       </Tabs>
     </Container>
   );
