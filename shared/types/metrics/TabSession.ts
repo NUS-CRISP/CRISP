@@ -8,5 +8,4 @@ export interface TabSession{
     sessionStartTime: Date;
     sessionEndTime: Date;
     sessionDuration: number;
-    sessionId: string;
 }

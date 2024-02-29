@@ -34,10 +34,6 @@ const TabSessionSchema = new Schema({
     type: Number,
     required: true,
   },
-  sessionId: {
-    type: String,
-    required: true,
-  },
 });
 
 const TabSessionModel = mongoose.model('TabSession', TabSessionSchema);
