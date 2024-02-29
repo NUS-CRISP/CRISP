@@ -16,8 +16,8 @@ const CourseNavBar: React.FC<CourseNavBarProps> = ({
   const [active, setActive] = useState('Overview');
   const [startTime, setStartTime] = useState<Date>(new Date());
 
-  const logSessionTime = async (newTab: string) => {
-    if (newTab === active) return;
+  const logSessionTime = async (newTab: string, isTabClosing: boolean) => {
+    if (newTab === active && !isTabClosing) return;
     const endTime = new Date();
     const sessionTime = endTime.getTime() - startTime.getTime();
 
@@ -58,9 +58,22 @@ const CourseNavBar: React.FC<CourseNavBarProps> = ({
 
   useEffect(() => {
     const newTab = determineActiveTab(router.pathname);
-    logSessionTime(newTab);
+    logSessionTime(newTab, false);
     setActive(newTab);
   }, [router.pathname]);
+
+  useEffect(() => {
+    const handleTabClose = (event: Event) => {
+      event.preventDefault();
+      logSessionTime(active, true);
+    };
+
+    window.addEventListener('beforeunload', handleTabClose);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleTabClose);
+    };
+  }, [active]);
 
   const linksData = [
     { link: `/courses/${courseId}`, label: 'Overview' },
@@ -90,7 +103,7 @@ const CourseNavBar: React.FC<CourseNavBarProps> = ({
       key={item.label}
       onClick={event => {
         event.preventDefault();
-        logSessionTime(item.label);
+        logSessionTime(item.label, false);
         setActive(item.label);
         router.push(item.link);
       }}
