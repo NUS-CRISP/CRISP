@@ -14,6 +14,65 @@ const CourseNavBar: React.FC<CourseNavBarProps> = ({
 }) => {
   const router = useRouter();
   const [active, setActive] = useState('Overview');
+  const [startTime, setStartTime] = useState<Date>(new Date());
+
+  const logSessionTime = async (newTab: string, isTabClosing: boolean) => {
+    if (newTab === active && !isTabClosing) return;
+    const endTime = new Date();
+    const sessionTime = endTime.getTime() - startTime.getTime();
+
+    await fetch('/api/metrics/tab-session', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        tabSessionData: {
+          course: courseId,
+          tab: active,
+          sessionStartTime: startTime,
+          sessionEndTime: endTime,
+          sessionDuration: sessionTime,
+        },
+      }),
+    });
+
+    setStartTime(endTime);
+  };
+
+  const determineActiveTab = (path: string) => {
+    if (path.startsWith('/courses/[id]/people')) {
+      return 'People';
+    } else if (path.startsWith('/courses/[id]/teams')) {
+      return 'Teams';
+    } else if (path.startsWith('/courses/[id]/timeline')) {
+      return 'Timeline';
+    } else if (path.startsWith('/courses/[id]/assessments')) {
+      return 'Assessments';
+    } else if (path.startsWith('/courses/[id]')) {
+      return 'Overview';
+    } else {
+      return '';
+    }
+  };
+
+  useEffect(() => {
+    const newTab = determineActiveTab(router.pathname);
+    setActive(newTab);
+  }, [router.pathname]);
+
+  useEffect(() => {
+    const handleTabClose = (event: Event) => {
+      event.preventDefault();
+      logSessionTime(active, true);
+    };
+
+    window.addEventListener('beforeunload', handleTabClose);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleTabClose);
+    };
+  }, [active]);
 
   const linksData = [
     { link: `/courses/${courseId}`, label: 'Overview' },
@@ -35,21 +94,6 @@ const CourseNavBar: React.FC<CourseNavBarProps> = ({
     },
   ];
 
-  useEffect(() => {
-    const path = router.pathname;
-    if (path.startsWith('/courses/[id]/people')) {
-      setActive('People');
-    } else if (path.startsWith('/courses/[id]/teams')) {
-      setActive('Teams');
-    } else if (path.startsWith('/courses/[id]/timeline')) {
-      setActive('Timeline');
-    } else if (path.startsWith('/courses/[id]/assessments')) {
-      setActive('Assessments');
-    } else if (path.startsWith('/courses/[id]')) {
-      setActive('Overview');
-    }
-  }, [router.pathname]);
-
   const links = linksData.map(item => (
     <a
       className={classes.link}
@@ -58,6 +102,7 @@ const CourseNavBar: React.FC<CourseNavBarProps> = ({
       key={item.label}
       onClick={event => {
         event.preventDefault();
+        logSessionTime(item.label, false);
         setActive(item.label);
         router.push(item.link);
       }}

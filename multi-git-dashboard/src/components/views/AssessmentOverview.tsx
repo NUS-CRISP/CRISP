@@ -197,22 +197,11 @@ const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
       </Modal>
       <Card style={{ marginBottom: '16px', marginTop: '16px' }}>
         <Text size="lg" style={{ marginBottom: '10px' }}>
-          Assessment Details
+          {assessment?.assessmentType}
         </Text>
-        <Text>Assessment Type: {assessment?.assessmentType}</Text>
         <Text>Mark Type: {assessment?.markType}</Text>
         <Text>Frequency: {assessment?.frequency}</Text>
         <Text>Granularity: {assessment?.granularity}</Text>
-        <Text>
-          Form Link:{' '}
-          <a
-            href={assessment?.formLink}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {assessment?.formLink}
-          </a>
-        </Text>
       </Card>
       {hasFacultyPermission && (
         <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
