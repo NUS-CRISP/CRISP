@@ -99,7 +99,10 @@ export const getAuthorizedTeamDataByCourse = async (
     }
     const sortedDatas = teams
       .map(team => team.teamData)
-      .filter((teamData): teamData is TeamData => teamData !== null && teamData !== undefined)
+      .filter(
+        (teamData): teamData is TeamData =>
+          teamData !== null && teamData !== undefined
+      )
       .sort((a, b) => {
         if (a.repoName < b.repoName) return -1;
         if (a.repoName > b.repoName) return 1;

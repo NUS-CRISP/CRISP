@@ -11,7 +11,7 @@ export const createNewAccount = async (
   password: string,
   role: string
 ) => {
-  let existingAccount = await AccountModel.findOne({ email });
+  const existingAccount = await AccountModel.findOne({ email });
   let newUser;
 
   if (existingAccount) {
