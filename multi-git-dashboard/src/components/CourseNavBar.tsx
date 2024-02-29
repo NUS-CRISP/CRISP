@@ -61,7 +61,6 @@ const CourseNavBar: React.FC<CourseNavBarProps> = ({
 
   useEffect(() => {
     const newTab = determineActiveTab(router.pathname);
-    logSessionTime(newTab, false);
     setActive(newTab);
   }, [router.pathname]);
 
