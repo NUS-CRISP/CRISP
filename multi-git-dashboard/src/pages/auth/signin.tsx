@@ -48,7 +48,7 @@ const SignInPage: React.FC = () => {
       showError(res.error);
     } else {
       logLogin();
-      router.push('/');
+      router.push('/courses');
     }
   };
 

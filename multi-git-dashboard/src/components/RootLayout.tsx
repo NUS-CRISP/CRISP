@@ -1,8 +1,8 @@
 import { useRouter } from 'next/router';
-import styles from '../styles/root-layout.module.css';
-import Sidebar from './Sidebar';
-import CourseNavBar from './CourseNavBar';
 import { useEffect, useState } from 'react';
+import styles from '../styles/root-layout.module.css';
+import CourseNavbar from './CourseNavbar';
+import Navbar from './Navbar';
 
 export default function RootLayout({
   children,
@@ -40,9 +40,9 @@ export default function RootLayout({
 
   return (
     <div className={styles.rootLayout}>
-      {shouldShowSidebar && <Sidebar />}
+      {shouldShowSidebar && <Navbar />}
       {isCourseRoute && courseId && (
-        <CourseNavBar courseId={courseId} courseCode={courseCode} />
+        <CourseNavbar courseId={courseId} courseCode={courseCode} />
       )}
       <div className={styles.content}>{children}</div>
     </div>

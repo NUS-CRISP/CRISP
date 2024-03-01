@@ -1,14 +1,14 @@
 import { Title } from '@mantine/core';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import classes from '../styles/Sidebar.module.css';
+import classes from '../styles/Navbar.module.css';
 
-interface CourseNavBarProps {
+interface CourseNavbarProps {
   courseId: string;
   courseCode: string;
 }
 
-const CourseNavBar: React.FC<CourseNavBarProps> = ({
+const CourseNavbar: React.FC<CourseNavbarProps> = ({
   courseId,
   courseCode,
 }) => {
@@ -96,7 +96,7 @@ const CourseNavBar: React.FC<CourseNavBarProps> = ({
 
   const links = linksData.map(item => (
     <a
-      className={classes.link}
+      className={classes.courseLink}
       data-active={item.label === active || undefined}
       href={item.link}
       key={item.label}
@@ -113,14 +113,12 @@ const CourseNavBar: React.FC<CourseNavBarProps> = ({
 
   return (
     <nav className={classes.courseNavbar}>
-      <div className={classes.navbarMain}>
-        <Title order={3} className={classes.title}>
-          {courseCode}
-        </Title>
-        {links}
-      </div>
+      <Title order={3} className={classes.title}>
+        {courseCode}
+      </Title>
+      {links}
     </nav>
   );
 };
 
-export default CourseNavBar;
+export default CourseNavbar;
