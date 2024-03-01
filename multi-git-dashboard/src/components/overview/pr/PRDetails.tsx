@@ -14,6 +14,7 @@ import classes from '@styles/pr-details.module.css';
 import { IconPlus } from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
 import Markdown from 'react-markdown';
+import { ProfileCard } from '../../cards/ProfileCard';
 
 interface PRDetailsProps {
   pr: TeamData['teamPRs'][number] | undefined;
@@ -84,7 +85,7 @@ const PRDetails: React.FC<PRDetailsProps> = ({ pr, showLastWeek, setShowLastWeek
                     </span>
                   </HoverCard.Target>
                   <HoverCard.Dropdown>
-                    <Profile gitHandle={review.user ?? ''} />
+                    <ProfileCard gitHandle={review.user ?? ''} />
                   </HoverCard.Dropdown>
                 </HoverCard>: {review.state}
               </Accordion.Control>
@@ -128,27 +129,6 @@ const PRDetails: React.FC<PRDetailsProps> = ({ pr, showLastWeek, setShowLastWeek
           ))}
         </Accordion>
       )}
-    </Box>
-  );
-};
-
-const Profile: React.FC<{ gitHandle: string }> = ({ gitHandle }) => {
-  // Look up user profile details from gitHandle
-
-  const getName = (gitHandle: string) => {
-    switch (gitHandle) {
-      case 'eugenechiaannyao':
-        return 'Eugene Chia';
-      case 'pranav-ganesh':
-        return 'Pranav Ganesh';
-      default:
-        return gitHandle;
-    }
-  };
-
-  return (
-    <Box>
-      <Text>Name: {getName(gitHandle)}</Text>
     </Box>
   );
 };

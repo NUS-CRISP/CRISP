@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { BadRequestError, NotFoundError } from '../services/errors';
+import { editUser, getUserByGitHandle } from '../services/userService';
 import { getAccountId } from '../utils/auth';
-import { editUser } from '../services/userService';
 
 export const updateUser = async (req: Request, res: Response) => {
   const accountId = await getAccountId(req);
@@ -25,3 +25,28 @@ export const updateUser = async (req: Request, res: Response) => {
     }
   }
 };
+
+export const getUserByHandle = async (req: Request, res: Response) => {
+  const accountId = await getAccountId(req);
+  if (!accountId) {
+    res.status(400).json({ error: 'Missing authorization' });
+    return;
+  }
+
+  try {
+    const { gitHandle } = req.query;
+    if (typeof gitHandle !== 'string') {
+      res.status(400).json({ error: 'Invalid git handle' });
+      return;
+    }
+    const user = await getUserByGitHandle(gitHandle);
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+    res.status(200).json(user);
+  } catch (error) {
+    console.error('Error fetching user by git handle:', error);
+    res.status(500).json({ error: 'Failed to fetch user by git handle' });
+  }
+}

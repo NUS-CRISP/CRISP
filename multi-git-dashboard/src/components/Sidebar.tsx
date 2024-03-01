@@ -82,7 +82,7 @@ const Sidebar: React.FC = () => {
 
         <a href={'https://forms.gle/41KcH8gFh3uDfzQGA'} target='_blank' className={classes.link}>
           <IconHelp className={classes.linkIcon} stroke={1.5} />
-          <span>Report an issue</span>
+          <span>Submit issue / feature</span>
         </a>
 
         <a href="#" className={classes.link} onClick={() => signOut()}>
