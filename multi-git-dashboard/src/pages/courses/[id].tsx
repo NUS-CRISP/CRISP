@@ -3,7 +3,7 @@ import { Container, Loader } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { Course } from '@shared/types/Course';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 const CourseViewPage: React.FC = () => {
   const router = useRouter();
@@ -28,7 +28,7 @@ const CourseViewPage: React.FC = () => {
     }
   }, [isNewCourse]);
 
-  const fetchCourse = async () => {
+  const fetchCourse = useCallback(async () => {
     try {
       const response = await fetch(courseApiRoute);
       if (!response.ok) {
@@ -40,7 +40,7 @@ const CourseViewPage: React.FC = () => {
     } catch (error) {
       console.error('Error fetching course:', error);
     }
-  };
+  }, [courseId]);
 
   useEffect(() => {
     if (courseId) {
