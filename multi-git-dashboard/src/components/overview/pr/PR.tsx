@@ -14,6 +14,11 @@ const PR: React.FC<PRProps> = ({ teamData }: PRProps) => {
   const [selectedPR, setSelectedPR] = useState<number | null>(
     teamData.teamPRs[0]?.id || null
   );
+  const [showLastWeek, setShowLastWeek] = useState(false);
+
+  const lastWeekPRs = teamData.teamPRs.filter(
+    pr => new Date(pr.createdAt) >= new Date(new Date().setDate(new Date().getDate() - 7))
+  );
 
   return (
     <Box
@@ -37,7 +42,7 @@ const PR: React.FC<PRProps> = ({ teamData }: PRProps) => {
         }}
       >
         <PRList
-          teamPRs={teamData.teamPRs}
+          teamPRs={showLastWeek ? lastWeekPRs : teamData.teamPRs}
           selectedPR={selectedPR}
           onSelectPR={setSelectedPR}
           maxHeight={MAX_HEIGHT}
@@ -45,7 +50,11 @@ const PR: React.FC<PRProps> = ({ teamData }: PRProps) => {
       </Box>
       {selectedPR !== null && (
         <Box style={{ flexGrow: 3, maxWidth: 750, overflowY: 'auto' }}>
-          <PRDetails pr={teamData.teamPRs.find(pr => pr.id === selectedPR)} />
+          <PRDetails
+            pr={teamData.teamPRs.find(pr => pr.id === selectedPR)}
+            showLastWeek={showLastWeek}
+            setShowLastWeek={setShowLastWeek}
+          />
         </Box>
       )}
     </Box>

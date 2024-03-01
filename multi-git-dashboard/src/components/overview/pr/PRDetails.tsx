@@ -1,40 +1,74 @@
 import {
   Accordion,
   Box,
+  Button,
   Container,
   Divider,
+  Flex,
+  HoverCard,
   Text,
-  useMantineTheme,
+  useMantineTheme
 } from '@mantine/core';
 import { TeamData } from '@shared/types/TeamData';
 import classes from '@styles/pr-details.module.css';
 import { IconPlus } from '@tabler/icons-react';
+import { useEffect, useState } from 'react';
 import Markdown from 'react-markdown';
 
 interface PRDetailsProps {
   pr: TeamData['teamPRs'][number] | undefined;
+  showLastWeek: boolean;
+  setShowLastWeek: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const PRDetails: React.FC<PRDetailsProps> = ({ pr }) => {
+const PRDetails: React.FC<PRDetailsProps> = ({ pr, showLastWeek, setShowLastWeek }) => {
   if (!pr) return null;
 
   const theme = useMantineTheme();
-  // Create map of users to random colors; this is used to color the user's name in the PR details
-  const userColors = new Map<string, string>();
-  const getRandomColor = () =>
-    theme.colors[
+
+  const [userColors, setUserColors] = useState<Map<string, string>>(new Map());
+
+  useEffect(() => {
+    const newUserColors = new Map<string, string>();
+
+    const getRandomColor = () =>
+      theme.colors[
       Object.keys(theme.colors)[
-        Math.floor(Math.random() * Object.keys(theme.colors).length)
+      Math.floor(Math.random() * Object.keys(theme.colors).length)
       ]
-    ][5];
+      ][5];
+
+    // Populate newUserColors with colors for each user in the PR details
+    pr?.reviews.forEach(review => {
+      if (!review.user) return;
+      if (!newUserColors.has(review.user)) {
+        newUserColors.set(review.user, getRandomColor());
+      }
+      review.comments.forEach(comment => {
+        if (!newUserColors.has(comment.user)) {
+          newUserColors.set(comment.user, getRandomColor());
+        }
+      });
+    });
+
+    setUserColors(newUserColors);
+  }, [pr, theme]);
+
 
   return (
     <Box>
-      <Text fw={500}>{pr.title}</Text>
-      <Text size="sm">Status: {pr.state}</Text>
-      <Text size="sm">
-        Created At: {new Date(pr.createdAt).toLocaleDateString()}
-      </Text>
+      <Flex justify={'space-between'}>
+        <Box>
+          <Text fw={500}>{pr.title}</Text>
+          <Text size="sm">Status: {pr.state}</Text>
+          <Text size="sm">
+            Created At: {new Date(pr.createdAt).toLocaleDateString()}
+          </Text>
+        </Box>
+        <Button onClick={() => setShowLastWeek(!showLastWeek)}>
+          {showLastWeek ? 'Show All Time' : 'Show Last Week'}
+        </Button>
+      </Flex>
       <Divider my="sm" />
       {pr.reviews.length === 0 ? (
         <Container>No reviews found.</Container>
@@ -43,7 +77,16 @@ const PRDetails: React.FC<PRDetailsProps> = ({ pr }) => {
           {pr.reviews.map(review => (
             <Accordion.Item key={review.id} value={String(review.id)}>
               <Accordion.Control>
-                {review.user}: {review.state}
+                <HoverCard>
+                  <HoverCard.Target>
+                    <span>
+                      {review.user}
+                    </span>
+                  </HoverCard.Target>
+                  <HoverCard.Dropdown>
+                    <Profile gitHandle={review.user ?? ''} />
+                  </HoverCard.Dropdown>
+                </HoverCard>: {review.state}
               </Accordion.Control>
               <Accordion.Panel>
                 <Markdown>
@@ -54,37 +97,30 @@ const PRDetails: React.FC<PRDetailsProps> = ({ pr }) => {
                     chevron={<IconPlus className={classes.icon} />}
                     classNames={{ chevron: classes.chevron }}
                   >
-                    {review.comments.map(comment => {
-                      // If the user is not in the map, pick random color from theme.colors
-                      if (!userColors.has(comment.user)) {
-                        userColors.set(comment.user, getRandomColor());
-                      }
-
-                      return (
-                        <Accordion.Item key={comment.id} value={comment.body}>
-                          <Accordion.Control
-                            icon={
-                              <span
-                                style={{
-                                  display: 'inline-block',
-                                  height: '10px',
-                                  width: '10px',
-                                  borderRadius: '50%',
-                                  backgroundColor:
-                                    userColors.get(comment.user) ||
-                                    'defaultColor',
-                                }}
-                              />
-                            }
-                          >
-                            {comment.user}
-                          </Accordion.Control>
-                          <Accordion.Panel>
-                            <Markdown>{comment.body}</Markdown>
-                          </Accordion.Panel>
-                        </Accordion.Item>
-                      );
-                    })}
+                    {review.comments.map(comment =>
+                      <Accordion.Item key={comment.id} value={comment.body}>
+                        <Accordion.Control
+                          icon={
+                            <span
+                              style={{
+                                display: 'inline-block',
+                                height: '10px',
+                                width: '10px',
+                                borderRadius: '50%',
+                                backgroundColor:
+                                  userColors.get(comment.user) ||
+                                  'defaultColor',
+                              }}
+                            />
+                          }
+                        >
+                          {comment.user}
+                        </Accordion.Control>
+                        <Accordion.Panel>
+                          <Markdown>{comment.body}</Markdown>
+                        </Accordion.Panel>
+                      </Accordion.Item>
+                    )}
                   </Accordion>
                 )}
               </Accordion.Panel>
@@ -92,6 +128,27 @@ const PRDetails: React.FC<PRDetailsProps> = ({ pr }) => {
           ))}
         </Accordion>
       )}
+    </Box>
+  );
+};
+
+const Profile: React.FC<{ gitHandle: string }> = ({ gitHandle }) => {
+  // Look up user profile details from gitHandle
+
+  const getName = (gitHandle: string) => {
+    switch (gitHandle) {
+      case 'eugenechiaannyao':
+        return 'Eugene Chia';
+      case 'pranav-ganesh':
+        return 'Pranav Ganesh';
+      default:
+        return gitHandle;
+    }
+  };
+
+  return (
+    <Box>
+      <Text>Name: {getName(gitHandle)}</Text>
     </Box>
   );
 };

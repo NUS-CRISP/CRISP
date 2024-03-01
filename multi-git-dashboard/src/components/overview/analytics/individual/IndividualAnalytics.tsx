@@ -1,4 +1,4 @@
-import { Button } from '@mantine/core';
+import { Button, Stack } from '@mantine/core';
 import { useState } from 'react';
 import {
   Bar,
@@ -11,7 +11,7 @@ import {
 } from 'recharts';
 import { AnalyticsProps } from '../Analytics';
 
-interface IndividualAnalyticsProps extends AnalyticsProps {}
+interface IndividualAnalyticsProps extends AnalyticsProps { }
 
 // TODO: Handle filter by last week on backend
 const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
@@ -63,28 +63,26 @@ const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
       });
     });
 
-    console.log(Array.from(contributors)); // Debug: Check accumulated data
-
     return Array.from(contributors, ([name, data]) => ({ name, ...data }));
   };
 
   const data = showLastWeek
     ? filterLastWeekData()
     : Object.entries(teamData.teamContributions).map(([key, value]) => ({
-        name: key,
-        commits: value.commits,
-        pullRequests: value.pullRequests,
-        codeReviews: value.codeReviews,
-        comments: value.comments,
-      }));
+      name: key,
+      commits: value.commits,
+      pullRequests: value.pullRequests,
+      codeReviews: value.codeReviews,
+      comments: value.comments,
+    }));
 
   return (
-    <>
+    <Stack align='flex-end'>
       <Button onClick={() => setShowLastWeek(!showLastWeek)}>
         {showLastWeek ? 'Show All Time' : 'Show Last Week'}
       </Button>
       <ResponsiveContainer width="100%" height={400}>
-        <BarChart data={data}>
+        <BarChart data={data} margin={{ right: 50, left: 20 }}>
           <XAxis dataKey="name" />
           <YAxis />
           <Tooltip />
@@ -94,7 +92,7 @@ const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
           <Bar dataKey="comments" fill="#ffc658" name="Comments" />
         </BarChart>
       </ResponsiveContainer>
-    </>
+    </Stack>
   );
 };
 

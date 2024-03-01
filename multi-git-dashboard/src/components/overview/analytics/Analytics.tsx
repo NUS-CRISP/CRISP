@@ -1,9 +1,7 @@
 import { Carousel, Embla } from '@mantine/carousel';
-import { Card, rem } from '@mantine/core';
+import { Card } from '@mantine/core';
 import { TeamData } from '@shared/types/TeamData';
-import classes from '@styles/team-analytics-view.module.css';
-import { IconArrowLeft, IconArrowRight } from '@tabler/icons-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import IndividualAnalytics from './individual/IndividualAnalytics';
 import OverallActivity from './team/OverallActivity';
 import WeeklyContributions from './team/WeeklyContributions';
@@ -16,33 +14,31 @@ export interface AnalyticsProps {
 const Analytics: React.FC<AnalyticsProps> = ({ teamData, teamDatas }) => {
   const [embla, setEmbla] = useState<Embla | null>(null);
 
+  const slides = [
+    OverallActivity, WeeklyContributions, IndividualAnalytics
+  ].map((Component) => (
+    <Carousel.Slide key={Component.name}>
+      <Component teamData={teamData} teamDatas={teamDatas} />
+    </Carousel.Slide>
+  ));
+
+  useEffect(() => {
+    embla?.reInit();
+  }, []);
+
   return (
-    <Card withBorder className={classes.card}>
+    <Card withBorder>
       <Carousel
         key={teamData._id}
         getEmblaApi={setEmbla}
-        nextControlIcon={
-          <IconArrowRight
-            style={{ width: rem(16), height: rem(16) }}
-            onClick={() => embla?.reInit()}
-          />
-        }
-        previousControlIcon={
-          <IconArrowLeft
-            style={{ width: rem(16), height: rem(16) }}
-            onClick={() => embla?.reInit()}
-          />
-        }
+        nextControlProps={{
+          onClick: () => embla?.reInit(),
+        }}
+        previousControlProps={{
+          onClick: () => embla?.reInit(),
+        }}
       >
-        <Carousel.Slide>
-          <OverallActivity teamData={teamData} teamDatas={teamDatas} />
-        </Carousel.Slide>
-        <Carousel.Slide>
-          <WeeklyContributions teamData={teamData} teamDatas={teamDatas} />
-        </Carousel.Slide>
-        <Carousel.Slide>
-          <IndividualAnalytics teamData={teamData} teamDatas={teamDatas} />
-        </Carousel.Slide>
+        {slides}
       </Carousel>
     </Card>
   );
