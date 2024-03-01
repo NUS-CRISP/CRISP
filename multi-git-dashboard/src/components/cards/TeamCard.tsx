@@ -1,5 +1,12 @@
-import { hasFacultyPermission } from '@/lib/auth/utils';
-import { ActionIcon, Card, Group, Select, Table, Text } from '@mantine/core';
+import {
+  ActionIcon,
+  Button,
+  Card,
+  Group,
+  Select,
+  Table,
+  Text,
+} from '@mantine/core';
 import { TeamData } from '@shared/types/TeamData';
 import { User } from '@shared/types/User';
 import { IconX } from '@tabler/icons-react';
@@ -10,10 +17,11 @@ interface TeamCardProps {
   number: number;
   members: User[];
   TA: User | null;
-  TAs: User[];
+  teachingTeam: User[];
   teamData: TeamData | null;
   teamDataList: TeamData[];
-  onTeamDeleted: () => void;
+  onUpdate: () => void;
+  isEditing?: boolean;
 }
 
 const TeamCard: React.FC<TeamCardProps> = ({
@@ -21,10 +29,11 @@ const TeamCard: React.FC<TeamCardProps> = ({
   number,
   members,
   TA,
-  TAs,
+  teachingTeam,
   teamData,
   teamDataList,
-  onTeamDeleted,
+  onUpdate,
+  isEditing,
 }) => {
   const [selectedTA, setSelectedTA] = useState<string | null>(TA?._id || null);
   const [selectedTeamData, setSelectedTeamData] = useState<string | null>(null);
@@ -35,7 +44,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
     setSelectedTeamData(teamData?._id || null);
   }, [TA]);
 
-  const handleDelete = async () => {
+  const handleDeleteTeam = async () => {
     try {
       const response = await fetch(apiRoute, {
         method: 'DELETE',
@@ -45,13 +54,29 @@ const TeamCard: React.FC<TeamCardProps> = ({
         console.error('Error deleting team:', response.statusText);
         return;
       }
-      onTeamDeleted();
+      onUpdate();
     } catch (error) {
       console.error('Error deleting team:', error);
     }
   };
 
-  const handleTAChange = async (TAId: string | null) => {
+  const handleRemoveMember = async (memberId: string) => {
+    try {
+      const apiRouteRemoveMember = `${apiRoute}/members/${memberId}`;
+      const response = await fetch(apiRouteRemoveMember, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        console.error('Error removing member:', response.statusText);
+        return;
+      }
+      onUpdate();
+    } catch (error) {
+      console.error('Error removing member:', error);
+    }
+  };
+
+  const handleTeamTAChange = async (TAId: string | null) => {
     try {
       const response = await fetch(apiRoute, {
         method: 'PATCH',
@@ -66,6 +91,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
         return;
       }
       setSelectedTA(TAId);
+      onUpdate();
     } catch (error) {
       console.error('Error updating team:', error);
     }
@@ -86,12 +112,16 @@ const TeamCard: React.FC<TeamCardProps> = ({
         return;
       }
       setSelectedTeamData(teamDataId);
+      onUpdate();
     } catch (error) {
       console.error('Error updating team:', error);
     }
   };
 
-  const taOptions = TAs.map(ta => ({ value: ta._id, label: ta.name }));
+  const taOptions = teachingTeam.map(user => ({
+    value: user._id,
+    label: user.name,
+  }));
   const repoOptions = teamDataList.map(teamData => ({
     value: teamData._id,
     label: teamData.repoName,
@@ -99,21 +129,27 @@ const TeamCard: React.FC<TeamCardProps> = ({
 
   const student_rows = members?.map(member => {
     return (
-      <tr key={member._id}>
-        <td style={{ textAlign: 'left' }}>{member.name}</td>
-        <td style={{ textAlign: 'left' }}>{member.gitHandle}</td>
-      </tr>
+      <Table.Tr key={member._id}>
+        <Table.Td style={{ textAlign: 'left' }}>{member.name}</Table.Td>
+        <Table.Td style={{ textAlign: 'left' }}>{member.gitHandle}</Table.Td>
+        {isEditing && (
+          <Table.Td>
+            <Button
+              size="compact-xs"
+              variant="light"
+              color="red"
+              onClick={() => handleRemoveMember(member._id)}
+            >
+              Remove
+            </Button>
+          </Table.Td>
+        )}
+      </Table.Tr>
     );
   });
 
   return (
-    <Card
-      shadow="sm"
-      padding="lg"
-      radius="md"
-      style={{ marginTop: '6px', marginBottom: '6px' }}
-      withBorder
-    >
+    <Card shadow="sm" padding="lg" radius="md" my={6} withBorder>
       <div
         style={{
           display: 'flex',
@@ -124,12 +160,12 @@ const TeamCard: React.FC<TeamCardProps> = ({
         <Group mt="md" mb="xs">
           <Text> Team {number.toString()}</Text>
         </Group>
-        {hasFacultyPermission() && (
+        {isEditing && (
           <ActionIcon
             variant="transparent"
             color="red"
             size="sm"
-            onClick={handleDelete}
+            onClick={handleDeleteTeam}
             title="Delete Team"
           >
             <IconX size={16} />
@@ -139,11 +175,11 @@ const TeamCard: React.FC<TeamCardProps> = ({
 
       <Group style={{ alignItems: 'center' }}>
         <Text>Teaching Assistant:</Text>
-        {hasFacultyPermission() ? (
+        {isEditing ? (
           <Select
             data={taOptions}
             value={selectedTA}
-            onChange={e => handleTAChange(e)}
+            onChange={e => handleTeamTAChange(e)}
             placeholder="Assign TA"
           />
         ) : (
@@ -152,7 +188,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
       </Group>
       <Group style={{ alignItems: 'center' }}>
         <Text>Repository:</Text>
-        {hasFacultyPermission() ? (
+        {isEditing ? (
           <Select
             data={repoOptions}
             value={selectedTeamData}
@@ -164,13 +200,18 @@ const TeamCard: React.FC<TeamCardProps> = ({
         )}
       </Group>
       <Table>
-        <thead>
-          <tr>
-            <th style={{ textAlign: 'left' }}>Name</th>
-            <th style={{ textAlign: 'left' }}>Git Handle</th>
-          </tr>
-        </thead>
-        <tbody>{student_rows}</tbody>
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th style={{ textAlign: 'left', width: '50%' }}>
+              Name
+            </Table.Th>
+            <Table.Th style={{ textAlign: 'left', width: '30%' }}>
+              Git Handle
+            </Table.Th>
+            <Table.Th style={{ textAlign: 'left', width: '20%' }} />
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>{student_rows}</Table.Tbody>
       </Table>
     </Card>
   );

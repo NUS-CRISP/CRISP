@@ -134,3 +134,16 @@ export const addTAsToTeam = async (courseId: string, tas: any[]) => {
   }
   await course.save();
 };
+
+export const removeMembersById = async (teamId: string, userId: string) => {
+  const team = await TeamModel.findById(teamId).populate('members');
+  if (!team) {
+    throw new NotFoundError('Team not found');
+  }
+  const user = await UserModel.findById(userId);
+  if (!user) {
+    throw new NotFoundError('User not found');
+  }
+  team.members = team.members?.filter(member => !member._id.equals(user._id));
+  await team.save();
+};

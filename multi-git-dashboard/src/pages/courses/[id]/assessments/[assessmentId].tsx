@@ -6,6 +6,8 @@ import { User } from '@shared/types/User';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
 import ResultCard from '../../../../components/cards/ResultCard';
+import AssessmentOverview from '@/components/views/AssessmentOverview';
+import { SheetData } from '@shared/types/SheetData';
 
 const AssessmentDetail: React.FC = () => {
   const router = useRouter();
@@ -16,10 +18,16 @@ const AssessmentDetail: React.FC = () => {
 
   const assessmentsApiRoute = `/api/assessments/${assessmentId}`;
   const teachingTeamApiRoute = `/api/courses/${id}/teachingteam`;
+  const assessmentSheetApiRoute = `/api/assessments/${assessmentId}/googlesheets`;
 
   const [assessment, setAssessment] = useState<Assessment | null>(null);
   const [teachingTeam, setTeachingTeam] = useState<User[]>([]);
-  const [isResultFormOpen, setIsResultFormOpen] = useState(false);
+  const [isResultFormOpen, setIsResultFormOpen] = useState<boolean>(false);
+  const [sheetData, setSheetData] = useState<SheetData | null>(null);
+
+  const [activeTab, setActiveTab] = useState<string>('Overview');
+
+  const permission = hasFacultyPermission();
 
   const fetchAssessment = useCallback(async () => {
     try {
@@ -54,82 +62,142 @@ const AssessmentDetail: React.FC = () => {
     }
   }, [id]);
 
+  const getSheetData = async () => {
+    try {
+      const response = await fetch(assessmentSheetApiRoute);
+      if (!response.ok) {
+        throw new Error('Failed to fetch sheets data');
+      }
+      const data = await response.json();
+      setSheetData(data);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
   const toggleResultForm = () => {
     setIsResultFormOpen(o => !o);
   };
 
-  const onUpdate = () => {
+  const onResultsUploaded = () => {
     fetchAssessment();
-    fetchTeachingTeam();
     setIsResultFormOpen(o => !o);
   };
 
-  useEffect(() => {
-    if (assessmentId && id) {
-      fetchAssessment();
-    }
-  }, [assessmentId, id, fetchAssessment]);
+  const onUpdateAssessment = () => {
+    fetchAssessment();
+  };
+
+  const onUpdateSheet = () => {
+    getSheetData();
+  };
+
+  const setActiveTabAndSave = (tabName: string) => {
+    setActiveTab(tabName);
+    localStorage.setItem(`activeAssessmentTab_${assessmentId}`, tabName);
+  };
 
   useEffect(() => {
-    if (id) {
+    const savedTab = localStorage.getItem(
+      `activeAssessmentTab_${assessmentId}`
+    );
+    if (permission) {
+      if (
+        savedTab &&
+        ['Overview', 'Form', 'Results'].some(label => label === savedTab)
+      ) {
+        setActiveTab(savedTab);
+      }
+    } else {
+      if (savedTab && ['Overview', 'Form'].some(label => label === savedTab)) {
+        setActiveTab(savedTab);
+      }
+    }
+  });
+
+  useEffect(() => {
+    if (router.isReady) {
+      fetchAssessment();
       fetchTeachingTeam();
     }
-  }, [id, fetchTeachingTeam]);
+  }, [router.isReady]);
+
+  useEffect(() => {
+    if (router.isReady) {
+      getSheetData();
+    }
+  }, [router.isReady]);
 
   return (
     <Container>
-      <Tabs defaultValue="overview">
+      <Tabs value={activeTab}>
         <Tabs.List>
-          <Tabs.Tab value="overview">Overview</Tabs.Tab>
-          <Tabs.Tab value="form">Google Form</Tabs.Tab>
-          <Tabs.Tab value="results">Results</Tabs.Tab>
+          <Tabs.Tab
+            value="Overview"
+            onClick={() => setActiveTabAndSave('Overview')}
+          >
+            Overview
+          </Tabs.Tab>
+          <Tabs.Tab value="Form" onClick={() => setActiveTabAndSave('Form')}>
+            Evaluate
+          </Tabs.Tab>
+          {hasFacultyPermission() && (
+            <Tabs.Tab
+              value="Results"
+              onClick={() => setActiveTabAndSave('Results')}
+            >
+              Results
+            </Tabs.Tab>
+          )}
         </Tabs.List>
 
-        <Tabs.Panel value="overview">
-          <Text>Assessment Type: {assessment?.assessmentType}</Text>
-          <Text>Mark Type: {assessment?.markType}</Text>
-          <Text>Frequency: {assessment?.frequency}</Text>
-          <Text>Granularity: {assessment?.granularity}</Text>
-          <Text>Form Link: {assessment?.formLink}</Text>
+        <Tabs.Panel value="Overview">
+          {id && (
+            <AssessmentOverview
+              courseId={id}
+              assessment={assessment}
+              sheetData={sheetData}
+              hasFacultyPermission={permission}
+              onUpdateSheetData={onUpdateSheet}
+              onUpdateAssessment={onUpdateAssessment}
+            />
+          )}
         </Tabs.Panel>
 
-        <Tabs.Panel value="form">
+        <Tabs.Panel value="Form">
           {assessment?.formLink ? (
-            <iframe src={assessment.formLink} width="100%" height="600">
+            <iframe src={assessment.formLink} width="100%" height="1200">
               Loading…
             </iframe>
           ) : (
             <Text>No form link provided</Text>
           )}
         </Tabs.Panel>
-        <Tabs.Panel value="results">
-          {hasFacultyPermission() && (
-            <Button
-              onClick={toggleResultForm}
-              style={{ marginTop: '16px', marginBottom: '16px' }}
-            >
+        {hasFacultyPermission() && (
+          <Tabs.Panel value="Results">
+            <Button onClick={toggleResultForm} my={16}>
               Upload Results
             </Button>
-          )}
-          <Modal
-            opened={isResultFormOpen}
-            onClose={toggleResultForm}
-            title="Upload Results"
-          >
-            <ResultForm
-              assessmentId={assessmentId}
-              onResultsUploaded={onUpdate}
-            />
-          </Modal>
-          {assessment?.results.map(result => (
-            <ResultCard
-              key={result._id}
-              result={result}
-              teachingTeam={teachingTeam}
-              assessmentId={assessmentId}
-            />
-          ))}
-        </Tabs.Panel>
+            <Modal
+              opened={isResultFormOpen}
+              onClose={toggleResultForm}
+              title="Upload Results"
+            >
+              <ResultForm
+                assessmentId={assessmentId}
+                onResultsUploaded={onResultsUploaded}
+              />
+            </Modal>
+            {assessment?.results.map(result => (
+              <ResultCard
+                key={result._id}
+                result={result}
+                teachingTeam={teachingTeam}
+                assessmentId={assessmentId}
+              />
+            ))}
+          </Tabs.Panel>
+        )}
       </Tabs>
     </Container>
   );

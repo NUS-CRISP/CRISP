@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 interface TeamSetFormProps {
   courseId: string;
-  onTeamSetCreated: () => void;
+  onTeamSetCreated: (teamSetName: string) => void;
 }
 
 const TeamSetForm: React.FC<TeamSetFormProps> = ({
@@ -38,7 +38,7 @@ const TeamSetForm: React.FC<TeamSetFormProps> = ({
         return;
       }
       await response.json();
-      onTeamSetCreated();
+      onTeamSetCreated(form.values.name);
     } catch (error) {
       console.error('Error creating teamset:', error);
       setError('Error creating teamset. Please try again.');

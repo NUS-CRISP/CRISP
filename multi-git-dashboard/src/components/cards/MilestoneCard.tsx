@@ -12,16 +12,10 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
   description,
 }) => {
   return (
-    <Card
-      shadow="sm"
-      padding="lg"
-      radius="md"
-      style={{ marginTop: '6px', marginBottom: '6px' }}
-      withBorder
-    >
+    <Card shadow="sm" padding="lg" radius="md" my={6} withBorder>
       <Text size="lg">Milestone {milestoneNumber}</Text>
       <Text size="sm" c="dimmed">
-        Dateline: {dateline.toLocaleDateString()}
+        Dateline: {dateline.toLocaleString()}
       </Text>
       <Text size="sm" c="dimmed">
         {description}

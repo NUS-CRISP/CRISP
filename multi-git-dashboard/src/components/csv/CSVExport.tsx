@@ -5,10 +5,16 @@ import { saveAs } from 'file-saver';
 interface CSVExportProps {
   data: Record<string, unknown>[];
   headers: string[];
+  label: string;
   filename: string;
 }
 
-const CSVExport: React.FC<CSVExportProps> = ({ data, headers, filename }) => {
+const CSVExport: React.FC<CSVExportProps> = ({
+  data,
+  headers,
+  label,
+  filename,
+}) => {
   const downloadCsv = () => {
     const csvContent = [
       headers,
@@ -22,7 +28,7 @@ const CSVExport: React.FC<CSVExportProps> = ({ data, headers, filename }) => {
     saveAs(blob, filename);
   };
 
-  return <Button onClick={downloadCsv}>Export Data</Button>;
+  return <Button onClick={downloadCsv}>{label}</Button>;
 };
 
 export default CSVExport;
