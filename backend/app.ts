@@ -9,8 +9,8 @@ import githubRoutes from './routes/githubRoutes';
 import metricRoutes from './routes/metricRoutes';
 import teamRoutes from './routes/teamRoutes';
 import teamSetRoutes from './routes/teamSetRoutes';
-import { connectToDatabase } from './utils/database';
 import userRoutes from './routes/userRoutes';
+import { connectToDatabase } from './utils/database';
 
 const env = process.env.NODE_ENV ?? 'development';
 config({ path: `.env.${env}` });
