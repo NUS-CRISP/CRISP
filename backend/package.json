@@ -5,8 +5,8 @@
   "main": "app.js",
   "scripts": {
     "build": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json",
-    "start": "node dist/backend/app.js NODE_ENV=production",
-    "dev": "nodemon -e ts,js --exec ts-node app.ts PORT=3003",
+    "start": "NODE_ENV=production node dist/backend/app.js",
+    "dev": "PORT=3003 nodemon -e ts,js --exec ts-node app.ts",
     "test": "jest",
     "prettier-format": "prettier --config .prettierrc.json ./**/*.ts --write"
   },
