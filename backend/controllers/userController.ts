@@ -46,7 +46,6 @@ export const getUserByHandle = async (req: Request, res: Response) => {
     }
     res.status(200).json(user);
   } catch (error) {
-    console.error('Error fetching user by git handle:', error);
     res.status(500).json({ error: 'Failed to fetch user by git handle' });
   }
 }
