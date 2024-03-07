@@ -1,7 +1,8 @@
 import bcrypt from 'bcrypt';
-import AccountModel from '../models/Account';
+import AccountModel, { Account } from '../models/Account';
 import UserModel from '../models/User';
-import { BadRequestError } from './errors';
+import { BadRequestError, NotFoundError } from './errors';
+import mongoose from 'mongoose';
 
 export const createNewAccount = async (
   identifier: string,
@@ -10,7 +11,7 @@ export const createNewAccount = async (
   password: string,
   role: string
 ) => {
-  let existingAccount = await AccountModel.findOne({ email });
+  const existingAccount = await AccountModel.findOne({ email });
   let newUser;
 
   if (existingAccount) {
@@ -61,4 +62,24 @@ export const approveAccountByIds = async (ids: string[]) => {
 
 export const rejectAccountByIds = async (ids: string[]) => {
   await AccountModel.deleteMany({ _id: { $in: ids } });
+};
+
+export const getAccountStatusesByUserIds = async (
+  userIds: string[]
+): Promise<Record<string, boolean>> => {
+  const objectIds = userIds.map(id => new mongoose.Types.ObjectId(id));
+  const accounts = await AccountModel.find({ user: { $in: objectIds } });
+
+  if (accounts.length === 0) {
+    throw new NotFoundError('No accounts found');
+  }
+  const accountStatusRecord = accounts.reduce(
+    (record: Record<string, boolean>, account: Account) => {
+      record[account.user._id.toString()] = account.isApproved;
+      return record;
+    },
+    {}
+  );
+
+  return accountStatusRecord;
 };

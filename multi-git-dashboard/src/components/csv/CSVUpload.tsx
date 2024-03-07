@@ -25,6 +25,7 @@ const CSVUpload: React.FC<CSVUploadProps> = ({
   transformFunction,
 }) => {
   const [items, setItems] = useState<unknown[]>([]);
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
 
   const handleFileUpload = useCallback(
     (file: File) => {
@@ -48,9 +49,10 @@ const CSVUpload: React.FC<CSVUploadProps> = ({
           });
         };
         reader.readAsText(file);
+        setUploadedFileName(file.name);
       }
     },
-    [setItems, onError]
+    [setItems, onError, setUploadedFileName]
   );
 
   const downloadCsvTemplate = () => {
@@ -129,6 +131,15 @@ const CSVUpload: React.FC<CSVUploadProps> = ({
           </Text>
         </Group>
       </Dropzone>
+      {uploadedFileName ? (
+        <Text size="md" style={{ marginTop: '4px' }}>
+          Selected file: {uploadedFileName}
+        </Text>
+      ) : (
+        <Text size="md" style={{ marginTop: '4px' }}>
+          No file selected
+        </Text>
+      )}
       <Group style={{ marginTop: '16px' }}>
         <Button onClick={handleSubmitCSV}>{uploadButtonString}</Button>
         <Button onClick={downloadCsvTemplate}>Download CSV Template</Button>

@@ -1,27 +1,31 @@
 import { hasFacultyPermission } from '@/lib/auth/utils';
-import { Button, Container, Modal } from '@mantine/core';
-import { Course } from '@shared/types/Course';
+import { Button, Container, Group, Modal } from '@mantine/core';
 import Link from 'next/link';
 import { useState } from 'react';
 import AssessmentCard from '../cards/AssessmentCard';
 import AssessmentForm from '../forms/AssessmentForm';
+import { Assessment } from '@shared/types/Assessment';
 
 interface AssessmentInfoProps {
-  course: Course;
+  courseId: string;
+  assessments: Assessment[];
+  teamSetNames: string[];
   onUpdate: () => void;
 }
 
 const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
-  course,
+  courseId,
+  assessments,
+  teamSetNames,
   onUpdate,
 }) => {
   const [isCreatingAssessment, setIsCreatingAssessment] = useState(false);
 
-  const assessmentCards = course.assessments.map(assessment => (
+  const assessmentCards = assessments.map(assessment => (
     <Link
       key={assessment._id}
       style={{ textDecoration: 'none' }}
-      href={`/courses/${course._id}/assessments/${assessment._id}`}
+      href={`/courses/${courseId}/assessments/${assessment._id}`}
       passHref
     >
       <AssessmentCard
@@ -48,12 +52,9 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
   return (
     <Container>
       {hasFacultyPermission() && (
-        <Button
-          onClick={toggleForm}
-          style={{ marginTop: '16px', marginBottom: '16px' }}
-        >
-          Create Assessment
-        </Button>
+        <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
+          <Button onClick={toggleForm}>Create Assessment</Button>
+        </Group>
       )}
       <Modal
         opened={isCreatingAssessment}
@@ -61,8 +62,8 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
         title="Create Assessment"
       >
         <AssessmentForm
-          teamSets={course.teamSets}
-          courseId={course._id.toString()}
+          teamSetNames={teamSetNames}
+          courseId={courseId}
           onAssessmentCreated={handleAssessmentCreated}
         />
       </Modal>

@@ -3,7 +3,7 @@ import { useSession } from 'next-auth/react';
 
 export const hasPermission = (...roles: Role[]) => {
   const { data: session } = useSession();
-  return session?.user.role && roles.includes(session.user.role);
+  return (session?.user.role && roles.includes(session.user.role)) || false;
 };
 
 export const hasFacultyPermission = () =>

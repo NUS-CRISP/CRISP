@@ -18,13 +18,7 @@ const AssessmentCard: React.FC<AssessmentCardProps> = ({
   formLink,
 }) => {
   return (
-    <Card
-      shadow="sm"
-      padding="lg"
-      radius="md"
-      style={{ marginTop: '6px', marginBottom: '6px' }}
-      withBorder
-    >
+    <Card shadow="sm" padding="lg" radius="md" my={6} withBorder>
       <Text size="lg">{assessmentType}</Text>
       <Text size="sm" c="dimmed">
         Mark Type: {markType}

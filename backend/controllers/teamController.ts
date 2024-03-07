@@ -1,6 +1,10 @@
 import { Request, Response } from 'express';
 import { NotFoundError } from '../services/errors';
-import { deleteTeamById, updateTeamById } from '../services/teamService';
+import {
+  deleteTeamById,
+  updateTeamById,
+  removeMembersById,
+} from '../services/teamService';
 
 export const deleteTeam = async (req: Request, res: Response) => {
   const teamId = req.params.id;
@@ -28,6 +32,21 @@ export const updateTeam = async (req: Request, res: Response) => {
     } else {
       console.error('Error updating team:', error);
       res.status(500).json({ error: 'Failed to update team' });
+    }
+  }
+};
+
+export const removeMembersFromTeam = async (req: Request, res: Response) => {
+  const { id, userId } = req.params;
+  try {
+    await removeMembersById(id, userId);
+    res.status(200).json({ message: 'Members removed successfully' });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error removing member:', error);
+      res.status(500).json({ error: 'Failed to remove member' });
     }
   }
 };

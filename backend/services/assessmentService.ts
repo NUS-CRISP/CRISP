@@ -22,19 +22,33 @@ export const getAssessmentById = async (
   if (!account) {
     throw new NotFoundError('Account not found');
   }
-  const assessment = await AssessmentModel.findById(assessmentId).populate<{
-    results: Result[];
-  }>({
-    path: 'results',
-    populate: {
-      path: 'team',
-      model: 'Team',
+  const assessment = await AssessmentModel.findById(assessmentId)
+    .populate<{
+      results: Result[];
+    }>({
+      path: 'results',
+      populate: [
+        {
+          path: 'team',
+          model: 'Team',
+          populate: {
+            path: 'members',
+            model: 'User',
+          },
+        },
+        {
+          path: 'marker',
+          model: 'User',
+        },
+      ],
+    })
+    .populate({
+      path: 'teamSet',
       populate: {
-        path: 'members',
-        model: 'User',
+        path: 'teams',
+        model: 'Team',
       },
-    },
-  });
+    });
   if (!assessment) {
     throw new NotFoundError('Assessment not found');
   }
@@ -63,6 +77,45 @@ export const getAssessmentById = async (
     });
   }
   return assessment;
+};
+
+export const updateAssessmentById = async (
+  assessmentId: string,
+  accountId: string,
+  updateData: Record<string, unknown>
+) => {
+  const account = await AccountModel.findById(accountId);
+  if (!account) {
+    throw new NotFoundError('Account not found');
+  }
+  if (account.role !== 'admin' && account.role !== 'Faculty member') {
+    throw new BadRequestError('Unauthorized');
+  }
+  const updatedAssessment = await AssessmentModel.findByIdAndUpdate(
+    assessmentId,
+    updateData,
+    { new: true }
+  );
+  if (!updatedAssessment) {
+    throw new NotFoundError('Assessment not found');
+  }
+};
+
+export const deleteAssessmentById = async (assessmentId: string) => {
+  const assessment = await AssessmentModel.findById(assessmentId);
+  if (!assessment) {
+    throw new NotFoundError('Assessment not found');
+  }
+  await ResultModel.deleteMany({ assessment: assessmentId });
+  const course = await CourseModel.findById(assessment.course);
+  if (course && course.assessments) {
+    const index = course.assessments.indexOf(assessment._id);
+    if (index !== -1) {
+      course.assessments.splice(index, 1);
+      await course.save();
+    }
+  }
+  await AssessmentModel.findByIdAndDelete(assessmentId);
 };
 
 export const uploadAssessmentResultsById = async (
@@ -144,6 +197,7 @@ interface AssessmentData {
   granularity: string;
   teamSetName?: string;
   formLink?: string;
+  sheetID?: string;
 }
 
 export const addAssessmentsToCourse = async (
@@ -166,6 +220,7 @@ export const addAssessmentsToCourse = async (
       granularity,
       teamSetName,
       formLink,
+      sheetID,
     } = data;
     const existingAssessment = await AssessmentModel.findOne({
       course: courseId,
@@ -183,19 +238,19 @@ export const addAssessmentsToCourse = async (
       granularity,
       teamSet: null,
       formLink,
+      sheetID,
     });
     await assessment.save();
     const results: mongoose.Document[] = [];
+    const teamSet = await TeamSetModel.findOne({
+      course: courseId,
+      name: teamSetName,
+    }).populate({ path: 'teams', populate: ['members', 'TA'] });
     if (granularity === 'team') {
-      const teamSet = await TeamSetModel.findOne({
-        course: courseId,
-        name: teamSetName,
-      }).populate({ path: 'teams', populate: ['members', 'TA'] });
       if (!teamSet) {
         continue;
       }
       assessment.teamSet = teamSet._id;
-      // Create a result object for each team
       teamSet.teams.forEach((team: any) => {
         const initialMarks = team.members.map((member: any) => ({
           user: member.identifier,
@@ -211,22 +266,39 @@ export const addAssessmentsToCourse = async (
         results.push(result);
       });
     } else {
-      // Create a result object for each student
-      course.students.forEach((student: any) => {
-        const result = new ResultModel({
-          assessment: assessment._id,
-          team: null,
-          marker: null,
-          marks: [
-            {
-              user: student.identifier,
-              name: student.name,
-              mark: 0,
-            },
-          ],
+      if (teamSet) {
+        assessment.teamSet = teamSet._id;
+        course.students.forEach((student: any) => {
+          const teams: Team[] = teamSet.teams as unknown as Team[];
+          const team = teams.find(t =>
+            t?.members?.some(member => member._id.equals(student._id))
+          );
+          const marker = team?.TA?._id || null;
+          const result = new ResultModel({
+            assessment: assessment._id,
+            team: team?._id,
+            marker,
+            marks: [{ user: student.identifier, name: student.name, mark: 0 }],
+          });
+          results.push(result);
         });
-        results.push(result);
-      });
+      } else {
+        course.students.forEach((student: any) => {
+          const result = new ResultModel({
+            assessment: assessment._id,
+            team: null,
+            marker: null,
+            marks: [
+              {
+                user: student.identifier,
+                name: student.name,
+                mark: 0,
+              },
+            ],
+          });
+          results.push(result);
+        });
+      }
     }
     assessment.results = results.map(result => result._id);
     course.assessments.push(assessment._id);

@@ -9,7 +9,7 @@ import {
 } from '@tabler/icons-react';
 import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import classes from '../styles/Sidebar.module.css';
 
 const Sidebar: React.FC = () => {
@@ -24,6 +24,17 @@ const Sidebar: React.FC = () => {
   if (session && session.user && session.user.role === 'admin') {
     linksData.push({ link: '/admin', label: 'Admin', icon: IconSettings2 });
   }
+
+  useEffect(() => {
+    const path = router.pathname;
+    if (path.startsWith('/courses')) {
+      setActive('View Courses');
+    } else if (path.startsWith('/admin')) {
+      setActive('Admin');
+    } else {
+      setActive('Home');
+    }
+  }, [router.pathname]);
 
   const links = linksData.map(item => (
     <a

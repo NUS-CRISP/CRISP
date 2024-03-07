@@ -11,6 +11,7 @@ import jiraRoutes from './routes/jiraRoutes';
 import metricRoutes from './routes/metricRoutes';
 import teamRoutes from './routes/teamRoutes';
 import teamSetRoutes from './routes/teamSetRoutes';
+import userRoutes from './routes/userRoutes';
 import { connectToDatabase } from './utils/database';
 
 const env = process.env.NODE_ENV ?? 'development';
@@ -23,7 +24,7 @@ const setupApp = async () => {
 };
 setupApp();
 
-const port = process.env.PORT;
+const port = process.env.PORT || 3001;
 const app: Express = express();
 
 app.use(express.json());
@@ -38,6 +39,7 @@ app.use('/api/teamsets', teamSetRoutes);
 app.use('/api/assessments', assessmentRoutes);
 app.use('/api/jira', jiraRoutes);
 app.use('/api/metrics', metricRoutes);
+app.use('/api/user', userRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);

@@ -11,3 +11,4 @@ load-test/jmeter.log
 
 # mongo
 data/
+mongo/dumps
