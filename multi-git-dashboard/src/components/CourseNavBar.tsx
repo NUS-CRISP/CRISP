@@ -92,6 +92,10 @@ const CourseNavBar: React.FC<CourseNavBarProps> = ({
       link: `/courses/${courseId}/assessments`,
       label: 'Assessments',
     },
+    {
+      link: `/courses/${courseId}/project-management`,
+      label: 'Project Management',
+    },
   ];
 
   const links = linksData.map(item => (

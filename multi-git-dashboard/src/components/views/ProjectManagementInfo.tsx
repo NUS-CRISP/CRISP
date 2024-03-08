@@ -21,31 +21,25 @@
 
 import { Course } from '@shared/types/Course';
 
-interface JiraInfoProps {
-  course: Course;
+interface ProjectManagementProps {
+  courseId: string;
+  hasFacultyPermission: boolean;
   onUpdate: () => void;
 }
 
-const JiraInfo: React.FC<JiraInfoProps> = ({ course, onUpdate }) => {
+const ProjectManagementInfo: React.FC<ProjectManagementProps> = ({ courseId, hasFacultyPermission, onUpdate }) => {
   const handleOAuthButtonClick = () => {
     // Redirect the user to the backend /jira/authorize endpoint
-    const apiRoute = `/api/jira/authorize?course=${course._id}`;
+    const apiRoute = `/api/jira/authorize?course=${courseId}`;
     window.location.href = apiRoute; // Update with your backend URL
   };
 
   return (
     <div>
       <h1>Welcome to Your App</h1>
-      {/* Render button if Atlassian account is not registered */}
-      {course.jira.isRegistered ? (
-        <button onClick={handleOAuthButtonClick}>
-          Reauthorize with another Jira account
-        </button>
-      ) : (
-        <button onClick={handleOAuthButtonClick}>Authorize with Jira</button>
-      )}
+      <button onClick={handleOAuthButtonClick}>Authorize with Jira</button>
     </div>
   );
 };
 
-export default JiraInfo;
+export default ProjectManagementInfo;
