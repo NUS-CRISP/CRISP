@@ -2,7 +2,7 @@ import express from 'express';
 import {
   authorizeJiraAccount,
   callbackJiraAccount,
-} from '../controllers/jiraController';
+} from '../controllers/projectManagementController';
 
 const router = express.Router();
 

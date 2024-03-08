@@ -49,6 +49,8 @@ const CourseNavBar: React.FC<CourseNavBarProps> = ({
       return 'Timeline';
     } else if (path.startsWith('/courses/[id]/assessments')) {
       return 'Assessments';
+    } else if (path.startsWith('/courses/[id]/project-management')) {
+      return 'Project Management';
     } else if (path.startsWith('/courses/[id]')) {
       return 'Overview';
     } else {
