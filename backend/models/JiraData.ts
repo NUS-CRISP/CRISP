@@ -1,5 +1,21 @@
-import { JiraBoard, JiraIssue, JiraSprint } from '@shared/types/JiraData';
-import mongoose, { Schema } from 'mongoose';
+import {
+  JiraBoard as SharedJiraBoard,
+  JiraIssue as SharedJiraIssue,
+  JiraSprint as SharedJiraSprint,
+} from '@shared/types/JiraData';
+import mongoose, { Schema, Types } from 'mongoose';
+
+export interface JiraBoard extends Omit<SharedJiraBoard, '_id'> {
+  _id: Types.ObjectId;
+}
+
+export interface JiraIssue extends Omit<SharedJiraIssue, '_id'> {
+  _id: Types.ObjectId;
+}
+
+export interface JiraSprint extends Omit<SharedJiraSprint, '_id'> {
+  _id: Types.ObjectId;
+}
 
 const sprintSchema: Schema = new Schema<JiraSprint>({
   id: { type: Number, required: true },
@@ -49,7 +65,7 @@ const boardSchema: Schema = new Schema<JiraBoard>({
   },
   jiraSprints: [{ type: Schema.Types.ObjectId, ref: 'JiraSprint' }],
   jiraIssues: [{ type: Schema.Types.ObjectId, ref: 'JiraIssue' }],
-  course: { type: Schema.Types.ObjectId, ref: 'Course'},
+  teamData: { type: Schema.Types.ObjectId, ref: 'TeamData' },
 });
 
 const JiraSprintModel = mongoose.model<JiraSprint>('JiraSprint', sprintSchema);

@@ -1,3 +1,5 @@
+import { JiraBoard } from "./JiraData";
+
 export interface TeamContribution {
   commits: number;
   createdIssues: number;
@@ -47,4 +49,5 @@ export interface TeamData {
   updatedIssues: string[];
   teamContributions: Record<string, TeamContribution>;
   teamPRs: TeamPR[];
+  board: JiraBoard;
 }

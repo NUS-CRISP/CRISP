@@ -4,8 +4,7 @@ import { Document, Types } from 'mongoose';
 import cron from 'node-cron';
 import { App, Octokit } from 'octokit';
 import TeamData from '../models/TeamData';
-import { filterTeamContributions, getApp, getGitHubApp } from '../utils/github';
-import { graphql } from '@octokit/graphql/dist-types/types';
+import { filterTeamContributions, getGitHubApp } from '../utils/github';
 
 const fetchAndSaveTeamData = async () => {
   const app: App = getGitHubApp();
@@ -24,8 +23,7 @@ const fetchAndSaveTeamData = async () => {
         const installationOctokit = await app.getInstallationOctokit(
           course.installationId
         );
-        const graphlqlApp: graphql = getApp(course.installationId);
-        await getCourseData(installationOctokit, graphlqlApp, course);
+        await getCourseData(installationOctokit, course);
       }
     })
   );
@@ -35,7 +33,6 @@ const fetchAndSaveTeamData = async () => {
 
 const getCourseData = async (
   octokit: Octokit,
-  graphqlWithAuth: graphql,
   course: Document<unknown, {}, Course> &
     Course &
     Required<{ _id: Types.ObjectId }>
@@ -58,50 +55,50 @@ const getCourseData = async (
     );
   }
 
-  const data: any = await graphqlWithAuth(
-    `query {
-      organization(login: "${gitHubOrgName}") {
-        projectsV2(first: 5) {
-          nodes {
-            title
-            id
-            repositories(first: 1) {
-              edges {
-                node {
-                  id
-                  name
-                }
-              }
-            }
-          }
-        }
-      }
-    }`,
-  );
-  console.log(data);
+  // const data: any = await graphqlWithAuth(
+  //   `query {
+  //     organization(login: "${gitHubOrgName}") {
+  //       projectsV2(first: 5) {
+  //         nodes {
+  //           title
+  //           id
+  //           repositories(first: 1) {
+  //             edges {
+  //               node {
+  //                 id
+  //                 name
+  //               }
+  //             }
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }`
+  // );
+  // console.log(data);
 
-  const issues: any = await graphqlWithAuth(
-    `query {
-      node(id: "${data?.organization?.projectsV2?.nodes?.[0]?.id}") {
-        ... on ProjectV2 {
-          items(last: 20) {
-            nodes {
-              id
-              content {
-                ... on Issue {
-                  title
-                  url
-                  state
-                  stateReason
-                }
-              }
-            }
-          }
-        }
-      }
-    }`
-  );
-  console.log(issues);
+  // const issues: any = await graphqlWithAuth(
+  //   `query {
+  //     node(id: "${data?.organization?.projectsV2?.nodes?.[0]?.id}") {
+  //       ... on ProjectV2 {
+  //         items(last: 20) {
+  //           nodes {
+  //             id
+  //             content {
+  //               ... on Issue {
+  //                 title
+  //                 url
+  //                 state
+  //                 stateReason
+  //               }
+  //             }
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }`
+  // );
+  // console.log(issues);
 
   for (const repo of allRepos) {
     const teamContributions: Record<string, TeamContribution> = {};

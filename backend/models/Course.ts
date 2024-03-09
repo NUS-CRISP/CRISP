@@ -51,7 +51,6 @@ export const courseSchema = new Schema<Course>({
     accessToken: { type: String },
     refreshToken: { type: String },
   },
-  boards: [{ type: Schema.Types.ObjectId, ref: 'JiraBoard' }],
   repoNameFilter: String,
   installationId: Number,
 });

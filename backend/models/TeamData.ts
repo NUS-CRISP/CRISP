@@ -75,6 +75,7 @@ const teamDataSchema = new Schema<TeamData>({
     required: true,
   },
   teamPRs: [teamPRSchema],
+  board: { type: Schema.Types.ObjectId, ref: 'JiraBoard' },
 });
 
 const TeamDataModel = mongoose.model<TeamData>('TeamData', teamDataSchema);

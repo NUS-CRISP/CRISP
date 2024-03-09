@@ -1,7 +1,7 @@
 import { TeamContribution } from '@shared/types/TeamData';
 import { App } from 'octokit';
-import { createAppAuth } from '@octokit/auth-app';
-import { graphql } from '@octokit/graphql';
+// import { createAppAuth } from '@octokit/auth-app';
+// import { graphql } from '@octokit/graphql';
 
 export const getGitHubApp = (): App => {
   const APP_ID = Number(process.env.GITHUB_APP_ID!);
@@ -13,24 +13,24 @@ export const getGitHubApp = (): App => {
   });
 };
 
-export const getApp = (installationId: number): typeof graphql => {
-  const APP_ID = Number(process.env.GITHUB_APP_ID!);
-  const PRIVATE_KEY = process.env.GITHUB_APP_PRIVATE_KEY!.replace(/\\n/g, '\n');
+// export const getApp = (installationId: number): typeof graphql => {
+//   const APP_ID = Number(process.env.GITHUB_APP_ID!);
+//   const PRIVATE_KEY = process.env.GITHUB_APP_PRIVATE_KEY!.replace(/\\n/g, '\n');
 
-  const auth = createAppAuth({
-    privateKey: PRIVATE_KEY,
-    appId: APP_ID,
-    installationId: installationId,
-  });
+//   const auth = createAppAuth({
+//     privateKey: PRIVATE_KEY,
+//     appId: APP_ID,
+//     installationId: installationId,
+//   });
 
-  const graphqlWithAuth = graphql.defaults({
-    request: {
-      hook: auth.hook,
-    },
-  });
+//   const graphqlWithAuth = graphql.defaults({
+//     request: {
+//       hook: auth.hook,
+//     },
+//   });
 
-  return graphqlWithAuth;
-}
+//   return graphqlWithAuth;
+// };
 
 /**
  * Deletes keys from a record

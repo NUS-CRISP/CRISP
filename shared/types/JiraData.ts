@@ -51,5 +51,5 @@ export interface JiraBoard extends Document {
   };
   jiraSprints: Schema.Types.ObjectId[];
   jiraIssues: Schema.Types.ObjectId[];
-  course: Schema.Types.ObjectId;
+  teamData: Schema.Types.ObjectId;
 }
