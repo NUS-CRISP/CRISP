@@ -19,15 +19,16 @@
 // import { useRouter } from 'next/router';
 // import { useState } from 'react';
 
-import { Course } from '@shared/types/Course';
+import { TeamSet } from '@shared/types/TeamSet';
 
 interface ProjectManagementProps {
   courseId: string;
+  teamSets: TeamSet[];
   hasFacultyPermission: boolean;
   onUpdate: () => void;
 }
 
-const ProjectManagementInfo: React.FC<ProjectManagementProps> = ({ courseId, hasFacultyPermission, onUpdate }) => {
+const ProjectManagementInfo: React.FC<ProjectManagementProps> = ({ courseId, teamSets, hasFacultyPermission, onUpdate }) => {
   const handleOAuthButtonClick = () => {
     // Redirect the user to the backend /jira/authorize endpoint
     const apiRoute = `/api/jira/authorize?course=${courseId}`;

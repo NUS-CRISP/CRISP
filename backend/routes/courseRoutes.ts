@@ -24,6 +24,7 @@ import {
   removeStudents,
   removeTAs,
   updateCourse,
+  getProjectManagementBoard,
 } from '../controllers/courseController';
 import { noCache } from '../middleware/noCache';
 
@@ -53,5 +54,6 @@ router.get('/:id/timeline', getTimeline);
 router.post('/:id/milestones', addMilestone);
 router.post('/:id/sprints', addSprint);
 router.post('/:id/assessments', addAssessments);
+router.get('/:id/project-management', getProjectManagementBoard);
 
 export default router;

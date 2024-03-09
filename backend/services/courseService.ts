@@ -456,3 +456,66 @@ export const getAssessmentsFromCourse = async (courseId: string) => {
   }
   return course.assessments;
 };
+
+/*------------------------------------Project Management------------------------------------*/
+export const getProjectManagementBoardFromCourse = async (
+  accountId: string,
+  courseId: string
+) => {
+  const account = await AccountModel.findById(accountId);
+  if (!account) {
+    throw new NotFoundError('Account not found');
+  }
+
+  const course = await CourseModel.findById(courseId).populate<{
+    teamSets: TeamSet[];
+  }>({
+    path: 'teamSets',
+    populate: {
+      path: 'teams',
+      model: 'Team',
+      populate: [{
+        path: 'members TA',
+        model: 'User'
+      },
+      {
+        path: 'teamData',
+        model: 'TeamData',
+        populate: {
+          path: 'board',
+          model: 'JiraBoard',
+          populate: [
+            {
+              path: 'jiraIssues',
+              model: 'JiraIssue'
+            },
+            {
+              path: 'jiraSprints',
+              model: 'JiraSprint'
+            }
+          ],
+        }
+      }],
+    },
+  });
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+
+  const role = account.role;
+  if (role === Role.TA) {
+    const userId = account.user;
+    course.teamSets.forEach(
+      teamSet =>
+        (teamSet.teams = teamSet.teams.filter(team =>
+          (team as unknown as Team).TA?.equals(userId)
+        ))
+    );
+  }
+  course.teamSets.forEach((teamSet: TeamSet) => {
+    teamSet.teams.sort(
+      (a: unknown, b: unknown) => (a as Team).number - (b as Team).number
+    );
+  });
+  return course.teamSets;
+};

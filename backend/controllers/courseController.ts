@@ -21,6 +21,7 @@ import {
   removeTAsFromCourse,
   updateCourseById,
   getPeopleFromCourse,
+  getProjectManagementBoardFromCourse,
 } from '../services/courseService';
 import { BadRequestError, NotFoundError } from '../services/errors';
 import { addStudentsToTeam, addTAsToTeam } from '../services/teamService';
@@ -441,6 +442,35 @@ export const getAssessments = async (req: Request, res: Response) => {
     } else {
       console.error('Error getting assessments:', error);
       res.status(500).json({ error: 'Failed to get assessments' });
+    }
+  }
+};
+
+/*------------------------------------Project Management------------------------------------*/
+export const getProjectManagementBoard = async (
+  req: Request,
+  res: Response
+) => {
+  const accountId = await getAccountId(req);
+  if (!accountId) {
+    res.status(400).json({ error: 'Missing authorization' });
+    return;
+  }
+  const courseId = req.params.id;
+  try {
+    const projectManagementBoard = await getProjectManagementBoardFromCourse(
+      accountId,
+      courseId
+    );
+    res.status(200).json(projectManagementBoard);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error getting project management boards:', error);
+      res
+        .status(500)
+        .json({ error: 'Failed to get project management boards' });
     }
   }
 };
