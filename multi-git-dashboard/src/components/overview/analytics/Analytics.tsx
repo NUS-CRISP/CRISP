@@ -11,6 +11,7 @@ export interface AnalyticsProps {
   teamDatas: TeamData[];
 }
 
+// TODO: Migrate to Mantine Charts (based on recharts); no need for standalone recharts
 const Analytics: React.FC<AnalyticsProps> = ({ teamData, teamDatas }) => {
   const [embla, setEmbla] = useState<Embla | null>(null);
 

@@ -1,14 +1,15 @@
 import { Box } from '@mantine/core';
 import { useState } from 'react';
-import { OverviewProps } from '../OverviewCard';
+import { OverviewProps } from '../../cards/OverviewCard';
 import PRDetails from './PRDetails';
 import PRList from './PRList';
 
-interface PRProps {
+export interface PRProps {
+  team?: OverviewProps['team'];
   teamData: OverviewProps['teamData'];
 }
 
-const PR: React.FC<PRProps> = ({ teamData }: PRProps) => {
+const PR: React.FC<PRProps> = ({ team, teamData }) => {
   const MAX_HEIGHT = 500;
 
   const [selectedPR, setSelectedPR] = useState<number | null>(
@@ -16,9 +17,17 @@ const PR: React.FC<PRProps> = ({ teamData }: PRProps) => {
   );
   const [showLastWeek, setShowLastWeek] = useState(false);
 
-  const lastWeekPRs = teamData.teamPRs.filter(
-    pr => new Date(pr.createdAt) >= new Date(new Date().setDate(new Date().getDate() - 7))
-  );
+  // Filter only team members, then filter by last week if applicable
+  const getDisplayedPRs = () => {
+    // const teamPRs = teamData.teamPRs.filter(pr => team?.members.some(member => member.gitHandle === pr.user));
+    const teamPRs = teamData.teamPRs;
+    if (showLastWeek) {
+      return teamPRs.filter(
+        pr => new Date(pr.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+      );
+    }
+    return teamPRs;
+  }
 
   return (
     <Box
@@ -42,7 +51,8 @@ const PR: React.FC<PRProps> = ({ teamData }: PRProps) => {
         }}
       >
         <PRList
-          teamPRs={showLastWeek ? lastWeekPRs : teamData.teamPRs}
+          team={team}
+          teamPRs={getDisplayedPRs()}
           selectedPR={selectedPR}
           onSelectPR={setSelectedPR}
           maxHeight={MAX_HEIGHT}

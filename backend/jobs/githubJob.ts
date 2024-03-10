@@ -4,7 +4,7 @@ import { Document, Types } from 'mongoose';
 import cron from 'node-cron';
 import { App, Octokit } from 'octokit';
 import TeamData from '../models/TeamData';
-import { filterTeamContributions, getGitHubApp } from '../utils/github';
+import { getGitHubApp, getTeamMembers } from '../utils/github';
 
 const fetchAndSaveTeamData = async () => {
   const app: App = getGitHubApp();
@@ -77,6 +77,26 @@ const getCourseData = async (
         repo: repo.name,
       }),
     ]);
+
+    // Filter out non team members
+    // TODO: Enable only after gitHandle mapping is done
+    if (process.env.NEW_FILTER) {
+      const teamMembers = await getTeamMembers(repo.id);
+      if (teamMembers) {
+        commits.data = commits.data.filter(commit =>
+          commit.author && teamMembers.has(commit.author.login)
+        );
+        issues.data = issues.data.filter(issue =>
+          issue.user && teamMembers.has(issue.user.login)
+        );
+        prs.data = prs.data.filter(pr =>
+          pr.user && teamMembers.has(pr.user.login)
+        );
+        contributors.data = contributors.data.filter(contributor =>
+          contributor.login && teamMembers.has(contributor.login)
+        );
+      }
+    }
 
     let codeFrequencyStats: number[][] = [];
     try {
@@ -189,7 +209,12 @@ const getCourseData = async (
         teamContributions[review.user].comments += review.comments.length;
       }
     }
-    filterTeamContributions(teamContributions);
+
+    if (!process.env.NEW_FILTER) {
+      if ('github-classroom[bot]' in teamContributions) {
+        delete teamContributions['github-classroom[bot]'];
+      }
+    }
 
     const teamData = {
       gitHubOrgName: gitHubOrgName.toLowerCase(),

@@ -1,9 +1,25 @@
 import AccountModel from '../models/Account';
 import CourseModel from '../models/Course';
-import TeamModel from '../models/Team';
+import TeamModel, { Team } from '../models/Team';
 import TeamSetModel from '../models/TeamSet';
 import UserModel from '../models/User';
 import { BadRequestError, NotFoundError } from './errors';
+import { getTeamSetsByCourseId } from './teamSetService';
+
+export const getTeamsByCourseId = async (courseId: string) => {
+  const teamSets = await getTeamSetsByCourseId(courseId);
+
+  // Get unique teams from all team sets
+  const teams = new Set<Team>();
+  for (const teamSet of teamSets) {
+    if (!teamSet.teams) continue;
+    for (const team of teamSet.teams) {
+      teams.add(team);
+    }
+  }
+
+  return Array.from(teams);
+};
 
 export const deleteTeamById = async (teamId: string) => {
   const team = await TeamModel.findById(teamId);

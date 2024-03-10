@@ -1,4 +1,6 @@
-import { TeamContribution } from '@shared/types/TeamData';
+import TeamModel from '@models/Team';
+import TeamDataModel from '@models/TeamData';
+import UserModel from '@models/User';
 import { App } from 'octokit';
 
 export const getGitHubApp = (): App => {
@@ -11,17 +13,15 @@ export const getGitHubApp = (): App => {
   });
 };
 
-/**
- * Deletes keys from a record
- */
-const filterRecord = <T>(record: Record<string, T>, ...keys: string[]) => {
-  for (const key of keys) {
-    if (key in record) delete record[key];
-  }
+export const getTeamMembers = async (teamId: number) => {
+  const teamData = await TeamDataModel.findOne({ teamId });
+  if (!teamData) return null;
+
+  const team = await TeamModel.findOne({ teamData: teamData._id });
+  if (!team) return null;
+
+  const teamMembers = await UserModel.find({ _id: { $in: team.members } });
+  const teamMembersGitHandles = teamMembers.map(member => member.gitHandle);
+
+  return new Set(teamMembersGitHandles);
 };
-
-const FILTER_LIST = ['github-classroom[bot]'];
-
-export const filterTeamContributions = (
-  teamContributions: Record<string, TeamContribution>
-) => filterRecord(teamContributions, ...FILTER_LIST);

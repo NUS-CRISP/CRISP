@@ -5,7 +5,6 @@ import {
   Container,
   Divider,
   Flex,
-  HoverCard,
   Text,
   useMantineTheme
 } from '@mantine/core';
@@ -14,7 +13,7 @@ import classes from '@styles/pr-details.module.css';
 import { IconPlus } from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
 import Markdown from 'react-markdown';
-import { ProfileCard } from '../../cards/ProfileCard';
+import { GitHandle } from '../../GitHandle';
 
 interface PRDetailsProps {
   pr: TeamData['teamPRs'][number] | undefined;
@@ -78,16 +77,7 @@ const PRDetails: React.FC<PRDetailsProps> = ({ pr, showLastWeek, setShowLastWeek
           {pr.reviews.map(review => (
             <Accordion.Item key={review.id} value={String(review.id)}>
               <Accordion.Control>
-                <HoverCard>
-                  <HoverCard.Target>
-                    <span>
-                      {review.user}
-                    </span>
-                  </HoverCard.Target>
-                  <HoverCard.Dropdown>
-                    <ProfileCard gitHandle={review.user ?? ''} />
-                  </HoverCard.Dropdown>
-                </HoverCard>: {review.state}
+                <GitHandle gitHandle={review.user ?? ''} />: {review.state}
               </Accordion.Control>
               <Accordion.Panel>
                 <Markdown>
