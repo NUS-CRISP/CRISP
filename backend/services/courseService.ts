@@ -474,28 +474,30 @@ export const getProjectManagementBoardFromCourse = async (
     populate: {
       path: 'teams',
       model: 'Team',
-      populate: [{
-        path: 'members TA',
-        model: 'User'
-      },
-      {
-        path: 'teamData',
-        model: 'TeamData',
-        populate: {
-          path: 'board',
-          model: 'JiraBoard',
-          populate: [
-            {
-              path: 'jiraIssues',
-              model: 'JiraIssue'
-            },
-            {
-              path: 'jiraSprints',
-              model: 'JiraSprint'
-            }
-          ],
-        }
-      }],
+      populate: [
+        {
+          path: 'members TA',
+          model: 'User',
+        },
+        {
+          path: 'teamData',
+          model: 'TeamData',
+          populate: {
+            path: 'board',
+            model: 'JiraBoard',
+            populate: [
+              {
+                path: 'jiraIssues',
+                model: 'JiraIssue',
+              },
+              {
+                path: 'jiraSprints',
+                model: 'JiraSprint',
+              },
+            ],
+          },
+        },
+      ],
     },
   });
   if (!course) {
@@ -518,4 +520,12 @@ export const getProjectManagementBoardFromCourse = async (
     );
   });
   return course.teamSets;
+};
+
+export const getCourseJiraRegistrationStatusById = async (courseId: string) => {
+  const course = await CourseModel.findById(courseId);
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+  return course.jira.isRegistered;
 };

@@ -11,23 +11,15 @@ const ProjectManagementPage: React.FC = () => {
     id: string;
   };
   const permission = hasFacultyPermission();
-  const teamSetsApiRoute = `/api/courses/${id}/project-management`;
+  const jiraRegistrationStatusApiRoute = `/api/courses/${id}/jira-registration-status`;
+  const projectManagementApiRoute = `/api/courses/${id}/project-management`;
 
   const [teamSets, setTeamSets] = useState<TeamSet[]>([]);
-
-  const onUpdate = () => {
-    fetchTeamSets();
-  };
-
-  useEffect(() => {
-    if (router.isReady) {
-      fetchTeamSets();
-    }
-  }, [router.isReady]);
+  const [jiraRegistrationStatus, setJiraRegistrationStatus] = useState<boolean>(false);
 
   const fetchTeamSets = async () => {
     try {
-      const response = await fetch(teamSetsApiRoute);
+      const response = await fetch(projectManagementApiRoute);
       if (!response.ok) {
         console.error('Error fetching Team Sets:', response.statusText);
         return;
@@ -39,12 +31,39 @@ const ProjectManagementPage: React.FC = () => {
     }
   };
 
+  const fetchJiraRegistrationStatus = async () => {
+    try {
+      const response = await fetch(jiraRegistrationStatusApiRoute);
+      if (!response.ok) {
+        console.error('Error fetching Jira registration status:', response.statusText);
+        return;
+      }
+      const data = await response.json();
+      setJiraRegistrationStatus(data);
+    } catch (error) {
+      console.error('Error fetching Jira registration status:', error);
+    }
+  };
+
+  const onUpdate = () => {
+    fetchTeamSets();
+    fetchJiraRegistrationStatus();
+  };
+
+  useEffect(() => {
+    if (router.isReady) {
+      fetchTeamSets();
+      fetchJiraRegistrationStatus();
+    }
+  }, [router.isReady]);
+
   return (
     <Container>
       {id && (
         <ProjectManagementInfo
           courseId={id}
           teamSets={teamSets}
+          jiraRegistrationStatus={jiraRegistrationStatus}
           hasFacultyPermission={permission}
           onUpdate={onUpdate}
         />

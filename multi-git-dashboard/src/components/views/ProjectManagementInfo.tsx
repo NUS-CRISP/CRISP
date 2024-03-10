@@ -19,27 +19,92 @@
 // import { useRouter } from 'next/router';
 // import { useState } from 'react';
 
+import { Button, Container, Group, Notification, Tabs } from '@mantine/core';
 import { TeamSet } from '@shared/types/TeamSet';
+import { useEffect, useState } from 'react';
 
 interface ProjectManagementProps {
   courseId: string;
   teamSets: TeamSet[];
+  jiraRegistrationStatus: boolean;
   hasFacultyPermission: boolean;
   onUpdate: () => void;
 }
 
-const ProjectManagementInfo: React.FC<ProjectManagementProps> = ({ courseId, teamSets, hasFacultyPermission, onUpdate }) => {
+const ProjectManagementInfo: React.FC<ProjectManagementProps> = ({
+  courseId,
+  teamSets,
+  jiraRegistrationStatus,
+  hasFacultyPermission,
+  onUpdate,
+}) => {
+  const [activeTab, setActiveTab] = useState<string | null>(
+    teamSets ? teamSets[0]?.name : null
+  );
+  const [error, setError] = useState<string | null>(null);
+
+  const setActiveTabAndSave = (tabName: string) => {
+    setActiveTab(tabName);
+    localStorage.setItem(`activeTeamSetTab_${courseId}`, tabName);
+  };
+
   const handleOAuthButtonClick = () => {
     // Redirect the user to the backend /jira/authorize endpoint
     const apiRoute = `/api/jira/authorize?course=${courseId}`;
     window.location.href = apiRoute; // Update with your backend URL
   };
 
+  useEffect(() => {
+    const savedTab = localStorage.getItem(`activeTeamSetTab_${courseId}`);
+    if (savedTab && teamSets.some(teamSet => teamSet.name === savedTab)) {
+      setActiveTab(savedTab);
+    }
+  }, [teamSets]);
+
+  const headers = teamSets.map((teamSet, index) => (
+    <Tabs.Tab
+      key={index}
+      value={teamSet.name}
+      onClick={() => {
+        setActiveTabAndSave(teamSet.name);
+      }}
+    >
+      {teamSet.name}
+    </Tabs.Tab>
+  ));
+
+  console.log(teamSets);
+
   return (
-    <div>
-      <h1>Welcome to Your App</h1>
-      <button onClick={handleOAuthButtonClick}>Authorize with Jira</button>
-    </div>
+    <Container>
+      <Tabs value={activeTab}>
+        <Tabs.List style={{ display: 'flex', justifyContent: 'space-evenly' }}>
+          {headers}
+        </Tabs.List>
+        {error && (
+          <Notification
+            title="Error"
+            color="red"
+            onClose={() => setError(null)}
+          >
+            {error}
+          </Notification>
+        )}
+        {hasFacultyPermission && (
+          <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
+            {jiraRegistrationStatus ? (
+              <Button onClick={handleOAuthButtonClick}>
+                Reauthorize with Jira
+              </Button>
+            ) : (
+              <Button onClick={handleOAuthButtonClick}>
+                Authorize with Jira
+              </Button>
+            )}
+          </Group>
+        )}
+      </Tabs>
+    </Container>
   );
 };
 
