@@ -22,6 +22,7 @@
 import { Button, Container, Group, Notification, Tabs } from '@mantine/core';
 import { TeamSet } from '@shared/types/TeamSet';
 import { useEffect, useState } from 'react';
+import ProjectManagementCard from '../cards/ProjectManagementCard';
 
 interface ProjectManagementProps {
   courseId: string;
@@ -73,6 +74,18 @@ const ProjectManagementInfo: React.FC<ProjectManagementProps> = ({
     </Tabs.Tab>
   ));
 
+  const projectManagementCards = (teamSet: TeamSet) => {
+    return teamSet.teams.map(team => (
+      <ProjectManagementCard
+        key={team._id}
+        number={team.number}
+        TA={team.TA}
+        teamData={team.teamData}
+        onUpdate={onUpdate}
+      />
+    ));
+  };
+
   console.log(teamSets);
 
   return (
@@ -103,6 +116,11 @@ const ProjectManagementInfo: React.FC<ProjectManagementProps> = ({
             )}
           </Group>
         )}
+        {teamSets.map(teamSet => (
+          <Tabs.Panel key={teamSet._id} value={teamSet.name}>
+            {projectManagementCards(teamSet)}
+          </Tabs.Panel>
+        ))}
       </Tabs>
     </Container>
   );
