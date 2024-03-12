@@ -493,6 +493,10 @@ export const getProjectManagementBoardFromCourse = async (
               {
                 path: 'jiraSprints',
                 model: 'JiraSprint',
+                populate: {
+                  path: 'jiraIssues',
+                  model: 'JiraIssue',
+                },
               },
             ],
           },

@@ -1,4 +1,4 @@
-import { Schema } from "mongoose";
+import { TeamData } from "./TeamData";
 
 export interface JiraSprint extends Document {
   _id: string;
@@ -11,8 +11,8 @@ export interface JiraSprint extends Document {
   createdDate: Date;
   originBoardId: number;
   goal: string;
-  jiraBoard: Schema.Types.ObjectId; // Reference to Board
-  jiraIssues: Schema.Types.ObjectId[];
+  jiraBoard: JiraBoard; // Reference to Board
+  jiraIssues: JiraIssue[];
 }
 
 export interface JiraIssue extends Document {
@@ -20,7 +20,9 @@ export interface JiraIssue extends Document {
   id: string;
   self: string;
   key: string;
+  storyPoints: number;
   fields: {
+    summary: string;
     statuscategorychangedate: Date;
     issuetype: {
       name: string;
@@ -29,9 +31,12 @@ export interface JiraIssue extends Document {
     status: {
       name: string;
     };
+    assignee: {
+      displayName: string;
+    };
   };
-  jiraSprint?: Schema.Types.ObjectId; // Reference to Sprint
-  jiraBoard: Schema.Types.ObjectId; // Reference to Board
+  jiraSprint: JiraSprint; // Reference to Sprint
+  jiraBoard: JiraBoard; // Reference to Board
 }
 
 export interface JiraBoard extends Document {
@@ -49,7 +54,7 @@ export interface JiraBoard extends Document {
     avatarURI: string;
     name: string;
   };
-  jiraSprints: Schema.Types.ObjectId[];
-  jiraIssues: Schema.Types.ObjectId[];
-  teamData: Schema.Types.ObjectId;
+  jiraSprints: JiraSprint[];
+  jiraIssues: JiraIssue[];
+  teamData: TeamData;
 }

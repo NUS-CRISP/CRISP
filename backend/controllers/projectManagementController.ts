@@ -18,7 +18,7 @@ export const authorizeJiraAccount = async (req: Request, res: Response) => {
     audience: 'api.atlassian.com',
     client_id: clientId as string,
     scope:
-      'offline_access read:issue-details:jira read:project:jira read:board-scope:jira-software read:sprint:jira-software',
+      'offline_access read:issue-details:jira read:project:jira read:board-scope:jira-software read:sprint:jira-software read:issue:jira-software',
     redirect_uri: redirectUri,
     state: courseId,
     response_type: 'code',

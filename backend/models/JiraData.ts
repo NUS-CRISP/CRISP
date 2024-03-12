@@ -27,7 +27,7 @@ const sprintSchema: Schema = new Schema<JiraSprint>({
   createdDate: { type: Date, required: true },
   originBoardId: { type: Number, required: true },
   goal: { type: String, required: true },
-  jiraBoard: { type: Schema.Types.ObjectId, ref: 'Board' },
+  jiraBoard: { type: Schema.Types.ObjectId, ref: 'JiraBoard' },
   jiraIssues: [{ type: Schema.Types.ObjectId, ref: 'JiraIssue' }],
 });
 
@@ -35,7 +35,9 @@ const issueSchema: Schema = new Schema<JiraIssue>({
   id: { type: String, required: true },
   self: { type: String, required: true },
   key: { type: String, required: true },
+  storyPoints: { type: Number },
   fields: {
+    summary: { type: String, required: true },
     statuscategorychangedate: { type: Date, required: true },
     issuetype: {
       name: { type: String, required: true },
@@ -44,9 +46,12 @@ const issueSchema: Schema = new Schema<JiraIssue>({
     status: {
       name: { type: String, required: true },
     },
+    assignee: {
+      displayName: { type: String },
+    },
   },
-  jiraSprint: { type: Schema.Types.ObjectId, ref: 'Sprint' }, // Reference to Sprint
-  jiraBoard: { type: Schema.Types.ObjectId, ref: 'Board' }, // Reference to Board
+  jiraSprint: { type: Schema.Types.ObjectId, ref: 'JiraSprint' }, // Reference to Sprint
+  jiraBoard: { type: Schema.Types.ObjectId, ref: 'JiraBoard' }, // Reference to Board
 });
 
 const boardSchema: Schema = new Schema<JiraBoard>({

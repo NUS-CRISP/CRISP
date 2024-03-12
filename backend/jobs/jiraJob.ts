@@ -116,9 +116,10 @@ async function fetchSprints(
 async function fetchIssues(
   boardId: number,
   cloudId: string,
-  accessToken: string
+  accessToken: string,
+  apiBoardId: number
 ): Promise<any> {
-  const jiraIssuesUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board/${boardId}/backlog`;
+  const jiraIssuesUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board/${boardId}/issue`;
 
   try {
     const response = await fetch(jiraIssuesUri, {
@@ -134,11 +135,30 @@ async function fetchIssues(
     }
 
     const data = await response.json();
-
     await Promise.all(
       data.issues.map(async (issueData: any) => {
+        const issueKey = issueData.key;
+        const storyPointsUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/issue/${issueKey}/estimation?boardId=${apiBoardId}`;
+
+        const storyPointsResponse = await fetch(storyPointsUri, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${accessToken}`, // Use the access token here
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!storyPointsResponse.ok) {
+          throw new Error(
+            `Failed to fetch story points. Status: ${storyPointsResponse.status}`
+          );
+        }
+
+        const storyPoints = (await storyPointsResponse.json()).value;
+
         const jiraIssue: Omit<JiraIssue, '_id'> = {
           ...issueData,
+          storyPoints: storyPoints,
           jiraBoard: await findJiraBoardId(boardId),
           jiraSprint: await findJiraSprintId(issueData.fields?.sprint?.id),
         };
@@ -240,7 +260,6 @@ export const fetchAndSaveJiraData = async () => {
         return response.json();
       })
       .then(async data => {
-        console.log('Response data:', data);
         const boards = data.values;
 
         boards.forEach(async (boardData: any) => {
@@ -272,7 +291,7 @@ export const fetchAndSaveJiraData = async () => {
           );
 
           await fetchSprints(jiraBoard.id, cloudId, accessToken);
-          await fetchIssues(jiraBoard.id, cloudId, accessToken);
+          await fetchIssues(jiraBoard.id, cloudId, accessToken, jiraBoard.id);
         });
       })
       .catch(error => {
