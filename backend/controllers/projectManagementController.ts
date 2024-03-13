@@ -11,7 +11,7 @@ const cloudUrl = 'https://api.atlassian.com/oauth/token/accessible-resources';
 // Handle authorization flow
 export const authorizeJiraAccount = async (req: Request, res: Response) => {
   const clientId = process.env.CLIENT_ID;
-  const redirectUri = `${process.env.BACKEND_URI}:${process.env.PORT}/api/jira/callback`;
+  const redirectUri = `${process.env.FRONTEND_URI}/api/jira/callback`;
   const courseId = req.query.course as string;
 
   const authParams = new URLSearchParams({
@@ -33,7 +33,8 @@ export const callbackJiraAccount = async (req: Request, res: Response) => {
   const { state, code } = req.query;
   const clientId = process.env.CLIENT_ID;
   const clientSecret = process.env.CLIENT_SECRET;
-  const redirectUri = `${process.env.BACKEND_URI}:${process.env.PORT}/api/jira/callback`;
+  const redirectUri = `${process.env.FRONTEND_URI}/api/jira/callback`;
+  const frontendUri = `${process.env.FRONTEND_URI}/courses/${state}/project-management`;
 
   // Exchange authorization code for access token
   try {
@@ -83,7 +84,7 @@ export const callbackJiraAccount = async (req: Request, res: Response) => {
         console.error('Error:', error);
       });
 
-    res.redirect(`http://localhost:3002/courses/${state}/project-management`);
+    res.redirect(frontendUri);
     await fetchAndSaveJiraData();
   } catch (error) {
     console.error(
