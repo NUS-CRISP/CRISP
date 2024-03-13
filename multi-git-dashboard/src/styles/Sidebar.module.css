@@ -1,3 +1,8 @@
+.navbarsContainer {
+    display: flex; /* Align children side by side */
+    height: 100vh;
+}
+
 .navbar {
   height: 100vh;
   width: rem(230px);
