@@ -1,10 +1,9 @@
+import { ProfileGetter } from '@/components/views/Overview';
 import {
   Accordion,
   Box,
-  Button,
   Container,
   Divider,
-  Flex,
   Text,
   useMantineTheme
 } from '@mantine/core';
@@ -17,11 +16,10 @@ import { GitHandle } from '../../GitHandle';
 
 interface PRDetailsProps {
   pr: TeamData['teamPRs'][number] | undefined;
-  showLastWeek: boolean;
-  setShowLastWeek: React.Dispatch<React.SetStateAction<boolean>>;
+  profileGetter: ProfileGetter;
 }
 
-const PRDetails: React.FC<PRDetailsProps> = ({ pr, showLastWeek, setShowLastWeek }) => {
+const PRDetails: React.FC<PRDetailsProps> = ({ pr, profileGetter }) => {
   if (!pr) return null;
 
   const theme = useMantineTheme();
@@ -57,18 +55,13 @@ const PRDetails: React.FC<PRDetailsProps> = ({ pr, showLastWeek, setShowLastWeek
 
   return (
     <Box>
-      <Flex justify={'space-between'}>
-        <Box>
-          <Text fw={500}>{pr.title}</Text>
-          <Text size="sm">Status: {pr.state}</Text>
-          <Text size="sm">
-            Created At: {new Date(pr.createdAt).toLocaleDateString()}
-          </Text>
-        </Box>
-        <Button onClick={() => setShowLastWeek(!showLastWeek)}>
-          {showLastWeek ? 'Show All Time' : 'Show Last Week'}
-        </Button>
-      </Flex>
+      <Box>
+        <Text fw={500}>{pr.title}</Text>
+        <Text size="sm">Status: {pr.state}</Text>
+        <Text size="sm">
+          Created At: {new Date(pr.createdAt).toLocaleDateString()}
+        </Text>
+      </Box>
       <Divider my="sm" />
       {pr.reviews.length === 0 ? (
         <Container>No reviews found.</Container>
@@ -77,7 +70,7 @@ const PRDetails: React.FC<PRDetailsProps> = ({ pr, showLastWeek, setShowLastWeek
           {pr.reviews.map(review => (
             <Accordion.Item key={review.id} value={String(review.id)}>
               <Accordion.Control>
-                <GitHandle gitHandle={review.user ?? ''} />: {review.state}
+                <GitHandle gitHandle={review.user ?? ''} profileGetter={profileGetter} />: {review.state}
               </Accordion.Control>
               <Accordion.Panel>
                 <Markdown>

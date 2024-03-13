@@ -5,23 +5,19 @@ import {
 } from '@mantine/core';
 import { Profile } from '@shared/types/Profile';
 import { useEffect, useState } from 'react';
+import { GitHandleProps } from '../GitHandle';
 
-export const ProfileCard: React.FC<{ gitHandle: string; }> = ({ gitHandle }) => {
-  const apiUrl = `/api/user/profile?gitHandle=${gitHandle}`;
+interface ProfileCardProps extends GitHandleProps { }
 
+export const ProfileCard: React.FC<ProfileCardProps> = ({ gitHandle, profileGetter }) => {
   const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState({} as Profile);
   const [error, setError] = useState('');
+  const [profile, setProfile] = useState<Profile>({} as Profile);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await fetch(apiUrl);
-        if (!res.ok) {
-          throw new Error('Failed to fetch user profile.');
-        }
-        const data = await res.json();
-        setProfile(data as Profile);
+        setProfile(await profileGetter(gitHandle));
       } catch (error) {
         if (error instanceof Error) {
           setError(error.message);

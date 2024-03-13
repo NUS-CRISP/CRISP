@@ -1,17 +1,19 @@
 import { HoverCard } from '@mantine/core';
 import { ProfileCard } from './cards/ProfileCard';
+import { ProfileGetter } from './views/Overview';
 
-interface GitHandleProps {
+export interface GitHandleProps {
   gitHandle: string;
+  profileGetter: ProfileGetter
 }
 
-export const GitHandle: React.FC<GitHandleProps> = ({ gitHandle }) => (
+export const GitHandle: React.FC<GitHandleProps> = (props: GitHandleProps) => (
   <HoverCard>
     <HoverCard.Target>
-      <span>{gitHandle}</span>
+      <span>{props.gitHandle}</span>
     </HoverCard.Target>
     <HoverCard.Dropdown>
-      <ProfileCard gitHandle={gitHandle} />
+      <ProfileCard {...props} />
     </HoverCard.Dropdown>
   </HoverCard>
 );

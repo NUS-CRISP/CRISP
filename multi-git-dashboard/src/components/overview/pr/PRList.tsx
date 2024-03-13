@@ -1,4 +1,5 @@
-import { Box, Group, MultiSelect, ScrollArea, Text, useMantineTheme } from '@mantine/core';
+import { capitalize } from '@/lib/utils';
+import { Box, Group, MultiSelect, ScrollArea, Text } from '@mantine/core';
 import { TeamData } from '@shared/types/TeamData';
 import classes from '@styles/table-of-contents.module.css';
 import cx from 'clsx';
@@ -13,6 +14,11 @@ interface PRListProps {
   maxHeight: number;
 }
 
+interface PRListSelectOptions {
+  members: string[];
+  status: string[];
+}
+
 const PRList: React.FC<PRListProps> = ({
   team,
   teamPRs,
@@ -20,15 +26,20 @@ const PRList: React.FC<PRListProps> = ({
   onSelectPR,
   maxHeight,
 }) => {
-  const theme = useMantineTheme();
-  const [selected, setSelected] = useState<string[]>([]);
 
-  const options = {
+  const BOTTOM_SPACE = 9;
+  const [selected, setSelected] = useState<PRListSelectOptions>({ members: [], status: [] });
+
+  const options: PRListSelectOptions = {
     members: team?.members.map((member) => member.gitHandle === '' ? member.name : member.gitHandle) ?? [],
-    status: ['Open', 'Closed', 'Merged'],
+    status: ['Open', 'Closed'],
   }
+  const isNoneSelected = () => Object.values(selected).every((value) => value.length === 0);
 
-  const displayedPRs = teamPRs.filter((pr) => selected.length === 0 || selected.includes(pr.user) || pr.state === selected[0]);
+  const displayedPRs = teamPRs.filter((pr) => isNoneSelected() || (
+    (selected.members.length === 0 || selected.members.includes(pr.user)) &&
+    (selected.status.length === 0 || selected.status.some((status) => status.localeCompare(pr.state, undefined, { sensitivity: 'accent' }) === 0))
+  ));
 
   return (
     <div>
@@ -38,12 +49,18 @@ const PRList: React.FC<PRListProps> = ({
           placeholder="Filter pull requests"
           clearable
           searchable
-          data={Object.entries(options).map(([key, value]) => ({ group: key, items: value }))}
-          value={selected}
-          onChange={setSelected}
+          data={Object.entries(options).map(([key, value]) => ({ group: capitalize(key), items: value }))}
+          value={[...selected.members, ...selected.status]}
+          onChange={(value) =>
+            setSelected({
+              members: value.filter((v) => options.members.includes(v)),
+              status: value.filter((v) => options.status.includes(v)),
+            })
+          }
+          style={{ maxWidth: 200 }}
         />
       </Group>}
-      <ScrollArea.Autosize mah={`calc(${maxHeight}px - 6rem)`} scrollbars="y">
+      <ScrollArea.Autosize mih={300} mah={`calc(${maxHeight}px - ${BOTTOM_SPACE}rem)`} scrollbars="y">
         {displayedPRs.map(pr => (
           <Box<'a'>
             component="a"
@@ -54,7 +71,7 @@ const PRList: React.FC<PRListProps> = ({
             })}
             mr={3}
           >
-            <Text size="sm"><Text span fw={700} c={theme.colors.green[5]} inherit>{pr.user}</Text> - {pr.title}</Text>
+            <Text size="sm"><Text span fw={700} c={'green'} inherit>{pr.user}</Text> - {pr.title}</Text>
           </Box>
         ))}
       </ScrollArea.Autosize>

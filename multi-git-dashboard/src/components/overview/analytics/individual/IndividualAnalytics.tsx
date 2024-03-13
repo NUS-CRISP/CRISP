@@ -1,20 +1,15 @@
-import { Button, Stack } from '@mantine/core';
+import { BarChart } from '@mantine/charts';
+import { Box, Button, Center, Stack } from '@mantine/core';
 import { useState } from 'react';
-import {
-  Bar,
-  BarChart,
-  Legend,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
 import { AnalyticsProps } from '../Analytics';
 
 interface IndividualAnalyticsProps extends AnalyticsProps { }
 
+// export const CustomTooltip = (props) => <DefaultTooltipContent {...props} label={'asdf'} />;
+
 // TODO: Handle filter by last week on backend
 const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
+  team,
   teamData,
 }) => {
   const [showLastWeek, setShowLastWeek] = useState(false);
@@ -63,36 +58,57 @@ const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
       });
     });
 
-    return Array.from(contributors, ([name, data]) => ({ name, ...data }));
+    return Array.from(contributors, ([gitHandle, data]) => ({
+      name: team.members.find(member => member.gitHandle === gitHandle)?.name || gitHandle,
+      gitHandle,
+      'Pull Requests': data.pullRequests,
+      'Code Reviews': data.codeReviews,
+      'Comments': data.comments,
+    }));
   };
 
-  const data = showLastWeek
+  let data = showLastWeek
     ? filterLastWeekData()
-    : Object.entries(teamData.teamContributions).map(([key, value]) => ({
-      name: key,
-      commits: value.commits,
-      pullRequests: value.pullRequests,
-      codeReviews: value.codeReviews,
-      comments: value.comments,
+    : Object.entries(teamData.teamContributions).map(([gitHandle, teamContribution]) => ({
+      name: team.members.find(member => member.gitHandle === gitHandle)?.name || gitHandle,
+      gitHandle: gitHandle,
+      'Pull Requests': teamContribution.pullRequests,
+      'Code Reviews': teamContribution.codeReviews,
+      'Comments': teamContribution.comments,
     }));
 
+  if (team.members.length > 0) {
+    data = data.filter(d => team.members.some(member => member.gitHandle === d.gitHandle));
+  }
+
   return (
-    <Stack align='flex-end'>
-      <Button onClick={() => setShowLastWeek(!showLastWeek)}>
-        {showLastWeek ? 'Show All Time' : 'Show Last Week'}
-      </Button>
-      <ResponsiveContainer width="100%" height={400}>
-        <BarChart data={data} margin={{ right: 50, left: 20 }}>
-          <XAxis dataKey="name" />
-          <YAxis />
-          <Tooltip />
-          <Legend />
-          <Bar dataKey="pullRequests" fill="#8884d8" name="Pull Requests" />
-          <Bar dataKey="codeReviews" fill="#82ca9d" name="Code Reviews" />
-          <Bar dataKey="comments" fill="#ffc658" name="Comments" />
-        </BarChart>
-      </ResponsiveContainer>
-    </Stack>
+    <Stack>
+      <Box style={{ marginLeft: 'auto' }}>
+        <Button onClick={() => setShowLastWeek(!showLastWeek)}>
+          {showLastWeek ? 'Show All Time' : 'Show Last Week'}
+        </Button>
+      </Box>
+      {
+        (data.every(d => d['Pull Requests'] === 0 && d['Code Reviews'] === 0 && d['Comments'] === 0)) ? <Center>No data available.</Center> : (
+          <BarChart
+            h={400}
+            w={750}
+            ml={20}
+            mt={20}
+            xAxisProps={{ tickFormatter: (value: string) => value.length >= 12 ? `${value.substring(0, 12)}...` : value }}
+            data={data}
+            dataKey='name'
+            withLegend
+            legendProps={{ verticalAlign: 'bottom' }}
+            tooltipAnimationDuration={200}
+            series={[
+              { name: 'Pull Requests', color: 'red' },
+              { name: 'Code Reviews', color: 'green' },
+              { name: 'Comments', color: 'blue' },
+            ]}
+          />)
+      }
+    </Stack >
   );
 };
 
