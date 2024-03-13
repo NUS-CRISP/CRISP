@@ -15,7 +15,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: List files a
+      run: ls -lah
     - run: cd multi-git-dashboard
+    - name: List files b
+      run: ls -lah
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
       with:
