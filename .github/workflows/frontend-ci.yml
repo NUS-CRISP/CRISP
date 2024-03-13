@@ -9,16 +9,17 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: ./multi-git-dashboard
+
     strategy:
       matrix:
         node-version: [14.x]
 
     steps:
     - uses: actions/checkout@v3
-    - name: List files a
-      run: ls -lah
-    - run: cd multi-git-dashboard
-    - name: List files b
+    - name: List files
       run: ls -lah
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
