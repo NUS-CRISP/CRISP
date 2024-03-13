@@ -29,5 +29,7 @@ jobs:
       run: npm ci
     - name: Build
       run: npm run build --if-present
+      env:
+        MONGODB_URI: mongodb://localhost:27017/crisp 
     - name: Check formatting
       run: npm run prettier-format -- --check
