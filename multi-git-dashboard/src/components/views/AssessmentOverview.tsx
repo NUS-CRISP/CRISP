@@ -109,7 +109,14 @@ const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
         }
       });
     }
-    setPendingSubmissions(pending);
+    const filteredPendingSubmissions = pending.filter(row =>
+      teamFilter === 'All Teams'
+        ? true
+        : assessment?.granularity === 'individual'
+          ? row[2] === teamFilter
+          : row[0] === teamFilter
+    );
+    setPendingSubmissions(filteredPendingSubmissions);
   };
 
   const handleFilterChange = (value: string | null) => {
@@ -126,7 +133,7 @@ const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
 
   useEffect(() => {
     calculatePendingSubmissions();
-  }, [assessment, sheetData]);
+  }, [assessment, sheetData, teamFilter]);
 
   const teamOptions = [
     'All Teams',

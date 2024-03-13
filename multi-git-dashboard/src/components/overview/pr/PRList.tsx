@@ -23,10 +23,12 @@ const PRList: React.FC<PRListProps> = ({
   const theme = useMantineTheme();
   const [selected, setSelected] = useState<string[]>([]);
 
-  const displayedPRs = teamPRs.filter((pr) => {
-    if (!selected) return true;
-    return selected.includes(pr.user);
-  });
+  const options = {
+    members: team?.members.map((member) => member.gitHandle === '' ? member.name : member.gitHandle) ?? [],
+    status: ['Open', 'Closed', 'Merged'],
+  }
+
+  const displayedPRs = teamPRs.filter((pr) => selected.length === 0 || selected.includes(pr.user) || pr.state === selected[0]);
 
   return (
     <div>
@@ -36,10 +38,7 @@ const PRList: React.FC<PRListProps> = ({
           placeholder="Filter pull requests"
           clearable
           searchable
-          data={[
-            { group: 'Members', items: team.members.map((member) => member.gitHandle === '' ? member.name : member.gitHandle) },
-            { group: 'Status', items: ['Open', 'Closed', 'Merged'] },
-          ]}
+          data={Object.entries(options).map(([key, value]) => ({ group: key, items: value }))}
           value={selected}
           onChange={setSelected}
         />

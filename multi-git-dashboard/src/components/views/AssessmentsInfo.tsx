@@ -1,5 +1,5 @@
 import { hasFacultyPermission } from '@/lib/auth/utils';
-import { Button, Container, Group, Modal } from '@mantine/core';
+import { Button, Container, Group, Modal, Text } from '@mantine/core';
 import Link from 'next/link';
 import { useState } from 'react';
 import AssessmentCard from '../cards/AssessmentCard';
@@ -67,7 +67,11 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
           onAssessmentCreated={handleAssessmentCreated}
         />
       </Modal>
-      {assessmentCards}
+      {assessmentCards.length > 0 ? (
+        assessmentCards
+      ) : (
+        <Text>No Assessments</Text>
+      )}
     </Container>
   );
 };

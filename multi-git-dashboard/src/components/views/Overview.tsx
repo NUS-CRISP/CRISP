@@ -1,4 +1,4 @@
-import { Accordion, ScrollArea } from '@mantine/core';
+import { Accordion, Center, Loader, ScrollArea } from '@mantine/core';
 import { Team as SharedTeam } from '@shared/types/Team';
 import { TeamData } from '@shared/types/TeamData';
 import { useEffect, useState } from 'react';
@@ -29,15 +29,19 @@ const Overview: React.FC<OverviewProps> = ({ courseId }) => {
 
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamDatas, setTeamDatas] = useState<TeamData[]>([]);
+  const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('loading');
 
   useEffect(() => {
     const fetchData = async () => {
+      setStatus('loading');
       try {
         const fetchedTeams = await getTeams();
         setTeams(fetchedTeams);
         const fetchedTeamDatas = await getTeamDatas();
         setTeamDatas(fetchedTeamDatas);
+        setStatus('idle');
       } catch (error) {
+        setStatus('error');
         console.error(error);
       }
     };
@@ -45,9 +49,9 @@ const Overview: React.FC<OverviewProps> = ({ courseId }) => {
     fetchData();
   }, [courseId]);
 
-  if (teamDatas.length === 0) {
-    return <div>No teams found</div>;
-  }
+  if (status === 'loading') return <Center><Loader /></Center>;
+  if (status === 'error') return <Center>No data</Center>;
+  if (!teams.length || !teamDatas.length) return <Center>No teams found.</Center>;
 
   return (
     <ScrollArea.Autosize>
