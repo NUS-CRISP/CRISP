@@ -5,8 +5,6 @@ import { AnalyticsProps } from '../Analytics';
 
 interface IndividualAnalyticsProps extends AnalyticsProps { }
 
-// export const CustomTooltip = (props) => <DefaultTooltipContent {...props} label={'asdf'} />;
-
 // TODO: Handle filter by last week on backend
 const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
   team,
@@ -47,11 +45,9 @@ const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
             codeReviews: 0,
             comments: 0,
           };
-          currentData.codeReviews += 1; // Increment review count
+          currentData.codeReviews += 1;
 
-          review.comments.forEach(() => {
-            currentData.comments += 1; // Increment comment count
-          });
+          review.comments.forEach(() => currentData.comments += 1);
 
           contributors.set(reviewUser, currentData);
         }
@@ -77,7 +73,8 @@ const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
       'Comments': teamContribution.comments,
     }));
 
-  if (team.members.length > 0) {
+  // filter only if gitHandle is populated
+  if (team.members.every(member => member.gitHandle !== '')) {
     data = data.filter(d => team.members.some(member => member.gitHandle === d.gitHandle));
   }
 
@@ -108,7 +105,7 @@ const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
             ]}
           />)
       }
-    </Stack >
+    </Stack>
   );
 };
 
