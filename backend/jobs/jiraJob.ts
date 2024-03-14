@@ -17,10 +17,12 @@ import mongoose from 'mongoose';
  */
 
 async function findJiraBoardId(
-  id: number
+  id: number,
+  cloudId: string,
 ): Promise<mongoose.Types.ObjectId | null> {
   try {
-    const jiraBoard = await JiraBoardModel.findOne({ id: id }); // Replace with your criteria
+    const selfUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board/${id}`;
+    const jiraBoard = await JiraBoardModel.findOne({ self: selfUri }); // Replace with your criteria
     if (jiraBoard) {
       return jiraBoard._id; // Assuming _id is the ObjectId
     }
@@ -32,10 +34,12 @@ async function findJiraBoardId(
 }
 
 async function findJiraSprintId(
-  id: number
+  id: number,
+  cloudId: string,
 ): Promise<mongoose.Types.ObjectId | null> {
   try {
-    const jiraSprint = await JiraSprintModel.findOne({ id: id }); // Replace with your criteria
+    const selfUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/sprint/${id}`;
+    const jiraSprint = await JiraSprintModel.findOne({ self: selfUri }); // Replace with your criteria
     if (jiraSprint) {
       return jiraSprint._id; // Assuming _id is the ObjectId
     }
@@ -88,7 +92,7 @@ async function fetchSprints(
         const jiraSprint: Omit<JiraSprint, '_id'> = {
           ...sprintData,
           jiraIssues: [],
-          jiraBoard: await findJiraBoardId(boardId),
+          jiraBoard: await findJiraBoardId(boardId, cloudId),
         };
 
         const sprint = await JiraSprintModel.findOneAndUpdate(
@@ -159,8 +163,8 @@ async function fetchIssues(
         const jiraIssue: Omit<JiraIssue, '_id'> = {
           ...issueData,
           storyPoints: storyPoints,
-          jiraBoard: await findJiraBoardId(boardId),
-          jiraSprint: await findJiraSprintId(issueData.fields?.sprint?.id),
+          jiraBoard: await findJiraBoardId(boardId, cloudId),
+          jiraSprint: await findJiraSprintId(issueData.fields?.sprint?.id, cloudId),
         };
 
         const issue = await JiraIssueModel.findOneAndUpdate(
@@ -276,8 +280,9 @@ export const fetchAndSaveJiraData = async () => {
             location: undefined, // To remove the original location property
           };
 
+          const boardSelfUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board/${jiraBoard.id}`;
           const board = await JiraBoardModel.findOneAndUpdate(
-            { id: jiraBoard.id },
+            { self: boardSelfUri },
             jiraBoard,
             {
               upsert: true,
