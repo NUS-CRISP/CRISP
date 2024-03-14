@@ -26,20 +26,29 @@ const PRList: React.FC<PRListProps> = ({
   onSelectPR,
   maxHeight,
 }) => {
-
-  const BOTTOM_SPACE = 9;
+  const BOTTOM_SPACE = 7;
   const [selected, setSelected] = useState<PRListSelectOptions>({ members: [], status: [] });
 
+  const teamMemberHandles = team?.members.map(member => member.gitHandle || member.name) ?? [];
+
   const options: PRListSelectOptions = {
-    members: team?.members.map((member) => member.gitHandle === '' ? member.name : member.gitHandle) ?? [],
+    members: teamMemberHandles,
     status: ['Open', 'Closed'],
-  }
+  };
+
   const isNoneSelected = () => Object.values(selected).every((value) => value.length === 0);
 
-  const displayedPRs = teamPRs.filter((pr) => isNoneSelected() || (
-    (selected.members.length === 0 || selected.members.includes(pr.user)) &&
-    (selected.status.length === 0 || selected.status.some((status) => status.localeCompare(pr.state, undefined, { sensitivity: 'accent' }) === 0))
-  ));
+  let prsByTeamMembers = teamPRs;
+  // Filter only if gitHandles are populated
+  if (team?.members.every(member => member.gitHandle !== '')) {
+    prsByTeamMembers = teamPRs.filter(pr => teamMemberHandles.includes(pr.user));
+  }
+
+  const displayedPRs = prsByTeamMembers.filter(pr =>
+    isNoneSelected() ||
+    selected.members.includes(pr.user) ||
+    selected.status.includes(pr.state)
+  );
 
   return (
     <div>
@@ -51,18 +60,16 @@ const PRList: React.FC<PRListProps> = ({
           searchable
           data={Object.entries(options).map(([key, value]) => ({ group: capitalize(key), items: value }))}
           value={[...selected.members, ...selected.status]}
-          onChange={(value) =>
-            setSelected({
-              members: value.filter((v) => options.members.includes(v)),
-              status: value.filter((v) => options.status.includes(v)),
-            })
-          }
+          onChange={(value) => setSelected({
+            members: value.filter(v => options.members.includes(v)),
+            status: value.filter(v => options.status.includes(v)),
+          })}
           style={{ maxWidth: 200 }}
         />
       </Group>}
       <ScrollArea.Autosize mih={300} mah={`calc(${maxHeight}px - ${BOTTOM_SPACE}rem)`} scrollbars="y">
         {displayedPRs.map(pr => (
-          <Box<'a'>
+          <Box
             component="a"
             onClick={() => onSelectPR(pr.id)}
             key={pr.id}
@@ -71,7 +78,7 @@ const PRList: React.FC<PRListProps> = ({
             })}
             mr={3}
           >
-            <Text size="sm"><Text span fw={700} c={'green'} inherit>{pr.user}</Text> - {pr.title}</Text>
+            <Text size="sm"><Text span fw={700} color={'green'} inherit>{pr.user}</Text> - {pr.title}</Text>
           </Box>
         ))}
       </ScrollArea.Autosize>

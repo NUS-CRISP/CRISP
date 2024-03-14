@@ -1,112 +1,109 @@
+import { weekToDates } from '@/components/cards/OverviewCard';
 import { BarChart } from '@mantine/charts';
-import { Box, Button, Center, Stack } from '@mantine/core';
-import { useState } from 'react';
+import { Center } from '@mantine/core';
+import dayjs from 'dayjs';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+import { useEffect } from 'react';
 import { AnalyticsProps } from '../Analytics';
+
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 
 interface IndividualAnalyticsProps extends AnalyticsProps { }
 
-// TODO: Handle filter by last week on backend
+interface IndividualAnalyticsData {
+  name: string;
+  gitHandle: string;
+  'Pull Requests': number;
+  'Code Reviews': number;
+  'Comments': number;
+}
+
 const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
   team,
   teamData,
+  selectedWeekRange,
 }) => {
-  const [showLastWeek, setShowLastWeek] = useState(false);
+  const gitHandleToNameMap = new Map(team.members.map(member => [member.gitHandle, member.name || member.gitHandle]));
 
-  const filterLastWeekData = () => {
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  const filterDataByWeekRange = () => {
+    const startDate = weekToDates(selectedWeekRange[0]);
+    const endDate = weekToDates(selectedWeekRange[1]).add(1, 'week');
 
-    const contributors = new Map<
-      string,
-      { pullRequests: number; codeReviews: number; comments: number }
-    >();
+    const contributors = new Map<string, IndividualAnalyticsData>();
 
     teamData.teamPRs.forEach(pr => {
-      const prDate = new Date(pr.createdAt);
+      const prDate = dayjs(pr.createdAt);
       const prUser = pr.user || 'Unknown';
+      const prName = gitHandleToNameMap.get(prUser) || prUser;
 
-      if (prDate >= oneWeekAgo) {
-        const currentData = contributors.get(prUser) || {
-          pullRequests: 0,
-          codeReviews: 0,
-          comments: 0,
-        };
-        currentData.pullRequests += 1; // Increment PR count
-
+      if (prDate.isSameOrAfter(startDate) && prDate.isSameOrBefore(endDate)) {
+        const currentData = contributors.get(prUser) || { name: prName, gitHandle: prUser, 'Pull Requests': 0, 'Code Reviews': 0, 'Comments': 0 };
+        currentData['Pull Requests'] += 1;
         contributors.set(prUser, currentData);
       }
 
       pr.reviews.forEach(review => {
-        const reviewDate = new Date(review.submittedAt || '');
-        if (reviewDate >= oneWeekAgo) {
+        const reviewDate = dayjs(review.submittedAt);
+        if (reviewDate.isSameOrAfter(startDate) && reviewDate.isSameOrBefore(endDate)) {
           const reviewUser = review.user || 'Unknown';
-          const currentData = contributors.get(reviewUser) || {
-            pullRequests: 0,
-            codeReviews: 0,
-            comments: 0,
-          };
-          currentData.codeReviews += 1;
+          const reviewName = gitHandleToNameMap.get(reviewUser) || reviewUser;
+          const reviewData = contributors.get(reviewUser) || { name: reviewName, gitHandle: reviewUser, 'Pull Requests': 0, 'Code Reviews': 0, 'Comments': 0 };
+          reviewData['Code Reviews'] += 1;
 
-          review.comments.forEach(() => currentData.comments += 1);
+          review.comments.forEach(() => {
+            reviewData['Comments'] += 1;
+          });
 
-          contributors.set(reviewUser, currentData);
+          contributors.set(reviewUser, reviewData);
         }
       });
     });
 
-    return Array.from(contributors, ([gitHandle, data]) => ({
-      name: team.members.find(member => member.gitHandle === gitHandle)?.name || gitHandle,
-      gitHandle,
-      'Pull Requests': data.pullRequests,
-      'Code Reviews': data.codeReviews,
-      'Comments': data.comments,
-    }));
+    return Array.from(contributors.values());
   };
 
-  let data = showLastWeek
-    ? filterLastWeekData()
-    : Object.entries(teamData.teamContributions).map(([gitHandle, teamContribution]) => ({
-      name: team.members.find(member => member.gitHandle === gitHandle)?.name || gitHandle,
-      gitHandle: gitHandle,
-      'Pull Requests': teamContribution.pullRequests,
-      'Code Reviews': teamContribution.codeReviews,
-      'Comments': teamContribution.comments,
-    }));
+  let data = filterDataByWeekRange();
 
   // filter only if gitHandle is populated
   if (team.members.every(member => member.gitHandle !== '')) {
     data = data.filter(d => team.members.some(member => member.gitHandle === d.gitHandle));
   }
 
-  return (
-    <Stack>
-      <Box style={{ marginLeft: 'auto' }}>
-        <Button onClick={() => setShowLastWeek(!showLastWeek)}>
-          {showLastWeek ? 'Show All Time' : 'Show Last Week'}
-        </Button>
-      </Box>
-      {
-        (data.every(d => d['Pull Requests'] === 0 && d['Code Reviews'] === 0 && d['Comments'] === 0)) ? <Center>No data available.</Center> : (
-          <BarChart
-            h={400}
-            w={750}
-            ml={20}
-            mt={20}
-            xAxisProps={{ tickFormatter: (value: string) => value.length >= 12 ? `${value.substring(0, 12)}...` : value }}
-            data={data}
-            dataKey='name'
-            withLegend
-            legendProps={{ verticalAlign: 'bottom' }}
-            tooltipAnimationDuration={200}
-            series={[
-              { name: 'Pull Requests', color: 'red' },
-              { name: 'Code Reviews', color: 'green' },
-              { name: 'Comments', color: 'blue' },
-            ]}
-          />)
-      }
-    </Stack>
-  );
+  // Log time spent on this component
+  useEffect(() => {
+    // Capture start time
+    const startTime = Date.now();
+
+    // Cleanup function to calculate and log the time spent
+    return () => {
+      const endTime = Date.now();
+      const timeSpent = endTime - startTime;
+
+      // Log the time spent or send it to a backend server
+      console.log(`Time spent on IndividualAnalytics component: ${timeSpent} milliseconds`);
+    };
+  }, []);
+
+  return data.every(d => d['Pull Requests'] === 0 && d['Code Reviews'] === 0 && d['Comments'] === 0) ? <Center>No data available.</Center> : (
+    <BarChart
+      h={400}
+      w={750}
+      ml={20}
+      mt={20}
+      xAxisProps={{ tickFormatter: (_value, index) => data[index].gitHandle }}
+      data={data}
+      dataKey='name'
+      withLegend
+      legendProps={{ verticalAlign: 'bottom' }}
+      tooltipAnimationDuration={200}
+      series={[
+        { name: 'Pull Requests', color: 'red' },
+        { name: 'Code Reviews', color: 'green' },
+        { name: 'Comments', color: 'blue' },
+      ]}
+    />);
 };
 
 export default IndividualAnalytics;
