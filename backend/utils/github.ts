@@ -1,4 +1,6 @@
-import { TeamContribution } from '@shared/types/TeamData';
+import TeamModel from '@models/Team';
+import TeamDataModel from '@models/TeamData';
+import UserModel from '@models/User';
 import { App } from 'octokit';
 // import { createAppAuth } from '@octokit/auth-app';
 // import { graphql } from '@octokit/graphql';
@@ -13,36 +15,15 @@ export const getGitHubApp = (): App => {
   });
 };
 
-// export const getApp = (installationId: number): typeof graphql => {
-//   const APP_ID = Number(process.env.GITHUB_APP_ID!);
-//   const PRIVATE_KEY = process.env.GITHUB_APP_PRIVATE_KEY!.replace(/\\n/g, '\n');
+export const getTeamMembers = async (teamId: number) => {
+  const teamData = await TeamDataModel.findOne({ teamId });
+  if (!teamData) return null;
 
-//   const auth = createAppAuth({
-//     privateKey: PRIVATE_KEY,
-//     appId: APP_ID,
-//     installationId: installationId,
-//   });
+  const team = await TeamModel.findOne({ teamData: teamData._id });
+  if (!team) return null;
 
-//   const graphqlWithAuth = graphql.defaults({
-//     request: {
-//       hook: auth.hook,
-//     },
-//   });
+  const teamMembers = await UserModel.find({ _id: { $in: team.members } });
+  const teamMembersGitHandles = teamMembers.map(member => member.gitHandle);
 
-//   return graphqlWithAuth;
-// };
-
-/**
- * Deletes keys from a record
- */
-const filterRecord = <T>(record: Record<string, T>, ...keys: string[]) => {
-  for (const key of keys) {
-    if (key in record) delete record[key];
-  }
+  return new Set(teamMembersGitHandles);
 };
-
-const FILTER_LIST = ['github-classroom[bot]'];
-
-export const filterTeamContributions = (
-  teamContributions: Record<string, TeamContribution>
-) => filterRecord(teamContributions, ...FILTER_LIST);

@@ -10,7 +10,7 @@ import {
 } from 'recharts';
 import { AnalyticsProps } from '../Analytics';
 
-interface WeeklyContributionsProps extends AnalyticsProps {}
+interface WeeklyContributionsProps extends Omit<AnalyticsProps, 'team'> { }
 
 const convertChartData = (data: number[][]) => {
   return data.map(item => ({
