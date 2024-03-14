@@ -50,11 +50,15 @@ async function findJiraSprintId(
   }
 }
 
-async function findTeamDataIdByRepoName(
-  repoName: string
+async function findTeamDataIdByCourseAndRepoName(
+  gitHubOrgName: string | undefined,
+  repoName: string,
 ): Promise<mongoose.Types.ObjectId | null> {
   try {
-    const teamData = await TeamDataModel.findOne({ repoName: repoName }); // Replace with your criteria
+    const teamData = await TeamDataModel.findOne({
+      repoName: repoName,
+      gitHubOrgName: gitHubOrgName,
+    });
     if (teamData) {
       return teamData._id; // Assuming _id is the ObjectId
     }
@@ -267,7 +271,8 @@ export const fetchAndSaveJiraData = async () => {
         const boards = data.values;
 
         boards.forEach(async (boardData: any) => {
-          const teamDataId = await findTeamDataIdByRepoName(
+          const teamDataId = await findTeamDataIdByCourseAndRepoName(
+            course.gitHubOrgName,
             boardData.location.projectName
           );
 
