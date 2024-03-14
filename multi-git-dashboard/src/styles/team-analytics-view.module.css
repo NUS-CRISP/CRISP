@@ -4,11 +4,6 @@
   }
 }
 
-.card {
-  border-radius: 0 0 var(--mantine-radius-sm) var(--mantine-radius-sm);
-  /* border-top-color: transparent; */
-}
-
 .tab {
   font-weight: 500;
   height: rem(38);

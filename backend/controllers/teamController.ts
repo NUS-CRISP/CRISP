@@ -2,9 +2,21 @@ import { Request, Response } from 'express';
 import { NotFoundError } from '../services/errors';
 import {
   deleteTeamById,
-  updateTeamById,
+  getTeamsByCourseId,
   removeMembersById,
+  updateTeamById,
 } from '../services/teamService';
+
+export const getTeamsByCourse = async (req: Request, res: Response) => {
+  const { courseId } = req.params;
+  try {
+    const teams = await getTeamsByCourseId(courseId);
+    res.status(200).json(teams);
+  } catch (error) {
+    console.error('Error fetching teams:', error);
+    res.status(500).json({ error: 'Failed to fetch teams' });
+  }
+}
 
 export const deleteTeam = async (req: Request, res: Response) => {
   const teamId = req.params.id;

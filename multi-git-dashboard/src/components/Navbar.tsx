@@ -1,17 +1,35 @@
-import { Code, Group, Title } from '@mantine/core';
+import { Center, Stack, Title, Tooltip, UnstyledButton, rem } from '@mantine/core';
 import {
   IconGitBranch,
+  IconHelp,
+  IconHome2,
   IconListDetails,
   IconLogout,
   IconSettings2,
-  IconUserCircle,
+  IconUserCircle
 } from '@tabler/icons-react';
 import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import classes from '../styles/Sidebar.module.css';
+import classes from '../styles/Navbar.module.css';
 
-const Sidebar: React.FC = () => {
+interface NavbarLinkProps {
+  icon: typeof IconHome2;
+  label: string;
+  active?: boolean;
+  disabled?: boolean;
+  onClick: (event: React.MouseEvent) => void;
+}
+
+const NavbarLink = ({ icon: Icon, label, active, disabled, onClick }: NavbarLinkProps) => (
+  <Tooltip label={label} position="right" transitionProps={{ duration: 0 }}>
+    <UnstyledButton onClick={onClick} style={disabled ? { cursor: 'default' } : undefined} className={classes.link} data-active={active || undefined}>
+      <Icon style={{ width: rem(20), height: rem(20) }} stroke={1.5} />
+    </UnstyledButton>
+  </Tooltip>
+);
+
+const Navbar: React.FC = () => {
   const router = useRouter();
   const { pathname } = router;
   const { data: session } = useSession();
@@ -79,8 +97,28 @@ const Sidebar: React.FC = () => {
     mainLinksData.push({ link: '/admin', label: 'Admin', icon: IconSettings2 });
   }
 
+  const mainLinks = mainLinksData.map(item => (
+    <NavbarLink
+      icon={item.icon}
+      label={item.label}
+      active={item.label === activeMainTab}
+      onClick={(event) => {
+        event.preventDefault();
+        if (courseId) {
+          logSessionTime(activeCourseTab, true);
+        }
+        setActiveMainTab(item.label);
+        router.push(item.link);
+      }}
+      key={item.label}
+    />
+  ));
+
   const courseLinksData = [
-    { link: `/courses/${courseId}`, label: 'Overview' },
+    {
+      link: `/courses/${courseId}`,
+      label: 'Overview',
+    },
     {
       link: `/courses/${courseId}/people`,
       label: 'People',
@@ -98,6 +136,23 @@ const Sidebar: React.FC = () => {
       label: 'Assessments',
     },
   ];
+
+  const courseLinks = courseLinksData.map(item => (
+    <a
+      className={classes.courseLink}
+      data-active={item.label === activeCourseTab || undefined}
+      href={item.link}
+      key={item.label}
+      onClick={event => {
+        event.preventDefault();
+        logSessionTime(item.label, false);
+        setActiveCourseTab(item.label);
+        router.push(item.link);
+      }}
+    >
+      <span>{item.label}</span>
+    </a>
+  ));
 
   useEffect(() => {
     const path = router.pathname;
@@ -144,88 +199,54 @@ const Sidebar: React.FC = () => {
     };
   }, [activeCourseTab]);
 
-  const mainLinks = mainLinksData.map(item => (
-    <a
-      className={classes.link}
-      data-active={item.label === activeMainTab || undefined}
-      href={item.link}
-      key={item.label}
-      onClick={event => {
-        event.preventDefault();
-        if (courseId) {
-          logSessionTime(activeCourseTab, true);
-        }
-        setActiveMainTab(item.label);
-        router.push(item.link);
-      }}
-    >
-      <item.icon className={classes.linkIcon} stroke={1.5} />
-      <span>{item.label}</span>
-    </a>
-  ));
-
-  const courseLinks = courseLinksData.map(item => (
-    <a
-      className={classes.link}
-      data-active={item.label === activeCourseTab || undefined}
-      href={item.link}
-      key={item.label}
-      onClick={event => {
-        event.preventDefault();
-        logSessionTime(item.label, false);
-        setActiveCourseTab(item.label);
-        router.push(item.link);
-      }}
-    >
-      <span>{item.label}</span>
-    </a>
-  ));
-
   return (
     <div className={classes.navbarsContainer}>
       <nav className={classes.navbar}>
+        <Center>
+          <IconGitBranch size={30} />
+        </Center>
+
         <div className={classes.navbarMain}>
-          <Group className={classes.header} justify="space-between">
-            <Group>
-              <IconGitBranch size={28} />
-              CRISP
-            </Group>
-            <Code fw={700}>v0.0.1</Code>
-          </Group>
-          {mainLinks}
+          <Stack justify='center' gap={0}>
+            {mainLinks}
+          </Stack>
         </div>
 
-        <div className={classes.footer}>
-          <a
-            href="#"
-            className={classes.link}
-            style={{ pointerEvents: 'none' }}
-            onClick={event => event.preventDefault()}
-          >
-            <IconUserCircle className={classes.linkIcon} stroke={1.5} />
-            <span>
-              Hello, {session && session.user ? session.user.name : 'user'}
-            </span>
-          </a>
+        <Stack justify='center' gap={0}>
+          <NavbarLink
+            onClick={() => { }}
+            icon={IconUserCircle}
+            label={`Hello, ${session && session.user ? session.user.name : 'user'}`}
+            disabled
+          />
 
-          <a href="#" className={classes.link} onClick={handleSignOut}>
-            <IconLogout className={classes.linkIcon} stroke={1.5} />
-            <span>Logout</span>
-          </a>
-        </div>
+          <NavbarLink
+            onClick={() => window.open('https://forms.gle/41KcH8gFh3uDfzQGA', '_blank')}
+            icon={IconHelp}
+            label="Submit issue / feature"
+          />
+
+          <NavbarLink
+            onClick={handleSignOut}
+            icon={IconLogout}
+            label="Sign out"
+          />
+        </Stack>
       </nav>
-      {isCourseRoute && courseId && (
-        <nav className={classes.courseNavbar}>
-          <div className={classes.navbarMain}>
-            <Title order={3} className={classes.title}>
-              {courseCode}
-            </Title>
-            {courseLinks}
-          </div>
-        </nav>
-      )}
+      {
+        isCourseRoute && courseId && (
+          <nav className={classes.courseNavbar}>
+            <div className={classes.navbarMain}>
+              <Title order={3} className={classes.title}>
+                {courseCode}
+              </Title>
+              {courseLinks}
+            </div>
+          </nav>
+        )
+      }
     </div>
   );
 };
 
-export default Sidebar;
+export default Navbar;
