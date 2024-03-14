@@ -45,6 +45,7 @@ const ProjectManagementInfo: React.FC<ProjectManagementProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   const setActiveTabAndSave = (tabName: string) => {
+    onUpdate();
     setActiveTab(tabName);
     localStorage.setItem(`activeTeamSetTab_${courseId}`, tabName);
   };
@@ -81,7 +82,6 @@ const ProjectManagementInfo: React.FC<ProjectManagementProps> = ({
         number={team.number}
         TA={team.TA}
         teamData={team.teamData}
-        onUpdate={onUpdate}
       />
     ));
   };

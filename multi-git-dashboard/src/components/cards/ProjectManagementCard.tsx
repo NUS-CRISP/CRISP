@@ -7,14 +7,12 @@ interface ProjectManagementCardProps {
   number: number;
   TA: User | null;
   teamData: TeamData | null;
-  onUpdate: () => void;
 }
 
 const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   number,
   TA,
   teamData,
-  onUpdate,
 }) => {
   const getColumnCard = (
     jiraSprints: JiraSprint[] | undefined,
