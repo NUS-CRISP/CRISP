@@ -102,11 +102,8 @@ const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
     return () => {
       const endTime = Date.now();
       const timeSpent = endTime - startTime;
-
-      // Log the time spent or send it to a backend server
-      console.log(
-        `Time spent on IndividualAnalytics component: ${timeSpent} milliseconds`
-      );
+      console.log(`Time spent on IndividualAnalytics: ${timeSpent}ms`);
+      // TODO: Log time spent
     };
   }, []);
 
