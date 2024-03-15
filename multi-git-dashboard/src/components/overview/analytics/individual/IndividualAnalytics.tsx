@@ -10,7 +10,7 @@ import { AnalyticsProps } from '../Analytics';
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
-interface IndividualAnalyticsProps extends AnalyticsProps { }
+interface IndividualAnalyticsProps extends AnalyticsProps {}
 
 interface IndividualAnalyticsData {
   name: string;

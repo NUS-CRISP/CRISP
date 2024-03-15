@@ -70,9 +70,15 @@ const Overview: React.FC<OverviewProps> = ({ courseId }) => {
     fetchData();
   }, [courseId]);
 
-  if (status === Status.Loading) return <Center><Loader /></Center>;
+  if (status === Status.Loading)
+    return (
+      <Center>
+        <Loader />
+      </Center>
+    );
   if (status === Status.Error) return <Center>No data</Center>;
-  if (!teams.length || !teamDatas.length) return <Center>No teams found.</Center>;
+  if (!teams.length || !teamDatas.length)
+    return <Center>No teams found.</Center>;
 
   return (
     <ScrollArea.Autosize>

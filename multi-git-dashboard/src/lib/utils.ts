@@ -37,9 +37,10 @@ export const mergeDedupe = <T>(
   return combined;
 };
 
-export const capitalize = <T extends string>(s: T) => (s[0].toUpperCase() + s.slice(1)) as Capitalize<typeof s>;
+export const capitalize = <T extends string>(s: T) =>
+  (s[0].toUpperCase() + s.slice(1)) as Capitalize<typeof s>;
 
 export const startCase = (s: string) => {
   const result = s.replace(/([A-Z])/g, ' $1');
   return result.charAt(0).toUpperCase() + result.slice(1);
-}
+};
