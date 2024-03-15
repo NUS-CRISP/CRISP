@@ -5,15 +5,19 @@ import { Status } from '@shared/types/util/Status';
 import { useEffect, useState } from 'react';
 import { GitHandleProps } from '../GitHandle';
 
-interface ProfileCardProps extends GitHandleProps { }
+interface ProfileCardProps extends GitHandleProps {}
 
-export const ProfileCard: React.FC<ProfileCardProps> = ({ gitHandle, profileGetter }) => {
+export const ProfileCard: React.FC<ProfileCardProps> = ({
+  gitHandle,
+  profileGetter,
+}) => {
   const [status, setStatus] = useState<Status>(Status.Loading);
   const [error, setError] = useState<string>('');
   const [profile, setProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
+      setStatus(Status.Loading);
       try {
         const profileData = await profileGetter(gitHandle);
         setProfile(profileData);
