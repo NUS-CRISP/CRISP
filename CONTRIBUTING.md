@@ -104,33 +104,7 @@ Once you're ready to share your contributions, follow these steps to submit a Pu
     git push origin feature/my-new-feature
     ```
 
-5. **Open a Pull Request (PR)**: Go to your fork on GitHub and create a new Pull Request against the `staging` branch of the upstream repository. Make sure to fill out the PR template with the necessary details.
-
-### PR Message Template
-
-Use the following template for your Pull Request messages for consistency and clarity:
-
-
-```
-## Description
-
-Briefly describe the changes you've made. Include any relevant issues or context necessary for understanding the changes.
-
-## Changes
-
-- List your changes as bullet points
-- Include technical details or decisions if necessary
-
-## Screenshots (if applicable)
-
-Include any relevant screenshots or GIFs that demonstrate your changes visually.
-
-## Additional Notes
-
-Include any additional comments or context.
-
-Resolves #<issue_number>
-```
+5. **Open a Pull Request (PR)**: Go to your fork on GitHub and create a new Pull Request against the `staging` branch of the upstream repository. Make sure to fill out the [PR template](https://github.com/NUS-CRISP/CRISP/blob/main/pull_request_template.md) with the necessary details.
 
 ## Code of Conduct
 
