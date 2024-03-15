@@ -4,7 +4,7 @@ import { ProfileGetter } from './views/Overview';
 
 export interface GitHandleProps {
   gitHandle: string;
-  profileGetter: ProfileGetter
+  profileGetter: ProfileGetter;
 }
 
 export const GitHandle: React.FC<GitHandleProps> = (props: GitHandleProps) => (

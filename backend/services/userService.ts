@@ -35,4 +35,4 @@ export const getUserByGitHandle = async (gitHandle: string) => {
   };
 
   return profile;
-}
+};
