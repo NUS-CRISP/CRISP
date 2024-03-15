@@ -1,54 +1,66 @@
-import { Box } from '@mantine/core';
+import { Box, Card, Group } from '@mantine/core';
+import dayjs from 'dayjs';
 import { useState } from 'react';
-import { OverviewProps } from '../OverviewCard';
+import { OverviewProps, weekToDates } from '../../cards/OverviewCard';
 import PRDetails from './PRDetails';
 import PRList from './PRList';
 
-interface PRProps {
+export interface PRProps {
+  team?: OverviewProps['team'];
   teamData: OverviewProps['teamData'];
+  selectedWeekRange: [number, number];
+  profileGetter: OverviewProps['profileGetter'];
 }
 
-const PR: React.FC<PRProps> = ({ teamData }: PRProps) => {
+const PR: React.FC<PRProps> = ({
+  team,
+  teamData,
+  selectedWeekRange,
+  profileGetter,
+}) => {
   const MAX_HEIGHT = 500;
 
   const [selectedPR, setSelectedPR] = useState<number | null>(
-    teamData.teamPRs[0]?.id || null
+    teamData.teamPRs[0]?.id ?? null
   );
 
+  const getDisplayedPRs = () => {
+    const startDate = weekToDates(selectedWeekRange[0]);
+    const endDate = weekToDates(selectedWeekRange[1]).add(1, 'week');
+
+    return teamData.teamPRs.filter(pr => {
+      const prDate = dayjs(pr.createdAt);
+      return prDate.isAfter(startDate) && prDate.isBefore(endDate);
+    });
+  };
+
   return (
-    <Box
-      // TODO: Refactor styles to CSS modules
-      style={{
-        display: 'flex',
-        border: '1px solid var(--mantine-color-default-border)',
-        borderRadius: 'var(--mantine-radius-sm)',
-        padding: 20,
-        maxHeight: MAX_HEIGHT,
-        overflow: 'hidden',
-      }}
-    >
-      <Box
-        style={{
-          maxWidth: 200,
-          marginRight: 15,
-          flex: '1 1 auto',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
-        <PRList
-          teamPRs={teamData.teamPRs}
-          selectedPR={selectedPR}
-          onSelectPR={setSelectedPR}
-          maxHeight={MAX_HEIGHT}
-        />
-      </Box>
-      {selectedPR !== null && (
-        <Box style={{ flexGrow: 3, maxWidth: 750, overflowY: 'auto' }}>
-          <PRDetails pr={teamData.teamPRs.find(pr => pr.id === selectedPR)} />
+    <Card mah={MAX_HEIGHT}>
+      <Group grow align="start">
+        <Box
+          style={{
+            maxWidth: 200,
+            marginRight: 15,
+          }}
+        >
+          <PRList
+            team={team}
+            teamPRs={getDisplayedPRs()}
+            selectedPR={selectedPR}
+            onSelectPR={setSelectedPR}
+            maxHeight={MAX_HEIGHT}
+          />
         </Box>
-      )}
-    </Box>
+        {selectedPR !== null && (
+          <Box maw={700} mt={10} mr={10}>
+            <PRDetails
+              pr={teamData.teamPRs.find(pr => pr.id === selectedPR)}
+              profileGetter={profileGetter}
+            />
+          </Box>
+        )}
+      </Group>
+    </Card>
   );
 };
 

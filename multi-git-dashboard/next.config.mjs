@@ -3,11 +3,25 @@ import { PHASE_DEVELOPMENT_SERVER } from 'next/constants.js';
 /**
  * @type {import('next').NextConfig}
  * */
+
+const baseConfig = {
+  transpilePackages: ['shared'],
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/courses',
+        permanent: true,
+      },
+    ];
+  }
+};
+
 const nextConfig = (phase) => {
   // Dev config
   if (phase === PHASE_DEVELOPMENT_SERVER) {
     return {
-      transpilePackages: ['shared'],
+      ...baseConfig,
       async rewrites() {
         return [
           {
@@ -25,9 +39,7 @@ const nextConfig = (phase) => {
   }
 
   // Prod config
-  return {
-    transpilePackages: ['shared'],
-  }
+  return baseConfig;
 };
 
 export default nextConfig;

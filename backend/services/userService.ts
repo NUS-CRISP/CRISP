@@ -1,6 +1,7 @@
-import UserModel from '@models/User';
-import { BadRequestError, NotFoundError } from './errors';
 import AccountModel from '@models/Account';
+import UserModel from '@models/User';
+import { Profile } from '@shared/types/Profile';
+import { BadRequestError, NotFoundError } from './errors';
 
 export const editUser = async (
   accountId: string,
@@ -20,4 +21,19 @@ export const editUser = async (
   if (!updatedUser) {
     throw new NotFoundError('User not found');
   }
+};
+
+export const getUserByGitHandle = async (gitHandle: string) => {
+  const user = await UserModel.findOne({ gitHandle });
+
+  if (!user) {
+    throw new NotFoundError('User not found');
+  }
+
+  const profile: Profile = {
+    name: user.name,
+    gitHandle: user.gitHandle,
+  };
+
+  return profile;
 };
