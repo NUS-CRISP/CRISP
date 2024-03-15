@@ -10,14 +10,14 @@ import { AnalyticsProps } from '../Analytics';
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
-interface IndividualAnalyticsProps extends AnalyticsProps { }
+interface IndividualAnalyticsProps extends AnalyticsProps {}
 
 interface IndividualAnalyticsData {
   name: string;
   gitHandle: string;
   'Pull Requests': number;
   'Code Reviews': number;
-  'Comments': number;
+  Comments: number;
 }
 
 const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
@@ -25,7 +25,12 @@ const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
   teamData,
   selectedWeekRange,
 }) => {
-  const gitHandleToNameMap = new Map(team.members.map(member => [member.gitHandle, member.name || member.gitHandle]));
+  const gitHandleToNameMap = new Map(
+    team.members.map(member => [
+      member.gitHandle,
+      member.name || member.gitHandle,
+    ])
+  );
 
   const filterDataByWeekRange = () => {
     const startDate = weekToDates(selectedWeekRange[0]);
@@ -39,17 +44,32 @@ const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
       const prName = gitHandleToNameMap.get(prUser) || prUser;
 
       if (prDate.isSameOrAfter(startDate) && prDate.isSameOrBefore(endDate)) {
-        const currentData = contributors.get(prUser) || { name: prName, gitHandle: prUser, 'Pull Requests': 0, 'Code Reviews': 0, 'Comments': 0 };
+        const currentData = contributors.get(prUser) || {
+          name: prName,
+          gitHandle: prUser,
+          'Pull Requests': 0,
+          'Code Reviews': 0,
+          Comments: 0,
+        };
         currentData['Pull Requests'] += 1;
         contributors.set(prUser, currentData);
       }
 
       pr.reviews.forEach(review => {
         const reviewDate = dayjs(review.submittedAt);
-        if (reviewDate.isSameOrAfter(startDate) && reviewDate.isSameOrBefore(endDate)) {
+        if (
+          reviewDate.isSameOrAfter(startDate) &&
+          reviewDate.isSameOrBefore(endDate)
+        ) {
           const reviewUser = review.user || 'Unknown';
           const reviewName = gitHandleToNameMap.get(reviewUser) || reviewUser;
-          const reviewData = contributors.get(reviewUser) || { name: reviewName, gitHandle: reviewUser, 'Pull Requests': 0, 'Code Reviews': 0, 'Comments': 0 };
+          const reviewData = contributors.get(reviewUser) || {
+            name: reviewName,
+            gitHandle: reviewUser,
+            'Pull Requests': 0,
+            'Code Reviews': 0,
+            Comments: 0,
+          };
           reviewData['Code Reviews'] += 1;
 
           review.comments.forEach(() => {
@@ -68,7 +88,9 @@ const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
 
   // filter only if gitHandle is populated
   if (team.members.every(member => member.gitHandle !== '')) {
-    data = data.filter(d => team.members.some(member => member.gitHandle === d.gitHandle));
+    data = data.filter(d =>
+      team.members.some(member => member.gitHandle === d.gitHandle)
+    );
   }
 
   // Log time spent on this component
@@ -82,11 +104,18 @@ const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
       const timeSpent = endTime - startTime;
 
       // Log the time spent or send it to a backend server
-      console.log(`Time spent on IndividualAnalytics component: ${timeSpent} milliseconds`);
+      console.log(
+        `Time spent on IndividualAnalytics component: ${timeSpent} milliseconds`
+      );
     };
   }, []);
 
-  return data.every(d => d['Pull Requests'] === 0 && d['Code Reviews'] === 0 && d['Comments'] === 0) ? <Center>No data available.</Center> : (
+  return data.every(
+    d =>
+      d['Pull Requests'] === 0 && d['Code Reviews'] === 0 && d['Comments'] === 0
+  ) ? (
+    <Center>No data available.</Center>
+  ) : (
     <BarChart
       h={400}
       w={750}
@@ -94,7 +123,7 @@ const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
       mt={20}
       xAxisProps={{ tickFormatter: (_value, index) => data[index].gitHandle }}
       data={data}
-      dataKey='name'
+      dataKey="name"
       withLegend
       legendProps={{ verticalAlign: 'bottom' }}
       tooltipAnimationDuration={200}
@@ -103,7 +132,8 @@ const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
         { name: 'Code Reviews', color: 'green' },
         { name: 'Comments', color: 'blue' },
       ]}
-    />);
+    />
+  );
 };
 
 export default IndividualAnalytics;

@@ -8,14 +8,21 @@ import PRList from './PRList';
 export interface PRProps {
   team?: OverviewProps['team'];
   teamData: OverviewProps['teamData'];
-  selectedWeekRange: [number, number]
+  selectedWeekRange: [number, number];
   profileGetter: OverviewProps['profileGetter'];
 }
 
-const PR: React.FC<PRProps> = ({ team, teamData, selectedWeekRange, profileGetter }) => {
+const PR: React.FC<PRProps> = ({
+  team,
+  teamData,
+  selectedWeekRange,
+  profileGetter,
+}) => {
   const MAX_HEIGHT = 500;
 
-  const [selectedPR, setSelectedPR] = useState<number | null>(teamData.teamPRs[0]?.id ?? null);
+  const [selectedPR, setSelectedPR] = useState<number | null>(
+    teamData.teamPRs[0]?.id ?? null
+  );
 
   const getDisplayedPRs = () => {
     const startDate = weekToDates(selectedWeekRange[0]);
@@ -29,7 +36,7 @@ const PR: React.FC<PRProps> = ({ team, teamData, selectedWeekRange, profileGette
 
   return (
     <Card mah={MAX_HEIGHT}>
-      <Group grow align='start'>
+      <Group grow align="start">
         <Box
           style={{
             maxWidth: 200,

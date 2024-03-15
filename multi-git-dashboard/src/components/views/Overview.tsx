@@ -21,7 +21,7 @@ const Overview: React.FC<OverviewProps> = ({ courseId }) => {
     if (!res.ok) throw new Error('Failed to fetch teams');
     const teams: Team[] = await res.json();
     return teams;
-  }
+  };
 
   const getTeamDatas = async () => {
     const res = await fetch(`/api/github/course/${courseId}`);
@@ -35,7 +35,7 @@ const Overview: React.FC<OverviewProps> = ({ courseId }) => {
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('loading');
 
   const [studentMap, setStudentMap] = useState<Record<string, Profile>>({});
-  const getStudentNameByGitHandle: ProfileGetter = async (gitHandle) => {
+  const getStudentNameByGitHandle: ProfileGetter = async gitHandle => {
     if (!studentMap[gitHandle]) {
       const res = await fetch(`/api/profile/${gitHandle}`);
       if (!res.ok) throw new Error('Failed to fetch profile');
@@ -68,18 +68,38 @@ const Overview: React.FC<OverviewProps> = ({ courseId }) => {
     fetchData();
   }, [courseId]);
 
-  if (status === 'loading') return <Center><Loader /></Center>;
+  if (status === 'loading')
+    return (
+      <Center>
+        <Loader />
+      </Center>
+    );
   if (status === 'error') return <Center>No data</Center>;
-  if (!teams.length || !teamDatas.length) return <Center>No teams found.</Center>;
+  if (!teams.length || !teamDatas.length)
+    return <Center>No teams found.</Center>;
 
   return (
     <ScrollArea.Autosize>
-      <Accordion defaultValue={[teamDatas[0]._id]} multiple variant='separated' mx={20}>
+      <Accordion
+        defaultValue={[teamDatas[0]._id]}
+        multiple
+        variant="separated"
+        mx={20}
+      >
         {data.map(({ team, teamData }) => (
           <Accordion.Item key={teamData._id} value={teamData._id}>
             <Accordion.Control>{teamData.repoName}</Accordion.Control>
             <Accordion.Panel>
-              {team ? <OverviewCard team={team} teamData={teamData} teamDatas={teamDatas} profileGetter={getStudentNameByGitHandle} /> : <Center>No team found.</Center>}
+              {team ? (
+                <OverviewCard
+                  team={team}
+                  teamData={teamData}
+                  teamDatas={teamDatas}
+                  profileGetter={getStudentNameByGitHandle}
+                />
+              ) : (
+                <Center>No team found.</Center>
+              )}
             </Accordion.Panel>
           </Accordion.Item>
         ))}

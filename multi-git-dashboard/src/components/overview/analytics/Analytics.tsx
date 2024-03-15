@@ -15,20 +15,32 @@ export interface AnalyticsProps {
 }
 
 // TODO: Migrate Recharts -> Mantine Charts
-const Analytics: React.FC<AnalyticsProps> = ({ team, teamData, teamDatas, selectedWeekRange }) => {
+const Analytics: React.FC<AnalyticsProps> = ({
+  team,
+  teamData,
+  teamDatas,
+  selectedWeekRange,
+}) => {
   const [embla, setEmbla] = useState<Embla | null>(null);
 
   const charts = {
-    'Breakdown': OverallActivity,
+    Breakdown: OverallActivity,
     'Weekly Activity': WeeklyContributions,
-    'Individual Activity': IndividualAnalytics
+    'Individual Activity': IndividualAnalytics,
   };
 
   const slides = Object.entries(charts).map(([componentName, Component]) => (
     <Carousel.Slide key={componentName}>
       <Stack>
-        <Center><Title order={3}>{componentName}</Title></Center>
-        <Component team={team} teamData={teamData} teamDatas={teamDatas} selectedWeekRange={selectedWeekRange} />
+        <Center>
+          <Title order={3}>{componentName}</Title>
+        </Center>
+        <Component
+          team={team}
+          teamData={teamData}
+          teamDatas={teamDatas}
+          selectedWeekRange={selectedWeekRange}
+        />
       </Stack>
     </Carousel.Slide>
   ));

@@ -5,7 +5,7 @@ import {
   Container,
   Divider,
   Text,
-  useMantineTheme
+  useMantineTheme,
 } from '@mantine/core';
 import { TeamData } from '@shared/types/TeamData';
 import classes from '@styles/pr-details.module.css';
@@ -31,9 +31,9 @@ const PRDetails: React.FC<PRDetailsProps> = ({ pr, profileGetter }) => {
 
     const getRandomColor = () =>
       theme.colors[
-      Object.keys(theme.colors)[
-      Math.floor(Math.random() * Object.keys(theme.colors).length)
-      ]
+        Object.keys(theme.colors)[
+          Math.floor(Math.random() * Object.keys(theme.colors).length)
+        ]
       ][5];
 
     // Populate newUserColors with colors for each user in the PR details
@@ -52,7 +52,6 @@ const PRDetails: React.FC<PRDetailsProps> = ({ pr, profileGetter }) => {
     setUserColors(newUserColors);
   }, [pr, theme]);
 
-
   return (
     <Box>
       <Box>
@@ -70,7 +69,11 @@ const PRDetails: React.FC<PRDetailsProps> = ({ pr, profileGetter }) => {
           {pr.reviews.map(review => (
             <Accordion.Item key={review.id} value={String(review.id)}>
               <Accordion.Control>
-                <GitHandle gitHandle={review.user ?? ''} profileGetter={profileGetter} />: {review.state}
+                <GitHandle
+                  gitHandle={review.user ?? ''}
+                  profileGetter={profileGetter}
+                />
+                : {review.state}
               </Accordion.Control>
               <Accordion.Panel>
                 <Markdown>
@@ -81,7 +84,7 @@ const PRDetails: React.FC<PRDetailsProps> = ({ pr, profileGetter }) => {
                     chevron={<IconPlus className={classes.icon} />}
                     classNames={{ chevron: classes.chevron }}
                   >
-                    {review.comments.map(comment =>
+                    {review.comments.map(comment => (
                       <Accordion.Item key={comment.id} value={comment.body}>
                         <Accordion.Control
                           icon={
@@ -104,7 +107,7 @@ const PRDetails: React.FC<PRDetailsProps> = ({ pr, profileGetter }) => {
                           <Markdown>{comment.body}</Markdown>
                         </Accordion.Panel>
                       </Accordion.Item>
-                    )}
+                    ))}
                   </Accordion>
                 )}
               </Accordion.Panel>

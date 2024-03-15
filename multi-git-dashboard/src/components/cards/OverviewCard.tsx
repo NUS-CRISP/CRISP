@@ -28,15 +28,20 @@ export const OverviewCard: React.FC<OverviewProps> = ({
   team,
   teamData,
   teamDatas,
-  profileGetter
+  profileGetter,
 }) => {
   const calculateCurrentWeek = () => {
     const currentWeek = dayjs().diff(START_DATE, 'week');
-    return currentWeek >= BREAK_START_WEEK ? currentWeek + BREAK_DURATION_WEEKS : currentWeek;
+    return currentWeek >= BREAK_START_WEEK
+      ? currentWeek + BREAK_DURATION_WEEKS
+      : currentWeek;
   };
   const totalWeeks = calculateCurrentWeek();
 
-  const [selectedWeekRange, setSelectedWeekRange] = useState<[number, number]>([0, totalWeeks]);
+  const [selectedWeekRange, setSelectedWeekRange] = useState<[number, number]>([
+    0,
+    totalWeeks,
+  ]);
 
   return (
     <Stack>
@@ -45,16 +50,26 @@ export const OverviewCard: React.FC<OverviewProps> = ({
         max={totalWeeks}
         minRange={1}
         onChange={setSelectedWeekRange}
-        label={(value) => `Week ${value + 1}`}
+        label={value => `Week ${value + 1}`}
         marks={Array.from({ length: totalWeeks + 1 }, (_, i) => ({
           value: i,
-          label: `Week ${i + 1}`
+          label: `Week ${i + 1}`,
         }))}
         mx={20}
         mb={20}
       />
-      <Analytics team={team} teamData={teamData} teamDatas={teamDatas} selectedWeekRange={selectedWeekRange} />
-      <PR team={team} teamData={teamData} selectedWeekRange={selectedWeekRange} profileGetter={profileGetter} />
+      <Analytics
+        team={team}
+        teamData={teamData}
+        teamDatas={teamDatas}
+        selectedWeekRange={selectedWeekRange}
+      />
+      <PR
+        team={team}
+        teamData={teamData}
+        selectedWeekRange={selectedWeekRange}
+        profileGetter={profileGetter}
+      />
     </Stack>
   );
 };

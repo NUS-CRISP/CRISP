@@ -1,15 +1,15 @@
 import { capitalize } from '@/lib/utils';
-import {
-  Box, Loader,
-  Text
-} from '@mantine/core';
+import { Box, Loader, Text } from '@mantine/core';
 import { Profile } from '@shared/types/Profile';
 import { useEffect, useState } from 'react';
 import { GitHandleProps } from '../GitHandle';
 
-interface ProfileCardProps extends GitHandleProps { }
+interface ProfileCardProps extends GitHandleProps {}
 
-export const ProfileCard: React.FC<ProfileCardProps> = ({ gitHandle, profileGetter }) => {
+export const ProfileCard: React.FC<ProfileCardProps> = ({
+  gitHandle,
+  profileGetter,
+}) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [profile, setProfile] = useState<Profile>({} as Profile);
@@ -33,5 +33,9 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({ gitHandle, profileGett
   if (loading) return <Loader />;
   if (error) return <Box>{error}</Box>;
 
-  return Object.entries(profile).map(([key, value]) => <Text key={key}>{capitalize(key)}: {value}</Text>);
+  return Object.entries(profile).map(([key, value]) => (
+    <Text key={key}>
+      {capitalize(key)}: {value}
+    </Text>
+  ));
 };

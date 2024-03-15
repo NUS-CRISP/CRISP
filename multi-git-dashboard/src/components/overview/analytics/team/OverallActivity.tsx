@@ -12,7 +12,7 @@ import {
 } from 'recharts';
 import { AnalyticsProps } from '../Analytics';
 
-interface OverallActivityProps extends Omit<AnalyticsProps, 'team'> { }
+interface OverallActivityProps extends Omit<AnalyticsProps, 'team'> {}
 
 export interface OverallActivityChartData {
   commits: number;

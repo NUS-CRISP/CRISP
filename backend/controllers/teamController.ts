@@ -16,7 +16,7 @@ export const getTeamsByCourse = async (req: Request, res: Response) => {
     console.error('Error fetching teams:', error);
     res.status(500).json({ error: 'Failed to fetch teams' });
   }
-}
+};
 
 export const deleteTeam = async (req: Request, res: Response) => {
   const teamId = req.params.id;
