@@ -19,7 +19,15 @@
 // import { useRouter } from 'next/router';
 // import { useState } from 'react';
 
-import { Button, Container, Group, Notification, Tabs } from '@mantine/core';
+import {
+  Accordion,
+  Button,
+  Container,
+  Group,
+  Notification,
+  ScrollArea,
+  Tabs,
+} from '@mantine/core';
 import { TeamSet } from '@shared/types/TeamSet';
 import { useEffect, useState } from 'react';
 import ProjectManagementCard from '../cards/ProjectManagementCard';
@@ -76,14 +84,30 @@ const ProjectManagementInfo: React.FC<ProjectManagementProps> = ({
   ));
 
   const projectManagementCards = (teamSet: TeamSet) => {
-    return teamSet.teams.map(team => (
-      <ProjectManagementCard
-        key={team._id}
-        number={team.number}
-        TA={team.TA}
-        teamData={team.teamData}
-      />
-    ));
+    return (
+      <ScrollArea.Autosize>
+        <Accordion
+          defaultValue={teamSet.teams.length > 0 ? [teamSet.teams[0]._id] : []}
+          multiple
+          variant="separated"
+          mx={20}
+        >
+          {teamSet.teams.map(team => (
+            <Accordion.Item key={team._id} value={team._id}>
+              <Accordion.Control>{team.teamData.repoName}</Accordion.Control>
+              <Accordion.Panel>
+                <ProjectManagementCard
+                  key={team._id}
+                  number={team.number}
+                  TA={team.TA}
+                  teamData={team.teamData}
+                />
+              </Accordion.Panel>
+            </Accordion.Item>
+          ))}
+        </Accordion>
+      </ScrollArea.Autosize>
+    );
   };
 
   console.log(teamSets);

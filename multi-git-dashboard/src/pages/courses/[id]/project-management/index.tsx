@@ -15,7 +15,8 @@ const ProjectManagementPage: React.FC = () => {
   const projectManagementApiRoute = `/api/courses/${id}/project-management`;
 
   const [teamSets, setTeamSets] = useState<TeamSet[]>([]);
-  const [jiraRegistrationStatus, setJiraRegistrationStatus] = useState<boolean>(false);
+  const [jiraRegistrationStatus, setJiraRegistrationStatus] =
+    useState<boolean>(false);
 
   const fetchTeamSets = async () => {
     try {
@@ -35,7 +36,10 @@ const ProjectManagementPage: React.FC = () => {
     try {
       const response = await fetch(jiraRegistrationStatusApiRoute);
       if (!response.ok) {
-        console.error('Error fetching Jira registration status:', response.statusText);
+        console.error(
+          'Error fetching Jira registration status:',
+          response.statusText
+        );
         return;
       }
       const data = await response.json();

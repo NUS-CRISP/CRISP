@@ -47,25 +47,13 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   );
 
   return (
-    <Card shadow="sm" padding="lg" radius="md" my={6} withBorder>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'start',
-        }}
-      >
-        <Group mt="md" mb="xs">
-          <Text>Team {number.toString()}</Text>
-        </Group>
-      </div>
+    <Stack>
+      <Group style={{ alignItems: 'center' }}>
+        <Text>Team {number.toString()}</Text>
+      </Group>
       <Group style={{ alignItems: 'center' }}>
         <Text>Teaching Assistant:</Text>
         <Text>{TA ? TA.name : 'None'}</Text>
-      </Group>
-      <Group style={{ alignItems: 'center' }}>
-        <Text>Repository:</Text>
-        <Text>{teamData ? teamData.repoName : 'None'}</Text>
       </Group>
       {teamData?.board && (
         <>
@@ -103,23 +91,25 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
               );
             })}
           </Group>
-          <SimpleGrid cols={{ base: 1, xs: 3 }} mt="md" mb="xs">
-            <Stack>
-              <Text fw={600}>To Do</Text>
-              {getColumnCard(teamData?.board?.jiraSprints, 'To Do')}
-            </Stack>
-            <Stack>
-              <Text fw={600}>In Progress</Text>
-              {getColumnCard(teamData?.board?.jiraSprints, 'In Progress')}
-            </Stack>
-            <Stack>
-              <Text fw={600}>Done</Text>
-              {getColumnCard(teamData?.board?.jiraSprints, 'Done')}
-            </Stack>
-          </SimpleGrid>
+          <Card withBorder>
+            <SimpleGrid cols={{ base: 1, xs: 3 }} mt="md" mb="xs">
+              <Stack>
+                <Text fw={600}>To Do</Text>
+                {getColumnCard(teamData?.board?.jiraSprints, 'To Do')}
+              </Stack>
+              <Stack>
+                <Text fw={600}>In Progress</Text>
+                {getColumnCard(teamData?.board?.jiraSprints, 'In Progress')}
+              </Stack>
+              <Stack>
+                <Text fw={600}>Done</Text>
+                {getColumnCard(teamData?.board?.jiraSprints, 'Done')}
+              </Stack>
+            </SimpleGrid>
+          </Card>
         </>
       )}
-    </Card>
+    </Stack>
   );
 };
 
