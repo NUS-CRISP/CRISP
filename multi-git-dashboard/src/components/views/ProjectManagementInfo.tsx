@@ -85,67 +85,70 @@ const ProjectManagementInfo: React.FC<ProjectManagementProps> = ({
 
   const projectManagementCards = (teamSet: TeamSet) => {
     return (
-      <ScrollArea.Autosize>
-        <Accordion
-          defaultValue={teamSet.teams.length > 0 ? [teamSet.teams[0]._id] : []}
-          multiple
-          variant="separated"
-          mx={20}
-        >
-          {teamSet.teams.map(team => (
-            <Accordion.Item key={team._id} value={team._id}>
-              <Accordion.Control>{team.teamData.repoName}</Accordion.Control>
-              <Accordion.Panel>
-                <ProjectManagementCard
-                  key={team._id}
-                  number={team.number}
-                  TA={team.TA}
-                  teamData={team.teamData}
-                />
-              </Accordion.Panel>
-            </Accordion.Item>
-          ))}
-        </Accordion>
-      </ScrollArea.Autosize>
+      <Accordion
+        defaultValue={teamSet.teams.length > 0 ? [teamSet.teams[0]._id] : []}
+        multiple
+        variant="separated"
+      >
+        {teamSet.teams.map(team => (
+          <Accordion.Item key={team._id} value={team._id}>
+            <Accordion.Control>{team.teamData.repoName}</Accordion.Control>
+            <Accordion.Panel>
+              <ProjectManagementCard
+                key={team._id}
+                number={team.number}
+                TA={team.TA}
+                teamData={team.teamData}
+              />
+            </Accordion.Panel>
+          </Accordion.Item>
+        ))}
+      </Accordion>
     );
   };
 
   console.log(teamSets);
 
   return (
-    <Container>
-      <Tabs value={activeTab}>
-        <Tabs.List style={{ display: 'flex', justifyContent: 'space-evenly' }}>
-          {headers}
-        </Tabs.List>
-        {error && (
-          <Notification
-            title="Error"
-            color="red"
-            onClose={() => setError(null)}
+    <Container
+      style={{
+        height: 'calc(100dvh - 2 * 20px)',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      <ScrollArea.Autosize>
+        <Tabs value={activeTab} mx={20}>
+          <Tabs.List
+            style={{ display: 'flex', justifyContent: 'space-evenly' }}
           >
-            {error}
-          </Notification>
-        )}
-        {hasFacultyPermission && (
-          <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
-            {jiraRegistrationStatus ? (
+            {headers}
+          </Tabs.List>
+          {error && (
+            <Notification
+              title="Error"
+              color="red"
+              onClose={() => setError(null)}
+            >
+              {error}
+            </Notification>
+          )}
+          {hasFacultyPermission && (
+            <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
               <Button onClick={handleOAuthButtonClick}>
-                Reauthorize with Jira
+                {jiraRegistrationStatus
+                  ? 'Reauthorize with Jira'
+                  : 'Authorize with Jira'}
               </Button>
-            ) : (
-              <Button onClick={handleOAuthButtonClick}>
-                Authorize with Jira
-              </Button>
-            )}
-          </Group>
-        )}
-        {teamSets.map(teamSet => (
-          <Tabs.Panel key={teamSet._id} value={teamSet.name}>
-            {projectManagementCards(teamSet)}
-          </Tabs.Panel>
-        ))}
-      </Tabs>
+            </Group>
+          )}
+          {teamSets.map(teamSet => (
+            <Tabs.Panel key={teamSet._id} value={teamSet.name}>
+              {projectManagementCards(teamSet)}
+            </Tabs.Panel>
+          ))}
+        </Tabs>
+      </ScrollArea.Autosize>
     </Container>
   );
 };
