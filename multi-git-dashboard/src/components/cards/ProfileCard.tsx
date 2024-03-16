@@ -1,37 +1,50 @@
-import { capitalize } from '@/lib/utils';
-import {
-  Box, Loader,
-  Text
-} from '@mantine/core';
+import { startCase } from '@/lib/utils';
+import { Loader } from '@mantine/core';
 import { Profile } from '@shared/types/Profile';
+import { Status } from '@shared/types/util/Status';
 import { useEffect, useState } from 'react';
 import { GitHandleProps } from '../GitHandle';
 
-interface ProfileCardProps extends GitHandleProps { }
+interface ProfileCardProps extends GitHandleProps {}
 
-export const ProfileCard: React.FC<ProfileCardProps> = ({ gitHandle, profileGetter }) => {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [profile, setProfile] = useState<Profile>({} as Profile);
+export const ProfileCard: React.FC<ProfileCardProps> = ({
+  gitHandle,
+  profileGetter,
+}) => {
+  const [status, setStatus] = useState<Status>(Status.Loading);
+  const [error, setError] = useState<string>('');
+  const [profile, setProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
+      setStatus(Status.Loading);
       try {
-        setProfile(await profileGetter(gitHandle));
+        const profileData = await profileGetter(gitHandle);
+        setProfile(profileData);
+        setStatus(Status.Idle);
       } catch (error) {
         if (error instanceof Error) {
+          setStatus(Status.Error);
           setError(error.message);
         }
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchProfile();
-  }, []);
+  }, [gitHandle, profileGetter]);
 
-  if (loading) return <Loader />;
-  if (error) return <Box>{error}</Box>;
+  if (status === Status.Loading) return <Loader />;
+  if (status === Status.Error) return <div>{error}</div>;
 
-  return Object.entries(profile).map(([key, value]) => <Text key={key}>{capitalize(key)}: {value}</Text>);
+  if (!profile) return null;
+
+  return (
+    <div>
+      {Object.entries(profile).map(([key, value]) => (
+        <div key={key}>
+          {startCase(key)}: {value}
+        </div>
+      ))}
+    </div>
+  );
 };

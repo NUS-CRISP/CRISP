@@ -12,7 +12,8 @@
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
-    "prettier-format": "prettier --config .prettierrc.json src/**/*.{ts,tsx} --write"
+    "prettier-format": "prettier --config .prettierrc.json src/**/*.{ts,tsx} --write",
+    "prettier-check": "prettier --config .prettierrc.json src/**/*.{ts,tsx} --check"
   },
   "dependencies": {
     "@emotion/react": "^11.11.4",

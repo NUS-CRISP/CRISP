@@ -128,17 +128,17 @@ const getCourseData = async (
     if (process.env.NEW_FILTER) {
       const teamMembers = await getTeamMembers(repo.id);
       if (teamMembers) {
-        commits.data = commits.data.filter(commit =>
-          commit.author && teamMembers.has(commit.author.login)
+        commits.data = commits.data.filter(
+          commit => commit.author && teamMembers.has(commit.author.login)
         );
-        issues.data = issues.data.filter(issue =>
-          issue.user && teamMembers.has(issue.user.login)
+        issues.data = issues.data.filter(
+          issue => issue.user && teamMembers.has(issue.user.login)
         );
-        prs.data = prs.data.filter(pr =>
-          pr.user && teamMembers.has(pr.user.login)
+        prs.data = prs.data.filter(
+          pr => pr.user && teamMembers.has(pr.user.login)
         );
-        contributors.data = contributors.data.filter(contributor =>
-          contributor.login && teamMembers.has(contributor.login)
+        contributors.data = contributors.data.filter(
+          contributor => contributor.login && teamMembers.has(contributor.login)
         );
       }
     }

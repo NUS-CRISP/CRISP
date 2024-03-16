@@ -3,12 +3,13 @@ import TeamModel, { Team } from '../models/Team';
 import TeamSetModel, { TeamSet } from '../models/TeamSet';
 import { BadRequestError, NotFoundError } from './errors';
 
-export const getTeamSetsByCourseId = async (courseId: string) => await TeamSetModel.find({ course: courseId }).populate<{ teams: Team[] }>({
-  path: 'teams',
-  populate: {
-    path: 'members',
-  },
-});
+export const getTeamSetsByCourseId = async (courseId: string) =>
+  await TeamSetModel.find({ course: courseId }).populate<{ teams: Team[] }>({
+    path: 'teams',
+    populate: {
+      path: 'members',
+    },
+  });
 
 export const deleteTeamSetById = async (teamSetId: string) => {
   const teamSet = await TeamSetModel.findById(teamSetId);

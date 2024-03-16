@@ -32,7 +32,8 @@ export const getUserByGitHandle = async (gitHandle: string) => {
 
   const profile: Profile = {
     name: user.name,
+    gitHandle: user.gitHandle,
   };
 
   return profile;
-}
+};

@@ -1,4 +1,11 @@
-import { Center, Stack, Title, Tooltip, UnstyledButton, rem } from '@mantine/core';
+import {
+  Center,
+  Stack,
+  Title,
+  Tooltip,
+  UnstyledButton,
+  rem,
+} from '@mantine/core';
 import {
   IconGitBranch,
   IconHelp,
@@ -6,7 +13,7 @@ import {
   IconListDetails,
   IconLogout,
   IconSettings2,
-  IconUserCircle
+  IconUserCircle,
 } from '@tabler/icons-react';
 import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
@@ -21,9 +28,20 @@ interface NavbarLinkProps {
   onClick: (event: React.MouseEvent) => void;
 }
 
-const NavbarLink = ({ icon: Icon, label, active, disabled, onClick }: NavbarLinkProps) => (
+const NavbarLink = ({
+  icon: Icon,
+  label,
+  active,
+  disabled,
+  onClick,
+}: NavbarLinkProps) => (
   <Tooltip label={label} position="right" transitionProps={{ duration: 0 }}>
-    <UnstyledButton onClick={onClick} style={disabled ? { cursor: 'default' } : undefined} className={classes.link} data-active={active || undefined}>
+    <UnstyledButton
+      onClick={onClick}
+      style={disabled ? { cursor: 'default' } : undefined}
+      className={classes.link}
+      data-active={active || undefined}
+    >
       <Icon style={{ width: rem(20), height: rem(20) }} stroke={1.5} />
     </UnstyledButton>
   </Tooltip>
@@ -104,7 +122,7 @@ const Navbar: React.FC = () => {
       icon={item.icon}
       label={item.label}
       active={item.label === activeMainTab}
-      onClick={(event) => {
+      onClick={event => {
         event.preventDefault();
         if (courseId) {
           logSessionTime(activeCourseTab, true);
@@ -213,21 +231,23 @@ const Navbar: React.FC = () => {
         </Center>
 
         <div className={classes.navbarMain}>
-          <Stack justify='center' gap={0}>
+          <Stack justify="center" gap={0}>
             {mainLinks}
           </Stack>
         </div>
 
-        <Stack justify='center' gap={0}>
+        <Stack justify="center" gap={0}>
           <NavbarLink
-            onClick={() => { }}
+            onClick={() => {}}
             icon={IconUserCircle}
             label={`Hello, ${session && session.user ? session.user.name : 'user'}`}
             disabled
           />
 
           <NavbarLink
-            onClick={() => window.open('https://forms.gle/41KcH8gFh3uDfzQGA', '_blank')}
+            onClick={() =>
+              window.open('https://forms.gle/41KcH8gFh3uDfzQGA', '_blank')
+            }
             icon={IconHelp}
             label="Submit issue / feature"
           />
@@ -239,18 +259,16 @@ const Navbar: React.FC = () => {
           />
         </Stack>
       </nav>
-      {
-        isCourseRoute && courseId && (
-          <nav className={classes.courseNavbar}>
-            <div className={classes.navbarMain}>
-              <Title order={3} className={classes.title}>
-                {courseCode}
-              </Title>
-              {courseLinks}
-            </div>
-          </nav>
-        )
-      }
+      {isCourseRoute && courseId && (
+        <nav className={classes.courseNavbar}>
+          <div className={classes.navbarMain}>
+            <Title order={3} className={classes.title}>
+              {courseCode}
+            </Title>
+            {courseLinks}
+          </div>
+        </nav>
+      )}
     </div>
   );
 };
