@@ -1,3 +1,4 @@
+import { Course } from "./Course";
 import { JiraBoard } from "./JiraData";
 
 export interface TeamContribution {
@@ -39,6 +40,7 @@ export interface Comment {
 
 export interface TeamData {
   _id: string;
+  course: Course;
   gitHubOrgName: string;
   teamId: number;
   repoName: string;

@@ -61,6 +61,7 @@ const teamPRSchema = new Schema<TeamPR>(
 );
 
 const teamDataSchema = new Schema<TeamData>({
+  course: { type: Schema.Types.ObjectId, required: true, ref: 'Course' },
   teamId: { type: Number, required: true },
   gitHubOrgName: { type: String, required: true },
   repoName: { type: String, required: true },

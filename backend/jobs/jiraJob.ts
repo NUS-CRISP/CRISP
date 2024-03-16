@@ -10,6 +10,8 @@ import { Course } from '../models/Course';
 import CourseModel from '../models/Course';
 import TeamDataModel from '@models/TeamData';
 import mongoose from 'mongoose';
+import TeamSetModel from '@models/TeamSet';
+import { Team } from '@shared/types/Team';
 
 /**
  * Jira Cloud REST API Documentation: https://developer.atlassian.com/cloud/jira/software/rest/api-group-board/
@@ -51,20 +53,20 @@ async function findJiraSprintId(
 }
 
 async function findTeamDataIdByCourseAndRepoName(
-  gitHubOrgName: string | undefined,
+  courseId: mongoose.Types.ObjectId,
   repoName: string,
 ): Promise<mongoose.Types.ObjectId | null> {
   try {
     const teamData = await TeamDataModel.findOne({
       repoName: repoName,
-      gitHubOrgName: gitHubOrgName,
+      course: courseId,
     });
     if (teamData) {
       return teamData._id; // Assuming _id is the ObjectId
     }
     return null;
   } catch (error) {
-    console.error('Error finding JiraSprint:', error);
+    console.error('Error finding TeamData:', error);
     throw error;
   }
 }
@@ -272,8 +274,8 @@ export const fetchAndSaveJiraData = async () => {
 
         boards.forEach(async (boardData: any) => {
           const teamDataId = await findTeamDataIdByCourseAndRepoName(
-            course.gitHubOrgName,
-            boardData.location.projectName
+            course._id,
+            boardData.location.projectName,
           );
 
           const jiraBoard: Omit<JiraBoard, '_id'> = {

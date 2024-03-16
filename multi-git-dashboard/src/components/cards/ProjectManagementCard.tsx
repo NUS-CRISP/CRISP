@@ -67,53 +67,58 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
         <Text>Repository:</Text>
         <Text>{teamData ? teamData.repoName : 'None'}</Text>
       </Group>
-      <Group>
-        <Text>Current Sprint:</Text>
-        {teamData?.board?.jiraSprints.map(
-          sprint => sprint.state === 'active' && <Text>{sprint.name}</Text>
-        )}
-      </Group>
-      <Group>
-        <Text>Start Date:</Text>
-        {teamData?.board?.jiraSprints.map(sprint => {
-          const startDate = new Date(sprint.startDate);
-          return (
-            sprint.state === 'active' && (
-              <Text>
-                {startDate.toLocaleTimeString()},{' '}
-                {startDate.toLocaleDateString()}
-              </Text>
-            )
-          );
-        })}
-      </Group>
-      <Group>
-        <Text>End Date:</Text>
-        {teamData?.board?.jiraSprints.map(sprint => {
-          const endDate = new Date(sprint.endDate);
-          return (
-            sprint.state === 'active' && (
-              <Text>
-                {endDate.toLocaleTimeString()}, {endDate.toLocaleDateString()}
-              </Text>
-            )
-          );
-        })}
-      </Group>
-      <SimpleGrid cols={{ base: 1, xs: 3 }} mt="md" mb="xs">
-        <Stack>
-          <Text fw={600}>To Do</Text>
-          {getColumnCard(teamData?.board?.jiraSprints, 'To Do')}
-        </Stack>
-        <Stack>
-          <Text fw={600}>In Progress</Text>
-          {getColumnCard(teamData?.board?.jiraSprints, 'In Progress')}
-        </Stack>
-        <Stack>
-          <Text fw={600}>Done</Text>
-          {getColumnCard(teamData?.board?.jiraSprints, 'Done')}
-        </Stack>
-      </SimpleGrid>
+      {teamData?.board && (
+        <>
+          <Group>
+            <Text>Current Sprint:</Text>
+            {teamData?.board?.jiraSprints.map(
+              sprint => sprint.state === 'active' && <Text>{sprint.name}</Text>
+            )}
+          </Group>
+          <Group>
+            <Text>Start Date:</Text>
+            {teamData?.board?.jiraSprints.map(sprint => {
+              const startDate = new Date(sprint.startDate);
+              return (
+                sprint.state === 'active' && (
+                  <Text>
+                    {startDate.toLocaleTimeString()},{' '}
+                    {startDate.toLocaleDateString()}
+                  </Text>
+                )
+              );
+            })}
+          </Group>
+          <Group>
+            <Text>End Date:</Text>
+            {teamData?.board?.jiraSprints.map(sprint => {
+              const endDate = new Date(sprint.endDate);
+              return (
+                sprint.state === 'active' && (
+                  <Text>
+                    {endDate.toLocaleTimeString()},{' '}
+                    {endDate.toLocaleDateString()}
+                  </Text>
+                )
+              );
+            })}
+          </Group>
+          <SimpleGrid cols={{ base: 1, xs: 3 }} mt="md" mb="xs">
+            <Stack>
+              <Text fw={600}>To Do</Text>
+              {getColumnCard(teamData?.board?.jiraSprints, 'To Do')}
+            </Stack>
+            <Stack>
+              <Text fw={600}>In Progress</Text>
+              {getColumnCard(teamData?.board?.jiraSprints, 'In Progress')}
+            </Stack>
+            <Stack>
+              <Text fw={600}>Done</Text>
+              {getColumnCard(teamData?.board?.jiraSprints, 'Done')}
+            </Stack>
+          </SimpleGrid>
+        </>
+      )}
     </Card>
   );
 };
