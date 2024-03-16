@@ -53,14 +53,14 @@ async function findJiraSprintId(
 async function findTeamDataIdByCourseAndRepoName(
   courseId: mongoose.Types.ObjectId,
   repoName: string,
-): Promise<mongoose.Types.ObjectId | null> {
+): Promise<mongoose.Types.ObjectId[] | null> {
   try {
-    const teamData = await TeamDataModel.findOne({
+    const teamData = await TeamDataModel.find({
       repoName: repoName,
       course: courseId,
     });
     if (teamData) {
-      return teamData._id; // Assuming _id is the ObjectId
+      return teamData.map(teamData => teamData._id); // Assuming _id is the ObjectId
     }
     return null;
   } catch (error) {
@@ -271,14 +271,13 @@ export const fetchAndSaveJiraData = async () => {
         const boards = data.values;
 
         boards.forEach(async (boardData: any) => {
-          const teamDataId = await findTeamDataIdByCourseAndRepoName(
+          const teamDataIds = await findTeamDataIdByCourseAndRepoName(
             course._id,
             boardData.location.projectName,
           );
 
           const jiraBoard: Omit<JiraBoard, '_id'> = {
             ...boardData,
-            teamData: teamDataId,
             jiraLocation: boardData.location,
             jiraIssues: [],
             jiraSprints: [],
@@ -295,10 +294,14 @@ export const fetchAndSaveJiraData = async () => {
             }
           );
 
-          await TeamDataModel.findOneAndUpdate(
-            { _id: teamDataId },
-            { board: board._id }
-          );
+          if (teamDataIds) {
+            for (const teamDataId of teamDataIds) {
+              await TeamDataModel.findOneAndUpdate(
+                { _id: teamDataId },
+                { board: board._id }
+              );
+            }
+          }
 
           await fetchSprints(jiraBoard.id, cloudId, accessToken);
           await fetchIssues(jiraBoard.id, cloudId, accessToken, jiraBoard.id);

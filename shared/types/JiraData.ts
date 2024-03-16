@@ -56,5 +56,4 @@ export interface JiraBoard extends Document {
   };
   jiraSprints: JiraSprint[];
   jiraIssues: JiraIssue[];
-  teamData: TeamData;
 }

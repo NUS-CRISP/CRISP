@@ -70,7 +70,6 @@ const boardSchema: Schema = new Schema<JiraBoard>({
   },
   jiraSprints: [{ type: Schema.Types.ObjectId, ref: 'JiraSprint' }],
   jiraIssues: [{ type: Schema.Types.ObjectId, ref: 'JiraIssue' }],
-  teamData: { type: Schema.Types.ObjectId, ref: 'TeamData' },
 });
 
 const JiraSprintModel = mongoose.model<JiraSprint>('JiraSprint', sprintSchema);
