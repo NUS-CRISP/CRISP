@@ -10,8 +10,6 @@ import { Course } from '../models/Course';
 import CourseModel from '../models/Course';
 import TeamDataModel from '@models/TeamData';
 import mongoose from 'mongoose';
-import TeamSetModel from '@models/TeamSet';
-import { Team } from '@shared/types/Team';
 
 /**
  * Jira Cloud REST API Documentation: https://developer.atlassian.com/cloud/jira/software/rest/api-group-board/
