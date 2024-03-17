@@ -9,7 +9,6 @@ export interface JiraSprint extends Document {
   createdDate: Date;
   originBoardId: number;
   goal: string;
-  jiraBoard: JiraBoard; // Reference to Board
   jiraIssues: JiraIssue[];
 }
 
@@ -36,8 +35,6 @@ export interface JiraIssue extends Document {
       name: string;
     }
   };
-  jiraSprint: JiraSprint; // Reference to Sprint
-  jiraBoard: JiraBoard; // Reference to Board
 }
 
 export interface JiraBoard extends Document {

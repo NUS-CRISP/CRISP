@@ -6,8 +6,8 @@ import {
   JiraSprintModel,
 } from '@models/JiraData';
 import cron from 'node-cron';
-import { Course } from '../models/Course';
-import CourseModel from '../models/Course';
+import { Course } from '@models/Course';
+import CourseModel from '@models/Course';
 import TeamDataModel from '@models/TeamData';
 import mongoose from 'mongoose';
 
@@ -96,7 +96,6 @@ async function fetchSprints(
         const jiraSprint: Omit<JiraSprint, '_id'> = {
           ...sprintData,
           jiraIssues: [],
-          jiraBoard: await findJiraBoardId(boardId, cloudId),
         };
 
         const sprint = await JiraSprintModel.findOneAndUpdate(
@@ -108,8 +107,9 @@ async function fetchSprints(
           }
         );
 
+        const jiraBoardId = await findJiraBoardId(boardId, cloudId);
         await JiraBoardModel.findOneAndUpdate(
-          { _id: jiraSprint.jiraBoard },
+          { _id: jiraBoardId },
           { $push: { jiraSprints: sprint._id } },
           {}
         );
@@ -125,7 +125,6 @@ async function fetchIssues(
   boardId: number,
   cloudId: string,
   accessToken: string,
-  apiBoardId: number
 ): Promise<any> {
   const jiraIssuesUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board/${boardId}/issue`;
 
@@ -146,7 +145,7 @@ async function fetchIssues(
     await Promise.all(
       data.issues.map(async (issueData: any) => {
         const issueKey = issueData.key;
-        const storyPointsUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/issue/${issueKey}/estimation?boardId=${apiBoardId}`;
+        const storyPointsUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/issue/${issueKey}/estimation?boardId=${boardId}`;
 
         const storyPointsResponse = await fetch(storyPointsUri, {
           method: 'GET',
@@ -163,12 +162,9 @@ async function fetchIssues(
         }
 
         const storyPoints = (await storyPointsResponse.json()).value;
-
         const jiraIssue: Omit<JiraIssue, '_id'> = {
           ...issueData,
           storyPoints: storyPoints,
-          jiraBoard: await findJiraBoardId(boardId, cloudId),
-          jiraSprint: await findJiraSprintId(issueData.fields?.sprint?.id, cloudId),
         };
 
         const issue = await JiraIssueModel.findOneAndUpdate(
@@ -180,14 +176,16 @@ async function fetchIssues(
           }
         );
 
+        const jiraSprintId = await findJiraSprintId(issueData.fields?.sprint?.id, cloudId);
         await JiraSprintModel.findOneAndUpdate(
-          { _id: jiraIssue.jiraSprint },
+          { _id: jiraSprintId },
           { $push: { jiraIssues: issue._id } },
           {}
         );
 
+        const jiraBoardId = await findJiraBoardId(boardId, cloudId);
         await JiraBoardModel.findOneAndUpdate(
-          { _id: jiraIssue.jiraBoard },
+          { _id: jiraBoardId },
           { $push: { jiraIssues: issue._id } },
           {}
         );
@@ -304,7 +302,7 @@ export const fetchAndSaveJiraData = async () => {
           }
 
           await fetchSprints(jiraBoard.id, cloudId, accessToken);
-          await fetchIssues(jiraBoard.id, cloudId, accessToken, jiraBoard.id);
+          await fetchIssues(jiraBoard.id, cloudId, accessToken);
         });
       })
       .catch(error => {

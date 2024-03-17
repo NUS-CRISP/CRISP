@@ -27,7 +27,6 @@ const sprintSchema: Schema = new Schema<JiraSprint>({
   createdDate: { type: Date, required: true },
   originBoardId: { type: Number, required: true },
   goal: { type: String, required: true },
-  jiraBoard: { type: Schema.Types.ObjectId, ref: 'JiraBoard' },
   jiraIssues: [{ type: Schema.Types.ObjectId, ref: 'JiraIssue' }],
 });
 
@@ -53,8 +52,6 @@ const issueSchema: Schema = new Schema<JiraIssue>({
       name: { type: String },
     },
   },
-  jiraSprint: { type: Schema.Types.ObjectId, ref: 'JiraSprint' }, // Reference to Sprint
-  jiraBoard: { type: Schema.Types.ObjectId, ref: 'JiraBoard' }, // Reference to Board
 });
 
 const boardSchema: Schema = new Schema<JiraBoard>({
