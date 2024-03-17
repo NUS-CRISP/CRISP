@@ -32,6 +32,9 @@ export interface JiraIssue extends Document {
     assignee: {
       displayName: string;
     };
+    resolution: {
+      name: string;
+    }
   };
   jiraSprint: JiraSprint; // Reference to Sprint
   jiraBoard: JiraBoard; // Reference to Board

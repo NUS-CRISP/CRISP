@@ -49,6 +49,9 @@ const issueSchema: Schema = new Schema<JiraIssue>({
     assignee: {
       displayName: { type: String },
     },
+    resolution: {
+      name: { type: String },
+    },
   },
   jiraSprint: { type: Schema.Types.ObjectId, ref: 'JiraSprint' }, // Reference to Sprint
   jiraBoard: { type: Schema.Types.ObjectId, ref: 'JiraBoard' }, // Reference to Board

@@ -1,7 +1,7 @@
 import { Carousel } from '@mantine/carousel';
 import { BarChart } from '@mantine/charts';
 import { Card, Group, SimpleGrid, Stack, Text } from '@mantine/core';
-import { JiraBoard, JiraIssue, JiraSprint } from '@shared/types/JiraData';
+import { JiraIssue, JiraSprint } from '@shared/types/JiraData';
 import { TeamData } from '@shared/types/TeamData';
 import { User } from '@shared/types/User';
 
@@ -22,15 +22,21 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
         <Card withBorder>
           <SimpleGrid cols={{ base: 1, xs: 3 }} mt="md" mb="xs">
             <Stack>
-              <Text fw={600}>To Do</Text>
+              <Text fw={600} size="sm">
+                To Do
+              </Text>
               {getJiraBoardColumn(jiraSprint, 'To Do')}
             </Stack>
             <Stack>
-              <Text fw={600}>In Progress</Text>
+              <Text fw={600} size="sm">
+                In Progress
+              </Text>
               {getJiraBoardColumn(jiraSprint, 'In Progress')}
             </Stack>
             <Stack>
-              <Text fw={600}>Done</Text>
+              <Text fw={600} size="sm">
+                Done
+              </Text>
               {getJiraBoardColumn(jiraSprint, 'Done')}
             </Stack>
           </SimpleGrid>
@@ -47,24 +53,26 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   const getJiraBoardCard = (issue: JiraIssue) => (
     <Card radius="md" shadow="sm" padding="lg" withBorder>
       <Group style={{ alignItems: 'center' }}>
-        <Text fw={500}>{issue.fields.summary}</Text>
+        <Text fw={600} size="sm">
+          {issue.fields.summary}
+        </Text>
       </Group>
       <Group style={{ alignItems: 'center' }}>
-        <Text>Issue Type:</Text>
-        <Text>{issue.fields.issuetype.name}</Text>
+        <Text size="sm">Issue Type:</Text>
+        <Text size="sm">{issue.fields.issuetype.name}</Text>
       </Group>
       <Group style={{ alignItems: 'center' }}>
-        <Text>Story Points:</Text>
-        <Text>{issue.storyPoints || '-'}</Text>
+        <Text size="sm">Story Points:</Text>
+        <Text size="sm">{issue.storyPoints || '-'}</Text>
       </Group>
       <Group style={{ alignItems: 'center' }}>
-        <Text>Assignee:</Text>
-        <Text>{issue.fields?.assignee?.displayName || '-'}</Text>
+        <Text size="sm">Assignee:</Text>
+        <Text size="sm">{issue.fields?.assignee?.displayName || '-'}</Text>
       </Group>
     </Card>
   );
 
-  const getChart = (board: JiraBoard) => {
+  const getAssigneeStatsBarChart = (jiraSprints: JiraSprint[]) => {
     interface AssigneeStats {
       Assignee: string;
       Issues: number;
@@ -73,7 +81,7 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
 
     const assigneeStatsArrays: Record<string, AssigneeStats[]> = {};
 
-    board.jiraSprints.forEach(jiraSprint => {
+    jiraSprints.forEach(jiraSprint => {
       const assigneeStatsMap: Record<string, AssigneeStats> = {};
 
       jiraSprint.jiraIssues.forEach(issue => {
@@ -132,6 +140,72 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
     );
   };
 
+  const getSprintCompletionBarChart = (jiraSprints: JiraSprint[]) => {
+    interface SprintSummary {
+      endDate: Date;
+      endDateString: string;
+      Issues: number;
+      'Story Points': number;
+      'Issues Completed': number;
+      'Story Points Completed': number;
+    }
+
+    const sprintData: SprintSummary[] = [];
+
+    jiraSprints.forEach(sprint => {
+      const sprintSummary: SprintSummary = {
+        endDate: new Date(sprint.endDate),
+        endDateString: new Date(sprint.endDate).toLocaleDateString(),
+        Issues: 0,
+        'Story Points': 0,
+        'Issues Completed': 0,
+        'Story Points Completed': 0,
+      };
+
+      sprint.jiraIssues.forEach(issue => {
+        sprintSummary.Issues++;
+        sprintSummary['Story Points'] += issue.storyPoints ?? 0;
+
+        if (
+          issue.fields.resolution &&
+          issue.fields.resolution.name === 'Done'
+        ) {
+          sprintSummary['Issues Completed']++;
+          sprintSummary['Story Points Completed'] += issue.storyPoints ?? 0;
+        }
+      });
+
+      sprintData.push(sprintSummary);
+    });
+
+    sprintData.sort((a, b) => a.endDate.getTime() - b.endDate.getTime());
+
+    return (
+      <Card withBorder>
+        <Text
+          size="sm"
+          fw={500}
+          style={{ textAlign: 'center', marginBottom: 8 }}
+        >
+          Sprint Completion Status
+        </Text>
+        <BarChart
+          h={400}
+          data={sprintData}
+          dataKey="endDateString"
+          withLegend
+          legendProps={{ verticalAlign: 'bottom', height: 50 }}
+          series={[
+            { name: 'Issues Completed', color: 'blue.6' },
+            { name: 'Issues', color: 'blue.8' },
+            { name: 'Story Points Completed', color: 'teal.6' },
+            { name: 'Story Points', color: 'teal.8' },
+          ]}
+        />
+      </Card>
+    );
+  };
+
   return (
     <Stack>
       <Group style={{ alignItems: 'center' }}>
@@ -177,10 +251,16 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
               );
             })}
           </Group>
-          {getActiveSprintBoard(
-            teamData.board.jiraSprints.find(sprint => sprint.state === 'active')
-          )}
-          {getChart(teamData.board)}
+          {teamData.board?.jiraSprints &&
+            getActiveSprintBoard(
+              teamData.board.jiraSprints.find(
+                sprint => sprint.state === 'active'
+              )
+            )}
+          {teamData.board?.jiraSprints &&
+            getAssigneeStatsBarChart(teamData.board.jiraSprints)}
+          {teamData.board?.jiraSprints &&
+            getSprintCompletionBarChart(teamData.board.jiraSprints)}
         </>
       )}
     </Stack>
