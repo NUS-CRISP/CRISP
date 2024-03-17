@@ -15,19 +15,35 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   TA,
   teamData,
 }) => {
-  const getColumnCard = (
-    jiraSprints: JiraSprint[] | undefined,
-    status: string
-  ) =>
-    jiraSprints?.map(
-      sprint =>
-        sprint.state === 'active' &&
-        sprint?.jiraIssues?.map(
-          issue => issue.fields.status.name === status && getIssueCard(issue)
-        )
+  const getActiveSprintBoard = (jiraSprint: JiraSprint | undefined) => {
+    return (
+      jiraSprint && (
+        <Card withBorder>
+          <SimpleGrid cols={{ base: 1, xs: 3 }} mt="md" mb="xs">
+            <Stack>
+              <Text fw={600}>To Do</Text>
+              {getJiraBoardColumn(jiraSprint, 'To Do')}
+            </Stack>
+            <Stack>
+              <Text fw={600}>In Progress</Text>
+              {getJiraBoardColumn(jiraSprint, 'In Progress')}
+            </Stack>
+            <Stack>
+              <Text fw={600}>Done</Text>
+              {getJiraBoardColumn(jiraSprint, 'Done')}
+            </Stack>
+          </SimpleGrid>
+        </Card>
+      )
+    );
+  };
+
+  const getJiraBoardColumn = (jiraSprint: JiraSprint, status: string) =>
+    jiraSprint?.jiraIssues?.map(
+      issue => issue.fields.status.name === status && getJiraBoardCard(issue)
     );
 
-  const getIssueCard = (issue: JiraIssue) => (
+  const getJiraBoardCard = (issue: JiraIssue) => (
     <Card radius="md" shadow="sm" padding="lg" withBorder>
       <Group style={{ alignItems: 'center' }}>
         <Text fw={500}>{issue.fields.summary}</Text>
@@ -132,22 +148,9 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
               );
             })}
           </Group>
-          <Card withBorder>
-            <SimpleGrid cols={{ base: 1, xs: 3 }} mt="md" mb="xs">
-              <Stack>
-                <Text fw={600}>To Do</Text>
-                {getColumnCard(teamData.board?.jiraSprints, 'To Do')}
-              </Stack>
-              <Stack>
-                <Text fw={600}>In Progress</Text>
-                {getColumnCard(teamData.board?.jiraSprints, 'In Progress')}
-              </Stack>
-              <Stack>
-                <Text fw={600}>Done</Text>
-                {getColumnCard(teamData.board?.jiraSprints, 'Done')}
-              </Stack>
-            </SimpleGrid>
-          </Card>
+          {getActiveSprintBoard(
+            teamData.board.jiraSprints.find(sprint => sprint.state === 'active')
+          )}
           {getChart(teamData.board)}
         </>
       )}
