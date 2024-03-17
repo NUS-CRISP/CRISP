@@ -1,5 +1,6 @@
+import { BarChart } from '@mantine/charts';
 import { Card, Group, SimpleGrid, Stack, Text } from '@mantine/core';
-import { JiraIssue, JiraSprint } from '@shared/types/JiraData';
+import { JiraBoard, JiraIssue, JiraSprint } from '@shared/types/JiraData';
 import { TeamData } from '@shared/types/TeamData';
 import { User } from '@shared/types/User';
 
@@ -46,6 +47,46 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
     </Card>
   );
 
+  const getChart = (board: JiraBoard) => {
+    interface AssigneeStats {
+      Assignee: string;
+      Issues: number;
+      'Story Points': number;
+    }
+
+    const assigneeStatsMap: Record<string, AssigneeStats> = {};
+
+    board.jiraIssues.forEach(issue => {
+      const assigneeName = issue.fields.assignee?.displayName ?? 'Unassigned';
+      if (!assigneeStatsMap[assigneeName]) {
+        assigneeStatsMap[assigneeName] = {
+          Assignee: assigneeName,
+          Issues: 0,
+          'Story Points': 0,
+        };
+      }
+      assigneeStatsMap[assigneeName].Issues++;
+      assigneeStatsMap[assigneeName]['Story Points'] += issue.storyPoints ?? 0;
+    });
+
+    const assigneeStatsArray: AssigneeStats[] = Object.values(assigneeStatsMap);
+    return (
+      <Card withBorder>
+        <BarChart
+          h={400}
+          data={assigneeStatsArray}
+          dataKey="Assignee"
+          withLegend
+          legendProps={{ verticalAlign: 'bottom', height: 50 }}
+          series={[
+            { name: 'Issues', color: 'blue.6' },
+            { name: 'Story Points', color: 'teal.6' },
+          ]}
+        />
+      </Card>
+    );
+  };
+
   return (
     <Stack>
       <Group style={{ alignItems: 'center' }}>
@@ -59,13 +100,13 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
         <>
           <Group>
             <Text>Current Sprint:</Text>
-            {teamData?.board?.jiraSprints.map(
+            {teamData.board?.jiraSprints.map(
               sprint => sprint.state === 'active' && <Text>{sprint.name}</Text>
             )}
           </Group>
           <Group>
             <Text>Start Date:</Text>
-            {teamData?.board?.jiraSprints.map(sprint => {
+            {teamData.board?.jiraSprints.map(sprint => {
               const startDate = new Date(sprint.startDate);
               return (
                 sprint.state === 'active' && (
@@ -79,7 +120,7 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
           </Group>
           <Group>
             <Text>End Date:</Text>
-            {teamData?.board?.jiraSprints.map(sprint => {
+            {teamData.board?.jiraSprints.map(sprint => {
               const endDate = new Date(sprint.endDate);
               return (
                 sprint.state === 'active' && (
@@ -95,18 +136,19 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
             <SimpleGrid cols={{ base: 1, xs: 3 }} mt="md" mb="xs">
               <Stack>
                 <Text fw={600}>To Do</Text>
-                {getColumnCard(teamData?.board?.jiraSprints, 'To Do')}
+                {getColumnCard(teamData.board?.jiraSprints, 'To Do')}
               </Stack>
               <Stack>
                 <Text fw={600}>In Progress</Text>
-                {getColumnCard(teamData?.board?.jiraSprints, 'In Progress')}
+                {getColumnCard(teamData.board?.jiraSprints, 'In Progress')}
               </Stack>
               <Stack>
                 <Text fw={600}>Done</Text>
-                {getColumnCard(teamData?.board?.jiraSprints, 'Done')}
+                {getColumnCard(teamData.board?.jiraSprints, 'Done')}
               </Stack>
             </SimpleGrid>
           </Card>
+          {getChart(teamData.board)}
         </>
       )}
     </Stack>
