@@ -70,36 +70,62 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
       'Story Points': number;
     }
 
-    const assigneeStatsMap: Record<string, AssigneeStats> = {};
+    const assigneeStatsArrays: Record<string, AssigneeStats[]> = {};
 
-    board.jiraIssues.forEach(issue => {
-      const assigneeName = issue.fields.assignee?.displayName ?? 'Unassigned';
-      if (!assigneeStatsMap[assigneeName]) {
-        assigneeStatsMap[assigneeName] = {
-          Assignee: assigneeName,
-          Issues: 0,
-          'Story Points': 0,
-        };
-      }
-      assigneeStatsMap[assigneeName].Issues++;
-      assigneeStatsMap[assigneeName]['Story Points'] += issue.storyPoints ?? 0;
+    board.jiraSprints.forEach(jiraSprint => {
+      const assigneeStatsMap: Record<string, AssigneeStats> = {};
+
+      jiraSprint.jiraIssues.forEach(issue => {
+        const assigneeName = issue.fields.assignee?.displayName ?? 'Unassigned';
+        if (!assigneeStatsMap[assigneeName]) {
+          assigneeStatsMap[assigneeName] = {
+            Assignee: assigneeName,
+            Issues: 0,
+            'Story Points': 0,
+          };
+        }
+        assigneeStatsMap[assigneeName].Issues++;
+        assigneeStatsMap[assigneeName]['Story Points'] +=
+          issue.storyPoints ?? 0;
+      });
+
+      const assigneeStatsArray: AssigneeStats[] =
+        Object.values(assigneeStatsMap);
+      assigneeStatsArrays[new Date(jiraSprint.endDate).toLocaleDateString()] =
+        assigneeStatsArray;
     });
 
-    const assigneeStatsArray: AssigneeStats[] = Object.values(assigneeStatsMap);
+    // Get the keys as an array and sort them
+    const sortedKeys = Object.keys(assigneeStatsArrays).sort();
+    const sortedAssigneeStatsArrays: AssigneeStats[][] = sortedKeys.map(
+      key => assigneeStatsArrays[key]
+    );
+
     return (
-      <Card withBorder>
-        <BarChart
-          h={400}
-          data={assigneeStatsArray}
-          dataKey="Assignee"
-          withLegend
-          legendProps={{ verticalAlign: 'bottom', height: 50 }}
-          series={[
-            { name: 'Issues', color: 'blue.6' },
-            { name: 'Story Points', color: 'teal.6' },
-          ]}
-        />
-      </Card>
+      <>
+        {sortedAssigneeStatsArrays.map((assigneeStatsArray, index) => (
+          <Card key={index} withBorder>
+            <Text
+              size="sm"
+              fw={500}
+              style={{ textAlign: 'center', marginBottom: 8 }}
+            >
+              Sprint ending {sortedKeys[index]}
+            </Text>
+            <BarChart
+              h={400}
+              data={assigneeStatsArray}
+              dataKey="Assignee"
+              withLegend
+              legendProps={{ verticalAlign: 'bottom', height: 50 }}
+              series={[
+                { name: 'Issues', color: 'blue.6' },
+                { name: 'Story Points', color: 'teal.6' },
+              ]}
+            />
+          </Card>
+        ))}
+      </>
     );
   };
 

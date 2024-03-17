@@ -1,5 +1,3 @@
-import { TeamData } from "./TeamData";
-
 export interface JiraSprint extends Document {
   _id: string;
   id: number;

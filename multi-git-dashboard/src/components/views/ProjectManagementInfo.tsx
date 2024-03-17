@@ -106,8 +106,6 @@ const ProjectManagementInfo: React.FC<ProjectManagementProps> = ({
     );
   };
 
-  console.log(teamSets);
-
   return (
     <Container
       style={{
