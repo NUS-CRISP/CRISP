@@ -1,3 +1,4 @@
+import { Carousel } from '@mantine/carousel';
 import { BarChart } from '@mantine/charts';
 import { Card, Group, SimpleGrid, Stack, Text } from '@mantine/core';
 import { JiraBoard, JiraIssue, JiraSprint } from '@shared/types/JiraData';
@@ -91,41 +92,43 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
 
       const assigneeStatsArray: AssigneeStats[] =
         Object.values(assigneeStatsMap);
-      assigneeStatsArrays[new Date(jiraSprint.endDate).toLocaleDateString()] =
-        assigneeStatsArray;
+      const endDate = new Date(jiraSprint.endDate);
+      assigneeStatsArrays[endDate.toLocaleDateString()] = assigneeStatsArray;
     });
 
     // Get the keys as an array and sort them
-    const sortedKeys = Object.keys(assigneeStatsArrays).sort();
+    const sortedKeys = Object.keys(assigneeStatsArrays).sort().reverse();
     const sortedAssigneeStatsArrays: AssigneeStats[][] = sortedKeys.map(
       key => assigneeStatsArrays[key]
     );
 
     return (
-      <>
-        {sortedAssigneeStatsArrays.map((assigneeStatsArray, index) => (
-          <Card key={index} withBorder>
-            <Text
-              size="sm"
-              fw={500}
-              style={{ textAlign: 'center', marginBottom: 8 }}
-            >
-              Sprint ending {sortedKeys[index]}
-            </Text>
-            <BarChart
-              h={400}
-              data={assigneeStatsArray}
-              dataKey="Assignee"
-              withLegend
-              legendProps={{ verticalAlign: 'bottom', height: 50 }}
-              series={[
-                { name: 'Issues', color: 'blue.6' },
-                { name: 'Story Points', color: 'teal.6' },
-              ]}
-            />
-          </Card>
-        ))}
-      </>
+      <Card withBorder>
+        <Carousel withIndicators slideSize="100%" loop>
+          {sortedAssigneeStatsArrays.map((assigneeStatsArray, index) => (
+            <Carousel.Slide key={index}>
+              <Text
+                size="sm"
+                fw={500}
+                style={{ textAlign: 'center', marginBottom: 8 }}
+              >
+                Sprint ending {sortedKeys[index]}
+              </Text>
+              <BarChart
+                h={400}
+                data={assigneeStatsArray}
+                dataKey="Assignee"
+                withLegend
+                legendProps={{ verticalAlign: 'bottom', height: 50 }}
+                series={[
+                  { name: 'Issues', color: 'blue.6' },
+                  { name: 'Story Points', color: 'teal.6' },
+                ]}
+              />
+            </Carousel.Slide>
+          ))}
+        </Carousel>
+      </Card>
     );
   };
 
