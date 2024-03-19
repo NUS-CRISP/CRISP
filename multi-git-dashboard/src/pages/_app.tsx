@@ -37,11 +37,15 @@ export const weekToDates = (week: number) => {
 export const calculateCurrentWeek = () => {
   const today = dayjs();
   const weeksSinceStart = Math.ceil(today.diff(START_DATE, 'week', true));
-  const adjustedWeeks = weeksSinceStart >= BREAK_START_WEEK ? weeksSinceStart - BREAK_DURATION_WEEKS : weeksSinceStart;
+  const adjustedWeeks =
+    weeksSinceStart >= BREAK_START_WEEK
+      ? weeksSinceStart - BREAK_DURATION_WEEKS
+      : weeksSinceStart;
   return adjustedWeeks;
 };
 
-export const endOfWeek = (date: dayjs.Dayjs) => date.isoWeekday(7).hour(23).minute(59).second(59).millisecond(999);
+export const endOfWeek = (date: dayjs.Dayjs) =>
+  date.isoWeekday(7).hour(23).minute(59).second(59).millisecond(999);
 
 /* End date functions */
 

@@ -5,7 +5,7 @@ import dayjs from 'dayjs';
 import { useEffect } from 'react';
 import { AnalyticsProps } from '../Analytics';
 
-interface IndividualAnalyticsProps extends AnalyticsProps { }
+interface IndividualAnalyticsProps extends AnalyticsProps {}
 
 interface IndividualAnalyticsData {
   name: string;
@@ -33,7 +33,7 @@ const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
 
     const contributors = new Map<string, IndividualAnalyticsData>();
 
-    teamData.teamPRs.forEach((pr) => {
+    teamData.teamPRs.forEach(pr => {
       const prDate = dayjs(pr.createdAt);
       const prUser = pr.user || 'Unknown';
       const prName = gitHandleToNameMap.get(prUser) || prUser;
@@ -98,6 +98,7 @@ const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
     return () => {
       const endTime = Date.now();
       const timeSpent = endTime - startTime;
+      console.info(`IndividualAnalytics.tsx: ${timeSpent}ms`);
       // TODO: Log time spent
     };
   }, []);
