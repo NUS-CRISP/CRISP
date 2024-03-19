@@ -1,7 +1,8 @@
+import { OverviewProps } from '@/components/cards/OverviewCard';
+import { endOfWeek, weekToDates } from '@/pages/_app';
 import { Box, Card, Group } from '@mantine/core';
 import dayjs from 'dayjs';
 import { useState } from 'react';
-import { OverviewProps, weekToDates } from '../../cards/OverviewCard';
 import PRDetails from './PRDetails';
 import PRList from './PRList';
 
@@ -26,7 +27,7 @@ const PR: React.FC<PRProps> = ({
 
   const getDisplayedPRs = () => {
     const startDate = weekToDates(selectedWeekRange[0]);
-    const endDate = weekToDates(selectedWeekRange[1]).add(1, 'week');
+    const endDate = endOfWeek(weekToDates(selectedWeekRange[1]));
 
     return teamData.teamPRs.filter(pr => {
       const prDate = dayjs(pr.createdAt);

@@ -1,16 +1,11 @@
-import { weekToDates } from '@/components/cards/OverviewCard';
+import { endOfWeek, weekToDates } from '@/pages/_app';
 import { BarChart } from '@mantine/charts';
 import { Center } from '@mantine/core';
 import dayjs from 'dayjs';
-import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
-import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { useEffect } from 'react';
 import { AnalyticsProps } from '../Analytics';
 
-dayjs.extend(isSameOrAfter);
-dayjs.extend(isSameOrBefore);
-
-interface IndividualAnalyticsProps extends AnalyticsProps {}
+interface IndividualAnalyticsProps extends AnalyticsProps { }
 
 interface IndividualAnalyticsData {
   name: string;
@@ -34,11 +29,11 @@ const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
 
   const filterDataByWeekRange = () => {
     const startDate = weekToDates(selectedWeekRange[0]);
-    const endDate = weekToDates(selectedWeekRange[1]).add(1, 'week');
+    const endDate = endOfWeek(weekToDates(selectedWeekRange[1]));
 
     const contributors = new Map<string, IndividualAnalyticsData>();
 
-    teamData.teamPRs.forEach(pr => {
+    teamData.teamPRs.forEach((pr) => {
       const prDate = dayjs(pr.createdAt);
       const prUser = pr.user || 'Unknown';
       const prName = gitHandleToNameMap.get(prUser) || prUser;
@@ -81,7 +76,8 @@ const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
       });
     });
 
-    return Array.from(contributors.values());
+    const res = Array.from(contributors.values());
+    return res;
   };
 
   let data = filterDataByWeekRange();
@@ -102,7 +98,6 @@ const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
     return () => {
       const endTime = Date.now();
       const timeSpent = endTime - startTime;
-      console.log(`Time spent on IndividualAnalytics: ${timeSpent}ms`);
       // TODO: Log time spent
     };
   }, []);

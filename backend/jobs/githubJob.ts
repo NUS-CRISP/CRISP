@@ -80,7 +80,7 @@ const getCourseData = async (
 
     // Filter out non team members
     // TODO: Enable only after gitHandle mapping is done
-    if (process.env.NEW_FILTER) {
+    if (process.env.NEW_FILTER === 'true') {
       const teamMembers = await getTeamMembers(repo.id);
       if (teamMembers) {
         commits.data = commits.data.filter(
@@ -123,6 +123,7 @@ const getCourseData = async (
             user: review.user?.login,
             body: review.body,
             state: review.state,
+            submittedAt: review.submitted_at,
             comments: (
               await octokit.rest.pulls.listReviewComments({
                 owner: gitHubOrgName,

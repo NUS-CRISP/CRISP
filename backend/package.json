@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json",
     "start": "NODE_ENV=production node dist/backend/app.js",
-    "dev": "PORT=3003 nodemon -e ts,js --exec ts-node app.ts",
+    "dev": "NODE_ENV=development PORT=3003 nodemon -e ts,js --exec ts-node app.ts",
     "test": "jest",
     "prettier-format": "prettier --config .prettierrc.json ./**/*.ts --write",
     "prettier-check": "prettier --config .prettierrc.json ./**/*.ts --check"
