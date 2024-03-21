@@ -68,6 +68,12 @@ const boardSchema: Schema = new Schema<JiraBoard>({
     avatarURI: { type: String, required: true },
     name: { type: String, required: true },
   },
+  columns: [
+    {
+      name: { type: String },
+      _id: false,
+    },
+  ],
   jiraSprints: [{ type: Schema.Types.ObjectId, ref: 'JiraSprint' }],
   jiraIssues: [{ type: Schema.Types.ObjectId, ref: 'JiraIssue' }],
 });

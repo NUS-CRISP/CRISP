@@ -52,6 +52,9 @@ export interface JiraBoard extends Document {
     avatarURI: string;
     name: string;
   };
+  columns: {
+    name: string;
+  }[];
   jiraSprints: JiraSprint[];
   jiraIssues: JiraIssue[];
 }

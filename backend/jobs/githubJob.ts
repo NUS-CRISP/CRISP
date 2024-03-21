@@ -55,51 +55,6 @@ const getCourseData = async (
     );
   }
 
-  // const data: any = await graphqlWithAuth(
-  //   `query {
-  //     organization(login: "${gitHubOrgName}") {
-  //       projectsV2(first: 5) {
-  //         nodes {
-  //           title
-  //           id
-  //           repositories(first: 1) {
-  //             edges {
-  //               node {
-  //                 id
-  //                 name
-  //               }
-  //             }
-  //           }
-  //         }
-  //       }
-  //     }
-  //   }`
-  // );
-  // console.log(data);
-
-  // const issues: any = await graphqlWithAuth(
-  //   `query {
-  //     node(id: "${data?.organization?.projectsV2?.nodes?.[0]?.id}") {
-  //       ... on ProjectV2 {
-  //         items(last: 20) {
-  //           nodes {
-  //             id
-  //             content {
-  //               ... on Issue {
-  //                 title
-  //                 url
-  //                 state
-  //                 stateReason
-  //               }
-  //             }
-  //           }
-  //         }
-  //       }
-  //     }
-  //   }`
-  // );
-  // console.log(issues);
-
   for (const repo of allRepos) {
     const teamContributions: Record<string, TeamContribution> = {};
 

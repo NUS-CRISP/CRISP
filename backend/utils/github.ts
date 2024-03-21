@@ -2,8 +2,6 @@ import TeamModel from '@models/Team';
 import TeamDataModel from '@models/TeamData';
 import UserModel from '@models/User';
 import { App } from 'octokit';
-// import { createAppAuth } from '@octokit/auth-app';
-// import { graphql } from '@octokit/graphql';
 
 export const getGitHubApp = (): App => {
   const APP_ID = Number(process.env.GITHUB_APP_ID!);

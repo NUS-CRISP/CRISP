@@ -16,50 +16,50 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   TA,
   teamData,
 }) => {
-  const getActiveSprintBoard = (jiraSprint: JiraSprint | undefined) => {
+  const getActiveSprintBoard = (
+    jiraSprint: JiraSprint | undefined,
+    columns: {
+      name: string;
+    }[]
+  ) => {
     return (
-      jiraSprint && (
+      jiraSprint &&
+      columns && (
         <Card withBorder>
-          <SimpleGrid cols={{ base: 1, xs: 3 }} mt="md" mb="xs">
-            <Stack>
-              <Text fw={600} size="sm">
-                To Do
-              </Text>
-              {getJiraBoardColumn(jiraSprint, 'To Do')}
-            </Stack>
-            <Stack>
-              <Text fw={600} size="sm">
-                In Progress
-              </Text>
-              {getJiraBoardColumn(jiraSprint, 'In Progress')}
-            </Stack>
-            <Stack>
-              <Text fw={600} size="sm">
-                Done
-              </Text>
-              {getJiraBoardColumn(jiraSprint, 'Done')}
-            </Stack>
+          <SimpleGrid cols={{ base: 1, xs: columns.length }} mt="md" mb="xs">
+            {columns.map((column, index) => (
+              <Stack key={index}>
+                <Text fw={600} size="sm">
+                  {column.name}
+                </Text>
+                {getJiraBoardColumn(jiraSprint, column.name)}
+              </Stack>
+            ))}
           </SimpleGrid>
         </Card>
       )
     );
   };
 
-  const getJiraBoardColumn = (jiraSprint: JiraSprint, status: string) =>
-    jiraSprint?.jiraIssues?.map(
-      issue => issue.fields.status.name === status && getJiraBoardCard(issue)
+  const getJiraBoardColumn = (jiraSprint: JiraSprint, status: string) => {
+    return (
+      jiraSprint.jiraIssues &&
+      jiraSprint.jiraIssues.map(
+        issue => issue.fields.status?.name === status && getJiraBoardCard(issue)
+      )
     );
+  };
 
   const getJiraBoardCard = (issue: JiraIssue) => (
     <Card radius="md" shadow="sm" padding="lg" withBorder>
       <Group style={{ alignItems: 'center' }}>
         <Text fw={600} size="sm">
-          {issue.fields.summary}
+          {issue.fields.summary || '-'}
         </Text>
       </Group>
       <Group style={{ alignItems: 'center' }}>
         <Text size="sm">Issue Type:</Text>
-        <Text size="sm">{issue.fields.issuetype.name}</Text>
+        <Text size="sm">{issue.fields.issuetype?.name || '-'}</Text>
       </Group>
       <Group style={{ alignItems: 'center' }}>
         <Text size="sm">Story Points:</Text>
@@ -67,7 +67,7 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
       </Group>
       <Group style={{ alignItems: 'center' }}>
         <Text size="sm">Assignee:</Text>
-        <Text size="sm">{issue.fields?.assignee?.displayName || '-'}</Text>
+        <Text size="sm">{issue.fields.assignee?.displayName || '-'}</Text>
       </Group>
     </Card>
   );
@@ -251,15 +251,16 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
               );
             })}
           </Group>
-          {teamData.board?.jiraSprints &&
+          {teamData.board.jiraSprints &&
             getActiveSprintBoard(
               teamData.board.jiraSprints.find(
                 sprint => sprint.state === 'active'
-              )
+              ),
+              teamData.board.columns
             )}
-          {teamData.board?.jiraSprints &&
+          {teamData.board.jiraSprints &&
             getAssigneeStatsBarChart(teamData.board.jiraSprints)}
-          {teamData.board?.jiraSprints &&
+          {teamData.board.jiraSprints &&
             getSprintCompletionBarChart(teamData.board.jiraSprints)}
         </>
       )}

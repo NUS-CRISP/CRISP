@@ -18,7 +18,7 @@ import mongoose from 'mongoose';
 
 async function findJiraBoardId(
   id: number,
-  cloudId: string,
+  cloudId: string
 ): Promise<mongoose.Types.ObjectId | null> {
   try {
     const selfUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board/${id}`;
@@ -35,7 +35,7 @@ async function findJiraBoardId(
 
 async function findJiraSprintId(
   id: number,
-  cloudId: string,
+  cloudId: string
 ): Promise<mongoose.Types.ObjectId | null> {
   try {
     const selfUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/sprint/${id}`;
@@ -52,7 +52,7 @@ async function findJiraSprintId(
 
 async function findTeamDataIdByCourseAndRepoName(
   courseId: mongoose.Types.ObjectId,
-  repoName: string,
+  repoName: string
 ): Promise<mongoose.Types.ObjectId[] | null> {
   try {
     const teamData = await TeamDataModel.find({
@@ -124,7 +124,7 @@ async function fetchSprints(
 async function fetchIssues(
   boardId: number,
   cloudId: string,
-  accessToken: string,
+  accessToken: string
 ): Promise<any> {
   const jiraIssuesUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board/${boardId}/issue`;
 
@@ -155,6 +155,7 @@ async function fetchIssues(
             'Content-Type': 'application/json',
           },
         });
+
         if (!storyPointsResponse.ok) {
           throw new Error(
             `Failed to fetch story points. Status: ${storyPointsResponse.status}`
@@ -162,6 +163,7 @@ async function fetchIssues(
         }
 
         const storyPoints = (await storyPointsResponse.json()).value;
+
         const jiraIssue: Omit<JiraIssue, '_id'> = {
           ...issueData,
           storyPoints: storyPoints,
@@ -176,7 +178,10 @@ async function fetchIssues(
           }
         );
 
-        const jiraSprintId = await findJiraSprintId(issueData.fields?.sprint?.id, cloudId);
+        const jiraSprintId = await findJiraSprintId(
+          issueData.fields?.sprint?.id,
+          cloudId
+        );
         await JiraSprintModel.findOneAndUpdate(
           { _id: jiraSprintId },
           { $push: { jiraIssues: issue._id } },
@@ -269,14 +274,38 @@ export const fetchAndSaveJiraData = async () => {
         const boards = data.values;
 
         boards.forEach(async (boardData: any) => {
+          const boardId = await boardData.id;
+          const jiraBoardConfigurationUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board/${boardId}/configuration`;
+
+          const boardConfigurationResponse = await fetch(
+            jiraBoardConfigurationUri,
+            {
+              method: 'GET',
+              headers: {
+                Authorization: `Bearer ${accessToken}`, // Use the access token here
+                Accept: 'application/json',
+              },
+            }
+          );
+
+          if (!boardConfigurationResponse.ok) {
+            throw new Error(
+              `Failed to fetch board configuration. Status: ${boardConfigurationResponse.status}`
+            );
+          }
+
+          const boardConfigurationData =
+            await boardConfigurationResponse.json();
+
           const teamDataIds = await findTeamDataIdByCourseAndRepoName(
             course._id,
-            boardData.location.projectName,
+            boardData.location.projectName
           );
 
           const jiraBoard: Omit<JiraBoard, '_id'> = {
             ...boardData,
             jiraLocation: boardData.location,
+            columns: boardConfigurationData.columnConfig.columns,
             jiraIssues: [],
             jiraSprints: [],
             location: undefined, // To remove the original location property
