@@ -187,7 +187,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
         )}
       </Group>
       <Group style={{ alignItems: 'center' }}>
-        <Text>Repository:</Text>
+        <Text>Repository / Jira Project:</Text>
         {isEditing ? (
           <Select
             data={repoOptions}

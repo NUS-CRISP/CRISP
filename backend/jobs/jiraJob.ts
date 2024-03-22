@@ -52,8 +52,8 @@ async function findJiraSprintId(
 
 async function findTeamDataIdsByCourseAndRepoName(
   gitHubOrgName: string | undefined,
-  repoName: string,
-  ): Promise<mongoose.Types.ObjectId[] | null> {
+  repoName: string
+): Promise<mongoose.Types.ObjectId[] | null> {
   try {
     const teamData = await TeamDataModel.find({
       repoName: repoName,
