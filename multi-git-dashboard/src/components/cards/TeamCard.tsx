@@ -241,7 +241,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
             data={jiraBoardOptions}
             value={selectedJiraBoard}
             onChange={e => handleJiraProjectNameChange(e)}
-            placeholder="Select Jira Project Name"
+            placeholder="Select Jira Project"
           />
         ) : (
           <Text>{teamJiraBoard ? teamJiraBoard.jiraLocation.name : 'None'}</Text>

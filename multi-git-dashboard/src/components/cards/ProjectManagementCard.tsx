@@ -5,13 +5,11 @@ import { JiraBoard, JiraIssue, JiraSprint } from '@shared/types/JiraData';
 import { User } from '@shared/types/User';
 
 interface ProjectManagementCardProps {
-  number: number;
   TA: User | null;
   jiraBoard: JiraBoard | null;
 }
 
 const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
-  number,
   TA,
   jiraBoard,
 }) => {
@@ -208,11 +206,12 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   return (
     <Stack>
       <Group style={{ alignItems: 'center' }}>
-        <Text>Team {number.toString()}</Text>
-      </Group>
-      <Group style={{ alignItems: 'center' }}>
         <Text>Teaching Assistant:</Text>
         <Text>{TA ? TA.name : 'None'}</Text>
+      </Group>
+      <Group style={{ alignItems: 'center' }}>
+        <Text>Jira Project:</Text>
+        <Text>{jiraBoard ? jiraBoard.jiraLocation.projectName : 'None'}</Text>
       </Group>
       {jiraBoard && (
         <>

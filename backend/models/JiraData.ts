@@ -26,7 +26,7 @@ const sprintSchema: Schema = new Schema<JiraSprint>({
   endDate: { type: Date, required: true },
   createdDate: { type: Date, required: true },
   originBoardId: { type: Number, required: true },
-  goal: { type: String, required: true },
+  goal: { type: String },
   jiraIssues: [{ type: Schema.Types.ObjectId, ref: 'JiraIssue' }],
 });
 

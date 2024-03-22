@@ -21,9 +21,9 @@ async function findJiraBoardId(
 ): Promise<mongoose.Types.ObjectId | null> {
   try {
     const selfUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board/${id}`;
-    const jiraBoard = await JiraBoardModel.findOne({ self: selfUri }); // Replace with your criteria
+    const jiraBoard = await JiraBoardModel.findOne({ self: selfUri });
     if (jiraBoard) {
-      return jiraBoard._id; // Assuming _id is the ObjectId
+      return jiraBoard._id;
     }
     return null;
   } catch (error) {
@@ -38,13 +38,30 @@ async function findJiraSprintId(
 ): Promise<mongoose.Types.ObjectId | null> {
   try {
     const selfUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/sprint/${id}`;
-    const jiraSprint = await JiraSprintModel.findOne({ self: selfUri }); // Replace with your criteria
+    const jiraSprint = await JiraSprintModel.findOne({ self: selfUri });
     if (jiraSprint) {
-      return jiraSprint._id; // Assuming _id is the ObjectId
+      return jiraSprint._id;
     }
     return null;
   } catch (error) {
     console.error('Error finding JiraSprint:', error);
+    throw error;
+  }
+}
+
+async function findJiraIssueId(
+  id: number,
+  cloudId: string
+): Promise<mongoose.Types.ObjectId | null> {
+  try {
+    const selfUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/issue/${id}`;
+    const jiraIssue = await JiraSprintModel.findOne({ self: selfUri });
+    if (jiraIssue) {
+      return jiraIssue._id;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error finding JiraBoard:', error);
     throw error;
   }
 }
@@ -78,16 +95,24 @@ async function fetchSprints(
           jiraIssues: [],
         };
 
-        const sprint = await JiraSprintModel.findOneAndUpdate(
-          { id: jiraSprint.id },
-          jiraSprint,
-          {
-            upsert: true,
-            new: true,
-          }
-        );
+        const jiraSprintId = await findJiraSprintId(jiraSprint.id, cloudId);
+
+        let sprint;
+        if (jiraSprintId) {
+          sprint = await JiraSprintModel.findOneAndUpdate(
+            { _id: jiraSprintId },
+            jiraSprint,
+            {
+              upsert: true,
+              new: true,
+            }
+          );
+        } else {
+          sprint = await new JiraSprintModel(jiraSprint).save();
+        }
 
         const jiraBoardId = await findJiraBoardId(boardId, cloudId);
+
         await JiraBoardModel.findOneAndUpdate(
           { _id: jiraBoardId },
           { $push: { jiraSprints: sprint._id } },
@@ -112,7 +137,7 @@ async function fetchIssues(
     const response = await fetch(jiraIssuesUri, {
       method: 'GET',
       headers: {
-        Authorization: `Bearer ${accessToken}`, // Use the access token here
+        Authorization: `Bearer ${accessToken}`,
         Accept: 'application/json',
       },
     });
@@ -130,7 +155,7 @@ async function fetchIssues(
         const storyPointsResponse = await fetch(storyPointsUri, {
           method: 'GET',
           headers: {
-            Authorization: `Bearer ${accessToken}`, // Use the access token here
+            Authorization: `Bearer ${accessToken}`,
             Accept: 'application/json',
             'Content-Type': 'application/json',
           },
@@ -149,19 +174,27 @@ async function fetchIssues(
           storyPoints: storyPoints,
         };
 
-        const issue = await JiraIssueModel.findOneAndUpdate(
-          { id: jiraIssue.id },
-          jiraIssue,
-          {
-            upsert: true,
-            new: true,
-          }
-        );
+        const jiraIssueId = await findJiraIssueId(issueData.id, cloudId);
+
+        let issue;
+        if (jiraIssueId) {
+          issue = await JiraIssueModel.findOneAndUpdate(
+            { _id: jiraIssueId },
+            jiraIssue,
+            {
+              upsert: true,
+              new: true,
+            }
+          );
+        } else {
+          issue = await new JiraIssueModel(jiraIssue).save();
+        }
 
         const jiraSprintId = await findJiraSprintId(
           issueData.fields?.sprint?.id,
           cloudId
         );
+
         await JiraSprintModel.findOneAndUpdate(
           { _id: jiraSprintId },
           { $push: { jiraIssues: issue._id } },
@@ -169,6 +202,7 @@ async function fetchIssues(
         );
 
         const jiraBoardId = await findJiraBoardId(boardId, cloudId);
+
         await JiraBoardModel.findOneAndUpdate(
           { _id: jiraBoardId },
           { $push: { jiraIssues: issue._id } },
@@ -229,6 +263,7 @@ export const fetchAndSaveJiraData = async () => {
           'jira.refreshToken': refreshToken,
         },
       });
+
       console.log(`Access token refreshed for course with cloudId: ${cloudId}`);
     } else {
       console.error(
@@ -239,7 +274,7 @@ export const fetchAndSaveJiraData = async () => {
     fetch(jiraBoardUri, {
       method: 'GET',
       headers: {
-        Authorization: `Bearer ${accessToken}`, // Use the access token here
+        Authorization: `Bearer ${accessToken}`,
         Accept: 'application/json',
         'Content-Type': 'application/json',
       },
@@ -262,7 +297,7 @@ export const fetchAndSaveJiraData = async () => {
             {
               method: 'GET',
               headers: {
-                Authorization: `Bearer ${accessToken}`, // Use the access token here
+                Authorization: `Bearer ${accessToken}`,
                 Accept: 'application/json',
               },
             }
@@ -288,6 +323,7 @@ export const fetchAndSaveJiraData = async () => {
           };
 
           const boardSelfUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board/${jiraBoard.id}`;
+
           await JiraBoardModel.findOneAndUpdate(
             { self: boardSelfUri },
             jiraBoard,
@@ -305,10 +341,12 @@ export const fetchAndSaveJiraData = async () => {
         console.error('There was a problem with your fetch operation:', error);
       });
   }
+
+  console.log('fetchAndSaveJiraData job done');
 };
 
 const setupJiraJob = () => {
-  // Schedule the job to run every day at midnight
+  // Schedule the job to run every day at 01:00 hours
   cron.schedule('0 1 * * *', async () => {
     console.log('Running fetchAndSaveJiraData job:', new Date().toString());
     try {

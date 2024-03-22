@@ -95,7 +95,6 @@ const ProjectManagementInfo: React.FC<ProjectManagementProps> = ({
             <Accordion.Panel>
               <ProjectManagementCard
                 key={team._id}
-                number={team.number}
                 TA={team.TA}
                 jiraBoard={team.board}
               />
