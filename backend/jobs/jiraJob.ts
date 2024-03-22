@@ -213,16 +213,17 @@ async function fetchIssues(
           issue = await new JiraIssueModel(jiraIssue).save();
         }
 
-        const jiraSprintId = await findJiraSprintId(
-          issueData.fields?.sprint?.id,
-          cloudId
-        );
+        // Not required at the moment as the array from customfield_10020 includes active sprint.
+        // const jiraSprintId = await findJiraSprintId(
+        //   issueData.fields?.sprint?.id,
+        //   cloudId
+        // );
 
-        await JiraSprintModel.findOneAndUpdate(
-          { _id: jiraSprintId },
-          { $push: { jiraIssues: issue._id } },
-          {}
-        );
+        // await JiraSprintModel.findOneAndUpdate(
+        //   { _id: jiraSprintId },
+        //   { $push: { jiraIssues: issue._id } },
+        //   {}
+        // );
 
         if (issueData.fields.customfield_10020) {
           const jiraSprintIds = await findJiraSprintIds(
