@@ -1,23 +1,3 @@
-// import {
-//   Alert,
-//   Anchor,
-//   Button,
-//   Container,
-//   Paper,
-//   PasswordInput,
-//   SegmentedControl,
-//   Text,
-//   TextInput,
-//   Title,
-// } from '@mantine/core';
-// import { useForm } from '@mantine/form';
-// import type { Role } from '@shared/types/auth/Role';
-// import Roles from '@shared/types/auth/Role';
-// import { IconInfoCircle } from '@tabler/icons-react';
-// import Link from 'next/link';
-// import { useRouter } from 'next/router';
-// import { useState } from 'react';
-
 import {
   Accordion,
   Button,
