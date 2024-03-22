@@ -126,7 +126,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
     }
   };
 
-  const handleJiraBoardNameChange = async (jiraBoardId: string | null) => {
+  const handleJiraProjectNameChange = async (jiraBoardId: string | null) => {
     try {
       const response = await fetch(apiRoute, {
         method: 'PATCH',
@@ -240,11 +240,11 @@ const TeamCard: React.FC<TeamCardProps> = ({
           <Select
             data={jiraBoardOptions}
             value={selectedJiraBoard}
-            onChange={e => handleJiraBoardNameChange(e)}
-            placeholder="Select Jira Board Name"
+            onChange={e => handleJiraProjectNameChange(e)}
+            placeholder="Select Jira Project Name"
           />
         ) : (
-          <Text>{teamJiraBoard ? teamJiraBoard?.jiraLocation?.name : 'None'}</Text>
+          <Text>{teamJiraBoard ? teamJiraBoard.jiraLocation.name : 'None'}</Text>
         )}
       </Group>
       <Table>
