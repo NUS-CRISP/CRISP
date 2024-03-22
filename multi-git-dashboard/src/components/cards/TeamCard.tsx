@@ -42,7 +42,9 @@ const TeamCard: React.FC<TeamCardProps> = ({
 }) => {
   const [selectedTA, setSelectedTA] = useState<string | null>(TA?._id || null);
   const [selectedTeamData, setSelectedTeamData] = useState<string | null>(null);
-  const [selectedJiraBoard, setSelectedJiraBoard] = useState<string | null>(null);
+  const [selectedJiraBoard, setSelectedJiraBoard] = useState<string | null>(
+    null
+  );
 
   const apiRoute = `/api/teams/${teamId}`;
 
@@ -244,7 +246,9 @@ const TeamCard: React.FC<TeamCardProps> = ({
             placeholder="Select Jira Project"
           />
         ) : (
-          <Text>{teamJiraBoard ? teamJiraBoard.jiraLocation.name : 'None'}</Text>
+          <Text>
+            {teamJiraBoard ? teamJiraBoard.jiraLocation.name : 'None'}
+          </Text>
         )}
       </Group>
       <Table>
