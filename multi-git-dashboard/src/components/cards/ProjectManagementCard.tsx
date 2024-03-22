@@ -1,20 +1,19 @@
 import { Carousel } from '@mantine/carousel';
 import { BarChart } from '@mantine/charts';
 import { Card, Group, SimpleGrid, Stack, Text } from '@mantine/core';
-import { JiraIssue, JiraSprint } from '@shared/types/JiraData';
-import { TeamData } from '@shared/types/TeamData';
+import { JiraBoard, JiraIssue, JiraSprint } from '@shared/types/JiraData';
 import { User } from '@shared/types/User';
 
 interface ProjectManagementCardProps {
   number: number;
   TA: User | null;
-  teamData: TeamData | null;
+  jiraBoard: JiraBoard | null;
 }
 
 const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   number,
   TA,
-  teamData,
+  jiraBoard,
 }) => {
   const getActiveSprintBoard = (
     jiraSprint: JiraSprint | undefined,
@@ -209,23 +208,20 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   return (
     <Stack>
       <Group style={{ alignItems: 'center' }}>
-        <Text>Team {number.toString()}</Text>
-      </Group>
-      <Group style={{ alignItems: 'center' }}>
         <Text>Teaching Assistant:</Text>
         <Text>{TA ? TA.name : 'None'}</Text>
       </Group>
-      {teamData?.board && (
+      {jiraBoard && (
         <>
           <Group>
             <Text>Current Sprint:</Text>
-            {teamData.board?.jiraSprints.map(
+            {jiraBoard.jiraSprints.map(
               sprint => sprint.state === 'active' && <Text>{sprint.name}</Text>
             )}
           </Group>
           <Group>
             <Text>Start Date:</Text>
-            {teamData.board?.jiraSprints.map(sprint => {
+            {jiraBoard.jiraSprints.map(sprint => {
               const startDate = new Date(sprint.startDate);
               return (
                 sprint.state === 'active' && (
@@ -239,7 +235,7 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
           </Group>
           <Group>
             <Text>End Date:</Text>
-            {teamData.board?.jiraSprints.map(sprint => {
+            {jiraBoard.jiraSprints.map(sprint => {
               const endDate = new Date(sprint.endDate);
               return (
                 sprint.state === 'active' && (
@@ -251,17 +247,15 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
               );
             })}
           </Group>
-          {teamData.board.jiraSprints &&
+          {jiraBoard.jiraSprints &&
             getActiveSprintBoard(
-              teamData.board.jiraSprints.find(
-                sprint => sprint.state === 'active'
-              ),
-              teamData.board.columns
+              jiraBoard.jiraSprints.find(sprint => sprint.state === 'active'),
+              jiraBoard.columns
             )}
-          {teamData.board.jiraSprints &&
-            getAssigneeStatsBarChart(teamData.board.jiraSprints)}
-          {teamData.board.jiraSprints &&
-            getSprintCompletionBarChart(teamData.board.jiraSprints)}
+          {jiraBoard.jiraSprints &&
+            getAssigneeStatsBarChart(jiraBoard.jiraSprints)}
+          {jiraBoard.jiraSprints &&
+            getSprintCompletionBarChart(jiraBoard.jiraSprints)}
         </>
       )}
     </Stack>

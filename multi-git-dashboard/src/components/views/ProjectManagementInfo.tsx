@@ -91,13 +91,13 @@ const ProjectManagementInfo: React.FC<ProjectManagementProps> = ({
       >
         {teamSet.teams.map(team => (
           <Accordion.Item key={team._id} value={team._id}>
-            <Accordion.Control>{team.teamData.repoName}</Accordion.Control>
+            <Accordion.Control>Team {team.number.toString()}</Accordion.Control>
             <Accordion.Panel>
               <ProjectManagementCard
                 key={team._id}
                 number={team.number}
                 TA={team.TA}
-                teamData={team.teamData}
+                jiraBoard={team.board}
               />
             </Accordion.Panel>
           </Accordion.Item>

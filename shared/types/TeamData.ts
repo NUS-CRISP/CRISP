@@ -49,5 +49,4 @@ export interface TeamData {
   updatedIssues: string[];
   teamContributions: Record<string, TeamContribution>;
   teamPRs: TeamPR[];
-  board: JiraBoard;
 }

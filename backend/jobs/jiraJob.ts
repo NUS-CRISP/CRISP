@@ -308,6 +308,7 @@ export const fetchAndSaveJiraData = async () => {
             columns: boardConfigurationData.columnConfig.columns,
             jiraIssues: [],
             jiraSprints: [],
+            course: course._id,
             location: undefined, // To remove the original location property
           };
 

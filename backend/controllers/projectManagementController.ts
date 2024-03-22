@@ -2,6 +2,9 @@ import { Request, Response } from 'express';
 import { URLSearchParams } from 'url';
 import { fetchAndSaveJiraData } from '../jobs/jiraJob';
 import CourseModel from '../models/Course';
+import { getAccountId } from 'utils/auth';
+import { getJiraBoardNamesByCourse } from 'services/projectManagementService';
+import { NotFoundError } from 'services/errors';
 
 // Define OAuth 2.0 configuration
 const authorizationUrl = 'https://auth.atlassian.com/authorize';
@@ -94,5 +97,30 @@ export const callbackJiraAccount = async (req: Request, res: Response) => {
     res
       .status(500)
       .send('Error exchanging authorization code for access token');
+  }
+};
+
+export const getAllJiraBoardNamesByCourse = async (
+  req: Request,
+  res: Response
+) => {
+  const courseId = req.params.id;
+
+  const accountId = await getAccountId(req);
+  if (!accountId) {
+    res.status(400).json({ error: 'Missing authorization' });
+    return;
+  }
+
+  try {
+    const jiraBoards = await getJiraBoardNamesByCourse(accountId, courseId);
+    res.status(200).json(jiraBoards);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error fetching teams:', error);
+      res.status(500).json({ error: 'Failed to fetch teams' });
+    }
   }
 };

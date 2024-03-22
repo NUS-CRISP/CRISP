@@ -358,7 +358,7 @@ export const getTeamSetsFromCourse = async (
     populate: {
       path: 'teams',
       model: 'Team',
-      populate: ['members', 'TA', 'teamData'],
+      populate: ['members', 'TA', 'teamData', 'board'],
     },
   });
   if (!course) {
@@ -480,26 +480,22 @@ export const getProjectManagementBoardFromCourse = async (
           model: 'User',
         },
         {
-          path: 'teamData',
-          model: 'TeamData',
-          populate: {
-            path: 'board',
-            model: 'JiraBoard',
-            populate: [
-              {
+          path: 'board',
+          model: 'JiraBoard',
+          populate: [
+            {
+              path: 'jiraIssues',
+              model: 'JiraIssue',
+            },
+            {
+              path: 'jiraSprints',
+              model: 'JiraSprint',
+              populate: {
                 path: 'jiraIssues',
                 model: 'JiraIssue',
               },
-              {
-                path: 'jiraSprints',
-                model: 'JiraSprint',
-                populate: {
-                  path: 'jiraIssues',
-                  model: 'JiraIssue',
-                },
-              },
-            ],
-          },
+            },
+          ],
         },
       ],
     },

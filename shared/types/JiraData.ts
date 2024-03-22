@@ -1,3 +1,5 @@
+import { Course } from "./Course";
+
 export interface JiraSprint extends Document {
   _id: string;
   id: number;
@@ -57,4 +59,5 @@ export interface JiraBoard extends Document {
   }[];
   jiraSprints: JiraSprint[];
   jiraIssues: JiraIssue[];
+  course: Course;
 }
