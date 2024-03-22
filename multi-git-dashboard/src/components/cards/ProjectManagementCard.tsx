@@ -208,6 +208,9 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   return (
     <Stack>
       <Group style={{ alignItems: 'center' }}>
+        <Text>Team {number.toString()}</Text>
+      </Group>
+      <Group style={{ alignItems: 'center' }}>
         <Text>Teaching Assistant:</Text>
         <Text>{TA ? TA.name : 'None'}</Text>
       </Group>

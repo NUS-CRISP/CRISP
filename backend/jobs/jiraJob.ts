@@ -8,7 +8,6 @@ import {
 import cron from 'node-cron';
 import { Course } from '@models/Course';
 import CourseModel from '@models/Course';
-import TeamDataModel from '@models/TeamData';
 import mongoose from 'mongoose';
 
 /**
@@ -42,25 +41,6 @@ async function findJiraSprintId(
     const jiraSprint = await JiraSprintModel.findOne({ self: selfUri }); // Replace with your criteria
     if (jiraSprint) {
       return jiraSprint._id; // Assuming _id is the ObjectId
-    }
-    return null;
-  } catch (error) {
-    console.error('Error finding JiraSprint:', error);
-    throw error;
-  }
-}
-
-async function findTeamDataIdsByCourseAndRepoName(
-  gitHubOrgName: string | undefined,
-  repoName: string
-): Promise<mongoose.Types.ObjectId[] | null> {
-  try {
-    const teamData = await TeamDataModel.find({
-      repoName: repoName,
-      gitHubOrgName: gitHubOrgName,
-    });
-    if (teamData) {
-      return teamData.map(teamData => teamData._id); // Assuming _id is the ObjectId
     }
     return null;
   } catch (error) {
@@ -297,11 +277,6 @@ export const fetchAndSaveJiraData = async () => {
           const boardConfigurationData =
             await boardConfigurationResponse.json();
 
-          const teamDataIds = await findTeamDataIdsByCourseAndRepoName(
-            course.gitHubOrgName,
-            boardData.location.projectName
-          );
-
           const jiraBoard: Omit<JiraBoard, '_id'> = {
             ...boardData,
             jiraLocation: boardData.location,
@@ -313,7 +288,7 @@ export const fetchAndSaveJiraData = async () => {
           };
 
           const boardSelfUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board/${jiraBoard.id}`;
-          const board = await JiraBoardModel.findOneAndUpdate(
+          await JiraBoardModel.findOneAndUpdate(
             { self: boardSelfUri },
             jiraBoard,
             {
@@ -321,15 +296,6 @@ export const fetchAndSaveJiraData = async () => {
               new: true,
             }
           );
-
-          if (teamDataIds) {
-            for (const teamDataId of teamDataIds) {
-              await TeamDataModel.findOneAndUpdate(
-                { _id: teamDataId },
-                { board: board._id }
-              );
-            }
-          }
 
           await fetchSprints(jiraBoard.id, cloudId, accessToken);
           await fetchIssues(jiraBoard.id, cloudId, accessToken);
