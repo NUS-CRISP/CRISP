@@ -1,8 +1,9 @@
-import { Carousel } from '@mantine/carousel';
+import { Carousel, Embla } from '@mantine/carousel';
 import { BarChart } from '@mantine/charts';
 import { Card, Group, SimpleGrid, Stack, Text } from '@mantine/core';
 import { JiraBoard, JiraIssue, JiraSprint } from '@shared/types/JiraData';
 import { User } from '@shared/types/User';
+import { useState } from 'react';
 
 interface ProjectManagementCardProps {
   TA: User | null;
@@ -13,6 +14,8 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   TA,
   jiraBoard,
 }) => {
+  const [embla, setEmbla] = useState<Embla | null>(null);
+
   const getActiveSprintBoard = (
     jiraSprint: JiraSprint | undefined,
     columns: {
@@ -98,18 +101,33 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
       const assigneeStatsArray: AssigneeStats[] =
         Object.values(assigneeStatsMap);
       const endDate = new Date(jiraSprint.endDate);
-      assigneeStatsArrays[endDate.toLocaleDateString()] = assigneeStatsArray;
+      assigneeStatsArrays[endDate.toISOString()] = assigneeStatsArray;
     });
 
     // Get the keys as an array and sort them
-    const sortedKeys = Object.keys(assigneeStatsArrays).sort().reverse();
+    const sortedKeys = Object.keys(assigneeStatsArrays)
+      .map(key => new Date(key))
+      .sort((a, b) => b.getTime() - a.getTime())
+      .map(key => key.toISOString());
     const sortedAssigneeStatsArrays: AssigneeStats[][] = sortedKeys.map(
       key => assigneeStatsArrays[key]
     );
 
     return (
       <Card withBorder>
-        <Carousel withIndicators slideSize="100%" loop>
+        <Carousel
+          withIndicators
+          slideSize="100%"
+          loop
+          getEmblaApi={setEmbla}
+          nextControlProps={{
+            // fix for only first carousel working
+            onClick: () => embla?.reInit(),
+          }}
+          previousControlProps={{
+            onClick: () => embla?.reInit(),
+          }}
+        >
           {sortedAssigneeStatsArrays.map((assigneeStatsArray, index) => (
             <Carousel.Slide key={index}>
               <Text
@@ -117,7 +135,7 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                 fw={500}
                 style={{ textAlign: 'center', marginBottom: 8 }}
               >
-                Sprint ending {sortedKeys[index]}
+                Sprint ending {new Date(sortedKeys[index]).toLocaleDateString()}
               </Text>
               <BarChart
                 h={400}

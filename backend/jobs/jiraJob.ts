@@ -49,19 +49,42 @@ async function findJiraSprintId(
   }
 }
 
+async function findJiraSprintIds(
+  ids: number[],
+  cloudId: string
+): Promise<mongoose.Types.ObjectId[]> {
+  try {
+    const jiraSprints: mongoose.Types.ObjectId[] = [];
+
+    for (const id of ids) {
+      const selfUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/sprint/${id}`;
+      const jiraSprint = await JiraSprintModel.findOne({ self: selfUri });
+
+      if (jiraSprint) {
+        jiraSprints.push(jiraSprint._id);
+      }
+    }
+
+    return jiraSprints;
+  } catch (error) {
+    console.error('Error finding JiraSprints:', error);
+    throw error;
+  }
+}
+
 async function findJiraIssueId(
   id: number,
   cloudId: string
 ): Promise<mongoose.Types.ObjectId | null> {
   try {
     const selfUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/issue/${id}`;
-    const jiraIssue = await JiraSprintModel.findOne({ self: selfUri });
+    const jiraIssue = await JiraIssueModel.findOne({ self: selfUri });
     if (jiraIssue) {
       return jiraIssue._id;
     }
     return null;
   } catch (error) {
-    console.error('Error finding JiraBoard:', error);
+    console.error('Error finding JiraIssue:', error);
     throw error;
   }
 }
@@ -200,6 +223,23 @@ async function fetchIssues(
           { $push: { jiraIssues: issue._id } },
           {}
         );
+
+        if (issueData.fields.customfield_10020) {
+          const jiraSprintIds = await findJiraSprintIds(
+            issueData.fields.customfield_10020.map(
+              (sprint: { id: number }) => sprint.id
+            ),
+            cloudId
+          );
+
+          for (const id of jiraSprintIds) {
+            await JiraSprintModel.findOneAndUpdate(
+              { _id: id },
+              { $push: { jiraIssues: issue._id } },
+              {}
+            );
+          }
+        }
 
         const jiraBoardId = await findJiraBoardId(boardId, cloudId);
 
