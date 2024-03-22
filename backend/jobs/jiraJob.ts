@@ -50,21 +50,21 @@ async function findJiraSprintId(
   }
 }
 
-async function findTeamDataIdByCourseAndRepoName(
-  courseId: mongoose.Types.ObjectId,
-  repoName: string
-): Promise<mongoose.Types.ObjectId[] | null> {
+async function findTeamDataIdsByCourseAndRepoName(
+  gitHubOrgName: string | undefined,
+  repoName: string,
+  ): Promise<mongoose.Types.ObjectId[] | null> {
   try {
     const teamData = await TeamDataModel.find({
       repoName: repoName,
-      course: courseId,
+      gitHubOrgName: gitHubOrgName,
     });
     if (teamData) {
       return teamData.map(teamData => teamData._id); // Assuming _id is the ObjectId
     }
     return null;
   } catch (error) {
-    console.error('Error finding TeamData:', error);
+    console.error('Error finding JiraSprint:', error);
     throw error;
   }
 }
@@ -297,8 +297,8 @@ export const fetchAndSaveJiraData = async () => {
           const boardConfigurationData =
             await boardConfigurationResponse.json();
 
-          const teamDataIds = await findTeamDataIdByCourseAndRepoName(
-            course._id,
+          const teamDataIds = await findTeamDataIdsByCourseAndRepoName(
+            course.gitHubOrgName,
             boardData.location.projectName
           );
 

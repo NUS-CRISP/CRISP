@@ -217,7 +217,6 @@ const getCourseData = async (
     }
 
     const teamData = {
-      course: course._id,
       gitHubOrgName: gitHubOrgName.toLowerCase(),
       teamId: repo.id,
       repoName: repo.name,
