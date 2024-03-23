@@ -43,7 +43,7 @@ export interface Course {
   // end 'GitHubOrg' fields
   jira: {
     isRegistered: boolean;
-    cloudId: string;
+    cloudIds: string[];
     accessToken: string;
     refreshToken: string;
   };

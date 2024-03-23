@@ -69,13 +69,13 @@ export const callbackJiraAccount = async (req: Request, res: Response) => {
       .then(response => response.json())
       .then(async data => {
         // Extract the cloudId from the response
-        const cloudId = data[0].id; // Assuming the cloudId is in the first element of the response
+        const cloudIds = data.map((item: { id: string }) => item.id);
         await CourseModel.findOneAndUpdate(
           { _id: state },
           {
             jira: {
               isRegistered: true,
-              cloudId: cloudId,
+              cloudIds: cloudIds,
               accessToken: accessToken,
               refreshToken: refreshToken,
             },
