@@ -378,7 +378,10 @@ export const updateFacultyInCourse = async (
     if (!facultyAccount) {
       continue;
     }
-    if (facultyAccount.role !== Role.Faculty && facultyAccount.role !== Role.Admin) {
+    if (
+      facultyAccount.role !== Role.Faculty &&
+      facultyAccount.role !== Role.Admin
+    ) {
       continue;
     }
     if (!course.faculty.includes(faculty._id)) {
