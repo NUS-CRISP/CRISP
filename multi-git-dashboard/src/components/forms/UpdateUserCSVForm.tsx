@@ -41,6 +41,7 @@ const UpdateUserCSVForm: React.FC<UpdateUserCSVFormProps> = ({
         filename="update_template.csv"
         uploadButtonString="Upload new data"
         urlString={apiRoute}
+        requestType="PATCH"
       />
     </Box>
   );
