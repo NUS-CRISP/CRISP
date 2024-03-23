@@ -264,8 +264,8 @@ export const updateTAsInCourse = async (
     if (!course.TAs.includes(TA._id)) {
       continue;
     }
-    TA.name = TA.name ?? TA.name;
-    TA.gitHandle = TA.gitHandle ?? TA.gitHandle;
+    TA.name = TAData.name ?? TA.name;
+    TA.gitHandle = TAData.gitHandle ?? TA.gitHandle;
     await TA.save();
   }
 };
@@ -378,14 +378,14 @@ export const updateFacultyInCourse = async (
     if (!facultyAccount) {
       continue;
     }
-    if (facultyAccount.role !== Role.Faculty) {
+    if (facultyAccount.role !== Role.Faculty && facultyAccount.role !== Role.Admin) {
       continue;
     }
-    if (!course.TAs.includes(faculty._id)) {
+    if (!course.faculty.includes(faculty._id)) {
       continue;
     }
-    faculty.name = faculty.name ?? faculty.name;
-    faculty.gitHandle = faculty.gitHandle ?? faculty.gitHandle;
+    faculty.name = facultyData.name ?? faculty.name;
+    faculty.gitHandle = facultyData.gitHandle ?? faculty.gitHandle;
     await faculty.save();
   }
 };
