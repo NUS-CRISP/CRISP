@@ -1,13 +1,18 @@
 import { Request, Response } from 'express';
 import * as assessmentService from '../../services/assessmentService';
+import * as auth from '../../utils/auth';
 import {
   getAssessment,
   uploadResults,
   updateResultMarker,
 } from '../../controllers/assessmentController';
-import { NotFoundError } from '../../services/errors';
+import {
+  MissingAuthorizationError,
+  NotFoundError,
+} from '../../services/errors';
 
 jest.mock('../../services/assessmentService');
+jest.mock('../../utils/auth');
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -29,6 +34,14 @@ const mockResponse = () => {
 };
 
 describe('assessmentController', () => {
+  beforeEach(() => {
+    jest.spyOn(auth, 'getAccountId').mockResolvedValue('mockAccountId');
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   describe('getAssessment', () => {
     it('should retrieve an assessment and send a 200 status', async () => {
       const req = mockRequest(
@@ -88,8 +101,14 @@ describe('assessmentController', () => {
     });
 
     it('should handle missing authorization header', async () => {
-      const req = mockRequest({}, { assessmentId: '1' }); // No authorization header
+      const req = mockRequest({}, { assessmentId: '1' });
       const res = mockResponse();
+
+      jest
+        .spyOn(auth, 'getAccountId')
+        .mockRejectedValue(
+          new MissingAuthorizationError('Missing authorization')
+        );
 
       await getAssessment(req, res);
 
