@@ -6,6 +6,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { User } from '@shared/types/User';
 import { TeamData } from '@shared/types/TeamData';
+import { JiraBoard } from '@shared/types/JiraData';
 
 const TimelineListPage: React.FC = () => {
   const router = useRouter();
@@ -16,10 +17,12 @@ const TimelineListPage: React.FC = () => {
   const teamSetsApiRoute = `/api/courses/${id}/teamsets`;
   const teachingTeamApiRoute = `/api/courses/${id}/teachingteam`;
   const teamDatasApiRoute = `/api/github/course/${id}/names`;
+  const jiraBoardsApiRoute = `/api/jira/course/${id}/names`;
 
   const [teamSets, setTeamSets] = useState<TeamSet[]>([]);
   const [teachingTeam, setTeachingTeam] = useState<User[]>([]);
   const [teamDatas, setTeamDatas] = useState<TeamData[]>([]);
+  const [jiraBoards, setJiraBoards] = useState<JiraBoard[]>([]);
 
   const permission = hasFacultyPermission();
 
@@ -27,6 +30,7 @@ const TimelineListPage: React.FC = () => {
     fetchTeamSets();
     fetchTeachingTeam();
     fetchTeamDatas();
+    fetchJiraBoards();
   };
 
   useEffect(() => {
@@ -34,6 +38,7 @@ const TimelineListPage: React.FC = () => {
       fetchTeamSets();
       fetchTeachingTeam();
       fetchTeamDatas();
+      fetchJiraBoards();
     }
   }, [router.isReady]);
 
@@ -79,6 +84,20 @@ const TimelineListPage: React.FC = () => {
     }
   };
 
+  const fetchJiraBoards = async () => {
+    try {
+      const response = await fetch(jiraBoardsApiRoute);
+      if (!response.ok) {
+        console.error('Error fetching Jira boards:', response.statusText);
+        return;
+      }
+      const data = await response.json();
+      setJiraBoards(data);
+    } catch (error) {
+      console.error('Error fetching Jira boards:', error);
+    }
+  };
+
   return (
     <Container>
       {id && (
@@ -87,6 +106,7 @@ const TimelineListPage: React.FC = () => {
           teamSets={teamSets}
           teachingTeam={teachingTeam}
           teamDatas={teamDatas}
+          jiraBoards={jiraBoards}
           hasFacultyPermission={permission}
           onUpdate={onUpdate}
         />

@@ -277,7 +277,7 @@ const fetchCodeFrequencyStats = async (
   throw new Error('Max attempts reached. Data may not be available yet.');
 };
 
-export const setupJob = () => {
+export const setupGitHubJob = () => {
   // Schedule the job to run every day at midnight
   cron.schedule('0 0 * * *', async () => {
     console.log('Running fetchAndSaveTeamData job:', new Date().toString());
@@ -295,3 +295,5 @@ export const setupJob = () => {
     });
   }
 };
+
+export default setupGitHubJob;

@@ -24,6 +24,8 @@ import {
   removeStudents,
   removeTAs,
   updateCourse,
+  getProjectManagementBoard,
+  getCourseJiraRegistrationStatus,
 } from '../controllers/courseController';
 import { noCache } from '../middleware/noCache';
 
@@ -53,5 +55,7 @@ router.get('/:id/timeline', getTimeline);
 router.post('/:id/milestones', addMilestone);
 router.post('/:id/sprints', addSprint);
 router.post('/:id/assessments', addAssessments);
+router.get('/:id/project-management', getProjectManagementBoard);
+router.get('/:id/jira-registration-status', getCourseJiraRegistrationStatus);
 
 export default router;

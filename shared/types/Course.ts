@@ -41,4 +41,10 @@ export interface Course {
   repoNameFilter?: string;
   installationId?: number;
   // end 'GitHubOrg' fields
+  jira: {
+    isRegistered: boolean;
+    cloudId: string;
+    accessToken: string;
+    refreshToken: string;
+  };
 }

@@ -1,3 +1,5 @@
+import { JiraBoard } from "./JiraData";
+
 export interface TeamContribution {
   commits: number;
   createdIssues: number;
