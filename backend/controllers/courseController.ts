@@ -152,6 +152,24 @@ export const addStudents = async (req: Request, res: Response) => {
   }
 };
 
+export const updateStudents = async (req: Request, res: Response) => {
+    const courseId = req.params.id;
+    const students = req.body.items;
+    try {
+      await updateStudentsInCourse(courseId, students);
+      res
+        .status(200)
+        .json({ message: 'Students updated successfully' });
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        res.status(404).json({ error: error.message });
+      } else {
+        console.error('Error updating students:', error);
+        res.status(500).json({ error: 'Failed to update students' });
+      }
+    }
+  };
+
 export const removeStudents = async (req: Request, res: Response) => {
   const { id, userId } = req.params;
   try {
@@ -185,6 +203,22 @@ export const addTAs = async (req: Request, res: Response) => {
     }
   }
 };
+
+export const updateTAs = async (req: Request, res: Response) => {
+    const courseId = req.params.id;
+    const TAs = req.body.items;
+    try {
+      await addTAsInCourse(courseId, TAs);
+      res.status(200).json({ message: 'TAs updated successfully' });
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        res.status(404).json({ error: error.message });
+      } else {
+        console.error('Error updating TAs:', error);
+        res.status(500).json({ error: 'Failed to update TAs' });
+      }
+    }
+  };
 
 export const getTeachingTeam = async (req: Request, res: Response) => {
   const courseId = req.params.id;
@@ -236,6 +270,24 @@ export const addFaculty = async (req: Request, res: Response) => {
     }
   }
 };
+
+export const updateFaculty = async (req: Request, res: Response) => {
+    const courseId = req.params.id;
+    const faculty = req.body.items;
+    try {
+      await updateFacultyInCourse(courseId, faculty);
+      res
+        .status(200)
+        .json({ message: 'Faculty updated successfully' });
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        res.status(404).json({ error: error.message });
+      } else {
+        console.error('Error updating Faculty:', error);
+        res.status(500).json({ error: 'Failed to update Faculty' });
+      }
+    }
+  };
 
 export const removeFaculty = async (req: Request, res: Response) => {
   const { id, userId } = req.params;
