@@ -207,8 +207,6 @@ const AssessmentOverview: React.FC<AssessmentOverviewProps> = ({
           {assessment?.assessmentType}
         </Text>
         <Text>Mark Type: {assessment?.markType}</Text>
-        <Text>Frequency: {assessment?.frequency}</Text>
-        <Text>Granularity: {assessment?.granularity}</Text>
       </Card>
       {hasFacultyPermission && (
         <Group style={{ marginBottom: '16px', marginTop: '16px' }}>

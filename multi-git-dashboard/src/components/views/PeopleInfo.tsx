@@ -15,6 +15,7 @@ import CSVExport from '../csv/CSVExport';
 import UpdateUserForm from '../forms/UpdateUserForm';
 import Role from '@shared/types/auth/Role';
 import { User } from '@shared/types/User';
+import UpdateUserCSVForm from '../forms/UpdateUserCSVForm';
 
 interface PeopleInfoProps {
   courseId: string;
@@ -44,6 +45,10 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
   const [isEditingUser, setIsEditingUser] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
+  const [isUpdatingFaculty, setIsUpdatingFaculty] = useState(false);
+  const [isUpdatingTA, setIsUpdatingTA] = useState(false);
+  const [isUpdatingStudent, setIsUpdatingStudent] = useState(false);
+
   const apiRouteFaculty = `/api/courses/${courseId}/faculty/`;
   const apiRouteTAs = `/api/courses/${courseId}/tas/`;
   const apiRouteStudents = `/api/courses/${courseId}/students/`;
@@ -55,6 +60,10 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
 
   const toggleIsEditing = () => setIsEditing(!isEditing);
   const toggleEditUser = () => setIsEditingUser(!isEditingUser);
+
+  const toggleUpdateFaculty = () => setIsUpdatingFaculty(!isUpdatingFaculty);
+  const toggleUpdateTA = () => setIsUpdatingTA(!isUpdatingTA);
+  const toggleUpdateStudent = () => setIsUpdatingStudent(!isUpdatingStudent);
 
   const handleDeleteUser = async (userId: string, role: string) => {
     try {
@@ -94,6 +103,9 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
     setIsAddingStudent(false);
     setIsExportingData(false);
     setIsEditingUser(false);
+    setIsUpdatingFaculty(false);
+    setIsUpdatingTA(false);
+    setIsUpdatingStudent(false);
     setSelectedUser(null);
     onUpdate();
   };
@@ -122,9 +134,19 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
     <Container>
       {hasFacultyPermission && (
         <Group my={16}>
-          <Button onClick={toggleAddFaculty}>Add Faculty</Button>
-          <Button onClick={toggleAddTA}>Add TA</Button>
-          <Button onClick={toggleAddStudent}>Add Student</Button>
+          {isEditing ? (
+            <>
+              <Button onClick={toggleUpdateFaculty}>Update Faculty</Button>
+              <Button onClick={toggleUpdateTA}>Update TA</Button>
+              <Button onClick={toggleUpdateStudent}>Update Student</Button>
+            </>
+          ) : (
+            <>
+              <Button onClick={toggleAddFaculty}>Add Faculty</Button>
+              <Button onClick={toggleAddTA}>Add TA</Button>
+              <Button onClick={toggleAddStudent}>Add Student</Button>
+            </>
+          )}
           <Button onClick={toggleIsExportingData}>Export Data</Button>
           <Button onClick={toggleIsEditing}>
             {isEditing ? 'Finish Edit' : 'Edit Details'}
@@ -176,6 +198,35 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
       </Modal>
       <Modal opened={isEditingUser} onClose={toggleEditUser} title="Edit User">
         <UpdateUserForm user={selectedUser} onUserUpdated={handleUpdate} />
+      </Modal>
+      <Modal
+        opened={isUpdatingFaculty}
+        onClose={toggleUpdateFaculty}
+        title="Update Faculty"
+      >
+        <UpdateUserCSVForm
+          courseId={courseId}
+          role={Role.Faculty}
+          onUpdate={handleUpdate}
+        />
+      </Modal>
+      <Modal opened={isUpdatingTA} onClose={toggleUpdateTA} title="Update TA">
+        <UpdateUserCSVForm
+          courseId={courseId}
+          role={Role.TA}
+          onUpdate={handleUpdate}
+        />
+      </Modal>
+      <Modal
+        opened={isUpdatingStudent}
+        onClose={toggleUpdateStudent}
+        title="Update TA"
+      >
+        <UpdateUserCSVForm
+          courseId={courseId}
+          role={Role.Student}
+          onUpdate={handleUpdate}
+        />
       </Modal>
       <Divider label="Faculty Members" size="lg" />
       {faculty && faculty.length > 0 && (

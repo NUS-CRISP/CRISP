@@ -3,6 +3,7 @@ import * as courseService from '../../services/courseService';
 import * as assessmentService from '../../services/assessmentService';
 import * as teamSetService from '../../services/teamSetService';
 import * as teamService from '../../services/teamService';
+import * as auth from '../../utils/auth';
 import {
   createCourse,
   getCourses,
@@ -19,12 +20,17 @@ import {
   addSprint,
   addAssessments,
 } from '../../controllers/courseController';
-import { NotFoundError, BadRequestError } from '../../services/errors';
+import {
+  NotFoundError,
+  BadRequestError,
+  MissingAuthorizationError,
+} from '../../services/errors';
 
 jest.mock('../../services/courseService');
 jest.mock('../../services/assessmentService');
 jest.mock('../../services/teamSetService');
 jest.mock('../../services/teamService');
+jest.mock('../../utils/auth');
 
 const mockRequest = (body = {}, params = {}, headers = {}) => {
   const req = {} as Request;
@@ -42,6 +48,14 @@ const mockResponse = () => {
 };
 
 describe('courseController', () => {
+  beforeEach(() => {
+    jest.spyOn(auth, 'getAccountId').mockResolvedValue('mockAccountId');
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   describe('createCourse', () => {
     it('should create a course successfully', async () => {
       const req = mockRequest({}, {}, { authorization: 'accountId' });
@@ -65,8 +79,10 @@ describe('courseController', () => {
       const res = mockResponse();
 
       jest
-        .spyOn(courseService, 'createNewCourse')
-        .mockRejectedValue(new Error('Missing authorization'));
+        .spyOn(auth, 'getAccountId')
+        .mockRejectedValue(
+          new MissingAuthorizationError('Missing authorization')
+        );
 
       await createCourse(req, res);
 
@@ -126,8 +142,10 @@ describe('courseController', () => {
       const res = mockResponse();
 
       jest
-        .spyOn(courseService, 'getCoursesForUser')
-        .mockRejectedValue(new Error('Missing authorization'));
+        .spyOn(auth, 'getAccountId')
+        .mockRejectedValue(
+          new MissingAuthorizationError('Missing authorization')
+        );
 
       await getCourses(req, res);
 
@@ -184,20 +202,6 @@ describe('courseController', () => {
 
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockCourse);
-    });
-
-    it('should handle missing authorization send a 400 status', async () => {
-      const req = mockRequest({}, { id: 'courseId' });
-      const res = mockResponse();
-
-      jest
-        .spyOn(courseService, 'getCourseById')
-        .mockRejectedValue(new Error('Missing authorization'));
-
-      await getCourse(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Missing authorization' });
     });
 
     it('should handle NotFoundError and send a 404 status', async () => {
@@ -515,6 +519,12 @@ describe('courseController', () => {
       const res = mockResponse();
 
       jest
+        .spyOn(auth, 'getAccountId')
+        .mockRejectedValue(
+          new MissingAuthorizationError('Missing authorization')
+        );
+
+      jest
         .spyOn(teamSetService, 'createTeamSet')
         .mockRejectedValue(
           new BadRequestError(
@@ -601,6 +611,12 @@ describe('courseController', () => {
       const res = mockResponse();
 
       jest
+        .spyOn(auth, 'getAccountId')
+        .mockRejectedValue(
+          new MissingAuthorizationError('Missing authorization')
+        );
+
+      jest
         .spyOn(teamService, 'addStudentsToTeam')
         .mockRejectedValue(new BadRequestError('Invalid Student'));
 
@@ -685,6 +701,12 @@ describe('courseController', () => {
         { id: 'courseId' }
       );
       const res = mockResponse();
+
+      jest
+        .spyOn(auth, 'getAccountId')
+        .mockRejectedValue(
+          new MissingAuthorizationError('Missing authorization')
+        );
 
       jest
         .spyOn(teamService, 'addTAsToTeam')

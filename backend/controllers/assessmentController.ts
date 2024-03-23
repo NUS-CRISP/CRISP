@@ -6,7 +6,11 @@ import {
   updateAssessmentResultMarkerById,
   uploadAssessmentResultsById,
 } from '../services/assessmentService';
-import { BadRequestError, NotFoundError } from '../services/errors';
+import {
+  BadRequestError,
+  MissingAuthorizationError,
+  NotFoundError,
+} from '../services/errors';
 
 import {
   fetchAndSaveSheetData,
@@ -17,17 +21,14 @@ import { getAccountId } from '../utils/auth';
 export const getAssessment = async (req: Request, res: Response) => {
   try {
     const accountId = await getAccountId(req);
-
-    if (!accountId) {
-      res.status(400).json({ error: 'Missing authorization' });
-      return;
-    }
     const { assessmentId } = req.params;
     const assessment = await getAssessmentById(assessmentId, accountId);
     res.status(200).json(assessment);
   } catch (error) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
+    } else if (error instanceof MissingAuthorizationError) {
+      res.status(400).json({ error: 'Missing authorization' });
     } else {
       console.error('Error retrieving assessment:', error);
       res.status(500).json({ error: 'Failed to retrieve assessment' });
@@ -37,10 +38,6 @@ export const getAssessment = async (req: Request, res: Response) => {
 
 export const updateAssessment = async (req: Request, res: Response) => {
   const accountId = await getAccountId(req);
-  if (!accountId) {
-    res.status(400).json({ error: 'Missing authorization' });
-    return;
-  }
   const { assessmentId } = req.params;
   const updateData = req.body;
   try {
@@ -51,6 +48,8 @@ export const updateAssessment = async (req: Request, res: Response) => {
       res.status(404).json({ error: error.message });
     } else if (error instanceof BadRequestError) {
       res.status(400).json({ error: error.message });
+    } else if (error instanceof MissingAuthorizationError) {
+      res.status(400).json({ error: 'Missing authorization' });
     } else {
       console.error('Error updating assessment:', error);
       res.status(500).json({ error: 'Failed to update assessment' });
@@ -59,11 +58,6 @@ export const updateAssessment = async (req: Request, res: Response) => {
 };
 
 export const deleteAssessment = async (req: Request, res: Response) => {
-  const accountId = await getAccountId(req);
-  if (!accountId) {
-    res.status(400).json({ error: 'Missing authorization' });
-    return;
-  }
   const { assessmentId } = req.params;
   try {
     await deleteAssessmentById(assessmentId);
@@ -114,16 +108,14 @@ export const updateResultMarker = async (req: Request, res: Response) => {
 export const getSheetData = async (req: Request, res: Response) => {
   const { assessmentId } = req.params;
   const accountId = await getAccountId(req);
-  if (!accountId) {
-    res.status(400).json({ error: 'Missing authorization' });
-    return;
-  }
   try {
     const sheetsData = await getAssessmentSheetData(assessmentId, accountId);
     res.status(200).json(sheetsData);
   } catch (error) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
+    } else if (error instanceof MissingAuthorizationError) {
+      res.status(400).json({ error: 'Missing authorization' });
     } else {
       console.error('Error getting sheets data:', error);
       res.status(500).json({ error: 'Failed to get sheets data' });
