@@ -139,34 +139,33 @@ export const addStudentsToCourse = async (
 };
 
 export const updateStudentsInCourse = async (
-    courseId: string,
-    studentDataList: any[]
-  ) => {
-    const course = await CourseModel.findById(courseId);
-    if (!course) {
-      throw new NotFoundError('Course not found');
+  courseId: string,
+  studentDataList: any[]
+) => {
+  const course = await CourseModel.findById(courseId);
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+  for (const studentData of studentDataList) {
+    const studentId = studentData.identifier;
+    const student = await UserModel.findOne({ identifier: studentId });
+    if (!student) {
+      continue;
     }
-    for (const studentData of studentDataList) {
-      const studentId = studentData.identifier;
-      const student = await UserModel.findOne({ identifier: studentId });
-      if (!student) {
-        continue;
-      }
-      const studentAccount = await AccountModel.findOne({ user: student._id });
-      if (!studentAccount) {
-        continue;
-      }
-      if (
-        studentAccount.role !== Role.Student) {
-        continue;
-      }
-      if (!course.students.includes(student._id)) {
-        continue;
-      }
-      student.name = studentData.name ?? student.name;
-      student.gitHandle = studentData.gitHandle ?? student.gitHandle;
-      await student.save();
+    const studentAccount = await AccountModel.findOne({ user: student._id });
+    if (!studentAccount) {
+      continue;
     }
+    if (studentAccount.role !== Role.Student) {
+      continue;
+    }
+    if (!course.students.includes(student._id)) {
+      continue;
+    }
+    student.name = studentData.name ?? student.name;
+    student.gitHandle = studentData.gitHandle ?? student.gitHandle;
+    await student.save();
+  }
 };
 
 export const removeStudentsFromCourse = async (
@@ -242,34 +241,33 @@ export const addTAsToCourse = async (courseId: string, TADataList: any[]) => {
 };
 
 export const updateTAsInCourse = async (
-    courseId: string,
-    TADataList: any[]
-  ) => {
-    const course = await CourseModel.findById(courseId);
-    if (!course) {
-      throw new NotFoundError('Course not found');
+  courseId: string,
+  TADataList: any[]
+) => {
+  const course = await CourseModel.findById(courseId);
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+  for (const TAData of TADataList) {
+    const TAId = TAData.identifier;
+    const TA = await UserModel.findOne({ identifier: TAId });
+    if (!TA) {
+      continue;
     }
-    for (const TAData of TADataList) {
-      const TAId = TAData.identifier;
-      const TA = await UserModel.findOne({ identifier: TAId });
-      if (!TA) {
-        continue;
-      }
-      const TAAccount = await AccountModel.findOne({ user: TA._id });
-      if (!TAAccount) {
-        continue;
-      }
-      if (
-        TAAccount.role !== Role.TA) {
-        continue;
-      }
-      if (!course.TAs.includes(TA._id)) {
-        continue;
-      }
-      TA.name = TA.name ?? TA.name;
-      TA.gitHandle = TA.gitHandle ?? TA.gitHandle;
-      await TA.save();
+    const TAAccount = await AccountModel.findOne({ user: TA._id });
+    if (!TAAccount) {
+      continue;
     }
+    if (TAAccount.role !== Role.TA) {
+      continue;
+    }
+    if (!course.TAs.includes(TA._id)) {
+      continue;
+    }
+    TA.name = TA.name ?? TA.name;
+    TA.gitHandle = TA.gitHandle ?? TA.gitHandle;
+    await TA.save();
+  }
 };
 
 export const getCourseTeachingTeam = async (courseId: string) => {
@@ -363,34 +361,33 @@ export const addFacultyToCourse = async (
 };
 
 export const updateFacultyInCourse = async (
-    courseId: string,
-    facultyDataList: any[]
-  ) => {
-    const course = await CourseModel.findById(courseId);
-    if (!course) {
-      throw new NotFoundError('Course not found');
+  courseId: string,
+  facultyDataList: any[]
+) => {
+  const course = await CourseModel.findById(courseId);
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+  for (const facultyData of facultyDataList) {
+    const facultyId = facultyData.identifier;
+    const faculty = await UserModel.findOne({ identifier: facultyId });
+    if (!faculty) {
+      continue;
     }
-    for (const facultyData of facultyDataList) {
-      const facultyId = facultyData.identifier;
-      const faculty = await UserModel.findOne({ identifier: facultyId });
-      if (!faculty) {
-        continue;
-      }
-      const facultyAccount = await AccountModel.findOne({ user: faculty._id });
-      if (!facultyAccount) {
-        continue;
-      }
-      if (
-        facultyAccount.role !== Role.Faculty) {
-        continue;
-      }
-      if (!course.TAs.includes(faculty._id)) {
-        continue;
-      }
-      faculty.name = faculty.name ?? faculty.name;
-      faculty.gitHandle = faculty.gitHandle ?? faculty.gitHandle;
-      await faculty.save();
+    const facultyAccount = await AccountModel.findOne({ user: faculty._id });
+    if (!facultyAccount) {
+      continue;
     }
+    if (facultyAccount.role !== Role.Faculty) {
+      continue;
+    }
+    if (!course.TAs.includes(faculty._id)) {
+      continue;
+    }
+    faculty.name = faculty.name ?? faculty.name;
+    faculty.gitHandle = faculty.gitHandle ?? faculty.gitHandle;
+    await faculty.save();
+  }
 };
 
 export const removeFacultyFromCourse = async (
