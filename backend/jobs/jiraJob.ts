@@ -188,7 +188,9 @@ async function fetchIssues(
         if (storyPointsResponse.ok) {
           storyPoints = (await storyPointsResponse.json()).value;
         } else {
-          console.error(`Failed to fetch story points. Status: ${storyPointsResponse.status}`);
+          console.error(
+            `Failed to fetch story points. Status: ${storyPointsResponse.status}`
+          );
         }
 
         const jiraIssue: Omit<JiraIssue, '_id'> = {
