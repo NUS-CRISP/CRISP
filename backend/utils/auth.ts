@@ -2,7 +2,7 @@ import hkdf from '@panva/hkdf';
 import cookie from 'cookie';
 import { Request } from 'express';
 import * as jose from 'jose';
-import { MissingAuthorizationError } from 'services/errors';
+import { MissingAuthorizationError } from '../services/errors';
 
 export const getAccountId = async (req: Request) => {
   const result = (await getToken(req)).sub;
