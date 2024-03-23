@@ -21,6 +21,9 @@ import {
   removeTAsFromCourse,
   updateCourseById,
   getPeopleFromCourse,
+  updateFacultyInCourse,
+  updateStudentsInCourse,
+  updateTAsInCourse,
 } from '../services/courseService';
 import { BadRequestError, NotFoundError } from '../services/errors';
 import { addStudentsToTeam, addTAsToTeam } from '../services/teamService';
@@ -208,7 +211,7 @@ export const updateTAs = async (req: Request, res: Response) => {
     const courseId = req.params.id;
     const TAs = req.body.items;
     try {
-      await addTAsInCourse(courseId, TAs);
+      await updateTAsInCourse(courseId, TAs);
       res.status(200).json({ message: 'TAs updated successfully' });
     } catch (error) {
       if (error instanceof NotFoundError) {
