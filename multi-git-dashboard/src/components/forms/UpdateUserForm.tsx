@@ -16,7 +16,6 @@ const UpdateUserForm: React.FC<UpdateUserFormProps> = ({
 
   const form = useForm({
     initialValues: {
-      identifier: user?.identifier || '',
       name: user?.name || '',
       gitHandle: user?.gitHandle || '',
     },
@@ -26,9 +25,6 @@ const UpdateUserForm: React.FC<UpdateUserFormProps> = ({
   const handleSubmitForm = async () => {
     const requestBody: Record<string, string> = {};
 
-    if (form.values.identifier) {
-      requestBody.identifier = form.values.identifier;
-    }
     if (form.values.name) {
       requestBody.name = form.values.name;
     }
@@ -60,14 +56,6 @@ const UpdateUserForm: React.FC<UpdateUserFormProps> = ({
           value={form.values.name}
           onChange={event => {
             form.setFieldValue('name', event.currentTarget.value);
-          }}
-        />
-        <TextInput
-          label="ID (NUS Net)"
-          {...form.getInputProps('identifier')}
-          value={form.values.identifier}
-          onChange={event => {
-            form.setFieldValue('identifier', event.currentTarget.value);
           }}
         />
         <TextInput
