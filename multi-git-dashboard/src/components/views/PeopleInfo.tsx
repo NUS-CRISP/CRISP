@@ -61,9 +61,9 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
   const toggleIsEditing = () => setIsEditing(!isEditing);
   const toggleEditUser = () => setIsEditingUser(!isEditingUser);
 
-  const toggleUpdateFaculty = () => setIsUpdatingFaculty(!isAddingFaculty);
-  const toggleUpdateTA = () => setIsUpdatingTA(!isAddingTA);
-  const toggleUpdateStudent = () => setIsUpdatingStudent(!isAddingStudent);
+  const toggleUpdateFaculty = () => setIsUpdatingFaculty(!isUpdatingFaculty);
+  const toggleUpdateTA = () => setIsUpdatingTA(!isUpdatingTA);
+  const toggleUpdateStudent = () => setIsUpdatingStudent(!isUpdatingStudent);
 
   const handleDeleteUser = async (userId: string, role: string) => {
     try {
@@ -136,15 +136,15 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
         <Group my={16}>
           {isEditing ? (
             <>
-              <Button onClick={toggleAddFaculty}>Add Faculty</Button>
-              <Button onClick={toggleAddTA}>Add TA</Button>
-              <Button onClick={toggleAddStudent}>Add Student</Button>
-            </>
-          ) : (
-            <>
               <Button onClick={toggleUpdateFaculty}>Update Faculty</Button>
               <Button onClick={toggleUpdateTA}>Update TA</Button>
               <Button onClick={toggleUpdateStudent}>Update Student</Button>
+            </>
+          ) : (
+            <>
+              <Button onClick={toggleAddFaculty}>Add Faculty</Button>
+              <Button onClick={toggleAddTA}>Add TA</Button>
+              <Button onClick={toggleAddStudent}>Add Student</Button>
             </>
           )}
           <Button onClick={toggleIsExportingData}>Export Data</Button>
