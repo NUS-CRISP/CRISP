@@ -25,7 +25,11 @@ import {
   updateStudentsInCourse,
   updateTAsInCourse,
 } from '../services/courseService';
-import { BadRequestError, NotFoundError } from '../services/errors';
+import {
+  BadRequestError,
+  MissingAuthorizationError,
+  NotFoundError,
+} from '../services/errors';
 import { addStudentsToTeam, addTAsToTeam } from '../services/teamService';
 import { createTeamSet } from '../services/teamSetService';
 import { getAccountId } from '../utils/auth';
@@ -34,10 +38,6 @@ import { getAccountId } from '../utils/auth';
 export const createCourse = async (req: Request, res: Response) => {
   try {
     const accountId = await getAccountId(req);
-    if (!accountId) {
-      res.status(400).json({ error: 'Missing authorization' });
-      return;
-    }
     const course = await createNewCourse(req.body, accountId);
     res
       .status(201)
@@ -45,6 +45,8 @@ export const createCourse = async (req: Request, res: Response) => {
   } catch (error) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
+    } else if (error instanceof MissingAuthorizationError) {
+      res.status(400).json({ error: 'Missing authorization' });
     } else {
       console.error('Error creating course:', error);
       res.status(500).json({ error: 'Failed to create course' });
@@ -55,15 +57,13 @@ export const createCourse = async (req: Request, res: Response) => {
 export const getCourses = async (req: Request, res: Response) => {
   try {
     const accountId = await getAccountId(req);
-    if (!accountId) {
-      res.status(400).json({ error: 'Missing authorization' });
-      return;
-    }
     const courses = await getCoursesForUser(accountId);
     res.status(200).json(courses);
   } catch (error) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
+    } else if (error instanceof MissingAuthorizationError) {
+      res.status(400).json({ error: 'Missing authorization' });
     } else {
       console.error('Error fetching courses:', error);
       res.status(500).json({ error: 'Failed to fetch courses' });
@@ -73,10 +73,6 @@ export const getCourses = async (req: Request, res: Response) => {
 
 export const getCourse = async (req: Request, res: Response) => {
   const accountId = await getAccountId(req);
-  if (!accountId) {
-    res.status(400).json({ error: 'Missing authorization' });
-    return;
-  }
   const courseId = req.params.id;
   try {
     const course = await getCourseById(courseId, accountId);
@@ -84,6 +80,8 @@ export const getCourse = async (req: Request, res: Response) => {
   } catch (error) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
+    } else if (error instanceof MissingAuthorizationError) {
+      res.status(400).json({ error: 'Missing authorization' });
     } else {
       console.error('Error fetching course:', error);
       res.status(500).json({ error: 'Failed to fetch course' });
@@ -342,10 +340,6 @@ export const addTeamSet = async (req: Request, res: Response) => {
 
 export const getTeamSets = async (req: Request, res: Response) => {
   const accountId = await getAccountId(req);
-  if (!accountId) {
-    res.status(400).json({ error: 'Missing authorization' });
-    return;
-  }
   const courseId = req.params.id;
   try {
     const teamSets = await getTeamSetsFromCourse(accountId, courseId);
@@ -353,6 +347,8 @@ export const getTeamSets = async (req: Request, res: Response) => {
   } catch (error) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
+    } else if (error instanceof MissingAuthorizationError) {
+      res.status(400).json({ error: 'Missing authorization' });
     } else {
       console.error('Error getting team sets:', error);
       res.status(500).json({ error: 'Failed to get team sets' });

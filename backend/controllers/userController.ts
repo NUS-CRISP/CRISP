@@ -1,14 +1,14 @@
 import { Request, Response } from 'express';
-import { BadRequestError, NotFoundError } from '../services/errors';
+import {
+  BadRequestError,
+  MissingAuthorizationError,
+  NotFoundError,
+} from '../services/errors';
 import { editUser, getUserByGitHandle } from '../services/userService';
 import { getAccountId } from '../utils/auth';
 
 export const updateUser = async (req: Request, res: Response) => {
   const accountId = await getAccountId(req);
-  if (!accountId) {
-    res.status(400).json({ error: 'Missing authorization' });
-    return;
-  }
   try {
     const { userId } = req.params;
     const updateData = req.body;
@@ -19,6 +19,8 @@ export const updateUser = async (req: Request, res: Response) => {
       res.status(404).json({ error: error.message });
     } else if (error instanceof BadRequestError) {
       res.status(400).json({ error: error.message });
+    } else if (error instanceof MissingAuthorizationError) {
+      res.status(400).json({ error: 'Missing authorization' });
     } else {
       console.error('Error updating user:', error);
       res.status(500).json({ error: 'Failed to update user' });
@@ -27,12 +29,6 @@ export const updateUser = async (req: Request, res: Response) => {
 };
 
 export const getUserByHandle = async (req: Request, res: Response) => {
-  const accountId = await getAccountId(req);
-  if (!accountId) {
-    res.status(400).json({ error: 'Missing authorization' });
-    return;
-  }
-
   try {
     const { gitHandle } = req.query;
     if (typeof gitHandle !== 'string') {
