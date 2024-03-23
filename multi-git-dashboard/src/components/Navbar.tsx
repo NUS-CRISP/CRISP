@@ -94,6 +94,8 @@ const Navbar: React.FC = () => {
       return 'Timeline';
     } else if (path.startsWith('/courses/[id]/assessments')) {
       return 'Assessments';
+    } else if (path.startsWith('/courses/[id]/project-management')) {
+      return 'Project Management';
     } else if (path.startsWith('/courses/[id]')) {
       return 'Overview';
     } else {
@@ -152,6 +154,10 @@ const Navbar: React.FC = () => {
     {
       link: `/courses/${courseId}/assessments`,
       label: 'Assessments',
+    },
+    {
+      link: `/courses/${courseId}/project-management`,
+      label: 'Project Management',
     },
   ];
 
