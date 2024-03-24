@@ -3,8 +3,8 @@ import { URLSearchParams } from 'url';
 import { fetchAndSaveJiraData } from '../jobs/jiraJob';
 import CourseModel from '../models/Course';
 import { getAccountId } from '../utils/auth';
-import { getJiraBoardNamesByCourse } from 'services/projectManagementService';
-import { NotFoundError } from 'services/errors';
+import { getJiraBoardNamesByCourse } from '../services/projectManagementService';
+import { NotFoundError } from '../services/errors';
 
 // Define OAuth 2.0 configuration
 const authorizationUrl = 'https://auth.atlassian.com/authorize';
