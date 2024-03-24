@@ -47,7 +47,7 @@ export const courseSchema = new Schema<Course>({
   gitHubOrgName: String,
   jira: {
     isRegistered: { type: Boolean, required: true, default: false },
-    cloudId: { type: String },
+    cloudIds: [{ type: String }],
     accessToken: { type: String },
     refreshToken: { type: String },
   },

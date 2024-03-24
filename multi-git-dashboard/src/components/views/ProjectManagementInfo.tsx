@@ -113,8 +113,8 @@ const ProjectManagementInfo: React.FC<ProjectManagementProps> = ({
             <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
               <Button onClick={handleOAuthButtonClick}>
                 {jiraRegistrationStatus
-                  ? 'Reauthorize with Jira'
-                  : 'Authorize with Jira'}
+                  ? 'Authorize Another Jira Organization'
+                  : 'Authorize With Jira'}
               </Button>
             </Group>
           )}
