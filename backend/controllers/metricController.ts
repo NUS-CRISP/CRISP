@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { logLogin, logTabSessionById } from '../services/metricService';
 import { getAccountId } from '../utils/auth';
-import { MissingAuthorizationError } from 'services/errors';
+import { MissingAuthorizationError } from '../services/errors';
 
 export const logLoginEvent = async (req: Request, res: Response) => {
   try {
