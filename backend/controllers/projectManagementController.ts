@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { URLSearchParams } from 'url';
 import { fetchAndSaveJiraData } from '../jobs/jiraJob';
 import CourseModel from '../models/Course';
-import { getAccountId } from 'utils/auth';
+import { getAccountId } from '../utils/auth';
 import { getJiraBoardNamesByCourse } from 'services/projectManagementService';
 import { NotFoundError } from 'services/errors';
 
