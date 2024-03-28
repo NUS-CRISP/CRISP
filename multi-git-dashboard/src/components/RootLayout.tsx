@@ -1,6 +1,7 @@
+import { EXCLUDE_AUTH_REGEX } from '@/middleware';
+import styles from '@styles/root-layout.module.css';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import styles from '../styles/root-layout.module.css';
 import Navbar from './Navbar';
 
 export default function RootLayout({
@@ -9,17 +10,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { pathname } = router;
-
-  const excludedRoutes = ['/auth/signin', '/auth/register'];
-  const shouldShowSidebar = !excludedRoutes.includes(pathname);
+  const showSidebar = router.pathname !== '/' && EXCLUDE_AUTH_REGEX.test(router.pathname);
 
   return (
     <div className={styles.rootLayout}>
       <Head>
         <link rel="shortcut icon" href="/favicon.png" />
       </Head>
-      {shouldShowSidebar && <Navbar />}
+      {showSidebar && <Navbar />}
       <div className={styles.content}>{children}</div>
     </div>
   );

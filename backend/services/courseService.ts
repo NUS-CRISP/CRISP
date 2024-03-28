@@ -5,8 +5,8 @@ import TeamModel, { Team } from '@models/Team';
 import TeamSetModel, { TeamSet } from '@models/TeamSet';
 import UserModel, { User } from '@models/User';
 import Role from '@shared/types/auth/Role';
-import { NotFoundError } from './errors';
 import { Types } from 'mongoose';
+import { NotFoundError } from './errors';
 
 /*----------------------------------------Course----------------------------------------*/
 export const createNewCourse = async (courseData: any, accountId: string) => {
@@ -36,10 +36,12 @@ export const getCoursesForUser = async (accountId: string) => {
   return courses;
 };
 
-export const getCourseById = async (courseId: string, accountId: string) => {
-  const account = await AccountModel.findById(accountId);
-  if (!account) {
-    throw new NotFoundError('Account not found');
+export const getCourseById = async (courseId: string, accountId?: string) => {
+  if (accountId) {
+    const account = await AccountModel.findById(accountId);
+    if (!account) {
+      throw new NotFoundError('Account not found');
+    }
   }
   const course = await CourseModel.findById(courseId);
   if (!course) {
@@ -462,9 +464,9 @@ export const getTeamSetsFromCourse = async (
     const userId = account.user;
     course.teamSets.forEach(
       teamSet =>
-        (teamSet.teams = teamSet.teams.filter(team =>
-          (team as unknown as Team).TA?.equals(userId)
-        ))
+      (teamSet.teams = teamSet.teams.filter(team =>
+        (team as unknown as Team).TA?.equals(userId)
+      ))
     );
   }
   course.teamSets.forEach((teamSet: TeamSet) => {
@@ -602,9 +604,9 @@ export const getProjectManagementBoardFromCourse = async (
     const userId = account.user;
     course.teamSets.forEach(
       teamSet =>
-        (teamSet.teams = teamSet.teams.filter(team =>
-          (team as unknown as Team).TA?.equals(userId)
-        ))
+      (teamSet.teams = teamSet.teams.filter(team =>
+        (team as unknown as Team).TA?.equals(userId)
+      ))
     );
   }
   course.teamSets.forEach((teamSet: TeamSet) => {

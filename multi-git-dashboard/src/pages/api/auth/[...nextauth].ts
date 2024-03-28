@@ -28,6 +28,15 @@ export const authOptions: AuthOptions = {
           .db(process.env.DB_NAME)
           .collection('accounts');
 
+        // TODO: shouldn't be hard coded
+        if (credentials?.email === 'trial@example.com' && credentials.password === 'nuscrisptrial') {
+          return {
+            id: '660521956ecaf06ad0654137',
+            name: 'Trial User',
+            role: 'Trial User',
+          };
+        }
+
         const email = credentials?.email?.toLowerCase();
         const account = await accountsCollection.findOne({ email });
 

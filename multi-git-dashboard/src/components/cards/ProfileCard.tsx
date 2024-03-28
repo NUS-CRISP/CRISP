@@ -5,7 +5,7 @@ import { Status } from '@shared/types/util/Status';
 import { useEffect, useState } from 'react';
 import { GitHandleProps } from '../GitHandle';
 
-interface ProfileCardProps extends GitHandleProps {}
+interface ProfileCardProps extends GitHandleProps { }
 
 export const ProfileCard: React.FC<ProfileCardProps> = ({
   gitHandle,
@@ -19,7 +19,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
     const fetchProfile = async () => {
       setStatus(Status.Loading);
       try {
-        const profileData = await profileGetter(gitHandle);
+        const profileData: Profile = await profileGetter(gitHandle);
         setProfile(profileData);
         setStatus(Status.Idle);
       } catch (error) {

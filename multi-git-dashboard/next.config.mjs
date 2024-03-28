@@ -6,15 +6,6 @@ import { PHASE_DEVELOPMENT_SERVER } from 'next/constants.js';
 
 const baseConfig = {
   transpilePackages: ['shared'],
-  async redirects() {
-    return [
-      {
-        source: '/',
-        destination: '/courses',
-        permanent: true,
-      },
-    ];
-  }
 };
 
 const nextConfig = (phase) => {

@@ -2,6 +2,7 @@ import CourseCard from '@/components/cards/CourseCard';
 import { hasFacultyPermission } from '@/lib/auth/utils';
 import { Button } from '@mantine/core';
 import { Course } from '@shared/types/Course';
+import styles from '@styles/courses.module.css';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
@@ -38,41 +39,39 @@ const CourseListPage: React.FC = () => {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div>
-        <h1>Courses</h1>
-        {courses.length === 0 ? (
-          <p>No courses to show</p>
-        ) : (
-          <div className="course-card-list">
-            {courses.map(course => (
-              <Link
+    <div className={styles.content}>
+      <h1>Courses</h1>
+      {courses.length === 0 ? (
+        <p>No courses to show</p>
+      ) : (
+        <div className="course-card-list">
+          {courses.map(course => (
+            <Link
+              key={course._id.toString()}
+              style={{ textDecoration: 'none' }}
+              href={`/courses/${course._id}`}
+            >
+              <CourseCard
                 key={course._id.toString()}
-                style={{ textDecoration: 'none' }}
-                href={`/courses/${course._id}`}
-              >
-                <CourseCard
-                  key={course._id.toString()}
-                  name={course.name}
-                  code={course.code}
-                  semester={course.semester}
-                />
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
+                name={course.name}
+                code={course.code}
+                semester={course.semester}
+              />
+            </Link>
+          ))}
+        </div>
+      )}
       {hasFacultyPermission() && (
         <div>
           <Button
             onClick={() => router.push('/courses/create')}
-            style={{ marginTop: '16px' }}
+            mt={16}
           >
             Create Course
           </Button>
         </div>
       )}
-    </main>
+    </div>
   );
 };
 

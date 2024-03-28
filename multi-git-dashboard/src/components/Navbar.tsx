@@ -211,8 +211,7 @@ const Navbar: React.FC = () => {
   }, [router.pathname]);
 
   useEffect(() => {
-    const handleTabClose = (event: Event) => {
-      event.preventDefault();
+    const handleTabClose = () => {
       logSessionTime(activeCourseTab, true);
     };
 
@@ -238,7 +237,7 @@ const Navbar: React.FC = () => {
 
         <Stack justify="center" gap={0}>
           <NavbarLink
-            onClick={() => {}}
+            onClick={() => { }}
             icon={IconUserCircle}
             label={`Hello, ${session && session.user ? session.user.name : 'user'}`}
             disabled

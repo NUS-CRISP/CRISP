@@ -11,21 +11,21 @@ import {
   getAssessmentsFromCourse,
   getCourseById,
   getCourseCodeById,
+  getCourseJiraRegistrationStatusById,
   getCourseTeachingTeam,
   getCourseTimeline,
   getCoursesForUser,
-  getTeamSetsFromCourse,
+  getPeopleFromCourse,
+  getProjectManagementBoardFromCourse,
   getTeamSetNamesFromCourse,
+  getTeamSetsFromCourse,
   removeFacultyFromCourse,
   removeStudentsFromCourse,
   removeTAsFromCourse,
   updateCourseById,
-  getPeopleFromCourse,
   updateFacultyInCourse,
   updateStudentsInCourse,
   updateTAsInCourse,
-  getProjectManagementBoardFromCourse,
-  getCourseJiraRegistrationStatusById,
 } from '../services/courseService';
 import {
   BadRequestError,
@@ -74,9 +74,9 @@ export const getCourses = async (req: Request, res: Response) => {
 };
 
 export const getCourse = async (req: Request, res: Response) => {
-  const accountId = await getAccountId(req);
   const courseId = req.params.id;
   try {
+    const accountId = await getAccountId(req);
     const course = await getCourseById(courseId, accountId);
     res.status(200).json(course);
   } catch (error) {
