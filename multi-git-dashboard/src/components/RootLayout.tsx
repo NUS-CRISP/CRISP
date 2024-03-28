@@ -10,7 +10,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const showSidebar = router.pathname !== '/' && EXCLUDE_AUTH_REGEX.test(router.pathname);
+  const showSidebar =
+    router.pathname !== '/' && EXCLUDE_AUTH_REGEX.test(router.pathname);
 
   return (
     <div className={styles.rootLayout}>
