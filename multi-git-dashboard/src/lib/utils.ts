@@ -11,13 +11,14 @@ export interface DateUtils {
 const BREAK_START_WEEK = 6;
 const BREAK_DURATION_WEEKS = 1;
 
-export const weekToDateGenerator = (courseStartDate: Dayjs) => (week: number) => {
-  let date = courseStartDate.add(week, 'week');
-  if (week >= BREAK_START_WEEK) {
-    date = date.add(BREAK_DURATION_WEEKS, 'week');
-  }
-  return date;
-};
+export const weekToDateGenerator =
+  (courseStartDate: Dayjs) => (week: number) => {
+    let date = courseStartDate.add(week, 'week');
+    if (week >= BREAK_START_WEEK) {
+      date = date.add(BREAK_DURATION_WEEKS, 'week');
+    }
+    return date;
+  };
 
 export const getCurrentWeekGenerator = (courseStartDate: Dayjs) => () => {
   const today = dayjs();
