@@ -4,11 +4,7 @@
       "path": "."
     },
     {
-      "name": ".next",
-      "path": "multi-git-dashboard/.next"
-    },
-    {
-      "name": "multi-git-dashboard",
+      "name": "frontend",
       "path": "multi-git-dashboard"
     },
     {
