@@ -12,7 +12,7 @@ export const getAccountId = async (req: Request) => {
   return result;
 };
 
-const getToken = async (req: Request) => {
+export const getToken = async (req: Request) => {
   const tokenHeader = process.env.NEXTAUTH_TOKEN_HEADER;
   const nextAuthSecret = process.env.NEXTAUTH_SECRET;
 
@@ -33,5 +33,6 @@ const getToken = async (req: Request) => {
     32
   );
 
-  return (await jose.jwtDecrypt(jwe, key)).payload;
+  const dec = await jose.jwtDecrypt(jwe, key);
+  return dec.payload;
 };
