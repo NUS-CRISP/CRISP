@@ -1,17 +1,17 @@
-import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import AssessmentModel from '../../models/Assessment';
-import ResultModel, { Result } from '../../models/Result';
-import CourseModel from '../../models/Course';
+import mongoose from 'mongoose';
 import AccountModel from '../../models/Account';
+import AssessmentModel from '../../models/Assessment';
+import CourseModel from '../../models/Course';
+import ResultModel, { Result } from '../../models/Result';
 import UserModel from '../../models/User';
 import {
-  getAssessmentById,
-  uploadAssessmentResultsById,
-  updateAssessmentResultMarkerById,
   addAssessmentsToCourse,
+  getAssessmentById,
+  updateAssessmentResultMarkerById,
+  uploadAssessmentResultsById,
 } from '../../services/assessmentService';
-import { NotFoundError, BadRequestError } from '../../services/errors';
+import { BadRequestError, NotFoundError } from '../../services/errors';
 
 let mongo: MongoMemoryServer;
 
@@ -39,6 +39,7 @@ const commonCourseDetails = {
   name: 'Introduction to Computer Science',
   code: 'CS101',
   semester: 'Fall 2024',
+  startDate: new Date('2024-08-15'),
   courseType: 'Normal',
 };
 

@@ -33,6 +33,7 @@ describe('CourseModel', () => {
       name: 'Test Course',
       code: 'COURSE101',
       semester: 'Spring 2023',
+      startDate: new Date('2024-08-15'),
       courseType: 'Normal' as CourseType,
     };
 
@@ -50,6 +51,7 @@ describe('CourseModel', () => {
       name: 'Existing Course',
       code: 'EXIST101',
       semester: 'Fall 2022',
+      startDate: new Date('2024-08-15'),
       courseType: 'Normal' as CourseType,
     });
 
@@ -76,6 +78,7 @@ describe('CourseModel', () => {
       name: 'Course to Delete',
       code: 'DELETE101',
       semester: 'Fall 2022',
+      startDate: new Date('2024-08-15'),
       courseType: 'Normal' as CourseType,
     });
 
@@ -103,6 +106,7 @@ describe('CourseModel', () => {
       name: 'Course with Sprints',
       code: 'SPRINTS101',
       semester: 'Fall 2022',
+      startDate: new Date('2024-08-15'),
       courseType: 'Normal' as CourseType,
     });
 
@@ -131,6 +135,7 @@ describe('CourseModel', () => {
       name: 'Course with Milestones',
       code: 'MILESTONES101',
       semester: 'Fall 2022',
+      startDate: new Date('2024-08-15'),
       courseType: 'Normal' as CourseType,
     });
 
@@ -164,6 +169,7 @@ describe('CourseModel', () => {
       name: 'Test Course',
       code: 'TC101',
       semester: 'Spring 2023',
+      startDate: new Date('2024-08-15'),
       faculty: [faculty1._id, faculty2._id],
       courseType: 'Normal' as CourseType,
     };
@@ -184,6 +190,7 @@ describe('CourseModel', () => {
       name: 'Test Course',
       code: 'TC102',
       semester: 'Fall 2023',
+      startDate: new Date('2024-08-15'),
       students: [student._id],
       courseType: 'Normal' as CourseType,
     });
@@ -200,12 +207,14 @@ describe('CourseModel', () => {
       name: 'Spring Course',
       code: 'SC101',
       semester: 'Spring 2023',
+      startDate: new Date('2024-08-15'),
       courseType: 'Normal' as CourseType,
     });
     const course2 = new CourseModel({
       name: 'Fall Course',
       code: 'FC101',
       semester: 'Fall 2023',
+      startDate: new Date('2024-08-15'),
       courseType: 'Normal' as CourseType,
     });
     await Promise.all([course1.save(), course2.save()]);
