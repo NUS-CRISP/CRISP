@@ -1,3 +1,4 @@
+import { DateUtils } from '@/lib/utils';
 import { Accordion, Center, Loader, ScrollArea } from '@mantine/core';
 import { Profile } from '@shared/types/Profile';
 import { Team as SharedTeam } from '@shared/types/Team';
@@ -8,6 +9,7 @@ import OverviewCard from '../cards/OverviewCard';
 
 interface OverviewProps {
   courseId: string;
+  dateUtils: DateUtils;
 }
 
 export interface Team extends Omit<SharedTeam, 'teamData'> {
@@ -16,7 +18,7 @@ export interface Team extends Omit<SharedTeam, 'teamData'> {
 
 export type ProfileGetter = (gitHandle: string) => Promise<Profile>;
 
-const Overview: React.FC<OverviewProps> = ({ courseId }) => {
+const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
   const getTeams = async () => {
     const res = await fetch(`/api/teams/course/${courseId}`);
     if (!res.ok) throw new Error('Failed to fetch teams');
@@ -97,6 +99,7 @@ const Overview: React.FC<OverviewProps> = ({ courseId }) => {
                   team={team}
                   teamData={teamData}
                   teamDatas={teamDatas}
+                  dateUtils={dateUtils}
                   profileGetter={getStudentNameByGitHandle}
                 />
               ) : (

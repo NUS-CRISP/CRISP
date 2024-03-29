@@ -6,16 +6,15 @@ import {
   CloseButton,
   Collapse,
   List,
-  MultiSelect,
   SegmentedControl,
   Space,
   Text,
   TextInput,
-  Title,
+  Title
 } from '@mantine/core';
+import { DatePickerInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { CourseType } from '@shared/types/Course';
-import { TeamData } from '@shared/types/TeamData';
 import { IconBrandGithub, IconCheck } from '@tabler/icons-react';
 import { getSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
@@ -33,21 +32,31 @@ enum InstallationStatus {
   ERROR = 'error',
 }
 
-const CreateCoursePage: React.FC = () => {
+interface CreateCourseFormValues {
+  name: string;
+  code: string;
+  semester: string;
+  startDate: Date | null;
+  courseType: CourseType;
+  gitHubOrgName: string;
+  repoNameFilter: string;
+  installationId: string;
+}
+
+const CreateCourse: React.FC = () => {
   const router = useRouter();
   const apiRoute = '/api/courses';
 
   const [appInstallationStatus, setAppInstallationStatus] =
     useState<InstallationStatus>(InstallationStatus.IDLE);
-
-  const [repoList, setRepoList] = useState([] as string[]);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const form = useForm({
+  const form = useForm<CreateCourseFormValues>({
     initialValues: {
       name: '',
       code: '',
       semester: '',
+      startDate: null,
       courseType: CourseType.Normal,
       gitHubOrgName: '',
       repoNameFilter: '',
@@ -60,18 +69,20 @@ const CreateCoursePage: React.FC = () => {
         value.trim().length > 0 ? null : 'Course code is required',
       semester: value =>
         value.trim().length > 0 ? null : 'Semester is required',
+      startDate: value =>
+        value ? null : 'Start date is required',
       courseType: value => (value ? null : 'Course type is required'),
       // field should be valid only if courseType is Normal, or if courseType is GitHubOrg and installation check is successful
       gitHubOrgName: (value, values) =>
         values.courseType === CourseType.Normal ||
-        (values.courseType === CourseType.GitHubOrg &&
-          appInstallationStatus === InstallationStatus.SUCCESS)
+          (values.courseType === CourseType.GitHubOrg &&
+            appInstallationStatus === InstallationStatus.SUCCESS)
           ? null
           : 'GitHub Org name is required',
       repoNameFilter: (value, values) =>
         values.courseType === CourseType.Normal ||
-        (values.courseType === CourseType.GitHubOrg &&
-          appInstallationStatus === InstallationStatus.SUCCESS)
+          (values.courseType === CourseType.GitHubOrg &&
+            appInstallationStatus === InstallationStatus.SUCCESS)
           ? null
           : 'Repo name filter is required',
     },
@@ -79,7 +90,6 @@ const CreateCoursePage: React.FC = () => {
 
   const checkAppInstallation = async (orgName: string) => {
     const checkAppInstallationApiRoute = '/api/github/check-installation';
-    const reposApiRoute = `/api/github/${orgName}`;
 
     setAppInstallationStatus(InstallationStatus.LOADING);
     setErrorMessage('');
@@ -101,14 +111,6 @@ const CreateCoursePage: React.FC = () => {
       }
       const { installationId } = await response.json();
       form.setFieldValue('installationId', installationId);
-
-      const reposResponse = await fetch(reposApiRoute);
-      if (!reposResponse.ok && reposResponse.status !== 304) {
-        throw new Error('Failed to fetch repositories');
-      }
-      const teamDatas: TeamData[] = await reposResponse.json();
-
-      setRepoList(teamDatas.map(teamData => teamData.repoName));
 
       setAppInstallationStatus(InstallationStatus.SUCCESS);
     } catch (error) {
@@ -171,12 +173,23 @@ const CreateCoursePage: React.FC = () => {
             form.setFieldValue('semester', event.currentTarget.value)
           }
         />
+        <DatePickerInput
+          withAsterisk
+          label="Start Date"
+          placeholder="Pick start date"
+          error={form.errors.startDate}
+          value={form.values.startDate}
+          onChange={value => form.setFieldValue('startDate', value)}
+        />
         <Space h="md" />
         <Box>
+          <Text size="sm" fw={500} mb={3}>
+            Course Type
+          </Text>
           <SegmentedControl
             data={[
               { value: CourseType.Normal, label: 'Normal' },
-              { value: CourseType.GitHubOrg, label: 'GitHub Org' },
+              { value: CourseType.GitHubOrg, label: 'GitHub Organisation' },
             ]}
             {...form.getInputProps('courseType')}
           />
@@ -250,7 +263,7 @@ const CreateCoursePage: React.FC = () => {
                         }
                         rightSection={
                           appInstallationStatus ===
-                          InstallationStatus.SUCCESS ? (
+                            InstallationStatus.SUCCESS ? (
                             <IconCheck size={14} />
                           ) : null
                         }
@@ -287,7 +300,7 @@ const CreateCoursePage: React.FC = () => {
                       >
                         {form.values.gitHubOrgName}
                       </Badge>
-                      <MultiSelect
+                      {/* <MultiSelect
                         disabled
                         mt="sm"
                         label="Repositories"
@@ -297,7 +310,7 @@ const CreateCoursePage: React.FC = () => {
                         searchable
                         clearable
                         leftSectionWidth={100}
-                      />
+                      /> */}
                       <TextInput
                         withAsterisk
                         label="Repo Name Filter"
@@ -324,4 +337,4 @@ const CreateCoursePage: React.FC = () => {
   );
 };
 
-export default CreateCoursePage;
+export default CreateCourse;

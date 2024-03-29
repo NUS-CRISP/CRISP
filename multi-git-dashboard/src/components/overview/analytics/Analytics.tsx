@@ -1,4 +1,5 @@
 import { Team } from '@/components/views/Overview';
+import { DateUtils } from '@/lib/utils';
 import { Carousel, Embla } from '@mantine/carousel';
 import { Card, Center, Stack, Title } from '@mantine/core';
 import { TeamData } from '@shared/types/TeamData';
@@ -12,6 +13,7 @@ export interface AnalyticsProps {
   teamData: TeamData;
   teamDatas: TeamData[];
   selectedWeekRange: [number, number];
+  dateUtils: DateUtils;
 }
 
 // TODO: Migrate Recharts -> Mantine Charts
@@ -20,6 +22,7 @@ const Analytics: React.FC<AnalyticsProps> = ({
   teamData,
   teamDatas,
   selectedWeekRange,
+  dateUtils,
 }) => {
   const [embla, setEmbla] = useState<Embla | null>(null);
 
@@ -40,6 +43,7 @@ const Analytics: React.FC<AnalyticsProps> = ({
           teamData={teamData}
           teamDatas={teamDatas}
           selectedWeekRange={selectedWeekRange}
+          dateUtils={dateUtils}
         />
       </Stack>
     </Carousel.Slide>

@@ -1,5 +1,10 @@
 import { Center, Grid, Image, Stack, Title } from '@mantine/core';
+import ss1 from '@public/ss-1.png';
+import ss2 from '@public/ss-2.png';
+import ss3 from '@public/ss-3.png';
+import ss4 from '@public/ss-4.png';
 import classes from '@styles/Screenshots.module.css';
+import NextImage from 'next/image';
 import React, { useEffect, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
 
@@ -21,19 +26,23 @@ const Screenshots: React.FC = () => {
 
   const screenshots = [
     {
-      imgPath: '/ss-1.png',
+      key: 'ss1',
+      src: ss1,
       cols: 4.3,
     },
     {
-      imgPath: '/ss-2.png',
+      key: 'ss2',
+      src: ss2,
       cols: 7.7,
     },
     {
-      imgPath: '/ss-3.png',
+      key: 'ss3',
+      src: ss3,
       cols: 8.2,
     },
     {
-      imgPath: '/ss-4.png',
+      key: 'ss4',
+      src: ss4,
       cols: 3.8,
     }
   ];
@@ -47,12 +56,17 @@ const Screenshots: React.FC = () => {
       </Center>
       <Grid>
         {screenshots.map((ss, idx) => (
-          <Grid.Col key={ss.imgPath} span={{ base: 12, xs: ss.cols }}>
+          <Grid.Col key={ss.key} span={{ base: 12, xs: ss.cols }}>
             <Image
+              component={NextImage}
+              src={ss.src}
+              width={0}
+              height={0}
+              sizes="100vw"
+              alt={ss.key}
               radius="md"
-              src={ss.imgPath}
               className={`${classes.initialState} ${animated[idx] ? classes.fadeIn : ''}`}
-              style={{ animationDelay: `${idx * 100}ms` }}
+              style={{ animationDelay: `${idx * 100}ms`, width: '100%', height: 'auto' }}
             />
           </Grid.Col>
         ))}

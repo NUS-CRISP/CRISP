@@ -1,11 +1,10 @@
-import { endOfWeek, weekToDates } from '@/pages/_app';
 import { BarChart } from '@mantine/charts';
 import { Center } from '@mantine/core';
 import dayjs from 'dayjs';
 import { useEffect } from 'react';
 import { AnalyticsProps } from '../Analytics';
 
-interface IndividualAnalyticsProps extends AnalyticsProps {}
+interface IndividualAnalyticsProps extends AnalyticsProps { }
 
 interface IndividualAnalyticsData {
   name: string;
@@ -19,7 +18,9 @@ const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
   team,
   teamData,
   selectedWeekRange,
+  dateUtils,
 }) => {
+  const { weekToDate, getEndOfWeek } = dateUtils;
   const gitHandleToNameMap = new Map(
     team.members.map(member => [
       member.gitHandle,
@@ -28,8 +29,8 @@ const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
   );
 
   const filterDataByWeekRange = () => {
-    const startDate = weekToDates(selectedWeekRange[0]);
-    const endDate = endOfWeek(weekToDates(selectedWeekRange[1]));
+    const startDate = weekToDate(selectedWeekRange[0]);
+    const endDate = getEndOfWeek(weekToDate(selectedWeekRange[1]));
 
     const contributors = new Map<string, IndividualAnalyticsData>();
 

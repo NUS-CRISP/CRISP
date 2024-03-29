@@ -1,4 +1,5 @@
 import { Box, Button, Group, Text, Title } from '@mantine/core';
+import Role from '@shared/types/auth/Role';
 import classes from '@styles/Home.module.css';
 import { IconArrowRight, IconBrandGithub } from '@tabler/icons-react';
 import { signIn } from 'next-auth/react';
@@ -7,8 +8,7 @@ const Hero: React.FC = () => {
   const handleTrialSignIn = async () => {
     const result = await signIn('credentials', {
       callbackUrl: '/courses',
-      email: 'trial@example.com',
-      password: 'nuscrisptrial',
+      type: Role.TrialUser,
     });
 
     console.log(result);

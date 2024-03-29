@@ -1,4 +1,4 @@
-import { calculateCurrentWeek } from '@/pages/_app';
+import { DateUtils } from '@/lib/utils';
 import { RangeSlider, Stack } from '@mantine/core';
 import { TeamData } from '@shared/types/TeamData';
 import { useState } from 'react';
@@ -10,6 +10,7 @@ export interface OverviewProps {
   team: Team;
   teamData: TeamData;
   teamDatas: TeamData[];
+  dateUtils: DateUtils;
   profileGetter: ProfileGetter;
 }
 
@@ -17,9 +18,11 @@ export const OverviewCard: React.FC<OverviewProps> = ({
   team,
   teamData,
   teamDatas,
+  dateUtils,
   profileGetter,
 }) => {
-  const totalWeeks = calculateCurrentWeek();
+  const { getCurrentWeek } = dateUtils;
+  const totalWeeks = getCurrentWeek();
 
   const [selectedWeekRange, setSelectedWeekRange] = useState<[number, number]>([
     0,
@@ -46,11 +49,13 @@ export const OverviewCard: React.FC<OverviewProps> = ({
         teamData={teamData}
         teamDatas={teamDatas}
         selectedWeekRange={selectedWeekRange}
+        dateUtils={dateUtils}
       />
       <PR
         team={team}
         teamData={teamData}
         selectedWeekRange={selectedWeekRange}
+        dateUtils={dateUtils}
         profileGetter={profileGetter}
       />
     </Stack>
