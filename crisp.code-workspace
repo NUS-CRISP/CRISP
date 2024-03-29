@@ -1,0 +1,30 @@
+{
+  "folders": [
+    {
+      "path": "."
+    },
+    {
+      "name": ".next",
+      "path": "multi-git-dashboard/.next"
+    },
+    {
+      "name": "multi-git-dashboard",
+      "path": "multi-git-dashboard"
+    },
+    {
+      "name": "backend",
+      "path": "backend"
+    }
+  ],
+
+  "settings": {
+    "cssVariables.lookupFiles": [
+      "**/*.css",
+      "**/*.scss",
+      "**/*.sass",
+      "**/*.less",
+      "node_modules/@mantine/core/styles.css"
+    ],
+    "jest.disabledWorkspaceFolders": ["CRISP", ".next"]
+  }
+}

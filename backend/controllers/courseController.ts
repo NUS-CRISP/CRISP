@@ -248,7 +248,7 @@ export const removeTAs = async (req: Request, res: Response) => {
       res.status(404).json({ error: error.message });
     } else {
       console.error('Error removing tas:', error);
-      res.status(500).json({ error: 'Failed to remove tas' });
+      res.status(500).json({ error: 'Failed to remove TAs' });
     }
   }
 };

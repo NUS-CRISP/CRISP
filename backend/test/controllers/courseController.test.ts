@@ -1,30 +1,42 @@
 import { Request, Response } from 'express';
-import * as courseService from '../../services/courseService';
-import * as assessmentService from '../../services/assessmentService';
-import * as teamSetService from '../../services/teamSetService';
-import * as teamService from '../../services/teamService';
-import * as auth from '../../utils/auth';
 import {
-  createCourse,
-  getCourses,
-  getCourse,
-  updateCourse,
-  deleteCourse,
-  addStudents,
-  addTAs,
-  getTeachingTeam,
-  addTeamSet,
-  addStudentsToTeams,
-  addTAsToTeams,
+  addAssessments,
+  addFaculty,
   addMilestone,
   addSprint,
-  addAssessments,
+  addStudents,
+  addStudentsToTeams,
+  addTAs,
+  addTAsToTeams,
+  addTeamSet,
+  createCourse,
+  deleteCourse,
+  getAssessments,
+  getCourse,
+  getCourses,
+  getPeople,
+  getTeachingTeam,
+  getTeamSets,
+  getTeamSetsNames,
+  getTimeline,
+  removeFaculty,
+  removeStudents,
+  removeTAs,
+  updateCourse,
+  updateFaculty,
+  updateStudents,
+  updateTAs,
 } from '../../controllers/courseController';
+import * as assessmentService from '../../services/assessmentService';
+import * as courseService from '../../services/courseService';
 import {
-  NotFoundError,
   BadRequestError,
   MissingAuthorizationError,
+  NotFoundError,
 } from '../../services/errors';
+import * as teamService from '../../services/teamService';
+import * as teamSetService from '../../services/teamSetService';
+import * as auth from '../../utils/auth';
 
 jest.mock('../../services/courseService');
 jest.mock('../../services/assessmentService');
@@ -404,6 +416,120 @@ describe('courseController', () => {
     });
   });
 
+  describe('updateStudents', () => {
+    it('should update students in a course', async () => {
+      const req = mockRequest(
+        { items: ['student1', 'student2'] },
+        { id: 'courseId' }
+      );
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'updateStudentsInCourse')
+        .mockResolvedValue(undefined);
+
+      await updateStudents(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Students updated successfully',
+      });
+    });
+
+    it('should handle NotFoundError and send a 404 status', async () => {
+      const req = mockRequest(
+        { items: ['student1', 'student2'] },
+        { id: 'courseId' }
+      );
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'updateStudentsInCourse')
+        .mockRejectedValue(new NotFoundError('Course not found'));
+
+      await updateStudents(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
+    });
+
+    it('should handle errors when updating students', async () => {
+      const req = mockRequest(
+        { items: ['student1', 'student2'] },
+        { id: 'courseId' }
+      );
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'updateStudentsInCourse')
+        .mockRejectedValue(new Error('Error updating students'));
+
+      await updateStudents(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to update students',
+      });
+    });
+  });
+
+  describe('removeStudents', () => {
+    it('should remove students from a course', async () => {
+      const req = mockRequest(
+        { items: ['student1', 'student2'] },
+        { id: 'courseId' }
+      );
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'removeStudentsFromCourse')
+        .mockResolvedValue(undefined);
+
+      await removeStudents(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Students removed from the course successfully',
+      });
+    });
+
+    it('should handle NotFoundError and send a 404 status', async () => {
+      const req = mockRequest(
+        { items: ['student1', 'student2'] },
+        { id: 'courseId' }
+      );
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'removeStudentsFromCourse')
+        .mockRejectedValue(new NotFoundError('Course not found'));
+
+      await removeStudents(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
+    });
+
+    it('should handle errors when removing students', async () => {
+      const req = mockRequest(
+        { items: ['student1', 'student2'] },
+        { id: 'courseId' }
+      );
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'removeStudentsFromCourse')
+        .mockRejectedValue(new Error('Error removing students'));
+
+      await removeStudents(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to remove students',
+      });
+    });
+  });
+
   describe('addTAs', () => {
     it('should add students to a course', async () => {
       const req = mockRequest({ items: ['ta1', 'ta2'] }, { id: 'courseId' });
@@ -446,6 +572,52 @@ describe('courseController', () => {
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
         error: 'Failed to add TAs',
+      });
+    });
+  });
+
+  describe('updateTAs', () => {
+    it('should update TAs in a course', async () => {
+      const req = mockRequest({ items: ['ta1', 'ta2'] }, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest.spyOn(courseService, 'updateTAsInCourse').mockResolvedValue(undefined);
+
+      await updateTAs(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'TAs updated successfully',
+      });
+    });
+
+    it('should handle NotFoundError and send a 404 status', async () => {
+      const req = mockRequest({ items: ['ta1', 'ta2'] }, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'updateTAsInCourse')
+        .mockRejectedValue(new NotFoundError('Course not found'));
+
+      await updateTAs(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
+    });
+
+    it('should handle errors when updating TAs', async () => {
+      const req = mockRequest({ items: ['ta1', 'ta2'] }, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'updateTAsInCourse')
+        .mockRejectedValue(new Error('Error updating TAs'));
+
+      await updateTAs(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to update TAs',
       });
     });
   });
@@ -493,6 +665,235 @@ describe('courseController', () => {
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
         error: 'Failed to retrieve Teaching Team',
+      });
+    });
+  });
+
+  describe('removeTAs', () => {
+    it('should remove TAs from a course', async () => {
+      const req = mockRequest({ items: ['ta1', 'ta2'] }, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest.spyOn(courseService, 'removeTAsFromCourse').mockResolvedValue(undefined);
+
+      await removeTAs(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'TAs removed from the course successfully',
+      });
+    });
+
+    it('should handle NotFoundError and send a 404 status', async () => {
+      const req = mockRequest({ items: ['ta1', 'ta2'] }, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'removeTAsFromCourse')
+        .mockRejectedValue(new NotFoundError('Course not found'));
+
+      await removeTAs(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
+    });
+
+    it('should handle errors when removing TAs', async () => {
+      const req = mockRequest({ items: ['ta1', 'ta2'] }, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'removeTAsFromCourse')
+        .mockRejectedValue(new Error('Error removing TAs'));
+
+      await removeTAs(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to remove TAs',
+      });
+    });
+  });
+
+  describe('addFaculty', () => {
+    it('should add faculty to a course', async () => {
+      const req = mockRequest({ items: ['faculty1', 'faculty2'] }, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest.spyOn(courseService, 'addFacultyToCourse').mockResolvedValue(undefined);
+
+      await addFaculty(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Faculty added to the course successfully',
+      });
+    });
+
+    it('should handle NotFoundError and send a 404 status', async () => {
+      const req = mockRequest({ items: ['faculty1', 'faculty2'] }, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'addFacultyToCourse')
+        .mockRejectedValue(new NotFoundError('Course not found'));
+
+      await addFaculty(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
+    });
+
+    it('should handle errors when adding faculty', async () => {
+      const req = mockRequest({ items: ['faculty1', 'faculty2'] }, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'addFacultyToCourse')
+        .mockRejectedValue(new Error('Error adding faculty'));
+
+      await addFaculty(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to add Faculty',
+      });
+    });
+  });
+
+  describe('updateFaculty', () => {
+    it('should update faculty in a course', async () => {
+      const req = mockRequest({ items: ['faculty1', 'faculty2'] }, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest.spyOn(courseService, 'updateFacultyInCourse').mockResolvedValue(undefined);
+
+      await updateFaculty(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Faculty updated successfully',
+      });
+    });
+
+    it('should handle NotFoundError and send a 404 status', async () => {
+      const req = mockRequest({ items: ['faculty1', 'faculty2'] }, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'updateFacultyInCourse')
+        .mockRejectedValue(new NotFoundError('Course not found'));
+
+      await updateFaculty(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
+    });
+
+    it('should handle errors when updating faculty', async () => {
+      const req = mockRequest({ items: ['faculty1', 'faculty2'] }, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'updateFacultyInCourse')
+        .mockRejectedValue(new Error('Error updating faculty'));
+
+      await updateFaculty(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to update Faculty',
+      });
+    });
+  });
+
+  describe('removeFaculty', () => {
+    it('should remove faculty from a course', async () => {
+      const req = mockRequest({ items: ['faculty1', 'faculty2'] }, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest.spyOn(courseService, 'removeFacultyFromCourse').mockResolvedValue(undefined);
+
+      await removeFaculty(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Faculty removed from the course successfully',
+      });
+    });
+
+    it('should handle NotFoundError and send a 404 status', async () => {
+      const req = mockRequest({ items: ['faculty1', 'faculty2'] }, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'removeFacultyFromCourse')
+        .mockRejectedValue(new NotFoundError('Course not found'));
+
+      await removeFaculty(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
+    });
+
+    it('should handle errors when removing faculty', async () => {
+      const req = mockRequest({ items: ['faculty1', 'faculty2'] }, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'removeFacultyFromCourse')
+        .mockRejectedValue(new Error('Error removing faculty'));
+
+      await removeFaculty(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to remove faculty',
+      });
+    });
+  });
+
+  describe('getPeople', () => {
+    it('should get people in a course', async () => {
+      const req = mockRequest({}, { id: 'courseId' });
+      const res = mockResponse();
+      const mockPeople = ['student1', 'student2', 'ta1', 'ta2'];
+
+      jest.spyOn(courseService, 'getPeopleFromCourse').mockResolvedValue(mockPeople as any);
+
+      await getPeople(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(mockPeople);
+    });
+
+    it('should handle NotFoundError and send a 404 status', async () => {
+      const req = mockRequest({}, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'getPeopleFromCourse')
+        .mockRejectedValue(new NotFoundError('Course not found'));
+
+      await getPeople(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
+    });
+
+    it('should handle errors when getting people', async () => {
+      const req = mockRequest({}, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'getPeopleFromCourse')
+        .mockRejectedValue(new Error('Error getting people'));
+
+      await getPeople(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to retrieve people',
       });
     });
   });
@@ -575,6 +976,100 @@ describe('courseController', () => {
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
         error: 'Failed to create team set',
+      });
+    });
+  });
+
+  describe('getTeamSets', () => {
+    it('should get team sets in a course', async () => {
+      const req = mockRequest({}, { id: 'courseId' });
+      const res = mockResponse();
+      const mockTeamSets = ['teamSet1', 'teamSet2'];
+
+      jest
+        .spyOn(courseService, 'getTeamSetsFromCourse')
+        .mockResolvedValue(mockTeamSets as any);
+
+      await getTeamSets(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(mockTeamSets);
+    });
+
+    it('should handle NotFoundError and send a 404 status', async () => {
+      const req = mockRequest({}, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'getTeamSetsFromCourse')
+        .mockRejectedValue(new NotFoundError('Course not found'));
+
+      await getTeamSets(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
+    });
+
+    it('should handle errors when getting team sets', async () => {
+      const req = mockRequest({}, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'getTeamSetsFromCourse')
+        .mockRejectedValue(new Error('Error getting team sets'));
+
+      await getTeamSets(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to get team sets',
+      });
+    });
+  });
+
+  describe('getTeamSetsNames', () => {
+    it('should get team sets names in a course', async () => {
+      const req = mockRequest({}, { id: 'courseId' });
+      const res = mockResponse();
+      const mockTeamSets = ['teamSet1', 'teamSet2'];
+
+      jest
+        .spyOn(courseService, 'getTeamSetNamesFromCourse')
+        .mockResolvedValue(mockTeamSets as any);
+
+      await getTeamSetsNames(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(mockTeamSets);
+    });
+
+    it('should handle NotFoundError and send a 404 status', async () => {
+      const req = mockRequest({}, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'getTeamSetNamesFromCourse')
+        .mockRejectedValue(new NotFoundError('Course not found'));
+
+      await getTeamSetsNames(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
+    });
+
+    it('should handle errors when getting team sets names', async () => {
+      const req = mockRequest({}, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'getTeamSetNamesFromCourse')
+        .mockRejectedValue(new Error('Error getting team sets names'));
+
+      await getTeamSetsNames(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to get team set names',
       });
     });
   });
@@ -892,6 +1387,51 @@ describe('courseController', () => {
     });
   });
 
+  describe('getTimeline', () => {
+    it('should get timeline for a course', async () => {
+      const req = mockRequest({}, { id: 'courseId' });
+      const res = mockResponse();
+      const mockTimeline = ['milestone1', 'sprint1'];
+
+      jest.spyOn(courseService, 'getCourseTimeline').mockResolvedValue(mockTimeline as any);
+
+      await getTimeline(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(mockTimeline);
+    });
+
+    it('should handle NotFoundError and send a 404 status', async () => {
+      const req = mockRequest({}, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'getCourseTimeline')
+        .mockRejectedValue(new NotFoundError('Course not found'));
+
+      await getTimeline(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
+    });
+
+    it('should handle errors when getting timeline', async () => {
+      const req = mockRequest({}, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'getCourseTimeline')
+        .mockRejectedValue(new Error('Error getting timeline'));
+
+      await getTimeline(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to retrieve timeline',
+      });
+    });
+  });
+
   describe('addAssessments', () => {
     it('should successfully add assessments to a course', async () => {
       const req = mockRequest({ items: [{}] }, { id: 'courseId' });
@@ -954,6 +1494,53 @@ describe('courseController', () => {
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
         error: 'Failed to add assessments',
+      });
+    });
+  });
+
+  describe('getAssessments', () => {
+    it('should get assessments for a course', async () => {
+      const req = mockRequest({}, { id: 'courseId' });
+      const res = mockResponse();
+      const mockAssessments = ['assessment1', 'assessment2'];
+
+      jest
+        .spyOn(courseService, 'getAssessmentsFromCourse')
+        .mockResolvedValue(mockAssessments as any);
+
+      await getAssessments(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(mockAssessments);
+    });
+
+    it('should handle NotFoundError and send a 404 status', async () => {
+      const req = mockRequest({}, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'getAssessmentsFromCourse')
+        .mockRejectedValue(new NotFoundError('Course not found'));
+
+      await getAssessments(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
+    });
+
+    it('should handle errors when getting assessments', async () => {
+      const req = mockRequest({}, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'getAssessmentsFromCourse')
+        .mockRejectedValue(new Error('Error getting assessments'));
+
+      await getAssessments(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to get assessments',
       });
     });
   });

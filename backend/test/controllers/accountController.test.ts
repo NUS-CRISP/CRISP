@@ -1,11 +1,13 @@
 import { Request, Response } from 'express';
-import * as accountService from '../../services/accountService';
 import {
-  createAccount,
-  getPendingAccounts,
   approveAccounts,
+  createAccount,
+  getAccountStatuses,
+  getPendingAccounts,
+  rejectAccounts,
 } from '../../controllers/accountController';
-import { BadRequestError } from '../../services/errors';
+import * as accountService from '../../services/accountService';
+import { BadRequestError, NotFoundError } from '../../services/errors';
 
 jest.mock('../../services/accountService');
 
@@ -158,6 +160,93 @@ describe('accountController', () => {
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.send).toHaveBeenCalledWith({
         error: 'Error approving accounts',
+      });
+    });
+  });
+
+  describe('rejectAccounts', () => {
+    it('should reject accounts and send a 200 status', async () => {
+      const req = mockRequest();
+      req.body = { ids: ['123', '456'] };
+      const res = mockResponse();
+
+      jest
+        .spyOn(accountService, 'rejectAccountByIds')
+        .mockResolvedValue(undefined);
+
+      await rejectAccounts(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.send).toHaveBeenCalledWith({ message: 'Accounts rejected' });
+    });
+
+    it('should handle error and send a 500 status', async () => {
+      const req = mockRequest();
+      req.body = { ids: ['123', '456'] };
+      const res = mockResponse();
+
+      jest
+        .spyOn(accountService, 'rejectAccountByIds')
+        .mockRejectedValue(new Error('Error rejecting accounts'));
+
+      await rejectAccounts(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.send).toHaveBeenCalledWith({
+        error: 'Error rejecting accounts',
+      });
+    });
+
+    describe('getAccountStatuses', () => {
+      it('should retrieve account statuses and send a 200 status', async () => {
+        const req = mockRequest();
+        const res = mockResponse();
+        const mockStatuses: Record<string, boolean> = {
+          '123': true,
+          '456': false,
+        };
+        req.query = { ids: '123,456' };
+
+        jest
+          .spyOn(accountService, 'getAccountStatusesByUserIds')
+          .mockResolvedValue(mockStatuses);
+
+        await getAccountStatuses(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.send).toHaveBeenCalledWith(mockStatuses);
+      });
+
+      it('should handle NotFoundError and send a 404 status', async () => {
+        const req = mockRequest();
+        const res = mockResponse();
+        req.query = { ids: '123,456' };
+
+        jest
+          .spyOn(accountService, 'getAccountStatusesByUserIds')
+          .mockRejectedValue(new NotFoundError('User not found'));
+
+        await getAccountStatuses(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(404);
+        expect(res.send).toHaveBeenCalledWith({ error: 'User not found' });
+      });
+
+      it('should handle error and send a 500 status', async () => {
+        const req = mockRequest();
+        const res = mockResponse();
+        req.query = { ids: '123,456' };
+
+        jest
+          .spyOn(accountService, 'getAccountStatusesByUserIds')
+          .mockRejectedValue(new Error('Error getting account statuses'));
+
+        await getAccountStatuses(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.send).toHaveBeenCalledWith({
+          error: 'Error getting account statuses',
+        });
       });
     });
   });
