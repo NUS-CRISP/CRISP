@@ -1,19 +1,19 @@
-import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
+import mongoose from 'mongoose';
+import AccountModel from '../../models/Account';
 import CourseModel from '../../models/Course';
 import UserModel from '../../models/User';
-import AccountModel from '../../models/Account';
 import {
-  createNewCourse,
-  getCoursesForUser,
-  getCourseById,
-  updateCourseById,
-  deleteCourseById,
-  addStudentsToCourse,
-  addTAsToCourse,
-  getCourseTeachingTeam,
   addMilestoneToCourse,
   addSprintToCourse,
+  addStudentsToCourse,
+  addTAsToCourse,
+  createNewCourse,
+  deleteCourseById,
+  getCourseById,
+  getCourseTeachingTeam,
+  getCoursesForUser,
+  updateCourseById,
 } from '../../services/courseService';
 import { NotFoundError } from '../../services/errors';
 
@@ -43,6 +43,7 @@ const commonCourseDetailsDefault = {
   name: 'Software Engineering Project',
   code: 'CS3203',
   semester: 'Sem 2 2023/24',
+  startDate: new Date('2024-01-15'),
   courseType: 'Normal',
 };
 
@@ -50,6 +51,7 @@ const commonCourseDetails = {
   name: 'Introduction to Computer Science',
   code: 'CS101',
   semester: 'Fall 2024',
+  startDate: new Date('2024-08-15'),
   courseType: 'Normal',
 };
 
