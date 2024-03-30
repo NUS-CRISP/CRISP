@@ -10,6 +10,8 @@ import {
   addStudentsToTeam,
   addTAsToTeam,
   deleteTeamById,
+  getTeamsByCourseId,
+  removeMembersById,
   updateTeamById,
 } from '../../services/teamService';
 
@@ -122,6 +124,27 @@ async function createTestTeamSet(
 }
 
 describe('teamService', () => {
+  describe('getTeamsByCourseId', () => {
+    it('should return an empty array if no teams exist', async () => {
+      const course = await createTestCourse(commonCourseDetails);
+      const teams = await getTeamsByCourseId(course._id.toHexString());
+      expect(teams).toEqual([]);
+    });
+
+    it('should return an array of teams for a course', async () => {
+      const course = await createTestCourse(commonCourseDetails);
+      const team = await createTestTeam(commonTeamDetails);
+      await createTestTeamSet(
+        commonTeamSetDetails,
+        course._id,
+        [team._id]
+      );
+
+      const teams = await getTeamsByCourseId(course._id.toHexString());
+      expect(teams).toHaveLength(1);
+    });
+  });
+
   describe('deleteTeamById', () => {
     it('should delete a team by id', async () => {
       const team = await createTestTeam(commonTeamDetails);
@@ -235,6 +258,31 @@ describe('teamService', () => {
       });
       expect(team).toBeDefined();
       expect(team?.TA).toEqual(ta._id);
+    });
+  });
+
+  describe('removeMembersById', () => {
+    it('should remove members from a team', async () => {
+      await createTestCourse(commonCourseDetails);
+      const student = await createStudentUser(commonUserDetails);
+      const team = await createTestTeam(commonTeamDetails);
+
+      team.members?.push(student._id);
+      await team.save();
+
+      await removeMembersById(team._id.toHexString(), student._id.toHexString());
+
+      const updatedTeam = await TeamModel.findById(team._id);
+      expect(updatedTeam?.members).toEqual([]);
+    });
+
+    it('should throw NotFoundError if team does not exist', async () => {
+      const nonExistentId = new mongoose.Types.ObjectId().toHexString();
+      const student = await createStudentUser(commonUserDetails);
+
+      await expect(
+        removeMembersById(nonExistentId, student._id.toHexString())
+      ).rejects.toThrow(NotFoundError);
     });
   });
 });
