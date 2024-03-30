@@ -1,10 +1,11 @@
 import { Request } from 'express';
+import * as jose from 'jose';
 import { MissingAuthorizationError } from '../../services/errors';
 import * as auth from '../../utils/auth';
 
 jest.mock('jose', () => ({
-  __esModule: true,
-  jwtDecrypt: jest.fn().mockImplementation(async () => ({ payload: { sub: 'mockSub' } })),
+  ...jest.requireActual('jose'),
+  jwtDecrypt: jest.fn().mockResolvedValue({ payload: { sub: 'mockSub' } }),
 }));
 
 jest.mock('cookie', () => ({
@@ -62,6 +63,7 @@ describe('getToken', () => {
 
     const result = await auth.getToken(req);
 
+    expect(jose.jwtDecrypt).toHaveBeenCalled();
     expect(result).toEqual({ sub: 'mockSub' });
   });
 
