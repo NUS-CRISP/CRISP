@@ -7,7 +7,10 @@ import * as auth from '../../utils/auth';
 
 jest.mock('cookie');
 jest.mock('jose');
-jest.mock('@panva/hkdf');
+jest.mock('@panva/hkdf', () => ({
+  __esModule: true,
+  default: jest.fn().mockImplementation(async () => 'mockKey')
+}));
 
 describe('getAccountId', () => {
   it('throws MissingAuthorizationError if token sub is missing', async () => {
@@ -60,7 +63,7 @@ describe('getToken', () => {
       headers: {
         cookie: 'mockTokenHeader=mockToken',
       },
-    } as unknown as Request;
+    } as Request;
     process.env.NEXTAUTH_SECRET = 'mockSecret';
     process.env.NEXTAUTH_TOKEN_HEADER = 'mockTokenHeader';
     (cookie.parse as jest.Mock).mockReturnValue({ mockTokenHeader: mockToken });
