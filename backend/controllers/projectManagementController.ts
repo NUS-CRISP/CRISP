@@ -2,7 +2,10 @@ import { Request, Response } from 'express';
 import { URLSearchParams } from 'url';
 import { fetchAndSaveJiraData } from '../jobs/jiraJob';
 import { getAccountId } from '../utils/auth';
-import { exchangeCodeForToken, fetchCloudIdsAndUpdateCourse } from '../utils/jira';
+import {
+  exchangeCodeForToken,
+  fetchCloudIdsAndUpdateCourse,
+} from '../utils/jira';
 import { getJiraBoardNamesByCourse } from '../services/projectManagementService';
 import { NotFoundError } from '../services/errors';
 
@@ -33,8 +36,15 @@ export const callbackJiraAccount = async (req: Request, res: Response) => {
   const frontendUri = `${process.env.FRONTEND_URI}/courses/${state}/project-management`;
 
   try {
-    const { accessToken, refreshToken } = await exchangeCodeForToken(code as string);
-    await fetchCloudIdsAndUpdateCourse(accessToken, refreshToken, state as string);
+    const { accessToken, refreshToken } = await exchangeCodeForToken(
+      code as string
+    );
+
+    await fetchCloudIdsAndUpdateCourse(
+      accessToken,
+      refreshToken,
+      state as string
+    );
 
     res.redirect(frontendUri);
     await fetchAndSaveJiraData();

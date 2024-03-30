@@ -1,4 +1,5 @@
 import CourseModel from '@models/Course';
+import mongoose from 'mongoose';
 
 export const exchangeCodeForToken = async (code: string) => {
   const tokenUrl = 'https://auth.atlassian.com/oauth/token';
@@ -35,7 +36,7 @@ export const exchangeCodeForToken = async (code: string) => {
 export const fetchCloudIdsAndUpdateCourse = async (
   accessToken: string,
   refreshToken: string,
-  courseId: string
+  courseId: string | mongoose.Types.ObjectId
 ) => {
   const cloudUrl = 'https://api.atlassian.com/oauth/token/accessible-resources';
   const headers = {
@@ -48,20 +49,68 @@ export const fetchCloudIdsAndUpdateCourse = async (
     const data = await response.json();
 
     const cloudIds = data.map((item: { id: string }) => item.id);
-    await CourseModel.findOneAndUpdate(
-      { _id: courseId },
-      {
-        jira: {
-          isRegistered: true,
-          cloudIds: cloudIds,
-          accessToken: accessToken,
-          refreshToken: refreshToken,
-        },
+    await CourseModel.findByIdAndUpdate(courseId, {
+      jira: {
+        isRegistered: true,
+        cloudIds: cloudIds,
+        accessToken: accessToken,
+        refreshToken: refreshToken,
       },
-      {}
-    );
+    });
+    return cloudIds;
   } catch (error) {
     console.error('Error fetching cloud IDs and updating course:', error);
     throw new Error('Error fetching cloud IDs and updating course');
+  }
+};
+
+export const refreshAccessToken = async (
+  refreshToken: string,
+  courseId: mongoose.Types.ObjectId
+) => {
+  try {
+    const tokenUrl = 'https://auth.atlassian.com/oauth/token';
+    const clientId = process.env.CLIENT_ID;
+    const clientSecret = process.env.CLIENT_SECRET;
+    const tokenParams = {
+      grant_type: 'refresh_token',
+      client_id: clientId,
+      client_secret: clientSecret,
+      refresh_token: refreshToken,
+    };
+
+    const response = await fetch(tokenUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(tokenParams),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const newAccessToken = data.access_token;
+      const newRefreshToken = data.refresh_token;
+
+      await CourseModel.findByIdAndUpdate(courseId, {
+        $set: {
+          'jira.accessToken': newAccessToken,
+          'jira.refreshToken': newRefreshToken,
+        },
+      });
+
+      console.log(
+        `Access token refreshed for course with courseId: ${courseId}`
+      );
+      return newAccessToken;
+    } else {
+      console.error(
+        `Failed to refresh access token for course with courseId: ${courseId}`
+      );
+      return null;
+    }
+  } catch (error) {
+    console.error('Error refreshing access token:', error);
+    return null;
   }
 };
