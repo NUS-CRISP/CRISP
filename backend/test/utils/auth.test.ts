@@ -49,4 +49,13 @@ describe('getToken', () => {
 
     await expect(auth.getToken(req as any)).rejects.toThrow(MissingAuthorizationError);
   });
+
+  it('returns token if present', async () => {
+    const expectedToken = 'token';
+    jest.spyOn(auth, 'getToken').mockResolvedValueOnce(expectedToken as any);
+    const req = { headers: { cookie: 'auth=token' } };
+
+    const token = await auth.getToken(req as any);
+    expect(token).toEqual(expectedToken);
+  });
 });
