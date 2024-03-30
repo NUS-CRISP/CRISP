@@ -22,6 +22,10 @@ export const exchangeCodeForToken = async (code: string) => {
       }),
     });
 
+    if (!response.ok) {
+      throw new Error('Failed to fetch access token');
+    }
+
     const data = await response.json();
     return {
       accessToken: data.access_token,
