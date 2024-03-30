@@ -46,9 +46,14 @@ export const fetchCloudIdsAndUpdateCourse = async (
 
   try {
     const response = await fetch(cloudUrl, { headers });
-    const data = await response.json();
 
+    if (!response.ok) {
+      throw new Error(`Failed to fetch cloud IDs. Status: ${response.status}`);
+    }
+
+    const data = await response.json();
     const cloudIds = data.map((item: { id: string }) => item.id);
+
     await CourseModel.findByIdAndUpdate(courseId, {
       jira: {
         isRegistered: true,
@@ -57,7 +62,6 @@ export const fetchCloudIdsAndUpdateCourse = async (
         refreshToken: refreshToken,
       },
     });
-    return cloudIds;
   } catch (error) {
     console.error('Error fetching cloud IDs and updating course:', error);
     throw new Error('Error fetching cloud IDs and updating course');
@@ -87,28 +91,25 @@ export const refreshAccessToken = async (
       body: JSON.stringify(tokenParams),
     });
 
-    if (response.ok) {
-      const data = await response.json();
-      const newAccessToken = data.access_token;
-      const newRefreshToken = data.refresh_token;
-
-      await CourseModel.findByIdAndUpdate(courseId, {
-        $set: {
-          'jira.accessToken': newAccessToken,
-          'jira.refreshToken': newRefreshToken,
-        },
-      });
-
-      console.log(
-        `Access token refreshed for course with courseId: ${courseId}`
-      );
-      return newAccessToken;
-    } else {
-      console.error(
+    if (!response.ok) {
+      throw new Error(
         `Failed to refresh access token for course with courseId: ${courseId}`
       );
-      return null;
     }
+
+    const data = await response.json();
+    const newAccessToken = data.access_token;
+    const newRefreshToken = data.refresh_token;
+
+    await CourseModel.findByIdAndUpdate(courseId, {
+      $set: {
+        'jira.accessToken': newAccessToken,
+        'jira.refreshToken': newRefreshToken,
+      },
+    });
+
+    console.log(`Access token refreshed for course with courseId: ${courseId}`);
+    return newAccessToken;
   } catch (error) {
     console.error('Error refreshing access token:', error);
     return null;
