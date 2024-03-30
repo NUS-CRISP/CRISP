@@ -1,12 +1,13 @@
-import * as hkdfLib from '@panva/hkdf';
 import * as cookie from 'cookie';
 import { Request } from 'express';
-import * as jose from 'jose';
 import { MissingAuthorizationError } from '../../services/errors';
 import * as auth from '../../utils/auth';
 
 jest.mock('cookie');
-jest.mock('jose');
+jest.mock('jose', () => ({
+  __esModule: true,
+  jwtDecrypt: jest.fn().mockResolvedValue({ payload: { sub: 'mockSub' } }),
+}));
 jest.mock('@panva/hkdf', () => ({
   __esModule: true,
   default: jest.fn().mockImplementation(async () => 'mockKey'),
@@ -31,14 +32,6 @@ describe('getAccountId', () => {
 });
 
 describe('getToken', () => {
-  beforeAll(() => {
-    (hkdfLib.default as jest.Mock).mockImplementation(async () => 'mockKey');
-
-    (jose.jwtDecrypt as jest.Mock).mockImplementation(async () => ({
-      payload: { sub: 'mockSub' },
-    }));
-  });
-
   it('throws MissingAuthorizationError if NEXTAUTH_SECRET or NEXTAUTH_TOKEN_HEADER is not set', async () => {
     const req = { headers: {} } as Request;
     process.env.NEXTAUTH_SECRET = '';
