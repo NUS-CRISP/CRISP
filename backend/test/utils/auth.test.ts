@@ -2,11 +2,6 @@ import { Request } from 'express';
 import { MissingAuthorizationError } from '../../services/errors';
 import * as auth from '../../utils/auth';
 
-jest.mock('cookie', () => ({
-  __esModule: true,
-  parse: jest.fn().mockImplementation(() => ({ mockTokenHeader: 'mockToken' })),
-}));
-
 jest.mock('jose', () => ({
   __esModule: true,
   jwtDecrypt: jest.fn().mockImplementation(async () => ({ payload: { sub: 'mockSub' } })),
@@ -71,8 +66,6 @@ describe('getToken', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
-    jest.resetModules();
     delete process.env.NEXTAUTH_SECRET;
     delete process.env.NEXTAUTH_TOKEN_HEADER;
   });
