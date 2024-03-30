@@ -1,17 +1,21 @@
-import * as cookie from 'cookie';
 import { Request } from 'express';
 import { MissingAuthorizationError } from '../../services/errors';
 import * as auth from '../../utils/auth';
 
-jest.mock('cookie');
+jest.mock('cookie', () => ({
+  __esModule: true,
+  parse: jest.fn().mockImplementation(() => ({ mockTokenHeader: 'mockToken' })),
+}));
+
 jest.mock('jose', () => ({
   __esModule: true,
-  jwtDecrypt: jest.fn().mockResolvedValue({ payload: { sub: 'mockSub' } }),
+  jwtDecrypt: jest.fn().mockImplementation(async () => ({ payload: { sub: 'mockSub' } })),
 }));
-jest.mock('@panva/hkdf', () => ({
-  __esModule: true,
-  default: jest.fn().mockImplementation(async () => 'mockKey'),
-  hkdf: jest.fn().mockImplementation(async () => 'mockKey'),
+
+jest.mock('cookie', () => ({
+  parse: jest.fn().mockImplementation(() => ({
+    mockTokenHeader: 'eyJhbGciOiJIUzI1NiJ9...a.b.c.d.e'
+  })),
 }));
 
 describe('getAccountId', () => {
@@ -32,40 +36,43 @@ describe('getAccountId', () => {
 });
 
 describe('getToken', () => {
-  it('throws MissingAuthorizationError if NEXTAUTH_SECRET or NEXTAUTH_TOKEN_HEADER is not set', async () => {
-    const req = { headers: {} } as Request;
-    process.env.NEXTAUTH_SECRET = '';
-    process.env.NEXTAUTH_TOKEN_HEADER = '';
-
-    await expect(auth.getToken(req)).rejects.toThrow(MissingAuthorizationError);
-
-    delete process.env.NEXTAUTH_SECRET;
-    delete process.env.NEXTAUTH_TOKEN_HEADER;
-  });
-
-  it('throws MissingAuthorizationError if no cookies are present', async () => {
-    const req = { headers: {} } as Request;
+  beforeEach(() => {
     process.env.NEXTAUTH_SECRET = 'mockSecret';
     process.env.NEXTAUTH_TOKEN_HEADER = 'mockTokenHeader';
-
-    await expect(auth.getToken(req)).rejects.toThrow(MissingAuthorizationError);
   });
 
-  it('correctly parses and decrypts the token', async () => {
-    const mockToken = 'mockToken';
+  it('throws MissingAuthorizationError if NEXTAUTH_SECRET or NEXTAUTH_TOKEN_HEADER is not set', async () => {
     const req = {
       headers: {
         cookie: 'mockTokenHeader=mockToken',
       },
     } as Request;
-    process.env.NEXTAUTH_SECRET = 'mockSecret';
-    process.env.NEXTAUTH_TOKEN_HEADER = 'mockTokenHeader';
-    (cookie.parse as jest.Mock).mockReturnValue({ mockTokenHeader: mockToken });
+    delete process.env.NEXTAUTH_SECRET;
+
+    await expect(auth.getToken(req)).rejects.toThrow(MissingAuthorizationError);
+  });
+
+  it('throws MissingAuthorizationError if no cookies are present', async () => {
+    const req = { headers: {} } as Request;
+
+    await expect(auth.getToken(req)).rejects.toThrow(MissingAuthorizationError);
+  });
+
+  it('correctly parses and decrypts the token', async () => {
+    const req = {
+      headers: {
+        cookie: 'mockTokenHeader=eyJhbGciOiJIUzI1NiJ9...a.b.c.d.e',
+      },
+    } as Request;
 
     const result = await auth.getToken(req);
 
     expect(result).toEqual({ sub: 'mockSub' });
+  });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+    jest.resetModules();
     delete process.env.NEXTAUTH_SECRET;
     delete process.env.NEXTAUTH_TOKEN_HEADER;
   });
