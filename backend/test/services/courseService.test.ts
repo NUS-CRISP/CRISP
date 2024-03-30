@@ -17,13 +17,15 @@ import {
   getCourseTimeline,
   getCoursesForUser,
   getPeopleFromCourse,
+  getTeamSetNamesFromCourse,
+  getTeamSetsFromCourse,
   removeFacultyFromCourse,
   removeStudentsFromCourse,
   removeTAsFromCourse,
   updateCourseById,
   updateFacultyInCourse,
   updateStudentsInCourse,
-  updateTAsInCourse
+  updateTAsInCourse,
 } from '../../services/courseService';
 import { NotFoundError } from '../../services/errors';
 
@@ -77,7 +79,7 @@ const commonTADetails = {
   gitHandle: 'johndoeta',
 };
 
-const commonfacultyDetails = {
+const commonFacultyDetails = {
   identifier: 'uniquefacultyid',
   name: 'John Doe faculty',
   gitHandle: 'johndoefaculty',
@@ -164,7 +166,7 @@ describe('courseService', () => {
     const ta = await createTAUser(commonTADetails);
     taId = ta._id.toString();
 
-    const facultyPair = await createFacultyUser(commonfacultyDetails);
+    const facultyPair = await createFacultyUser(commonFacultyDetails);
     const faculty = facultyPair.user;
     facultyId = faculty._id.toString();
     const facultyAccount = facultyPair.account;
@@ -349,6 +351,79 @@ describe('courseService', () => {
       ).toBe(true);
     });
 
+    it('should create a new user if the student does not exist', async () => {
+      const studentDataList = [
+        {
+          identifier: 'newstudent',
+          name: 'New Student',
+          email: 'newstudent@example.com'
+        }
+      ];
+
+      await addStudentsToCourse(courseId, studentDataList);
+
+      const updatedCourse =
+        await CourseModel.findById(courseId).populate('students');
+      const newStudent = await UserModel
+        .findOne({ identifier: 'newstudent' });
+
+      expect(newStudent).toBeDefined();
+      expect(
+        updatedCourse?.students.some(student => student._id.equals(newStudent!._id))
+      ).toBe(true);
+    });
+
+    it('should not add if student user exists, but account does not exist', async () => {
+      const toDelete = await AccountModel.findOne({ email: `${commonStudentDetails.identifier}@example.com` });
+      expect(toDelete).toBeDefined();
+      toDelete!.deleteOne();
+
+      const studentDataList = [
+        {
+          identifier: commonStudentDetails.identifier,
+          name: commonStudentDetails.name,
+          email: `${commonStudentDetails.identifier}@example.com`,
+        },
+      ];
+
+      await addStudentsToCourse(courseId, studentDataList);
+
+      const updatedCourse =
+        await CourseModel.findById(courseId).populate('students');
+
+      // expect the student to not be added
+      expect(updatedCourse?.students.length).toBe(1);
+
+      const account = new AccountModel({
+        email: `${commonStudentDetails.identifier}@example.com`,
+        password: 'hashedpassword',
+        role: 'Student',
+        user: studentId,
+        isApproved: true,
+      });
+      account._id = toDelete!._id || new mongoose.Types.ObjectId().toString();
+      await account.save();
+      expect(await AccountModel.findOne({ email: `${commonStudentDetails.identifier}@example.com` })).toBeDefined();
+    });
+
+    it('should not add if student data does not match', async () => {
+      const studentDataList = [
+        {
+          identifier: commonStudentDetails.identifier,
+          name: commonStudentDetails.name + 'A',
+          email: commonStudentDetails.identifier + '@example.com'
+        },
+      ];
+
+      await addStudentsToCourse(courseId, studentDataList);
+
+      const updatedCourse =
+        await CourseModel.findById(courseId).populate('students');
+
+      // expect the student to not be added
+      expect(updatedCourse?.students.length).toBe(1);
+    });
+
     it('should throw NotFoundError for invalid courseId', async () => {
       const invalidCourseId = new mongoose.Types.ObjectId().toString();
       const studentDataList = [
@@ -461,13 +536,13 @@ describe('courseService', () => {
   });
 
   describe('addFacultyToCourse', () => {
-    const facultyEmail = commonfacultyDetails.identifier + '@example.com';
+    const facultyEmail = commonFacultyDetails.identifier + '@example.com';
 
     it('should add faculty to a course', async () => {
       const facultyDataList = [
         {
-          identifier: commonfacultyDetails.identifier,
-          name: commonfacultyDetails.name,
+          identifier: commonFacultyDetails.identifier,
+          name: commonFacultyDetails.name,
           email: facultyEmail,
         },
       ];
@@ -478,10 +553,87 @@ describe('courseService', () => {
       expect(updatedCourse?.faculty.some(faculty => faculty._id.equals(facultyId))).toBe(true);
     });
 
+    it('should create a new user if the faculty does not exist', async () => {
+      const facultyDataList = [
+        {
+          identifier: 'newfaculty',
+          name: 'New Faculty',
+          email: 'newfaculty@example.com'
+        }
+      ];
+
+      await addFacultyToCourse(courseId, facultyDataList);
+
+      const updatedCourse =
+        await CourseModel.findById(courseId).populate('faculty');
+
+      const newFaculty = await UserModel
+        .findOne({ identifier: 'newfaculty' });
+
+      expect(newFaculty).toBeDefined();
+      expect(
+        updatedCourse?.faculty.some(faculty => faculty._id.equals(newFaculty!._id))
+      ).toBe(true);
+    });
+
+    it('should not add if faculty user exists, but account does not exist', async () => {
+      const toDelete = await AccountModel.findOne({ email: `${commonFacultyDetails.identifier}@example.com` });
+      expect(toDelete).toBeDefined();
+      toDelete!.deleteOne();
+
+      const facultyDataList = [
+        {
+          identifier: commonFacultyDetails.identifier,
+          name: commonFacultyDetails.name,
+          email: `${commonFacultyDetails.identifier}@example.com`,
+        },
+      ];
+
+      await addFacultyToCourse(courseId, facultyDataList);
+
+      const updatedCourse =
+        await CourseModel.findById(courseId).populate('faculty');
+
+      // expect the faculty to not be added
+      expect(updatedCourse?.faculty.length).toBe(1);
+
+      // add the faculty account back
+      const account = new AccountModel({
+        email: `${commonFacultyDetails.identifier}@example.com`,
+        password: 'hashedpassword',
+        role: 'Faculty member',
+        user: facultyId,
+        isApproved: true,
+      });
+      account._id = toDelete!._id || new mongoose.Types.ObjectId().toString();
+      await account.save();
+      expect(await AccountModel.findOne({
+        email: `${commonFacultyDetails.identifier}@example.com`
+      })).toBeDefined();
+    });
+
+    it('should not add if faculty data does not match', async () => {
+      const facultyDataList = [
+        {
+          identifier: commonFacultyDetails.identifier,
+          name: commonFacultyDetails.name + 'A',
+          email: commonFacultyDetails.identifier + '@example.com'
+        },
+      ];
+
+      await addFacultyToCourse(courseId, facultyDataList);
+
+      const updatedCourse =
+        await CourseModel.findById(courseId).populate('faculty');
+
+      // expect the faculty to not be added
+      expect(updatedCourse?.faculty.length).toBe(1);
+    });
+
     it('should throw NotFoundError for invalid courseId', async () => {
       const invalidCourseId = new mongoose.Types.ObjectId().toString();
       const facultyDataList = [
-        { identifier: facultyId, name: commonfacultyDetails.name, email: facultyEmail },
+        { identifier: facultyId, name: commonFacultyDetails.name, email: facultyEmail },
       ];
       await expect(addFacultyToCourse(invalidCourseId, facultyDataList)).rejects.toThrow(
         NotFoundError
@@ -493,17 +645,17 @@ describe('courseService', () => {
     it('should update faculty in a course', async () => {
       const facultyDataList = [
         {
-          identifier: commonfacultyDetails.identifier,
-          name: commonfacultyDetails.name + ' updated',
-          email: commonfacultyDetails.identifier + '@example.com',
+          identifier: commonFacultyDetails.identifier,
+          name: commonFacultyDetails.name + ' updated',
+          email: commonFacultyDetails.identifier + '@example.com',
         },
       ];
       await updateFacultyInCourse(courseId, facultyDataList);
       const updatedCourse = await CourseModel.findById(courseId).populate<{ faculty: User[] }>('faculty');
       console.log(updatedCourse?.faculty);
 
-      expect(updatedCourse?.faculty.find(faculty => faculty.identifier === commonfacultyDetails.identifier)?.name).toBe(
-        commonfacultyDetails.name + ' updated'
+      expect(updatedCourse?.faculty.find(faculty => faculty.identifier === commonFacultyDetails.identifier)?.name).toBe(
+        commonFacultyDetails.name + ' updated'
       );
     });
 
@@ -511,9 +663,9 @@ describe('courseService', () => {
       const invalidCourseId = new mongoose.Types.ObjectId().toString();
       const facultyDataList = [
         {
-          identifier: commonfacultyDetails.identifier,
-          name: commonfacultyDetails.name,
-          email: commonfacultyDetails.identifier + '@example.com',
+          identifier: commonFacultyDetails.identifier,
+          name: commonFacultyDetails.name,
+          email: commonFacultyDetails.identifier + '@example.com',
         },
       ];
       await expect(
@@ -631,6 +783,43 @@ describe('courseService', () => {
       await expect(
         addSprintToCourse(invalidCourseId, sprintData)
       ).rejects.toThrow(NotFoundError);
+    });
+  });
+
+  describe('getTeamSetsFromCourse', () => {
+    it('should retrieve team sets from a course', async () => {
+      const teamSets = await getTeamSetsFromCourse(courseId, facultyAccountId);
+      expect(teamSets).toBeDefined();
+      expect(teamSets.length).toBe(0);
+    });
+
+    it('should throw NotFoundError for invalid courseId', async () => {
+      const invalidCourseId = new mongoose.Types.ObjectId().toString();
+      await expect(getTeamSetsFromCourse(invalidCourseId, facultyAccountId)).rejects.toThrow(
+        NotFoundError
+      );
+    });
+
+    it('should throw NotFoundError for invalid accountId', async () => {
+      const invalidAccountId = new mongoose.Types.ObjectId().toString();
+      await expect(getTeamSetsFromCourse(courseId, invalidAccountId)).rejects.toThrow(
+        NotFoundError
+      );
+    });
+  });
+
+  describe('getTeamSetNamesFromCourse', () => {
+    it('should retrieve team set names from a course', async () => {
+      const teamSetNames = await getTeamSetNamesFromCourse(courseId);
+      expect(teamSetNames).toBeDefined();
+      expect(teamSetNames.length).toBe(0);
+    });
+
+    it('should throw NotFoundError for invalid courseId', async () => {
+      const invalidCourseId = new mongoose.Types.ObjectId().toString();
+      await expect(getTeamSetNamesFromCourse(invalidCourseId)).rejects.toThrow(
+        NotFoundError
+      );
     });
   });
 });
