@@ -3,17 +3,6 @@ import * as jose from 'jose';
 import { MissingAuthorizationError } from '../../services/errors';
 import * as auth from '../../utils/auth';
 
-jest.mock('jose', () => ({
-  ...jest.requireActual('jose'),
-  jwtDecrypt: jest.fn().mockResolvedValue({ payload: { sub: 'mockSub' } }),
-}));
-
-jest.mock('cookie', () => ({
-  parse: jest.fn().mockImplementation(() => ({
-    mockTokenHeader: 'eyJhbGciOiJIUzI1NiJ9...a.b.c.d.e'
-  })),
-}));
-
 describe('getAccountId', () => {
   it('throws MissingAuthorizationError if token sub is missing', async () => {
     jest.spyOn(auth, 'getToken').mockResolvedValueOnce({});
@@ -54,20 +43,20 @@ describe('getToken', () => {
     await expect(auth.getToken(req)).rejects.toThrow(MissingAuthorizationError);
   });
 
-  it('correctly parses and decrypts the token', async () => {
+  it('successfully decrypts token and returns payload when valid cookie is present', async () => {
     const req = {
       headers: {
-        cookie: 'mockTokenHeader=eyJhbGciOiJIUzI1NiJ9...a.b.c.d.e',
+        cookie: 'mockTokenHeader=validToken',
       },
     } as Request;
+    jest.spyOn(jose, 'jwtDecrypt').mockResolvedValueOnce({ payload: { sub: '123' } } as any);
 
-    const result = await auth.getToken(req);
-
-    expect(jose.jwtDecrypt).toHaveBeenCalled();
-    expect(result).toEqual({ sub: 'mockSub' });
+    const tokenPayload = await auth.getToken(req);
+    expect(tokenPayload).toHaveProperty('sub', '123');
   });
 
   afterEach(() => {
+    jest.clearAllMocks();
     delete process.env.NEXTAUTH_SECRET;
     delete process.env.NEXTAUTH_TOKEN_HEADER;
   });
