@@ -1,7 +1,7 @@
 import TeamModel from '@models/Team';
 import TeamDataModel from '@models/TeamData';
 import UserModel from '@models/User';
-import { App } from 'octokit';
+import * as octokit from 'octokit';
 import * as github from '../../utils/github';
 
 jest.mock('@models/Team');
@@ -13,10 +13,11 @@ describe('getGitHubApp', () => {
   it('creates a new GitHub App instance with environment variables', () => {
     process.env.GITHUB_APP_ID = '123';
     process.env.GITHUB_APP_PRIVATE_KEY = 'private\\nkey';
+    jest.spyOn(octokit, 'App');
 
     github.getGitHubApp();
 
-    expect(App).toHaveBeenCalledWith({
+    expect(octokit.App).toHaveBeenCalledWith({
       appId: 123,
       privateKey: 'private\nkey',
     });

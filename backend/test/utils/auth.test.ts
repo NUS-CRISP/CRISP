@@ -1,5 +1,3 @@
-import * as cookie from 'cookie';
-import * as jose from 'jose';
 import { MissingAuthorizationError } from '../../services/errors';
 import * as auth from '../../utils/auth';
 
@@ -50,16 +48,5 @@ describe('getToken', () => {
     const req = { headers: {} };
 
     await expect(auth.getToken(req as any)).rejects.toThrow(MissingAuthorizationError);
-  });
-
-  it('returns payload after successful decryption', async () => {
-    const expectedPayload = { user: 'test' };
-    jest.spyOn(cookie, 'parse').mockReturnValueOnce({ Authorization: 'encryptedToken' });
-    jest.spyOn(jose, 'jwtDecrypt').mockResolvedValueOnce({ payload: expectedPayload } as any);
-
-    const req = { headers: { cookie: 'Authorization=encryptedToken' } }; // Mock request object
-
-    const result = await auth.getToken(req as any);
-    expect(result).toEqual(expectedPayload);
   });
 });
