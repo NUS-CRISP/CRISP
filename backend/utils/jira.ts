@@ -23,7 +23,9 @@ export const exchangeCodeForToken = async (code: string) => {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch access token');
+      throw new Error(
+        `Failed to fetch access token with status: ${response.status}`
+      );
     }
 
     const data = await response.json();
@@ -52,7 +54,7 @@ export const fetchCloudIdsAndUpdateCourse = async (
     const response = await fetch(cloudUrl, { headers });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch cloud IDs. Status: ${response.status}`);
+      throw new Error(`Failed to fetch cloud IDs with status: ${response.status}`);
     }
 
     const data = await response.json();
@@ -97,7 +99,7 @@ export const refreshAccessToken = async (
 
     if (!response.ok) {
       throw new Error(
-        `Failed to refresh access token for course with courseId: ${courseId}`
+        `Failed to refresh access token for course with courseId: ${courseId} and status: ${response.status}`
       );
     }
 
@@ -116,6 +118,6 @@ export const refreshAccessToken = async (
     return newAccessToken;
   } catch (error) {
     console.error('Error refreshing access token:', error);
-    return null;
+    throw new Error('Error refreshing access token');
   }
 };

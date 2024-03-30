@@ -244,10 +244,6 @@ export const fetchAndSaveJiraData = async () => {
     try {
       const accessToken = await refreshAccessToken(refreshToken, course._id);
 
-      if (!accessToken) {
-        throw new Error('Access token is null.');
-      }
-
       for (const cloudId of cloudIds) {
         try {
           const jiraBoardUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board`;
