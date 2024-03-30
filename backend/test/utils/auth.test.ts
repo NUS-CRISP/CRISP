@@ -9,7 +9,8 @@ jest.mock('cookie');
 jest.mock('jose');
 jest.mock('@panva/hkdf', () => ({
   __esModule: true,
-  default: jest.fn().mockImplementation(async () => 'mockKey')
+  default: jest.fn().mockImplementation(async () => 'mockKey'),
+  hkdf: jest.fn().mockImplementation(async () => 'mockKey'),
 }));
 
 describe('getAccountId', () => {
