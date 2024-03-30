@@ -7,9 +7,7 @@ import * as github from '../../utils/github';
 jest.mock('@models/Team');
 jest.mock('@models/TeamData');
 jest.mock('@models/User');
-jest.mock('octokit', () => ({
-  App: jest.fn(),
-}));
+jest.mock('octokit');
 
 describe('getGitHubApp', () => {
   it('creates a new GitHub App instance with environment variables', () => {

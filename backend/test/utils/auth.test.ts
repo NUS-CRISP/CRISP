@@ -3,9 +3,7 @@ import * as jose from 'jose';
 import { MissingAuthorizationError } from '../../services/errors';
 import * as auth from '../../utils/auth';
 
-jest.mock('cookie', () => ({
-  parse: jest.fn(),
-}));
+jest.mock('cookie');
 
 describe('getAccountId', () => {
   it('throws MissingAuthorizationError if token sub is missing', async () => {
