@@ -107,7 +107,7 @@ async function createStudentUser(userData: any) {
   });
   await account.save();
 
-  return user;
+  return { user, account };
 }
 
 async function createTAUser(userData: any) {
@@ -151,6 +151,7 @@ async function createFacultyUser(userData: any) {
 describe('courseService', () => {
   let courseId: string;
   let studentId: string;
+  let studentAccountId: string;
   let taId: string;
   let facultyId: string;
   let facultyAccountId: string;
@@ -160,8 +161,11 @@ describe('courseService', () => {
     await UserModel.deleteMany({});
     await AccountModel.deleteMany({});
 
-    const student = await createStudentUser(commonStudentDetails);
+    const studentPair = await createStudentUser(commonStudentDetails);
+    const student = studentPair.user;
     studentId = student._id.toString();
+    const studentAccount = studentPair.account;
+    studentAccountId = studentAccount._id.toString();
 
     const ta = await createTAUser(commonTADetails);
     taId = ta._id.toString();
@@ -374,9 +378,8 @@ describe('courseService', () => {
     });
 
     it('should not add if student user exists, but account does not exist', async () => {
-      const toDelete = await AccountModel.findOne({ email: `${commonStudentDetails.identifier}@example.com` });
-      expect(toDelete).toBeDefined();
-      toDelete!.deleteOne();
+      const deleted = await AccountModel.deleteOne({ email: `${commonStudentDetails.identifier}@example.com` });
+      expect(deleted.deletedCount).toBe(1);
 
       const studentDataList = [
         {
@@ -401,9 +404,10 @@ describe('courseService', () => {
         user: studentId,
         isApproved: true,
       });
-      account._id = toDelete!._id || new mongoose.Types.ObjectId().toString();
+      account._id = studentAccountId;
       await account.save();
-      expect(await AccountModel.findOne({ email: `${commonStudentDetails.identifier}@example.com` })).toBeDefined();
+      expect(await AccountModel.findOne({ email: `${commonStudentDetails.identifier}@example.com` }))
+        .toEqual(await AccountModel.findById(studentAccountId));
     });
 
     it('should not add if student data does not match', async () => {
@@ -577,9 +581,8 @@ describe('courseService', () => {
     });
 
     it('should not add if faculty user exists, but account does not exist', async () => {
-      const toDelete = await AccountModel.findOne({ email: `${commonFacultyDetails.identifier}@example.com` });
-      expect(toDelete).toBeDefined();
-      toDelete!.deleteOne();
+      const deleted = await AccountModel.deleteOne({ email: `${commonFacultyDetails.identifier}@example.com` });
+      expect(deleted.deletedCount).toBe(1);
 
       const facultyDataList = [
         {
@@ -605,11 +608,12 @@ describe('courseService', () => {
         user: facultyId,
         isApproved: true,
       });
-      account._id = toDelete!._id || new mongoose.Types.ObjectId().toString();
+      account._id = facultyAccountId;
       await account.save();
       expect(await AccountModel.findOne({
         email: `${commonFacultyDetails.identifier}@example.com`
-      })).toBeDefined();
+      })).toEqual(
+        await AccountModel.findById(facultyAccountId));
     });
 
     it('should not add if faculty data does not match', async () => {
@@ -788,7 +792,7 @@ describe('courseService', () => {
 
   describe('getTeamSetsFromCourse', () => {
     it('should retrieve team sets from a course', async () => {
-      const teamSets = await getTeamSetsFromCourse(courseId, facultyAccountId);
+      const teamSets = await getTeamSetsFromCourse(facultyAccountId, courseId);
       expect(teamSets).toBeDefined();
       expect(teamSets.length).toBe(0);
     });
