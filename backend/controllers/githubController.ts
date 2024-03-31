@@ -38,9 +38,8 @@ export const getAllTeamDataByOrg = async (req: Request, res: Response) => {
 export const getAllTeamDataByCourse = async (req: Request, res: Response) => {
   const courseId = req.params.id;
 
-  const accountId = await getAccountId(req);
-
   try {
+    const accountId = await getAccountId(req);
     const teams = await getAuthorizedTeamDataByCourse(accountId, courseId);
     res.status(200).json(teams);
   } catch (error) {
@@ -79,18 +78,15 @@ export const getAllTeamDataNamesByCourse = async (
 ) => {
   const courseId = req.params.id;
 
-  const accountId = await getAccountId(req);
-  if (!accountId) {
-    res.status(400).json({ error: 'Missing authorization' });
-    return;
-  }
-
   try {
+    const accountId = await getAccountId(req);
     const teams = await getAuthorizedTeamDataNamesByCourse(accountId, courseId);
     res.status(200).json(teams);
   } catch (error) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
+    } else if (error instanceof MissingAuthorizationError) {
+      res.status(400).json({ error: 'Missing authorization' });
     } else {
       console.error('Error fetching teams:', error);
       res.status(500).json({ error: 'Failed to fetch teams' });

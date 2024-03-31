@@ -19,9 +19,9 @@ export const logLoginEvent = async (req: Request, res: Response) => {
 };
 
 export const logTabSession = async (req: Request, res: Response) => {
-  const accountId = await getAccountId(req);
   const { tabSessionData } = req.body;
   try {
+    const accountId = await getAccountId(req);
     await logTabSessionById(accountId, tabSessionData);
     res.status(200).json({ message: 'Login event logged successfully' });
   } catch (error) {

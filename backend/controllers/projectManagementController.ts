@@ -4,7 +4,7 @@ import { fetchAndSaveJiraData } from '../jobs/jiraJob';
 import CourseModel from '../models/Course';
 import { getAccountId } from 'utils/auth';
 import { getJiraBoardNamesByCourse } from 'services/projectManagementService';
-import { NotFoundError } from 'services/errors';
+import { MissingAuthorizationError, NotFoundError } from 'services/errors';
 
 // Define OAuth 2.0 configuration
 const authorizationUrl = 'https://auth.atlassian.com/authorize';
@@ -106,18 +106,15 @@ export const getAllJiraBoardNamesByCourse = async (
 ) => {
   const courseId = req.params.id;
 
-  const accountId = await getAccountId(req);
-  if (!accountId) {
-    res.status(400).json({ error: 'Missing authorization' });
-    return;
-  }
-
   try {
+    const accountId = await getAccountId(req);
     const jiraBoards = await getJiraBoardNamesByCourse(accountId, courseId);
     res.status(200).json(jiraBoards);
   } catch (error) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
+    } else if (error instanceof MissingAuthorizationError) {
+      res.status(400).json({ error: 'Missing authorization' });
     } else {
       console.error('Error fetching teams:', error);
       res.status(500).json({ error: 'Failed to fetch teams' });
