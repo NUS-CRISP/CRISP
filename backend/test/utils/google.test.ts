@@ -54,6 +54,13 @@ describe('Google Utils', () => {
       const data = await fetchDataFromSheet(mockSheetId, mockRange, true);
       expect(data).toEqual(transformedDataTeam);
     });
+
+    it('throws an error if GOOGLE_CLIENT_EMAIL is not set', async () => {
+      process.env.GOOGLE_CLIENT_EMAIL = '';
+      await expect(fetchDataFromSheet(mockSheetId, mockRange)).rejects.toThrow(
+        'Google credentials not found'
+      );
+    });
   });
 });
 
