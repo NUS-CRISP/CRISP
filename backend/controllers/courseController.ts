@@ -74,9 +74,9 @@ export const getCourses = async (req: Request, res: Response) => {
 };
 
 export const getCourse = async (req: Request, res: Response) => {
-  const accountId = await getAccountId(req);
   const courseId = req.params.id;
   try {
+    const accountId = await getAccountId(req);
     const course = await getCourseById(courseId, accountId);
     res.status(200).json(course);
   } catch (error) {
@@ -247,8 +247,8 @@ export const removeTAs = async (req: Request, res: Response) => {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
     } else {
-      console.error('Error removing tas:', error);
-      res.status(500).json({ error: 'Failed to remove tas' });
+      console.error('Error removing TAs:', error);
+      res.status(500).json({ error: 'Failed to remove TAs' });
     }
   }
 };
