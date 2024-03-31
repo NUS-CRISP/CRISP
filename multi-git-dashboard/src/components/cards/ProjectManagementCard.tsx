@@ -1,6 +1,6 @@
 import { Carousel, Embla } from '@mantine/carousel';
 import { BarChart } from '@mantine/charts';
-import { Card, Group, SimpleGrid, Stack, Text } from '@mantine/core';
+import { Card, Group, SimpleGrid, Stack, Table, Text } from '@mantine/core';
 import { JiraBoard, JiraIssue, JiraSprint } from '@shared/types/JiraData';
 import { User } from '@shared/types/User';
 import { useState } from 'react';
@@ -109,14 +109,24 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
       .map(key => new Date(key))
       .sort((a, b) => b.getTime() - a.getTime())
       .map(key => key.toISOString());
+
     const sortedAssigneeStatsArrays: AssigneeStats[][] = sortedKeys.map(
       key => assigneeStatsArrays[key]
     );
 
+    const rows = (assigneeStatsArray: AssigneeStats[]) =>
+      assigneeStatsArray.map(assigneeStats => (
+        <Table.Tr key={assigneeStats.Assignee}>
+          <Table.Td>{assigneeStats.Assignee}</Table.Td>
+          <Table.Td>{assigneeStats.Issues}</Table.Td>
+          <Table.Td>{assigneeStats['Story Points']}</Table.Td>
+        </Table.Tr>
+      ));
+
     return (
       <Card withBorder>
         <Carousel
-          withIndicators
+          controlsOffset="xs"
           slideSize="100%"
           loop
           getEmblaApi={setEmbla}
@@ -137,17 +147,19 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
               >
                 Sprint ending {new Date(sortedKeys[index]).toLocaleDateString()}
               </Text>
-              <BarChart
-                h={400}
-                data={assigneeStatsArray}
-                dataKey="Assignee"
-                withLegend
-                legendProps={{ verticalAlign: 'bottom', height: 50 }}
-                series={[
-                  { name: 'Issues', color: 'blue.6' },
-                  { name: 'Story Points', color: 'teal.6' },
-                ]}
-              />
+              <Group style={{ paddingLeft: '6%', paddingRight: '6%' }}>
+                <Table>
+                  <Table.Thead>
+                    <Table.Tr>
+                      <Table.Th>Assignee</Table.Th>
+                      <Table.Th>Issues</Table.Th>
+                      <Table.Th>Story Points</Table.Th>
+                      {/* <Table.Th></Table.Th> */}
+                    </Table.Tr>
+                  </Table.Thead>
+                  <Table.Tbody>{rows(assigneeStatsArray)}</Table.Tbody>
+                </Table>
+              </Group>
             </Carousel.Slide>
           ))}
         </Carousel>
@@ -224,8 +236,8 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
           ]}
         />
         <Group style={{ alignItems: 'center' }}>
-          <Text size='sm'>Team's Velocity:</Text>
-          <Text size='sm'>{velocity}</Text>
+          <Text size="sm">Team's Velocity:</Text>
+          <Text size="sm">{velocity}</Text>
         </Group>
       </Card>
     );
