@@ -14,6 +14,8 @@ import {
   deleteAssessmentById,
 } from '../../services/assessmentService';
 import { NotFoundError, BadRequestError } from '../../services/errors';
+import TeamSetModel from '@models/TeamSet';
+import TeamModel from '@models/Team';
 
 let mongo: MongoMemoryServer;
 
@@ -134,9 +136,29 @@ describe('assessmentService', () => {
   let taAccountId: string;
   let studentId: string;
   let resultId: string;
+  let teamSetName: string;
+
   beforeEach(async () => {
     const course = await createTestCourse(commonCourseDetails);
     courseId = course._id.toHexString();
+
+    const teamSet = new TeamSetModel({
+      course: courseId,
+      name: 'TeamSet1',
+    });
+    await teamSet.save();
+    teamSetName = teamSet.name;
+    course.teamSets.push(teamSet._id);
+    await course.save();
+
+    const team = new TeamModel({
+      teamSet: teamSet._id,
+      number: 1,
+      members: [studentId],
+    });
+    await team.save();
+    teamSet.teams.push(team._id);
+    await teamSet.save();
 
     const student = await createStudentUser(commonStudentDetails);
     studentId = student._id.toHexString();
@@ -453,7 +475,7 @@ describe('assessmentService', () => {
   });
 
   describe('addAssessmentsToCourse', () => {
-    it('should add assessments to a course', async () => {
+    it('should add assessments to a course without teamset', async () => {
       const assessmentsData = [
         {
           assessmentType: 'Exam2',
@@ -466,6 +488,48 @@ describe('assessmentService', () => {
 
       const createdAssessment = await AssessmentModel.findOne({
         assessmentType: 'Exam2',
+      });
+      const updatedCourse = await CourseModel.findById(courseId);
+
+      expect(createdAssessment).toBeDefined();
+      expect(updatedCourse?.assessments).toContainEqual(createdAssessment?._id);
+    });
+
+    it('should add assessments to a course with teamset', async () => {
+      const assessmentsData = [
+        {
+          assessmentType: 'Exam2',
+          markType: 'Percentage',
+          frequency: 'Once',
+          granularity: 'individual',
+          teamSetName: teamSetName,
+        },
+      ];
+      await addAssessmentsToCourse(courseId, assessmentsData);
+
+      const createdAssessment = await AssessmentModel.findOne({
+        assessmentType: 'Exam2',
+      });
+      const updatedCourse = await CourseModel.findById(courseId);
+
+      expect(createdAssessment).toBeDefined();
+      expect(updatedCourse?.assessments).toContainEqual(createdAssessment?._id);
+    });
+
+    it('should add team assessments to a course', async () => {
+      const assessmentsData = [
+        {
+          assessmentType: 'Exam3',
+          markType: 'Percentage',
+          frequency: 'Once',
+          granularity: 'team',
+          teamSetName: teamSetName,
+        },
+      ];
+      await addAssessmentsToCourse(courseId, assessmentsData);
+
+      const createdAssessment = await AssessmentModel.findOne({
+        assessmentType: 'Exam3',
       });
       const updatedCourse = await CourseModel.findById(courseId);
 
