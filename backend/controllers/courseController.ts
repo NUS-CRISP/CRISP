@@ -300,7 +300,7 @@ export const removeFaculty = async (req: Request, res: Response) => {
       res.status(404).json({ error: error.message });
     } else {
       console.error('Error removing faculty:', error);
-      res.status(500).json({ error: 'Failed to remove faculty' });
+      res.status(500).json({ error: 'Failed to remove Faculty' });
     }
   }
 };
