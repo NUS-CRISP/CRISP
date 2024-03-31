@@ -85,9 +85,6 @@ export const addStudentsToTeam = async (courseId: string, students: any[]) => {
         teamSet: teamSet._id,
         members: [],
       });
-      if (!teamSet.teams) {
-        teamSet.teams = [];
-      }
       teamSet.teams.push(team._id);
     }
     if (team.members && !team.members.some(s => s._id === student._id)) {
@@ -139,9 +136,6 @@ export const addTAsToTeam = async (courseId: string, tas: any[]) => {
         members: [],
         TA: null,
       });
-      if (!teamSet.teams) {
-        teamSet.teams = [];
-      }
       teamSet.teams.push(team._id);
     }
     team.TA = ta._id;
