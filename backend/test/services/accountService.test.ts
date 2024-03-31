@@ -4,9 +4,12 @@ import AccountModel from '../../models/Account';
 import {
   approveAccountByIds,
   createNewAccount,
+  getAccountStatusesByUserIds,
   getAllPendingAccounts,
+  rejectAccountByIds,
 } from '../../services/accountService';
-import { BadRequestError } from '../../services/errors';
+import { BadRequestError, NotFoundError } from '../../services/errors';
+import UserModel from '@models/User';
 
 let mongo: MongoMemoryServer;
 
@@ -20,7 +23,7 @@ beforeAll(async () => {
 beforeEach(async () => {
   const collections = await mongoose.connection.db.collections();
 
-  for (let collection of collections) {
+  for (const collection of collections) {
     await collection.deleteMany({});
   }
 });
@@ -115,7 +118,6 @@ describe('accountService', () => {
       await createTestAccount({
         email: 'pending@example.com',
         identifier: 'testIdentifier1',
-        isApproved: false,
       });
 
       const pendingAccounts = await getAllPendingAccounts();
@@ -124,7 +126,6 @@ describe('accountService', () => {
         expect.arrayContaining([
           expect.objectContaining({
             email: 'pending@example.com',
-            isApproved: false,
           }),
         ])
       );
@@ -137,12 +138,10 @@ describe('accountService', () => {
       const account1 = await createTestAccount({
         email: 'approve1@example.com',
         identifier: 'testIdentifier1',
-        isApproved: false,
       });
       const account2 = await createTestAccount({
         email: 'approve2@example.com',
         identifier: 'testIdentifier2',
-        isApproved: false,
       });
 
       if (!account1 || !account2) {
@@ -164,6 +163,79 @@ describe('accountService', () => {
 
     it('should not throw an error if an empty array is passed', async () => {
       await expect(approveAccountByIds([])).resolves.not.toThrow();
+    });
+  });
+
+  describe('rejectAccountByIds', () => {
+    it('should reject accounts by their IDs', async () => {
+      const account1 = await createTestAccount({
+        email: 'approve1@example.com',
+        identifier: 'testIdentifier1',
+      });
+      const account2 = await createTestAccount({
+        email: 'approve2@example.com',
+        identifier: 'testIdentifier2',
+      });
+
+      if (!account1 || !account2) {
+        throw new Error('Test accounts could not be created');
+      }
+
+      await rejectAccountByIds([account1._id, account2._id]);
+
+      const updatedAccount1 = await AccountModel.findById(account1._id);
+      const updatedAccount2 = await AccountModel.findById(account2._id);
+
+      expect(updatedAccount1).toBe(null);
+      expect(updatedAccount2).toBe(null);
+    });
+
+    it('should not throw an error if an empty array is passed', async () => {
+      await expect(rejectAccountByIds([])).resolves.not.toThrow();
+    });
+  });
+
+  describe('getAccountStatusesByUserIds', () => {
+    it('should get account statuses', async () => {
+      const account1 = await createTestAccount({
+        email: 'approve1@example.com',
+        identifier: 'testIdentifier1',
+      });
+
+      const account2 = await createTestAccount({
+        email: 'approve2@example.com',
+        identifier: 'testIdentifier2',
+      });
+
+      if (!account1 || !account2) {
+        throw new Error('Test accounts could not be created');
+      }
+
+      const user1 = await new UserModel({
+        identifier: 'test1',
+        name: 'test1',
+      }).save();
+      account1.user = user1._id;
+      await account1.save();
+
+      const user2 = await new UserModel({
+        identifier: 'test2',
+        name: 'test2',
+      }).save();
+      account2.user = user2._id;
+      account2.isApproved = true;
+      await account2.save();
+
+      const userIds = [user1._id.toHexString(), user2._id.toHexString()];
+      const accountStatusRecord = await getAccountStatusesByUserIds(userIds);
+      expect(accountStatusRecord[user1._id.toHexString()]).toBe(false);
+      expect(accountStatusRecord[user2._id.toHexString()]).toBe(true);
+    });
+
+    it('should throw an error if an empty array is passed', async () => {
+      await expect(getAccountStatusesByUserIds([])).rejects.toThrow(
+        NotFoundError
+      );
     });
   });
 });
