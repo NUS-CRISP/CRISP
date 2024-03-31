@@ -12,11 +12,11 @@ import CourseModel from '@models/Course';
 
 jest.mock('../../utils/google');
 
+process.env.GOOGLE_CLIENT_EMAIL = 'mockEmail';
+process.env.GOOGLE_PRIVATE_KEY = 'mockKey';
 let mongo: MongoMemoryServer;
 
 beforeAll(async () => {
-  process.env.GOOGLE_CLIENT_EMAIL = 'mockEmail';
-  process.env.GOOGLE_PRIVATE_KEY = 'mockKey';
   mongo = await MongoMemoryServer.create();
   const mongoUri = mongo.getUri();
   await mongoose.connect(mongoUri);
