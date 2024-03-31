@@ -12,8 +12,6 @@ import CourseModel from '@models/Course';
 
 jest.mock('../../utils/google');
 
-process.env.GOOGLE_CLIENT_EMAIL = 'mockEmail';
-process.env.GOOGLE_PRIVATE_KEY = 'mockKey';
 let mongo: MongoMemoryServer;
 
 beforeAll(async () => {
