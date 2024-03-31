@@ -2,9 +2,9 @@ import { Request, Response } from 'express';
 import { URLSearchParams } from 'url';
 import { fetchAndSaveJiraData } from '../jobs/jiraJob';
 import CourseModel from '../models/Course';
-import { getAccountId } from 'utils/auth';
-import { getJiraBoardNamesByCourse } from 'services/projectManagementService';
-import { MissingAuthorizationError, NotFoundError } from 'services/errors';
+import { getAccountId } from '../utils/auth';
+import { getJiraBoardNamesByCourse } from '../services/projectManagementService';
+import { MissingAuthorizationError, NotFoundError } from '../services/errors';
 
 // Define OAuth 2.0 configuration
 const authorizationUrl = 'https://auth.atlassian.com/authorize';
@@ -69,13 +69,13 @@ export const callbackJiraAccount = async (req: Request, res: Response) => {
       .then(response => response.json())
       .then(async data => {
         // Extract the cloudId from the response
-        const cloudId = data[0].id; // Assuming the cloudId is in the first element of the response
+        const cloudIds = data.map((item: { id: string }) => item.id);
         await CourseModel.findOneAndUpdate(
           { _id: state },
           {
             jira: {
               isRegistered: true,
-              cloudId: cloudId,
+              cloudIds: cloudIds,
               accessToken: accessToken,
               refreshToken: refreshToken,
             },

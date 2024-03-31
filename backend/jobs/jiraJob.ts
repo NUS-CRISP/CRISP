@@ -145,7 +145,6 @@ async function fetchSprints(
     );
   } catch (error) {
     console.error('Error fetching sprints:', error);
-    throw error; // Propagate the error back to the caller
   }
 }
 
@@ -184,13 +183,15 @@ async function fetchIssues(
           },
         });
 
-        if (!storyPointsResponse.ok) {
-          throw new Error(
+        let storyPoints = 0;
+
+        if (storyPointsResponse.ok) {
+          storyPoints = (await storyPointsResponse.json()).value;
+        } else {
+          console.error(
             `Failed to fetch story points. Status: ${storyPointsResponse.status}`
           );
         }
-
-        const storyPoints = (await storyPointsResponse.json()).value;
 
         const jiraIssue: Omit<JiraIssue, '_id'> = {
           ...issueData,
@@ -252,8 +253,7 @@ async function fetchIssues(
       })
     );
   } catch (error) {
-    console.error('Error fetching sprints:', error);
-    throw error; // Propagate the error back to the caller
+    console.error('Error fetching issues:', error);
   }
 }
 
@@ -263,7 +263,7 @@ export const fetchAndSaveJiraData = async () => {
   const courses: Course[] = await CourseModel.find();
 
   for (const course of courses) {
-    const { isRegistered, cloudId } = course.jira;
+    const { isRegistered, cloudIds } = course.jira;
     let { accessToken, refreshToken } = course.jira;
 
     if (!isRegistered) {
@@ -272,7 +272,6 @@ export const fetchAndSaveJiraData = async () => {
 
     // Define the token endpoint URL
     const tokenUrl = 'https://auth.atlassian.com/oauth/token';
-    const jiraBoardUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board`;
 
     // Define the request parameters
     const tokenParams = {
@@ -305,82 +304,95 @@ export const fetchAndSaveJiraData = async () => {
         },
       });
 
-      console.log(`Access token refreshed for course with cloudId: ${cloudId}`);
+      console.log(
+        `Access token refreshed for course with courseId: ${course._id}`
+      );
     } else {
       console.error(
-        `Failed to refresh access token for course with cloudId: ${cloudId}`
+        `Failed to refresh access token for course with courseId: ${course._id}`
       );
     }
 
-    fetch(jiraBoardUri, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-    })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
+    for (const cloudId of cloudIds) {
+      const jiraBoardUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board`;
+
+      fetch(jiraBoardUri, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
       })
-      .then(async data => {
-        const boards = data.values;
-
-        boards.forEach(async (boardData: any) => {
-          const boardId = await boardData.id;
-          const jiraBoardConfigurationUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board/${boardId}/configuration`;
-
-          const boardConfigurationResponse = await fetch(
-            jiraBoardConfigurationUri,
-            {
-              method: 'GET',
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-                Accept: 'application/json',
-              },
-            }
-          );
-
-          if (!boardConfigurationResponse.ok) {
-            throw new Error(
-              `Failed to fetch board configuration. Status: ${boardConfigurationResponse.status}`
-            );
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
           }
+          return response.json();
+        })
+        .then(async data => {
+          const boards = data.values;
 
-          const boardConfigurationData =
-            await boardConfigurationResponse.json();
+          boards.forEach(async (boardData: any) => {
+            try {
+              const boardId = await boardData.id;
+              const jiraBoardConfigurationUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board/${boardId}/configuration`;
 
-          const jiraBoard: Omit<JiraBoard, '_id'> = {
-            ...boardData,
-            jiraLocation: boardData.location,
-            columns: boardConfigurationData.columnConfig.columns,
-            jiraIssues: [],
-            jiraSprints: [],
-            course: course._id,
-            location: undefined, // To remove the original location property
-          };
+              const boardConfigurationResponse = await fetch(
+                jiraBoardConfigurationUri,
+                {
+                  method: 'GET',
+                  headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    Accept: 'application/json',
+                  },
+                }
+              );
 
-          const boardSelfUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board/${jiraBoard.id}`;
+              if (!boardConfigurationResponse.ok) {
+                throw new Error(
+                  `Failed to fetch board configuration. Status: ${boardConfigurationResponse.status}`
+                );
+              }
 
-          await JiraBoardModel.findOneAndUpdate(
-            { self: boardSelfUri },
-            jiraBoard,
-            {
-              upsert: true,
-              new: true,
+              const boardConfigurationData =
+                await boardConfigurationResponse.json();
+
+              const jiraBoard: Omit<JiraBoard, '_id'> = {
+                ...boardData,
+                jiraLocation: boardData.location,
+                columns: boardConfigurationData.columnConfig.columns,
+                jiraIssues: [],
+                jiraSprints: [],
+                course: course._id,
+                location: undefined, // To remove the original location property
+              };
+
+              const boardSelfUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board/${jiraBoard.id}`;
+
+              await JiraBoardModel.findOneAndUpdate(
+                { self: boardSelfUri },
+                jiraBoard,
+                {
+                  upsert: true,
+                  new: true,
+                }
+              );
+
+              await fetchSprints(jiraBoard.id, cloudId, accessToken);
+              await fetchIssues(jiraBoard.id, cloudId, accessToken);
+            } catch (error) {
+              console.error('Error in forEach loop:', error);
             }
+          });
+        })
+        .catch(error => {
+          console.error(
+            'There was a problem with your fetch operation:',
+            error
           );
-
-          await fetchSprints(jiraBoard.id, cloudId, accessToken);
-          await fetchIssues(jiraBoard.id, cloudId, accessToken);
         });
-      })
-      .catch(error => {
-        console.error('There was a problem with your fetch operation:', error);
-      });
+    }
   }
 
   console.log('fetchAndSaveJiraData job done');

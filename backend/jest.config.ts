@@ -6,4 +6,6 @@ module.exports = {
     '^@shared/(.*)': '<rootDir>/../shared/$1',
     '^@models/(.*)': '<rootDir>/models/$1',
   },
+  collectCoverage: true,
+  coverageReporters: ['text', 'cobertura'],
 };
