@@ -40,6 +40,7 @@ afterEach(async () => {
 
 describe('googleService', () => {
   let assessmentId: string;
+  let assessmentTeamId: string;
 
   beforeEach(async () => {
     const course = new CourseModel({
@@ -74,6 +75,21 @@ describe('googleService', () => {
     await sheetData.save();
     assessment.sheetData = sheetData._id;
     await assessment.save();
+
+    const assessmentTeam = new AssessmentModel({
+      course: course._id,
+      assessmentType: 'Exam',
+      markType: 'Percentage',
+      results: [],
+      frequency: 'Once',
+      granularity: 'team',
+    });
+    await assessmentTeam.save();
+    assessmentTeamId = assessmentTeam._id.toHexString();
+    course.assessments.push(assessmentTeam._id);
+    await course.save();
+    assessmentTeam.sheetData = sheetData._id;
+    await assessmentTeam.save();
   });
 
   describe('getAssessmentSheetData', () => {
@@ -87,6 +103,21 @@ describe('googleService', () => {
       await account.save();
       const sheetData = await getAssessmentSheetData(assessmentId, account._id);
 
+      expect(sheetData).toBeDefined();
+    });
+
+    it('should retrieve sheet data for an assessment team', async () => {
+      const account = new AccountModel({
+        email: 'ta1@example.com',
+        password: 'hashedpassword',
+        role: 'Teaching assistant',
+        isApproved: true,
+      });
+      await account.save();
+      const sheetData = await getAssessmentSheetData(
+        assessmentTeamId,
+        account._id
+      );
       expect(sheetData).toBeDefined();
     });
 
