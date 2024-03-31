@@ -9,11 +9,12 @@ type SheetDataType = SheetRow[];
 const DEFAULT_SHEET_TAB = 'Form Responses 1';
 
 const authenticateGoogleSheets = async (): Promise<sheets_v4.Sheets> => {
-  const GOOGLE_CLIENT_EMAIL = process.env.GOOGLE_CLIENT_EMAIL;
-  const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY?.replace(
-    /\\n/g,
-    '\n'
-  );
+  const GOOGLE_CLIENT_EMAIL = process.env.GOOGLE_CLIENT_EMAIL || '';
+  const GOOGLE_PRIVATE_KEY =
+    process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n') || '';
+  if (!GOOGLE_CLIENT_EMAIL || !GOOGLE_PRIVATE_KEY) {
+    throw new Error('Google credentials not found');
+  }
   const auth = new google.auth.JWT(
     GOOGLE_CLIENT_EMAIL,
     undefined,
