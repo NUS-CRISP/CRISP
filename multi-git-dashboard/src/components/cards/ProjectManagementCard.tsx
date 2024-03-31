@@ -155,14 +155,12 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
     );
   };
 
-  const getSprintCompletionBarChart = (jiraSprints: JiraSprint[]) => {
+  const getVelocityChart = (jiraSprints: JiraSprint[]) => {
     interface SprintSummary {
       endDate: Date;
       endDateString: string;
-      Issues: number;
-      'Story Points': number;
-      'Issues Completed': number;
-      'Story Points Completed': number;
+      Commitment: number;
+      Completed: number;
     }
 
     const sprintData: SprintSummary[] = [];
@@ -171,22 +169,18 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
       const sprintSummary: SprintSummary = {
         endDate: new Date(sprint.endDate),
         endDateString: new Date(sprint.endDate).toLocaleDateString(),
-        Issues: 0,
-        'Story Points': 0,
-        'Issues Completed': 0,
-        'Story Points Completed': 0,
+        Commitment: 0,
+        Completed: 0,
       };
 
       sprint.jiraIssues.forEach(issue => {
-        sprintSummary.Issues++;
-        sprintSummary['Story Points'] += issue.storyPoints ?? 0;
+        sprintSummary['Commitment'] += issue.storyPoints ?? 0;
 
         if (
           issue.fields.resolution &&
           issue.fields.resolution.name === 'Done'
         ) {
-          sprintSummary['Issues Completed']++;
-          sprintSummary['Story Points Completed'] += issue.storyPoints ?? 0;
+          sprintSummary['Completed'] += issue.storyPoints ?? 0;
         }
       });
 
@@ -195,6 +189,18 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
 
     sprintData.sort((a, b) => a.endDate.getTime() - b.endDate.getTime());
 
+    // Calculate the total completed story points
+    const totalCompletedStoryPoints = sprintData.reduce(
+      (acc, sprintSummary) => acc + sprintSummary['Completed'],
+      0
+    );
+
+    // Calculate the velocity (average completed story points)
+    const velocity =
+      sprintData.length > 0
+        ? (totalCompletedStoryPoints / sprintData.length).toFixed(2)
+        : 0;
+
     return (
       <Card withBorder>
         <Text
@@ -202,21 +208,25 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
           fw={500}
           style={{ textAlign: 'center', marginBottom: 8 }}
         >
-          Sprint Completion Status
+          Velocity Chart
         </Text>
         <BarChart
           h={400}
           data={sprintData}
           dataKey="endDateString"
+          xAxisLabel="Sprint"
+          yAxisLabel="Story Points"
           withLegend
-          legendProps={{ verticalAlign: 'bottom', height: 50 }}
+          legendProps={{ verticalAlign: 'top' }}
           series={[
-            { name: 'Issues Completed', color: 'blue.6' },
-            { name: 'Issues', color: 'blue.8' },
-            { name: 'Story Points Completed', color: 'teal.6' },
-            { name: 'Story Points', color: 'teal.8' },
+            { name: 'Commitment', color: 'gray.5' },
+            { name: 'Completed', color: 'teal.7' },
           ]}
         />
+        <Group style={{ alignItems: 'center' }}>
+          <Text size='sm'>Team's Velocity:</Text>
+          <Text size='sm'>{velocity}</Text>
+        </Group>
       </Card>
     );
   };
@@ -274,8 +284,7 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
             )}
           {jiraBoard.jiraSprints &&
             getAssigneeStatsBarChart(jiraBoard.jiraSprints)}
-          {jiraBoard.jiraSprints &&
-            getSprintCompletionBarChart(jiraBoard.jiraSprints)}
+          {jiraBoard.jiraSprints && getVelocityChart(jiraBoard.jiraSprints)}
         </>
       )}
     </Stack>

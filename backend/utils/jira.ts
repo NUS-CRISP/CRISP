@@ -54,7 +54,9 @@ export const fetchCloudIdsAndUpdateCourse = async (
     const response = await fetch(cloudUrl, { headers });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch cloud IDs with status: ${response.status}`);
+      throw new Error(
+        `Failed to fetch cloud IDs with status: ${response.status}`
+      );
     }
 
     const data = await response.json();
