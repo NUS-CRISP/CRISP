@@ -341,9 +341,9 @@ export const addTeamSet = async (req: Request, res: Response) => {
 };
 
 export const getTeamSets = async (req: Request, res: Response) => {
-  const accountId = await getAccountId(req);
   const courseId = req.params.id;
   try {
+    const accountId = await getAccountId(req);
     const teamSets = await getTeamSetsFromCourse(accountId, courseId);
     res.status(200).json(teamSets);
   } catch (error) {
@@ -499,13 +499,9 @@ export const getProjectManagementBoard = async (
   req: Request,
   res: Response
 ) => {
-  const accountId = await getAccountId(req);
-  if (!accountId) {
-    res.status(400).json({ error: 'Missing authorization' });
-    return;
-  }
   const courseId = req.params.id;
   try {
+    const accountId = await getAccountId(req);
     const projectManagementBoard = await getProjectManagementBoardFromCourse(
       accountId,
       courseId
@@ -514,6 +510,8 @@ export const getProjectManagementBoard = async (
   } catch (error) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
+    } else if (error instanceof MissingAuthorizationError) {
+      res.status(400).json({ error: 'Missing authorization' });
     } else {
       console.error('Error getting project management boards:', error);
       res
