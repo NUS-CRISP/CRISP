@@ -1,6 +1,6 @@
 import Overview from '@/components/views/Overview';
 import { DateUtils, getCurrentWeekGenerator, getEndOfWeek, weekToDateGenerator } from '@/lib/utils';
-import { Container, Loader } from '@mantine/core';
+import { Container, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { Course } from '@shared/types/Course';
 import dayjs from 'dayjs';
@@ -68,7 +68,7 @@ const CourseViewPage: React.FC = () => {
         flexDirection: 'column',
       }}
     >
-      {course && dateUtils ? <Overview courseId={courseId} dateUtils={dateUtils} /> : <Loader size="md" />}
+      {course && dateUtils ? <Overview courseId={courseId} dateUtils={dateUtils} /> : <Text>Course not available</Text>}
     </Container>
   );
 };

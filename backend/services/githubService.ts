@@ -65,9 +65,7 @@ export const getAuthorizedTeamDataByCourse = async (
 
   const role = account.role;
 
-  if (role === Role.Faculty || role === Role.Admin) {
-    // Faculty can view all teams in the course; return all TeamData with same orgName as course
-    // TODO: Temp. solution; adjust schema so we have a way to get all teams in a course
+  if (role === Role.Faculty || role === Role.Admin || role === Role.TrialUser) {
     if (!course.gitHubOrgName) {
       throw new NotFoundError('Course GitHub organization not found');
     }

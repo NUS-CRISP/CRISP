@@ -1,5 +1,5 @@
 import { DateUtils } from '@/lib/utils';
-import { Accordion, Center, Loader, ScrollArea } from '@mantine/core';
+import { Accordion, Center, Container, Loader, ScrollArea } from '@mantine/core';
 import { Profile } from '@shared/types/Profile';
 import { Team as SharedTeam } from '@shared/types/Team';
 import { TeamData } from '@shared/types/TeamData';
@@ -75,7 +75,9 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
   if (status === Status.Loading)
     return (
       <Center>
-        <Loader />
+        <Container mt={40}>
+          <Loader />
+        </Container>
       </Center>
     );
   if (status === Status.Error) return <Center>No data</Center>;
