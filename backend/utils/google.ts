@@ -53,9 +53,9 @@ const getSheetData = async (
       valueRenderOption: 'FORMATTED_VALUE',
       majorDimension: 'ROWS',
     });
-
-  const rows: string[][] = response.data.values || [];
-  const headers: string[] = rows.shift() || [];
+  let rows: string[][] = response.data.values || [];
+  const headers: string[] = rows[0] || [];
+  rows = rows.slice(1);
 
   const sheetData: SheetDataType = rows.map(rowArray => {
     const rowObject: SheetRow = {};
@@ -73,7 +73,6 @@ const getSheetData = async (
     });
     return rowObject;
   });
-
   return sheetData;
 };
 
