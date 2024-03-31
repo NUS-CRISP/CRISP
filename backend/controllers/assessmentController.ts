@@ -64,7 +64,7 @@ export const deleteAssessment = async (req: Request, res: Response) => {
     return res.status(200).json({ message: 'Assessment deleted successfully' });
   } catch (error) {
     if (error instanceof NotFoundError) {
-      res.status(404).send({ error: error.message });
+      res.status(404).json({ error: error.message });
     } else {
       console.error('Error deleting Assessment:', error);
       res.status(500).json({ error: 'Failed to delete Assessment' });
