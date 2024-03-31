@@ -16,15 +16,17 @@ const transformedDataTeam = [
 process.env.GOOGLE_CLIENT_EMAIL = 'mockEmail';
 process.env.GOOGLE_PRIVATE_KEY = 'mockKey';
 
-jest.mock('googleapis', () => {
-  return {
-    google: {
-      auth: {
-        JWT: jest.fn().mockImplementation(() => ({
-          authorize: jest.fn().mockResolvedValue({}),
-        })),
+jest.mock('googleapis', () => ({
+  google: {
+    auth: {
+      JWT: function () {
+        return {
+          authorize: jest.fn().mockResolvedValue(undefined),
+        };
       },
-      sheets: jest.fn().mockReturnValue({
+    },
+    sheets: function () {
+      return {
         spreadsheets: {
           values: {
             get: jest.fn().mockResolvedValue({
@@ -38,10 +40,10 @@ jest.mock('googleapis', () => {
             }),
           },
         },
-      }),
+      };
     },
-  };
-});
+  },
+}));
 
 describe('Google Utils', () => {
   describe('fetchDataFromSheet', () => {
