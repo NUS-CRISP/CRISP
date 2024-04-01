@@ -72,34 +72,57 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
     </Card>
   );
 
-  const getAssigneeStatsBarChart = (jiraSprints: JiraSprint[]) => {
+  const getStatsTable = (jiraSprints: JiraSprint[]) => {
     interface AssigneeStats {
-      Assignee: string;
-      Issues: number;
-      'Story Points': number;
+      assignee: string;
+      issues: number;
+      storyPoints: number;
+      storyPointsPerIssue: number;
     }
 
     const assigneeStatsArrays: Record<string, AssigneeStats[]> = {};
 
     jiraSprints.forEach(jiraSprint => {
       const assigneeStatsMap: Record<string, AssigneeStats> = {};
+      let totalIssues = 0;
+      let totalStoryPoints = 0;
 
       jiraSprint.jiraIssues.forEach(issue => {
         const assigneeName = issue.fields.assignee?.displayName ?? 'Unassigned';
         if (!assigneeStatsMap[assigneeName]) {
           assigneeStatsMap[assigneeName] = {
-            Assignee: assigneeName,
-            Issues: 0,
-            'Story Points': 0,
+            assignee: assigneeName,
+            issues: 0,
+            storyPoints: 0,
+            storyPointsPerIssue: 0,
           };
         }
-        assigneeStatsMap[assigneeName].Issues++;
-        assigneeStatsMap[assigneeName]['Story Points'] +=
-          issue.storyPoints ?? 0;
+        assigneeStatsMap[assigneeName].issues++;
+        assigneeStatsMap[assigneeName].storyPoints += issue.storyPoints ?? 0;
+
+        // Accumulate total issues and story points
+        totalIssues++;
+        totalStoryPoints += issue.storyPoints ?? 0;
       });
+
+      assigneeStatsMap['Total'] = {
+        assignee: 'Total',
+        issues: totalIssues,
+        storyPoints: totalStoryPoints,
+        storyPointsPerIssue: 0,
+      };
 
       const assigneeStatsArray: AssigneeStats[] =
         Object.values(assigneeStatsMap);
+
+      // Calculate average story points per issue for each assignee
+      assigneeStatsArray.forEach(assigneeStats => {
+        assigneeStats.storyPointsPerIssue =
+          assigneeStats.issues > 0
+            ? assigneeStats.storyPoints / assigneeStats.issues
+            : 0;
+      });
+
       const endDate = new Date(jiraSprint.endDate);
       assigneeStatsArrays[endDate.toISOString()] = assigneeStatsArray;
     });
@@ -116,10 +139,11 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
 
     const rows = (assigneeStatsArray: AssigneeStats[]) =>
       assigneeStatsArray.map(assigneeStats => (
-        <Table.Tr key={assigneeStats.Assignee}>
-          <Table.Td>{assigneeStats.Assignee}</Table.Td>
-          <Table.Td>{assigneeStats.Issues}</Table.Td>
-          <Table.Td>{assigneeStats['Story Points']}</Table.Td>
+        <Table.Tr key={assigneeStats.assignee}>
+          <Table.Td>{assigneeStats.assignee}</Table.Td>
+          <Table.Td>{assigneeStats.issues}</Table.Td>
+          <Table.Td>{assigneeStats.storyPoints}</Table.Td>
+          <Table.Td>{assigneeStats.storyPointsPerIssue.toFixed(2)}</Table.Td>
         </Table.Tr>
       ));
 
@@ -148,13 +172,18 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                 Sprint ending {new Date(sortedKeys[index]).toLocaleDateString()}
               </Text>
               <Group style={{ paddingLeft: '6%', paddingRight: '6%' }}>
-                <Table>
+                <Table
+                  striped
+                  highlightOnHover
+                  withTableBorder
+                  withColumnBorders
+                >
                   <Table.Thead>
                     <Table.Tr>
                       <Table.Th>Assignee</Table.Th>
                       <Table.Th>Issues</Table.Th>
                       <Table.Th>Story Points</Table.Th>
-                      {/* <Table.Th></Table.Th> */}
+                      <Table.Th>Story Points Per Issue</Table.Th>
                     </Table.Tr>
                   </Table.Thead>
                   <Table.Tbody>{rows(assigneeStatsArray)}</Table.Tbody>
@@ -209,9 +238,7 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
 
     // Calculate the velocity (average completed story points)
     const velocity =
-      sprintData.length > 0
-        ? (totalCompletedStoryPoints / sprintData.length).toFixed(2)
-        : 0;
+      sprintData.length > 0 ? totalCompletedStoryPoints / sprintData.length : 0;
 
     return (
       <Card withBorder>
@@ -237,7 +264,7 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
         />
         <Group style={{ alignItems: 'center' }}>
           <Text size="sm">Team's Velocity:</Text>
-          <Text size="sm">{velocity}</Text>
+          <Text size="sm">{velocity.toFixed(2)}</Text>
         </Group>
       </Card>
     );
@@ -294,8 +321,7 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
               jiraBoard.jiraSprints.find(sprint => sprint.state === 'active'),
               jiraBoard.columns
             )}
-          {jiraBoard.jiraSprints &&
-            getAssigneeStatsBarChart(jiraBoard.jiraSprints)}
+          {jiraBoard.jiraSprints && getStatsTable(jiraBoard.jiraSprints)}
           {jiraBoard.jiraSprints && getVelocityChart(jiraBoard.jiraSprints)}
         </>
       )}
