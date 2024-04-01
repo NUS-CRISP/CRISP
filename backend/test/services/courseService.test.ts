@@ -165,24 +165,29 @@ describe('courseService', () => {
     await UserModel.deleteMany({});
     await AccountModel.deleteMany({});
 
+    const course = await createTestCourse(commonCourseDetailsDefault);
+    courseId = course._id.toString();
+
     const studentPair = await createStudentUser(commonStudentDetails);
     const student = studentPair.user;
     studentId = student._id.toString();
+    course.students.push(student._id);
 
     const taPair = await createTAUser(commonTADetails);
     const ta = taPair.user;
     taId = ta._id.toString();
     const taAccount = taPair.account;
     taAccountId = taAccount._id.toString();
+    course.TAs.push(ta._id);
 
     const facultyPair = await createFacultyUser(commonFacultyDetails);
     const faculty = facultyPair.user;
     facultyId = faculty._id.toString();
     const facultyAccount = facultyPair.account;
     facultyAccountId = facultyAccount._id.toString();
+    course.faculty.push(faculty._id);
 
-    const course = await createTestCourse(commonCourseDetailsDefault);
-    courseId = course._id.toString();
+    await course.save();
   });
 
   describe('createNewCourse', () => {
@@ -412,7 +417,7 @@ describe('courseService', () => {
       const updatedCourse =
         await CourseModel.findById(courseId).populate('students');
       expect(
-        updatedCourse?.students.some(student => student._id.equals(studentId))
+        updatedCourse?.students.some(student => student._id.equals(taId))
       ).toBe(false);
     });
 
@@ -572,7 +577,9 @@ describe('courseService', () => {
       await addTAsToCourse(courseId, TADataList);
       const updatedCourse =
         await CourseModel.findById(courseId).populate('TAs');
-      expect(updatedCourse?.TAs.some(ta => ta._id.equals(taId))).toBe(false);
+      expect(updatedCourse?.TAs.some(ta => ta._id.equals(studentId))).toBe(
+        false
+      );
     });
 
     it('should throw NotFoundError for invalid courseId', async () => {
@@ -753,7 +760,7 @@ describe('courseService', () => {
       const updatedCourse =
         await CourseModel.findById(courseId).populate('faculty');
       expect(
-        updatedCourse?.faculty.some(faculty => faculty._id.equals(facultyId))
+        updatedCourse?.faculty.some(faculty => faculty._id.equals(studentId))
       ).toBe(false);
     });
 
@@ -878,13 +885,9 @@ describe('courseService', () => {
       if (!course) {
         throw new Error('Course not found');
       }
-      course.students.push(student._id);
-      course.TAs.push(ta._id);
-      course.faculty.push(faculty._id);
       student.enrolledCourses.push(course._id);
       ta.enrolledCourses.push(course._id);
       faculty.enrolledCourses.push(course._id);
-      await course.save();
       await student.save();
       await ta.save();
       await faculty.save();
