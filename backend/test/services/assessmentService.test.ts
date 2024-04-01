@@ -13,6 +13,7 @@ import {
   getAssessmentById,
   updateAssessmentById,
   updateAssessmentResultMarkerById,
+  uploadAssessmentResultsById,
 } from '../../services/assessmentService';
 import { BadRequestError, NotFoundError } from '../../services/errors';
 

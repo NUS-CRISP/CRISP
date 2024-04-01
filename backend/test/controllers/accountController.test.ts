@@ -6,6 +6,7 @@ import {
   getPendingAccounts,
   rejectAccounts,
 } from '../../controllers/accountController';
+import * as accountService from '../../services/accountService';
 import { BadRequestError, NotFoundError } from '../../services/errors';
 
 jest.mock('../../services/accountService');

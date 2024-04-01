@@ -10,17 +10,24 @@ import {
   addStudentsToTeams,
   addTAs,
   addTAsToTeams,
+  addTeamSet,
+  createCourse,
+  deleteCourse,
   getAssessments,
+  getCourse,
   getCourseCode,
   getCourseJiraRegistrationStatus,
+  getCourses,
   getPeople,
   getProjectManagementBoard,
+  getTeachingTeam,
   getTeamSets,
   getTeamSetsNames,
   getTimeline,
   removeFaculty,
   removeStudents,
   removeTAs,
+  updateCourse,
   updateFaculty,
   updateStudents,
   updateTAs,
@@ -32,6 +39,9 @@ import {
   MissingAuthorizationError,
   NotFoundError,
 } from '../../services/errors';
+import * as teamService from '../../services/teamService';
+import * as teamSetService from '../../services/teamSetService';
+import * as auth from '../../utils/auth';
 
 jest.mock('../../services/courseService');
 jest.mock('../../services/assessmentService');

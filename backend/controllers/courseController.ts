@@ -77,7 +77,6 @@ export const getCourse = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   try {
     const accountId = await getAccountId(req);
-    const accountId = await getAccountId(req);
     const course = await getCourseById(courseId, accountId);
     res.status(200).json(course);
   } catch (error) {

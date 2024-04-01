@@ -19,12 +19,14 @@ import {
   getCourseCodeById,
   getCourseTeachingTeam,
   getCourseTimeline,
+  getCoursesForUser,
   getPeopleFromCourse,
   getTeamSetNamesFromCourse,
   getTeamSetsFromCourse,
   removeFacultyFromCourse,
   removeStudentsFromCourse,
   removeTAsFromCourse,
+  updateCourseById,
   updateFacultyInCourse,
   updateStudentsInCourse,
   updateTAsInCourse,
@@ -153,7 +155,6 @@ async function createFacultyUser(userData: any) {
 describe('courseService', () => {
   let courseId: string;
   let studentId: string;
-  let studentAccountId: string;
   let taId: string;
   let taAccountId: string;
   let facultyId: string;
@@ -167,8 +168,6 @@ describe('courseService', () => {
     const studentPair = await createStudentUser(commonStudentDetails);
     const student = studentPair.user;
     studentId = student._id.toString();
-    const studentAccount = studentPair.account;
-    studentAccountId = studentAccount._id.toString();
 
     const taPair = await createTAUser(commonTADetails);
     const ta = taPair.user;
@@ -705,13 +704,13 @@ describe('courseService', () => {
   });
 
   describe('addFacultyToCourse', () => {
-    const facultyEmail = commonfacultyDetails.identifier + '@example.com';
+    const facultyEmail = commonFacultyDetails.identifier + '@example.com';
 
     it('should add faculty to a course', async () => {
       const facultyDataList = [
         {
-          identifier: commonfacultyDetails.identifier,
-          name: commonfacultyDetails.name,
+          identifier: commonFacultyDetails.identifier,
+          name: commonFacultyDetails.name,
           email: facultyEmail,
         },
       ];
@@ -763,7 +762,7 @@ describe('courseService', () => {
       const facultyDataList = [
         {
           identifier: taId,
-          name: commonfacultyDetails.name,
+          name: commonFacultyDetails.name,
           email: facultyEmail,
         },
       ];
@@ -777,35 +776,35 @@ describe('courseService', () => {
     it('should update faculty in a course', async () => {
       const facultyDataList = [
         {
-          identifier: commonfacultyDetails.identifier,
-          name: commonfacultyDetails.name,
-          email: commonfacultyDetails.identifier + '@example.com',
+          identifier: commonFacultyDetails.identifier,
+          name: commonFacultyDetails.name,
+          email: commonFacultyDetails.identifier + '@example.com',
         },
       ];
       await addFacultyToCourse(courseId, facultyDataList);
 
       const updatedFacultyDataList = [
         {
-          identifier: commonfacultyDetails.identifier,
-          name: commonfacultyDetails.name + ' updated',
-          email: commonfacultyDetails.identifier + '@example.com',
+          identifier: commonFacultyDetails.identifier,
+          name: commonFacultyDetails.name + ' updated',
+          email: commonFacultyDetails.identifier + '@example.com',
         },
       ];
       await updateFacultyInCourse(courseId, updatedFacultyDataList);
 
       const updatedUser = await UserModel.findOne({
-        identifier: commonfacultyDetails.identifier,
+        identifier: commonFacultyDetails.identifier,
       });
-      expect(updatedUser?.name).toBe(commonfacultyDetails.name + ' updated');
+      expect(updatedUser?.name).toBe(commonFacultyDetails.name + ' updated');
     });
 
     it('should throw NotFoundError for invalid courseId', async () => {
       const invalidCourseId = new mongoose.Types.ObjectId().toString();
       const facultyDataList = [
         {
-          identifier: commonfacultyDetails.identifier,
-          name: commonfacultyDetails.name,
-          email: commonfacultyDetails.identifier + '@example.com',
+          identifier: commonFacultyDetails.identifier,
+          name: commonFacultyDetails.name,
+          email: commonFacultyDetails.identifier + '@example.com',
         },
       ];
       await expect(
@@ -824,9 +823,9 @@ describe('courseService', () => {
       await updateFacultyInCourse(courseId, updatedFacultyDataList);
 
       const updatedUser = await UserModel.findOne({
-        identifier: commonfacultyDetails.identifier,
+        identifier: commonFacultyDetails.identifier,
       });
-      expect(updatedUser?.name).toBe(commonfacultyDetails.name);
+      expect(updatedUser?.name).toBe(commonFacultyDetails.name);
     });
   });
 
@@ -834,9 +833,9 @@ describe('courseService', () => {
     it('should remove faculty from a course', async () => {
       const facultyDataList = [
         {
-          identifier: commonfacultyDetails.identifier,
-          name: commonfacultyDetails.name,
-          email: commonfacultyDetails.identifier + '@example.com',
+          identifier: commonFacultyDetails.identifier,
+          name: commonFacultyDetails.name,
+          email: commonFacultyDetails.identifier + '@example.com',
         },
       ];
       await addFacultyToCourse(courseId, facultyDataList);

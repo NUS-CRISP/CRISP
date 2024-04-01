@@ -9,8 +9,10 @@ import { BadRequestError, NotFoundError } from '../../services/errors';
 import {
   addStudentsToTeam,
   addTAsToTeam,
+  deleteTeamById,
   getTeamsByCourseId,
   removeMembersById,
+  updateTeamById,
 } from '../../services/teamService';
 
 let mongo: MongoMemoryServer;
