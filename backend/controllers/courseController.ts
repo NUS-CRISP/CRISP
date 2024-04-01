@@ -74,9 +74,9 @@ export const getCourses = async (req: Request, res: Response) => {
 };
 
 export const getCourse = async (req: Request, res: Response) => {
-  const accountId = await getAccountId(req);
   const courseId = req.params.id;
   try {
+    const accountId = await getAccountId(req);
     const course = await getCourseById(courseId, accountId);
     res.status(200).json(course);
   } catch (error) {
@@ -247,8 +247,8 @@ export const removeTAs = async (req: Request, res: Response) => {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
     } else {
-      console.error('Error removing tas:', error);
-      res.status(500).json({ error: 'Failed to remove tas' });
+      console.error('Error removing TAs:', error);
+      res.status(500).json({ error: 'Failed to remove TAs' });
     }
   }
 };
@@ -300,7 +300,7 @@ export const removeFaculty = async (req: Request, res: Response) => {
       res.status(404).json({ error: error.message });
     } else {
       console.error('Error removing faculty:', error);
-      res.status(500).json({ error: 'Failed to remove faculty' });
+      res.status(500).json({ error: 'Failed to remove Faculty' });
     }
   }
 };
@@ -341,9 +341,9 @@ export const addTeamSet = async (req: Request, res: Response) => {
 };
 
 export const getTeamSets = async (req: Request, res: Response) => {
-  const accountId = await getAccountId(req);
   const courseId = req.params.id;
   try {
+    const accountId = await getAccountId(req);
     const teamSets = await getTeamSetsFromCourse(accountId, courseId);
     res.status(200).json(teamSets);
   } catch (error) {
@@ -499,13 +499,9 @@ export const getProjectManagementBoard = async (
   req: Request,
   res: Response
 ) => {
-  const accountId = await getAccountId(req);
-  if (!accountId) {
-    res.status(400).json({ error: 'Missing authorization' });
-    return;
-  }
   const courseId = req.params.id;
   try {
+    const accountId = await getAccountId(req);
     const projectManagementBoard = await getProjectManagementBoardFromCourse(
       accountId,
       courseId
@@ -514,6 +510,8 @@ export const getProjectManagementBoard = async (
   } catch (error) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
+    } else if (error instanceof MissingAuthorizationError) {
+      res.status(400).json({ error: 'Missing authorization' });
     } else {
       console.error('Error getting project management boards:', error);
       res

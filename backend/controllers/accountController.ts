@@ -59,9 +59,9 @@ export const rejectAccounts = async (req: Request, res: Response) => {
 };
 
 export const getAccountStatuses = async (req: Request, res: Response) => {
-  const { ids } = req.query;
+  const ids = req.query?.ids;
   if (!ids || typeof ids !== 'string') {
-    return res.status(400).json({ error: 'Invalid or missing IDs' });
+    return res.status(400).send({ error: 'Invalid or missing IDs' });
   }
   try {
     const userIds = ids.split(',');

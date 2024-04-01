@@ -8,8 +8,8 @@ import { editUser, getUserByGitHandle } from '../services/userService';
 import { getAccountId } from '../utils/auth';
 
 export const updateUser = async (req: Request, res: Response) => {
-  const accountId = await getAccountId(req);
   try {
+    const accountId = await getAccountId(req);
     const { userId } = req.params;
     const updateData = req.body;
     await editUser(accountId, userId, updateData);
