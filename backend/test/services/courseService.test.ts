@@ -14,8 +14,11 @@ import {
   getCourseTeachingTeam,
   addMilestoneToCourse,
   addSprintToCourse,
+  getCourseCodeById,
+  updateStudentsInCourse,
 } from '../../services/courseService';
 import { NotFoundError } from '../../services/errors';
+import { User } from '../../models/User';
 
 let mongo: MongoMemoryServer;
 
@@ -265,6 +268,21 @@ describe('courseService', () => {
     });
   });
 
+  describe('getCourseCodeById', () => {
+    it('should retrieve a course code by id', async () => {
+      const courseCode = await getCourseCodeById(courseId);
+      expect(courseCode).toBeDefined();
+      expect(courseCode).toBe(commonCourseDetailsDefault.code);
+    });
+
+    it('should throw NotFoundError for invalid courseId', async () => {
+      const invalidCourseId = new mongoose.Types.ObjectId().toString();
+      await expect(
+        getCourseById(invalidCourseId, facultyAccountId)
+      ).rejects.toThrow(NotFoundError);
+    });
+  });
+
   describe('addStudentsToCourse', () => {
     const studentEmail = commonStudentDetails.identifier + '@example.com';
 
@@ -285,6 +303,40 @@ describe('courseService', () => {
       ).toBe(true);
     });
 
+    it('should add new students to a course', async () => {
+      const studentDataList = [
+        {
+          identifier: 'newstudent',
+          name: 'New Student',
+          email: 'newstudent@gmail.com',
+        },
+      ];
+      await addStudentsToCourse(courseId, studentDataList);
+      const updatedCourse =
+        await CourseModel.findById(courseId).populate('students');
+      expect(
+        (updatedCourse?.students as unknown as User[]).some(
+          student => student.identifier === studentDataList[0].identifier
+        )
+      ).toBe(true);
+    });
+
+    it('should not update if student is not a student', async () => {
+      const studentDataList = [
+        {
+          identifier: commonTADetails.identifier,
+          name: commonTADetails.name,
+          email: commonTADetails.identifier + '@example.com',
+        },
+      ];
+      await addStudentsToCourse(courseId, studentDataList);
+      const updatedCourse =
+        await CourseModel.findById(courseId).populate('students');
+      expect(
+        updatedCourse?.students.some(student => student._id.equals(studentId))
+      ).toBe(false);
+    });
+
     it('should throw NotFoundError for invalid courseId', async () => {
       const invalidCourseId = new mongoose.Types.ObjectId().toString();
       const studentDataList = [
@@ -297,6 +349,63 @@ describe('courseService', () => {
       await expect(
         addStudentsToCourse(invalidCourseId, studentDataList)
       ).rejects.toThrow(NotFoundError);
+    });
+  });
+
+  describe('updateStudentsInCourse', () => {
+    it('should update students in a course', async () => {
+      const studentDataList = [
+        {
+          identifier: commonStudentDetails.identifier,
+          name: commonStudentDetails.name,
+          email: commonStudentDetails.identifier + '@example.com',
+        },
+      ];
+      await addStudentsToCourse(courseId, studentDataList);
+
+      const updatedStudentDataList = [
+        {
+          identifier: commonStudentDetails.identifier,
+          name: commonStudentDetails.name + ' updated',
+          email: commonStudentDetails.identifier + '@example.com',
+        },
+      ];
+      await updateStudentsInCourse(courseId, updatedStudentDataList);
+
+      const updatedUser = await UserModel.findOne({
+        identifier: commonStudentDetails.identifier,
+      });
+      expect(updatedUser?.name).toBe(commonStudentDetails.name + ' updated');
+    });
+
+    it('should throw NotFoundError for invalid courseId', async () => {
+      const invalidCourseId = new mongoose.Types.ObjectId().toString();
+      const studentDataList = [
+        {
+          identifier: commonStudentDetails.identifier,
+          name: commonStudentDetails.name,
+          email: commonStudentDetails.identifier + '@example.com',
+        },
+      ];
+      await expect(
+        updateStudentsInCourse(invalidCourseId, studentDataList)
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should not update is student is not a student', async () => {
+      const updatedStudentDataList = [
+        {
+          identifier: commonTADetails.identifier,
+          name: commonTADetails.name + ' updated',
+          email: commonTADetails.identifier + '@example.com',
+        },
+      ];
+      await updateStudentsInCourse(courseId, updatedStudentDataList);
+
+      const updatedUser = await UserModel.findOne({
+        identifier: commonTADetails.identifier,
+      });
+      expect(updatedUser?.name).toBe(commonTADetails.name);
     });
   });
 
