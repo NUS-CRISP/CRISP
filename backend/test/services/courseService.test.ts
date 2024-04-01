@@ -25,10 +25,13 @@ import {
   getPeopleFromCourse,
   getTeamSetsFromCourse,
   getTeamSetNamesFromCourse,
+  getCourseTimeline,
+  getAssessmentsFromCourse,
 } from '../../services/courseService';
 import { NotFoundError } from '../../services/errors';
 import { User } from '../../models/User';
 import TeamSetModel from '@models/TeamSet';
+import AssessmentModel from '@models/Assessment';
 
 let mongo: MongoMemoryServer;
 
@@ -977,9 +980,69 @@ describe('courseService', () => {
     });
   });
 
-  describe('getCourseTimeline', () => {});
+  describe('getCourseTimeline', () => {
+    it('should get the timeline for a course', async () => {
+      const course = await CourseModel.findOne({ _id: courseId });
+      if (!course) {
+        throw new Error('Course not found');
+      }
+      const sprint = {
+        number: 1111,
+        startDate: new Date(),
+        endDate: new Date(),
+        description: 'Sprint 1',
+      };
 
-  describe('getAssessmentsFromCourse', () => {});
+      const milestone = {
+        number: 222,
+        dateline: new Date(),
+        description: 'Milestone 1',
+      };
+      course.sprints.push(sprint);
+      course.milestones.push(milestone);
+      await course.save();
 
-  describe('getCourseTimeline', () => {});
+      const timeline = await getCourseTimeline(courseId);
+      expect(timeline.sprints.length).toBe(1);
+      expect(timeline.milestones.length).toBe(1);
+      expect(timeline.sprints[0].number).toBe(sprint.number);
+      expect(timeline.milestones[0].number).toBe(milestone.number);
+    });
+
+    it('should throw NotFoundError for invalid courseId', async () => {
+      const invalidCourseId = new mongoose.Types.ObjectId().toString();
+      expect(getCourseTimeline(invalidCourseId)).rejects.toThrow(NotFoundError);
+    });
+  });
+
+  describe('getAssessmentsFromCourse', () => {
+    it('should get the assessments for a course', async () => {
+      const course = await CourseModel.findOne({ _id: courseId });
+      if (!course) {
+        throw new Error('Course not found');
+      }
+      const teamAssessment = new AssessmentModel({
+        course: courseId,
+        assessmentType: 'Exam',
+        markType: 'Percentage',
+        results: [],
+        frequency: 'Once',
+        granularity: 'team',
+      });
+      teamAssessment.save();
+      course.assessments.push(teamAssessment._id);
+      await course.save();
+
+      const assessments = await getAssessmentsFromCourse(courseId);
+      expect(assessments.length).toBe(1);
+      expect(assessments[0]._id.equals(teamAssessment._id)).toBe(true);
+    });
+
+    it('should throw NotFoundError for invalid courseId', async () => {
+      const invalidCourseId = new mongoose.Types.ObjectId().toString();
+      expect(getAssessmentsFromCourse(invalidCourseId)).rejects.toThrow(
+        NotFoundError
+      );
+    });
+  });
 });
