@@ -8,36 +8,7 @@ import {
 import cron from 'node-cron';
 import { Course } from '@models/Course';
 import CourseModel from '@models/Course';
-import mongoose from 'mongoose';
 import { refreshAccessToken } from '../utils/jira';
-
-/**
- * Jira Cloud REST API Documentation: https://developer.atlassian.com/cloud/jira/software/rest/api-group-board/
- * Atlassian OAuth 2.0 Documentation: https://developer.atlassian.com/cloud/jira/platform/oauth-2-3lo-apps/
- */
-
-async function findJiraSprintIds(
-  ids: number[],
-  cloudId: string
-): Promise<mongoose.Types.ObjectId[]> {
-  try {
-    const jiraSprints: mongoose.Types.ObjectId[] = [];
-
-    for (const id of ids) {
-      const selfUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/sprint/${id}`;
-      const jiraSprint = await JiraSprintModel.findOne({ self: selfUri });
-
-      if (jiraSprint) {
-        jiraSprints.push(jiraSprint._id);
-      }
-    }
-
-    return jiraSprints;
-  } catch (error) {
-    console.error('Error finding JiraSprints:', error);
-    throw error;
-  }
-}
 
 async function fetchSprints(
   boardId: number,
@@ -174,21 +145,28 @@ async function fetchIssues(
           }
         );
 
-        if (issueData.fields.customfield_10020) {
-          const jiraSprintIds = await findJiraSprintIds(
-            issueData.fields.customfield_10020.map(
-              (sprint: { id: number }) => sprint.id
-            ),
-            cloudId
-          );
+        if (issueData.fields.sprint) {
+          const sprintSelfUri = issueData.fields.sprint.self;
 
-          for (const id of jiraSprintIds) {
+          await JiraSprintModel.findOneAndUpdate(
+            { self: sprintSelfUri },
+            { $push: { jiraIssues: issue._id } },
+            {}
+          );
+        }
+
+        if (issueData.fields.closedSprints) {
+          const closedSprints = issueData.fields.closedSprints;
+
+          closedSprints.forEach(async (closedSprint: { self: string }) => {
+            const sprintSelfUri = closedSprint.self;
+
             await JiraSprintModel.findOneAndUpdate(
-              { _id: id },
+              { self: sprintSelfUri },
               { $push: { jiraIssues: issue._id } },
               {}
             );
-          }
+          });
         }
 
         const boardSelfUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board/${boardId}`;
