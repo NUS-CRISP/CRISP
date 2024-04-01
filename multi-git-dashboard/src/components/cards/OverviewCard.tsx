@@ -4,6 +4,7 @@ import { TeamData } from '@shared/types/TeamData';
 import { useState } from 'react';
 import Analytics from '../overview/analytics/Analytics';
 import PR from '../overview/pr/PR';
+import TutorialPopover from '../tutorial/TutorialPopover';
 import { ProfileGetter, Team } from '../views/Overview';
 
 export interface OverviewProps {
@@ -31,33 +32,39 @@ export const OverviewCard: React.FC<OverviewProps> = ({
 
   return (
     <Stack>
-      <RangeSlider
-        value={selectedWeekRange}
-        max={totalWeeks - 1}
-        minRange={1}
-        onChange={setSelectedWeekRange}
-        label={value => `Week ${value + 1}`}
-        marks={Array.from({ length: totalWeeks }, (_, i) => ({
-          value: i,
-          label: `Week ${i + 1}`,
-        }))}
-        mx={20}
-        mb={20}
-      />
-      <Analytics
-        team={team}
-        teamData={teamData}
-        teamDatas={teamDatas}
-        selectedWeekRange={selectedWeekRange}
-        dateUtils={dateUtils}
-      />
-      <PR
-        team={team}
-        teamData={teamData}
-        selectedWeekRange={selectedWeekRange}
-        dateUtils={dateUtils}
-        profileGetter={profileGetter}
-      />
+      <TutorialPopover stage={10} offset={30}>
+        <RangeSlider
+          value={selectedWeekRange}
+          max={totalWeeks - 1}
+          minRange={1}
+          onChange={setSelectedWeekRange}
+          label={value => `Week ${value + 1}`}
+          marks={Array.from({ length: totalWeeks }, (_, i) => ({
+            value: i,
+            label: `Week ${i + 1}`,
+          }))}
+          mx={20}
+          mb={20}
+        />
+      </TutorialPopover>
+      <TutorialPopover stage={8}>
+        <Analytics
+          team={team}
+          teamData={teamData}
+          teamDatas={teamDatas}
+          selectedWeekRange={selectedWeekRange}
+          dateUtils={dateUtils}
+        />
+      </TutorialPopover>
+      <TutorialPopover stage={9}>
+        <PR
+          team={team}
+          teamData={teamData}
+          selectedWeekRange={selectedWeekRange}
+          dateUtils={dateUtils}
+          profileGetter={profileGetter}
+        />
+      </TutorialPopover>
     </Stack>
   );
 };

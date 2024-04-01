@@ -8,12 +8,16 @@ describe('getAccountId', () => {
     jest.spyOn(auth, 'getToken').mockResolvedValueOnce({});
     const req = { headers: { cookie: 'auth=token' } } as Request;
 
-    await expect(auth.getAccountId(req)).rejects.toThrow(MissingAuthorizationError);
+    await expect(auth.getAccountId(req)).rejects.toThrow(
+      MissingAuthorizationError
+    );
   });
 
   it('returns sub if present', async () => {
     const expectedAccountId = '123';
-    jest.spyOn(auth, 'getToken').mockResolvedValueOnce({ sub: expectedAccountId });
+    jest
+      .spyOn(auth, 'getToken')
+      .mockResolvedValueOnce({ sub: expectedAccountId });
     const req = { headers: { cookie: 'auth=token' } } as Request;
     const accountId = await auth.getAccountId(req);
     expect(accountId).toEqual(expectedAccountId);
@@ -49,7 +53,9 @@ describe('getToken', () => {
         cookie: 'mockTokenHeader=validToken',
       },
     } as Request;
-    jest.spyOn(jose, 'jwtDecrypt').mockResolvedValueOnce({ payload: { sub: '123' } } as any);
+    jest
+      .spyOn(jose, 'jwtDecrypt')
+      .mockResolvedValueOnce({ payload: { sub: '123' } } as any);
 
     const tokenPayload = await auth.getToken(req);
     expect(tokenPayload).toHaveProperty('sub', '123');

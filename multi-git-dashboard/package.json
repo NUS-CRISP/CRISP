@@ -26,6 +26,7 @@
     "@mantine/form": "^7.7.1",
     "@mantine/hooks": "^7.7.1",
     "@mantine/notifications": "^7.7.1",
+    "@mantine/nprogress": "^7.7.1",
     "@tabler/icons-react": "^2.47.0",
     "@types/node": "20.4.9",
     "@types/papaparse": "^5.3.14",

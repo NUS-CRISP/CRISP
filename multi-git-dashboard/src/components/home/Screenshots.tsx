@@ -9,7 +9,12 @@ import React, { useEffect, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
 
 const Screenshots: React.FC = () => {
-  const [animated, setAnimated] = useState<boolean[]>([false, false, false, false]);
+  const [animated, setAnimated] = useState<boolean[]>([
+    false,
+    false,
+    false,
+    false,
+  ]);
   const { ref, inView } = useInView({
     triggerOnce: true,
     threshold: 0.5,
@@ -44,13 +49,15 @@ const Screenshots: React.FC = () => {
       key: 'ss4',
       src: ss4,
       cols: 3.8,
-    }
+    },
   ];
 
   return (
     <Stack mt={50} mb={100} gap="lg" ref={ref}>
       <Center>
-        <Title className={`${classes.title} ${inView ? classes.fadeIn : classes.initialState}`}>
+        <Title
+          className={`${classes.title} ${inView ? classes.fadeIn : classes.initialState}`}
+        >
           Screenshots
         </Title>
       </Center>
@@ -66,7 +73,11 @@ const Screenshots: React.FC = () => {
               alt={ss.key}
               radius="md"
               className={`${classes.initialState} ${animated[idx] ? classes.fadeIn : ''}`}
-              style={{ animationDelay: `${idx * 100}ms`, width: '100%', height: 'auto' }}
+              style={{
+                animationDelay: `${idx * 100}ms`,
+                width: '100%',
+                height: 'auto',
+              }}
             />
           </Grid.Col>
         ))}

@@ -1,6 +1,6 @@
 .navbarsContainer {
-    display: flex; /* Align children side by side */
-    height: 100vh;
+  display: flex; /* Align children side by side */
+  height: 100vh;
 }
 
 .navbar {

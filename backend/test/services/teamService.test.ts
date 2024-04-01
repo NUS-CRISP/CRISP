@@ -134,11 +134,7 @@ describe('teamService', () => {
     it('should return an array of teams for a course', async () => {
       const course = await createTestCourse(commonCourseDetails);
       const team = await createTestTeam(commonTeamDetails);
-      await createTestTeamSet(
-        commonTeamSetDetails,
-        course._id,
-        [team._id]
-      );
+      await createTestTeamSet(commonTeamSetDetails, course._id, [team._id]);
 
       const teams = await getTeamsByCourseId(course._id.toHexString());
       expect(teams).toHaveLength(1);
@@ -270,7 +266,10 @@ describe('teamService', () => {
       team.members?.push(student._id);
       await team.save();
 
-      await removeMembersById(team._id.toHexString(), student._id.toHexString());
+      await removeMembersById(
+        team._id.toHexString(),
+        student._id.toHexString()
+      );
 
       const updatedTeam = await TeamModel.findById(team._id);
       expect(updatedTeam?.members).toEqual([]);

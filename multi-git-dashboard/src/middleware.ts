@@ -10,7 +10,5 @@ export default withAuth({
 export const EXCLUDE_AUTH_REGEX = /^(?!\/auth).+/;
 
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|auth|favicon.png|$).*)',
-  ],
+  matcher: ['/((?!_next/static|_next/image|auth|favicon.png|$).*)'],
 };

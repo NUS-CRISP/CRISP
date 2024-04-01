@@ -1,5 +1,10 @@
 import Overview from '@/components/views/Overview';
-import { DateUtils, getCurrentWeekGenerator, getEndOfWeek, weekToDateGenerator } from '@/lib/utils';
+import {
+  DateUtils,
+  getCurrentWeekGenerator,
+  getEndOfWeek,
+  weekToDateGenerator,
+} from '@/lib/utils';
 import { Container, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { Course } from '@shared/types/Course';
@@ -24,7 +29,7 @@ const CourseViewPage: React.FC = () => {
         title: 'Course created',
         message: 'Course created successfully',
         autoClose: 3000,
-        onClose: () =>
+        onOpen: () =>
           delete query.new &&
           router.replace({ pathname, query }, undefined, { shallow: true }),
       });
@@ -44,8 +49,8 @@ const CourseViewPage: React.FC = () => {
       const dateUtils = {
         weekToDate: weekToDateGenerator(courseStartDate),
         getCurrentWeek: getCurrentWeekGenerator(courseStartDate),
-        getEndOfWeek: getEndOfWeek
-      }
+        getEndOfWeek: getEndOfWeek,
+      };
 
       setCourse(course);
       setDateUtils(dateUtils);
@@ -68,7 +73,11 @@ const CourseViewPage: React.FC = () => {
         flexDirection: 'column',
       }}
     >
-      {course && dateUtils ? <Overview courseId={courseId} dateUtils={dateUtils} /> : <Text>Course not available</Text>}
+      {course && dateUtils ? (
+        <Overview courseId={courseId} dateUtils={dateUtils} />
+      ) : (
+        <Text>Course not available</Text>
+      )}
     </Container>
   );
 };

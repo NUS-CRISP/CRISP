@@ -69,6 +69,9 @@ export const getAuthorizedTeamDataByCourse = async (
     if (!course.gitHubOrgName) {
       throw new NotFoundError('Course GitHub organization not found');
     }
+    if (!(await CourseModel.exists({ _id: courseId, faculty: user._id }))) {
+      throw new NotFoundError('User is not authorized to view course');
+    }
     const teamDatas = await TeamDataModel.find({
       gitHubOrgName: course.gitHubOrgName,
     });

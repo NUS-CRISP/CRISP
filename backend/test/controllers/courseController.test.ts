@@ -581,7 +581,9 @@ describe('courseController', () => {
       const req = mockRequest({ items: ['ta1', 'ta2'] }, { id: 'courseId' });
       const res = mockResponse();
 
-      jest.spyOn(courseService, 'updateTAsInCourse').mockResolvedValue(undefined);
+      jest
+        .spyOn(courseService, 'updateTAsInCourse')
+        .mockResolvedValue(undefined);
 
       await updateTAs(req, res);
 
@@ -674,7 +676,9 @@ describe('courseController', () => {
       const req = mockRequest({ items: ['ta1', 'ta2'] }, { id: 'courseId' });
       const res = mockResponse();
 
-      jest.spyOn(courseService, 'removeTAsFromCourse').mockResolvedValue(undefined);
+      jest
+        .spyOn(courseService, 'removeTAsFromCourse')
+        .mockResolvedValue(undefined);
 
       await removeTAs(req, res);
 
@@ -717,10 +721,15 @@ describe('courseController', () => {
 
   describe('addFaculty', () => {
     it('should add faculty to a course', async () => {
-      const req = mockRequest({ items: ['faculty1', 'faculty2'] }, { id: 'courseId' });
+      const req = mockRequest(
+        { items: ['faculty1', 'faculty2'] },
+        { id: 'courseId' }
+      );
       const res = mockResponse();
 
-      jest.spyOn(courseService, 'addFacultyToCourse').mockResolvedValue(undefined);
+      jest
+        .spyOn(courseService, 'addFacultyToCourse')
+        .mockResolvedValue(undefined);
 
       await addFaculty(req, res);
 
@@ -731,7 +740,10 @@ describe('courseController', () => {
     });
 
     it('should handle NotFoundError and send a 404 status', async () => {
-      const req = mockRequest({ items: ['faculty1', 'faculty2'] }, { id: 'courseId' });
+      const req = mockRequest(
+        { items: ['faculty1', 'faculty2'] },
+        { id: 'courseId' }
+      );
       const res = mockResponse();
 
       jest
@@ -745,7 +757,10 @@ describe('courseController', () => {
     });
 
     it('should handle errors when adding faculty', async () => {
-      const req = mockRequest({ items: ['faculty1', 'faculty2'] }, { id: 'courseId' });
+      const req = mockRequest(
+        { items: ['faculty1', 'faculty2'] },
+        { id: 'courseId' }
+      );
       const res = mockResponse();
 
       jest
@@ -763,10 +778,15 @@ describe('courseController', () => {
 
   describe('updateFaculty', () => {
     it('should update faculty in a course', async () => {
-      const req = mockRequest({ items: ['faculty1', 'faculty2'] }, { id: 'courseId' });
+      const req = mockRequest(
+        { items: ['faculty1', 'faculty2'] },
+        { id: 'courseId' }
+      );
       const res = mockResponse();
 
-      jest.spyOn(courseService, 'updateFacultyInCourse').mockResolvedValue(undefined);
+      jest
+        .spyOn(courseService, 'updateFacultyInCourse')
+        .mockResolvedValue(undefined);
 
       await updateFaculty(req, res);
 
@@ -777,7 +797,10 @@ describe('courseController', () => {
     });
 
     it('should handle NotFoundError and send a 404 status', async () => {
-      const req = mockRequest({ items: ['faculty1', 'faculty2'] }, { id: 'courseId' });
+      const req = mockRequest(
+        { items: ['faculty1', 'faculty2'] },
+        { id: 'courseId' }
+      );
       const res = mockResponse();
 
       jest
@@ -791,7 +814,10 @@ describe('courseController', () => {
     });
 
     it('should handle errors when updating faculty', async () => {
-      const req = mockRequest({ items: ['faculty1', 'faculty2'] }, { id: 'courseId' });
+      const req = mockRequest(
+        { items: ['faculty1', 'faculty2'] },
+        { id: 'courseId' }
+      );
       const res = mockResponse();
 
       jest
@@ -809,10 +835,15 @@ describe('courseController', () => {
 
   describe('removeFaculty', () => {
     it('should remove faculty from a course', async () => {
-      const req = mockRequest({ items: ['faculty1', 'faculty2'] }, { id: 'courseId' });
+      const req = mockRequest(
+        { items: ['faculty1', 'faculty2'] },
+        { id: 'courseId' }
+      );
       const res = mockResponse();
 
-      jest.spyOn(courseService, 'removeFacultyFromCourse').mockResolvedValue(undefined);
+      jest
+        .spyOn(courseService, 'removeFacultyFromCourse')
+        .mockResolvedValue(undefined);
 
       await removeFaculty(req, res);
 
@@ -823,7 +854,10 @@ describe('courseController', () => {
     });
 
     it('should handle NotFoundError and send a 404 status', async () => {
-      const req = mockRequest({ items: ['faculty1', 'faculty2'] }, { id: 'courseId' });
+      const req = mockRequest(
+        { items: ['faculty1', 'faculty2'] },
+        { id: 'courseId' }
+      );
       const res = mockResponse();
 
       jest
@@ -837,7 +871,10 @@ describe('courseController', () => {
     });
 
     it('should handle errors when removing faculty', async () => {
-      const req = mockRequest({ items: ['faculty1', 'faculty2'] }, { id: 'courseId' });
+      const req = mockRequest(
+        { items: ['faculty1', 'faculty2'] },
+        { id: 'courseId' }
+      );
       const res = mockResponse();
 
       jest
@@ -859,7 +896,9 @@ describe('courseController', () => {
       const res = mockResponse();
       const mockPeople = ['student1', 'student2', 'ta1', 'ta2'];
 
-      jest.spyOn(courseService, 'getPeopleFromCourse').mockResolvedValue(mockPeople as any);
+      jest
+        .spyOn(courseService, 'getPeopleFromCourse')
+        .mockResolvedValue(mockPeople as any);
 
       await getPeople(req, res);
 
@@ -1393,7 +1432,9 @@ describe('courseController', () => {
       const res = mockResponse();
       const mockTimeline = ['milestone1', 'sprint1'];
 
-      jest.spyOn(courseService, 'getCourseTimeline').mockResolvedValue(mockTimeline as any);
+      jest
+        .spyOn(courseService, 'getCourseTimeline')
+        .mockResolvedValue(mockTimeline as any);
 
       await getTimeline(req, res);
 

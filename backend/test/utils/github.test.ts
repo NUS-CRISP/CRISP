@@ -37,7 +37,9 @@ describe('getTeamMembers', () => {
   });
 
   it('returns null if team is not found', async () => {
-    jest.spyOn(TeamDataModel, 'findOne').mockResolvedValueOnce({ _id: 'teamDataId' });
+    jest
+      .spyOn(TeamDataModel, 'findOne')
+      .mockResolvedValueOnce({ _id: 'teamDataId' });
     jest.spyOn(TeamModel, 'findOne').mockResolvedValueOnce(null);
 
     const result = await github.getTeamMembers(123);
@@ -60,8 +62,9 @@ describe('getTeamMembers', () => {
 
     const result = await github.getTeamMembers(123);
 
-    expect(UserModel.find).toHaveBeenCalledWith({ _id: { $in: ['userId1', 'userId2'] } });
+    expect(UserModel.find).toHaveBeenCalledWith({
+      _id: { $in: ['userId1', 'userId2'] },
+    });
     expect(result).toEqual(new Set(['user1', 'user2']));
   });
 });
-

@@ -27,7 +27,9 @@ describe('gitHubService', () => {
     it('should throw NotFoundError if no team data found for org', async () => {
       TeamDataModel.find = jest.fn().mockResolvedValue([]);
 
-      await expect(gitHubService.fetchAllTeamDataForOrg('nonexistentOrg')).rejects.toThrow(NotFoundError);
+      await expect(
+        gitHubService.fetchAllTeamDataForOrg('nonexistentOrg')
+      ).rejects.toThrow(NotFoundError);
     });
 
     it('should return team datas for a given org', async () => {
@@ -58,7 +60,9 @@ describe('gitHubService', () => {
         },
       } as any);
 
-      await expect(gitHubService.checkGitHubInstallation('nonexistentOrg')).rejects.toThrow(NotFoundError);
+      await expect(
+        gitHubService.checkGitHubInstallation('nonexistentOrg')
+      ).rejects.toThrow(NotFoundError);
     });
 
     it('should return installation id if GitHub App is installed', async () => {
@@ -82,14 +86,25 @@ describe('gitHubService', () => {
 
   describe('getAuthorizedTeamDataByCourse', () => {
     it('should throw NotFoundError if account not found', async () => {
-      jest.spyOn(gitHubService, 'getAuthorizedTeamDataByCourse').mockResolvedValue(undefined);
-      jest.spyOn(gitHubService, 'getAuthorizedTeamDataByCourse').mockRejectedValue(new NotFoundError('Account not found'));
+      jest
+        .spyOn(gitHubService, 'getAuthorizedTeamDataByCourse')
+        .mockResolvedValue(undefined);
+      jest
+        .spyOn(gitHubService, 'getAuthorizedTeamDataByCourse')
+        .mockRejectedValue(new NotFoundError('Account not found'));
 
-      await expect(gitHubService.getAuthorizedTeamDataByCourse('nonexistentId', 'courseId')).rejects.toThrow(NotFoundError);
+      await expect(
+        gitHubService.getAuthorizedTeamDataByCourse('nonexistentId', 'courseId')
+      ).rejects.toThrow(NotFoundError);
     });
 
     it('should throw NotFoundError if course not found', async () => {
-      await expect(gitHubService.getAuthorizedTeamDataByCourse('accountId', 'nonexistentId')).rejects.toThrow(NotFoundError);
+      await expect(
+        gitHubService.getAuthorizedTeamDataByCourse(
+          'accountId',
+          'nonexistentId'
+        )
+      ).rejects.toThrow(NotFoundError);
     });
   });
 
@@ -99,9 +114,14 @@ describe('gitHubService', () => {
         { _id: '1', repoName: 'team1' },
         { _id: '2', repoName: 'team2' },
       ];
-      jest.spyOn(gitHubService, 'getAuthorizedTeamDataByCourse').mockResolvedValue(mockTeamDatas as any);
+      jest
+        .spyOn(gitHubService, 'getAuthorizedTeamDataByCourse')
+        .mockResolvedValue(mockTeamDatas as any);
 
-      const result = await gitHubService.getAuthorizedTeamDataNamesByCourse('accountId', 'courseId');
+      const result = await gitHubService.getAuthorizedTeamDataNamesByCourse(
+        'accountId',
+        'courseId'
+      );
 
       expect(result).toEqual([
         { _id: '1', repoName: 'team1' },
