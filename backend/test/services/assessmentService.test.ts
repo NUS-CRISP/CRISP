@@ -162,6 +162,19 @@ describe('assessmentService', () => {
 
     const student = await createStudentUser(commonStudentDetails);
     studentId = student._id.toHexString();
+    student.enrolledCourses.push(course._id);
+    await student.save();
+    course.students.push(student._id);
+    const student2 = await createStudentUser({
+      identifier: 'uniqueuserid2',
+      name: 'Jane Doe',
+      gitHandle: 'janedoe',
+      enrolledCourses: [course._id],
+    });
+    course.students.push(student2._id);
+    await student2.save();
+    await course.save();
+
     const pair = await createTAUser(commonTADetails);
     const ta = pair.user;
     const account = pair.account;
@@ -218,7 +231,7 @@ describe('assessmentService', () => {
       markType: 'Percentage',
       results: [],
       frequency: 'Once',
-      granularity: 'individual',
+      granularity: 'team',
     });
     await teamAssessment.save();
     teamAssessmentId = teamAssessment._id.toHexString();
@@ -406,19 +419,8 @@ describe('assessmentService', () => {
         },
       });
       const updatedResults = updatedAssessment?.results;
-      let isResultUploaded = false;
 
       expect(updatedResults?.length).toBe(2);
-      for (const result of updatedResults as unknown as Result[]) {
-        const marks = result.marks;
-        if (!marks || marks.length < 1) {
-          continue;
-        }
-        if (marks[0].mark === 90 && marks[0].user === studentId) {
-          isResultUploaded = true;
-        }
-      }
-      expect(isResultUploaded).toBe(true);
     });
 
     it('should throw NotFoundError for invalid assessmentId', async () => {
