@@ -23,9 +23,12 @@ import {
   removeFacultyFromCourse,
   updateFacultyInCourse,
   getPeopleFromCourse,
+  getTeamSetsFromCourse,
+  getTeamSetNamesFromCourse,
 } from '../../services/courseService';
 import { NotFoundError } from '../../services/errors';
 import { User } from '../../models/User';
+import TeamSetModel from '@models/TeamSet';
 
 let mongo: MongoMemoryServer;
 
@@ -122,7 +125,7 @@ async function createTAUser(userData: any) {
   });
   await account.save();
 
-  return user;
+  return { user, account };
 }
 
 async function createFacultyUser(userData: any) {
@@ -148,6 +151,7 @@ describe('courseService', () => {
   let courseId: string;
   let studentId: string;
   let taId: string;
+  let taAccountId: string;
   let facultyId: string;
   let facultyAccountId: string;
 
@@ -159,8 +163,11 @@ describe('courseService', () => {
     const student = await createStudentUser(commonStudentDetails);
     studentId = student._id.toString();
 
-    const ta = await createTAUser(commonTADetails);
+    const taPair = await createTAUser(commonTADetails);
+    const ta = taPair.user;
     taId = ta._id.toString();
+    const taAccount = taPair.account;
+    taAccountId = taAccount._id.toString();
 
     const facultyPair = await createFacultyUser(commonfacultyDetails);
     const faculty = facultyPair.user;
@@ -845,9 +852,68 @@ describe('courseService', () => {
     });
   });
 
-  describe('getTeamSetsFromCourse', () => {});
+  describe('getTeamSetsFromCourse', () => {
+    it('should get team sets from a course', async () => {
+      const course = await CourseModel.findOne({ _id: courseId });
+      if (!course) {
+        throw new Error('Course not found');
+      }
+      const teamSet = new TeamSetModel({
+        course: course._id,
+        name: 'Team Set 1',
+      });
+      teamSet.save();
+      course.teamSets.push(teamSet._id);
+      await course.save();
 
-  describe('getTeamSetNamesFromCourse', () => {});
+      const teamSets = await getTeamSetsFromCourse(taAccountId, courseId);
+      expect(teamSets).toBeDefined();
+      expect(teamSets.length).toBe(1);
+      expect(teamSets.some(set => set._id.equals(teamSet._id))).toBe(true);
+    });
+
+    it('should throw NotFoundError for invalid courseId', async () => {
+      const invalidCourseId = new mongoose.Types.ObjectId().toString();
+      await expect(
+        getTeamSetsFromCourse(taAccountId, invalidCourseId)
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should throw NotFoundError for invalid account', async () => {
+      const invalidAccountId = new mongoose.Types.ObjectId().toString();
+      await expect(
+        getTeamSetsFromCourse(invalidAccountId, courseId)
+      ).rejects.toThrow(NotFoundError);
+    });
+  });
+
+  describe('getTeamSetNamesFromCourse', () => {
+    it('should get team set names from a course', async () => {
+      const course = await CourseModel.findOne({ _id: courseId });
+      if (!course) {
+        throw new Error('Course not found');
+      }
+      const teamSet = new TeamSetModel({
+        course: course._id,
+        name: 'Team Set 1',
+      });
+      teamSet.save();
+      course.teamSets.push(teamSet._id);
+      await course.save();
+
+      const teamSetNames = await getTeamSetNamesFromCourse(courseId);
+
+      expect(teamSetNames.length).toBe(1);
+      expect(teamSetNames[0]).toBe('Team Set 1');
+    });
+
+    it('should throw NotFoundError for invalid courseId', async () => {
+      const invalidCourseId = new mongoose.Types.ObjectId().toString();
+      await expect(getTeamSetNamesFromCourse(invalidCourseId)).rejects.toThrow(
+        NotFoundError
+      );
+    });
+  });
 
   describe('addMilestoneToCourse', () => {
     it('should add a milestone to a course', async () => {
