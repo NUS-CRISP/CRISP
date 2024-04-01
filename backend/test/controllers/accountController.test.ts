@@ -6,7 +6,6 @@ import {
   getPendingAccounts,
   rejectAccounts,
 } from '../../controllers/accountController';
-import * as accountService from '../../services/accountService';
 import { BadRequestError, NotFoundError } from '../../services/errors';
 
 jest.mock('../../services/accountService');
@@ -187,7 +186,7 @@ describe('accountController', () => {
 
       jest
         .spyOn(accountService, 'rejectAccountByIds')
-        .mockRejectedValue(new Error('Error rejecting accounts'));
+        .mockRejectedValue(new Error('Error approving accounts'));
 
       await rejectAccounts(req, res);
 
@@ -196,57 +195,66 @@ describe('accountController', () => {
         error: 'Error rejecting accounts',
       });
     });
+  });
 
-    describe('getAccountStatuses', () => {
-      it('should retrieve account statuses and send a 200 status', async () => {
-        const req = mockRequest();
-        const res = mockResponse();
-        const mockStatuses: Record<string, boolean> = {
-          '123': true,
-          '456': false,
-        };
-        req.query = { ids: '123,456' };
+  describe('getAccountStatusesByUserIds', () => {
+    it('should return account statuses for given user IDs', async () => {
+      const req = mockRequest();
+      req.query = { ids: 'id1,id2' };
+      const res = mockResponse();
+      const mockStatuses = { id1: true, id2: false };
 
-        jest
-          .spyOn(accountService, 'getAccountStatusesByUserIds')
-          .mockResolvedValue(mockStatuses);
+      jest
+        .spyOn(accountService, 'getAccountStatusesByUserIds')
+        .mockResolvedValue(mockStatuses);
 
-        await getAccountStatuses(req, res);
+      await getAccountStatuses(req, res);
 
-        expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.send).toHaveBeenCalledWith(mockStatuses);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.send).toHaveBeenCalledWith(mockStatuses);
+    });
+
+    it('should handle invalid IDs and send a 400 status', async () => {
+      const req = mockRequest();
+      const res = mockResponse();
+
+      await getAccountStatuses(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.send).toHaveBeenCalledWith({
+        error: 'Invalid or missing IDs',
       });
+    });
 
-      it('should handle NotFoundError and send a 404 status', async () => {
-        const req = mockRequest();
-        const res = mockResponse();
-        req.query = { ids: '123,456' };
+    it('should handle NotFound and send a 404 status', async () => {
+      const req = mockRequest();
+      req.query = { ids: 'id1,id2' };
+      const res = mockResponse();
 
-        jest
-          .spyOn(accountService, 'getAccountStatusesByUserIds')
-          .mockRejectedValue(new NotFoundError('User not found'));
+      jest
+        .spyOn(accountService, 'getAccountStatusesByUserIds')
+        .mockRejectedValue(new NotFoundError('No accounts found'));
 
-        await getAccountStatuses(req, res);
+      await getAccountStatuses(req, res);
 
-        expect(res.status).toHaveBeenCalledWith(404);
-        expect(res.send).toHaveBeenCalledWith({ error: 'User not found' });
-      });
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.send).toHaveBeenCalledWith({ error: 'No accounts found' });
+    });
 
-      it('should handle error and send a 500 status', async () => {
-        const req = mockRequest();
-        const res = mockResponse();
-        req.query = { ids: '123,456' };
+    it('should handle error and send a 500 status', async () => {
+      const req = mockRequest();
+      req.query = { ids: 'id1,id2' };
+      const res = mockResponse();
 
-        jest
-          .spyOn(accountService, 'getAccountStatusesByUserIds')
-          .mockRejectedValue(new Error('Error getting account statuses'));
+      jest
+        .spyOn(accountService, 'getAccountStatusesByUserIds')
+        .mockRejectedValue(new Error('Error getting account statuses'));
 
-        await getAccountStatuses(req, res);
+      await getAccountStatuses(req, res);
 
-        expect(res.status).toHaveBeenCalledWith(500);
-        expect(res.send).toHaveBeenCalledWith({
-          error: 'Error getting account statuses',
-        });
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.send).toHaveBeenCalledWith({
+        error: 'Error getting account statuses',
       });
     });
   });

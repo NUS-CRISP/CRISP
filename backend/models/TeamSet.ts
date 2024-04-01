@@ -12,7 +12,10 @@ export interface TeamSet
 const teamSetSchema = new Schema<TeamSet>({
   course: { type: Schema.Types.ObjectId, required: true },
   name: { type: String, required: true },
-  teams: [{ type: Schema.Types.ObjectId, ref: 'Team' }],
+  teams: {
+    type: [{ type: Schema.Types.ObjectId, ref: 'Team' }],
+    default: [],
+  },
 });
 
 const TeamSetModel = mongoose.model<TeamSet>('TeamSet', teamSetSchema);

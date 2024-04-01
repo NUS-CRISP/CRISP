@@ -178,11 +178,11 @@ export const removeStudentsFromCourse = async (
   if (!course) {
     throw new NotFoundError('Course not found');
   }
-  const student =
-    await UserModel.findById(studentId).populate('enrolledCourses');
+  const student = await UserModel.findOne({ _id: studentId });
   if (!student) {
     throw new NotFoundError('Student not found');
   }
+  await student.populate('enrolledCourses');
 
   (course.students as Types.Array<Types.ObjectId>).pull(student._id);
   await course.save();
@@ -289,10 +289,11 @@ export const removeTAsFromCourse = async (courseId: string, taId: string) => {
   if (!course) {
     throw new NotFoundError('Course not found');
   }
-  const ta = await UserModel.findById(taId).populate('enrolledCourses');
+  const ta = await UserModel.findOne({ _id: taId });
   if (!ta) {
-    throw new NotFoundError('TA not found');
+    throw new NotFoundError('Student not found');
   }
+  await ta.populate('enrolledCourses');
 
   (course.TAs as Types.Array<Types.ObjectId>).pull(ta._id);
   await course.save();
@@ -403,11 +404,12 @@ export const removeFacultyFromCourse = async (
   if (!course) {
     throw new NotFoundError('Course not found');
   }
-  const facultyMember =
-    await UserModel.findById(facultyId).populate('enrolledCourses');
+
+  const facultyMember = await UserModel.findOne({ _id: facultyId });
   if (!facultyMember) {
-    throw new NotFoundError('Faculty Member not found');
+    throw new NotFoundError('Student not found');
   }
+  await facultyMember.populate('enrolledCourses');
 
   (course.faculty as Types.Array<Types.ObjectId>).pull(facultyMember._id);
   await course.save();
