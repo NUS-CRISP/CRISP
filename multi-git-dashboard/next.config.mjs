@@ -8,7 +8,7 @@ const baseConfig = {
   transpilePackages: ['shared'],
 };
 
-const nextConfig = (phase) => {
+const nextConfig = phase => {
   // Dev config
   if (phase === PHASE_DEVELOPMENT_SERVER) {
     return {
@@ -25,7 +25,7 @@ const nextConfig = (phase) => {
             destination: 'http://localhost:3003/api/:path*',
           },
         ];
-      }
+      },
     };
   }
 

@@ -9,7 +9,7 @@ import {
   Textarea,
   Title,
   getGradient,
-  useMantineTheme
+  useMantineTheme,
 } from '@mantine/core';
 import classes from '@styles/ContactUs.module.css';
 import { IconBrandGithub } from '@tabler/icons-react';
@@ -21,16 +21,28 @@ const ContactUs: React.FC = () => {
   const theme = useMantineTheme();
 
   const icons = social.map((Icon, index) => (
-    <ActionIcon key={index} size={28} className={classes.social} variant="transparent">
+    <ActionIcon
+      key={index}
+      size={28}
+      className={classes.social}
+      variant="transparent"
+    >
       <Icon size="1.4rem" stroke={1.5} />
     </ActionIcon>
   ));
 
   return (
-    <Box className={classes.wrapper} style={{ backgroundImage: getGradient({ from: 'blue', to: 'cyan' }, theme) }}>
+    <Box
+      className={classes.wrapper}
+      style={{
+        backgroundImage: getGradient({ from: 'blue', to: 'cyan' }, theme),
+      }}
+    >
       <SimpleGrid cols={{ base: 1, sm: 2 }} spacing={50}>
-        <Stack justify='center'>
-          <Title className={classes.title} mb={30}>Contact us</Title>
+        <Stack justify="center">
+          <Title className={classes.title} mb={30}>
+            Contact us
+          </Title>
           <ContactIcons />
           <Group mt="xl">{icons}</Group>
         </Stack>
@@ -63,6 +75,6 @@ const ContactUs: React.FC = () => {
       </SimpleGrid>
     </Box>
   );
-}
+};
 
 export default ContactUs;

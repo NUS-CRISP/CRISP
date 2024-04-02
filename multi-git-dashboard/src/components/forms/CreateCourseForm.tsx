@@ -10,7 +10,7 @@ import {
   Space,
   Text,
   TextInput,
-  Title
+  Title,
 } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
@@ -69,20 +69,19 @@ const CreateCourse: React.FC = () => {
         value.trim().length > 0 ? null : 'Course code is required',
       semester: value =>
         value.trim().length > 0 ? null : 'Semester is required',
-      startDate: value =>
-        value ? null : 'Start date is required',
+      startDate: value => (value ? null : 'Start date is required'),
       courseType: value => (value ? null : 'Course type is required'),
       // field should be valid only if courseType is Normal, or if courseType is GitHubOrg and installation check is successful
       gitHubOrgName: (value, values) =>
         values.courseType === CourseType.Normal ||
-          (values.courseType === CourseType.GitHubOrg &&
-            appInstallationStatus === InstallationStatus.SUCCESS)
+        (values.courseType === CourseType.GitHubOrg &&
+          appInstallationStatus === InstallationStatus.SUCCESS)
           ? null
           : 'GitHub Org name is required',
       repoNameFilter: (value, values) =>
         values.courseType === CourseType.Normal ||
-          (values.courseType === CourseType.GitHubOrg &&
-            appInstallationStatus === InstallationStatus.SUCCESS)
+        (values.courseType === CourseType.GitHubOrg &&
+          appInstallationStatus === InstallationStatus.SUCCESS)
           ? null
           : 'Repo name filter is required',
     },
@@ -263,7 +262,7 @@ const CreateCourse: React.FC = () => {
                         }
                         rightSection={
                           appInstallationStatus ===
-                            InstallationStatus.SUCCESS ? (
+                          InstallationStatus.SUCCESS ? (
                             <IconCheck size={14} />
                           ) : null
                         }

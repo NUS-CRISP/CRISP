@@ -1,11 +1,19 @@
 import { DateUtils } from '@/lib/utils';
-import { Accordion, Center, Container, Loader, ScrollArea } from '@mantine/core';
+import {
+  Accordion,
+  Center,
+  Container,
+  Loader,
+  ScrollArea,
+} from '@mantine/core';
 import { Profile } from '@shared/types/Profile';
 import { Team as SharedTeam } from '@shared/types/Team';
 import { TeamData } from '@shared/types/TeamData';
 import { Status } from '@shared/types/util/Status';
 import { useEffect, useState } from 'react';
-import OverviewCard from '../cards/OverviewCard';
+import OverviewAccordionItem from '../overview/OverviewAccordionItem';
+import { useTutorialContext } from '../tutorial/TutorialContext';
+import TutorialPopover from '../tutorial/TutorialPopover';
 
 interface OverviewProps {
   courseId: string;
@@ -19,6 +27,14 @@ export interface Team extends Omit<SharedTeam, 'teamData'> {
 export type ProfileGetter = (gitHandle: string) => Promise<Profile>;
 
 const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
+  const { curTutorialStage } = useTutorialContext();
+
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [teamDatas, setTeamDatas] = useState<TeamData[]>([]);
+  const [status, setStatus] = useState<Status>(Status.Loading);
+
+  const [studentMap, setStudentMap] = useState<Record<string, Profile>>({});
+
   const getTeams = async () => {
     const res = await fetch(`/api/teams/course/${courseId}`);
     if (!res.ok) throw new Error('Failed to fetch teams');
@@ -33,17 +49,11 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
     return teamDatas;
   };
 
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [teamDatas, setTeamDatas] = useState<TeamData[]>([]);
-  const [status, setStatus] = useState<Status>(Status.Loading);
-
-  const [studentMap, setStudentMap] = useState<Record<string, Profile>>({});
   const getStudentNameByGitHandle: ProfileGetter = async gitHandle => {
     if (!studentMap[gitHandle]) {
       const res = await fetch(`/api/user/profile?gitHandle=${gitHandle}`);
       if (!res.ok) throw new Error('Failed to fetch profile');
       const profile: Profile = await res.json();
-      console.log(profile);
       setStudentMap({ ...studentMap, [gitHandle]: profile });
     }
     return studentMap[gitHandle];
@@ -85,30 +95,29 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
     return <Center>No teams found.</Center>;
 
   return (
-    <ScrollArea.Autosize>
+    <ScrollArea.Autosize mt={20}>
       <Accordion
         defaultValue={[teamDatas[0]._id]}
         multiple
         variant="separated"
         mx={20}
       >
-        {data.map(({ team, teamData }) => (
-          <Accordion.Item key={teamData._id} value={teamData._id}>
-            <Accordion.Control>{teamData.repoName}</Accordion.Control>
-            <Accordion.Panel>
-              {team ? (
-                <OverviewCard
-                  team={team}
-                  teamData={teamData}
-                  teamDatas={teamDatas}
-                  dateUtils={dateUtils}
-                  profileGetter={getStudentNameByGitHandle}
-                />
-              ) : (
-                <Center>No team found.</Center>
-              )}
-            </Accordion.Panel>
-          </Accordion.Item>
+        {data.map(({ team, teamData }, idx) => (
+          <TutorialPopover
+            key={teamData._id}
+            stage={7}
+            position="bottom"
+            disabled={idx !== 0 || curTutorialStage !== 7}
+          >
+            <OverviewAccordionItem
+              key={teamData._id}
+              team={team}
+              teamData={teamData}
+              teamDatas={teamDatas}
+              dateUtils={dateUtils}
+              getStudentNameByGitHandle={getStudentNameByGitHandle}
+            />
+          </TutorialPopover>
         ))}
       </Accordion>
     </ScrollArea.Autosize>

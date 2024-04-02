@@ -4,7 +4,7 @@ import dayjs from 'dayjs';
 import { useEffect } from 'react';
 import { AnalyticsProps } from '../Analytics';
 
-interface IndividualAnalyticsProps extends AnalyticsProps { }
+interface IndividualAnalyticsProps extends AnalyticsProps {}
 
 interface IndividualAnalyticsData {
   name: string;

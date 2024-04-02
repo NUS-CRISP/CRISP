@@ -1,9 +1,9 @@
 import { Team } from '@/components/views/Overview';
-import { DateUtils } from '@/lib/utils';
+import { DateUtils, getTutorialHighlightColor } from '@/lib/utils';
 import { Carousel, Embla } from '@mantine/carousel';
 import { Card, Center, Stack, Title } from '@mantine/core';
 import { TeamData } from '@shared/types/TeamData';
-import { useState } from 'react';
+import { forwardRef, useState } from 'react';
 import IndividualAnalytics from './individual/IndividualAnalytics';
 import OverallActivity from './team/OverallActivity';
 import WeeklyContributions from './team/WeeklyContributions';
@@ -17,55 +17,51 @@ export interface AnalyticsProps {
 }
 
 // TODO: Migrate Recharts -> Mantine Charts
-const Analytics: React.FC<AnalyticsProps> = ({
-  team,
-  teamData,
-  teamDatas,
-  selectedWeekRange,
-  dateUtils,
-}) => {
-  const [embla, setEmbla] = useState<Embla | null>(null);
+const Analytics = forwardRef<HTMLDivElement, AnalyticsProps>(
+  ({ team, teamData, teamDatas, selectedWeekRange, dateUtils }, ref) => {
+    const [embla, setEmbla] = useState<Embla | null>(null);
 
-  const charts = {
-    Breakdown: OverallActivity,
-    'Weekly Activity': WeeklyContributions,
-    'Individual Activity': IndividualAnalytics,
-  };
+    const charts = {
+      Breakdown: OverallActivity,
+      'Weekly Activity': WeeklyContributions,
+      'Individual Activity': IndividualAnalytics,
+    };
 
-  const slides = Object.entries(charts).map(([componentName, Component]) => (
-    <Carousel.Slide key={componentName}>
-      <Stack>
-        <Center>
-          <Title order={3}>{componentName}</Title>
-        </Center>
-        <Component
-          team={team}
-          teamData={teamData}
-          teamDatas={teamDatas}
-          selectedWeekRange={selectedWeekRange}
-          dateUtils={dateUtils}
-        />
-      </Stack>
-    </Carousel.Slide>
-  ));
+    const slides = Object.entries(charts).map(([componentName, Component]) => (
+      <Carousel.Slide key={componentName}>
+        <Stack>
+          <Center>
+            <Title order={3}>{componentName}</Title>
+          </Center>
+          <Component
+            team={team}
+            teamData={teamData}
+            teamDatas={teamDatas}
+            selectedWeekRange={selectedWeekRange}
+            dateUtils={dateUtils}
+          />
+        </Stack>
+      </Carousel.Slide>
+    ));
 
-  return (
-    <Card withBorder>
-      <Carousel
-        key={teamData._id}
-        getEmblaApi={setEmbla}
-        nextControlProps={{
-          // fix for only first carousel working
-          onClick: () => embla?.reInit(),
-        }}
-        previousControlProps={{
-          onClick: () => embla?.reInit(),
-        }}
-      >
-        {slides}
-      </Carousel>
-    </Card>
-  );
-};
+    return (
+      <Card withBorder ref={ref} bg={getTutorialHighlightColor(8)}>
+        <Carousel
+          key={teamData._id}
+          getEmblaApi={setEmbla}
+          nextControlProps={{
+            // fix for only first carousel working
+            onClick: () => embla?.reInit(),
+          }}
+          previousControlProps={{
+            onClick: () => embla?.reInit(),
+          }}
+        >
+          {slides}
+        </Carousel>
+      </Card>
+    );
+  }
+);
 
 export default Analytics;

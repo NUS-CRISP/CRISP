@@ -25,7 +25,7 @@ export const authOptions: AuthOptions = {
         type: {
           label: 'Type',
           type: 'text',
-        }
+        },
       },
       async authorize(credentials) {
         const client = await clientPromise;
