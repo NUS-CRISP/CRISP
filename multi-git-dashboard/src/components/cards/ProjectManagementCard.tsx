@@ -1,6 +1,14 @@
 import { Carousel, Embla } from '@mantine/carousel';
 import { BarChart } from '@mantine/charts';
-import { Card, Group, SimpleGrid, Stack, Table, Text } from '@mantine/core';
+import {
+  Card,
+  Group,
+  Select,
+  SimpleGrid,
+  Stack,
+  Table,
+  Text,
+} from '@mantine/core';
 import { JiraBoard, JiraIssue, JiraSprint } from '@shared/types/JiraData';
 import { User } from '@shared/types/User';
 import { useState } from 'react';
@@ -45,7 +53,9 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
     return (
       jiraSprint.jiraIssues &&
       jiraSprint.jiraIssues.map(
-        issue => issue.fields.status?.name === status && getJiraBoardCard(issue)
+        issue =>
+          issue.fields.status?.name.toLowerCase() === status.toLowerCase() &&
+          getJiraBoardCard(issue)
       )
     );
   };
@@ -97,6 +107,7 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
             storyPointsPerIssue: 0,
           };
         }
+
         assigneeStatsMap[assigneeName].issues++;
         assigneeStatsMap[assigneeName].storyPoints += issue.storyPoints ?? 0;
 
@@ -112,8 +123,27 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
         storyPointsPerIssue: 0,
       };
 
-      const assigneeStatsArray: AssigneeStats[] =
-        Object.values(assigneeStatsMap);
+      const endKeys = ['Unassigned', 'Total'];
+
+      const assigneeStatsArray: AssigneeStats[] = Object.values(
+        assigneeStatsMap
+      ).sort((a, b) => {
+        // Check if the keys are in the endKeys array
+        const indexA = endKeys.indexOf(a.assignee);
+        const indexB = endKeys.indexOf(b.assignee);
+
+        // If both keys are in the endKeys array, sort based on their position in the endKeys array
+        if (indexA !== -1 && indexB !== -1) {
+          return indexA - indexB;
+        }
+
+        // If only one key is in the endKeys array, place it at the end
+        if (indexA !== -1) return 1;
+        if (indexB !== -1) return -1;
+
+        // For other keys, sort based on the key string (ascending order)
+        return a.assignee.localeCompare(b.assignee);
+      });
 
       // Calculate average story points per issue for each assignee
       assigneeStatsArray.forEach(assigneeStats => {
@@ -200,8 +230,10 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
     interface SprintSummary {
       endDate: Date;
       endDateString: string;
-      Commitment: number;
-      Completed: number;
+      'Story Points Commitment': number;
+      'Issues Commitment': number;
+      'Story Points Completed': number;
+      'Issues Completed': number;
     }
 
     const sprintData: SprintSummary[] = [];
@@ -210,18 +242,22 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
       const sprintSummary: SprintSummary = {
         endDate: new Date(sprint.endDate),
         endDateString: new Date(sprint.endDate).toLocaleDateString(),
-        Commitment: 0,
-        Completed: 0,
+        'Story Points Commitment': 0,
+        'Issues Commitment': 0,
+        'Story Points Completed': 0,
+        'Issues Completed': 0,
       };
 
       sprint.jiraIssues.forEach(issue => {
-        sprintSummary['Commitment'] += issue.storyPoints ?? 0;
+        sprintSummary['Issues Commitment'] += 1;
+        sprintSummary['Story Points Commitment'] += issue.storyPoints ?? 0;
 
         if (
           issue.fields.resolution &&
           issue.fields.resolution.name === 'Done'
         ) {
-          sprintSummary['Completed'] += issue.storyPoints ?? 0;
+          sprintSummary['Issues Completed'] += 1;
+          sprintSummary['Story Points Completed'] += issue.storyPoints ?? 0;
         }
       });
 
@@ -232,16 +268,36 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
 
     // Calculate the total completed story points
     const totalCompletedStoryPoints = sprintData.reduce(
-      (acc, sprintSummary) => acc + sprintSummary['Completed'],
+      (acc, sprintSummary) => acc + sprintSummary['Story Points Completed'],
       0
     );
 
     // Calculate the velocity (average completed story points)
-    const velocity =
+    const storyPointsVelocity =
       sprintData.length > 0 ? totalCompletedStoryPoints / sprintData.length : 0;
+
+    // Calculate the total completed issues
+    const totalCompletedIssues = sprintData.reduce(
+      (acc, sprintSummary) => acc + sprintSummary['Issues Completed'],
+      0
+    );
+
+    // Calculate the velocity (average completed story points)
+    const issuesVelocity =
+      sprintData.length > 0 ? totalCompletedIssues / sprintData.length : 0;
 
     return (
       <Card withBorder>
+        <Select
+          data={[
+            { value: 'storyPoints', label: 'Story Points' },
+            { value: 'issues', label: 'Issues' },
+          ]}
+          value={selectedVelocityChart}
+          allowDeselect={false}
+          onChange={(_value, option) => setSelectedVelocityChart(option.value)}
+          style={{ position: 'absolute', top: '15', left: '15' }}
+        />
         <Text
           size="sm"
           fw={500}
@@ -249,26 +305,54 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
         >
           Velocity Chart
         </Text>
-        <BarChart
-          h={400}
-          data={sprintData}
-          dataKey="endDateString"
-          xAxisLabel="Sprint"
-          yAxisLabel="Story Points"
-          withLegend
-          legendProps={{ verticalAlign: 'top' }}
-          series={[
-            { name: 'Commitment', color: 'gray.5' },
-            { name: 'Completed', color: 'teal.7' },
-          ]}
-        />
-        <Group style={{ alignItems: 'center' }}>
-          <Text size="sm">Team's Velocity:</Text>
-          <Text size="sm">{velocity.toFixed(2)}</Text>
-        </Group>
+        {selectedVelocityChart === 'storyPoints' && (
+          <>
+            <BarChart
+              h={400}
+              data={sprintData}
+              dataKey="endDateString"
+              xAxisLabel="Sprint"
+              yAxisLabel="Story Points"
+              withLegend
+              legendProps={{ verticalAlign: 'top' }}
+              series={[
+                { name: 'Story Points Commitment', color: 'gray.5' },
+                { name: 'Story Points Completed', color: 'teal.7' },
+              ]}
+            />
+            <Group style={{ alignItems: 'center' }}>
+              <Text size="sm">Team's Velocity:</Text>
+              <Text size="sm">{storyPointsVelocity.toFixed(2)}</Text>
+            </Group>
+          </>
+        )}
+        {selectedVelocityChart === 'issues' && (
+          <>
+            <BarChart
+              h={400}
+              data={sprintData}
+              dataKey="endDateString"
+              xAxisLabel="Sprint"
+              yAxisLabel="Issues"
+              withLegend
+              legendProps={{ verticalAlign: 'top' }}
+              series={[
+                { name: 'Issues Commitment', color: 'gray.5' },
+                { name: 'Issues Completed', color: 'teal.7' },
+              ]}
+            />
+            <Group style={{ alignItems: 'center' }}>
+              <Text size="sm">Team's Velocity:</Text>
+              <Text size="sm">{issuesVelocity.toFixed(2)}</Text>
+            </Group>
+          </>
+        )}
       </Card>
     );
   };
+
+  const [selectedVelocityChart, setSelectedVelocityChart] =
+    useState('storyPoints'); // Default to 'storyPoints'
 
   return (
     <Stack>

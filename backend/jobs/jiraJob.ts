@@ -102,7 +102,7 @@ async function fetchIssues(
   cloudId: string,
   accessToken: string
 ): Promise<any> {
-  const jiraIssuesUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board/${boardId}/issue`;
+  const jiraIssuesUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board/${boardId}/issue?maxResults=300`;
 
   try {
     const response = await fetch(jiraIssuesUri, {
