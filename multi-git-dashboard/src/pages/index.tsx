@@ -1,8 +1,8 @@
 import ContactUs from '@/components/home/ContactUs';
+import FeatureShowcase from '@/components/home/FeatureShowcase';
 import Features from '@/components/home/Features';
 import Header from '@/components/home/Header';
 import Hero from '@/components/home/Hero';
-import Screenshots from '@/components/home/Screenshots';
 import { Container } from '@mantine/core';
 import classes from '@styles/Home.module.css';
 
@@ -12,7 +12,7 @@ const Home: React.FC = () => (
       <Header />
       <Hero />
       <Features />
-      <Screenshots />
+      <FeatureShowcase />
       <ContactUs />
     </Container>
   </div>

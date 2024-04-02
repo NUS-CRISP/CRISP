@@ -28,7 +28,9 @@ const CourseListPage: React.FC = () => {
     fetchCourses();
 
     return () => {
-      window.removeEventListener('beforeunload', () => signOut());
+      window.removeEventListener('beforeunload', () =>
+        signOut({ redirect: false })
+      );
     };
   }, []);
 
@@ -36,7 +38,9 @@ const CourseListPage: React.FC = () => {
     if (isReady && isTrial) {
       delete query.trial;
       router.replace({ query }, undefined, { shallow: true });
-      window.addEventListener('beforeunload', () => signOut());
+      window.addEventListener('beforeunload', () =>
+        signOut({ redirect: false })
+      );
       startTutorial();
     }
   }, [isReady, isTrial]);
@@ -80,7 +84,11 @@ const CourseListPage: React.FC = () => {
                 hideButton
                 disabled={idx !== 0 || curTutorialStage !== 4}
               >
-                <CourseCard key={course._id} course={course} isTutorial />
+                <CourseCard
+                  key={course._id}
+                  course={course}
+                  isTutorial={idx === 0 && curTutorialStage === 4}
+                />
               </TutorialPopover>
             ))}
           </div>

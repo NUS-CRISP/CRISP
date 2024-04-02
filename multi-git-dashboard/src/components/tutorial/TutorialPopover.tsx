@@ -20,7 +20,7 @@ interface TutorialPopoverProps {
   disabled?: boolean;
   offset?: number;
   w?: number;
-  isFinish?: boolean;
+  finish?: boolean;
 }
 
 const TutorialPopover: React.FC<TutorialPopoverProps> = ({
@@ -30,7 +30,7 @@ const TutorialPopover: React.FC<TutorialPopoverProps> = ({
   disabled = false,
   offset,
   w,
-  isFinish,
+  finish,
   children,
 }) => {
   const { curTutorialStage, nextTutorialStage, startTutorial } =
@@ -59,13 +59,13 @@ const TutorialPopover: React.FC<TutorialPopoverProps> = ({
       <Popover.Dropdown className={classes.popoverDropdown}>
         <Stack>
           <Text>
-            {isFinish
+            {finish
               ? 'Remember, you can ask for help here if you get stuck with anything. Feel free to try out anything you want with this trial account. Enjoy! 🎉'
               : tutorialContents[stage]}
           </Text>
           {!hideButton && (
             <Group justify="center">
-              {isFinish && (
+              {finish && (
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -77,7 +77,7 @@ const TutorialPopover: React.FC<TutorialPopoverProps> = ({
                 </Button>
               )}
               <Button variant="outline" onClick={nextTutorialStage}>
-                {isFinish ? 'Finish' : 'Next'}
+                {finish ? 'Finish' : 'Next'}
               </Button>
             </Group>
           )}

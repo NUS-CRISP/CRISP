@@ -5,7 +5,7 @@ import TeamDataModel, { TeamData } from '@models/TeamData';
 import TeamSetModel from '@models/TeamSet';
 import Role from '@shared/types/auth/Role';
 import { getGitHubApp } from '../utils/github';
-import { NotFoundError } from './errors';
+import { GitHubError, NotFoundError } from './errors';
 
 export const fetchAllTeamData = async () => {
   return await TeamDataModel.find({});
@@ -29,16 +29,17 @@ export const checkGitHubInstallation = async (orgName: string) => {
     });
     return response.data.id;
   } catch (error) {
-    if (error instanceof Error) {
-      if (error.name === 'RequestError' && error.message === 'Not Found') {
-        throw new NotFoundError(
-          'The GitHub App is not installed on the specified organization.'
-        );
-      } else {
-        throw new Error(error.message);
-      }
+    if (
+      error instanceof GitHubError &&
+      error.name === 'RequestError' &&
+      error.message === 'Not Found'
+    ) {
+      throw new NotFoundError(
+        'The GitHub App is not installed on the specified organization.'
+      );
+    } else if (error instanceof Error) {
+      throw error;
     } else {
-      console.error('Unknown error checking GitHub installation:', error);
       throw new Error('Unknown error checking GitHub installation.');
     }
   }

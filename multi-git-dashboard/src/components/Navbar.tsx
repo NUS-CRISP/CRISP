@@ -193,6 +193,8 @@ const Navbar: React.FC = () => {
     } else {
       setActiveMainTab('View Courses');
     }
+    const newTab = determineActiveTab(path);
+    setActiveCourseTab(newTab);
   }, [router.pathname]);
 
   useEffect(() => {
@@ -212,11 +214,6 @@ const Navbar: React.FC = () => {
       fetchCourse();
     }
   }, [courseId, isCourseRoute]);
-
-  useEffect(() => {
-    const newTab = determineActiveTab(router.pathname);
-    setActiveCourseTab(newTab);
-  }, [router.pathname]);
 
   useEffect(() => {
     const handleTabClose = () => logSessionTime(activeCourseTab, true);
@@ -272,7 +269,7 @@ const Navbar: React.FC = () => {
                 disabled
               />
 
-              <TutorialPopover stage={11} position="right-end" w={250} isFinish>
+              <TutorialPopover stage={11} position="right-end" w={250} finish>
                 <NavbarLink
                   onClick={() =>
                     window.open('https://forms.gle/41KcH8gFh3uDfzQGA', '_blank')

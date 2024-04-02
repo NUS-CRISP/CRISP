@@ -18,3 +18,11 @@ export class MissingAuthorizationError extends Error {
     Object.setPrototypeOf(this, MissingAuthorizationError.prototype);
   }
 }
+
+export class GitHubError extends Error {
+  constructor(name: string, message: string) {
+    super(message);
+    this.name = name;
+    Object.setPrototypeOf(this, GitHubError.prototype);
+  }
+}
