@@ -1,7 +1,14 @@
 import Overview from '@/components/views/Overview';
-import { Container, Loader } from '@mantine/core';
+import {
+  DateUtils,
+  getCurrentWeekGenerator,
+  getEndOfWeek,
+  weekToDateGenerator,
+} from '@/lib/utils';
+import { Container, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { Course } from '@shared/types/Course';
+import dayjs from 'dayjs';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -14,6 +21,7 @@ const CourseViewPage: React.FC = () => {
   const courseApiRoute = `/api/courses/${courseId}`;
 
   const [course, setCourse] = useState<Course>();
+  const [dateUtils, setDateUtils] = useState<DateUtils>();
 
   useEffect(() => {
     if (isNewCourse) {
@@ -21,7 +29,7 @@ const CourseViewPage: React.FC = () => {
         title: 'Course created',
         message: 'Course created successfully',
         autoClose: 3000,
-        onClose: () =>
+        onOpen: () =>
           delete query.new &&
           router.replace({ pathname, query }, undefined, { shallow: true }),
       });
@@ -35,8 +43,17 @@ const CourseViewPage: React.FC = () => {
         console.error('Error fetching course:', response.statusText);
         return;
       }
-      const data = await response.json();
-      setCourse(data);
+      const course: Course = await response.json();
+
+      const courseStartDate = dayjs(course.startDate);
+      const dateUtils = {
+        weekToDate: weekToDateGenerator(courseStartDate),
+        getCurrentWeek: getCurrentWeekGenerator(courseStartDate),
+        getEndOfWeek: getEndOfWeek,
+      };
+
+      setCourse(course);
+      setDateUtils(dateUtils);
     } catch (error) {
       console.error('Error fetching course:', error);
     }
@@ -56,7 +73,11 @@ const CourseViewPage: React.FC = () => {
         flexDirection: 'column',
       }}
     >
-      {course ? <Overview courseId={courseId} /> : <Loader size="md" />}
+      {course && dateUtils ? (
+        <Overview courseId={courseId} dateUtils={dateUtils} />
+      ) : (
+        <Text>Course not available</Text>
+      )}
     </Container>
   );
 };

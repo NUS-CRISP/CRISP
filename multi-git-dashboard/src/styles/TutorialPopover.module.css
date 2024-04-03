@@ -1,0 +1,22 @@
+.arrow-bottom {
+  border-color: light-dark(
+      var(--mantine-color-gray-6),
+      var(--mantine-color-gray-1)
+    )
+    transparent transparent
+    light-dark(var(--mantine-color-gray-6), var(--mantine-color-gray-1));
+}
+
+.arrow-right {
+  border-color: transparent transparent
+    light-dark(var(--mantine-color-gray-6), var(--mantine-color-gray-1))
+    light-dark(var(--mantine-color-gray-6), var(--mantine-color-gray-1));
+}
+
+.popoverDropdown {
+  color: light-dark(var(--mantine-color-gray-8), var(--mantine-color-gray-1));
+  border-color: light-dark(
+    var(--mantine-color-gray-6),
+    var(--mantine-color-gray-1)
+  );
+}

@@ -6,18 +6,9 @@ import { PHASE_DEVELOPMENT_SERVER } from 'next/constants.js';
 
 const baseConfig = {
   transpilePackages: ['shared'],
-  async redirects() {
-    return [
-      {
-        source: '/',
-        destination: '/courses',
-        permanent: true,
-      },
-    ];
-  }
 };
 
-const nextConfig = (phase) => {
+const nextConfig = phase => {
   // Dev config
   if (phase === PHASE_DEVELOPMENT_SERVER) {
     return {
@@ -34,7 +25,7 @@ const nextConfig = (phase) => {
             destination: 'http://localhost:3003/api/:path*',
           },
         ];
-      }
+      },
     };
   }
 

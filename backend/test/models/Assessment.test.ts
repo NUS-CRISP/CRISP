@@ -33,6 +33,7 @@ describe('AssessmentModel', () => {
       name: 'Test Course',
       code: 'TC101',
       semester: 'Spring 2023',
+      startDate: new Date('2024-08-15'),
       courseType: 'Normal' as CourseType,
     });
     await course.save();
@@ -61,6 +62,7 @@ describe('AssessmentModel', () => {
       name: 'Existing Course',
       code: 'EC101',
       semester: 'Fall 2022',
+      startDate: new Date('2024-08-15'),
       courseType: 'Normal' as CourseType,
     });
     await course.save();
@@ -92,6 +94,7 @@ describe('AssessmentModel', () => {
       name: 'Course to Delete',
       code: 'CD101',
       semester: 'Spring 2022',
+      startDate: new Date('2024-08-15'),
       courseType: 'Normal' as CourseType,
     });
     await course.save();
@@ -127,6 +130,7 @@ describe('AssessmentModel', () => {
       name: 'Course with TeamSet',
       code: 'CTS101',
       semester: 'Fall 2023',
+      startDate: new Date('2024-08-15'),
       courseType: 'Normal' as CourseType,
     });
     const teamSet = new TeamSetModel({

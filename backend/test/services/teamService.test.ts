@@ -1,17 +1,19 @@
-import mongoose, { Types } from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
+import mongoose, { Types } from 'mongoose';
+import AccountModel from '../../models/Account';
+import CourseModel from '../../models/Course';
 import TeamModel from '../../models/Team';
 import TeamSetModel from '../../models/TeamSet';
 import UserModel from '../../models/User';
-import AccountModel from '../../models/Account';
-import CourseModel from '../../models/Course';
+import { BadRequestError, NotFoundError } from '../../services/errors';
 import {
-  deleteTeamById,
-  updateTeamById,
   addStudentsToTeam,
   addTAsToTeam,
+  deleteTeamById,
+  getTeamsByCourseId,
+  removeMembersById,
+  updateTeamById,
 } from '../../services/teamService';
-import { NotFoundError } from '../../services/errors';
 
 let mongo: MongoMemoryServer;
 
@@ -39,6 +41,7 @@ const commonCourseDetails = {
   name: 'Introduction to Computer Science',
   code: 'CS101',
   semester: 'Fall 2024',
+  startDate: new Date('2024-08-15'),
   courseType: 'Normal',
 };
 
@@ -121,6 +124,27 @@ async function createTestTeamSet(
 }
 
 describe('teamService', () => {
+  describe('getTeamsByCourseId', () => {
+    it('should get teams by course id', async () => {
+      const course = await createTestCourse(commonCourseDetails);
+      const team = await createTestTeam(commonTeamDetails);
+      const team2 = await createTestTeam({ number: 2 });
+      const teamSet = await createTestTeamSet(
+        commonTeamSetDetails,
+        course._id,
+        [team._id, team2._id]
+      );
+      team.teamSet = teamSet._id;
+      team2.teamSet = teamSet._id;
+      await team.save();
+
+      const teams = await getTeamsByCourseId(course._id.toHexString());
+      expect(teams).toHaveLength(2);
+      expect(teams[0].number).toBe(team.number);
+      expect(teams[1].number).toBe(team2.number);
+    });
+  });
+
   describe('deleteTeamById', () => {
     it('should delete a team by id', async () => {
       const team = await createTestTeam(commonTeamDetails);
@@ -203,6 +227,62 @@ describe('teamService', () => {
       expect(team).toBeDefined();
       expect(team?.members).toContainEqual(student._id);
     });
+
+    it('should throw error if invalid courseId', async () => {
+      const course = await createTestCourse(commonCourseDetails);
+      const courseId = course._id.toHexString();
+      await CourseModel.deleteOne({ _id: course._id });
+
+      await expect(addStudentsToTeam(courseId, [])).rejects.toThrow(
+        NotFoundError
+      );
+    });
+
+    it('should throw error if invalid studentId', async () => {
+      const course = await createTestCourse(commonCourseDetails);
+
+      await expect(
+        addStudentsToTeam(course._id.toHexString(), [
+          {
+            identifier: 'invalidStudentId',
+            teamSet: 'Team Set 1',
+            teamNumber: 1,
+          },
+        ])
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should throw error if student not enrolled in course', async () => {
+      const course = await createTestCourse(commonCourseDetails);
+      const student = await createStudentUser(commonUserDetails);
+      await expect(
+        addStudentsToTeam(course._id.toHexString(), [
+          {
+            identifier: student.identifier,
+            teamSet: 'Team Set 1',
+            teamNumber: 1,
+          },
+        ])
+      ).rejects.toThrow(BadRequestError);
+    });
+
+    it('should throw error if invalid teamSet', async () => {
+      const course = await createTestCourse(commonCourseDetails);
+      const student = await createStudentUser(commonUserDetails);
+      student.enrolledCourses.push(course._id);
+      await student.save();
+      course.students.push(student._id);
+      await course.save();
+      await expect(
+        addStudentsToTeam(course._id.toHexString(), [
+          {
+            identifier: student.identifier,
+            teamSet: 'invalidTeamSet',
+            teamNumber: 1,
+          },
+        ])
+      ).rejects.toThrow(NotFoundError);
+    });
   });
 
   describe('addTAsToTeam', () => {
@@ -234,6 +314,98 @@ describe('teamService', () => {
       });
       expect(team).toBeDefined();
       expect(team?.TA).toEqual(ta._id);
+    });
+
+    it('should throw error if invalid courseId', async () => {
+      const course = await createTestCourse(commonCourseDetails);
+      const courseId = course._id.toHexString();
+      await CourseModel.deleteOne({ _id: course._id });
+
+      await expect(addTAsToTeam(courseId, [])).rejects.toThrow(NotFoundError);
+    });
+
+    it('should throw error if invalid TAId', async () => {
+      const course = await createTestCourse(commonCourseDetails);
+
+      await expect(
+        addTAsToTeam(course._id.toHexString(), [
+          {
+            identifier: 'invalidStudentId',
+            teamSet: 'Team Set 1',
+            teamNumber: 1,
+          },
+        ])
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should throw error if TA not enrolled in course', async () => {
+      const course = await createTestCourse(commonCourseDetails);
+      const ta = await createTAUser(commonUserDetails);
+      await expect(
+        addTAsToTeam(course._id.toHexString(), [
+          {
+            identifier: ta.identifier,
+            teamSet: 'Team Set 1',
+            teamNumber: 1,
+          },
+        ])
+      ).rejects.toThrow(BadRequestError);
+    });
+
+    it('should throw error if invalid teamSet', async () => {
+      const course = await createTestCourse(commonCourseDetails);
+      const ta = await createTAUser(commonUserDetails);
+      ta.enrolledCourses.push(course._id);
+      await ta.save();
+      course.TAs.push(ta._id);
+      await course.save();
+      await expect(
+        addTAsToTeam(course._id.toHexString(), [
+          {
+            identifier: ta.identifier,
+            teamSet: 'invalidTeamSet',
+            teamNumber: 1,
+          },
+        ])
+      ).rejects.toThrow(NotFoundError);
+    });
+  });
+
+  describe('removeMembersById', () => {
+    it('should remove member by id', async () => {
+      const team = await createTestTeam(commonTeamDetails);
+      const user = await createStudentUser(commonUserDetails);
+      if (!team || !user) {
+        throw new Error('Test team or user could not be created');
+      }
+      team.members?.push(user._id);
+      await team.save();
+
+      await removeMembersById(team._id.toHexString(), user._id.toHexString());
+      const updatedTeam = await TeamModel.findById(team._id).populate(
+        'members'
+      );
+      expect(updatedTeam?.members).toHaveLength(0);
+    });
+
+    it('should throw error if invalid team', async () => {
+      const user = await createStudentUser(commonUserDetails);
+      const team = await createTestTeam(commonTeamDetails);
+      const teamId = team._id.toHexString();
+      await TeamModel.deleteOne({ _id: team._id });
+      await expect(
+        removeMembersById(teamId, user._id.toHexString())
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should throw error if invalid user', async () => {
+      const user = await createStudentUser(commonUserDetails);
+      const userId = user._id.toHexString();
+      await UserModel.deleteOne({ _id: user._id });
+      const team = await createTestTeam(commonTeamDetails);
+      await expect(
+        removeMembersById(team._id.toHexString(), userId)
+      ).rejects.toThrow(NotFoundError);
     });
   });
 });

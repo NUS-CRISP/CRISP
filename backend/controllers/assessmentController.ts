@@ -37,10 +37,10 @@ export const getAssessment = async (req: Request, res: Response) => {
 };
 
 export const updateAssessment = async (req: Request, res: Response) => {
-  const accountId = await getAccountId(req);
   const { assessmentId } = req.params;
   const updateData = req.body;
   try {
+    const accountId = await getAccountId(req);
     await updateAssessmentById(assessmentId, accountId, updateData);
     res.status(200).json({ message: 'Assessment updated successfully' });
   } catch (error) {
@@ -64,7 +64,7 @@ export const deleteAssessment = async (req: Request, res: Response) => {
     return res.status(200).json({ message: 'Assessment deleted successfully' });
   } catch (error) {
     if (error instanceof NotFoundError) {
-      res.status(404).send({ error: error.message });
+      res.status(404).json({ error: error.message });
     } else {
       console.error('Error deleting Assessment:', error);
       res.status(500).json({ error: 'Failed to delete Assessment' });
@@ -107,8 +107,8 @@ export const updateResultMarker = async (req: Request, res: Response) => {
 /*----------------------------------------Google Sheets----------------------------------------*/
 export const getSheetData = async (req: Request, res: Response) => {
   const { assessmentId } = req.params;
-  const accountId = await getAccountId(req);
   try {
+    const accountId = await getAccountId(req);
     const sheetsData = await getAssessmentSheetData(assessmentId, accountId);
     res.status(200).json(sheetsData);
   } catch (error) {

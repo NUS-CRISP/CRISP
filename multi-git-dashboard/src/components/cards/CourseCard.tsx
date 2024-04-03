@@ -1,37 +1,49 @@
-import { Card, Text, Group } from '@mantine/core';
+import { Card, Group, Text } from '@mantine/core';
+import { Course } from '@shared/types/Course';
+import Link from 'next/link';
+import { forwardRef } from 'react';
+import { useTutorialContext } from '../tutorial/TutorialContext';
 
 interface CourseCardProps {
-  name: string;
-  code: string;
-  semester: string;
+  course: Course;
+  isTutorial?: boolean;
 }
 
-const CourseCard: React.FC<CourseCardProps> = ({ name, code, semester }) => {
-  return (
-    <Card
-      shadow="sm"
-      padding="lg"
-      radius="md"
-      withBorder
-      style={{
-        width: '350px',
-        height: '200px',
-        marginTop: '6px',
-        marginBottom: '6px',
-      }}
-    >
-      <Group mt="md" mb="xs">
-        <Text>{name}</Text>
-      </Group>
+const CourseCard = forwardRef<HTMLAnchorElement, CourseCardProps>(
+  ({ course, isTutorial }, ref) => {
+    const { nextTutorialStage } = useTutorialContext();
 
-      <Text size="sm" c="dimmed">
-        {code}
-      </Text>
-      <Text size="sm" c="dimmed">
-        {semester}
-      </Text>
-    </Card>
-  );
-};
+    return (
+      <Card
+        shadow="sm"
+        padding="lg"
+        radius="md"
+        withBorder
+        component={Link}
+        href={`/courses/${course._id}`}
+        onClick={() => isTutorial && nextTutorialStage()}
+        style={{
+          width: '350px',
+          height: '200px',
+          marginTop: '6px',
+          marginBottom: '6px',
+          textDecoration: 'none',
+        }}
+        ref={ref}
+      >
+        <Group mt="md" mb="xs">
+          <Text>{course.name}</Text>
+        </Group>
+
+        <Text size="sm" c="dimmed">
+          {course.code}
+        </Text>
+        <Text size="sm" c="dimmed">
+          {course.semester}
+        </Text>
+      </Card>
+    );
+  }
+);
 
 export default CourseCard;
