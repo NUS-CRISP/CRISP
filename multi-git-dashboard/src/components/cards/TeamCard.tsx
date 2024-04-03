@@ -7,6 +7,7 @@ import {
   Table,
   Text,
 } from '@mantine/core';
+import { JiraBoard } from '@shared/types/JiraData';
 import { TeamData } from '@shared/types/TeamData';
 import { User } from '@shared/types/User';
 import { IconX } from '@tabler/icons-react';
@@ -20,6 +21,8 @@ interface TeamCardProps {
   teachingTeam: User[];
   teamData: TeamData | null;
   teamDataList: TeamData[];
+  teamJiraBoard: JiraBoard | null;
+  jiraBoardList: JiraBoard[];
   onUpdate: () => void;
   isEditing?: boolean;
 }
@@ -32,16 +35,23 @@ const TeamCard: React.FC<TeamCardProps> = ({
   teachingTeam,
   teamData,
   teamDataList,
+  teamJiraBoard,
+  jiraBoardList,
   onUpdate,
   isEditing,
 }) => {
   const [selectedTA, setSelectedTA] = useState<string | null>(TA?._id || null);
   const [selectedTeamData, setSelectedTeamData] = useState<string | null>(null);
+  const [selectedJiraBoard, setSelectedJiraBoard] = useState<string | null>(
+    null
+  );
+
   const apiRoute = `/api/teams/${teamId}`;
 
   useEffect(() => {
     setSelectedTA(TA?._id || null);
     setSelectedTeamData(teamData?._id || null);
+    setSelectedJiraBoard(teamJiraBoard?._id || null);
   }, [TA]);
 
   const handleDeleteTeam = async () => {
@@ -118,13 +128,40 @@ const TeamCard: React.FC<TeamCardProps> = ({
     }
   };
 
+  const handleJiraProjectNameChange = async (jiraBoardId: string | null) => {
+    try {
+      const response = await fetch(apiRoute, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ board: jiraBoardId }),
+      });
+
+      if (!response.ok) {
+        console.error('Error updating team:', response.statusText);
+        return;
+      }
+      setSelectedJiraBoard(jiraBoardId);
+      onUpdate();
+    } catch (error) {
+      console.error('Error updating team:', error);
+    }
+  };
+
   const taOptions = teachingTeam.map(user => ({
     value: user._id,
     label: user.name,
   }));
+
   const repoOptions = teamDataList.map(teamData => ({
     value: teamData._id,
     label: teamData.repoName,
+  }));
+
+  const jiraBoardOptions = jiraBoardList.map(jiraBoard => ({
+    value: jiraBoard._id,
+    label: jiraBoard.jiraLocation.name,
   }));
 
   const student_rows = members?.map(member => {
@@ -197,6 +234,21 @@ const TeamCard: React.FC<TeamCardProps> = ({
           />
         ) : (
           <Text>{teamData ? teamData.repoName : 'None'}</Text>
+        )}
+      </Group>
+      <Group style={{ alignItems: 'center' }}>
+        <Text>Jira Project:</Text>
+        {isEditing ? (
+          <Select
+            data={jiraBoardOptions}
+            value={selectedJiraBoard}
+            onChange={e => handleJiraProjectNameChange(e)}
+            placeholder="Select Jira Project"
+          />
+        ) : (
+          <Text>
+            {teamJiraBoard ? teamJiraBoard.jiraLocation.name : 'None'}
+          </Text>
         )}
       </Group>
       <Table>

@@ -1,8 +1,8 @@
-import mongoose, { ConnectOptions, Types } from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
-import UserModel from '../../models/User';
-import CourseModel from '../../models/Course';
 import { CourseType } from '@shared/types/Course';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import mongoose, { ConnectOptions } from 'mongoose';
+import CourseModel from '../../models/Course';
+import UserModel from '../../models/User';
 
 let mongoServer: MongoMemoryServer;
 
@@ -85,12 +85,14 @@ describe('UserModel', () => {
       name: 'Math 101',
       code: 'MATH101',
       semester: 'Spring 2023',
+      startDate: new Date('2024-08-15'),
       courseType: 'Normal' as CourseType,
     });
     const course2 = new CourseModel({
       name: 'Science 102',
       code: 'SCI102',
       semester: 'Spring 2023',
+      startDate: new Date('2024-08-15'),
       courseType: 'Normal' as CourseType,
     });
     await Promise.all([course1.save(), course2.save()]);

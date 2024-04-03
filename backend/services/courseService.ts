@@ -5,8 +5,8 @@ import TeamModel, { Team } from '@models/Team';
 import TeamSetModel, { TeamSet } from '@models/TeamSet';
 import UserModel, { User } from '@models/User';
 import Role from '@shared/types/auth/Role';
-import { NotFoundError } from './errors';
 import { Types } from 'mongoose';
+import { NotFoundError } from './errors';
 
 /*----------------------------------------Course----------------------------------------*/
 export const createNewCourse = async (courseData: any, accountId: string) => {
@@ -36,10 +36,12 @@ export const getCoursesForUser = async (accountId: string) => {
   return courses;
 };
 
-export const getCourseById = async (courseId: string, accountId: string) => {
-  const account = await AccountModel.findById(accountId);
-  if (!account) {
-    throw new NotFoundError('Account not found');
+export const getCourseById = async (courseId: string, accountId?: string) => {
+  if (accountId) {
+    const account = await AccountModel.findById(accountId);
+    if (!account) {
+      throw new NotFoundError('Account not found');
+    }
   }
   const course = await CourseModel.findById(courseId);
   if (!course) {
@@ -138,6 +140,36 @@ export const addStudentsToCourse = async (
   await course.save();
 };
 
+export const updateStudentsInCourse = async (
+  courseId: string,
+  studentDataList: any[]
+) => {
+  const course = await CourseModel.findById(courseId);
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+  for (const studentData of studentDataList) {
+    const studentId = studentData.identifier;
+    const student = await UserModel.findOne({ identifier: studentId });
+    if (!student) {
+      continue;
+    }
+    const studentAccount = await AccountModel.findOne({ user: student._id });
+    if (!studentAccount) {
+      continue;
+    }
+    if (studentAccount.role !== Role.Student) {
+      continue;
+    }
+    if (!course.students.includes(student._id)) {
+      continue;
+    }
+    student.name = studentData.name ?? student.name;
+    student.gitHandle = studentData.gitHandle ?? student.gitHandle;
+    await student.save();
+  }
+};
+
 export const removeStudentsFromCourse = async (
   courseId: string,
   studentId: string
@@ -146,11 +178,11 @@ export const removeStudentsFromCourse = async (
   if (!course) {
     throw new NotFoundError('Course not found');
   }
-  const student =
-    await UserModel.findById(studentId).populate('enrolledCourses');
+  const student = await UserModel.findOne({ _id: studentId });
   if (!student) {
     throw new NotFoundError('Student not found');
   }
+  await student.populate('enrolledCourses');
 
   (course.students as Types.Array<Types.ObjectId>).pull(student._id);
   await course.save();
@@ -210,6 +242,36 @@ export const addTAsToCourse = async (courseId: string, TADataList: any[]) => {
   await course.save();
 };
 
+export const updateTAsInCourse = async (
+  courseId: string,
+  TADataList: any[]
+) => {
+  const course = await CourseModel.findById(courseId);
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+  for (const TAData of TADataList) {
+    const TAId = TAData.identifier;
+    const TA = await UserModel.findOne({ identifier: TAId });
+    if (!TA) {
+      continue;
+    }
+    const TAAccount = await AccountModel.findOne({ user: TA._id });
+    if (!TAAccount) {
+      continue;
+    }
+    if (TAAccount.role !== Role.TA) {
+      continue;
+    }
+    if (!course.TAs.includes(TA._id)) {
+      continue;
+    }
+    TA.name = TAData.name ?? TA.name;
+    TA.gitHandle = TAData.gitHandle ?? TA.gitHandle;
+    await TA.save();
+  }
+};
+
 export const getCourseTeachingTeam = async (courseId: string) => {
   const course = await CourseModel.findById(courseId)
     .populate<{ faculty: User[] }>('faculty')
@@ -227,10 +289,11 @@ export const removeTAsFromCourse = async (courseId: string, taId: string) => {
   if (!course) {
     throw new NotFoundError('Course not found');
   }
-  const ta = await UserModel.findById(taId).populate('enrolledCourses');
+  const ta = await UserModel.findOne({ _id: taId });
   if (!ta) {
-    throw new NotFoundError('TA not found');
+    throw new NotFoundError('Student not found');
   }
+  await ta.populate('enrolledCourses');
 
   (course.TAs as Types.Array<Types.ObjectId>).pull(ta._id);
   await course.save();
@@ -300,6 +363,39 @@ export const addFacultyToCourse = async (
   await course.save();
 };
 
+export const updateFacultyInCourse = async (
+  courseId: string,
+  facultyDataList: any[]
+) => {
+  const course = await CourseModel.findById(courseId);
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+  for (const facultyData of facultyDataList) {
+    const facultyId = facultyData.identifier;
+    const faculty = await UserModel.findOne({ identifier: facultyId });
+    if (!faculty) {
+      continue;
+    }
+    const facultyAccount = await AccountModel.findOne({ user: faculty._id });
+    if (!facultyAccount) {
+      continue;
+    }
+    if (
+      facultyAccount.role !== Role.Faculty &&
+      facultyAccount.role !== Role.Admin
+    ) {
+      continue;
+    }
+    if (!course.faculty.includes(faculty._id)) {
+      continue;
+    }
+    faculty.name = facultyData.name ?? faculty.name;
+    faculty.gitHandle = facultyData.gitHandle ?? faculty.gitHandle;
+    await faculty.save();
+  }
+};
+
 export const removeFacultyFromCourse = async (
   courseId: string,
   facultyId: string
@@ -308,11 +404,12 @@ export const removeFacultyFromCourse = async (
   if (!course) {
     throw new NotFoundError('Course not found');
   }
-  const facultyMember =
-    await UserModel.findById(facultyId).populate('enrolledCourses');
+
+  const facultyMember = await UserModel.findOne({ _id: facultyId });
   if (!facultyMember) {
-    throw new NotFoundError('Faculty Member not found');
+    throw new NotFoundError('Student not found');
   }
+  await facultyMember.populate('enrolledCourses');
 
   (course.faculty as Types.Array<Types.ObjectId>).pull(facultyMember._id);
   await course.save();
@@ -358,7 +455,7 @@ export const getTeamSetsFromCourse = async (
     populate: {
       path: 'teams',
       model: 'Team',
-      populate: ['members', 'TA', 'teamData'],
+      populate: ['members', 'TA', 'teamData', 'board'],
     },
   });
   if (!course) {
@@ -455,4 +552,77 @@ export const getAssessmentsFromCourse = async (courseId: string) => {
     throw new NotFoundError('Course not found');
   }
   return course.assessments;
+};
+
+/*------------------------------------Project Management------------------------------------*/
+export const getProjectManagementBoardFromCourse = async (
+  accountId: string,
+  courseId: string
+) => {
+  const account = await AccountModel.findById(accountId);
+  if (!account) {
+    throw new NotFoundError('Account not found');
+  }
+
+  const course = await CourseModel.findById(courseId).populate<{
+    teamSets: TeamSet[];
+  }>({
+    path: 'teamSets',
+    populate: {
+      path: 'teams',
+      model: 'Team',
+      populate: [
+        {
+          path: 'members TA',
+          model: 'User',
+        },
+        {
+          path: 'board',
+          model: 'JiraBoard',
+          populate: [
+            {
+              path: 'jiraIssues',
+              model: 'JiraIssue',
+            },
+            {
+              path: 'jiraSprints',
+              model: 'JiraSprint',
+              populate: {
+                path: 'jiraIssues',
+                model: 'JiraIssue',
+              },
+            },
+          ],
+        },
+      ],
+    },
+  });
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+
+  const role = account.role;
+  if (role === Role.TA) {
+    const userId = account.user;
+    course.teamSets.forEach(
+      teamSet =>
+        (teamSet.teams = teamSet.teams.filter(team =>
+          (team as unknown as Team).TA?.equals(userId)
+        ))
+    );
+  }
+  course.teamSets.forEach((teamSet: TeamSet) => {
+    teamSet.teams.sort(
+      (a: unknown, b: unknown) => (a as Team).number - (b as Team).number
+    );
+  });
+  return course.teamSets;
+};
+
+export const getCourseJiraRegistrationStatusById = async (courseId: string) => {
+  const course = await CourseModel.findById(courseId);
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+  return course.jira.isRegistered;
 };

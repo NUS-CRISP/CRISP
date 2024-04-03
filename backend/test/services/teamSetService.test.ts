@@ -1,12 +1,12 @@
-import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
+import mongoose from 'mongoose';
 import CourseModel from '../../models/Course';
 import TeamSetModel from '../../models/TeamSet';
+import { BadRequestError, NotFoundError } from '../../services/errors';
 import {
-  deleteTeamSetById,
   createTeamSet,
+  deleteTeamSetById,
 } from '../../services/teamSetService';
-import { NotFoundError, BadRequestError } from '../../services/errors';
 
 let mongo: MongoMemoryServer;
 
@@ -32,6 +32,7 @@ const commonCourseDetails = {
   name: 'Introduction to Computer Science',
   code: 'CS101',
   semester: 'Fall 2024',
+  startDate: new Date('2024-08-15'),
   courseType: 'Normal',
 };
 

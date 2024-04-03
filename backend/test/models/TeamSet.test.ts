@@ -1,9 +1,9 @@
+import { CourseType } from '@shared/types/Course';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose, { ConnectOptions } from 'mongoose';
-import TeamSetModel from '../../models/TeamSet';
-import TeamModel from '../../models/Team';
 import CourseModel from '../../models/Course';
-import { CourseType } from '@shared/types/Course';
+import TeamModel from '../../models/Team';
+import TeamSetModel from '../../models/TeamSet';
 
 let mongoServer: MongoMemoryServer;
 
@@ -32,6 +32,7 @@ describe('TeamSetModel', () => {
     name: 'Test Course',
     code: 'TEST1234',
     semester: 'Spring 2023',
+    startDate: new Date('2024-08-15'),
     courseType: 'Normal' as CourseType,
   });
   testCourse.save();

@@ -6,6 +6,9 @@ export default withAuth({
   },
 });
 
+// Exclude home ('/') and auth ('/auth/*')
+export const EXCLUDE_AUTH_REGEX = /^(?!\/auth).+/;
+
 export const config = {
-  matcher: ['/((?!auth/signin|auth/register|api/accounts/register).*)'],
+  matcher: ['/((?!_next/static|_next/image|auth|favicon.png|$).*)'],
 };

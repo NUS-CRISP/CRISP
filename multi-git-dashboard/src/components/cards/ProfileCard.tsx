@@ -19,7 +19,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
     const fetchProfile = async () => {
       setStatus(Status.Loading);
       try {
-        const profileData = await profileGetter(gitHandle);
+        const profileData: Profile = await profileGetter(gitHandle);
         setProfile(profileData);
         setStatus(Status.Idle);
       } catch (error) {

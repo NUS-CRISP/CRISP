@@ -13,6 +13,7 @@ interface CSVUploadProps {
   uploadButtonString: string;
   urlString: string;
   transformFunction?: (data: unknown[]) => unknown[];
+  requestType?: 'POST' | 'PATCH';
 }
 
 const CSVUpload: React.FC<CSVUploadProps> = ({
@@ -23,6 +24,7 @@ const CSVUpload: React.FC<CSVUploadProps> = ({
   uploadButtonString,
   urlString,
   transformFunction,
+  requestType = 'POST',
 }) => {
   const [items, setItems] = useState<unknown[]>([]);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
@@ -71,7 +73,7 @@ const CSVUpload: React.FC<CSVUploadProps> = ({
 
     try {
       const response = await fetch(urlString, {
-        method: 'POST',
+        method: requestType,
         headers: {
           'Content-Type': 'application/json',
         },

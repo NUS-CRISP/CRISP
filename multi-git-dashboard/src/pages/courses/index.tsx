@@ -1,21 +1,49 @@
 import CourseCard from '@/components/cards/CourseCard';
+import { useTutorialContext } from '@/components/tutorial/TutorialContext';
+import TutorialPopover from '@/components/tutorial/TutorialPopover';
+import WelcomeMessage from '@/components/views/WelcomeMessage';
 import { hasFacultyPermission } from '@/lib/auth/utils';
-import { Button } from '@mantine/core';
+import { Box, Button, Modal } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
 import { Course } from '@shared/types/Course';
-import Link from 'next/link';
+import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import CreateCourseForm from '../../components/forms/CreateCourseForm';
 
 const CourseListPage: React.FC = () => {
   const apiRoute = '/api/courses';
 
+  const [opened, { open, close }] = useDisclosure(false);
+
+  const { curTutorialStage, startTutorial } = useTutorialContext();
+
   const router = useRouter();
+  const { query, isReady } = router;
+  const isTrial = query.trial === 'true';
 
   const [courses, setCourses] = useState<Course[]>([]);
 
   useEffect(() => {
     fetchCourses();
+
+    return () => {
+      window.removeEventListener('beforeunload', () =>
+        signOut({ redirect: false })
+      );
+    };
   }, []);
+
+  useEffect(() => {
+    if (isReady && isTrial) {
+      delete query.trial;
+      router.replace({ query }, undefined, { shallow: true });
+      window.addEventListener('beforeunload', () =>
+        signOut({ redirect: false })
+      );
+      startTutorial();
+    }
+  }, [isReady, isTrial]);
 
   const fetchCourses = async () => {
     try {
@@ -38,41 +66,45 @@ const CourseListPage: React.FC = () => {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div>
+    <>
+      <Modal opened={opened} onClose={close} title="Create Course">
+        <CreateCourseForm />
+      </Modal>
+      <Box pl={20}>
         <h1>Courses</h1>
         {courses.length === 0 ? (
           <p>No courses to show</p>
         ) : (
-          <div className="course-card-list">
-            {courses.map(course => (
-              <Link
-                key={course._id.toString()}
-                style={{ textDecoration: 'none' }}
-                href={`/courses/${course._id}`}
+          <div>
+            {courses.map((course, idx) => (
+              <TutorialPopover
+                key={course._id}
+                stage={4}
+                position="bottom"
+                hideButton
+                disabled={idx !== 0 || curTutorialStage !== 4}
               >
                 <CourseCard
-                  key={course._id.toString()}
-                  name={course.name}
-                  code={course.code}
-                  semester={course.semester}
+                  key={course._id}
+                  course={course}
+                  isTutorial={idx === 0 && curTutorialStage === 4}
                 />
-              </Link>
+              </TutorialPopover>
             ))}
           </div>
         )}
-      </div>
-      {hasFacultyPermission() && (
-        <div>
-          <Button
-            onClick={() => router.push('/courses/create')}
-            style={{ marginTop: '16px' }}
-          >
-            Create Course
-          </Button>
-        </div>
-      )}
-    </main>
+        {hasFacultyPermission() && (
+          <div>
+            <Button onClick={open} mt={16}>
+              Create Course
+            </Button>
+          </div>
+        )}
+        {curTutorialStage === 0 && (
+          <WelcomeMessage opened={curTutorialStage === 0} />
+        )}
+      </Box>
+    </>
   );
 };
 

@@ -8,11 +8,7 @@ Click [here](https://crisp.comp.nus.edu.sg/) to go to the CRISP product website.
 
 ## Contribute
 
-Check out our contributing guide [here](https://github.com/NUS-CRISP/CRISP/blob/main/CONTRIBUTING.md).
-
-## License
-
-No license.
+Check out our developer guide [here](https://github.com/NUS-CRISP/CRISP/wiki).
 
 ## Acknowledgements
 

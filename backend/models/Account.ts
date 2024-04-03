@@ -1,6 +1,6 @@
 import mongoose, { Schema, Types } from 'mongoose';
-import { Account as SharedAccount } from '../../shared/types/Account';
-import Role from '../../shared/types/auth/Role';
+import { Account as SharedAccount } from '@shared/types/Account';
+import Role from '@shared/types/auth/Role';
 
 export interface Account extends Omit<SharedAccount, 'user'>, Document {
   user: Types.ObjectId;

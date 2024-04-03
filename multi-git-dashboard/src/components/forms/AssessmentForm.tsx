@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  Divider,
   Notification,
   Radio,
   Select,
@@ -81,6 +82,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
           {error}
         </Notification>
       )}
+      <Divider label="Enter Details" size="lg" />
       <form onSubmit={form.onSubmit(handleSubmitForm)}>
         <TextInput
           withAsterisk
@@ -167,6 +169,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
           Create Assessment
         </Button>
       </form>
+      <Divider label="or Upload CSV" size="lg" />
       <CSVUpload
         headers={csvTemplateHeaders}
         onProcessComplete={onAssessmentCreated}

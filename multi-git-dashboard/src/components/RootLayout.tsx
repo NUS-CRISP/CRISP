@@ -1,7 +1,9 @@
+import { EXCLUDE_AUTH_REGEX } from '@/middleware';
+import styles from '@styles/root-layout.module.css';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import styles from '../styles/root-layout.module.css';
 import Navbar from './Navbar';
+import { TutorialContextProvider } from './tutorial/TutorialContext';
 
 export default function RootLayout({
   children,
@@ -9,18 +11,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { pathname } = router;
+  const showSidebar =
+    router.pathname !== '/' && EXCLUDE_AUTH_REGEX.test(router.pathname);
 
-  const excludedRoutes = ['/auth/signin', '/auth/register'];
-  const shouldShowSidebar = !excludedRoutes.includes(pathname);
+  const initTutorialStage = -1; // default to -1 to disable tutorial
 
   return (
-    <div className={styles.rootLayout}>
-      <Head>
-        <link rel="shortcut icon" href="/favicon.png" />
-      </Head>
-      {shouldShowSidebar && <Navbar />}
-      <div className={styles.content}>{children}</div>
-    </div>
+    <TutorialContextProvider init={initTutorialStage}>
+      <div className={styles.rootLayout}>
+        <Head>
+          <link rel="shortcut icon" href="/favicon.png" />
+        </Head>
+        {showSidebar && <Navbar />}
+        <div className={styles.content}>{children}</div>
+      </div>
+    </TutorialContextProvider>
   );
 }

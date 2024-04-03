@@ -19,6 +19,7 @@ export const courseSchema = new Schema<Course>({
   name: { type: String, required: true },
   code: { type: String, required: true },
   semester: { type: String, required: true },
+  startDate: { type: Date, required: true },
   faculty: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   TAs: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   students: [{ type: Schema.Types.ObjectId, ref: 'User' }],
@@ -45,6 +46,12 @@ export const courseSchema = new Schema<Course>({
     required: true,
   },
   gitHubOrgName: String,
+  jira: {
+    isRegistered: { type: Boolean, required: true, default: false },
+    cloudIds: [{ type: String }],
+    accessToken: { type: String },
+    refreshToken: { type: String },
+  },
   repoNameFilter: String,
   installationId: Number,
 });

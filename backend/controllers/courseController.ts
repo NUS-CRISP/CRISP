@@ -11,18 +11,27 @@ import {
   getAssessmentsFromCourse,
   getCourseById,
   getCourseCodeById,
+  getCourseJiraRegistrationStatusById,
   getCourseTeachingTeam,
   getCourseTimeline,
   getCoursesForUser,
-  getTeamSetsFromCourse,
+  getPeopleFromCourse,
+  getProjectManagementBoardFromCourse,
   getTeamSetNamesFromCourse,
+  getTeamSetsFromCourse,
   removeFacultyFromCourse,
   removeStudentsFromCourse,
   removeTAsFromCourse,
   updateCourseById,
-  getPeopleFromCourse,
+  updateFacultyInCourse,
+  updateStudentsInCourse,
+  updateTAsInCourse,
 } from '../services/courseService';
-import { BadRequestError, NotFoundError } from '../services/errors';
+import {
+  BadRequestError,
+  MissingAuthorizationError,
+  NotFoundError,
+} from '../services/errors';
 import { addStudentsToTeam, addTAsToTeam } from '../services/teamService';
 import { createTeamSet } from '../services/teamSetService';
 import { getAccountId } from '../utils/auth';
@@ -31,10 +40,6 @@ import { getAccountId } from '../utils/auth';
 export const createCourse = async (req: Request, res: Response) => {
   try {
     const accountId = await getAccountId(req);
-    if (!accountId) {
-      res.status(400).json({ error: 'Missing authorization' });
-      return;
-    }
     const course = await createNewCourse(req.body, accountId);
     res
       .status(201)
@@ -42,6 +47,8 @@ export const createCourse = async (req: Request, res: Response) => {
   } catch (error) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
+    } else if (error instanceof MissingAuthorizationError) {
+      res.status(400).json({ error: 'Missing authorization' });
     } else {
       console.error('Error creating course:', error);
       res.status(500).json({ error: 'Failed to create course' });
@@ -52,15 +59,13 @@ export const createCourse = async (req: Request, res: Response) => {
 export const getCourses = async (req: Request, res: Response) => {
   try {
     const accountId = await getAccountId(req);
-    if (!accountId) {
-      res.status(400).json({ error: 'Missing authorization' });
-      return;
-    }
     const courses = await getCoursesForUser(accountId);
     res.status(200).json(courses);
   } catch (error) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
+    } else if (error instanceof MissingAuthorizationError) {
+      res.status(400).json({ error: 'Missing authorization' });
     } else {
       console.error('Error fetching courses:', error);
       res.status(500).json({ error: 'Failed to fetch courses' });
@@ -69,18 +74,16 @@ export const getCourses = async (req: Request, res: Response) => {
 };
 
 export const getCourse = async (req: Request, res: Response) => {
-  const accountId = await getAccountId(req);
-  if (!accountId) {
-    res.status(400).json({ error: 'Missing authorization' });
-    return;
-  }
   const courseId = req.params.id;
   try {
+    const accountId = await getAccountId(req);
     const course = await getCourseById(courseId, accountId);
     res.status(200).json(course);
   } catch (error) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
+    } else if (error instanceof MissingAuthorizationError) {
+      res.status(400).json({ error: 'Missing authorization' });
     } else {
       console.error('Error fetching course:', error);
       res.status(500).json({ error: 'Failed to fetch course' });
@@ -152,6 +155,22 @@ export const addStudents = async (req: Request, res: Response) => {
   }
 };
 
+export const updateStudents = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  const students = req.body.items;
+  try {
+    await updateStudentsInCourse(courseId, students);
+    res.status(200).json({ message: 'Students updated successfully' });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error updating students:', error);
+      res.status(500).json({ error: 'Failed to update students' });
+    }
+  }
+};
+
 export const removeStudents = async (req: Request, res: Response) => {
   const { id, userId } = req.params;
   try {
@@ -186,6 +205,22 @@ export const addTAs = async (req: Request, res: Response) => {
   }
 };
 
+export const updateTAs = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  const TAs = req.body.items;
+  try {
+    await updateTAsInCourse(courseId, TAs);
+    res.status(200).json({ message: 'TAs updated successfully' });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error updating TAs:', error);
+      res.status(500).json({ error: 'Failed to update TAs' });
+    }
+  }
+};
+
 export const getTeachingTeam = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   try {
@@ -212,8 +247,10 @@ export const removeTAs = async (req: Request, res: Response) => {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
     } else {
+      console.error('Error removing TAs:', error);
+      res.status(500).json({ error: 'Failed to remove TAs' });
       console.error('Error removing tas:', error);
-      res.status(500).json({ error: 'Failed to remove tas' });
+      res.status(500).json({ error: 'Failed to remove TAs' });
     }
   }
 };
@@ -237,6 +274,22 @@ export const addFaculty = async (req: Request, res: Response) => {
   }
 };
 
+export const updateFaculty = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  const faculty = req.body.items;
+  try {
+    await updateFacultyInCourse(courseId, faculty);
+    res.status(200).json({ message: 'Faculty updated successfully' });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error updating Faculty:', error);
+      res.status(500).json({ error: 'Failed to update Faculty' });
+    }
+  }
+};
+
 export const removeFaculty = async (req: Request, res: Response) => {
   const { id, userId } = req.params;
   try {
@@ -249,7 +302,7 @@ export const removeFaculty = async (req: Request, res: Response) => {
       res.status(404).json({ error: error.message });
     } else {
       console.error('Error removing faculty:', error);
-      res.status(500).json({ error: 'Failed to remove faculty' });
+      res.status(500).json({ error: 'Failed to remove Faculty' });
     }
   }
 };
@@ -290,18 +343,16 @@ export const addTeamSet = async (req: Request, res: Response) => {
 };
 
 export const getTeamSets = async (req: Request, res: Response) => {
-  const accountId = await getAccountId(req);
-  if (!accountId) {
-    res.status(400).json({ error: 'Missing authorization' });
-    return;
-  }
   const courseId = req.params.id;
   try {
+    const accountId = await getAccountId(req);
     const teamSets = await getTeamSetsFromCourse(accountId, courseId);
     res.status(200).json(teamSets);
   } catch (error) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
+    } else if (error instanceof MissingAuthorizationError) {
+      res.status(400).json({ error: 'Missing authorization' });
     } else {
       console.error('Error getting team sets:', error);
       res.status(500).json({ error: 'Failed to get team sets' });
@@ -441,6 +492,52 @@ export const getAssessments = async (req: Request, res: Response) => {
     } else {
       console.error('Error getting assessments:', error);
       res.status(500).json({ error: 'Failed to get assessments' });
+    }
+  }
+};
+
+/*------------------------------------Project Management------------------------------------*/
+export const getProjectManagementBoard = async (
+  req: Request,
+  res: Response
+) => {
+  const courseId = req.params.id;
+  try {
+    const accountId = await getAccountId(req);
+    const projectManagementBoard = await getProjectManagementBoardFromCourse(
+      accountId,
+      courseId
+    );
+    res.status(200).json(projectManagementBoard);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else if (error instanceof MissingAuthorizationError) {
+      res.status(400).json({ error: 'Missing authorization' });
+    } else {
+      console.error('Error getting project management boards:', error);
+      res
+        .status(500)
+        .json({ error: 'Failed to get project management boards' });
+    }
+  }
+};
+
+export const getCourseJiraRegistrationStatus = async (
+  req: Request,
+  res: Response
+) => {
+  const courseId = req.params.id;
+  try {
+    const jiraRegistrationStatus =
+      await getCourseJiraRegistrationStatusById(courseId);
+    res.status(200).json(jiraRegistrationStatus);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error getting Jira registration status:', error);
+      res.status(500).json({ error: 'Failed to get Jira registration status' });
     }
   }
 };

@@ -28,6 +28,7 @@ export interface Course {
   name: string;
   code: string;
   semester: string;
+  startDate: Date;
   faculty: User[];
   TAs: User[];
   students: User[];
@@ -41,4 +42,10 @@ export interface Course {
   repoNameFilter?: string;
   installationId?: number;
   // end 'GitHubOrg' fields
+  jira: {
+    isRegistered: boolean;
+    cloudIds: string[];
+    accessToken: string;
+    refreshToken: string;
+  };
 }

@@ -14,12 +14,14 @@ import TATeamForm from '../forms/TATeamForm';
 import TeamSetForm from '../forms/TeamSetForm';
 import { User } from '@shared/types/User';
 import { TeamData } from '@shared/types/TeamData';
+import { JiraBoard } from '@shared/types/JiraData';
 
 interface TeamsInfoProps {
   courseId: string;
   teamSets: TeamSet[];
   teachingTeam: User[];
   teamDatas: TeamData[];
+  jiraBoards: JiraBoard[];
   hasFacultyPermission: boolean;
   onUpdate: () => void;
 }
@@ -29,6 +31,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({
   teamSets,
   teachingTeam,
   teamDatas,
+  jiraBoards,
   hasFacultyPermission,
   onUpdate,
 }) => {
@@ -119,6 +122,8 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({
         teachingTeam={teachingTeam}
         teamData={team.teamData}
         teamDataList={teamDatas}
+        teamJiraBoard={team.board}
+        jiraBoardList={jiraBoards}
         members={team.members}
         onUpdate={onUpdate}
         isEditing={isEditing}

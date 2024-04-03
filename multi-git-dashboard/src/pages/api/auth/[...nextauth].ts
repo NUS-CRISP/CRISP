@@ -1,4 +1,5 @@
 import clientPromise from '@/lib/mongodb';
+import Role from '@shared/types/auth/Role';
 import bcrypt from 'bcrypt';
 import {
   GetServerSidePropsContext,
@@ -21,12 +22,24 @@ export const authOptions: AuthOptions = {
           label: 'Password',
           type: 'password',
         },
+        type: {
+          label: 'Type',
+          type: 'text',
+        },
       },
       async authorize(credentials) {
         const client = await clientPromise;
         const accountsCollection = client
           .db(process.env.DB_NAME)
           .collection('accounts');
+
+        if (credentials?.type === Role.TrialUser) {
+          return {
+            id: process.env.TRIAL_USER_ID || '',
+            name: Role.TrialUser,
+            role: Role.TrialUser,
+          };
+        }
 
         const email = credentials?.email?.toLowerCase();
         const account = await accountsCollection.findOne({ email });

@@ -244,8 +244,8 @@ const fetchCodeFrequencyStats = async (
   repo: string
 ) => {
   let attempt = 0;
-  const maxAttempts = 10; // Maximum number of attempts
-  const delayBetweenAttempts = 2000; // Delay in milliseconds
+  const maxAttempts = 10;
+  const delayBetweenAttempts = 2000;
 
   while (attempt < maxAttempts) {
     try {
@@ -255,14 +255,11 @@ const fetchCodeFrequencyStats = async (
       });
 
       if (response.status === 200) {
-        // Data is ready
         return response.data;
       } else if (response.status === 202) {
-        // Data is not ready yet, wait and try again
         await new Promise(resolve => setTimeout(resolve, delayBetweenAttempts));
         attempt++;
       } else {
-        // Handle other HTTP statuses
         throw new Error('Failed to fetch code frequency stats');
       }
     } catch (error: unknown) {
@@ -277,7 +274,7 @@ const fetchCodeFrequencyStats = async (
   throw new Error('Max attempts reached. Data may not be available yet.');
 };
 
-export const setupJob = () => {
+export const setupGitHubJob = () => {
   // Schedule the job to run every day at midnight
   cron.schedule('0 0 * * *', async () => {
     console.log('Running fetchAndSaveTeamData job:', new Date().toString());
@@ -295,3 +292,5 @@ export const setupJob = () => {
     });
   }
 };
+
+export default setupGitHubJob;

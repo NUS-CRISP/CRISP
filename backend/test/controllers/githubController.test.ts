@@ -74,7 +74,7 @@ describe('gitHubController', () => {
       await getAllTeamDataByOrg(req, res);
 
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ teamDatas: mockTeamDatas });
+      expect(res.json).toHaveBeenCalledWith(mockTeamDatas);
     });
 
     it('should handle NotFoundError when retrieving team data for an organization', async () => {

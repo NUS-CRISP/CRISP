@@ -32,10 +32,7 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
         key={assessment._id}
         assessmentType={assessment.assessmentType}
         markType={assessment.markType}
-        frequency={assessment.frequency}
-        granularity={assessment.granularity}
         teamSetName={assessment.teamSet ? assessment.teamSet.name : null}
-        formLink={assessment.formLink}
       />
     </Link>
   ));

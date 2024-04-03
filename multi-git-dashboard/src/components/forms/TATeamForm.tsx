@@ -1,4 +1,4 @@
-import { Box, Button, Notification, TextInput } from '@mantine/core';
+import { Box, Button, Divider, Notification, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
 import CSVUpload from '../csv/CSVUpload';
@@ -76,6 +76,7 @@ const TATeamForm: React.FC<TATeamFormProps> = ({
           {error}
         </Notification>
       )}
+      <Divider label="Enter Details" size="lg" />
       <form onSubmit={form.onSubmit(handleSubmitForm)}>
         <TextInput
           withAsterisk
@@ -99,6 +100,7 @@ const TATeamForm: React.FC<TATeamFormProps> = ({
           Upload TA
         </Button>
       </form>
+      <Divider label="or Upload CSV" size="lg" />
       <CSVUpload
         headers={csvTemplateHeaders}
         onProcessComplete={onTeamCreated}
