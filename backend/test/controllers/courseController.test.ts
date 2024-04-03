@@ -1,48 +1,47 @@
+import { Assessment } from '@models/Assessment';
+import { TeamSet } from '@models/TeamSet';
 import { Request, Response } from 'express';
-import * as courseService from '../../services/courseService';
-import * as assessmentService from '../../services/assessmentService';
-import * as teamSetService from '../../services/teamSetService';
-import * as teamService from '../../services/teamService';
-import * as auth from '../../utils/auth';
 import {
-  createCourse,
-  getCourses,
-  getCourse,
-  updateCourse,
-  deleteCourse,
-  addStudents,
-  addTAs,
-  getTeachingTeam,
-  addTeamSet,
-  addStudentsToTeams,
-  addTAsToTeams,
+  addAssessments,
+  addFaculty,
   addMilestone,
   addSprint,
-  addAssessments,
+  addStudents,
+  addStudentsToTeams,
+  addTAs,
+  addTAsToTeams,
+  addTeamSet,
+  createCourse,
+  deleteCourse,
+  getAssessments,
+  getCourse,
   getCourseCode,
-  updateStudents,
-  removeStudents,
-  updateTAs,
-  removeTAs,
-  addFaculty,
-  removeFaculty,
-  updateFaculty,
+  getCourseJiraRegistrationStatus,
+  getCourses,
   getPeople,
+  getProjectManagementBoard,
+  getTeachingTeam,
   getTeamSets,
   getTeamSetsNames,
   getTimeline,
-  getAssessments,
-  getProjectManagementBoard,
-  getCourseJiraRegistrationStatus,
+  removeFaculty,
+  removeStudents,
+  removeTAs,
+  updateCourse,
+  updateFaculty,
+  updateStudents,
+  updateTAs,
 } from '../../controllers/courseController';
+import * as assessmentService from '../../services/assessmentService';
+import * as courseService from '../../services/courseService';
 import {
-  NotFoundError,
   BadRequestError,
   MissingAuthorizationError,
+  NotFoundError,
 } from '../../services/errors';
-import { Course } from '@models/Course';
-import { TeamSet } from '@models/TeamSet';
-import { Assessment } from '@models/Assessment';
+import * as teamService from '../../services/teamService';
+import * as teamSetService from '../../services/teamSetService';
+import * as auth from '../../utils/auth';
 
 jest.mock('../../services/courseService');
 jest.mock('../../services/assessmentService');

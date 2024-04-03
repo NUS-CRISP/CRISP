@@ -1,19 +1,19 @@
-import mongoose, { Types } from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
+import mongoose, { Types } from 'mongoose';
+import AccountModel from '../../models/Account';
+import CourseModel from '../../models/Course';
 import TeamModel from '../../models/Team';
 import TeamSetModel from '../../models/TeamSet';
 import UserModel from '../../models/User';
-import AccountModel from '../../models/Account';
-import CourseModel from '../../models/Course';
+import { BadRequestError, NotFoundError } from '../../services/errors';
 import {
-  deleteTeamById,
-  updateTeamById,
   addStudentsToTeam,
   addTAsToTeam,
+  deleteTeamById,
   getTeamsByCourseId,
   removeMembersById,
+  updateTeamById,
 } from '../../services/teamService';
-import { BadRequestError, NotFoundError } from '../../services/errors';
 
 let mongo: MongoMemoryServer;
 
@@ -41,6 +41,7 @@ const commonCourseDetails = {
   name: 'Introduction to Computer Science',
   code: 'CS101',
   semester: 'Fall 2024',
+  startDate: new Date('2024-08-15'),
   courseType: 'Normal',
 };
 

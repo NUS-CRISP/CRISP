@@ -1,0 +1,20 @@
+.control {
+  height: rem(54px);
+  padding-left: rem(38px);
+  padding-right: rem(38px);
+
+  @media (max-width: $mantine-breakpoint-sm) {
+    height: rem(54px);
+    padding-left: rem(18px);
+    padding-right: rem(18px);
+    flex: 1;
+  }
+}
+
+.arrow {
+  transition: transform 0.3s ease-in-out;
+}
+
+.control:hover .arrow {
+  transform: translateX(7px);
+}

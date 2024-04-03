@@ -11,21 +11,21 @@ import {
   getAssessmentsFromCourse,
   getCourseById,
   getCourseCodeById,
+  getCourseJiraRegistrationStatusById,
   getCourseTeachingTeam,
   getCourseTimeline,
   getCoursesForUser,
-  getTeamSetsFromCourse,
+  getPeopleFromCourse,
+  getProjectManagementBoardFromCourse,
   getTeamSetNamesFromCourse,
+  getTeamSetsFromCourse,
   removeFacultyFromCourse,
   removeStudentsFromCourse,
   removeTAsFromCourse,
   updateCourseById,
-  getPeopleFromCourse,
   updateFacultyInCourse,
   updateStudentsInCourse,
   updateTAsInCourse,
-  getProjectManagementBoardFromCourse,
-  getCourseJiraRegistrationStatusById,
 } from '../services/courseService';
 import {
   BadRequestError,
@@ -248,6 +248,8 @@ export const removeTAs = async (req: Request, res: Response) => {
       res.status(404).json({ error: error.message });
     } else {
       console.error('Error removing TAs:', error);
+      res.status(500).json({ error: 'Failed to remove TAs' });
+      console.error('Error removing tas:', error);
       res.status(500).json({ error: 'Failed to remove TAs' });
     }
   }

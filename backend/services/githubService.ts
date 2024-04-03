@@ -4,9 +4,8 @@ import TeamModel from '@models/Team';
 import TeamDataModel, { TeamData } from '@models/TeamData';
 import TeamSetModel from '@models/TeamSet';
 import Role from '@shared/types/auth/Role';
-import { RequestError } from 'octokit';
 import { getGitHubApp } from '../utils/github';
-import { NotFoundError } from './errors';
+import { GitHubError, NotFoundError } from './errors';
 
 export const fetchAllTeamData = async () => {
   return await TeamDataModel.find({});
@@ -16,7 +15,7 @@ export const fetchAllTeamDataForOrg = async (gitHubOrgName: string) => {
   const teamDatas = await TeamDataModel.find({
     gitHubOrgName: gitHubOrgName.toLowerCase(),
   });
-  if (!teamDatas) {
+  if (teamDatas.length === 0) {
     throw new NotFoundError('Team datas not found');
   }
   return teamDatas;
@@ -30,14 +29,17 @@ export const checkGitHubInstallation = async (orgName: string) => {
     });
     return response.data.id;
   } catch (error) {
-    if (error instanceof RequestError && error.status === 404) {
+    if (
+      error instanceof GitHubError &&
+      error.name === 'RequestError' &&
+      error.message === 'Not Found'
+    ) {
       throw new NotFoundError(
         'The GitHub App is not installed on the specified organization.'
       );
     } else if (error instanceof Error) {
-      throw new Error(error.message);
+      throw error;
     } else {
-      console.error('Unknown Eerror checking github installation:', error);
       throw new Error('Unknown error checking GitHub installation.');
     }
   }
@@ -64,11 +66,12 @@ export const getAuthorizedTeamDataByCourse = async (
 
   const role = account.role;
 
-  if (role === Role.Faculty || role === Role.Admin) {
-    // Faculty can view all teams in the course; return all TeamData with same orgName as course
-    // TODO: Temp. solution; adjust schema so we have a way to get all teams in a course
+  if (role === Role.Faculty || role === Role.Admin || role === Role.TrialUser) {
     if (!course.gitHubOrgName) {
       throw new NotFoundError('Course GitHub organization not found');
+    }
+    if (!(await CourseModel.exists({ _id: courseId, faculty: user._id }))) {
+      throw new NotFoundError('User is not authorized to view course');
     }
     const teamDatas = await TeamDataModel.find({
       gitHubOrgName: course.gitHubOrgName,

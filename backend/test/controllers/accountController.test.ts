@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
-import * as accountService from '../../services/accountService';
 import {
-  createAccount,
-  getPendingAccounts,
   approveAccounts,
-  rejectAccounts,
+  createAccount,
   getAccountStatuses,
+  getPendingAccounts,
+  rejectAccounts,
 } from '../../controllers/accountController';
+import * as accountService from '../../services/accountService';
 import { BadRequestError, NotFoundError } from '../../services/errors';
 
 jest.mock('../../services/accountService');

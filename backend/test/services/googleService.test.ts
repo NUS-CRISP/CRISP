@@ -1,14 +1,14 @@
-import mongoose from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
-import {
-  getAssessmentSheetData,
-  fetchAndSaveSheetData,
-} from '../../services/googleService';
-import SheetDataModel from '../../models/SheetData';
-import AssessmentModel from '../../models/Assessment';
-import AccountModel from '../../models/Account';
-import { NotFoundError } from '../../services/errors';
 import CourseModel from '@models/Course';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import mongoose from 'mongoose';
+import AccountModel from '../../models/Account';
+import AssessmentModel from '../../models/Assessment';
+import SheetDataModel from '../../models/SheetData';
+import { NotFoundError } from '../../services/errors';
+import {
+  fetchAndSaveSheetData,
+  getAssessmentSheetData,
+} from '../../services/googleService';
 
 jest.mock('../../utils/google');
 
@@ -47,6 +47,7 @@ describe('googleService', () => {
       name: 'Introduction to Computer Science',
       code: 'CS101',
       semester: 'Fall 2024',
+      startDate: new Date('2024-01-15'),
       courseType: 'Normal',
     });
     await course.save();
