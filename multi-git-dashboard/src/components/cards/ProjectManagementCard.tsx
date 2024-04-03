@@ -3,6 +3,7 @@ import { BarChart } from '@mantine/charts';
 import {
   Card,
   Group,
+  NumberInput,
   Select,
   SimpleGrid,
   Stack,
@@ -23,6 +24,18 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   jiraBoard,
 }) => {
   const [embla, setEmbla] = useState<Embla | null>(null);
+
+  const [selectedVelocityChart, setSelectedVelocityChart] =
+    useState('storyPoints'); // Default to 'storyPoints'
+
+  const [storyPointsEstimate, setStoryPointsEstimate] = useState<number>(4);
+
+  const handleStoryPointsEstimateChange = (value: string | number) => {
+    const newValue = typeof value === 'string' ? parseInt(value, 10) : value;
+    if (!isNaN(newValue) && newValue >= 0) {
+      setStoryPointsEstimate(newValue);
+    }
+  };
 
   const getActiveSprintBoard = (
     jiraSprint: JiraSprint | undefined,
@@ -92,70 +105,73 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
 
     const assigneeStatsArrays: Record<string, AssigneeStats[]> = {};
 
-    jiraSprints.forEach(jiraSprint => {
-      const assigneeStatsMap: Record<string, AssigneeStats> = {};
-      let totalIssues = 0;
-      let totalStoryPoints = 0;
+    jiraSprints
+      .filter(sprint => sprint.state !== 'future')
+      .forEach(jiraSprint => {
+        const assigneeStatsMap: Record<string, AssigneeStats> = {};
+        let totalIssues = 0;
+        let totalStoryPoints = 0;
 
-      jiraSprint.jiraIssues.forEach(issue => {
-        const assigneeName = issue.fields.assignee?.displayName ?? 'Unassigned';
-        if (!assigneeStatsMap[assigneeName]) {
-          assigneeStatsMap[assigneeName] = {
-            assignee: assigneeName,
-            issues: 0,
-            storyPoints: 0,
-            storyPointsPerIssue: 0,
-          };
-        }
+        jiraSprint.jiraIssues.forEach(issue => {
+          const assigneeName =
+            issue.fields.assignee?.displayName ?? 'Unassigned';
+          if (!assigneeStatsMap[assigneeName]) {
+            assigneeStatsMap[assigneeName] = {
+              assignee: assigneeName,
+              issues: 0,
+              storyPoints: 0,
+              storyPointsPerIssue: 0,
+            };
+          }
 
-        assigneeStatsMap[assigneeName].issues++;
-        assigneeStatsMap[assigneeName].storyPoints += issue.storyPoints ?? 0;
+          assigneeStatsMap[assigneeName].issues++;
+          assigneeStatsMap[assigneeName].storyPoints += issue.storyPoints ?? 0;
 
-        // Accumulate total issues and story points
-        totalIssues++;
-        totalStoryPoints += issue.storyPoints ?? 0;
+          // Accumulate total issues and story points
+          totalIssues++;
+          totalStoryPoints += issue.storyPoints ?? 0;
+        });
+
+        assigneeStatsMap['Total'] = {
+          assignee: 'Total',
+          issues: totalIssues,
+          storyPoints: totalStoryPoints,
+          storyPointsPerIssue: 0,
+        };
+
+        const endKeys = ['Unassigned', 'Total'];
+
+        const assigneeStatsArray: AssigneeStats[] = Object.values(
+          assigneeStatsMap
+        ).sort((a, b) => {
+          // Check if the keys are in the endKeys array
+          const indexA = endKeys.indexOf(a.assignee);
+          const indexB = endKeys.indexOf(b.assignee);
+
+          // If both keys are in the endKeys array, sort based on their position in the endKeys array
+          if (indexA !== -1 && indexB !== -1) {
+            return indexA - indexB;
+          }
+
+          // If only one key is in the endKeys array, place it at the end
+          if (indexA !== -1) return 1;
+          if (indexB !== -1) return -1;
+
+          // For other keys, sort based on the key string (ascending order)
+          return a.assignee.localeCompare(b.assignee);
+        });
+
+        // Calculate average story points per issue for each assignee
+        assigneeStatsArray.forEach(assigneeStats => {
+          assigneeStats.storyPointsPerIssue =
+            assigneeStats.issues > 0
+              ? assigneeStats.storyPoints / assigneeStats.issues
+              : 0;
+        });
+
+        const endDate = new Date(jiraSprint.endDate);
+        assigneeStatsArrays[endDate.toISOString()] = assigneeStatsArray;
       });
-
-      assigneeStatsMap['Total'] = {
-        assignee: 'Total',
-        issues: totalIssues,
-        storyPoints: totalStoryPoints,
-        storyPointsPerIssue: 0,
-      };
-
-      const endKeys = ['Unassigned', 'Total'];
-
-      const assigneeStatsArray: AssigneeStats[] = Object.values(
-        assigneeStatsMap
-      ).sort((a, b) => {
-        // Check if the keys are in the endKeys array
-        const indexA = endKeys.indexOf(a.assignee);
-        const indexB = endKeys.indexOf(b.assignee);
-
-        // If both keys are in the endKeys array, sort based on their position in the endKeys array
-        if (indexA !== -1 && indexB !== -1) {
-          return indexA - indexB;
-        }
-
-        // If only one key is in the endKeys array, place it at the end
-        if (indexA !== -1) return 1;
-        if (indexB !== -1) return -1;
-
-        // For other keys, sort based on the key string (ascending order)
-        return a.assignee.localeCompare(b.assignee);
-      });
-
-      // Calculate average story points per issue for each assignee
-      assigneeStatsArray.forEach(assigneeStats => {
-        assigneeStats.storyPointsPerIssue =
-          assigneeStats.issues > 0
-            ? assigneeStats.storyPoints / assigneeStats.issues
-            : 0;
-      });
-
-      const endDate = new Date(jiraSprint.endDate);
-      assigneeStatsArrays[endDate.toISOString()] = assigneeStatsArray;
-    });
 
     // Get the keys as an array and sort them
     const sortedKeys = Object.keys(assigneeStatsArrays)
@@ -173,12 +189,30 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
           <Table.Td>{assigneeStats.assignee}</Table.Td>
           <Table.Td>{assigneeStats.issues}</Table.Td>
           <Table.Td>{assigneeStats.storyPoints}</Table.Td>
-          <Table.Td>{assigneeStats.storyPointsPerIssue.toFixed(2)}</Table.Td>
+          <Table.Td
+            c={
+              assigneeStats.storyPointsPerIssue <= 16 / storyPointsEstimate
+                ? 'teal.7'
+                : 'red.7'
+            }
+          >
+            {assigneeStats.storyPointsPerIssue.toFixed(2)}
+          </Table.Td>
         </Table.Tr>
       ));
 
     return (
       <Card withBorder>
+        <NumberInput
+          label="Number of hours per story point"
+          value={storyPointsEstimate}
+          onChange={handleStoryPointsEstimateChange}
+          min={1}
+          step={1}
+          clampBehavior="strict"
+          allowNegative={false}
+          style={{ width: '30%' }}
+        />
         <Carousel
           controlsOffset="xs"
           slideSize="100%"
@@ -194,20 +228,23 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
         >
           {sortedAssigneeStatsArrays.map((assigneeStatsArray, index) => (
             <Carousel.Slide key={index}>
-              <Text
-                size="sm"
-                fw={500}
-                style={{ textAlign: 'center', marginBottom: 8 }}
+              <Group
+                style={{
+                  paddingLeft: '6%',
+                  paddingRight: '6%',
+                  paddingTop: '2%',
+                }}
               >
-                Sprint ending {new Date(sortedKeys[index]).toLocaleDateString()}
-              </Text>
-              <Group style={{ paddingLeft: '6%', paddingRight: '6%' }}>
                 <Table
                   striped
                   highlightOnHover
                   withTableBorder
                   withColumnBorders
                 >
+                  <Table.Caption>
+                    Sprint ending{' '}
+                    {new Date(sortedKeys[index]).toLocaleDateString()}
+                  </Table.Caption>
                   <Table.Thead>
                     <Table.Tr>
                       <Table.Th>Assignee</Table.Th>
@@ -238,31 +275,33 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
 
     const sprintData: SprintSummary[] = [];
 
-    jiraSprints.forEach(sprint => {
-      const sprintSummary: SprintSummary = {
-        endDate: new Date(sprint.endDate),
-        endDateString: new Date(sprint.endDate).toLocaleDateString(),
-        'Story Points Commitment': 0,
-        'Issues Commitment': 0,
-        'Story Points Completed': 0,
-        'Issues Completed': 0,
-      };
+    jiraSprints
+      .filter(sprint => sprint.state !== 'future')
+      .forEach(sprint => {
+        const sprintSummary: SprintSummary = {
+          endDate: new Date(sprint.endDate),
+          endDateString: new Date(sprint.endDate).toLocaleDateString(),
+          'Story Points Commitment': 0,
+          'Issues Commitment': 0,
+          'Story Points Completed': 0,
+          'Issues Completed': 0,
+        };
 
-      sprint.jiraIssues.forEach(issue => {
-        sprintSummary['Issues Commitment'] += 1;
-        sprintSummary['Story Points Commitment'] += issue.storyPoints ?? 0;
+        sprint.jiraIssues.forEach(issue => {
+          sprintSummary['Issues Commitment'] += 1;
+          sprintSummary['Story Points Commitment'] += issue.storyPoints ?? 0;
 
-        if (
-          issue.fields.resolution &&
-          issue.fields.resolution.name === 'Done'
-        ) {
-          sprintSummary['Issues Completed'] += 1;
-          sprintSummary['Story Points Completed'] += issue.storyPoints ?? 0;
-        }
+          if (
+            issue.fields.resolution &&
+            issue.fields.resolution.name === 'Done'
+          ) {
+            sprintSummary['Issues Completed'] += 1;
+            sprintSummary['Story Points Completed'] += issue.storyPoints ?? 0;
+          }
+        });
+
+        sprintData.push(sprintSummary);
       });
-
-      sprintData.push(sprintSummary);
-    });
 
     sprintData.sort((a, b) => a.endDate.getTime() - b.endDate.getTime());
 
@@ -350,9 +389,6 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
       </Card>
     );
   };
-
-  const [selectedVelocityChart, setSelectedVelocityChart] =
-    useState('storyPoints'); // Default to 'storyPoints'
 
   return (
     <Stack>
