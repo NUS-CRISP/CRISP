@@ -4,6 +4,7 @@ import {
   Box,
   Container,
   Divider,
+  ScrollArea,
   Text,
   useMantineTheme,
 } from '@mantine/core';
@@ -13,14 +14,22 @@ import { IconPlus } from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
 import Markdown from 'react-markdown';
 import { GitHandle } from '../../GitHandle';
+import { Spacing } from './PR';
 
 interface PRDetailsProps {
   pr: TeamData['teamPRs'][number] | undefined;
+  spacing: Spacing;
   profileGetter: ProfileGetter;
 }
 
-const PRDetails: React.FC<PRDetailsProps> = ({ pr, profileGetter }) => {
+const PRDetails: React.FC<PRDetailsProps> = ({
+  pr,
+  spacing,
+  profileGetter,
+}) => {
   if (!pr) return null;
+
+  const { maxHeight, bottomSpace } = spacing;
 
   const theme = useMantineTheme();
 
@@ -65,55 +74,61 @@ const PRDetails: React.FC<PRDetailsProps> = ({ pr, profileGetter }) => {
       {pr.reviews.length === 0 ? (
         <Container>No reviews found.</Container>
       ) : (
-        <Accordion variant="separated">
-          {pr.reviews.map(review => (
-            <Accordion.Item key={review.id} value={String(review.id)}>
-              <Accordion.Control>
-                <GitHandle
-                  gitHandle={review.user ?? ''}
-                  profileGetter={profileGetter}
-                />
-                : {review.state}
-              </Accordion.Control>
-              <Accordion.Panel>
-                <Markdown>
-                  {review.body === '' ? 'No review body' : review.body}
-                </Markdown>
-                {review.comments.length > 0 && (
-                  <Accordion
-                    chevron={<IconPlus className={classes.icon} />}
-                    classNames={{ chevron: classes.chevron }}
-                  >
-                    {review.comments.map(comment => (
-                      <Accordion.Item key={comment.id} value={comment.body}>
-                        <Accordion.Control
-                          icon={
-                            <span
-                              style={{
-                                display: 'inline-block',
-                                height: '10px',
-                                width: '10px',
-                                borderRadius: '50%',
-                                backgroundColor:
-                                  userColors.get(comment.user) ||
-                                  'defaultColor',
-                              }}
-                            />
-                          }
-                        >
-                          {comment.user}
-                        </Accordion.Control>
-                        <Accordion.Panel>
-                          <Markdown>{comment.body}</Markdown>
-                        </Accordion.Panel>
-                      </Accordion.Item>
-                    ))}
-                  </Accordion>
-                )}
-              </Accordion.Panel>
-            </Accordion.Item>
-          ))}
-        </Accordion>
+        <ScrollArea.Autosize
+          mih={300}
+          mah={`calc(${maxHeight}px - ${bottomSpace}rem)`}
+          scrollbars="y"
+        >
+          <Accordion variant="separated">
+            {pr.reviews.map(review => (
+              <Accordion.Item key={review.id} value={String(review.id)}>
+                <Accordion.Control>
+                  <GitHandle
+                    gitHandle={review.user ?? ''}
+                    profileGetter={profileGetter}
+                  />
+                  : {review.state}
+                </Accordion.Control>
+                <Accordion.Panel>
+                  <Markdown>
+                    {review.body === '' ? 'No review body' : review.body}
+                  </Markdown>
+                  {review.comments.length > 0 && (
+                    <Accordion
+                      chevron={<IconPlus className={classes.icon} />}
+                      classNames={{ chevron: classes.chevron }}
+                    >
+                      {review.comments.map(comment => (
+                        <Accordion.Item key={comment.id} value={comment.body}>
+                          <Accordion.Control
+                            icon={
+                              <span
+                                style={{
+                                  display: 'inline-block',
+                                  height: '10px',
+                                  width: '10px',
+                                  borderRadius: '50%',
+                                  backgroundColor:
+                                    userColors.get(comment.user) ||
+                                    'defaultColor',
+                                }}
+                              />
+                            }
+                          >
+                            {comment.user}
+                          </Accordion.Control>
+                          <Accordion.Panel>
+                            <Markdown>{comment.body}</Markdown>
+                          </Accordion.Panel>
+                        </Accordion.Item>
+                      ))}
+                    </Accordion>
+                  )}
+                </Accordion.Panel>
+              </Accordion.Item>
+            ))}
+          </Accordion>
+        </ScrollArea.Autosize>
       )}
     </Box>
   );
