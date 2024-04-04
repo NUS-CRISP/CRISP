@@ -67,7 +67,7 @@ const FeatureShowcase: React.FC = () => {
     },
   });
 
-  const getSubtitle = (idx: number, description: string) => {
+  const getCaption = (idx: number, description: string) => {
     const { className, style } = getTransitionClassName(idx);
     return (
       <Center mt={10} className={className} style={style}>
@@ -91,7 +91,7 @@ const FeatureShowcase: React.FC = () => {
           className={className}
           style={style}
         />
-        {getSubtitle(idx, ss.description)}
+        {getCaption(idx, ss.description)}
       </Grid.Col>
     );
   };
