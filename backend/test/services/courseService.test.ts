@@ -23,6 +23,7 @@ import {
   getAssessmentsFromCourse,
   getCourseById,
   getCourseCodeById,
+  getCourseJiraRegistrationStatusById,
   getCourseTeachingTeam,
   getCourseTimeline,
   getCoursesForUser,
@@ -1250,6 +1251,30 @@ describe('courseService', () => {
       const invalidAccountId = new mongoose.Types.ObjectId().toString();
       await expect(
         getProjectManagementBoardFromCourse(invalidAccountId, courseId)
+      ).rejects.toThrow(NotFoundError);
+    });
+  });
+
+  describe('getCourseJiraRegistrationStatusById', () => {
+    it('should get Jira registration status from a course', async () => {
+      const course = await CourseModel.findOne({ _id: courseId });
+      if (!course) {
+        throw new Error('Course not found');
+      }
+
+      course.jira.isRegistered = true;
+      await course.save();
+
+      const jiraRegistrationStatus =
+        await getCourseJiraRegistrationStatusById(courseId);
+
+      expect(jiraRegistrationStatus).toBe(true);
+    });
+
+    it('should throw NotFoundError for invalid courseId', async () => {
+      const invalidCourseId = new mongoose.Types.ObjectId().toString();
+      await expect(
+        getCourseJiraRegistrationStatusById(invalidCourseId)
       ).rejects.toThrow(NotFoundError);
     });
   });
