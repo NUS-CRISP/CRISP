@@ -19,6 +19,27 @@ interface ProjectManagementCardProps {
   jiraBoard: JiraBoard | null;
 }
 
+interface SprintSummary {
+  endDate: Date;
+  endDateString: string;
+  'Story Points Commitment': number;
+  'Issues Commitment': number;
+  'Story Points Completed': number;
+  'Issues Completed': number;
+}
+
+interface AssigneeStats {
+  assignee: string;
+  issues: number;
+  storyPoints: number;
+  storyPointsPerIssue: number;
+}
+
+enum VelocityChartType {
+  StoryPoints = 'storyPoints',
+  Issues = 'issues',
+}
+
 const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   TA,
   jiraBoard,
@@ -26,7 +47,7 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   const [embla, setEmbla] = useState<Embla | null>(null);
 
   const [selectedVelocityChart, setSelectedVelocityChart] =
-    useState('storyPoints'); // Default to 'storyPoints'
+    useState<VelocityChartType>(VelocityChartType.StoryPoints); // Default to 'storyPoints'
 
   const [storyPointsEstimate, setStoryPointsEstimate] = useState<number>(4);
 
@@ -96,13 +117,6 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   );
 
   const getStatsTable = (jiraSprints: JiraSprint[]) => {
-    interface AssigneeStats {
-      assignee: string;
-      issues: number;
-      storyPoints: number;
-      storyPointsPerIssue: number;
-    }
-
     const assigneeStatsArrays: Record<string, AssigneeStats[]> = {};
 
     jiraSprints
@@ -264,15 +278,6 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   };
 
   const getVelocityChart = (jiraSprints: JiraSprint[]) => {
-    interface SprintSummary {
-      endDate: Date;
-      endDateString: string;
-      'Story Points Commitment': number;
-      'Issues Commitment': number;
-      'Story Points Completed': number;
-      'Issues Completed': number;
-    }
-
     const sprintData: SprintSummary[] = [];
 
     jiraSprints
@@ -329,12 +334,14 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
       <Card withBorder>
         <Select
           data={[
-            { value: 'storyPoints', label: 'Story Points' },
-            { value: 'issues', label: 'Issues' },
+            { value: VelocityChartType.StoryPoints, label: 'Story Points' },
+            { value: VelocityChartType.Issues, label: 'Issues' },
           ]}
           value={selectedVelocityChart}
           allowDeselect={false}
-          onChange={(_value, option) => setSelectedVelocityChart(option.value)}
+          onChange={(_value, option) =>
+            setSelectedVelocityChart(option.value as VelocityChartType)
+          }
           style={{ position: 'absolute', top: '15', left: '15' }}
         />
         <Text
@@ -344,7 +351,7 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
         >
           Velocity Chart
         </Text>
-        {selectedVelocityChart === 'storyPoints' && (
+        {selectedVelocityChart === VelocityChartType.StoryPoints && (
           <>
             <BarChart
               h={400}
@@ -365,7 +372,7 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
             </Group>
           </>
         )}
-        {selectedVelocityChart === 'issues' && (
+        {selectedVelocityChart === VelocityChartType.Issues && (
           <>
             <BarChart
               h={400}
