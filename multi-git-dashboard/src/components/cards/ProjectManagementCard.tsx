@@ -225,7 +225,7 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
           step={1}
           clampBehavior="strict"
           allowNegative={false}
-          style={{ width: '30%' }}
+          w={'30%'}
         />
         <Carousel
           controlsOffset="xs"
@@ -242,13 +242,7 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
         >
           {sortedAssigneeStatsArrays.map((assigneeStatsArray, index) => (
             <Carousel.Slide key={index}>
-              <Group
-                style={{
-                  paddingLeft: '6%',
-                  paddingRight: '6%',
-                  paddingTop: '2%',
-                }}
-              >
+              <Group pl={'6%'} pr={'6%'} pt={'2%'}>
                 <Table
                   striped
                   highlightOnHover
@@ -342,13 +336,11 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
           onChange={(_value, option) =>
             setSelectedVelocityChart(option.value as VelocityChartType)
           }
-          style={{ position: 'absolute', top: '15', left: '15' }}
+          pos={'absolute'}
+          top={'15'}
+          left={'15'}
         />
-        <Text
-          size="sm"
-          fw={500}
-          style={{ textAlign: 'center', marginBottom: 8 }}
-        >
+        <Text size="sm" fw={500} ta={'center'} mb={'8'}>
           Velocity Chart
         </Text>
         {selectedVelocityChart === VelocityChartType.StoryPoints && (
