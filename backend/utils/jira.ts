@@ -1,14 +1,14 @@
 import CourseModel from '@models/Course';
 import mongoose from 'mongoose';
+import { CLOUD_URL, REDIRECT_URI_PATH, TOKEN_URL } from './endpoints';
 
 export const exchangeCodeForToken = async (code: string) => {
-  const tokenUrl = 'https://auth.atlassian.com/oauth/token';
   const clientId = process.env.CLIENT_ID;
   const clientSecret = process.env.CLIENT_SECRET;
-  const redirectUri = `${process.env.FRONTEND_URI}/api/jira/callback`;
+  const redirectUri = `${process.env.FRONTEND_URI}${REDIRECT_URI_PATH}`;
 
   try {
-    const response = await fetch(tokenUrl, {
+    const response = await fetch(TOKEN_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -44,14 +44,13 @@ export const fetchCloudIdsAndUpdateCourse = async (
   refreshToken: string,
   courseId: string | mongoose.Types.ObjectId
 ) => {
-  const cloudUrl = 'https://api.atlassian.com/oauth/token/accessible-resources';
   const headers = {
     Authorization: `Bearer ${accessToken}`,
     Accept: 'application/json',
   };
 
   try {
-    const response = await fetch(cloudUrl, { headers });
+    const response = await fetch(CLOUD_URL, { headers });
 
     if (!response.ok) {
       throw new Error(
@@ -81,7 +80,6 @@ export const refreshAccessToken = async (
   courseId: mongoose.Types.ObjectId
 ) => {
   try {
-    const tokenUrl = 'https://auth.atlassian.com/oauth/token';
     const clientId = process.env.CLIENT_ID;
     const clientSecret = process.env.CLIENT_SECRET;
     const tokenParams = {
@@ -91,7 +89,7 @@ export const refreshAccessToken = async (
       refresh_token: refreshToken,
     };
 
-    const response = await fetch(tokenUrl, {
+    const response = await fetch(TOKEN_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

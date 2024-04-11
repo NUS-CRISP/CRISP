@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { URLSearchParams } from 'url';
 import { JiraBoard, JiraIssue, JiraSprint } from '@shared/types/JiraData';
 import {
   JiraBoardModel,
@@ -8,6 +9,11 @@ import {
 import cron from 'node-cron';
 import { Course } from '@models/Course';
 import CourseModel from '@models/Course';
+import {
+  BOARD_API_PATH,
+  ISSUE_API_PATH,
+  JIRA_API_BASE_URL,
+} from '../utils/endpoints';
 import { refreshAccessToken } from '../utils/jira';
 
 async function fetchSprints(
@@ -15,7 +21,7 @@ async function fetchSprints(
   cloudId: string,
   accessToken: string
 ) {
-  const jiraSprintUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board/${boardId}/sprint`;
+  const jiraSprintUri = `${JIRA_API_BASE_URL}/${cloudId}${BOARD_API_PATH}/${boardId}/sprint`;
 
   try {
     const response = await fetch(jiraSprintUri, {
@@ -49,7 +55,7 @@ async function fetchSprints(
           }
         );
 
-        const boardSelfUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board/${boardId}`;
+        const boardSelfUri = `${JIRA_API_BASE_URL}/${cloudId}${BOARD_API_PATH}/${boardId}`;
 
         await JiraBoardModel.findOneAndUpdate(
           { self: boardSelfUri },
@@ -70,7 +76,11 @@ async function fetchStoryPoints(
   cloudId: string,
   accessToken: string
 ): Promise<number> {
-  const storyPointsUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/issue/${issueKey}/estimation?boardId=${boardId}`;
+  const params = new URLSearchParams({
+    boardId: boardId.toString(),
+  });
+
+  const storyPointsUri = `${JIRA_API_BASE_URL}/${cloudId}${ISSUE_API_PATH}/${issueKey}/estimation?${params}`;
 
   try {
     const storyPointsResponse = await fetch(storyPointsUri, {
@@ -102,7 +112,11 @@ async function fetchIssues(
   cloudId: string,
   accessToken: string
 ): Promise<any> {
-  const jiraIssuesUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board/${boardId}/issue?maxResults=300`;
+  const params = new URLSearchParams({
+    maxResults: '300',
+  });
+
+  const jiraIssuesUri = `${JIRA_API_BASE_URL}/${cloudId}${BOARD_API_PATH}/${boardId}/issue?${params}`;
 
   try {
     const response = await fetch(jiraIssuesUri, {
@@ -169,7 +183,7 @@ async function fetchIssues(
           });
         }
 
-        const boardSelfUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board/${boardId}`;
+        const boardSelfUri = `${JIRA_API_BASE_URL}/${cloudId}${BOARD_API_PATH}/${boardId}`;
 
         await JiraBoardModel.findOneAndUpdate(
           { self: boardSelfUri },
@@ -189,7 +203,7 @@ const fetchJiraBoardConfiguration = async (
   cloudId: string,
   accessToken: string
 ) => {
-  const jiraBoardConfigurationUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board/${boardId}/configuration`;
+  const jiraBoardConfigurationUri = `${JIRA_API_BASE_URL}/${cloudId}${BOARD_API_PATH}/${boardId}/configuration`;
 
   const boardConfigurationResponse = await fetch(jiraBoardConfigurationUri, {
     method: 'GET',
@@ -224,7 +238,7 @@ export const fetchAndSaveJiraData = async () => {
 
       for (const cloudId of cloudIds) {
         try {
-          const jiraBoardUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board`;
+          const jiraBoardUri = `${JIRA_API_BASE_URL}/${cloudId}${BOARD_API_PATH}`;
 
           const boardResponse = await fetch(jiraBoardUri, {
             method: 'GET',
@@ -261,7 +275,7 @@ export const fetchAndSaveJiraData = async () => {
                 location: undefined,
               };
 
-              const boardSelfUri = `https://api.atlassian.com/ex/jira/${cloudId}/rest/agile/1.0/board/${jiraBoard.id}`;
+              const boardSelfUri = `${JIRA_API_BASE_URL}/${cloudId}${BOARD_API_PATH}/${jiraBoard.id}`;
 
               await JiraBoardModel.findOneAndUpdate(
                 { self: boardSelfUri },

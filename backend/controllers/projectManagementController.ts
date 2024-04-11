@@ -1,19 +1,19 @@
 import { Request, Response } from 'express';
 import { URLSearchParams } from 'url';
 import { fetchAndSaveJiraData } from '../jobs/jiraJob';
+import { MissingAuthorizationError, NotFoundError } from '../services/errors';
+import { getJiraBoardNamesByCourse } from '../services/projectManagementService';
 import { getAccountId } from '../utils/auth';
+import { AUTHORIZATION_URL, REDIRECT_URI_PATH } from '../utils/endpoints';
 import {
   exchangeCodeForToken,
   fetchCloudIdsAndUpdateCourse,
 } from '../utils/jira';
-import { getJiraBoardNamesByCourse } from '../services/projectManagementService';
-import { MissingAuthorizationError, NotFoundError } from '../services/errors';
 
 // Handle authorization flow
 export const authorizeJiraAccount = async (req: Request, res: Response) => {
-  const authorizationUrl = 'https://auth.atlassian.com/authorize';
   const clientId = process.env.CLIENT_ID;
-  const redirectUri = `${process.env.FRONTEND_URI}/api/jira/callback`;
+  const redirectUri = `${process.env.FRONTEND_URI}${REDIRECT_URI_PATH}`;
   const courseId = req.query.course as string;
 
   const authParams = new URLSearchParams({
@@ -26,7 +26,8 @@ export const authorizeJiraAccount = async (req: Request, res: Response) => {
     response_type: 'code',
     prompt: 'consent',
   });
-  const authRedirectUrl = `${authorizationUrl}?${authParams}`;
+
+  const authRedirectUrl = `${AUTHORIZATION_URL}?${authParams}`;
   res.redirect(authRedirectUrl);
 };
 
