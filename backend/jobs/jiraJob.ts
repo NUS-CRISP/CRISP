@@ -1,14 +1,13 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import cron from 'node-cron';
 import { URLSearchParams } from 'url';
-import { JiraBoard, JiraIssue, JiraSprint } from '@shared/types/JiraData';
+import { Course } from '@models/Course';
+import CourseModel from '@models/Course';
 import {
   JiraBoardModel,
   JiraIssueModel,
   JiraSprintModel,
 } from '@models/JiraData';
-import cron from 'node-cron';
-import { Course } from '@models/Course';
-import CourseModel from '@models/Course';
+import { JiraBoard, JiraIssue, JiraSprint } from '@shared/types/JiraData';
 import {
   BOARD_API_PATH,
   ISSUE_API_PATH,
@@ -39,7 +38,7 @@ async function fetchSprints(
     const data = await response.json();
 
     await Promise.all(
-      data.values.map(async (sprintData: any) => {
+      data.values.map(async (sprintData: JiraSprint) => {
         const jiraSprint: Omit<JiraSprint, '_id'> = {
           ...sprintData,
           jiraIssues: [],
@@ -111,7 +110,7 @@ async function fetchIssues(
   boardId: number,
   cloudId: string,
   accessToken: string
-): Promise<any> {
+) {
   const params = new URLSearchParams({
     maxResults: '300',
   });
@@ -133,7 +132,7 @@ async function fetchIssues(
 
     const data = await response.json();
     await Promise.all(
-      data.issues.map(async (issueData: any) => {
+      data.issues.map(async (issueData: JiraIssue) => {
         const issueKey = issueData.key;
 
         const storyPoints = await fetchStoryPoints(

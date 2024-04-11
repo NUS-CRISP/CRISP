@@ -51,6 +51,15 @@ const issueSchema: Schema = new Schema<JiraIssue>({
     resolution: {
       name: { type: String },
     },
+    sprint: {
+      self: { type: String },
+    },
+    closedSprints: [
+      {
+        self: { type: String },
+        _id: false,
+      },
+    ],
   },
 });
 
