@@ -4,14 +4,14 @@ import { TeamData } from '@shared/types/TeamData';
 import classes from '@styles/table-of-contents.module.css';
 import cx from 'clsx';
 import { useState } from 'react';
-import { PRProps } from './PR';
+import { PRProps, Spacing } from './PR';
 
 interface PRListProps {
   team?: PRProps['team'];
   teamPRs: TeamData['teamPRs'];
   selectedPR: number | null;
   onSelectPR: (prId: number) => void;
-  maxHeight: number;
+  spacing: Spacing;
 }
 
 interface PRListSelectOptions {
@@ -24,9 +24,11 @@ const PRList: React.FC<PRListProps> = ({
   teamPRs,
   selectedPR,
   onSelectPR,
-  maxHeight,
+  spacing,
 }) => {
-  const BOTTOM_SPACE = 7;
+  const maxHeight = spacing.maxHeight;
+  const bottomSpace = spacing.bottomSpace - 2; // -2 to account for padding
+
   const [selected, setSelected] = useState<PRListSelectOptions>({
     members: [],
     status: [],
@@ -84,7 +86,7 @@ const PRList: React.FC<PRListProps> = ({
       )}
       <ScrollArea.Autosize
         mih={300}
-        mah={`calc(${maxHeight}px - ${BOTTOM_SPACE}rem)`}
+        mah={`calc(${maxHeight}px - ${bottomSpace - 2}rem)`}
         scrollbars="y"
       >
         {displayedPRs.map(pr => (

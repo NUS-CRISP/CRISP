@@ -68,7 +68,7 @@ const CourseViewPage: React.FC = () => {
   return (
     <Container
       style={{
-        height: 'calc(100dvh - 2 * 20px)',
+        height: 'calc(100dvh - 20px)',
         display: 'flex',
         flexDirection: 'column',
       }}
