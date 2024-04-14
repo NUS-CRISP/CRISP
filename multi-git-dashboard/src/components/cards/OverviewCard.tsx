@@ -47,7 +47,7 @@ export const OverviewCard: React.FC<OverviewProps> = ({
           mb={20}
         />
       </TutorialPopover>
-      <TutorialPopover stage={8}>
+      <TutorialPopover stage={8} position="left">
         <Analytics
           team={team}
           teamData={teamData}
@@ -56,7 +56,7 @@ export const OverviewCard: React.FC<OverviewProps> = ({
           dateUtils={dateUtils}
         />
       </TutorialPopover>
-      <TutorialPopover stage={9}>
+      <TutorialPopover stage={9} position="top">
         <PR
           team={team}
           teamData={teamData}

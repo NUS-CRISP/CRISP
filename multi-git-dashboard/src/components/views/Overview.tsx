@@ -106,7 +106,7 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
           <TutorialPopover
             key={teamData._id}
             stage={7}
-            position="bottom"
+            position="left"
             disabled={idx !== 0 || curTutorialStage !== 7}
           >
             <OverviewAccordionItem

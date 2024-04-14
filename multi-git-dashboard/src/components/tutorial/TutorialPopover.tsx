@@ -46,8 +46,8 @@ const TutorialPopover: React.FC<TutorialPopoverProps> = ({
       classNames={{
         arrow:
           position === undefined
-            ? classes['arrow-bottom']
-            : classes[`arrow-${position.split('-')[0]}`],
+            ? classes['popover-bottom-arrow']
+            : classes[`popover-${position.split('-')[0]}-arrow`],
       }}
       arrowSize={18}
       shadow="md"
@@ -76,7 +76,7 @@ const TutorialPopover: React.FC<TutorialPopoverProps> = ({
                   Restart
                 </Button>
               )}
-              <Button variant="outline" onClick={nextTutorialStage}>
+              <Button variant="outline" mb={1} onClick={nextTutorialStage}>
                 {finish ? 'Finish' : 'Next'}
               </Button>
             </Group>
