@@ -1,10 +1,10 @@
 import { hasFacultyPermission } from '@/lib/auth/utils';
-import { Button, Container, Group, Modal, Text } from '@mantine/core';
+import { Button, Center, Container, Group, Modal, Text } from '@mantine/core';
+import { Assessment } from '@shared/types/Assessment';
 import Link from 'next/link';
 import { useState } from 'react';
 import AssessmentCard from '../cards/AssessmentCard';
 import AssessmentForm from '../forms/AssessmentForm';
-import { Assessment } from '@shared/types/Assessment';
 
 interface AssessmentInfoProps {
   courseId: string;
@@ -67,7 +67,9 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
       {assessmentCards.length > 0 ? (
         assessmentCards
       ) : (
-        <Text>No Assessments</Text>
+        <Center>
+          <Text>No Assessments</Text>
+        </Center>
       )}
     </Container>
   );

@@ -5,6 +5,7 @@ sonar-project.properties
 # JMeter
 load-test/results
 load-test/jmeter.log
+load-test/apache-jmeter-*
 
 # MacOS
 .DS_Store
