@@ -5,6 +5,12 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
 import AccountModel from '../../models/Account';
 import CourseModel from '../../models/Course';
+import {
+  JiraBoardModel,
+  JiraIssueModel,
+  JiraSprintModel,
+} from '../../models/JiraData';
+import TeamModel from '../../models/Team';
 import UserModel from '../../models/User';
 import {
   addFacultyToCourse,
@@ -17,10 +23,12 @@ import {
   getAssessmentsFromCourse,
   getCourseById,
   getCourseCodeById,
+  getCourseJiraRegistrationStatusById,
   getCourseTeachingTeam,
   getCourseTimeline,
   getCoursesForUser,
   getPeopleFromCourse,
+  getProjectManagementBoardFromCourse,
   getTeamSetNamesFromCourse,
   getTeamSetsFromCourse,
   removeFacultyFromCourse,
@@ -924,7 +932,7 @@ describe('courseService', () => {
         course: course._id,
         name: 'Team Set 1',
       });
-      teamSet.save();
+      await teamSet.save();
       course.teamSets.push(teamSet._id);
       await course.save();
 
@@ -959,7 +967,7 @@ describe('courseService', () => {
         course: course._id,
         name: 'Team Set 1',
       });
-      teamSet.save();
+      await teamSet.save();
       course.teamSets.push(teamSet._id);
       await course.save();
 
@@ -1102,6 +1110,172 @@ describe('courseService', () => {
       expect(getAssessmentsFromCourse(invalidCourseId)).rejects.toThrow(
         NotFoundError
       );
+    });
+  });
+
+  describe('getProjectManagementBoardFromCourse', () => {
+    it('should get team sets from a course', async () => {
+      const course = await CourseModel.findOne({ _id: courseId });
+      if (!course) {
+        throw new Error('Course not found');
+      }
+
+      const mockIssue = new JiraIssueModel({
+        id: 'ISSUE-1',
+        self: 'Mock Issue URL',
+        key: 'ISSUE-1',
+        storyPoints: 5,
+        fields: {
+          summary: 'Mock Issue Summary',
+          statuscategorychangedate: new Date(),
+          issuetype: {
+            name: 'Task',
+            subtask: false,
+          },
+          status: {
+            name: 'To Do',
+          },
+          assignee: {
+            displayName: 'John Doe',
+          },
+          resolution: {
+            name: 'Unresolved',
+          },
+        },
+      });
+
+      const mockSprint = new JiraSprintModel({
+        id: 1,
+        self: 'Mock Sprint URL',
+        state: 'active',
+        name: 'Mock Sprint',
+        startDate: new Date(),
+        endDate: new Date(),
+        createdDate: new Date(),
+        originBoardId: 1,
+        goal: 'Mock Sprint Goal',
+        jiraIssues: [mockIssue._id],
+      });
+
+      const mockBoard = new JiraBoardModel({
+        id: 1,
+        self: 'Mock Board URL',
+        name: 'Mock Board',
+        type: 'Scrum',
+        jiraLocation: {
+          projectId: 1,
+          displayName: 'Mock Project',
+          projectName: 'Mock Project Name',
+          projectKey: 'MPN',
+          projectTypeKey: 'Software',
+          avatarURI: 'Mock Avatar URL',
+          name: 'Mock Location',
+        },
+        columns: [{ name: 'To Do' }],
+        jiraSprints: [mockSprint._id], // Assign the mock sprint to the board
+        jiraIssues: [mockIssue._id], // Assign the mock issue to the board
+        course: course._id,
+      });
+
+      const team = new TeamModel({
+        number: 1,
+        board: mockBoard._id,
+      });
+
+      const teamSet = new TeamSetModel({
+        course: course._id,
+        name: 'Team Set 1',
+        teams: [team._id],
+      });
+
+      team.teamSet = teamSet._id;
+
+      await mockSprint.save();
+      await mockIssue.save();
+      await mockBoard.save();
+      await team.save();
+      await teamSet.save();
+      course.teamSets.push(teamSet._id);
+      await course.save();
+
+      const teamSets = await getProjectManagementBoardFromCourse(
+        taAccountId,
+        courseId
+      );
+
+      expect(teamSets).toBeDefined();
+      expect(teamSets.length).toBe(1);
+      expect(teamSets.some(set => set._id.equals(teamSet._id))).toBe(true);
+
+      teamSets.forEach(async teamSet => {
+        for (const teamId of teamSet.teams) {
+          const team = await TeamModel.findById(teamId);
+          expect(team).toBeDefined();
+
+          const boardId = team?.board;
+          const board = await JiraBoardModel.findById(boardId);
+          expect(board).toBeDefined();
+
+          expect(board?.jiraIssues).toBeDefined();
+          expect(board?.jiraIssues.length).toBe(1);
+
+          const jiraIssueId = board?.jiraIssues[0];
+          const jiraIssue = await JiraIssueModel.findById(jiraIssueId);
+          expect(jiraIssue).toBeDefined();
+
+          expect(board?.jiraSprints).toBeDefined();
+          expect(board?.jiraSprints.length).toBe(1);
+
+          const jiraSprintId = board?.jiraSprints[0];
+          const jiraSprint = await JiraSprintModel.findById(jiraSprintId);
+          expect(jiraSprint).toBeDefined();
+
+          expect(jiraSprint?.jiraIssues).toBeDefined();
+          expect(jiraSprint?.jiraIssues.length).toBe(1);
+
+          const jiraIssueId2 = jiraSprint?.jiraIssues[0];
+          const jiraIssue2 = await JiraIssueModel.findById(jiraIssueId2);
+          expect(jiraIssue2).toBeDefined();
+        }
+      });
+    });
+
+    it('should throw NotFoundError for invalid courseId', async () => {
+      const invalidCourseId = new mongoose.Types.ObjectId().toString();
+      await expect(
+        getProjectManagementBoardFromCourse(taAccountId, invalidCourseId)
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should throw NotFoundError for invalid account', async () => {
+      const invalidAccountId = new mongoose.Types.ObjectId().toString();
+      await expect(
+        getProjectManagementBoardFromCourse(invalidAccountId, courseId)
+      ).rejects.toThrow(NotFoundError);
+    });
+  });
+
+  describe('getCourseJiraRegistrationStatusById', () => {
+    it('should get Jira registration status from a course', async () => {
+      const course = await CourseModel.findOne({ _id: courseId });
+      if (!course) {
+        throw new Error('Course not found');
+      }
+
+      course.jira.isRegistered = true;
+      await course.save();
+
+      const jiraRegistrationStatus =
+        await getCourseJiraRegistrationStatusById(courseId);
+
+      expect(jiraRegistrationStatus).toBe(true);
+    });
+
+    it('should throw NotFoundError for invalid courseId', async () => {
+      const invalidCourseId = new mongoose.Types.ObjectId().toString();
+      await expect(
+        getCourseJiraRegistrationStatusById(invalidCourseId)
+      ).rejects.toThrow(NotFoundError);
     });
   });
 });
