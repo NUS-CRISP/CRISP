@@ -6,6 +6,7 @@ import OverviewCard from '../cards/OverviewCard';
 import { ProfileGetter, Team } from '../views/Overview';
 
 interface OverviewAccordionItemProps {
+  index: number;
   teamData: TeamData;
   team: Team | undefined;
   teamDatas: TeamData[];
@@ -18,7 +19,7 @@ const OverviewAccordionItem = forwardRef<
   OverviewAccordionItemProps
 >(
   (
-    { teamData, team, teamDatas, dateUtils, getStudentNameByGitHandle },
+    { index, teamData, team, teamDatas, dateUtils, getStudentNameByGitHandle },
     ref
   ) => (
     <Accordion.Item key={teamData._id} value={teamData._id} ref={ref}>
@@ -28,6 +29,7 @@ const OverviewAccordionItem = forwardRef<
       <Accordion.Panel bg={getTutorialHighlightColor(7)}>
         {team ? (
           <OverviewCard
+            index={index}
             team={team}
             teamData={teamData}
             teamDatas={teamDatas}
