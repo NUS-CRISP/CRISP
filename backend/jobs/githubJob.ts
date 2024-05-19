@@ -49,6 +49,55 @@ const getCourseData = async (
   });
   let allRepos = repos.data;
 
+  const data: any = await octokit.graphql(
+    `query {
+      organization(login: "${gitHubOrgName}") {
+        projectsV2(first: 5) {
+          nodes {
+            id
+            title
+            items(first: 10) {
+              nodes {
+                content {
+                  ... on Issue {
+                    id
+                    title
+                    url
+                    assignees(first: 5) {
+                      nodes {
+                        id
+                        login
+                        name
+                      }
+                    }
+                  }
+                  ... on PullRequest {
+                    id
+                    title
+                    url
+                    assignees(first: 5) {
+                      nodes {
+                        id
+                        login
+                        name
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    `,
+  );
+
+  // console.log(data);
+  // console.log(data.organization.projectsV2.nodes);
+  console.log(data.organization.projectsV2.nodes[0].items.nodes[0].content.assignees);
+
+
   if (course.repoNameFilter) {
     allRepos = allRepos.filter(repo =>
       repo.name.includes(course.repoNameFilter as string)
@@ -230,7 +279,7 @@ const getCourseData = async (
       teamPRs,
     };
 
-    console.log('Saving team data:', teamData);
+    // console.log('Saving team data:', teamData);
 
     await TeamData.findOneAndUpdate({ teamId: teamData.teamId }, teamData, {
       upsert: true,
