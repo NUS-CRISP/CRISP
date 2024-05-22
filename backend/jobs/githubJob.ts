@@ -3,6 +3,7 @@ import { Review, TeamContribution, TeamPR } from '@shared/types/TeamData';
 import { Document, Types } from 'mongoose';
 import cron from 'node-cron';
 import { App, Octokit } from 'octokit';
+import Project from '../models/ProjectsV2Data';
 import TeamData from '../models/TeamData';
 import { getGitHubApp, getTeamMembers } from '../utils/github';
 
@@ -89,14 +90,47 @@ const getCourseData = async (
           }
         }
       }
-    }
-    `,
+    }`
   );
 
-  // console.log(data);
-  // console.log(data.organization.projectsV2.nodes);
-  console.log(data.organization.projectsV2.nodes[0].items.nodes[0].content.assignees);
+  // Transform the fetched data into the required schema format
+  const transformedProjects = data.organization.projectsV2.nodes.map(
+    (project: any) => ({
+      id: project.id,
+      title: project.title,
+      gitHubOrgName: gitHubOrgName,
+      items: project.items.nodes.map((item: any) => ({
+        content: {
+          id: item.content.id,
+          title: item.content.title,
+          url: item.content.url,
+          assignees: item.content.assignees.nodes.map((assignee: any) => ({
+            id: assignee.id,
+            login: assignee.login,
+            name: assignee.name,
+          })),
+        },
+      })),
+    })
+  );
 
+  // Save each project into MongoDB using findOneAndUpdate
+  for (const project of transformedProjects) {
+    const query = { id: project.id, gitHubOrgName: project.gitHubOrgName };
+    const update = project;
+    const options = { new: true, upsert: true };
+
+    try {
+      const result = await Project.findOneAndUpdate(
+        query,
+        update,
+        options
+      ).exec();
+      console.log('Saved project:', result);
+    } catch (error) {
+      console.error('Error saving project:', project.id, error);
+    }
+  }
 
   if (course.repoNameFilter) {
     allRepos = allRepos.filter(repo =>
