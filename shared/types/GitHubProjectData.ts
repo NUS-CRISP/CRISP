@@ -1,4 +1,3 @@
-
 export interface Assignee {
   id: string;
   login: string;
@@ -23,7 +22,7 @@ export interface ProjectItem {
   content: Issue | PullRequest;
 }
 
-export interface Project {
+export interface GitHubProject {
   _id: string;
   id: string;
   title: string;

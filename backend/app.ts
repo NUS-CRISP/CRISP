@@ -7,7 +7,8 @@ import accountRoutes from './routes/accountRoutes';
 import assessmentRoutes from './routes/assessmentRoutes';
 import courseRoutes from './routes/courseRoutes';
 import githubRoutes from './routes/githubRoutes';
-import jiraRoutes from './routes/projectManagementRoutes';
+import gitHubProjectRoutes from './routes/gitHubProjectRoutes';
+import jiraRoutes from './routes/jiraRoutes';
 import metricRoutes from './routes/metricRoutes';
 import teamRoutes from './routes/teamRoutes';
 import teamSetRoutes from './routes/teamSetRoutes';
@@ -33,6 +34,7 @@ app.use(cors());
 
 app.use('/api/courses', courseRoutes);
 app.use('/api/github', githubRoutes);
+app.use('/api/gitHubProject', gitHubProjectRoutes);
 app.use('/api/accounts', accountRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/teamsets', teamSetRoutes);

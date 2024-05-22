@@ -1,3 +1,4 @@
+import { GitHubProject } from './GitHubProjectData';
 import { JiraBoard } from './JiraData';
 import { TeamData } from './TeamData';
 import { TeamSet } from './TeamSet';
@@ -11,4 +12,5 @@ export interface Team {
   members: User[];
   teamData: TeamData;
   board: JiraBoard;
+  gitHubProject: GitHubProject;
 }

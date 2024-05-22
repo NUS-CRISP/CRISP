@@ -3,7 +3,7 @@ import { Review, TeamContribution, TeamPR } from '@shared/types/TeamData';
 import { Document, Types } from 'mongoose';
 import cron from 'node-cron';
 import { App, Octokit } from 'octokit';
-import Project from '../models/ProjectsV2Data';
+import GitHubProjectModel from '../models/GitHubProjectData';
 import TeamData from '../models/TeamData';
 import { getGitHubApp, getTeamMembers } from '../utils/github';
 
@@ -121,14 +121,14 @@ const getCourseData = async (
     const options = { new: true, upsert: true };
 
     try {
-      const result = await Project.findOneAndUpdate(
+      const result = await GitHubProjectModel.findOneAndUpdate(
         query,
         update,
         options
       ).exec();
-      console.log('Saved project:', result);
+      console.log('Saved GitHub Project:', result);
     } catch (error) {
-      console.error('Error saving project:', project.id, error);
+      console.error('Error saving GitHub Project:', project.id, error);
     }
   }
 

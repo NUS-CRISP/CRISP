@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { User } from '@shared/types/User';
 import { TeamData } from '@shared/types/TeamData';
 import { JiraBoard } from '@shared/types/JiraData';
+import { GitHubProject } from '@shared/types/GitHubProjectData';
 
 const TimelineListPage: React.FC = () => {
   const router = useRouter();
@@ -17,11 +18,15 @@ const TimelineListPage: React.FC = () => {
   const teamSetsApiRoute = `/api/courses/${id}/teamsets`;
   const teachingTeamApiRoute = `/api/courses/${id}/teachingteam`;
   const teamDatasApiRoute = `/api/github/course/${id}/names`;
+  const gitHubProjectDatasApiRoute = `/api/gitHubProject/course/${id}/names`;
   const jiraBoardsApiRoute = `/api/jira/course/${id}/names`;
 
   const [teamSets, setTeamSets] = useState<TeamSet[]>([]);
   const [teachingTeam, setTeachingTeam] = useState<User[]>([]);
   const [teamDatas, setTeamDatas] = useState<TeamData[]>([]);
+  const [gitHubProjectDatas, setGitHubProjectDatas] = useState<GitHubProject[]>(
+    []
+  );
   const [jiraBoards, setJiraBoards] = useState<JiraBoard[]>([]);
 
   const permission = hasFacultyPermission();
@@ -31,6 +36,7 @@ const TimelineListPage: React.FC = () => {
     fetchTeachingTeam();
     fetchTeamDatas();
     fetchJiraBoards();
+    fetchGitHubProjects();
   };
 
   useEffect(() => {
@@ -39,6 +45,7 @@ const TimelineListPage: React.FC = () => {
       fetchTeachingTeam();
       fetchTeamDatas();
       fetchJiraBoards();
+      fetchGitHubProjects();
     }
   }, [router.isReady]);
 
@@ -98,6 +105,20 @@ const TimelineListPage: React.FC = () => {
     }
   };
 
+  const fetchGitHubProjects = async () => {
+    try {
+      const response = await fetch(gitHubProjectDatasApiRoute);
+      if (!response.ok) {
+        console.error('Error fetching GitHub Projects:', response.statusText);
+        return;
+      }
+      const data = await response.json();
+      setGitHubProjectDatas(data);
+    } catch (error) {
+      console.error('Error fetching GitHub Projects:', error);
+    }
+  };
+
   return (
     <Container>
       {id && (
@@ -106,6 +127,7 @@ const TimelineListPage: React.FC = () => {
           teamSets={teamSets}
           teachingTeam={teachingTeam}
           teamDatas={teamDatas}
+          gitHubProjectDatas={gitHubProjectDatas}
           jiraBoards={jiraBoards}
           hasFacultyPermission={permission}
           onUpdate={onUpdate}

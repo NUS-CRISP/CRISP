@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { URLSearchParams } from 'url';
 import { fetchAndSaveJiraData } from '../jobs/jiraJob';
 import { MissingAuthorizationError, NotFoundError } from '../services/errors';
-import { getJiraBoardNamesByCourse } from '../services/projectManagementService';
+import { getJiraBoardNamesByCourse } from '../services/jiraService';
 import { getAccountId } from '../utils/auth';
 import { AUTHORIZATION_URL, REDIRECT_URI_PATH } from '../utils/endpoints';
 import {
