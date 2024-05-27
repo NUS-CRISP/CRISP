@@ -34,7 +34,6 @@ const MilestoneSchema: Schema = new Schema<Milestone>({
   dueOn: { type: Date, required: false },
 });
 
-
 const AssigneeSchema: Schema = new Schema<Assignee>({
   id: { type: String, required: true },
   login: { type: String, required: true },

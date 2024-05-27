@@ -114,34 +114,36 @@ const getCourseData = async (
   );
 
   // Transform the fetched data into the required schema format
-  const transformedProjects = data.organization.projectsV2.nodes.map((project: any) => ({
-    id: project.id,
-    title: project.title,
-    gitHubOrgName: gitHubOrgName,
-    items: project.items.nodes.map((item: any) => ({
-      type: item.type,
-      content: {
-        id: item.content.id,
-        title: item.content.title,
-        url: item.content.url,
-        labels: item.content.labels.nodes.map((label: any) => ({
-          name: label.name,
-        })),
-        milestone: item.content.milestone
-          ? {
-              title: item.content.milestone.title,
-              dueOn: item.content.milestone.dueOn,
-            }
-          : null,
-        assignees: item.content.assignees.nodes.map((assignee: any) => ({
-          id: assignee.id,
-          login: assignee.login,
-          name: assignee.name,
-        })),
-        contentType: item.content.__typename, // Distinguish between Issue and PullRequest
-      },
-    })),
-  }));
+  const transformedProjects = data.organization.projectsV2.nodes.map(
+    (project: any) => ({
+      id: project.id,
+      title: project.title,
+      gitHubOrgName: gitHubOrgName,
+      items: project.items.nodes.map((item: any) => ({
+        type: item.type,
+        content: {
+          id: item.content.id,
+          title: item.content.title,
+          url: item.content.url,
+          labels: item.content.labels.nodes.map((label: any) => ({
+            name: label.name,
+          })),
+          milestone: item.content.milestone
+            ? {
+                title: item.content.milestone.title,
+                dueOn: item.content.milestone.dueOn,
+              }
+            : null,
+          assignees: item.content.assignees.nodes.map((assignee: any) => ({
+            id: assignee.id,
+            login: assignee.login,
+            name: assignee.name,
+          })),
+          contentType: item.content.__typename, // Distinguish between Issue and PullRequest
+        },
+      })),
+    })
+  );
 
   // Save each project into MongoDB using findOneAndUpdate
   for (const project of transformedProjects) {
