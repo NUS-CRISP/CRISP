@@ -1,5 +1,6 @@
 import {
   Assignee,
+  FieldValue,
   Label,
   Milestone,
   GitHubProject as SharedGitHubProject,
@@ -40,6 +41,13 @@ const AssigneeSchema: Schema = new Schema<Assignee>({
   name: { type: String, required: false },
 });
 
+const FieldValueSchema: Schema = new Schema<FieldValue>({
+  name: { type: String, required: true },
+  field: {
+    name: { type: String, required: true },
+  },
+});
+
 const IssueSchema: Schema = new Schema<Issue>({
   id: { type: String, required: true },
   title: { type: String, required: true },
@@ -78,6 +86,7 @@ const ProjectItemSchema: Schema = new Schema<ProjectItem>({
     required: true,
     enum: ['ISSUE', 'PULL_REQUEST', 'DRAFT_ISSUE', 'REDACTED'],
   },
+  fieldValues: { type: [FieldValueSchema], required: true },
 });
 
 const ProjectSchema: Schema = new Schema<GitHubProject>({

@@ -76,7 +76,7 @@ const getCourseData = async (
                       dueOn
                     }
                     assignees(first: 5) {
-                    nodes {
+                      nodes {
                         id
                         login
                         name
@@ -105,6 +105,18 @@ const getCourseData = async (
                     }
                   }
                 }
+                fieldValues(first: 10) {
+                  nodes {
+                    ... on ProjectV2ItemFieldSingleSelectValue {
+                      field {
+                        ... on ProjectV2SingleSelectField {
+                          name
+                        }
+                      }
+                      name
+                    }
+                  }
+                }
               }
             }
           }
@@ -119,29 +131,43 @@ const getCourseData = async (
       id: project.id,
       title: project.title,
       gitHubOrgName: gitHubOrgName,
-      items: project.items.nodes.map((item: any) => ({
-        type: item.type,
-        content: {
-          id: item.content.id,
-          title: item.content.title,
-          url: item.content.url,
-          labels: item.content.labels.nodes.map((label: any) => ({
-            name: label.name,
-          })),
-          milestone: item.content.milestone
-            ? {
-                title: item.content.milestone.title,
-                dueOn: item.content.milestone.dueOn,
-              }
-            : null,
-          assignees: item.content.assignees.nodes.map((assignee: any) => ({
-            id: assignee.id,
-            login: assignee.login,
-            name: assignee.name,
-          })),
+      items: project.items.nodes.map((item: any) => {
+        const statusField = item.fieldValues.nodes.find(
+          (field: any) => field.field && field.field.name === 'Status'
+        );
+        return {
+          content: {
+            id: item.content.id,
+            title: item.content.title,
+            url: item.content.url,
+            labels: item.content.labels.nodes.map((label: any) => ({
+              name: label.name,
+            })),
+            milestone: item.content.milestone
+              ? {
+                  title: item.content.milestone.title,
+                  dueOn: item.content.milestone.dueOn,
+                }
+              : null,
+            assignees: item.content.assignees.nodes.map((assignee: any) => ({
+              id: assignee.id,
+              login: assignee.login,
+              name: assignee.name,
+            })),
+            __typename: item.content.__typename,
+            status: statusField ? statusField.name : 'Unknown', // Include the status field
+          },
           contentType: item.content.__typename, // Distinguish between Issue and PullRequest
-        },
-      })),
+          fieldValues: item.fieldValues.nodes
+            .filter((field: any) => field.field) // Filter out empty objects
+            .map((field: any) => ({
+              name: field.name,
+              field: {
+                name: field.field.name,
+              },
+            })),
+        };
+      }),
     })
   );
 

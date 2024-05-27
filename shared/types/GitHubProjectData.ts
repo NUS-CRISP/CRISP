@@ -13,6 +13,13 @@ export interface Assignee {
   name: string | null;
 }
 
+export interface FieldValue {
+  name: string;
+  field: {
+    name: string;
+  };
+}
+
 export interface Issue {
   id: string;
   title: string;
@@ -36,6 +43,7 @@ export interface PullRequest {
 export interface ProjectItem {
   content: Issue | PullRequest;
   type: string;
+  fieldValues: FieldValue[];
 }
 
 export interface GitHubProject {
