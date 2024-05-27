@@ -136,6 +136,7 @@ const getCourseData = async (
           (field: any) => field.field && field.field.name === 'Status'
         );
         return {
+          type: item.type,
           content: {
             id: item.content.id,
             title: item.content.title,
