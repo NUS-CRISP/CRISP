@@ -1,8 +1,10 @@
 import {
   Assignee,
+  FieldOption,
   FieldValue,
   Label,
   Milestone,
+  ProjectField,
   GitHubProject as SharedGitHubProject,
   Issue as SharedIssue,
   ProjectItem as SharedProjectItem,
@@ -89,11 +91,22 @@ const ProjectItemSchema: Schema = new Schema<ProjectItem>({
   fieldValues: { type: [FieldValueSchema], required: true },
 });
 
+const FieldOptionSchema: Schema = new Schema<FieldOption>({
+  id: { type: String, required: true },
+  name: { type: String, required: true },
+});
+
+const ProjectFieldSchema: Schema = new Schema<ProjectField>({
+  name: { type: String, required: true },
+  options: { type: [FieldOptionSchema] },
+});
+
 const ProjectSchema: Schema = new Schema<GitHubProject>({
   id: { type: String, required: true },
   title: { type: String, required: true },
   gitHubOrgName: { type: String, required: true },
   items: { type: [ProjectItemSchema], required: true },
+  fields: { type: [ProjectFieldSchema], required: true },
 });
 
 const GitHubProjectModel = mongoose.model<GitHubProject>(

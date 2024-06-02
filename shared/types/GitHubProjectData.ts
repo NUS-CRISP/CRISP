@@ -46,10 +46,21 @@ export interface ProjectItem {
   fieldValues: FieldValue[];
 }
 
+export interface FieldOption {
+  id: string;
+  name: string;
+}
+
+export interface ProjectField {
+  name: string;
+  options?: FieldOption[];
+}
+
 export interface GitHubProject {
   _id: string;
   id: string;
   title: string;
   gitHubOrgName: string;
   items: ProjectItem[];
+  fields: ProjectField[];
 }
