@@ -214,7 +214,7 @@ const getCourseData = async (
   for (const repo of allRepos) {
     const teamContributions: Record<string, TeamContribution> = {};
 
-    const [commits, issues, prs, contributors] = await Promise.all([
+    const [commits, issues, prs, contributors, milestones] = await Promise.all([
       octokit.rest.repos.listCommits({
         owner: gitHubOrgName,
         repo: repo.name,
@@ -231,6 +231,11 @@ const getCourseData = async (
       octokit.rest.repos.listContributors({
         owner: gitHubOrgName,
         repo: repo.name,
+      }),
+      octokit.rest.issues.listMilestones({
+        owner: gitHubOrgName,
+        repo: repo.name,
+        state: 'all',
       }),
     ]);
 
@@ -384,9 +389,10 @@ const getCourseData = async (
       updatedIssues: issues.data.map(issue => issue.updated_at),
       teamContributions,
       teamPRs,
+      milestones: milestones.data,
     };
 
-    // console.log('Saving team data:', teamData);
+    console.log('Saving team data:', teamData);
 
     await TeamData.findOneAndUpdate({ teamId: teamData.teamId }, teamData, {
       upsert: true,

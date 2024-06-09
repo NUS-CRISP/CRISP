@@ -35,6 +35,18 @@ export interface Comment {
   createdAt: Date;
 }
 
+export interface Milestone {
+  title: string;
+  description: string;
+  open_issues: number;
+  closed_issues: number;
+  state: 'closed' | 'open'
+  created_at: Date;
+  updated_at: Date;
+  due_on: Date;
+  closed_at: Date;
+}
+
 export interface TeamData {
   _id: string;
   gitHubOrgName: string;
@@ -47,4 +59,5 @@ export interface TeamData {
   updatedIssues: string[];
   teamContributions: Record<string, TeamContribution>;
   teamPRs: TeamPR[];
+  milestones: Milestone[];
 }
