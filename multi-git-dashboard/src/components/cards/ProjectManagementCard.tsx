@@ -14,7 +14,7 @@ import { JiraBoard, JiraIssue, JiraSprint } from '@shared/types/JiraData';
 import { User } from '@shared/types/User';
 import { useState } from 'react';
 
-interface ProjectManagementCardProps {
+interface ProjectManagementJiraCardProps {
   TA: User | null;
   jiraBoard: JiraBoard | null;
 }
@@ -40,7 +40,7 @@ enum VelocityChartType {
   Issues = 'issues',
 }
 
-const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
+const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
   TA,
   jiraBoard,
 }) => {
@@ -448,4 +448,4 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   );
 };
 
-export default ProjectManagementCard;
+export default ProjectManagementJiraCard;
