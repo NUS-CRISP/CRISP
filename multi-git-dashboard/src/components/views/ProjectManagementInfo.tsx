@@ -9,7 +9,8 @@ import {
 } from '@mantine/core';
 import { TeamSet } from '@shared/types/TeamSet';
 import { useEffect, useState } from 'react';
-import ProjectManagementJiraCard from '../cards/ProjectManagementCard';
+import ProjectManagementJiraCard from '../cards/ProjectManagementJiraCard';
+import ProjectManagementGitHubProjectCard from '../cards/ProjectManagementGitHubProjectCard';
 
 interface ProjectManagementProps {
   courseId: string;
@@ -73,11 +74,19 @@ const ProjectManagementInfo: React.FC<ProjectManagementProps> = ({
           <Accordion.Item key={team._id} value={team._id}>
             <Accordion.Control>Team {team.number.toString()}</Accordion.Control>
             <Accordion.Panel>
-              <ProjectManagementJiraCard
-                key={team._id}
-                TA={team.TA}
-                jiraBoard={team.board}
-              />
+              {team.board ? (
+                <ProjectManagementJiraCard
+                  key={team._id}
+                  TA={team.TA}
+                  jiraBoard={team.board}
+                />
+              ) : (
+                <ProjectManagementGitHubProjectCard
+                  key={team._id}
+                  TA={team.TA}
+                  gitHubProject={team.gitHubProject}
+                />
+              )}
             </Accordion.Panel>
           </Accordion.Item>
         ))}
