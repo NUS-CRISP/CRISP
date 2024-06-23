@@ -1,5 +1,6 @@
 import {
   Comment,
+  Milestone,
   Review,
   TeamData as SharedTeamData,
   TeamContribution,
@@ -60,6 +61,21 @@ const teamPRSchema = new Schema<TeamPR>(
   { _id: false }
 );
 
+const milestoneSchema = new Schema<Milestone>(
+  {
+    title: { type: String, required: true },
+    description: { type: String, required: true },
+    open_issues: { type: Number, required: true },
+    closed_issues: { type: Number, required: true },
+    state: { type: String, enum: ['closed', 'open'], required: true },
+    created_at: { type: Date, required: true },
+    updated_at: { type: Date },
+    due_on: { type: Date },
+    closed_at: { type: Date },
+  },
+  { _id: false }
+);
+
 const teamDataSchema = new Schema<TeamData>({
   teamId: { type: Number, required: true },
   gitHubOrgName: { type: String, required: true },
@@ -75,6 +91,7 @@ const teamDataSchema = new Schema<TeamData>({
     required: true,
   },
   teamPRs: [teamPRSchema],
+  milestones: [milestoneSchema],
 });
 
 const TeamDataModel = mongoose.model<TeamData>('TeamData', teamDataSchema);

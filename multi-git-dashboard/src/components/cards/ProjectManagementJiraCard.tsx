@@ -14,7 +14,7 @@ import { JiraBoard, JiraIssue, JiraSprint } from '@shared/types/JiraData';
 import { User } from '@shared/types/User';
 import { useState } from 'react';
 
-interface ProjectManagementCardProps {
+interface ProjectManagementJiraCardProps {
   TA: User | null;
   jiraBoard: JiraBoard | null;
 }
@@ -40,7 +40,7 @@ enum VelocityChartType {
   Issues = 'issues',
 }
 
-const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
+const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
   TA,
   jiraBoard,
 }) => {
@@ -95,7 +95,7 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   };
 
   const getJiraBoardCard = (issue: JiraIssue) => (
-    <Card radius="md" shadow="sm" padding="lg" withBorder>
+    <Card key={issue.self} radius="md" shadow="sm" padding="lg" withBorder>
       <Group style={{ alignItems: 'center' }}>
         <Text fw={600} size="sm">
           {issue.fields.summary || '-'}
@@ -389,6 +389,45 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
     );
   };
 
+  const getActiveSprint = (jiraBoard: JiraBoard) => {
+    return jiraBoard.jiraSprints.find(sprint => sprint.state === 'active');
+  };
+
+  const getActiveSprintName = (jiraBoard: JiraBoard) => {
+    const activeSprint = getActiveSprint(jiraBoard);
+    return <Text>{activeSprint ? activeSprint.name : 'No active sprint'}</Text>;
+  };
+
+  const getActiveSprintStartDate = (jiraBoard: JiraBoard) => {
+    const activeSprint = getActiveSprint(jiraBoard);
+
+    if (!activeSprint) {
+      return <Text>{'No active sprint'}</Text>;
+    }
+
+    const startDate = new Date(activeSprint.startDate);
+    return (
+      <Text>
+        {startDate.toLocaleTimeString()}, {startDate.toLocaleDateString()}
+      </Text>
+    );
+  };
+
+  const getActiveSprintEndDate = (jiraBoard: JiraBoard) => {
+    const activeSprint = getActiveSprint(jiraBoard);
+
+    if (!activeSprint) {
+      return <Text>{'No active sprint'}</Text>;
+    }
+
+    const endDate = new Date(activeSprint.endDate);
+    return (
+      <Text>
+        {endDate.toLocaleTimeString()}, {endDate.toLocaleDateString()}
+      </Text>
+    );
+  };
+
   return (
     <Stack>
       <Group style={{ alignItems: 'center' }}>
@@ -403,37 +442,15 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
         <>
           <Group>
             <Text>Current Sprint:</Text>
-            {jiraBoard.jiraSprints.map(
-              sprint => sprint.state === 'active' && <Text>{sprint.name}</Text>
-            )}
+            {getActiveSprintName(jiraBoard)}
           </Group>
           <Group>
             <Text>Start Date:</Text>
-            {jiraBoard.jiraSprints.map(sprint => {
-              const startDate = new Date(sprint.startDate);
-              return (
-                sprint.state === 'active' && (
-                  <Text>
-                    {startDate.toLocaleTimeString()},{' '}
-                    {startDate.toLocaleDateString()}
-                  </Text>
-                )
-              );
-            })}
+            {getActiveSprintStartDate(jiraBoard)}
           </Group>
           <Group>
             <Text>End Date:</Text>
-            {jiraBoard.jiraSprints.map(sprint => {
-              const endDate = new Date(sprint.endDate);
-              return (
-                sprint.state === 'active' && (
-                  <Text>
-                    {endDate.toLocaleTimeString()},{' '}
-                    {endDate.toLocaleDateString()}
-                  </Text>
-                )
-              );
-            })}
+            {getActiveSprintEndDate(jiraBoard)}
           </Group>
           {jiraBoard.jiraSprints &&
             getActiveSprintBoard(
@@ -448,4 +465,4 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   );
 };
 
-export default ProjectManagementCard;
+export default ProjectManagementJiraCard;

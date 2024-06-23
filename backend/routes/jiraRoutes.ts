@@ -3,7 +3,7 @@ import {
   authorizeJiraAccount,
   callbackJiraAccount,
   getAllJiraBoardNamesByCourse,
-} from '../controllers/projectManagementController';
+} from '../controllers/jiraController';
 
 const router = express.Router();
 

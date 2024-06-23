@@ -7,6 +7,7 @@ import {
   Table,
   Text,
 } from '@mantine/core';
+import { GitHubProject } from '@shared/types/GitHubProjectData';
 import { JiraBoard } from '@shared/types/JiraData';
 import { TeamData } from '@shared/types/TeamData';
 import { User } from '@shared/types/User';
@@ -21,6 +22,8 @@ interface TeamCardProps {
   teachingTeam: User[];
   teamData: TeamData | null;
   teamDataList: TeamData[];
+  teamGitHubProject: GitHubProject | null;
+  gitHubProjectList: GitHubProject[];
   teamJiraBoard: JiraBoard | null;
   jiraBoardList: JiraBoard[];
   onUpdate: () => void;
@@ -35,6 +38,8 @@ const TeamCard: React.FC<TeamCardProps> = ({
   teachingTeam,
   teamData,
   teamDataList,
+  teamGitHubProject,
+  gitHubProjectList,
   teamJiraBoard,
   jiraBoardList,
   onUpdate,
@@ -42,6 +47,9 @@ const TeamCard: React.FC<TeamCardProps> = ({
 }) => {
   const [selectedTA, setSelectedTA] = useState<string | null>(TA?._id || null);
   const [selectedTeamData, setSelectedTeamData] = useState<string | null>(null);
+  const [selectedGitHubProject, setSelectedGitHubProject] = useState<
+    string | null
+  >(null);
   const [selectedJiraBoard, setSelectedJiraBoard] = useState<string | null>(
     null
   );
@@ -51,6 +59,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
   useEffect(() => {
     setSelectedTA(TA?._id || null);
     setSelectedTeamData(teamData?._id || null);
+    setSelectedGitHubProject(teamGitHubProject?._id || null);
     setSelectedJiraBoard(teamJiraBoard?._id || null);
   }, [TA]);
 
@@ -128,6 +137,29 @@ const TeamCard: React.FC<TeamCardProps> = ({
     }
   };
 
+  const handleGitHubProjectNameChange = async (
+    gitHubProjectId: string | null
+  ) => {
+    try {
+      const response = await fetch(apiRoute, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ gitHubProject: gitHubProjectId }),
+      });
+
+      if (!response.ok) {
+        console.error('Error updating team:', response.statusText);
+        return;
+      }
+      setSelectedGitHubProject(gitHubProjectId);
+      onUpdate();
+    } catch (error) {
+      console.error('Error updating team:', error);
+    }
+  };
+
   const handleJiraProjectNameChange = async (jiraBoardId: string | null) => {
     try {
       const response = await fetch(apiRoute, {
@@ -157,6 +189,11 @@ const TeamCard: React.FC<TeamCardProps> = ({
   const repoOptions = teamDataList.map(teamData => ({
     value: teamData._id,
     label: teamData.repoName,
+  }));
+
+  const gitHubProjectOptions = gitHubProjectList.map(gitHubProject => ({
+    value: gitHubProject._id,
+    label: gitHubProject.title,
   }));
 
   const jiraBoardOptions = jiraBoardList.map(jiraBoard => ({
@@ -234,6 +271,19 @@ const TeamCard: React.FC<TeamCardProps> = ({
           />
         ) : (
           <Text>{teamData ? teamData.repoName : 'None'}</Text>
+        )}
+      </Group>
+      <Group style={{ alignItems: 'center' }}>
+        <Text>GitHub Project:</Text>
+        {isEditing ? (
+          <Select
+            data={gitHubProjectOptions}
+            value={selectedGitHubProject}
+            onChange={e => handleGitHubProjectNameChange(e)}
+            placeholder="Select GitHub Project"
+          />
+        ) : (
+          <Text>{teamGitHubProject ? teamGitHubProject.title : 'None'}</Text>
         )}
       </Group>
       <Group style={{ alignItems: 'center' }}>

@@ -455,7 +455,7 @@ export const getTeamSetsFromCourse = async (
     populate: {
       path: 'teams',
       model: 'Team',
-      populate: ['members', 'TA', 'teamData', 'board'],
+      populate: ['members', 'TA', 'teamData', 'board', 'gitHubProject'],
     },
   });
   if (!course) {
@@ -575,6 +575,14 @@ export const getProjectManagementBoardFromCourse = async (
         {
           path: 'members TA',
           model: 'User',
+        },
+        {
+          path: 'gitHubProject',
+          model: 'GitHubProject',
+        },
+        {
+          path: 'teamData',
+          model: 'TeamData',
         },
         {
           path: 'board',

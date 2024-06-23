@@ -3,6 +3,7 @@ import { Review, TeamContribution, TeamPR } from '@shared/types/TeamData';
 import { Document, Types } from 'mongoose';
 import cron from 'node-cron';
 import { App, Octokit } from 'octokit';
+import GitHubProjectModel from '../models/GitHubProjectData';
 import TeamData from '../models/TeamData';
 import { getGitHubApp, getTeamMembers } from '../utils/github';
 
@@ -49,6 +50,161 @@ const getCourseData = async (
   });
   let allRepos = repos.data;
 
+  const data: any = await octokit.graphql(
+    `query {
+      organization(login: "${gitHubOrgName}") {
+        projectsV2(first: 5) {
+          nodes {
+            id
+            title
+            fields(first: 20) {
+              nodes {
+                ... on ProjectV2SingleSelectField {
+                  name
+                  options {
+                    id
+                    name
+                  }
+                }
+              }
+            }
+            items(first: 10) {
+              nodes {
+                type
+                content {
+                  __typename
+                  ... on Issue {
+                    id
+                    title
+                    url
+                    labels(first: 5) {
+                      nodes {
+                        name
+                      }
+                    }
+                    milestone {
+                      title
+                      dueOn
+                    }
+                    assignees(first: 5) {
+                      nodes {
+                        id
+                        login
+                        name
+                      }
+                    }
+                  }
+                  ... on PullRequest {
+                    id
+                    title
+                    url
+                    labels(first: 5) {
+                      nodes {
+                        name
+                      }
+                    }
+                    milestone {
+                      title
+                      dueOn
+                    }
+                    assignees(first: 5) {
+                      nodes {
+                        id
+                        login
+                        name
+                      }
+                    }
+                  }
+                }
+                fieldValues(first: 10) {
+                  nodes {
+                    ... on ProjectV2ItemFieldSingleSelectValue {
+                      field {
+                        ... on ProjectV2SingleSelectField {
+                          name
+                        }
+                      }
+                      name
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }`
+  );
+
+  // Transform the fetched data into the required schema format
+  const transformedProjects = data.organization.projectsV2.nodes.map(
+    (project: any) => ({
+      id: project.id,
+      title: project.title,
+      gitHubOrgName: gitHubOrgName,
+      items: project.items.nodes.map((item: any) => ({
+        type: item.type,
+        content: {
+          id: item.content.id,
+          title: item.content.title,
+          url: item.content.url,
+          labels: item.content.labels?.nodes.map((label: any) => ({
+            name: label.name,
+          })),
+          milestone: item.content.milestone
+            ? {
+                title: item.content.milestone.title,
+                dueOn: item.content.milestone.dueOn,
+              }
+            : null,
+          assignees: item.content.assignees.nodes.map((assignee: any) => ({
+            id: assignee.id,
+            login: assignee.login,
+            name: assignee.name,
+          })),
+          __typename: item.content.__typename,
+        },
+        fieldValues: item.fieldValues.nodes
+          .filter((field: any) => field.field) // Filter out empty objects
+          .map((field: any) => ({
+            name: field.name,
+            field: {
+              name: field.field.name,
+            },
+          })),
+      })),
+      fields: project.fields.nodes
+        .filter((field: any) => field.options) // Filter out empty objects
+        .map((field: any) => ({
+          name: field.name,
+          options: field.options
+            ? field.options.map((option: any) => ({
+                id: option.id,
+                name: option.name,
+              }))
+            : [],
+        })),
+    })
+  );
+
+  // Save each project into MongoDB using findOneAndUpdate
+  for (const project of transformedProjects) {
+    const query = { id: project.id, gitHubOrgName: project.gitHubOrgName };
+    const update = project;
+    const options = { new: true, upsert: true };
+
+    try {
+      const result = await GitHubProjectModel.findOneAndUpdate(
+        query,
+        update,
+        options
+      ).exec();
+      console.log('Saved GitHub Project:', result);
+    } catch (error) {
+      console.error('Error saving GitHub Project:', project.id, error);
+    }
+  }
+
   if (course.repoNameFilter) {
     allRepos = allRepos.filter(repo =>
       repo.name.includes(course.repoNameFilter as string)
@@ -58,7 +214,7 @@ const getCourseData = async (
   for (const repo of allRepos) {
     const teamContributions: Record<string, TeamContribution> = {};
 
-    const [commits, issues, prs, contributors] = await Promise.all([
+    const [commits, issues, prs, contributors, milestones] = await Promise.all([
       octokit.rest.repos.listCommits({
         owner: gitHubOrgName,
         repo: repo.name,
@@ -75,6 +231,11 @@ const getCourseData = async (
       octokit.rest.repos.listContributors({
         owner: gitHubOrgName,
         repo: repo.name,
+      }),
+      octokit.rest.issues.listMilestones({
+        owner: gitHubOrgName,
+        repo: repo.name,
+        state: 'all',
       }),
     ]);
 
@@ -228,6 +389,7 @@ const getCourseData = async (
       updatedIssues: issues.data.map(issue => issue.updated_at),
       teamContributions,
       teamPRs,
+      milestones: milestones.data,
     };
 
     console.log('Saving team data:', teamData);
