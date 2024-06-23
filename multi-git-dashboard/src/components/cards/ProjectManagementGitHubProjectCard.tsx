@@ -12,12 +12,11 @@ interface ProjectManagementGitHubCardProps {
 const ProjectManagementGitHubProjectCard: React.FC<
   ProjectManagementGitHubCardProps
 > = ({ TA, gitHubProject, teamData }) => {
-
   const getMilestoneTitle = (teamData: TeamData) => {
-    const openMilestone = teamData.milestones.find(milestone => milestone.state === 'open');
-    return (
-      <Text>{openMilestone ? openMilestone.title : 'None'}</Text>
+    const openMilestone = teamData.milestones.find(
+      milestone => milestone.state === 'open'
     );
+    return <Text>{openMilestone ? openMilestone.title : 'None'}</Text>;
   };
 
   return (
@@ -30,13 +29,14 @@ const ProjectManagementGitHubProjectCard: React.FC<
         <Text>GitHub Project:</Text>
         <Text>{gitHubProject ? gitHubProject.title : 'None'}</Text>
       </Group>
-      {teamData && gitHubProject && (<>
-        <Group style={{ alignItems: 'center' }}>
-        <Text>Current Milestone:</Text>
-        {getMilestoneTitle(teamData)}
-      </Group>
-      </>)
-}
+      {teamData && gitHubProject && (
+        <>
+          <Group style={{ alignItems: 'center' }}>
+            <Text>Current Milestone:</Text>
+            {getMilestoneTitle(teamData)}
+          </Group>
+        </>
+      )}
     </Stack>
   );
 };
