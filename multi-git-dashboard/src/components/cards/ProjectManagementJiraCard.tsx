@@ -389,6 +389,47 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
     );
   };
 
+  const getActiveSprint = (jiraBoard: JiraBoard) => {
+    return jiraBoard.jiraSprints.find(sprint => sprint.state === 'active');
+  };
+
+  const getActiveSprintName = (jiraBoard: JiraBoard) => {
+    const activeSprint = getActiveSprint(jiraBoard);
+    return <Text>{activeSprint ? activeSprint.name : 'No active sprint'}</Text>
+  };
+
+  const getActiveSprintStartDate = (jiraBoard: JiraBoard) => {
+    const activeSprint = getActiveSprint(jiraBoard);
+
+    if (!activeSprint) {
+      return <Text>{'No active sprint'}</Text>;
+    }
+
+    const startDate = new Date(activeSprint.startDate);
+    return (
+      <Text>
+        {startDate.toLocaleTimeString()},{' '}
+        {startDate.toLocaleDateString()}
+      </Text>
+    );
+  };
+
+  const getActiveSprintEndDate = (jiraBoard: JiraBoard) => {
+    const activeSprint = getActiveSprint(jiraBoard);
+
+    if (!activeSprint) {
+      return <Text>{'No active sprint'}</Text>;
+    }
+
+    const endDate = new Date(activeSprint.endDate);
+    return (
+      <Text>
+        {endDate.toLocaleTimeString()},{' '}
+        {endDate.toLocaleDateString()}
+      </Text>
+    );
+  };
+
   return (
     <Stack>
       <Group style={{ alignItems: 'center' }}>
@@ -403,37 +444,15 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
         <>
           <Group>
             <Text>Current Sprint:</Text>
-            {jiraBoard.jiraSprints.map(
-              sprint => sprint.state === 'active' && <Text>{sprint.name}</Text>
-            )}
+            {getActiveSprintName(jiraBoard)}
           </Group>
           <Group>
             <Text>Start Date:</Text>
-            {jiraBoard.jiraSprints.map(sprint => {
-              const startDate = new Date(sprint.startDate);
-              return (
-                sprint.state === 'active' && (
-                  <Text>
-                    {startDate.toLocaleTimeString()},{' '}
-                    {startDate.toLocaleDateString()}
-                  </Text>
-                )
-              );
-            })}
+            {getActiveSprintStartDate(jiraBoard)}
           </Group>
           <Group>
             <Text>End Date:</Text>
-            {jiraBoard.jiraSprints.map(sprint => {
-              const endDate = new Date(sprint.endDate);
-              return (
-                sprint.state === 'active' && (
-                  <Text>
-                    {endDate.toLocaleTimeString()},{' '}
-                    {endDate.toLocaleDateString()}
-                  </Text>
-                )
-              );
-            })}
+            {getActiveSprintEndDate(jiraBoard)}
           </Group>
           {jiraBoard.jiraSprints &&
             getActiveSprintBoard(
