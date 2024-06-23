@@ -85,6 +85,7 @@ const ProjectManagementInfo: React.FC<ProjectManagementProps> = ({
                   key={team._id}
                   TA={team.TA}
                   gitHubProject={team.gitHubProject}
+                  teamData={team.teamData}
                 />
               )}
             </Accordion.Panel>
