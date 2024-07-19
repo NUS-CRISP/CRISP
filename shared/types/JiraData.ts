@@ -35,7 +35,13 @@ export interface JiraIssue extends Document {
     };
     resolution: {
       name: string;
-    }
+    };
+    sprint: {
+      self: string;
+    };
+    closedSprints: {
+      self: string;
+    }[];
   };
 }
 

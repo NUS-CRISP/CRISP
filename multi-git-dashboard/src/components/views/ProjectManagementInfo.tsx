@@ -110,7 +110,7 @@ const ProjectManagementInfo: React.FC<ProjectManagementProps> = ({
             </Notification>
           )}
           {hasFacultyPermission && (
-            <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
+            <Group mb={'16px'} mt={'16px'}>
               <Button onClick={handleOAuthButtonClick}>
                 {jiraRegistrationStatus
                   ? 'Authorize Another Jira Organization'
