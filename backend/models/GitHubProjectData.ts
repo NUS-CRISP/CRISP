@@ -26,6 +26,7 @@ const LabelSchema: Schema = new Schema<Label>(
 const MilestoneSchema: Schema = new Schema<Milestone>(
   {
     title: { type: String, required: true },
+    createdAt: { type: Date, required: true },
     dueOn: { type: Date, required: false },
   },
   { _id: false }

@@ -4,6 +4,7 @@ export interface Label {
 
 export interface Milestone {
   title: string;
+  createdAt: Date;
   dueOn: Date;
 }
 

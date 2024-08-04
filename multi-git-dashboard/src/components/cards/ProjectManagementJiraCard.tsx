@@ -320,7 +320,7 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
       0
     );
 
-    // Calculate the velocity (average completed story points)
+    // Calculate the velocity (average completed issues)
     const issuesVelocity =
       sprintData.length > 0 ? totalCompletedIssues / sprintData.length : 0;
 

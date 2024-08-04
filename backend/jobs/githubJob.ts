@@ -84,6 +84,7 @@ const getCourseData = async (
                     }
                     milestone {
                       title
+                      createdAt
                       dueOn
                     }
                     assignees(first: 5) {
@@ -105,6 +106,7 @@ const getCourseData = async (
                     }
                     milestone {
                       title
+                      createdAt
                       dueOn
                     }
                     assignees(first: 5) {
@@ -154,6 +156,7 @@ const getCourseData = async (
           milestone: item.content.milestone
             ? {
                 title: item.content.milestone.title,
+                createdAt: item.content.milestone.createdAt,
                 dueOn: item.content.milestone.dueOn,
               }
             : null,
