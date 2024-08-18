@@ -3,9 +3,15 @@ import { Review, TeamContribution, TeamPR } from '@shared/types/TeamData';
 import { Document, Types } from 'mongoose';
 import cron from 'node-cron';
 import { App, Octokit } from 'octokit';
-import GitHubProjectModel from '../models/GitHubProjectData';
+import GitHubProjectModel from '@models/GitHubProjectData';
 import TeamData from '../models/TeamData';
 import { getGitHubApp, getTeamMembers } from '../utils/github';
+import {
+  JiraBoardModel,
+  JiraIssueModel,
+  JiraSprintModel,
+} from '@models/JiraData';
+import { JiraBoard, JiraIssue, JiraSprint } from '@shared/types/JiraData';
 
 const fetchAndSaveTeamData = async () => {
   const app: App = getGitHubApp();
@@ -32,12 +38,7 @@ const fetchAndSaveTeamData = async () => {
   console.log('fetchAndSaveTeamData job done');
 };
 
-const getCourseData = async (
-  octokit: Octokit,
-  course: Document<unknown, {}, Course> &
-    Course &
-    Required<{ _id: Types.ObjectId }>
-) => {
+const getCourseData = async (octokit: Octokit, course: any) => {
   if (!course.gitHubOrgName) return;
   const gitHubOrgName = course.gitHubOrgName;
 
@@ -59,6 +60,9 @@ const getCourseData = async (
             title
             fields(first: 20) {
               nodes {
+                ... on ProjectV2Field {
+                  name
+                }
                 ... on ProjectV2SingleSelectField {
                   name
                   options {
@@ -83,6 +87,7 @@ const getCourseData = async (
                       }
                     }
                     milestone {
+                      id
                       title
                       createdAt
                       dueOn
@@ -105,6 +110,7 @@ const getCourseData = async (
                       }
                     }
                     milestone {
+                      id
                       title
                       createdAt
                       dueOn
@@ -155,6 +161,7 @@ const getCourseData = async (
           })),
           milestone: item.content.milestone
             ? {
+                id: item.content.milestone.id,
                 title: item.content.milestone.title,
                 createdAt: item.content.milestone.createdAt,
                 dueOn: item.content.milestone.dueOn,
@@ -191,18 +198,33 @@ const getCourseData = async (
   );
 
   // Save each project into MongoDB using findOneAndUpdate
+  let projectId = 1;
   for (const project of transformedProjects) {
-    const query = { id: project.id, gitHubOrgName: project.gitHubOrgName };
-    const update = project;
-    const options = { new: true, upsert: true };
-
     try {
-      const result = await GitHubProjectModel.findOneAndUpdate(
-        query,
-        update,
-        options
-      ).exec();
-      console.log('Saved GitHub Project:', result);
+      const jiraBoard: Omit<JiraBoard, '_id'> = {
+        id: projectId++,
+        self: project.id,
+        name: project.title,
+        type: 'GitHub Project',
+        jiraLocation: {
+          displayName: project.title,
+          projectName: project.title,
+          name: project.title,
+        },
+        columns: project.fields.find(
+          (field: { name: string }) => field.name === 'Status'
+        ).options,
+        jiraIssues: [],
+        jiraSprints: [],
+        course: course._id,
+      };
+
+      await JiraBoardModel.findOneAndUpdate({ self: project.id }, jiraBoard, {
+        upsert: true,
+        new: true,
+      });
+
+      console.log('Saved GitHub Project');
     } catch (error) {
       console.error('Error saving GitHub Project:', project.id, error);
     }
