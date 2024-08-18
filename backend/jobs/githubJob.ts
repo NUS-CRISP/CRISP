@@ -89,8 +89,11 @@ const getCourseData = async (octokit: Octokit, course: any) => {
                     milestone {
                       id
                       title
+                      description
+                      number
                       createdAt
                       dueOn
+                      state
                     }
                     assignees(first: 5) {
                       nodes {
@@ -112,8 +115,11 @@ const getCourseData = async (octokit: Octokit, course: any) => {
                     milestone {
                       id
                       title
+                      description
+                      number
                       createdAt
                       dueOn
+                      state
                     }
                     assignees(first: 5) {
                       nodes {
@@ -163,8 +169,11 @@ const getCourseData = async (octokit: Octokit, course: any) => {
             ? {
                 id: item.content.milestone.id,
                 title: item.content.milestone.title,
+                description: item.content.milestone.description,
+                number: item.content.milestone.number,
                 createdAt: item.content.milestone.createdAt,
                 dueOn: item.content.milestone.dueOn,
+                state: item.content.milestone.state,
               }
             : null,
           assignees: item.content.assignees.nodes.map((assignee: any) => ({
@@ -219,10 +228,94 @@ const getCourseData = async (octokit: Octokit, course: any) => {
         course: course._id,
       };
 
-      await JiraBoardModel.findOneAndUpdate({ self: project.id }, jiraBoard, {
-        upsert: true,
-        new: true,
-      });
+      const board = await JiraBoardModel.findOneAndUpdate(
+        { self: project.id },
+        jiraBoard,
+        {
+          upsert: true,
+          new: true,
+        }
+      );
+
+      for (const item of project.items) {
+        const jiraIssue: Omit<JiraIssue, '_id'> = {
+          id: item.content.id,
+          self: item.content.id,
+          key: project.title,
+          storyPoints: 0,
+          fields: {
+            summary: item.content.title,
+            issuetype: {
+              name: item.type,
+              subtask: false,
+            },
+            status: {
+              name: item.fieldValues.find(
+                (fieldValue: { field: { name: string } }) =>
+                  fieldValue.field.name === 'Status'
+              ).name,
+            },
+            assignee: {
+              displayName:
+                item.content.assignees.length > 0
+                  ? item.content.assignees[0].name
+                  : null,
+            },
+          },
+        };
+
+        const self = jiraIssue.self;
+
+        const issue = await JiraIssueModel.findOneAndUpdate(
+          { self: self },
+          jiraIssue,
+          {
+            upsert: true,
+            new: true,
+          }
+        );
+
+        const sprint = await JiraSprintModel.findOneAndUpdate(
+          { self: item.content.milestone.id },
+          {
+            $setOnInsert: {
+              id: item.content.milestone.number,
+              self: item.content.milestone.id,
+              name: item.content.title,
+              jiraIssues: [], // Initialize jiraIssues as an array
+              state: item.content.milestone.state === 'CLOSED' ? 'closed' : 'active',
+              startDate: item.content.milestone.createdAt,
+              endDate: item.content.milestone.dueOn,
+              createdDate: item.content.milestone.createdAt,
+              originBoardId: board.id,
+              goal: item.content.milestone.description,
+            },
+          },
+          {
+            upsert: true,
+            new: true,
+          }
+        );
+
+        // Now push the issue into the jiraIssues array
+        await JiraSprintModel.findOneAndUpdate(
+          { self: item.content.milestone.id },
+          { $push: { jiraIssues: issue._id } },
+          {}
+        );
+
+        await JiraBoardModel.findOneAndUpdate(
+          { self: project.id },
+          { $addToSet: { jiraSprints: sprint._id } },
+          {}
+        );
+
+        await JiraBoardModel.findOneAndUpdate(
+          { self: project.id },
+          { $push: { jiraIssues: issue._id } },
+          {}
+        );
+      }
 
       console.log('Saved GitHub Project');
     } catch (error) {

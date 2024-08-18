@@ -37,7 +37,7 @@ const issueSchema: Schema = new Schema<JiraIssue>({
   storyPoints: { type: Number },
   fields: {
     summary: { type: String, required: true },
-    statuscategorychangedate: { type: Date, required: true },
+    statuscategorychangedate: { type: Date },
     issuetype: {
       name: { type: String, required: true },
       subtask: { type: Boolean, required: true },

@@ -22,7 +22,7 @@ export interface JiraIssue {
   storyPoints: number;
   fields: {
     summary: string;
-    statuscategorychangedate: Date;
+    statuscategorychangedate?: Date;
     issuetype: {
       name: string;
       subtask: boolean;
@@ -30,16 +30,16 @@ export interface JiraIssue {
     status: {
       name: string;
     };
-    assignee: {
+    assignee?: {
       displayName: string;
     };
-    resolution: {
+    resolution?: {
       name: string;
     };
-    sprint: {
+    sprint?: {
       self: string;
     };
-    closedSprints: {
+    closedSprints?: {
       self: string;
     }[];
   };
