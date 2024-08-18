@@ -18,7 +18,6 @@ export const teamSchema = new Schema<Team>({
   members: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   teamData: { type: Schema.Types.ObjectId, ref: 'TeamData' },
   board: { type: Schema.Types.ObjectId, ref: 'JiraBoard' },
-  gitHubProject: { type: Schema.Types.ObjectId, ref: 'GitHubProject' },
 });
 
 const TeamModel = mongoose.model<Team>('Team', teamSchema);

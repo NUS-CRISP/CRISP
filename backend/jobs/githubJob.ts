@@ -1,17 +1,15 @@
-import CourseModel, { Course } from '@models/Course';
-import { Review, TeamContribution, TeamPR } from '@shared/types/TeamData';
-import { Document, Types } from 'mongoose';
-import cron from 'node-cron';
-import { App, Octokit } from 'octokit';
-import GitHubProjectModel from '@models/GitHubProjectData';
-import TeamData from '../models/TeamData';
-import { getGitHubApp, getTeamMembers } from '../utils/github';
+import CourseModel from '@models/Course';
 import {
   JiraBoardModel,
   JiraIssueModel,
   JiraSprintModel,
 } from '@models/JiraData';
-import { JiraBoard, JiraIssue, JiraSprint } from '@shared/types/JiraData';
+import { JiraBoard, JiraIssue } from '@shared/types/JiraData';
+import { Review, TeamContribution, TeamPR } from '@shared/types/TeamData';
+import cron from 'node-cron';
+import { App, Octokit } from 'octokit';
+import TeamData from '../models/TeamData';
+import { getGitHubApp, getTeamMembers } from '../utils/github';
 
 const fetchAndSaveTeamData = async () => {
   const app: App = getGitHubApp();
@@ -283,7 +281,8 @@ const getCourseData = async (octokit: Octokit, course: any) => {
               self: item.content.milestone.id,
               name: item.content.title,
               jiraIssues: [], // Initialize jiraIssues as an array
-              state: item.content.milestone.state === 'CLOSED' ? 'closed' : 'active',
+              state:
+                item.content.milestone.state === 'CLOSED' ? 'closed' : 'active',
               startDate: item.content.milestone.createdAt,
               endDate: item.content.milestone.dueOn,
               createdDate: item.content.milestone.createdAt,

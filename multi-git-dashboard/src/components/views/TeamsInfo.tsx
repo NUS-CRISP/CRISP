@@ -15,14 +15,12 @@ import TeamSetForm from '../forms/TeamSetForm';
 import { User } from '@shared/types/User';
 import { TeamData } from '@shared/types/TeamData';
 import { JiraBoard } from '@shared/types/JiraData';
-import { GitHubProject } from '@shared/types/GitHubProjectData';
 
 interface TeamsInfoProps {
   courseId: string;
   teamSets: TeamSet[];
   teachingTeam: User[];
   teamDatas: TeamData[];
-  gitHubProjectDatas: GitHubProject[];
   jiraBoards: JiraBoard[];
   hasFacultyPermission: boolean;
   onUpdate: () => void;
@@ -33,7 +31,6 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({
   teamSets,
   teachingTeam,
   teamDatas,
-  gitHubProjectDatas,
   jiraBoards,
   hasFacultyPermission,
   onUpdate,
@@ -125,8 +122,6 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({
         teachingTeam={teachingTeam}
         teamData={team.teamData}
         teamDataList={teamDatas}
-        teamGitHubProject={team.gitHubProject}
-        gitHubProjectList={gitHubProjectDatas}
         teamJiraBoard={team.board}
         jiraBoardList={jiraBoards}
         members={team.members}
