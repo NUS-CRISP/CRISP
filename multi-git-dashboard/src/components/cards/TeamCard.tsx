@@ -237,13 +237,13 @@ const TeamCard: React.FC<TeamCardProps> = ({
         )}
       </Group>
       <Group style={{ alignItems: 'center' }}>
-        <Text>Jira Project:</Text>
+        <Text>Project Board:</Text>
         {isEditing ? (
           <Select
             data={jiraBoardOptions}
             value={selectedJiraBoard}
             onChange={e => handleJiraProjectNameChange(e)}
-            placeholder="Select Jira Project"
+            placeholder="Select Project Board"
           />
         ) : (
           <Text>

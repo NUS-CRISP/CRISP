@@ -435,7 +435,7 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
         <Text>{TA ? TA.name : 'None'}</Text>
       </Group>
       <Group style={{ alignItems: 'center' }}>
-        <Text>Jira Project:</Text>
+        <Text>Project Board:</Text>
         <Text>{jiraBoard ? jiraBoard.jiraLocation.projectName : 'None'}</Text>
       </Group>
       {jiraBoard && (
