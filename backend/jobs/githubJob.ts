@@ -52,7 +52,7 @@ const getCourseData = async (octokit: Octokit, course: any) => {
   const data: any = await octokit.graphql(
     `query {
       organization(login: "${gitHubOrgName}") {
-        projectsV2(first: 5) {
+        projectsV2(first: 20, orderBy: {field: UPDATED_AT, direction: DESC}) {
           nodes {
             id
             title
@@ -70,7 +70,7 @@ const getCourseData = async (octokit: Octokit, course: any) => {
                 }
               }
             }
-            items(first: 10) {
+            items(first: 50) {
               nodes {
                 type
                 content {
@@ -177,11 +177,13 @@ const getCourseData = async (octokit: Octokit, course: any) => {
                 state: item.content.milestone.state,
               }
             : null,
-          assignees: item.content.assignees.nodes.map((assignee: any) => ({
-            id: assignee.id,
-            login: assignee.login,
-            name: assignee.name,
-          })),
+          assignees: item.content.assignees
+            ? item.content.assignees.nodes.map((assignee: any) => ({
+                id: assignee.id,
+                login: assignee.login,
+                name: assignee.name,
+              }))
+            : [],
           __typename: item.content.__typename,
         },
         fieldValues: item.fieldValues.nodes
