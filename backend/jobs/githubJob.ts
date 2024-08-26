@@ -299,7 +299,7 @@ const getCourseData = async (octokit: Octokit, course: any) => {
         // Now push the issue into the jiraIssues array
         await JiraSprintModel.findOneAndUpdate(
           { self: item.content.milestone.id },
-          { $push: { jiraIssues: issue._id } },
+          { $addToSet: { jiraIssues: issue._id } },
           {}
         );
 
