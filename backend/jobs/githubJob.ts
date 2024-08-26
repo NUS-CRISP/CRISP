@@ -79,6 +79,7 @@ const getCourseData = async (octokit: Octokit, course: any) => {
                     id
                     title
                     url
+                    closed
                     labels(first: 5) {
                       nodes {
                         name
@@ -105,6 +106,7 @@ const getCourseData = async (octokit: Octokit, course: any) => {
                     id
                     title
                     url
+                    closed
                     labels(first: 5) {
                       nodes {
                         name
@@ -160,6 +162,7 @@ const getCourseData = async (octokit: Octokit, course: any) => {
           id: item.content.id,
           title: item.content.title,
           url: item.content.url,
+          closed: item.content.closed,
           labels: item.content.labels?.nodes.map((label: any) => ({
             name: label.name,
           })),
@@ -243,6 +246,7 @@ const getCourseData = async (octokit: Octokit, course: any) => {
           storyPoints: 0,
           fields: {
             summary: item.content.title,
+            resolution: item.content.closed ? { name: 'Done' } : undefined,
             issuetype: {
               name: item.type,
               subtask: false,
