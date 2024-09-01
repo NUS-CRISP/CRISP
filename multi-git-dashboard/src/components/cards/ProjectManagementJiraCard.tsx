@@ -421,7 +421,7 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
     }
 
     if (!activeSprint.endDate) {
-      return <Text>{'-'}</Text>
+      return <Text>{'-'}</Text>;
     }
 
     const endDate = new Date(activeSprint.endDate);
