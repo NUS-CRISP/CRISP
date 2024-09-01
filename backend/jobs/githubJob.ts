@@ -49,255 +49,276 @@ const getCourseData = async (octokit: Octokit, course: any) => {
   });
   let allRepos = repos.data;
 
-  const data: any = await octokit.graphql(
-    `query {
-      organization(login: "${gitHubOrgName}") {
-        projectsV2(first: 20, orderBy: {field: UPDATED_AT, direction: DESC}) {
-          nodes {
-            id
-            title
-            fields(first: 20) {
-              nodes {
-                ... on ProjectV2Field {
-                  name
-                }
-                ... on ProjectV2SingleSelectField {
-                  name
-                  options {
-                    id
+  // GraphQL Pagination
+  let hasNextPage = true;
+  let endCursor = '';
+  let counter = 0;
+
+  while (hasNextPage && counter < 25) {
+    const data: any = await octokit.graphql(
+      `query {
+        organization(login: "${gitHubOrgName}") {
+          projectsV2(first: 1, orderBy: {field: UPDATED_AT, direction: DESC}, after: "${endCursor}") {
+            pageInfo {
+              endCursor
+              hasNextPage
+              hasPreviousPage
+            }
+            nodes {
+              id
+              title
+              fields(first: 20) {
+                nodes {
+                  ... on ProjectV2Field {
                     name
                   }
-                }
-              }
-            }
-            items(first: 20) {
-              nodes {
-                type
-                content {
-                  __typename
-                  ... on Issue {
-                    id
-                    title
-                    url
-                    closed
-                    labels(first: 5) {
-                      nodes {
-                        name
-                      }
-                    }
-                    milestone {
+                  ... on ProjectV2SingleSelectField {
+                    name
+                    options {
                       id
-                      title
-                      description
-                      number
-                      createdAt
-                      dueOn
-                      state
-                    }
-                    assignees(first: 5) {
-                      nodes {
-                        id
-                        login
-                        name
-                      }
-                    }
-                  }
-                }
-                fieldValues(first: 10) {
-                  nodes {
-                    ... on ProjectV2ItemFieldSingleSelectValue {
-                      field {
-                        ... on ProjectV2SingleSelectField {
-                          name
-                        }
-                      }
                       name
                     }
                   }
                 }
               }
+              items(first: 100) {
+                nodes {
+                  type
+                  content {
+                    __typename
+                    ... on Issue {
+                      id
+                      title
+                      url
+                      closed
+                      labels(first: 5) {
+                        nodes {
+                          name
+                        }
+                      }
+                      milestone {
+                        id
+                        title
+                        description
+                        number
+                        createdAt
+                        dueOn
+                        state
+                      }
+                      assignees(first: 5) {
+                        nodes {
+                          id
+                          login
+                          name
+                        }
+                      }
+                    }
+                  }
+                  fieldValues(first: 10) {
+                    nodes {
+                      ... on ProjectV2ItemFieldSingleSelectValue {
+                        field {
+                          ... on ProjectV2SingleSelectField {
+                            name
+                          }
+                        }
+                        name
+                      }
+                    }
+                  }
+                }
+              }
             }
           }
         }
-      }
-    }`
-  );
+      }`
+    );
 
-  // Transform the fetched data into the required schema format
-  const transformedProjects = data.organization.projectsV2.nodes.map(
-    (project: any) => ({
-      id: project.id,
-      title: project.title,
-      gitHubOrgName: gitHubOrgName,
-      items: project.items.nodes.map((item: any) => ({
-        type: item.type,
-        content: {
-          id: item.content.id,
-          title: item.content.title,
-          url: item.content.url,
-          closed: item.content.closed,
-          labels: item.content.labels?.nodes.map((label: any) => ({
-            name: label.name,
-          })),
-          milestone: item.content.milestone
-            ? {
-                id: item.content.milestone.id,
-                title: item.content.milestone.title,
-                description: item.content.milestone.description,
-                number: item.content.milestone.number,
-                createdAt: item.content.milestone.createdAt,
-                dueOn: item.content.milestone.dueOn,
-                state: item.content.milestone.state,
-              }
-            : null,
-          assignees: item.content.assignees
-            ? item.content.assignees.nodes.map((assignee: any) => ({
-                id: assignee.id,
-                login: assignee.login,
-                name: assignee.name,
-              }))
-            : [],
-          __typename: item.content.__typename,
-        },
-        fieldValues: item.fieldValues.nodes
-          .filter((field: any) => field.field) // Filter out empty objects
+    endCursor = data.organization.projectsV2.pageInfo.endCursor;
+    hasNextPage = data.organization.projectsV2.pageInfo.hasNextPage;
+    counter++;
+
+    // Transform the fetched data into the required schema format
+    const transformedProjects = data.organization.projectsV2.nodes.map(
+      (project: any) => ({
+        id: project.id,
+        title: project.title,
+        gitHubOrgName: gitHubOrgName,
+        items: project.items.nodes.map((item: any) => ({
+          type: item.type,
+          content: {
+            id: item.content.id,
+            title: item.content.title,
+            url: item.content.url,
+            closed: item.content.closed,
+            labels: item.content.labels?.nodes.map((label: any) => ({
+              name: label.name,
+            })),
+            milestone: item.content.milestone
+              ? {
+                  id: item.content.milestone.id,
+                  title: item.content.milestone.title,
+                  description: item.content.milestone.description,
+                  number: item.content.milestone.number,
+                  createdAt: item.content.milestone.createdAt,
+                  dueOn: item.content.milestone.dueOn,
+                  state: item.content.milestone.state,
+                }
+              : null,
+            assignees: item.content.assignees
+              ? item.content.assignees.nodes.map((assignee: any) => ({
+                  id: assignee.id,
+                  login: assignee.login,
+                  name: assignee.name,
+                }))
+              : [],
+            __typename: item.content.__typename,
+          },
+          fieldValues: item.fieldValues.nodes
+            .filter((field: any) => field.field) // Filter out empty objects
+            .map((field: any) => ({
+              name: field.name,
+              field: {
+                name: field.field.name,
+              },
+            })),
+        })),
+        fields: project.fields.nodes
+          .filter((field: any) => field.options) // Filter out empty objects
           .map((field: any) => ({
             name: field.name,
-            field: {
-              name: field.field.name,
-            },
+            options: field.options
+              ? field.options.map((option: any) => ({
+                  id: option.id,
+                  name: option.name,
+                }))
+              : [],
           })),
-      })),
-      fields: project.fields.nodes
-        .filter((field: any) => field.options) // Filter out empty objects
-        .map((field: any) => ({
-          name: field.name,
-          options: field.options
-            ? field.options.map((option: any) => ({
-                id: option.id,
-                name: option.name,
-              }))
-            : [],
-        })),
-    })
-  );
+      })
+    );
 
-  // Save each project into MongoDB using findOneAndUpdate
-  let projectId = 1;
-  for (const project of transformedProjects) {
-    try {
-      const jiraBoard: Omit<JiraBoard, '_id'> = {
-        id: projectId++,
-        self: project.id,
-        name: project.title,
-        type: 'GitHub Project',
-        jiraLocation: {
-          displayName: project.title,
-          projectName: project.title,
+    // Save each project into MongoDB using findOneAndUpdate
+    let projectId = 1;
+    for (const project of transformedProjects) {
+      try {
+        const jiraBoard: Omit<JiraBoard, '_id'> = {
+          id: projectId++,
+          self: project.id,
           name: project.title,
-        },
-        columns: project.fields.find(
-          (field: { name: string }) => field.name === 'Status'
-        ).options,
-        jiraIssues: [],
-        jiraSprints: [],
-        course: course._id,
-      };
-
-      const board = await JiraBoardModel.findOneAndUpdate(
-        { self: project.id },
-        jiraBoard,
-        {
-          upsert: true,
-          new: true,
-        }
-      );
-
-      for (const item of project.items) {
-        const jiraIssue: Omit<JiraIssue, '_id'> = {
-          id: item.content.id,
-          self: item.content.id,
-          key: project.title,
-          storyPoints: 0,
-          fields: {
-            summary: item.content.title,
-            resolution: item.content.closed ? { name: 'Done' } : undefined,
-            issuetype: {
-              name: item.type,
-              subtask: false,
-            },
-            status: {
-              name: item.fieldValues.find(
-                (fieldValue: { field: { name: string } }) =>
-                  fieldValue.field.name === 'Status'
-              ).name,
-            },
-            assignee: {
-              displayName:
-                item.content.assignees.length > 0
-                  ? item.content.assignees[0].name
-                  : null,
-            },
+          type: 'GitHub Project',
+          jiraLocation: {
+            displayName: project.title,
+            projectName: project.title,
+            name: project.title,
           },
+          columns: project.fields.find(
+            (field: { name: string }) => field.name === 'Status'
+          ).options,
+          jiraIssues: [],
+          jiraSprints: [],
+          course: course._id,
         };
 
-        const self = jiraIssue.self;
-
-        const issue = await JiraIssueModel.findOneAndUpdate(
-          { self: self },
-          jiraIssue,
+        const board = await JiraBoardModel.findOneAndUpdate(
+          { self: project.id },
+          jiraBoard,
           {
             upsert: true,
             new: true,
           }
         );
 
-        const sprint = await JiraSprintModel.findOneAndUpdate(
-          { self: item.content.milestone.id },
-          {
-            $setOnInsert: {
-              id: item.content.milestone.number,
-              self: item.content.milestone.id,
-              name: item.content.title,
-              jiraIssues: [], // Initialize jiraIssues as an array
-              state:
-                item.content.milestone.state === 'CLOSED' ? 'closed' : 'active',
-              startDate: item.content.milestone.createdAt,
-              endDate: item.content.milestone.dueOn,
-              createdDate: item.content.milestone.createdAt,
-              originBoardId: board.id,
-              goal: item.content.milestone.description,
+        for (const item of project.items) {
+          const jiraIssue: Omit<JiraIssue, '_id'> = {
+            id: item.content.id,
+            self: item.content.id,
+            key: project.title,
+            storyPoints: 0,
+            fields: {
+              summary: item.content.title,
+              resolution: item.content.closed ? { name: 'Done' } : undefined,
+              issuetype: {
+                name: item.type,
+                subtask: false,
+              },
+              status: {
+                name:
+                  item.fieldValues.find(
+                    (fieldValue: { field: { name: string } }) =>
+                      fieldValue.field.name === 'Status'
+                  )?.name ?? 'Unknown',
+              },
+              assignee: {
+                displayName:
+                  item.content.assignees.length > 0
+                    ? item.content.assignees[0].name
+                    : null,
+              },
             },
-          },
-          {
-            upsert: true,
-            new: true,
+          };
+
+          const self = jiraIssue.self;
+
+          const issue = await JiraIssueModel.findOneAndUpdate(
+            { self: self },
+            jiraIssue,
+            {
+              upsert: true,
+              new: true,
+            }
+          );
+
+          if (item.content.milestone) {
+            const sprint = await JiraSprintModel.findOneAndUpdate(
+              { self: item.content.milestone.id },
+              {
+                $setOnInsert: {
+                  id: item.content.milestone.number,
+                  self: item.content.milestone.id,
+                  name: item.content.title,
+                  jiraIssues: [], // Initialize jiraIssues as an array
+                  state:
+                    item.content.milestone.state === 'CLOSED'
+                      ? 'closed'
+                      : 'active',
+                  startDate: item.content.milestone.createdAt,
+                  endDate: item.content.milestone.dueOn,
+                  createdDate: item.content.milestone.createdAt,
+                  originBoardId: board.id,
+                  goal: item.content.milestone.description,
+                },
+              },
+              {
+                upsert: true,
+                new: true,
+              }
+            );
+
+            // Now push the issue into the jiraIssues array
+            await JiraSprintModel.findOneAndUpdate(
+              { self: item.content.milestone.id },
+              { $addToSet: { jiraIssues: issue._id } },
+              {}
+            );
+
+            await JiraBoardModel.findOneAndUpdate(
+              { self: project.id },
+              { $addToSet: { jiraSprints: sprint._id } },
+              {}
+            );
           }
-        );
 
-        // Now push the issue into the jiraIssues array
-        await JiraSprintModel.findOneAndUpdate(
-          { self: item.content.milestone.id },
-          { $addToSet: { jiraIssues: issue._id } },
-          {}
-        );
+          await JiraBoardModel.findOneAndUpdate(
+            { self: project.id },
+            { $push: { jiraIssues: issue._id } },
+            {}
+          );
+        }
 
-        await JiraBoardModel.findOneAndUpdate(
-          { self: project.id },
-          { $addToSet: { jiraSprints: sprint._id } },
-          {}
-        );
-
-        await JiraBoardModel.findOneAndUpdate(
-          { self: project.id },
-          { $push: { jiraIssues: issue._id } },
-          {}
-        );
+        console.log('Saved GitHub Project: ', project.title);
+      } catch (error) {
+        console.error('Error saving GitHub Project: ', project.id, error);
       }
-
-      console.log('Saved GitHub Project');
-    } catch (error) {
-      console.error('Error saving GitHub Project:', project.id, error);
     }
   }
 
