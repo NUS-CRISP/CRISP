@@ -70,39 +70,12 @@ const getCourseData = async (octokit: Octokit, course: any) => {
                 }
               }
             }
-            items(first: 50) {
+            items(first: 20) {
               nodes {
                 type
                 content {
                   __typename
                   ... on Issue {
-                    id
-                    title
-                    url
-                    closed
-                    labels(first: 5) {
-                      nodes {
-                        name
-                      }
-                    }
-                    milestone {
-                      id
-                      title
-                      description
-                      number
-                      createdAt
-                      dueOn
-                      state
-                    }
-                    assignees(first: 5) {
-                      nodes {
-                        id
-                        login
-                        name
-                      }
-                    }
-                  }
-                  ... on PullRequest {
                     id
                     title
                     url

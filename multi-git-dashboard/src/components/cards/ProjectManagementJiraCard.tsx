@@ -20,8 +20,8 @@ interface ProjectManagementJiraCardProps {
 }
 
 interface SprintSummary {
-  endDate: Date;
-  endDateString: string;
+  startDate: Date;
+  startDateString: string;
   'Story Points Commitment': number;
   'Issues Commitment': number;
   'Story Points Completed': number;
@@ -47,7 +47,7 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
   const [embla, setEmbla] = useState<Embla | null>(null);
 
   const [selectedVelocityChart, setSelectedVelocityChart] =
-    useState<VelocityChartType>(VelocityChartType.StoryPoints); // Default to 'storyPoints'
+    useState<VelocityChartType>(VelocityChartType.Issues); // Default to 'issues'
 
   const [storyPointsEstimate, setStoryPointsEstimate] = useState<number>(4);
 
@@ -183,8 +183,8 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
               : 0;
         });
 
-        const endDate = new Date(jiraSprint.endDate);
-        assigneeStatsArrays[endDate.toISOString()] = assigneeStatsArray;
+        const startDate = new Date(jiraSprint.startDate);
+        assigneeStatsArrays[startDate.toISOString()] = assigneeStatsArray;
       });
 
     // Get the keys as an array and sort them
@@ -250,7 +250,7 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
                   withColumnBorders
                 >
                   <Table.Caption>
-                    Sprint ending{' '}
+                    Sprint starting{' '}
                     {new Date(sortedKeys[index]).toLocaleDateString()}
                   </Table.Caption>
                   <Table.Thead>
@@ -278,8 +278,8 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
       .filter(sprint => sprint.state !== 'future')
       .forEach(sprint => {
         const sprintSummary: SprintSummary = {
-          endDate: new Date(sprint.endDate),
-          endDateString: new Date(sprint.endDate).toLocaleDateString(),
+          startDate: new Date(sprint.startDate),
+          startDateString: new Date(sprint.startDate).toLocaleDateString(),
           'Story Points Commitment': 0,
           'Issues Commitment': 0,
           'Story Points Completed': 0,
@@ -302,7 +302,7 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
         sprintData.push(sprintSummary);
       });
 
-    sprintData.sort((a, b) => a.endDate.getTime() - b.endDate.getTime());
+    sprintData.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
 
     // Calculate the total completed story points
     const totalCompletedStoryPoints = sprintData.reduce(
@@ -348,7 +348,7 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
             <BarChart
               h={400}
               data={sprintData}
-              dataKey="endDateString"
+              dataKey="startDateString"
               xAxisLabel="Sprint"
               yAxisLabel="Story Points"
               withLegend
@@ -418,6 +418,10 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
 
     if (!activeSprint) {
       return <Text>{'No active sprint'}</Text>;
+    }
+
+    if (!activeSprint.endDate) {
+      return <Text>{'-'}</Text>
     }
 
     const endDate = new Date(activeSprint.endDate);
