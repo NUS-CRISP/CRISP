@@ -22,6 +22,7 @@ import { forwardRef, useEffect, useState } from 'react';
 import classes from '../styles/Navbar.module.css';
 import { useTutorialContext } from './tutorial/TutorialContext';
 import TutorialPopover from './tutorial/TutorialPopover';
+import { Accordion } from '@mantine/core';
 
 interface NavbarLinkProps {
   icon: typeof IconHome2;
@@ -29,11 +30,12 @@ interface NavbarLinkProps {
   active?: boolean;
   disabled?: boolean;
   onClick: (event: React.MouseEvent) => void;
+  popoverOpened?: boolean;
 }
 
 const NavbarLink = forwardRef<HTMLButtonElement, NavbarLinkProps>(
-  ({ icon: Icon, label, active, disabled, onClick }, ref) => (
-    <Tooltip label={label} position="right" transitionProps={{ duration: 0 }}>
+  ({ icon: Icon, label, active, disabled, onClick, popoverOpened }, ref) => (
+    popoverOpened ? (
       <UnstyledButton
         onClick={onClick}
         style={disabled ? { cursor: 'default' } : undefined}
@@ -43,11 +45,24 @@ const NavbarLink = forwardRef<HTMLButtonElement, NavbarLinkProps>(
       >
         <Icon style={{ width: rem(20), height: rem(20) }} stroke={1.5} />
       </UnstyledButton>
-    </Tooltip>
+    ) : (
+      <Tooltip label={label} position="right" transitionProps={{ duration: 0 }}>
+        <UnstyledButton
+          onClick={onClick}
+          style={disabled ? { cursor: 'default' } : undefined}
+          className={classes.link}
+          data-active={active || undefined}
+          ref={ref}
+        >
+          <Icon style={{ width: rem(20), height: rem(20) }} stroke={1.5} />
+        </UnstyledButton>
+      </Tooltip>
+    )
   )
 );
 
 const Navbar: React.FC = () => {
+
   const { curTutorialStage } = useTutorialContext();
 
   const router = useRouter();
@@ -62,6 +77,9 @@ const Navbar: React.FC = () => {
 
   const [activeCourseTab, setActiveCourseTab] = useState('Overview');
   const [startTime, setStartTime] = useState<Date>(new Date());
+
+  const [mainLinkPopoverOpened, setMainLinkPopoverOpened] = useState(false);
+  const [questionPopoverOpened, setQuestionPopoverOpened] = useState(false);
 
   const logSessionTime = async (newTab: string, isTabClosing: boolean) => {
     if (newTab === activeCourseTab && !isTabClosing) return;
@@ -133,6 +151,7 @@ const Navbar: React.FC = () => {
         router.push(item.link);
       }}
       key={item.label}
+      popoverOpened={mainLinkPopoverOpened}
     />
   ));
 
@@ -239,11 +258,15 @@ const Navbar: React.FC = () => {
           </Center>
 
           <div className={classes.navbarMain}>
-            <TutorialPopover stage={2} position="right">
+            <TutorialPopover stage={2} position="right"
+              onOpen={() => setMainLinkPopoverOpened(true)}
+              onClose={() => setMainLinkPopoverOpened(false)}
+            >
               <Stack
                 justify="center"
                 gap={0}
                 style={{
+                  width: '50px',
                   borderRadius: 10,
                   backgroundColor: getTutorialHighlightColor(2),
                 }}
@@ -253,7 +276,8 @@ const Navbar: React.FC = () => {
             </TutorialPopover>
           </div>
 
-          <TutorialPopover stage={3} position="right">
+          <TutorialPopover stage={3} position="right" onOpen={()=>setQuestionPopoverOpened(true)}
+              onClose={()=>setQuestionPopoverOpened(false)}>
             <Stack
               justify="center"
               gap={0}
@@ -263,19 +287,25 @@ const Navbar: React.FC = () => {
               }}
             >
               <NavbarLink
-                onClick={() => {}}
+                onClick={() => { }}
                 icon={IconUserCircle}
                 label={`Hello, ${session && session.user ? session.user.name : 'user'}`}
                 disabled
+                popoverOpened={questionPopoverOpened}
               />
 
-              <TutorialPopover stage={11} position="right-end" w={250} finish>
+              <TutorialPopover stage={11} position="right-end" w={250} finish
+              >
+                
+              
                 <NavbarLink
                   onClick={() =>
                     window.open('https://forms.gle/41KcH8gFh3uDfzQGA', '_blank')
                   }
                   icon={IconHelp}
                   label="Submit issue / feature"
+                  popoverOpened={questionPopoverOpened}
+                
                 />
               </TutorialPopover>
 
@@ -283,11 +313,14 @@ const Navbar: React.FC = () => {
                 onClick={handleSignOut}
                 icon={IconLogout}
                 label="Sign out"
+                popoverOpened={questionPopoverOpened}
               />
             </Stack>
           </TutorialPopover>
         </nav>
       </TutorialPopover>
+
+
       {isCourseRoute && courseId && (
         <TutorialPopover stage={5} position="right">
           <nav
