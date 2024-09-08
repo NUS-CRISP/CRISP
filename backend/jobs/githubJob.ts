@@ -254,10 +254,12 @@ const fetchGitHubProjectData = async (
   // GraphQL Pagination
   let hasNextProject = true;
   let projectEndCursor = '';
+  let gitHubProjectCount = 0;
 
-  while (hasNextProject) {
+  while (hasNextProject && gitHubProjectCount < 25) {
     let hasNextIssue = true;
     let issueEndCursor = '';
+    gitHubProjectCount++;
 
     while (hasNextIssue) {
       const data: any = await octokit.graphql(

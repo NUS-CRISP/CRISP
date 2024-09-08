@@ -49,14 +49,14 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
   const [selectedVelocityChart, setSelectedVelocityChart] =
     useState<VelocityChartType>(VelocityChartType.Issues); // Default to 'issues'
 
-  const [storyPointsEstimate, setStoryPointsEstimate] = useState<number>(4);
+  // const [storyPointsEstimate, setStoryPointsEstimate] = useState<number>(4);
 
-  const handleStoryPointsEstimateChange = (value: string | number) => {
-    const newValue = typeof value === 'string' ? parseInt(value, 10) : value;
-    if (!isNaN(newValue) && newValue >= 0) {
-      setStoryPointsEstimate(newValue);
-    }
-  };
+  // const handleStoryPointsEstimateChange = (value: string | number) => {
+  //   const newValue = typeof value === 'string' ? parseInt(value, 10) : value;
+  //   if (!isNaN(newValue) && newValue >= 0) {
+  //     setStoryPointsEstimate(newValue);
+  //   }
+  // };
 
   const getActiveSprintBoard = (
     jiraSprint: JiraSprint | undefined,
@@ -204,11 +204,11 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
           <Table.Td>{assigneeStats.issues}</Table.Td>
           <Table.Td>{assigneeStats.storyPoints}</Table.Td>
           <Table.Td
-            c={
-              assigneeStats.storyPointsPerIssue <= 16 / storyPointsEstimate
-                ? 'teal.7'
-                : 'red.7'
-            }
+            // c={
+            //   assigneeStats.storyPointsPerIssue <= 16 / storyPointsEstimate
+            //     ? 'teal.7'
+            //     : 'red.7'
+            // }
           >
             {assigneeStats.storyPointsPerIssue.toFixed(2)}
           </Table.Td>
@@ -217,7 +217,7 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
 
     return (
       <Card withBorder>
-        <NumberInput
+        {/* <NumberInput
           label="Number of hours per story point"
           value={storyPointsEstimate}
           onChange={handleStoryPointsEstimateChange}
@@ -226,7 +226,7 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
           clampBehavior="strict"
           allowNegative={false}
           w={'30%'}
-        />
+        /> */}
         <Carousel
           controlsOffset="xs"
           slideSize="100%"
