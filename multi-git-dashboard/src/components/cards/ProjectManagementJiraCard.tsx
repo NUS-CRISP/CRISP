@@ -3,7 +3,6 @@ import { BarChart } from '@mantine/charts';
 import {
   Card,
   Group,
-  NumberInput,
   Select,
   SimpleGrid,
   Stack,
