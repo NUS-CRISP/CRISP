@@ -49,6 +49,208 @@ const getCourseData = async (octokit: Octokit, course: any) => {
   });
   let allRepos = repos.data;
 
+  await fetchGitHubProjectData(octokit, course, gitHubOrgName);
+
+  if (course.repoNameFilter) {
+    allRepos = allRepos.filter(repo =>
+      repo.name.includes(course.repoNameFilter as string)
+    );
+  }
+
+  for (const repo of allRepos) {
+    const teamContributions: Record<string, TeamContribution> = {};
+
+    const [commits, issues, prs, contributors, milestones] = await Promise.all([
+      octokit.rest.repos.listCommits({
+        owner: gitHubOrgName,
+        repo: repo.name,
+      }),
+      octokit.rest.issues.listForRepo({
+        owner: gitHubOrgName,
+        repo: repo.name,
+      }),
+      octokit.rest.pulls.list({
+        owner: gitHubOrgName,
+        repo: repo.name,
+        state: 'all',
+      }),
+      octokit.rest.repos.listContributors({
+        owner: gitHubOrgName,
+        repo: repo.name,
+      }),
+      octokit.rest.issues.listMilestones({
+        owner: gitHubOrgName,
+        repo: repo.name,
+        state: 'all',
+      }),
+    ]);
+
+    // Filter out non team members
+    // TODO: Enable only after gitHandle mapping is done
+    if (process.env.NEW_FILTER === 'true') {
+      const teamMembers = await getTeamMembers(repo.id);
+      if (teamMembers) {
+        commits.data = commits.data.filter(
+          commit => commit.author && teamMembers.has(commit.author.login)
+        );
+        issues.data = issues.data.filter(
+          issue => issue.user && teamMembers.has(issue.user.login)
+        );
+        prs.data = prs.data.filter(
+          pr => pr.user && teamMembers.has(pr.user.login)
+        );
+        contributors.data = contributors.data.filter(
+          contributor => contributor.login && teamMembers.has(contributor.login)
+        );
+      }
+    }
+
+    let codeFrequencyStats: number[][] = [];
+    try {
+      codeFrequencyStats = await fetchCodeFrequencyStats(
+        octokit,
+        gitHubOrgName,
+        repo.name
+      );
+    } catch (err) {
+      console.error('Error fetching code frequency stats:', err);
+    }
+
+    const teamPRs: TeamPR[] = await Promise.all(
+      prs.data.map(async pr => {
+        const reviews = await octokit.rest.pulls.listReviews({
+          owner: gitHubOrgName,
+          repo: repo.name,
+          pull_number: pr.number,
+        });
+
+        const reviewDetails: Review[] = await Promise.all(
+          reviews.data.map(async review => ({
+            id: review.id,
+            user: review.user?.login,
+            body: review.body,
+            state: review.state,
+            submittedAt: review.submitted_at,
+            comments: (
+              await octokit.rest.pulls.listReviewComments({
+                owner: gitHubOrgName,
+                repo: repo.name,
+                pull_number: pr.number,
+                review_id: review.id,
+              })
+            ).data.map(comment => ({
+              id: comment.id,
+              body: comment.body,
+              user: comment.user.login,
+              createdAt: new Date(comment.created_at),
+            })),
+          }))
+        );
+
+        return {
+          id: pr.id,
+          title: pr.title,
+          user: pr.user?.login || '',
+          url: pr.html_url,
+          state: pr.state,
+          createdAt: new Date(pr.created_at),
+          updatedAt: new Date(pr.updated_at),
+          reviews: reviewDetails.map(review => ({
+            id: review.id,
+            body: review.body,
+            state: review.state,
+            submittedAt: review.submittedAt,
+            user: review.user,
+            comments: review.comments.map(comment => ({
+              id: comment.id,
+              body: comment.body,
+              user: comment.user,
+              createdAt: new Date(comment.createdAt),
+            })),
+          })),
+        };
+      })
+    );
+
+    for (const contributor of contributors.data) {
+      if (!contributor.login) continue;
+
+      const contributorCommits = commits.data.filter(
+        commit => commit.author?.login === contributor.login
+      ).length;
+
+      const createdIssues = issues.data.filter(
+        issue => issue.user && issue.user.login === contributor.login
+      ).length;
+      const openIssues = issues.data.filter(
+        issue =>
+          issue.user &&
+          issue.user.login === contributor.login &&
+          issue.state === 'open'
+      ).length;
+      const closedIssues = issues.data.filter(
+        issue =>
+          issue.user &&
+          issue.user.login === contributor.login &&
+          issue.state === 'closed'
+      ).length;
+
+      const contributorPRs = prs.data.filter(
+        pr => pr.user && pr.user.login === contributor.login
+      ).length;
+
+      teamContributions[contributor.login] = {
+        commits: contributorCommits,
+        createdIssues: createdIssues,
+        openIssues: openIssues,
+        closedIssues: closedIssues,
+        pullRequests: contributorPRs,
+        codeReviews: 0,
+        comments: 0,
+      };
+    }
+
+    for (const teamPR of teamPRs) {
+      for (const review of teamPR.reviews) {
+        if (!review.user || !(review.user in teamContributions)) continue;
+        teamContributions[review.user].codeReviews++;
+        teamContributions[review.user].comments += review.comments.length;
+      }
+    }
+
+    if (!process.env.NEW_FILTER) {
+      if ('github-classroom[bot]' in teamContributions) {
+        delete teamContributions['github-classroom[bot]'];
+      }
+    }
+
+    const teamData = {
+      gitHubOrgName: gitHubOrgName.toLowerCase(),
+      teamId: repo.id,
+      repoName: repo.name,
+      commits: commits.data.length,
+      weeklyCommits: codeFrequencyStats,
+      issues: issues.data.length,
+      pullRequests: prs.data.length,
+      updatedIssues: issues.data.map(issue => issue.updated_at),
+      teamContributions,
+      teamPRs,
+      milestones: milestones.data,
+    };
+
+    console.log('Saving team data:', teamData);
+
+    await TeamData.findOneAndUpdate({ teamId: teamData.teamId }, teamData, {
+      upsert: true,
+    });
+  }
+};
+
+const fetchGitHubProjectData = async (
+  octokit: Octokit,
+  course: any,
+  gitHubOrgName: string
+) => {
   // GraphQL Pagination
   let hasNextPage = true;
   let endCursor = '';
@@ -320,200 +522,6 @@ const getCourseData = async (octokit: Octokit, course: any) => {
         console.error('Error saving GitHub Project: ', project.id, error);
       }
     }
-  }
-
-  if (course.repoNameFilter) {
-    allRepos = allRepos.filter(repo =>
-      repo.name.includes(course.repoNameFilter as string)
-    );
-  }
-
-  for (const repo of allRepos) {
-    const teamContributions: Record<string, TeamContribution> = {};
-
-    const [commits, issues, prs, contributors, milestones] = await Promise.all([
-      octokit.rest.repos.listCommits({
-        owner: gitHubOrgName,
-        repo: repo.name,
-      }),
-      octokit.rest.issues.listForRepo({
-        owner: gitHubOrgName,
-        repo: repo.name,
-      }),
-      octokit.rest.pulls.list({
-        owner: gitHubOrgName,
-        repo: repo.name,
-        state: 'all',
-      }),
-      octokit.rest.repos.listContributors({
-        owner: gitHubOrgName,
-        repo: repo.name,
-      }),
-      octokit.rest.issues.listMilestones({
-        owner: gitHubOrgName,
-        repo: repo.name,
-        state: 'all',
-      }),
-    ]);
-
-    // Filter out non team members
-    // TODO: Enable only after gitHandle mapping is done
-    if (process.env.NEW_FILTER === 'true') {
-      const teamMembers = await getTeamMembers(repo.id);
-      if (teamMembers) {
-        commits.data = commits.data.filter(
-          commit => commit.author && teamMembers.has(commit.author.login)
-        );
-        issues.data = issues.data.filter(
-          issue => issue.user && teamMembers.has(issue.user.login)
-        );
-        prs.data = prs.data.filter(
-          pr => pr.user && teamMembers.has(pr.user.login)
-        );
-        contributors.data = contributors.data.filter(
-          contributor => contributor.login && teamMembers.has(contributor.login)
-        );
-      }
-    }
-
-    let codeFrequencyStats: number[][] = [];
-    try {
-      codeFrequencyStats = await fetchCodeFrequencyStats(
-        octokit,
-        gitHubOrgName,
-        repo.name
-      );
-    } catch (err) {
-      console.error('Error fetching code frequency stats:', err);
-    }
-
-    const teamPRs: TeamPR[] = await Promise.all(
-      prs.data.map(async pr => {
-        const reviews = await octokit.rest.pulls.listReviews({
-          owner: gitHubOrgName,
-          repo: repo.name,
-          pull_number: pr.number,
-        });
-
-        const reviewDetails: Review[] = await Promise.all(
-          reviews.data.map(async review => ({
-            id: review.id,
-            user: review.user?.login,
-            body: review.body,
-            state: review.state,
-            submittedAt: review.submitted_at,
-            comments: (
-              await octokit.rest.pulls.listReviewComments({
-                owner: gitHubOrgName,
-                repo: repo.name,
-                pull_number: pr.number,
-                review_id: review.id,
-              })
-            ).data.map(comment => ({
-              id: comment.id,
-              body: comment.body,
-              user: comment.user.login,
-              createdAt: new Date(comment.created_at),
-            })),
-          }))
-        );
-
-        return {
-          id: pr.id,
-          title: pr.title,
-          user: pr.user?.login || '',
-          url: pr.html_url,
-          state: pr.state,
-          createdAt: new Date(pr.created_at),
-          updatedAt: new Date(pr.updated_at),
-          reviews: reviewDetails.map(review => ({
-            id: review.id,
-            body: review.body,
-            state: review.state,
-            submittedAt: review.submittedAt,
-            user: review.user,
-            comments: review.comments.map(comment => ({
-              id: comment.id,
-              body: comment.body,
-              user: comment.user,
-              createdAt: new Date(comment.createdAt),
-            })),
-          })),
-        };
-      })
-    );
-
-    for (const contributor of contributors.data) {
-      if (!contributor.login) continue;
-
-      const contributorCommits = commits.data.filter(
-        commit => commit.author?.login === contributor.login
-      ).length;
-
-      const createdIssues = issues.data.filter(
-        issue => issue.user && issue.user.login === contributor.login
-      ).length;
-      const openIssues = issues.data.filter(
-        issue =>
-          issue.user &&
-          issue.user.login === contributor.login &&
-          issue.state === 'open'
-      ).length;
-      const closedIssues = issues.data.filter(
-        issue =>
-          issue.user &&
-          issue.user.login === contributor.login &&
-          issue.state === 'closed'
-      ).length;
-
-      const contributorPRs = prs.data.filter(
-        pr => pr.user && pr.user.login === contributor.login
-      ).length;
-
-      teamContributions[contributor.login] = {
-        commits: contributorCommits,
-        createdIssues: createdIssues,
-        openIssues: openIssues,
-        closedIssues: closedIssues,
-        pullRequests: contributorPRs,
-        codeReviews: 0,
-        comments: 0,
-      };
-    }
-
-    for (const teamPR of teamPRs) {
-      for (const review of teamPR.reviews) {
-        if (!review.user || !(review.user in teamContributions)) continue;
-        teamContributions[review.user].codeReviews++;
-        teamContributions[review.user].comments += review.comments.length;
-      }
-    }
-
-    if (!process.env.NEW_FILTER) {
-      if ('github-classroom[bot]' in teamContributions) {
-        delete teamContributions['github-classroom[bot]'];
-      }
-    }
-
-    const teamData = {
-      gitHubOrgName: gitHubOrgName.toLowerCase(),
-      teamId: repo.id,
-      repoName: repo.name,
-      commits: commits.data.length,
-      weeklyCommits: codeFrequencyStats,
-      issues: issues.data.length,
-      pullRequests: prs.data.length,
-      updatedIssues: issues.data.map(issue => issue.updated_at),
-      teamContributions,
-      teamPRs,
-      milestones: milestones.data,
-    };
-
-    console.log('Saving team data:', teamData);
-
-    await TeamData.findOneAndUpdate({ teamId: teamData.teamId }, teamData, {
-      upsert: true,
-    });
   }
 };
 
