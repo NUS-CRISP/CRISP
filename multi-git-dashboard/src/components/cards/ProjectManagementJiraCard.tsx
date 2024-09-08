@@ -204,11 +204,11 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
           <Table.Td>{assigneeStats.issues}</Table.Td>
           <Table.Td>{assigneeStats.storyPoints}</Table.Td>
           <Table.Td
-            // c={
-            //   assigneeStats.storyPointsPerIssue <= 16 / storyPointsEstimate
-            //     ? 'teal.7'
-            //     : 'red.7'
-            // }
+          // c={
+          //   assigneeStats.storyPointsPerIssue <= 16 / storyPointsEstimate
+          //     ? 'teal.7'
+          //     : 'red.7'
+          // }
           >
             {assigneeStats.storyPointsPerIssue.toFixed(2)}
           </Table.Td>
