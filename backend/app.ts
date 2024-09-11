@@ -7,7 +7,7 @@ import accountRoutes from './routes/accountRoutes';
 import assessmentRoutes from './routes/assessmentRoutes';
 import courseRoutes from './routes/courseRoutes';
 import githubRoutes from './routes/githubRoutes';
-import jiraRoutes from './routes/projectManagementRoutes';
+import jiraRoutes from './routes/jiraRoutes';
 import metricRoutes from './routes/metricRoutes';
 import teamRoutes from './routes/teamRoutes';
 import teamSetRoutes from './routes/teamSetRoutes';
