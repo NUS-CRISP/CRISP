@@ -3,7 +3,6 @@ import { BarChart } from '@mantine/charts';
 import {
   Card,
   Group,
-  NumberInput,
   Select,
   SimpleGrid,
   Stack,
@@ -14,14 +13,14 @@ import { JiraBoard, JiraIssue, JiraSprint } from '@shared/types/JiraData';
 import { User } from '@shared/types/User';
 import { useState } from 'react';
 
-interface ProjectManagementCardProps {
+interface ProjectManagementJiraCardProps {
   TA: User | null;
   jiraBoard: JiraBoard | null;
 }
 
 interface SprintSummary {
-  endDate: Date;
-  endDateString: string;
+  startDate: Date;
+  startDateString: string;
   'Story Points Commitment': number;
   'Issues Commitment': number;
   'Story Points Completed': number;
@@ -40,23 +39,23 @@ enum VelocityChartType {
   Issues = 'issues',
 }
 
-const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
+const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
   TA,
   jiraBoard,
 }) => {
   const [embla, setEmbla] = useState<Embla | null>(null);
 
   const [selectedVelocityChart, setSelectedVelocityChart] =
-    useState<VelocityChartType>(VelocityChartType.StoryPoints); // Default to 'storyPoints'
+    useState<VelocityChartType>(VelocityChartType.Issues); // Default to 'issues'
 
-  const [storyPointsEstimate, setStoryPointsEstimate] = useState<number>(4);
+  // const [storyPointsEstimate, setStoryPointsEstimate] = useState<number>(4);
 
-  const handleStoryPointsEstimateChange = (value: string | number) => {
-    const newValue = typeof value === 'string' ? parseInt(value, 10) : value;
-    if (!isNaN(newValue) && newValue >= 0) {
-      setStoryPointsEstimate(newValue);
-    }
-  };
+  // const handleStoryPointsEstimateChange = (value: string | number) => {
+  //   const newValue = typeof value === 'string' ? parseInt(value, 10) : value;
+  //   if (!isNaN(newValue) && newValue >= 0) {
+  //     setStoryPointsEstimate(newValue);
+  //   }
+  // };
 
   const getActiveSprintBoard = (
     jiraSprint: JiraSprint | undefined,
@@ -95,7 +94,7 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   };
 
   const getJiraBoardCard = (issue: JiraIssue) => (
-    <Card radius="md" shadow="sm" padding="lg" withBorder>
+    <Card key={issue.self} radius="md" shadow="sm" padding="lg" withBorder>
       <Group style={{ alignItems: 'center' }}>
         <Text fw={600} size="sm">
           {issue.fields.summary || '-'}
@@ -183,8 +182,8 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
               : 0;
         });
 
-        const endDate = new Date(jiraSprint.endDate);
-        assigneeStatsArrays[endDate.toISOString()] = assigneeStatsArray;
+        const startDate = new Date(jiraSprint.startDate);
+        assigneeStatsArrays[startDate.toISOString()] = assigneeStatsArray;
       });
 
     // Get the keys as an array and sort them
@@ -204,11 +203,11 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
           <Table.Td>{assigneeStats.issues}</Table.Td>
           <Table.Td>{assigneeStats.storyPoints}</Table.Td>
           <Table.Td
-            c={
-              assigneeStats.storyPointsPerIssue <= 16 / storyPointsEstimate
-                ? 'teal.7'
-                : 'red.7'
-            }
+          // c={
+          //   assigneeStats.storyPointsPerIssue <= 16 / storyPointsEstimate
+          //     ? 'teal.7'
+          //     : 'red.7'
+          // }
           >
             {assigneeStats.storyPointsPerIssue.toFixed(2)}
           </Table.Td>
@@ -217,7 +216,7 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
 
     return (
       <Card withBorder>
-        <NumberInput
+        {/* <NumberInput
           label="Number of hours per story point"
           value={storyPointsEstimate}
           onChange={handleStoryPointsEstimateChange}
@@ -226,7 +225,7 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
           clampBehavior="strict"
           allowNegative={false}
           w={'30%'}
-        />
+        /> */}
         <Carousel
           controlsOffset="xs"
           slideSize="100%"
@@ -250,7 +249,7 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                   withColumnBorders
                 >
                   <Table.Caption>
-                    Sprint ending{' '}
+                    Sprint starting{' '}
                     {new Date(sortedKeys[index]).toLocaleDateString()}
                   </Table.Caption>
                   <Table.Thead>
@@ -278,8 +277,8 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
       .filter(sprint => sprint.state !== 'future')
       .forEach(sprint => {
         const sprintSummary: SprintSummary = {
-          endDate: new Date(sprint.endDate),
-          endDateString: new Date(sprint.endDate).toLocaleDateString(),
+          startDate: new Date(sprint.startDate),
+          startDateString: new Date(sprint.startDate).toLocaleDateString(),
           'Story Points Commitment': 0,
           'Issues Commitment': 0,
           'Story Points Completed': 0,
@@ -302,7 +301,7 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
         sprintData.push(sprintSummary);
       });
 
-    sprintData.sort((a, b) => a.endDate.getTime() - b.endDate.getTime());
+    sprintData.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
 
     // Calculate the total completed story points
     const totalCompletedStoryPoints = sprintData.reduce(
@@ -320,7 +319,7 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
       0
     );
 
-    // Calculate the velocity (average completed story points)
+    // Calculate the velocity (average completed issues)
     const issuesVelocity =
       sprintData.length > 0 ? totalCompletedIssues / sprintData.length : 0;
 
@@ -348,7 +347,7 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
             <BarChart
               h={400}
               data={sprintData}
-              dataKey="endDateString"
+              dataKey="startDateString"
               xAxisLabel="Sprint"
               yAxisLabel="Story Points"
               withLegend
@@ -389,6 +388,49 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
     );
   };
 
+  const getActiveSprint = (jiraBoard: JiraBoard) => {
+    return jiraBoard.jiraSprints.find(sprint => sprint.state === 'active');
+  };
+
+  const getActiveSprintName = (jiraBoard: JiraBoard) => {
+    const activeSprint = getActiveSprint(jiraBoard);
+    return <Text>{activeSprint ? activeSprint.name : 'No active sprint'}</Text>;
+  };
+
+  const getActiveSprintStartDate = (jiraBoard: JiraBoard) => {
+    const activeSprint = getActiveSprint(jiraBoard);
+
+    if (!activeSprint) {
+      return <Text>{'No active sprint'}</Text>;
+    }
+
+    const startDate = new Date(activeSprint.startDate);
+    return (
+      <Text>
+        {startDate.toLocaleTimeString()}, {startDate.toLocaleDateString()}
+      </Text>
+    );
+  };
+
+  const getActiveSprintEndDate = (jiraBoard: JiraBoard) => {
+    const activeSprint = getActiveSprint(jiraBoard);
+
+    if (!activeSprint) {
+      return <Text>{'No active sprint'}</Text>;
+    }
+
+    if (!activeSprint.endDate) {
+      return <Text>{'-'}</Text>;
+    }
+
+    const endDate = new Date(activeSprint.endDate);
+    return (
+      <Text>
+        {endDate.toLocaleTimeString()}, {endDate.toLocaleDateString()}
+      </Text>
+    );
+  };
+
   return (
     <Stack>
       <Group style={{ alignItems: 'center' }}>
@@ -396,44 +438,22 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
         <Text>{TA ? TA.name : 'None'}</Text>
       </Group>
       <Group style={{ alignItems: 'center' }}>
-        <Text>Jira Project:</Text>
+        <Text>Project Board:</Text>
         <Text>{jiraBoard ? jiraBoard.jiraLocation.projectName : 'None'}</Text>
       </Group>
       {jiraBoard && (
         <>
           <Group>
             <Text>Current Sprint:</Text>
-            {jiraBoard.jiraSprints.map(
-              sprint => sprint.state === 'active' && <Text>{sprint.name}</Text>
-            )}
+            {getActiveSprintName(jiraBoard)}
           </Group>
           <Group>
             <Text>Start Date:</Text>
-            {jiraBoard.jiraSprints.map(sprint => {
-              const startDate = new Date(sprint.startDate);
-              return (
-                sprint.state === 'active' && (
-                  <Text>
-                    {startDate.toLocaleTimeString()},{' '}
-                    {startDate.toLocaleDateString()}
-                  </Text>
-                )
-              );
-            })}
+            {getActiveSprintStartDate(jiraBoard)}
           </Group>
           <Group>
             <Text>End Date:</Text>
-            {jiraBoard.jiraSprints.map(sprint => {
-              const endDate = new Date(sprint.endDate);
-              return (
-                sprint.state === 'active' && (
-                  <Text>
-                    {endDate.toLocaleTimeString()},{' '}
-                    {endDate.toLocaleDateString()}
-                  </Text>
-                )
-              );
-            })}
+            {getActiveSprintEndDate(jiraBoard)}
           </Group>
           {jiraBoard.jiraSprints &&
             getActiveSprintBoard(
@@ -448,4 +468,4 @@ const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   );
 };
 
-export default ProjectManagementCard;
+export default ProjectManagementJiraCard;

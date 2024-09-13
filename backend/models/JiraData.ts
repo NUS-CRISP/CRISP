@@ -37,7 +37,7 @@ const issueSchema: Schema = new Schema<JiraIssue>({
   storyPoints: { type: Number },
   fields: {
     summary: { type: String, required: true },
-    statuscategorychangedate: { type: Date, required: true },
+    statuscategorychangedate: { type: Date },
     issuetype: {
       name: { type: String, required: true },
       subtask: { type: Boolean, required: true },
@@ -69,12 +69,12 @@ const boardSchema: Schema = new Schema<JiraBoard>({
   name: { type: String, required: true },
   type: { type: String, required: true },
   jiraLocation: {
-    projectId: { type: Number, required: true },
+    projectId: { type: Number },
     displayName: { type: String, required: true },
     projectName: { type: String, required: true },
-    projectKey: { type: String, required: true },
-    projectTypeKey: { type: String, required: true },
-    avatarURI: { type: String, required: true },
+    projectKey: { type: String },
+    projectTypeKey: { type: String },
+    avatarURI: { type: String },
     name: { type: String, required: true },
   },
   columns: [

@@ -577,6 +577,10 @@ export const getProjectManagementBoardFromCourse = async (
           model: 'User',
         },
         {
+          path: 'teamData',
+          model: 'TeamData',
+        },
+        {
           path: 'board',
           model: 'JiraBoard',
           populate: [
