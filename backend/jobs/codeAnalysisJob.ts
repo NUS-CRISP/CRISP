@@ -4,6 +4,7 @@ import { App, Octokit } from 'octokit';
 import { getGitHubApp } from '../utils/github';
 import * as fs from 'fs';
 import * as path from 'path';
+import codeAnalysisDataModel from '../models/CodeAnalysisData'
 
 const { exec } = require('child_process');
 
@@ -59,6 +60,8 @@ const getCourseCodeData = async (octokit: Octokit, course: any) => {
     await getLatestCommit(gitHubOrgName, repo.name);
 
     await scanRepo(gitHubOrgName, repo.name, buildTool);
+
+    await getAndSaveCodeData(gitHubOrgName, repo);
   }
 };
 
@@ -265,10 +268,89 @@ const scanRepo = async (
   }
 };
 
+const getAndSaveCodeData = async (gitHubOrgName: string, repo: any) => {
+  try {
+    const sonarUri = process.env.SONAR_URI;
+    const sonarToken = process.env.SONAR_TOKEN;
+    const projectKey = gitHubOrgName + '_' + repo.name;
+    const metricKeys =
+      'complexity, cognitive_complexity, branch_coverage, coverage, line_coverage, tests, uncovered_conditions, uncovered_lines, test_execution_time, test_errors,  test_failures, test_success_density, skipped_tests, duplicated_blocks, duplicated_files, duplicated_lines, duplicated_lines_density, code_smells, sqale_index, sqale_debt_ratio, sqale_rating, alert_status, quality_gate_details, bugs, reliability_rating, reliability_remediation_effort, vulnerabilities, security_rating, security_remediation_effort, security_hotspots, classes, comment_lines, comment_lines_density, files, lines, ncloc, functions, statements';
+
+    const codeAnalysisResponse = await fetch(
+      `${sonarUri}/api/measures/component?component=${projectKey}&metricKeys=${metricKeys}&additionalFields=metrics`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Basic ${Buffer.from(`${sonarToken}:`).toString('base64')}`,
+        },
+      }
+    );
+
+    if (!codeAnalysisResponse.ok) {
+      throw new Error(
+        `Failed to fetch data from Sonar API: ${codeAnalysisResponse.statusText}`
+      );
+    }
+
+    const responseData = await codeAnalysisResponse.json();
+    const { component, metrics } = responseData;
+
+    if (!component || !component.measures) {
+      throw new Error('Invalid response structure from Sonar API');
+    }
+
+    const metricsArray: string[] = [];
+    const valuesArray: string[] = [];
+    const typesArray: string[] = [];
+    const domainsArray: string[] = [];
+
+    const metricMap = new Map<string, { type: string; domain: string }>();
+
+    metrics.forEach((metric: any) => {
+      metricMap.set(metric.key, {
+        type: metric.type,
+        domain: metric.domain,
+      });
+    });
+
+    component.measures.forEach((measure: any) => {
+      const metricKey = measure.metric;
+      const metricInfo = metricMap.get(metricKey);
+
+      if (metricInfo) {
+        metricsArray.push(metricKey);
+        valuesArray.push(measure.value || '');
+        typesArray.push(metricInfo.type || '');
+        domainsArray.push(metricInfo.domain || '');
+      }
+    });
+
+    const codeAnalysisData = new codeAnalysisDataModel({
+      executionTime: new Date(),
+      gitHubOrgName,
+      teamId: repo.id,
+      repoName: repo.name,
+      metrics: metricsArray,
+      values: valuesArray,
+      types: typesArray,
+      domains: domainsArray,
+    });
+
+    // console.log('Saving code analysis data:', codeAnalysisData);
+
+    await codeAnalysisData.save();
+  } catch (error) {
+    console.error(`Error fetching or saving data for: ${repo.name}`, error);
+  }
+};
+
 export const setupCodeAnalysisJob = () => {
   // Schedule the job to run every day at midnight
   cron.schedule('0 0 * * *', async () => {
-    console.log('Running fetchAndSaveCodeAnalysisData job:', new Date().toString());
+    console.log(
+      'Running fetchAndSaveCodeAnalysisData job:',
+      new Date().toString()
+    );
     try {
       await fetchAndSaveCodeAnalysisData();
     } catch (err) {
@@ -278,7 +360,9 @@ export const setupCodeAnalysisJob = () => {
 
   // To run the job immediately for testing
   if (process.env.RUN_JOB_NOW === 'true') {
-    console.log('Running fetchAndSaveCodeAnalysisData job:', new Date().toString());
+    console.log(
+      'Running fetchAndSaveCodeAnalysisData job:',
+    );
     fetchAndSaveCodeAnalysisData().catch(err => {
       console.error('Error running job manually:', err);
     });
