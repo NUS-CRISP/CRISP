@@ -4,7 +4,7 @@ import { App, Octokit } from 'octokit';
 import { getGitHubApp } from '../utils/github';
 import * as fs from 'fs';
 import * as path from 'path';
-import codeAnalysisDataModel from '../models/CodeAnalysisData'
+import codeAnalysisDataModel from '../models/CodeAnalysisData';
 
 const { exec } = require('child_process');
 
@@ -360,9 +360,7 @@ export const setupCodeAnalysisJob = () => {
 
   // To run the job immediately for testing
   if (process.env.RUN_JOB_NOW === 'true') {
-    console.log(
-      'Running fetchAndSaveCodeAnalysisData job:',
-    );
+    console.log('Running fetchAndSaveCodeAnalysisData job');
     fetchAndSaveCodeAnalysisData().catch(err => {
       console.error('Error running job manually:', err);
     });
