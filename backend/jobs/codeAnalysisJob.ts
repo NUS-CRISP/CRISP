@@ -346,7 +346,7 @@ const getAndSaveCodeData = async (gitHubOrgName: string, repo: any) => {
 
 export const setupCodeAnalysisJob = () => {
   // Schedule the job to run every day at midnight
-  cron.schedule('0 0 * * *', async () => {
+  cron.schedule('0 2 * * *', async () => {
     console.log(
       'Running fetchAndSaveCodeAnalysisData job:',
       new Date().toString()
