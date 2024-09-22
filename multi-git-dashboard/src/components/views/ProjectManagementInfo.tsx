@@ -133,7 +133,7 @@ const ProjectManagementInfo: React.FC<ProjectManagementProps> = ({
                 onClose={close}
                 title="Connect With Trofos"
               >
-                <ConnectTrofosForm closeModal={close} />
+                <ConnectTrofosForm courseId={courseId} closeModal={close} />
               </Modal>
             </Group>
           )}
