@@ -3,13 +3,16 @@ import {
   Button,
   Container,
   Group,
+  Modal,
   Notification,
   ScrollArea,
   Tabs,
 } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
 import { TeamSet } from '@shared/types/TeamSet';
 import { useEffect, useState } from 'react';
 import ProjectManagementJiraCard from '../cards/ProjectManagementJiraCard';
+import ConnectTrofosForm from '../../components/forms/ConnectTrofosForm';
 
 interface ProjectManagementProps {
   courseId: string;
@@ -30,6 +33,8 @@ const ProjectManagementInfo: React.FC<ProjectManagementProps> = ({
     teamSets ? teamSets[0]?.name : null
   );
   const [error, setError] = useState<string | null>(null);
+
+  const [opened, { open, close }] = useDisclosure(false);
 
   const setActiveTabAndSave = (tabName: string) => {
     onUpdate();
@@ -112,12 +117,24 @@ const ProjectManagementInfo: React.FC<ProjectManagementProps> = ({
             </Notification>
           )}
           {hasFacultyPermission && (
-            <Group mb={'16px'} mt={'16px'}>
+            <Group mb={16} mt={16}>
               <Button onClick={handleOAuthButtonClick}>
                 {jiraRegistrationStatus
-                  ? 'Authorize Another Jira Organization'
-                  : 'Authorize With Jira'}
+                  ? 'Connect With Jira Cloud'
+                  : 'Connect With Jira Cloud'}
               </Button>
+              <Button onClick={open}>Connect With Trofos</Button>
+            </Group>
+          )}
+          {hasFacultyPermission && (
+            <Group mb={'16px'} mt={'16px'}>
+              <Modal
+                opened={opened}
+                onClose={close}
+                title="Connect With Trofos"
+              >
+                <ConnectTrofosForm closeModal={close} />
+              </Modal>
             </Group>
           )}
           {teamSets.map(teamSet => (
