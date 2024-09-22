@@ -1,9 +1,9 @@
 import {
-  TextInput,
   Button,
-  Space,
-  NumberInput,
   Notification,
+  NumberInput,
+  Space,
+  TextInput,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
