@@ -452,6 +452,23 @@ export const getRepositoriesFromCourse = async (courseId: string) => {
   };
 };
 
+export const addRepositoriesToCourse = async (
+  courseId: string,
+  repositories: { gitHubRepoLink: string }[]
+) => {
+  const course = await CourseModel.findById(courseId);
+
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+
+  for (const repository of repositories) {
+    course.gitHubRepoLinks.push(repository.gitHubRepoLink);
+  }
+
+  await course.save();
+};
+
 /*----------------------------------------TeamSet----------------------------------------*/
 export const getTeamSetsFromCourse = async (
   accountId: string,

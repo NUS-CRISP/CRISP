@@ -15,11 +15,11 @@ const RepositoryForm: React.FC<RepositoryFormProps> = ({
   const apiRoute = `/api/courses/${courseId}/repositories`;
 
   // CSV template with a single column for GitHub repo links
-  const csvTemplateHeaders = ['repoLink'];
+  const csvTemplateHeaders = ['gitHubRepoLink'];
 
   const form = useForm({
     initialValues: {
-      repoLink: '',
+      gitHubRepoLink: '',
     },
   });
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +31,7 @@ const RepositoryForm: React.FC<RepositoryFormProps> = ({
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        repository: form.values.repoLink,
+        items: [{ gitHubRepoLink: form.values.gitHubRepoLink }],
       }),
     });
 
@@ -60,10 +60,10 @@ const RepositoryForm: React.FC<RepositoryFormProps> = ({
         <TextInput
           withAsterisk
           label="GitHub Repository Link"
-          {...form.getInputProps('repoLink')}
-          value={form.values.repoLink}
+          {...form.getInputProps('gitHubRepoLink')}
+          value={form.values.gitHubRepoLink}
           onChange={event =>
-            form.setFieldValue('repoLink', event.currentTarget.value)
+            form.setFieldValue('gitHubRepoLink', event.currentTarget.value)
           }
         />
         <Button type="submit" style={{ marginTop: '16px' }}>

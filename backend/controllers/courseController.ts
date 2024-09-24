@@ -3,6 +3,7 @@ import { addAssessmentsToCourse } from '../services/assessmentService';
 import {
   addFacultyToCourse,
   addMilestoneToCourse,
+  addRepositoriesToCourse,
   addSprintToCourse,
   addStudentsToCourse,
   addTAsToCourse,
@@ -336,6 +337,24 @@ export const getRepositories = async (req: Request, res: Response) => {
     } else {
       console.error('Error fetching repositories:', error);
       res.status(500).json({ error: 'Failed to retrieve repositories' });
+    }
+  }
+};
+
+export const addRepositories = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  const repositories = req.body.items;
+  try {
+    await addRepositoriesToCourse(courseId, repositories);
+    res
+      .status(200)
+      .json({ message: 'Repositories added to the course successfully' });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error adding repositories:', error);
+      res.status(500).json({ error: 'Failed to add repositories' });
     }
   }
 };
