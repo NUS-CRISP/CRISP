@@ -439,6 +439,19 @@ export const getPeopleFromCourse = async (courseId: string) => {
   };
 };
 
+/*----------------------------------------People----------------------------------------*/
+export const getRepositoriesFromCourse = async (courseId: string) => {
+  const course = await CourseModel.findById(courseId);
+
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+
+  return {
+    repositories: course.gitHubRepoLinks,
+  };
+};
+
 /*----------------------------------------TeamSet----------------------------------------*/
 export const getTeamSetsFromCourse = async (
   accountId: string,

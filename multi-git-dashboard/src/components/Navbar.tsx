@@ -90,6 +90,8 @@ const Navbar: React.FC = () => {
   const determineActiveTab = (path: string) => {
     if (path.startsWith('/courses/[id]/people')) {
       return 'People';
+    } else if (path.startsWith('/courses/[id]/repositories')) {
+      return 'Repositories';
     } else if (path.startsWith('/courses/[id]/teams')) {
       return 'Teams';
     } else if (path.startsWith('/courses/[id]/timeline')) {
@@ -144,6 +146,10 @@ const Navbar: React.FC = () => {
     {
       link: `/courses/${courseId}/people`,
       label: 'People',
+    },
+    {
+      link: `/courses/${courseId}/repositories`,
+      label: 'Repositories',
     },
     {
       link: `/courses/${courseId}/teams`,

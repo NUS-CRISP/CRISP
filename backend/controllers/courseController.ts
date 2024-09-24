@@ -17,6 +17,7 @@ import {
   getCoursesForUser,
   getPeopleFromCourse,
   getProjectManagementBoardFromCourse,
+  getRepositoriesFromCourse,
   getTeamSetNamesFromCourse,
   getTeamSetsFromCourse,
   removeFacultyFromCourse,
@@ -319,6 +320,22 @@ export const getPeople = async (req: Request, res: Response) => {
     } else {
       console.error('Error fetching people:', error);
       res.status(500).json({ error: 'Failed to retrieve people' });
+    }
+  }
+};
+
+/*-------------------------------------Repositories-------------------------------------*/
+export const getRepositories = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  try {
+    const repositories = await getRepositoriesFromCourse(courseId);
+    res.status(200).json(repositories);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error fetching repositories:', error);
+      res.status(500).json({ error: 'Failed to retrieve repositories' });
     }
   }
 };

@@ -29,6 +29,7 @@ import {
   updateTAs,
   getProjectManagementBoard,
   getCourseJiraRegistrationStatus,
+  getRepositories,
 } from '../controllers/courseController';
 import { noCache } from '../middleware/noCache';
 
@@ -51,6 +52,7 @@ router.post('/:id/tas', addTAs);
 router.patch('/:id/tas', updateTAs);
 router.delete('/:id/tas/:userId', removeTAs);
 router.get('/:id/people', getPeople);
+router.get('/:id/repositories', getRepositories);
 router.get('/:id/teamsets', getTeamSets);
 router.post('/:id/teamsets', addTeamSet);
 router.get('/:id/teamsets/names', getTeamSetsNames);
