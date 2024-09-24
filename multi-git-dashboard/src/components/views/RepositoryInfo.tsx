@@ -7,9 +7,8 @@ import {
   Modal,
   Space,
   Table,
+  Text,
 } from '@mantine/core';
-import Role from '@shared/types/auth/Role';
-import { User } from '@shared/types/User';
 import RepositoryForm from '../forms/RepositoryForm';
 
 interface RepositoryInfoProps {
@@ -26,34 +25,28 @@ const RepositoryInfo: React.FC<RepositoryInfoProps> = ({
   onUpdate,
 }) => {
   const [isAddingRepository, setIsAddingRepository] = useState(false);
-
   const [isEditing, setIsEditing] = useState(false);
-  const [isEditingRepository, setIsEditingRepository] = useState(false);
   const [selectedRepository, setSelectedRepository] = useState<string | null>(
     null
   );
 
-  const [isUpdatingRepository, setIsUpdatingRepository] = useState(false);
-
-  const apiRouteRepository = `/api/courses/${courseId}/repository/`;
+  const apiRouteRepository = `/api/courses/${courseId}/repositories/`;
 
   const toggleAddRepository = () => setIsAddingRepository(!isAddingRepository);
-
   const toggleIsEditing = () => setIsEditing(!isEditing);
-
-  const toggleUpdateRepository = () =>
-    setIsUpdatingRepository(!isUpdatingRepository);
 
   const handleDeleteRepository = async (repository: string) => {
     try {
-      const apiRoute = apiRouteRepository;
-
-      const response = await fetch(apiRoute, {
+      const response = await fetch(`${apiRouteRepository}${repository}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
       });
+
+      if (!response.ok) {
+        throw new Error('Error deleting repository');
+      }
 
       await response.json();
       onUpdate();
@@ -64,80 +57,72 @@ const RepositoryInfo: React.FC<RepositoryInfoProps> = ({
 
   const openEditModal = (repository: string) => {
     setSelectedRepository(repository);
-    setIsEditingRepository(true);
+    setIsAddingRepository(true); // Reuse the same modal for adding and editing
   };
 
   const handleUpdate = () => {
+    setIsAddingRepository(false);
+    setSelectedRepository(null);
     onUpdate();
   };
-
-  const csvHeaders = ['identifier', 'name', 'gitHandle'];
 
   return (
     <Container>
       {hasFacultyPermission && (
         <Group my={16}>
-          {isEditing ? (
-            <>
-              <Button onClick={toggleUpdateRepository}>
-                Update Repository
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button onClick={toggleAddRepository}>Add Repository</Button>
-            </>
-          )}
+          <Button onClick={toggleAddRepository}>Add Repository</Button>
           <Button onClick={toggleIsEditing}>
             {isEditing ? 'Finish Edit' : 'Edit Details'}
           </Button>
         </Group>
       )}
+
       <Modal
         opened={isAddingRepository}
         onClose={toggleAddRepository}
-        title="Add Repository"
+        title={selectedRepository ? 'Edit Repository' : 'Add Repository'}
       >
         <RepositoryForm
           courseId={courseId}
           onRepositoryCreated={handleUpdate}
         />
       </Modal>
+
       <Divider label="Public GitHub Repositories" size="lg" />
-      {
+
+      {repositories.length > 0 ? (
         <Table>
           <Table.Thead>
             <Table.Tr>
               <Table.Th style={{ textAlign: 'left', width: '83%' }}>
                 Repository
               </Table.Th>
-              <Table.Th style={{ textAlign: 'left', width: '7%' }} />
-              <Table.Th style={{ textAlign: 'left', width: '10%' }} />
+              {isEditing && (
+                <>
+                  <Table.Th style={{ textAlign: 'left', width: '7%' }} />
+                  <Table.Th style={{ textAlign: 'left', width: '10%' }} />
+                </>
+              )}
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {repositories &&
-              repositories.length > 0 &&
-              repositories.map(repository => (
-                <Table.Tr key={repository}>
-                  <Table.Td style={{ textAlign: 'left' }}>
-                    {repository}
-                  </Table.Td>
-                  {isEditing && (
+            {repositories.map(repository => (
+              <Table.Tr key={repository}>
+                <Table.Td>{repository}</Table.Td>
+                {isEditing && (
+                  <>
                     <Table.Td>
                       <Button
-                        size="compact-xs"
+                        size="xs"
                         variant="light"
                         onClick={() => openEditModal(repository)}
                       >
                         Edit
                       </Button>
                     </Table.Td>
-                  )}
-                  {isEditing && (
                     <Table.Td>
                       <Button
-                        size="compact-xs"
+                        size="xs"
                         variant="light"
                         color="red"
                         onClick={() => handleDeleteRepository(repository)}
@@ -145,12 +130,16 @@ const RepositoryInfo: React.FC<RepositoryInfoProps> = ({
                         Remove
                       </Button>
                     </Table.Td>
-                  )}
-                </Table.Tr>
-              ))}
+                  </>
+                )}
+              </Table.Tr>
+            ))}
           </Table.Tbody>
         </Table>
-      }
+      ) : (
+        <Text>No repositories available</Text>
+      )}
+
       <Space h="md" />
     </Container>
   );
