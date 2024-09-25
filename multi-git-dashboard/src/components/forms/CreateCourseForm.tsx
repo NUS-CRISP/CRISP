@@ -38,6 +38,7 @@ interface CreateCourseFormValues {
   code: string;
   semester: string;
   startDate: Date | null;
+  duration: number;
   courseType: CourseType;
   gitHubOrgName: string;
   repoNameFilter: string;
@@ -58,6 +59,7 @@ const CreateCourse: React.FC = () => {
       code: '',
       semester: '',
       startDate: null,
+      duration: 13,
       courseType: CourseType.Normal,
       gitHubOrgName: '',
       repoNameFilter: '',
@@ -71,6 +73,7 @@ const CreateCourse: React.FC = () => {
       semester: value =>
         value.trim().length > 0 ? null : 'Semester is required',
       startDate: value => (value ? null : 'Start date is required'),
+      duration: value => (value ? null : 'Duration is required'),
       courseType: value => (value ? null : 'Course type is required'),
       // field should be valid only if courseType is Normal, or if courseType is GitHubOrg and installation check is successful
       gitHubOrgName: (value, values) =>
@@ -148,7 +151,7 @@ const CreateCourse: React.FC = () => {
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <TextInput
           withAsterisk
-          mt="md"
+
           label="Course Name"
           placeholder="Software Engineering Project"
           {...form.getInputProps('name')}
@@ -168,17 +171,6 @@ const CreateCourse: React.FC = () => {
             form.setFieldValue('code', event.currentTarget.value)
           }
         />
-        {/* <TextInput
-          withAsterisk
-          mt="md"
-          label="Semester"
-          placeholder="Ay2022/23 Sem 2"
-          {...form.getInputProps('semester')}
-          value={form.values.semester}
-          onChange={event =>
-            form.setFieldValue('semester', event.currentTarget.value)
-          }
-        /> */}
         <Select
           required
           mt="md"
@@ -198,6 +190,20 @@ const CreateCourse: React.FC = () => {
           error={form.errors.startDate}
           value={form.values.startDate}
           onChange={value => form.setFieldValue('startDate', value)}
+        />
+        <TextInput
+          withAsterisk
+          mt="md"
+          label="Duration"
+          placeholder="13"
+          rightSection={
+            <Text style={{ paddingRight: 30 }}> weeks </Text>
+          }
+          {...form.getInputProps('duration')}
+          value={form.values.duration}
+          onChange={event =>
+            form.setFieldValue('duration', Number(event.currentTarget.value) || 0)
+          }
         />
         <Space h="md" />
         <Box>
@@ -348,8 +354,11 @@ const CreateCourse: React.FC = () => {
             </Box>
           </Collapse>
         </Box>
-        <Space h="md" />
-        <Button type="submit">Create Course</Button>
+        <Space h="md" mt="md" />
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <Button type="submit">Create Course</Button>
+        </div>
+        <Space mt="md" />
       </form>
     </Box>
   );

@@ -67,7 +67,7 @@ const CourseListPage: React.FC = () => {
 
   return (
     <>
-      <Modal opened={opened} onClose={close} title="Create Course">
+      <Modal opened={opened} onClose={close} title="Course Creation">
         <CreateCourseForm />
       </Modal>
       <Box pl={20}>
