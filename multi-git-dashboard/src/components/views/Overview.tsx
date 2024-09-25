@@ -14,6 +14,7 @@ import { useEffect, useState } from 'react';
 import OverviewAccordionItem from '../overview/OverviewAccordionItem';
 import { useTutorialContext } from '../tutorial/TutorialContext';
 import TutorialPopover from '../tutorial/TutorialPopover';
+import AllTeams from '../overview/analytics/team/AllTeams';
 
 interface OverviewProps {
   courseId: string;
@@ -102,6 +103,15 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
         variant="separated"
         mx={20}
       >
+        <text> All Teams</text>
+        <AllTeams
+          teamDatas={teamDatas}
+          teamData={teamDatas[0]}  // You can adjust which teamData to pass, here I use the first one.
+          dateUtils={dateUtils}
+          selectedWeekRange={[0, 12]}  // Example range, adjust as needed
+        />
+
+
         {data.map(({ team, teamData }, idx) => (
           <TutorialPopover
             key={teamData._id}
@@ -118,6 +128,7 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
               dateUtils={dateUtils}
               getStudentNameByGitHandle={getStudentNameByGitHandle}
             />
+
           </TutorialPopover>
         ))}
       </Accordion>
