@@ -15,7 +15,6 @@ import {
 import { Carousel, Embla } from '@mantine/carousel';
 import { Card, Stack, Title, Center } from '@mantine/core';
 import { TeamData } from '@shared/types/TeamData';
-import WeeklyContributions from './WeeklyContributions';
 
 interface AllTeamsProps {
     teamDatas: TeamData[];
@@ -63,15 +62,14 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(({ teamDatas }, ref) 
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Area dataKey="commits"name="Commits" stroke="#8884d8" fillOpacity={1} fill="url(#colorUv)"/>
-                <Area dataKey="issues" name="Issues" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPv)"/>
+                <Area dataKey="commits" name="Commits" stroke="#8884d8" fillOpacity={1} fill="url(#colorUv)" />
+                <Area dataKey="issues" name="Issues" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPv)" />
                 <Line dataKey="pullRequests" name="Pull Requests" stroke="#ff7300" opacity="50" />
                 <Line dataKey="weeklyCommits" name="Weekly Commits" stroke="var(--mantine-color-blue-filled)" opacity="50" />
             </ComposedChart>
         </ResponsiveContainer>
     );
 
-    // Pull Requests Bar Chart Component
     const PRBarChart = () => (
         <ResponsiveContainer width="100%" height={400}>
             <BarChart
@@ -88,7 +86,6 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(({ teamDatas }, ref) 
         </ResponsiveContainer>
     );
 
-    // Prepare slides with charts
     const slides = [
         {
             title: 'Course Overview',
@@ -101,7 +98,7 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(({ teamDatas }, ref) 
     ];
 
     return (
-        <Card withBorder ref={ref} style={{marginBottom:"16px"}}>
+        <Card withBorder ref={ref} style={{ marginBottom: "16px" }}>
             <Carousel
                 getEmblaApi={setEmbla}
                 nextControlProps={{
