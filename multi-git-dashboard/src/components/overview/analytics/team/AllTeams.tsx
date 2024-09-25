@@ -16,12 +16,22 @@ interface OverallActivityProps extends Omit<AnalyticsProps, 'team'> { }
 
 const AllTeams: React.FC<OverallActivityProps> = ({ teamDatas }) => {
     // Prepare data for the chart
-    const data = teamDatas.map((teamData) => ({
-        teamName: teamData.repoName, // assuming repoName is the name of the team
-        commits: teamData.commits,
-        issues: teamData.issues,
-        pullRequests: teamData.pullRequests,
-    }));
+    const uniqueTeams = new Set<string>(); // To track unique team names
+    const data = teamDatas
+        .filter((teamData) => {
+            // If team name is already in the set, skip it
+            if (uniqueTeams.has(teamData.repoName)) {
+                return false;
+            }
+            uniqueTeams.add(teamData.repoName);
+            return true;
+        })
+        .map((teamData) => ({
+            teamName: teamData.repoName, // assuming repoName is the name of the team
+            commits: teamData.commits,
+            issues: teamData.issues,
+            pullRequests: teamData.pullRequests,
+        }));
 
     return (
         <ResponsiveContainer width="100%" height={400}>
@@ -39,9 +49,8 @@ const AllTeams: React.FC<OverallActivityProps> = ({ teamDatas }) => {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                {/* <Bar dataKey="commits" fill="#8884d8" name="Commits" />
-                <Bar dataKey="issues" fill="#82ca9d" name="Issues" /> */}
-                <Bar dataKey="pullRequests" fill="#ffc658" name="Pull Requests" />
+                <Bar dataKey="commits" fill="#8884d8" name="Commits" />
+                {/* Other bars can be re-added later */}
             </BarChart>
         </ResponsiveContainer>
     );
