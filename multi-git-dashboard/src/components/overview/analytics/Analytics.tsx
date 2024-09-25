@@ -26,7 +26,7 @@ const Analytics = forwardRef<HTMLDivElement, AnalyticsProps>(
       'Breakdown': OverallActivity,
       'Weekly Activity': WeeklyContributions,
       'Individual Activity': IndividualAnalytics,
-      'Individual Act2': AllTeams,
+      'All Teams Activity': AllTeams,
     };
 
     const slides = Object.entries(charts).map(([componentName, Component]) => (
