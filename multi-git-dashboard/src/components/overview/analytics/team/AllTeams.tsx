@@ -42,7 +42,7 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(({ teamDatas }, ref) 
         }))
         .sort((a, b) => a.teamName.localeCompare(b.teamName));
 
-    const CommitBarChart = () => (
+    const CourseOverviewChart = () => (
         <ResponsiveContainer width="100%" height={400}>
             <ComposedChart
                 data={data}
@@ -91,8 +91,8 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(({ teamDatas }, ref) 
     // Prepare slides with charts
     const slides = [
         {
-            title: 'Overall Reviews',
-            component: CommitBarChart,
+            title: 'Course Overview',
+            component: CourseOverviewChart,
         },
         {
             title: 'Pull Requests',
