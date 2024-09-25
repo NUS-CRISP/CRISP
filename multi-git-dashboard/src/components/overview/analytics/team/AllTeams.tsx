@@ -31,7 +31,9 @@ const AllTeams: React.FC<OverallActivityProps> = ({ teamDatas }) => {
             commits: teamData.commits,
             issues: teamData.issues,
             pullRequests: teamData.pullRequests,
-        }));
+        }))
+        // Sort alphabetically by team name
+        .sort((a, b) => a.teamName.localeCompare(b.teamName));
 
     return (
         <ResponsiveContainer width="100%" height={400}>
