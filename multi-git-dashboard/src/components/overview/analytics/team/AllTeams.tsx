@@ -98,7 +98,7 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(({ teamDatas }, ref) 
     ];
 
     return (
-        <Card withBorder ref={ref}>
+        <Card withBorder ref={ref} style={{marginBottom:"16px"}}>
             <Carousel
                 getEmblaApi={setEmbla}
                 nextControlProps={{
