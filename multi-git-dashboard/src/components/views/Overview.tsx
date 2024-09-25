@@ -15,6 +15,7 @@ import OverviewAccordionItem from '../overview/OverviewAccordionItem';
 import { useTutorialContext } from '../tutorial/TutorialContext';
 import TutorialPopover from '../tutorial/TutorialPopover';
 import AllTeams from '../overview/analytics/team/AllTeams';
+import styles from '@styles/root-layout.module.css';
 
 interface OverviewProps {
   courseId: string;
@@ -103,12 +104,9 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
         variant="separated"
         mx={20}
       >
-        <text> All Teams</text>
         <AllTeams
           teamDatas={teamDatas}
-     
         />
-
 
         {data.map(({ team, teamData }, idx) => (
           <TutorialPopover
