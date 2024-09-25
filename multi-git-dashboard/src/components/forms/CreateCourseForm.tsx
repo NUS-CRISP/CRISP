@@ -7,6 +7,7 @@ import {
   Collapse,
   List,
   SegmentedControl,
+  Select,
   Space,
   Text,
   TextInput,
@@ -74,14 +75,14 @@ const CreateCourse: React.FC = () => {
       // field should be valid only if courseType is Normal, or if courseType is GitHubOrg and installation check is successful
       gitHubOrgName: (value, values) =>
         values.courseType === CourseType.Normal ||
-        (values.courseType === CourseType.GitHubOrg &&
-          appInstallationStatus === InstallationStatus.SUCCESS)
+          (values.courseType === CourseType.GitHubOrg &&
+            appInstallationStatus === InstallationStatus.SUCCESS)
           ? null
           : 'GitHub Org name is required',
       repoNameFilter: (value, values) =>
         values.courseType === CourseType.Normal ||
-        (values.courseType === CourseType.GitHubOrg &&
-          appInstallationStatus === InstallationStatus.SUCCESS)
+          (values.courseType === CourseType.GitHubOrg &&
+            appInstallationStatus === InstallationStatus.SUCCESS)
           ? null
           : 'Repo name filter is required',
     },
@@ -147,7 +148,9 @@ const CreateCourse: React.FC = () => {
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <TextInput
           withAsterisk
+          mt="md"
           label="Course Name"
+          placeholder="Software Engineering Project"
           {...form.getInputProps('name')}
           value={form.values.name}
           onChange={event =>
@@ -156,24 +159,40 @@ const CreateCourse: React.FC = () => {
         />
         <TextInput
           withAsterisk
+          mt="md"
           label="Course Code"
+          placeholder="CS3203"
           {...form.getInputProps('code')}
           value={form.values.code}
           onChange={event =>
             form.setFieldValue('code', event.currentTarget.value)
           }
         />
-        <TextInput
+        {/* <TextInput
           withAsterisk
+          mt="md"
           label="Semester"
+          placeholder="Ay2022/23 Sem 2"
           {...form.getInputProps('semester')}
           value={form.values.semester}
           onChange={event =>
             form.setFieldValue('semester', event.currentTarget.value)
           }
+        /> */}
+        <Select
+          required
+          mt="md"
+          comboboxProps={{ withinPortal: true }}
+          data={['Ay2023/24 Sem 1', 'Ay2023/24 Sem 2', 'Ay2024/25 Sem 1', 'Ay2024/25 Sem 2', 'Ay2024/25 Special Term']}
+          placeholder="Choose current semester"
+          label="Semester"
+          {...form.getInputProps('semester')}
+          value={form.values.semester}
+          onChange={value => form.setFieldValue('semester', value ?? '')}
         />
         <DatePickerInput
           withAsterisk
+          mt="md"
           label="Start Date"
           placeholder="Pick start date"
           error={form.errors.startDate}
@@ -262,7 +281,7 @@ const CreateCourse: React.FC = () => {
                         }
                         rightSection={
                           appInstallationStatus ===
-                          InstallationStatus.SUCCESS ? (
+                            InstallationStatus.SUCCESS ? (
                             <IconCheck size={14} />
                           ) : null
                         }

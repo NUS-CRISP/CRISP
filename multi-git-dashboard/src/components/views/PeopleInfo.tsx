@@ -142,7 +142,7 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
             </>
           ) : (
             <>
-              <Button onClick={toggleAddFaculty}>Add Faculty</Button>
+              <Button onClick={toggleAddFaculty}>Add Faculty Member</Button>
               <Button onClick={toggleAddTA}>Add TA</Button>
               <Button onClick={toggleAddStudent}>Add Student</Button>
             </>
