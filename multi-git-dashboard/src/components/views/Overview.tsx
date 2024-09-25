@@ -106,9 +106,7 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
         <text> All Teams</text>
         <AllTeams
           teamDatas={teamDatas}
-          teamData={teamDatas[0]}  // You can adjust which teamData to pass, here I use the first one.
-          dateUtils={dateUtils}
-          selectedWeekRange={[0, 12]}  // Example range, adjust as needed
+     
         />
 
 
