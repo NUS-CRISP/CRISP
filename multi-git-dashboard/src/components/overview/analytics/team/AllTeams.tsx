@@ -15,11 +15,9 @@ import { TeamData } from '@shared/types/TeamData';
 interface OverallActivityProps extends Omit<AnalyticsProps, 'team'> { }
 
 const AllTeams: React.FC<OverallActivityProps> = ({ teamDatas }) => {
-    // Prepare data for the chart
-    const uniqueTeams = new Set<string>(); // To track unique team names
+    const uniqueTeams = new Set<string>(); 
     const data = teamDatas
         .filter((teamData) => {
-            // If team name is already in the set, skip it
             if (uniqueTeams.has(teamData.repoName)) {
                 return false;
             }
