@@ -5,6 +5,7 @@ import { Card, Center, Stack, Title } from '@mantine/core';
 import { TeamData } from '@shared/types/TeamData';
 import { forwardRef, useState } from 'react';
 import IndividualAnalytics from './individual/IndividualAnalytics';
+import AllTeams from './team/AllTeams';
 import OverallActivity from './team/OverallActivity';
 import WeeklyContributions from './team/WeeklyContributions';
 
@@ -20,11 +21,12 @@ export interface AnalyticsProps {
 const Analytics = forwardRef<HTMLDivElement, AnalyticsProps>(
   ({ team, teamData, teamDatas, selectedWeekRange, dateUtils }, ref) => {
     const [embla, setEmbla] = useState<Embla | null>(null);
-
+    
     const charts = {
-      Breakdown: OverallActivity,
+      'Breakdown': OverallActivity,
       'Weekly Activity': WeeklyContributions,
       'Individual Activity': IndividualAnalytics,
+      'Individual Act2': AllTeams,
     };
 
     const slides = Object.entries(charts).map(([componentName, Component]) => (
