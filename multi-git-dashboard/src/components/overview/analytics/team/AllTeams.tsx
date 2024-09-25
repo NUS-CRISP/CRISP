@@ -15,6 +15,7 @@ import {
 import { Carousel, Embla } from '@mantine/carousel';
 import { Card, Stack, Title, Center } from '@mantine/core';
 import { TeamData } from '@shared/types/TeamData';
+import WeeklyContributions from './WeeklyContributions';
 
 interface AllTeamsProps {
     teamDatas: TeamData[];
@@ -37,6 +38,7 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(({ teamDatas }, ref) 
             commits: teamData.commits,
             issues: teamData.issues,
             pullRequests: teamData.pullRequests,
+            weeklyCommits: teamData.weeklyCommits.length,
         }))
         .sort((a, b) => a.teamName.localeCompare(b.teamName));
 
@@ -62,8 +64,9 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(({ teamDatas }, ref) 
                 <Tooltip />
                 <Legend />
                 <Area dataKey="commits"name="Commits" stroke="#8884d8" fillOpacity={1} fill="url(#colorUv)"/>
-                <Area dataKey="issues" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPv)"/>
-                <Line dataKey="pullRequests" stroke="#ff7300" opacity="50" />
+                <Area dataKey="issues" name="Issues" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPv)"/>
+                <Line dataKey="pullRequests" name="Pull Requests" stroke="#ff7300" opacity="50" />
+                <Line dataKey="weeklyCommits" name="Weekly Commits" stroke="var(--mantine-color-blue-filled)" opacity="50" />
             </ComposedChart>
         </ResponsiveContainer>
     );
@@ -88,7 +91,7 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(({ teamDatas }, ref) 
     // Prepare slides with charts
     const slides = [
         {
-            title: 'Commits',
+            title: 'Overall Reviews',
             component: CommitBarChart,
         },
         {
