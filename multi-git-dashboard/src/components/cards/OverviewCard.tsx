@@ -37,7 +37,7 @@ export const OverviewCard: React.FC<OverviewProps> = ({
       <TutorialPopover stage={10} offset={30} disabled={index !== 0}>
         <RangeSlider
           value={selectedWeekRange}
-          max={totalWeeks - 1}
+          max={12}
           minRange={1}
           onChange={setSelectedWeekRange}
           label={value => `Week ${value + 1}`}
