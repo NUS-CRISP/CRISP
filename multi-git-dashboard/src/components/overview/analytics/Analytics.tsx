@@ -1,59 +1,69 @@
-import { useEffect, useState } from 'react';
-import {
-    BarChart,
-    Bar,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    Legend,
-    ResponsiveContainer,
-} from 'recharts';
-import { AnalyticsProps } from '../Analytics';
+import { Team } from '@/components/views/Overview';
+import { DateUtils, getTutorialHighlightColor } from '@/lib/utils';
+import { Carousel, Embla } from '@mantine/carousel';
+import { Card, Center, Stack, Title } from '@mantine/core';
 import { TeamData } from '@shared/types/TeamData';
+import { forwardRef, useState } from 'react';
+import IndividualAnalytics from './individual/IndividualAnalytics';
+import AllTeams from './team/AllTeams';
+import OverallActivity from './team/OverallActivity';
+import WeeklyContributions from './team/WeeklyContributions';
 
-interface OverallActivityProps extends Omit<AnalyticsProps, 'team'> { }
+export interface AnalyticsProps {
+  team: Team;
+  teamData: TeamData;
+  teamDatas: TeamData[];
+  selectedWeekRange: [number, number];
+  dateUtils: DateUtils;
+}
 
-const AllTeams: React.FC<OverallActivityProps> = ({ teamDatas }) => {
-    // Prepare data for the chart
-    const uniqueTeams = new Set<string>(); // To track unique team names
-    const data = teamDatas
-        .filter((teamData) => {
-            // If team name is already in the set, skip it
-            if (uniqueTeams.has(teamData.repoName)) {
-                return false;
-            }
-            uniqueTeams.add(teamData.repoName);
-            return true;
-        })
-        .map((teamData) => ({
-            teamName: teamData.repoName, // assuming repoName is the name of the team
-            commits: teamData.commits,
-            issues: teamData.issues,
-            pullRequests: teamData.pullRequests,
-        }));
+// TODO: Migrate Recharts -> Mantine Charts
+const Analytics = forwardRef<HTMLDivElement, AnalyticsProps>(
+  ({ team, teamData, teamDatas, selectedWeekRange, dateUtils }, ref) => {
+    const [embla, setEmbla] = useState<Embla | null>(null);
+    
+    const charts = {
+      'All Teams Activity': AllTeams,
+      'Breakdown': OverallActivity,
+      'Weekly Activity': WeeklyContributions,
+      'Individual Activity': IndividualAnalytics,
+    };
+
+    const slides = Object.entries(charts).map(([componentName, Component]) => (
+      <Carousel.Slide key={componentName}>
+        <Stack>
+          <Center>
+            <Title order={3}>{componentName}</Title>
+          </Center>
+          <Component
+            team={team}
+            teamData={teamData}
+            teamDatas={teamDatas}
+            selectedWeekRange={selectedWeekRange}
+            dateUtils={dateUtils}
+          />
+        </Stack>
+      </Carousel.Slide>
+    ));
 
     return (
-        <ResponsiveContainer width="100%" height={400}>
-            <BarChart
-                data={data}
-                margin={{
-                    top: 20,
-                    right: 30,
-                    left: 20,
-                    bottom: 5,
-                }}
-            >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="teamName" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="commits" fill="#8884d8" name="Commits" />
-                {/* Other bars can be re-added later */}
-            </BarChart>
-        </ResponsiveContainer>
+      <Card withBorder ref={ref} bg={getTutorialHighlightColor(8)}>
+        <Carousel
+          key={teamData._id}
+          getEmblaApi={setEmbla}
+          nextControlProps={{
+            // fix for only first carousel working
+            onClick: () => embla?.reInit(),
+          }}
+          previousControlProps={{
+            onClick: () => embla?.reInit(),
+          }}
+        >
+          {slides}
+        </Carousel>
+      </Card>
     );
-};
+  }
+);
 
-export default AllTeams;
+export default Analytics;
