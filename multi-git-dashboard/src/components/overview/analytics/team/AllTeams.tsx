@@ -100,6 +100,7 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(({ teamDatas }, ref) 
     return (
         <Card withBorder ref={ref} style={{ marginBottom: "16px" }}>
             <Carousel
+                style = {{ paddingRight: "24px" }}
                 getEmblaApi={setEmbla}
                 nextControlProps={{
                     onClick: () => embla?.reInit(),
