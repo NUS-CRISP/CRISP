@@ -24,6 +24,7 @@ import { useTutorialContext } from './tutorial/TutorialContext';
 import TutorialPopover from './tutorial/TutorialPopover';
 import { Accordion } from '@mantine/core';
 
+
 interface NavbarLinkProps {
   icon: typeof IconHome2;
   label: string;
@@ -71,6 +72,8 @@ const Navbar: React.FC = () => {
 
   const isCourseRoute = pathname.includes('/courses/[id]');
   const courseId = isCourseRoute ? (router.query.id as string) : null;
+
+  const [peopleAdded, setPeopleAdded] = useState(false);
 
   const [activeMainTab, setActiveMainTab] = useState('Home');
   const [courseCode, setCourseCode] = useState('');
@@ -159,6 +162,7 @@ const Navbar: React.FC = () => {
     {
       link: `/courses/${courseId}`,
       label: 'Overview',
+     
     },
     {
       link: `/courses/${courseId}/people`,
@@ -167,19 +171,24 @@ const Navbar: React.FC = () => {
     {
       link: `/courses/${courseId}/teams`,
       label: 'Teams',
+      disabled: !peopleAdded,
     },
     {
       link: `/courses/${courseId}/timeline`,
       label: 'Timeline',
+      disabled: !peopleAdded,
     },
     {
       link: `/courses/${courseId}/assessments`,
       label: 'Assessments',
+      disabled: !peopleAdded,
     },
     {
       link: `/courses/${courseId}/project-management`,
       label: 'Project Management',
+      disabled: !peopleAdded,
     },
+    
   ];
 
   const courseLinks = courseLinksData.map(item => (
@@ -195,10 +204,14 @@ const Navbar: React.FC = () => {
         href={item.link}
         onClick={event => {
           event.preventDefault();
-          logSessionTime(item.label, false);
-          setActiveCourseTab(item.label);
-          router.push(item.link);
+          if (!item.disabled) {
+            logSessionTime(item.label, false);
+            setActiveCourseTab(item.label);
+            router.push(item.link);
+          }
         }}
+        key={item.label}
+      style={item.disabled ? { cursor: 'not-allowed', opacity: 0.5 } : {}}
       >
         <span>{item.label}</span>
       </a>
@@ -344,6 +357,7 @@ const Navbar: React.FC = () => {
           </nav>
         </TutorialPopover>
       )}
+
     </div>
   );
 };

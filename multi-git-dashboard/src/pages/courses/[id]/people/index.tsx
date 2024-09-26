@@ -28,6 +28,13 @@ const PeopleListPage: React.FC = () => {
     getAccountStatuses();
   };
 
+  const [peopleAdded, setPeopleAdded] = useState(false);
+
+  const handlePeopleAdded = () => {
+    setPeopleAdded(true);  // Enable other tabs when people are added
+  };
+
+
   useEffect(() => {
     if (router.isReady) {
       fetchPeople();
@@ -98,6 +105,7 @@ const PeopleListPage: React.FC = () => {
           hasFacultyPermission={permission}
           accountStatusRecord={accountStatusRecord}
           onUpdate={onUpdate}
+          onPeopleAdded={handlePeopleAdded} 
         />
       )}
     </Container>

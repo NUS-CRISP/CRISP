@@ -92,7 +92,7 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
         </Container>
       </Center>
     );
-  if (status === Status.Error) return <Center>No data available</Center>;
+  if (status === Status.Error) return <Center>No GitHub Data Available</Center>;
   if (!teams.length || !teamDatas.length)
     return <Center>No teams found.</Center>;
 

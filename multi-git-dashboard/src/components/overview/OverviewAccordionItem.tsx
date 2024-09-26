@@ -1,7 +1,7 @@
 import { DateUtils, getTutorialHighlightColor } from '@/lib/utils';
 import { Accordion, Center } from '@mantine/core';
 import { TeamData } from '@shared/types/TeamData';
-import { forwardRef } from 'react';
+import { forwardRef, useState } from 'react';
 import OverviewCard from '../cards/OverviewCard';
 import { ProfileGetter, Team } from '../views/Overview';
 
@@ -21,7 +21,10 @@ const OverviewAccordionItem = forwardRef<
   (
     { index, teamData, team, teamDatas, dateUtils, getStudentNameByGitHandle },
     ref
-  ) => (
+  ) => {
+    
+    return (
+    
     <Accordion.Item key={teamData._id} value={teamData._id} ref={ref}>
       <Accordion.Control bg={getTutorialHighlightColor(7)}>
         {teamData.repoName}
@@ -41,7 +44,10 @@ const OverviewAccordionItem = forwardRef<
         )}
       </Accordion.Panel>
     </Accordion.Item>
-  )
+    
+  );
+
+}
 );
 
 export default OverviewAccordionItem;

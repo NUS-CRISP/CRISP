@@ -25,7 +25,9 @@ interface PeopleInfoProps {
   hasFacultyPermission: boolean;
   accountStatusRecord: Record<string, boolean>;
   onUpdate: () => void;
+  onPeopleAdded: () => void;
 }
+
 
 const PeopleInfo: React.FC<PeopleInfoProps> = ({
   courseId,
@@ -35,6 +37,7 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
   hasFacultyPermission,
   accountStatusRecord,
   onUpdate,
+  onPeopleAdded,
 }) => {
   const [isAddingFaculty, setIsAddingFaculty] = useState(false);
   const [isAddingTA, setIsAddingTA] = useState(false);
@@ -109,6 +112,7 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
     setSelectedUser(null);
     onUpdate();
   };
+
 
   const facultyData = faculty.map(faculty => ({
     identifier: faculty.identifier,
