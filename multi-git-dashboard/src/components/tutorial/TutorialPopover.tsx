@@ -31,7 +31,6 @@ const TutorialPopover: React.FC<TutorialPopoverProps> = ({
   hideButton = false,
   disabled = false,
   offset,
-  w,
   finish,
   children,
   onOpen,

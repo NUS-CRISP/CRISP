@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Button,
   Container,
@@ -25,7 +25,6 @@ interface PeopleInfoProps {
   hasFacultyPermission: boolean;
   accountStatusRecord: Record<string, boolean>;
   onUpdate: () => void;
-  onPeopleAdded: () => void;
 }
 
 const PeopleInfo: React.FC<PeopleInfoProps> = ({
@@ -36,7 +35,6 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
   hasFacultyPermission,
   accountStatusRecord,
   onUpdate,
-  onPeopleAdded,
 }) => {
   const [isAddingFaculty, setIsAddingFaculty] = useState(false);
   const [isAddingTA, setIsAddingTA] = useState(false);

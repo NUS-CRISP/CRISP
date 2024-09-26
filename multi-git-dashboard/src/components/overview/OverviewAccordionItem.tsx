@@ -1,7 +1,7 @@
 import { DateUtils, getTutorialHighlightColor } from '@/lib/utils';
 import { Accordion, Center } from '@mantine/core';
 import { TeamData } from '@shared/types/TeamData';
-import { forwardRef, useState } from 'react';
+import { forwardRef } from 'react';
 import OverviewCard from '../cards/OverviewCard';
 import { ProfileGetter, Team } from '../views/Overview';
 

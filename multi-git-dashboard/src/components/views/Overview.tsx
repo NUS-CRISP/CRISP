@@ -15,7 +15,6 @@ import OverviewAccordionItem from '../overview/OverviewAccordionItem';
 import { useTutorialContext } from '../tutorial/TutorialContext';
 import TutorialPopover from '../tutorial/TutorialPopover';
 import AllTeams from '../overview/analytics/team/AllTeams';
-import styles from '@styles/root-layout.module.css';
 
 interface OverviewProps {
   courseId: string;

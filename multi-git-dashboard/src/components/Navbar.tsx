@@ -1,6 +1,9 @@
 import { getTutorialHighlightColor } from '@/lib/utils';
 import {
+  Alert,
+  Button,
   Center,
+  Modal,
   Stack,
   Title,
   Tooltip,
@@ -22,7 +25,8 @@ import { forwardRef, useEffect, useState } from 'react';
 import classes from '../styles/Navbar.module.css';
 import { useTutorialContext } from './tutorial/TutorialContext';
 import TutorialPopover from './tutorial/TutorialPopover';
-import { Accordion } from '@mantine/core';
+import { Course } from '@shared/types/Course';
+import { IconInfoCircle } from '@tabler/icons-react';
 
 interface NavbarLinkProps {
   icon: typeof IconHome2;
@@ -71,6 +75,7 @@ const Navbar: React.FC = () => {
   const courseId = isCourseRoute ? (router.query.id as string) : null;
 
   const [peopleAdded, setPeopleAdded] = useState(false);
+  const [alertOpened, setAlertOpened] = useState(false);
 
   const [activeMainTab, setActiveMainTab] = useState('Home');
   const [courseCode, setCourseCode] = useState('');
@@ -80,6 +85,36 @@ const Navbar: React.FC = () => {
 
   const [mainLinkPopoverOpened, setMainLinkPopoverOpened] = useState(false);
   const [questionPopoverOpened, setQuestionPopoverOpened] = useState(false);
+
+  useEffect(() => {
+    const fetchCourseData = async () => {
+      try {
+        const response = await fetch(`/api/courses/${courseId}`);
+        const data: Course = await response.json();
+
+        // Check if students exist and update the state accordingly
+        if (data.students.length > 0) {
+          setPeopleAdded(true); // Enable tabs when students are added
+        } else {
+          setPeopleAdded(false); // Disable tabs when no students are added
+        }
+      } catch (error) {
+        console.error('Failed to fetch course data:', error);
+      }
+    };
+
+    if (courseId) {
+      fetchCourseData();
+    }
+  }, [courseId]);
+
+  const handleTabClick = (tab: string) => {
+    if (!peopleAdded) {
+      setAlertOpened(true); // Show alert if people are not added
+    } else {
+      setActiveMainTab(tab); // Set active tab if people are added
+    }
+  };
 
   const logSessionTime = async (newTab: string, isTabClosing: boolean) => {
     if (newTab === activeCourseTab && !isTabClosing) return;
@@ -159,6 +194,7 @@ const Navbar: React.FC = () => {
     {
       link: `/courses/${courseId}`,
       label: 'Overview',
+      disabled: !peopleAdded,
     },
     {
       link: `/courses/${courseId}/people`,
@@ -203,6 +239,8 @@ const Navbar: React.FC = () => {
             logSessionTime(item.label, false);
             setActiveCourseTab(item.label);
             router.push(item.link);
+          } else {
+            setAlertOpened(true); // Show alert if people are not added
           }
         }}
         key={item.label}
@@ -353,6 +391,24 @@ const Navbar: React.FC = () => {
           </nav>
         </TutorialPopover>
       )}
+
+      <Alert
+        icon={<IconInfoCircle />}
+        title="Action Required"
+        color="blue"
+        withCloseButton
+        onClose={() => setAlertOpened(false)}
+        style={{
+          display: alertOpened ? 'block' : 'none',
+          position: 'absolute',
+          top: '30%',
+          left: '55%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 1000, // Ensure it's above other content
+        }}
+      >
+        <p>You need to add people for this course first.</p>
+      </Alert>
     </div>
   );
 };
