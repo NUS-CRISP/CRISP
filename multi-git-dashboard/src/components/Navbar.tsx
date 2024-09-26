@@ -1,9 +1,7 @@
 import { getTutorialHighlightColor } from '@/lib/utils';
 import {
   Alert,
-  Button,
   Center,
-  Modal,
   Stack,
   Title,
   Tooltip,
@@ -107,14 +105,6 @@ const Navbar: React.FC = () => {
       fetchCourseData();
     }
   }, [courseId]);
-
-  const handleTabClick = (tab: string) => {
-    if (!peopleAdded) {
-      setAlertOpened(true); // Show alert if people are not added
-    } else {
-      setActiveMainTab(tab); // Set active tab if people are added
-    }
-  };
 
   const logSessionTime = async (newTab: string, isTabClosing: boolean) => {
     if (newTab === activeCourseTab && !isTabClosing) return;
