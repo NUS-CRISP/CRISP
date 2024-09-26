@@ -24,7 +24,6 @@ import { useTutorialContext } from './tutorial/TutorialContext';
 import TutorialPopover from './tutorial/TutorialPopover';
 import { Accordion } from '@mantine/core';
 
-
 interface NavbarLinkProps {
   icon: typeof IconHome2;
   label: string;
@@ -35,7 +34,7 @@ interface NavbarLinkProps {
 }
 
 const NavbarLink = forwardRef<HTMLButtonElement, NavbarLinkProps>(
-  ({ icon: Icon, label, active, disabled, onClick, popoverOpened }, ref) => (
+  ({ icon: Icon, label, active, disabled, onClick, popoverOpened }, ref) =>
     popoverOpened ? (
       <UnstyledButton
         onClick={onClick}
@@ -59,11 +58,9 @@ const NavbarLink = forwardRef<HTMLButtonElement, NavbarLinkProps>(
         </UnstyledButton>
       </Tooltip>
     )
-  )
 );
 
 const Navbar: React.FC = () => {
-
   const { curTutorialStage } = useTutorialContext();
 
   const router = useRouter();
@@ -162,7 +159,6 @@ const Navbar: React.FC = () => {
     {
       link: `/courses/${courseId}`,
       label: 'Overview',
-     
     },
     {
       link: `/courses/${courseId}/people`,
@@ -188,7 +184,6 @@ const Navbar: React.FC = () => {
       label: 'Project Management',
       disabled: !peopleAdded,
     },
-    
   ];
 
   const courseLinks = courseLinksData.map(item => (
@@ -211,7 +206,7 @@ const Navbar: React.FC = () => {
           }
         }}
         key={item.label}
-      style={item.disabled ? { cursor: 'not-allowed', opacity: 0.5 } : {}}
+        style={item.disabled ? { cursor: 'not-allowed', opacity: 0.5 } : {}}
       >
         <span>{item.label}</span>
       </a>
@@ -271,7 +266,9 @@ const Navbar: React.FC = () => {
           </Center>
 
           <div className={classes.navbarMain}>
-            <TutorialPopover stage={2} position="right"
+            <TutorialPopover
+              stage={2}
+              position="right"
               onOpen={() => setMainLinkPopoverOpened(true)}
               onClose={() => setMainLinkPopoverOpened(false)}
             >
@@ -289,8 +286,12 @@ const Navbar: React.FC = () => {
             </TutorialPopover>
           </div>
 
-          <TutorialPopover stage={3} position="right" onOpen={()=>setQuestionPopoverOpened(true)}
-              onClose={()=>setQuestionPopoverOpened(false)}>
+          <TutorialPopover
+            stage={3}
+            position="right"
+            onOpen={() => setQuestionPopoverOpened(true)}
+            onClose={() => setQuestionPopoverOpened(false)}
+          >
             <Stack
               justify="center"
               gap={0}
@@ -300,17 +301,14 @@ const Navbar: React.FC = () => {
               }}
             >
               <NavbarLink
-                onClick={() => { }}
+                onClick={() => {}}
                 icon={IconUserCircle}
                 label={`Hello, ${session && session.user ? session.user.name : 'user'}`}
                 disabled
                 popoverOpened={questionPopoverOpened}
               />
 
-              <TutorialPopover stage={11} position="right-end" w={250} finish
-              >
-                
-              
+              <TutorialPopover stage={11} position="right-end" w={250} finish>
                 <NavbarLink
                   onClick={() =>
                     window.open('https://forms.gle/41KcH8gFh3uDfzQGA', '_blank')
@@ -318,7 +316,6 @@ const Navbar: React.FC = () => {
                   icon={IconHelp}
                   label="Submit issue / feature"
                   popoverOpened={questionPopoverOpened}
-                
                 />
               </TutorialPopover>
 
@@ -332,7 +329,6 @@ const Navbar: React.FC = () => {
           </TutorialPopover>
         </nav>
       </TutorialPopover>
-
 
       {isCourseRoute && courseId && (
         <TutorialPopover stage={5} position="right">
@@ -357,7 +353,6 @@ const Navbar: React.FC = () => {
           </nav>
         </TutorialPopover>
       )}
-
     </div>
   );
 };

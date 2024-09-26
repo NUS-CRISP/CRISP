@@ -104,9 +104,7 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
         variant="separated"
         mx={20}
       >
-        <AllTeams
-          teamDatas={teamDatas}
-        />
+        <AllTeams teamDatas={teamDatas} />
 
         {data.map(({ team, teamData }, idx) => (
           <TutorialPopover
@@ -124,7 +122,6 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
               dateUtils={dateUtils}
               getStudentNameByGitHandle={getStudentNameByGitHandle}
             />
-
           </TutorialPopover>
         ))}
       </Accordion>

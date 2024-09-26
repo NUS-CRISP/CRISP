@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "ls": "^0.2.1",
+    "prettier": "^3.3.3",
+    "prettier-check": "^2.0.0"
+  }
+}

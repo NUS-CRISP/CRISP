@@ -28,7 +28,6 @@ interface PeopleInfoProps {
   onPeopleAdded: () => void;
 }
 
-
 const PeopleInfo: React.FC<PeopleInfoProps> = ({
   courseId,
   faculty,
@@ -112,7 +111,6 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
     setSelectedUser(null);
     onUpdate();
   };
-
 
   const facultyData = faculty.map(faculty => ({
     identifier: faculty.identifier,

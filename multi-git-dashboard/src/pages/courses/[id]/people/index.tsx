@@ -31,9 +31,8 @@ const PeopleListPage: React.FC = () => {
   const [peopleAdded, setPeopleAdded] = useState(false);
 
   const handlePeopleAdded = () => {
-    setPeopleAdded(true);  // Enable other tabs when people are added
+    setPeopleAdded(true); // Enable other tabs when people are added
   };
-
 
   useEffect(() => {
     if (router.isReady) {
@@ -105,7 +104,7 @@ const PeopleListPage: React.FC = () => {
           hasFacultyPermission={permission}
           accountStatusRecord={accountStatusRecord}
           onUpdate={onUpdate}
-          onPeopleAdded={handlePeopleAdded} 
+          onPeopleAdded={handlePeopleAdded}
         />
       )}
     </Container>

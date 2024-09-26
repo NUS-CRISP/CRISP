@@ -20,9 +20,9 @@ export interface AnalyticsProps {
 const Analytics = forwardRef<HTMLDivElement, AnalyticsProps>(
   ({ team, teamData, teamDatas, selectedWeekRange, dateUtils }, ref) => {
     const [embla, setEmbla] = useState<Embla | null>(null);
-    
+
     const charts = {
-      'Breakdown': OverallActivity,
+      Breakdown: OverallActivity,
       'Weekly Activity': WeeklyContributions,
       'Individual Activity': IndividualAnalytics,
     };

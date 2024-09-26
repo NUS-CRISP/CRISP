@@ -78,14 +78,14 @@ const CreateCourse: React.FC = () => {
       // field should be valid only if courseType is Normal, or if courseType is GitHubOrg and installation check is successful
       gitHubOrgName: (value, values) =>
         values.courseType === CourseType.Normal ||
-          (values.courseType === CourseType.GitHubOrg &&
-            appInstallationStatus === InstallationStatus.SUCCESS)
+        (values.courseType === CourseType.GitHubOrg &&
+          appInstallationStatus === InstallationStatus.SUCCESS)
           ? null
           : 'GitHub Org name is required',
       repoNameFilter: (value, values) =>
         values.courseType === CourseType.Normal ||
-          (values.courseType === CourseType.GitHubOrg &&
-            appInstallationStatus === InstallationStatus.SUCCESS)
+        (values.courseType === CourseType.GitHubOrg &&
+          appInstallationStatus === InstallationStatus.SUCCESS)
           ? null
           : 'Repo name filter is required',
     },
@@ -151,7 +151,6 @@ const CreateCourse: React.FC = () => {
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <TextInput
           withAsterisk
-
           label="Course Name"
           placeholder="Software Engineering Project"
           {...form.getInputProps('name')}
@@ -175,7 +174,13 @@ const CreateCourse: React.FC = () => {
           required
           mt="md"
           comboboxProps={{ withinPortal: true }}
-          data={['Ay2023/24 Sem 1', 'Ay2023/24 Sem 2', 'Ay2024/25 Sem 1', 'Ay2024/25 Sem 2', 'Ay2024/25 Special Term']}
+          data={[
+            'Ay2023/24 Sem 1',
+            'Ay2023/24 Sem 2',
+            'Ay2024/25 Sem 1',
+            'Ay2024/25 Sem 2',
+            'Ay2024/25 Special Term',
+          ]}
           placeholder="Choose current semester"
           label="Semester"
           {...form.getInputProps('semester')}
@@ -196,13 +201,14 @@ const CreateCourse: React.FC = () => {
           mt="md"
           label="Duration"
           placeholder="13"
-          rightSection={
-            <Text style={{ paddingRight: 30 }}> weeks </Text>
-          }
+          rightSection={<Text style={{ paddingRight: 30 }}> weeks </Text>}
           {...form.getInputProps('duration')}
           value={form.values.duration}
           onChange={event =>
-            form.setFieldValue('duration', Number(event.currentTarget.value) || 0)
+            form.setFieldValue(
+              'duration',
+              Number(event.currentTarget.value) || 0
+            )
           }
         />
         <Space h="md" />
@@ -287,7 +293,7 @@ const CreateCourse: React.FC = () => {
                         }
                         rightSection={
                           appInstallationStatus ===
-                            InstallationStatus.SUCCESS ? (
+                          InstallationStatus.SUCCESS ? (
                             <IconCheck size={14} />
                           ) : null
                         }

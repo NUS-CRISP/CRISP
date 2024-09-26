@@ -23,7 +23,6 @@ interface TutorialPopoverProps {
   finish?: boolean;
   onOpen?: () => void;
   onClose?: () => void;
-
 }
 
 const TutorialPopover: React.FC<TutorialPopoverProps> = ({
@@ -35,11 +34,15 @@ const TutorialPopover: React.FC<TutorialPopoverProps> = ({
   w,
   finish,
   children,
-onOpen,
-onClose,
+  onOpen,
+  onClose,
 }) => {
-  const { curTutorialStage, nextTutorialStage, previousTutorialStage, startTutorial } =
-    useTutorialContext();
+  const {
+    curTutorialStage,
+    nextTutorialStage,
+    previousTutorialStage,
+    startTutorial,
+  } = useTutorialContext();
 
   const router = useRouter();
 
@@ -63,7 +66,10 @@ onClose,
     >
       <Popover.Target>{children}</Popover.Target>
 
-      <Popover.Dropdown className={classes.popoverDropdown} style={{width: '240px'}}>
+      <Popover.Dropdown
+        className={classes.popoverDropdown}
+        style={{ width: '240px' }}
+      >
         <Stack>
           <Text>
             {finish
@@ -93,7 +99,6 @@ onClose,
           )}
         </Stack>
       </Popover.Dropdown>
-
     </Popover>
   );
 };

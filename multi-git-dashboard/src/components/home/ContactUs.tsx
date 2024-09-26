@@ -18,8 +18,8 @@ import ContactIcons from './ContactIcons';
 const social = [
   {
     icon: IconBrandGithub,
-    link: "https://github.com/NUS-CRISP/CRISP",
-  }
+    link: 'https://github.com/NUS-CRISP/CRISP',
+  },
 ];
 
 const ContactUs: React.FC = () => {
@@ -31,7 +31,7 @@ const ContactUs: React.FC = () => {
       size={28}
       className={classes.social}
       variant="transparent"
-      component="a" 
+      component="a"
       href={item.link}
       target="_blank"
       rel="noopener noreferrer"
