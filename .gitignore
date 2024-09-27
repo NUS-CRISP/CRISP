@@ -13,3 +13,7 @@ load-test/apache-jmeter-*
 # mongo
 data/
 mongo/dumps
+
+/node_modules
+/.pnp
+.pnp.js
