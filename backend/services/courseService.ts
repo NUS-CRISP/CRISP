@@ -7,6 +7,7 @@ import UserModel, { User } from '@models/User';
 import Role from '@shared/types/auth/Role';
 import { Types } from 'mongoose';
 import { NotFoundError } from './errors';
+import { InternalAssessment } from '@shared/types/InternalAssessment';
 
 /*----------------------------------------Course----------------------------------------*/
 export const createNewCourse = async (courseData: any, accountId: string) => {
@@ -552,6 +553,25 @@ export const getAssessmentsFromCourse = async (courseId: string) => {
     throw new NotFoundError('Course not found');
   }
   return course.assessments;
+};
+
+/*----------------------------------------Internal Assessments----------------------------------------*/
+export const getInternalAssessmentsFromCourse = async (courseId: string) => {
+  const course = await CourseModel.findById(courseId).populate<{
+    assessments: InternalAssessment[];
+  }>({
+    path: 'internalAssessments',
+    populate: [
+      {
+        path: 'teamSet',
+        model: 'TeamSet',
+      },
+    ],
+  });
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+  return course.internalAssessments;
 };
 
 /*------------------------------------Project Management------------------------------------*/

@@ -1,7 +1,7 @@
 import AssessmentsInfo from '@/components/views/AssessmentsInfo';
 import { Container } from '@mantine/core';
 import { Assessment } from '@shared/types/Assessment';
-import { InternalAssessment } from '@shared/types/InternalAssessment'; // Import the InternalAssessment type
+import { InternalAssessment } from '@shared/types/InternalAssessment'; // Import InternalAssessment type
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
@@ -12,16 +12,16 @@ const AssessmentListPage: React.FC = () => {
   };
 
   const assessmentsApiRoute = `/api/courses/${id}/assessments`;
-  const internalAssessmentsApiRoute = `/api/courses/${id}/internal-assessments`; // New internal assessments route
+  const internalAssessmentsApiRoute = `/api/courses/${id}/internal-assessments`; // New API route
   const courseTeamSetNamesApiRoute = `/api/courses/${id}/teamsets/names`;
 
   const [assessments, setAssessments] = useState<Assessment[]>([]);
-  const [internalAssessments, setInternalAssessments] = useState<InternalAssessment[]>([]); // State for internal assessments
+  const [internalAssessments, setInternalAssessments] = useState<InternalAssessment[]>([]); // New state
   const [teamSetNames, setTeamSetNames] = useState<string[]>([]);
 
   const onUpdate = () => {
     fetchAssessments();
-    fetchInternalAssessments(); // Fetch internal assessments when updating
+    fetchInternalAssessments(); // Fetch internal assessments on update
     fetchTeamSetNames();
   };
 
@@ -33,7 +33,6 @@ const AssessmentListPage: React.FC = () => {
     }
   }, [router.isReady]);
 
-  // Fetch regular assessments
   const fetchAssessments = async () => {
     try {
       const response = await fetch(assessmentsApiRoute, {
@@ -48,13 +47,14 @@ const AssessmentListPage: React.FC = () => {
       } else {
         const data = await response.json();
         setAssessments(data);
+        console.log(data);
       }
     } catch (error) {
       console.error('Error fetching assessments:', error);
     }
   };
 
-  // Fetch internal assessments
+  // New function to fetch internal assessments
   const fetchInternalAssessments = async () => {
     try {
       const response = await fetch(internalAssessmentsApiRoute, {
@@ -68,6 +68,7 @@ const AssessmentListPage: React.FC = () => {
         console.error('Error fetching internal assessments:', response.statusText);
       } else {
         const data = await response.json();
+        console.log(data);
         setInternalAssessments(data);
       }
     } catch (error) {
@@ -75,7 +76,6 @@ const AssessmentListPage: React.FC = () => {
     }
   };
 
-  // Fetch team set names
   const fetchTeamSetNames = async () => {
     try {
       const response = await fetch(courseTeamSetNamesApiRoute, {
@@ -101,7 +101,7 @@ const AssessmentListPage: React.FC = () => {
       <AssessmentsInfo
         courseId={id}
         assessments={assessments}
-        internalAssessments={internalAssessments} // Pass internal assessments to the component
+        internalAssessments={internalAssessments} // Pass internal assessments
         teamSetNames={teamSetNames}
         onUpdate={onUpdate}
       />

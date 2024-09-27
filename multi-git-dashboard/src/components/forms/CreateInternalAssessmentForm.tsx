@@ -1,0 +1,123 @@
+import { Button, Select, TextInput, Textarea, Text, Radio } from '@mantine/core';
+import { useForm } from '@mantine/form';
+import { User } from '@shared/types/User';
+
+interface CreateInternalFormProps {
+  courseId: string | string[] | undefined;
+  onAssessmentCreated: () => void;
+  teamSetNames: string[];
+  teachingTeam: User[]; // The list of teaching assistants
+}
+
+const CreateInternalForm: React.FC<CreateInternalFormProps> = ({
+  courseId,
+  onAssessmentCreated,
+  teamSetNames,
+  teachingTeam,
+}) => {
+  const form = useForm({
+    initialValues: {
+      assessmentName: '',
+      description: '',
+      startDate: '',
+      endDate: '',
+      granularity: 'individual',
+      maxMarks: '',
+      teamSetName: '',
+      gradedBy: '', // Storing the gradedBy as the User's _id
+    },
+  });
+
+  const handleSubmit = async () => {
+    try {
+      console.log(form.values);
+      const response = await fetch(`/api/courses/${courseId}/internal-assessments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          items: [form.values]
+        }),
+      });
+
+      if (response.ok) {
+        onAssessmentCreated();
+      } else {
+        console.error('Error creating internal assessment');
+      }
+    } catch (error) {
+      console.error('Error creating internal assessment', error);
+    }
+  };
+
+  return (
+    <form onSubmit={form.onSubmit(handleSubmit)}>
+      <TextInput
+        withAsterisk
+        label="Assessment Name"
+        {...form.getInputProps('assessmentName')}
+      />
+      <Textarea
+        withAsterisk
+        label="Description"
+        {...form.getInputProps('description')}
+      />
+      <TextInput
+        withAsterisk
+        label="Start Date"
+        {...form.getInputProps('startDate')}
+        placeholder="YYYY-MM-DD"
+        type="date" // Change input type to date
+      />
+      <TextInput
+        label="End Date (Optional)"
+        {...form.getInputProps('endDate')}
+        placeholder="YYYY-MM-DD"
+        type="date" // Change input type to date
+      />
+
+      {/* Bold title and padding for granularity section */}
+      <Text style={{ fontWeight: 'bold', marginTop: '16px', marginBottom: '8px' }}>
+        Assessment Type
+      </Text>
+      <div style={{ marginBottom: '16px' }}>
+        <Radio.Group
+          value={form.values.granularity}
+          onChange={value => form.setFieldValue('granularity', value)}
+        >
+          <div style={{ display: 'flex', gap: '20px' }}>
+            <Radio label="Individual" value="individual" />
+            <Radio label="Team" value="team" />
+          </div>
+        </Radio.Group>
+      </div>
+
+      <TextInput
+        label="Maximum Marks (Optional)"
+        {...form.getInputProps('maxMarks')}
+        placeholder="Enter max marks"
+      />
+
+      <Select
+        withAsterisk
+        label="Assigned to"
+        data={teamSetNames.map((name) => ({ value: name, label: name }))}
+        {...form.getInputProps('teamSetName')}
+      />
+
+      <Select
+        label="Graded By (Optional)"
+        placeholder="Select a Teaching Assistant"
+        data={teachingTeam.map(ta => ({ value: ta._id, label: ta.name }))} // Map teachingTeam User objects
+        {...form.getInputProps('gradedBy')}
+      />
+
+      <Button type="submit" mt="sm">
+        Create Internal Assessment
+      </Button>
+    </form>
+  );
+};
+
+export default CreateInternalForm;
