@@ -1,0 +1,40 @@
+[
+  {
+    "id": 10,
+    "pname": "crisp-project-1",
+    "pkey": "c1",
+    "description": null,
+    "course_id": 18,
+    "public": false,
+    "created_at": "2024-09-15T12:54:06.748Z",
+    "backlog_counter": 1,
+    "telegramChannelLink": null,
+    "is_archive": null,
+    "course": {
+      "id": 18,
+      "code": "crisp",
+      "startYear": 2024,
+      "startSem": 1,
+      "endYear": 2024,
+      "endSem": 1,
+      "cname": "crisp course",
+      "description": null,
+      "public": false,
+      "created_at": "2024-09-15T12:53:21.666Z",
+      "shadow_course": false,
+      "milestones": []
+    },
+    "users": [
+      {
+        "user": {
+          "user_id": 21,
+          "user_email": "faculty@crisp.com",
+          "user_display_name": "crisp_faculty",
+          "courses": [
+            { "id": 40, "user_id": 21, "role_id": 1, "course_id": 18 }
+          ]
+        }
+      }
+    ]
+  }
+]

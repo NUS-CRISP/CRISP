@@ -3,6 +3,7 @@ import { config } from 'dotenv';
 import express, { Express } from 'express';
 import setupGitHubJob from './jobs/githubJob';
 import setupJiraJob from './jobs/jiraJob';
+import setupTrofosJob from './jobs/trofosJob';
 import accountRoutes from './routes/accountRoutes';
 import assessmentRoutes from './routes/assessmentRoutes';
 import courseRoutes from './routes/courseRoutes';
@@ -21,6 +22,7 @@ const setupApp = async () => {
   await connectToDatabase();
   setupGitHubJob();
   setupJiraJob();
+  setupTrofosJob();
 };
 setupApp();
 
