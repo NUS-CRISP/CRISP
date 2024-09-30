@@ -22,6 +22,7 @@ const ConnectTrofosForm = ({
 
   const form = useForm({
     initialValues: {
+      isRegistered: true,
       apiKey: '',
       trofosCourseId: 0,
     },

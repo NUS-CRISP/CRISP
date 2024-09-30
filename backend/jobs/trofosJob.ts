@@ -12,10 +12,10 @@ const fetchAndSaveTrofosData = async () => {
 
   for (const course of courses) {
     const {
-      trofos: { apiKey },
+      trofos: { isRegistered, apiKey },
     } = course;
 
-    if (!apiKey) {
+    if (!isRegistered) {
       continue;
     }
 
