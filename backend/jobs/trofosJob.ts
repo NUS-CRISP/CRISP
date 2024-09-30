@@ -1,19 +1,67 @@
 import cron from 'node-cron';
-import { URLSearchParams } from 'url';
 import { Course } from '@models/Course';
 import CourseModel from '@models/Course';
 
 const fetchAndSaveTrofosData = async () => {
-  const trofosCourseUri = 'https://trofos.comp.nus.edu.sg/api/external/v1/course';
-  const trofosProjectUri = 'https://trofos.comp.nus.edu.sg/api/external/v1/project';
+  const trofosCourseUri =
+    'https://trofos.comp.nus.edu.sg/api/external/v1/course';
+  const trofosProjectUri =
+    'https://trofos.comp.nus.edu.sg/api/external/v1/project';
 
   const courses: Course[] = await CourseModel.find();
 
   for (const course of courses) {
-    const apiKey = course.trofos.apiKey;
+    const {
+      trofos: { apiKey },
+    } = course;
 
+    if (!apiKey) {
+      continue;
+    }
+
+    try {
+      const trofosCourseResponse = await fetch(trofosCourseUri, {
+        method: 'GET',
+        headers: {
+          'x-api-key': apiKey,
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!trofosCourseResponse.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const trofosCourseData = await trofosCourseResponse.json();
+      console.log(trofosCourseData);
+    } catch (error) {
+      console.error('Error in fetching Trofos course:', error);
+    }
+
+    try {
+      const trofosProjectResponse = await fetch(trofosProjectUri, {
+        method: 'GET',
+        headers: {
+          'x-api-key': apiKey,
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!trofosProjectResponse.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const trofosProjectData = await trofosProjectResponse.json();
+      console.log(trofosProjectData);
+    } catch (error) {
+      console.error('Error in fetching Trofos project:', error);
+    }
   }
-}
+
+  console.log('fetchAndSaveTrofosData job done');
+};
 
 const setupTrofosJob = () => {
   // Schedule the job to run every day at 01:00 hours
