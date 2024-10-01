@@ -1,13 +1,9 @@
 import cron from 'node-cron';
 import { Course } from '@models/Course';
 import CourseModel from '@models/Course';
+import { TROFOS_COURSE_URI, TROFOS_PROJECT_URI } from '../utils/endpoints';
 
 const fetchAndSaveTrofosData = async () => {
-  const trofosCourseUri =
-    'https://trofos.comp.nus.edu.sg/api/external/v1/course';
-  const trofosProjectUri =
-    'https://trofos.comp.nus.edu.sg/api/external/v1/project';
-
   const courses: Course[] = await CourseModel.find();
 
   for (const course of courses) {
@@ -20,7 +16,7 @@ const fetchAndSaveTrofosData = async () => {
     }
 
     try {
-      const trofosCourseResponse = await fetch(trofosCourseUri, {
+      const trofosCourseResponse = await fetch(TROFOS_COURSE_URI, {
         method: 'GET',
         headers: {
           'x-api-key': apiKey,
@@ -40,7 +36,7 @@ const fetchAndSaveTrofosData = async () => {
     }
 
     try {
-      const trofosProjectResponse = await fetch(trofosProjectUri, {
+      const trofosProjectResponse = await fetch(TROFOS_PROJECT_URI, {
         method: 'GET',
         headers: {
           'x-api-key': apiKey,
@@ -55,12 +51,44 @@ const fetchAndSaveTrofosData = async () => {
 
       const trofosProjectData = await trofosProjectResponse.json();
       console.log(trofosProjectData);
+
+      for (const trofosProject of trofosProjectData) {
+        const trofosProjectId = trofosProject.id;
+        await fetchSingleTrofosProject(trofosProjectId, apiKey);
+      }
     } catch (error) {
       console.error('Error in fetching Trofos project:', error);
     }
   }
 
   console.log('fetchAndSaveTrofosData job done');
+};
+
+const fetchSingleTrofosProject = async (
+  trofosProjectId: number,
+  apiKey: string
+) => {
+  const singleTrofosProjectUri = `${TROFOS_PROJECT_URI}/${trofosProjectId}`;
+
+  try {
+    const singleTrofosProjectResponse = await fetch(singleTrofosProjectUri, {
+      method: 'GET',
+      headers: {
+        'x-api-key': apiKey,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!singleTrofosProjectResponse.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    const singleTrofosProjectData = await singleTrofosProjectResponse.json();
+    console.log(singleTrofosProjectData);
+  } catch (error) {
+    console.error('Error in fetching single Trofos project:', error);
+  }
 };
 
 const setupTrofosJob = () => {
