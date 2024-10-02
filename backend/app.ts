@@ -13,6 +13,7 @@ import teamRoutes from './routes/teamRoutes';
 import teamSetRoutes from './routes/teamSetRoutes';
 import userRoutes from './routes/userRoutes';
 import { connectToDatabase } from './utils/database';
+import setupCodeAnalysisJob from './jobs/codeAnalysisJob';
 
 const env = process.env.NODE_ENV ?? 'development';
 config({ path: `.env.${env}` });
@@ -21,6 +22,7 @@ const setupApp = async () => {
   await connectToDatabase();
   setupGitHubJob();
   setupJiraJob();
+  setupCodeAnalysisJob();
 };
 setupApp();
 
