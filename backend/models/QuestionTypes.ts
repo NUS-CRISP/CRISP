@@ -36,22 +36,40 @@ export const MultipleResponseQuestionModel = QuestionModel.discriminator<Multipl
   MultipleResponseSchema
 );
 
+export interface ScaleLabel {
+  value: number;
+  label: string;
+}
+
 export interface ScaleQuestion extends BaseQuestion {
   type: 'Scale';
   scaleMax: number;
-  labelMin: string;
-  labelMax: string;
+  labels: ScaleLabel[];
 }
 
-const ScaleSchema = new Schema({
+const ScaleLabelSchema = new Schema<ScaleLabel>({
+  value: { type: Number, required: true },
+  label: { type: String, required: true },
+});
+
+const ScaleQuestionSchema = new Schema({
   scaleMax: { type: Number, required: true },
-  labelMin: { type: String, required: true },
-  labelMax: { type: String, required: true },
+  labels: { type: [ScaleLabelSchema], required: true, validate: {
+    validator: function(v: ScaleLabel[]) {
+      if (!v || v.length < 2) return false; // At least min and max labels
+      const sorted = [...v].sort((a, b) => a.value - b.value);
+      for (let i = 1; i < sorted.length; i++) {
+        if (sorted[i].value <= sorted[i - 1].value) return false; // Values must be ascending
+      }
+      return true;
+    },
+    message: 'Labels must have unique, ascending values and at least two labels (min and max).',
+  }},
 });
 
 export const ScaleQuestionModel = QuestionModel.discriminator<ScaleQuestion>(
   'Scale',
-  ScaleSchema
+  ScaleQuestionSchema
 );
 
 export interface ShortResponseQuestion extends BaseQuestion {

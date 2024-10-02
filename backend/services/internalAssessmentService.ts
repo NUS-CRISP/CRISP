@@ -189,6 +189,7 @@ interface InternalAssessmentData {
   granularity: string;
   teamSetName: string;
   gradedBy?: string;
+  areSubmissionsEditable: boolean;
 }
 
 export const addInternalAssessmentsToCourse = async (
@@ -216,6 +217,7 @@ export const addInternalAssessmentsToCourse = async (
       granularity,
       teamSetName,
       gradedBy,
+      areSubmissionsEditable,
     } = data;
 
     const existingAssessment = await InternalAssessmentModel.findOne({
@@ -237,6 +239,7 @@ export const addInternalAssessmentsToCourse = async (
       granularity,
       teamSet: null,
       gradedBy: gradedBy ? new ObjectId(gradedBy) : null,
+      areSubmissionsEditable,
       results: [],
       isReleased: false,
       questions: [],

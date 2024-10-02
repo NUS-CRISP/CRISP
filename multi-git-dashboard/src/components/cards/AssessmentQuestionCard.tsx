@@ -13,6 +13,7 @@ import {
   Radio,
   Checkbox,
   Textarea,
+  ActionIcon,
 } from '@mantine/core';
 import { DatePicker, DatesRangeValue, DateValue } from '@mantine/dates';
 import {
@@ -25,8 +26,9 @@ import {
   DateQuestion,
   NumberQuestion,
   UndecidedQuestion,
+  ScaleLabel,
 } from '@shared/types/Question';
-import { IconTrash, IconPencil } from '@tabler/icons-react';
+import { IconTrash, IconPencil, IconPlus } from '@tabler/icons-react';
 
 interface AssessmentQuestionCardProps {
   questionData: QuestionUnion;
@@ -52,14 +54,16 @@ const AssessmentQuestionCard: React.FC<AssessmentQuestionCardProps> = ({
   const [questionText, setQuestionText] = useState<string>(questionData.text || '');
   const [questionType, setQuestionType] = useState<QuestionUnion['type']>(questionData.type);
   const [customInstruction, setCustomInstruction] = useState<string>(questionData.customInstruction || '');
+  const [isRequired, setIsRequired] = useState<boolean>(questionData.isRequired || false); // New state for isRequired
 
   // Additional state based on question type
   const [options, setOptions] = useState<string[]>([]);
   const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
   const [scaleMax, setScaleMax] = useState<number>(5);
   const [scaleValue, setScaleValue] = useState<number>(1);
-  const [labelMin, setLabelMin] = useState<string>('Low');
-  const [labelMax, setLabelMax] = useState<string>('High');
+  const [minLabel, setMinLabel] = useState<{ value: number; label: string }>({ value: 1, label: 'Low' }); // Fixed min label
+  const [maxLabel, setMaxLabel] = useState<{ value: number; label: string }>({ value: 5, label: 'High' }); // Tied to scaleMax
+  const [intermediateLabels, setIntermediateLabels] = useState<ScaleLabel[]>([]); // Intermediate labels
   const [shortResponseValue, setShortResponseValue] = useState<string>(''); // For submission
   const [shortResponsePlaceholder, setShortResponsePlaceholder] = useState<string>(''); // For editing the placeholder
   const [longResponseValue, setLongResponseValue] = useState<string>(''); // For Long Response submission
@@ -73,6 +77,10 @@ const AssessmentQuestionCard: React.FC<AssessmentQuestionCardProps> = ({
   const [maxDate, setMaxDate] = useState<Date | null>((questionData as DateQuestion).maxDate || null); // Edit mode
   const [numberValue, setNumberValue] = useState<number | undefined>((questionData as NumberQuestion).maxNumber || undefined); // Editable number value
 
+  // Temporary state for Max Scale Value as string to handle empty input and trimming
+  const [tempScaleMax, setTempScaleMax] = useState<string>(scaleMax.toString());
+  const [previousScaleMax, setPreviousScaleMax] = useState<number>(scaleMax);
+
   // Initialize state based on question type
   useEffect(() => {
     switch (questionType) {
@@ -85,14 +93,34 @@ const AssessmentQuestionCard: React.FC<AssessmentQuestionCardProps> = ({
         }
         break;
       case 'Scale':
-        if ('scaleMax' in questionData && 'labelMin' in questionData && 'labelMax' in questionData) {
+        if (
+          'scaleMax' in questionData &&
+          'labels' in questionData &&
+          questionData.labels.length >= 2
+        ) {
           setScaleMax(questionData.scaleMax);
-          setLabelMin(questionData.labelMin);
-          setLabelMax(questionData.labelMax);
+          setPreviousScaleMax(questionData.scaleMax);
+          // Separate min and max labels
+          const sortedLabels = [...questionData.labels].sort((a, b) => a.value - b.value);
+          const min = sortedLabels.find((label) => label.value === 1) || { value: 1, label: 'Low' };
+          const max = sortedLabels.find((label) => label.value === questionData.scaleMax) || {
+            value: questionData.scaleMax,
+            label: 'High',
+          };
+          const intermediates = sortedLabels.filter(
+            (label) => label.value !== min.value && label.value !== max.value
+          );
+          setMinLabel(min);
+          setMaxLabel(max);
+          setIntermediateLabels(intermediates);
+          setTempScaleMax(questionData.scaleMax.toString());
         } else {
           setScaleMax(5);
-          setLabelMin('Low');
-          setLabelMax('High');
+          setPreviousScaleMax(5);
+          setMinLabel({ value: 1, label: 'Low' });
+          setMaxLabel({ value: 5, label: 'High' });
+          setIntermediateLabels([]);
+          setTempScaleMax('5');
         }
         break;
       case 'Short Response':
@@ -119,6 +147,12 @@ const AssessmentQuestionCard: React.FC<AssessmentQuestionCardProps> = ({
     }
   }, [questionType, questionData]);
 
+  // Synchronize tempScaleMax with scaleMax when scaleMax changes externally
+  useEffect(() => {
+    setTempScaleMax(scaleMax.toString());
+    setPreviousScaleMax(scaleMax);
+  }, [scaleMax]);
+
   const handleAddOption = () => {
     setOptions([...options, '']);
   };
@@ -136,15 +170,66 @@ const AssessmentQuestionCard: React.FC<AssessmentQuestionCardProps> = ({
 
   const toggleOption = (index: number) => {
     if (questionType === 'Multiple Choice') {
-      setSelectedOptions(selectedOptions.includes(index) ? [] : [index]); // Only one can be selected at a time for MCQ
+      setSelectedOptions(selectedOptions.includes(index) ? [] : [index]);
     } else if (questionType === 'Multiple Response') {
       setSelectedOptions((prev) =>
         prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
-      ); // Toggle selection for MRQ
+      );
     }
   };
 
+  // Handlers for dynamic intermediate labels
+  const handleAddIntermediateLabel = () => {
+    // Determine next available value between min and max
+    const existingValues = intermediateLabels.map((l) => l.value);
+    let newValue = Math.floor((minLabel.value + maxLabel.value) / 2);
+    while (existingValues.includes(newValue) && newValue > minLabel.value && newValue < maxLabel.value) {
+      newValue += 1;
+    }
+    if (newValue > minLabel.value && newValue < maxLabel.value) {
+      setIntermediateLabels([...intermediateLabels, { value: newValue, label: '' }]);
+    } else {
+      alert('Cannot add more intermediate labels.');
+    }
+  };
+
+  const handleIntermediateLabelChange = (index: number, field: keyof ScaleLabel, value: string | number) => {
+    const updatedLabels = [...intermediateLabels];
+    updatedLabels[index] = { ...updatedLabels[index], [field]: value };
+    setIntermediateLabels(updatedLabels);
+  };
+
+  const handleDeleteIntermediateLabel = (index: number) => {
+    const updatedLabels = intermediateLabels.filter((_, i) => i !== index);
+    setIntermediateLabels(updatedLabels);
+  };
+
   const saveQuestion = () => {
+    // Validate Scale labels
+    if (questionType === 'Scale') {
+      if (!minLabel || !maxLabel) {
+        alert('Scale questions must have both min and max labels.');
+        return;
+      }
+
+      // Ensure no duplicate intermediate label values
+      const allValues = intermediateLabels.map((label) => label.value);
+      const uniqueValues = new Set(allValues);
+      if (uniqueValues.size !== allValues.length) {
+        alert('Intermediate label values must be unique.');
+        return;
+      }
+
+      // Ensure all intermediate labels are between min and max
+      const invalidLabels = intermediateLabels.filter(
+        (label) => label.value <= minLabel.value || label.value >= maxLabel.value
+      );
+      if (invalidLabels.length > 0) {
+        alert('Intermediate label values must be between min and max scale values.');
+        return;
+      }
+    }
+
     let updatedQuestion: QuestionUnion;
 
     switch (questionType) {
@@ -156,6 +241,7 @@ const AssessmentQuestionCard: React.FC<AssessmentQuestionCardProps> = ({
           options,
           customInstruction: customInstruction || getDefaultInstruction(),
           isLocked: questionData.isLocked || false,
+          isRequired, // Added isRequired
         } as MultipleChoiceQuestion;
         break;
       case 'Multiple Response':
@@ -166,6 +252,7 @@ const AssessmentQuestionCard: React.FC<AssessmentQuestionCardProps> = ({
           options,
           customInstruction: customInstruction || getDefaultInstruction(),
           isLocked: questionData.isLocked || false,
+          isRequired, // Added isRequired
         } as MultipleResponseQuestion;
         break;
       case 'Scale':
@@ -174,10 +261,10 @@ const AssessmentQuestionCard: React.FC<AssessmentQuestionCardProps> = ({
           text: questionText,
           type: questionType,
           scaleMax,
-          labelMin,
-          labelMax,
+          labels: [minLabel, ...intermediateLabels.sort((a, b) => a.value - b.value), maxLabel],
           customInstruction: customInstruction || getDefaultInstruction(),
           isLocked: questionData.isLocked || false,
+          isRequired, // Added isRequired
         } as ScaleQuestion;
         break;
       case 'Short Response':
@@ -188,6 +275,7 @@ const AssessmentQuestionCard: React.FC<AssessmentQuestionCardProps> = ({
           shortResponsePlaceholder,
           customInstruction: customInstruction || getDefaultInstruction(),
           isLocked: questionData.isLocked || false,
+          isRequired, // Added isRequired
         } as ShortResponseQuestion;
         break;
       case 'Long Response':
@@ -198,6 +286,7 @@ const AssessmentQuestionCard: React.FC<AssessmentQuestionCardProps> = ({
           longResponsePlaceholder: shortResponsePlaceholder,
           customInstruction: customInstruction || getDefaultInstruction(),
           isLocked: questionData.isLocked || false,
+          isRequired, // Added isRequired
         } as LongResponseQuestion;
         break;
       case 'Date':
@@ -211,6 +300,7 @@ const AssessmentQuestionCard: React.FC<AssessmentQuestionCardProps> = ({
           maxDate: maxDate || undefined,
           customInstruction: customInstruction || getDefaultInstruction(),
           isLocked: questionData.isLocked || false,
+          isRequired, // Added isRequired
         } as DateQuestion;
         break;
       case 'Number':
@@ -221,6 +311,7 @@ const AssessmentQuestionCard: React.FC<AssessmentQuestionCardProps> = ({
           maxNumber: numberValue || 100,
           customInstruction: customInstruction || getDefaultInstruction(),
           isLocked: questionData.isLocked || false,
+          isRequired, // Added isRequired
         } as NumberQuestion;
         break;
       case 'Undecided':
@@ -230,6 +321,7 @@ const AssessmentQuestionCard: React.FC<AssessmentQuestionCardProps> = ({
           type: questionType,
           customInstruction: customInstruction || '',
           isLocked: questionData.isLocked || false,
+          isRequired,
         } as UndecidedQuestion;
         break;
       default:
@@ -238,6 +330,7 @@ const AssessmentQuestionCard: React.FC<AssessmentQuestionCardProps> = ({
           text: questionText,
           type: questionType,
           isLocked: questionData.isLocked || false,
+          isRequired,
         } as QuestionUnion;
         break;
     }
@@ -267,7 +360,7 @@ const AssessmentQuestionCard: React.FC<AssessmentQuestionCardProps> = ({
   };
 
   if (!isEditing) {
-    // View mode
+    // View mode (Form Takers)
     return (
       <Box
         p="md"
@@ -275,21 +368,17 @@ const AssessmentQuestionCard: React.FC<AssessmentQuestionCardProps> = ({
         style={{
           border: '1px solid #ccc',
           borderRadius: '8px',
-          position: 'relative',
         }}
       >
-        {/* Question type badge */}
-        <Badge
-          color={isQuestionLocked ? 'red' : 'blue'}
-          size="sm"
-          style={{
-            position: 'absolute',
-            top: '8px',
-            right: '8px',
-          }}
-        >
-          {isQuestionLocked ? 'Locked' : questionType}
-        </Badge>
+        {/* Top Badges */}
+        <Group justify="space-between" mb="sm">
+          <Badge color={isRequired ? 'red' : 'blue'} size="sm">
+            {isRequired ? 'Required' : 'Optional'}
+          </Badge>
+          <Badge color={isQuestionLocked ? 'red' : 'blue'} size="sm">
+            {isQuestionLocked ? 'Locked' : questionType}
+          </Badge>
+        </Group>
 
         {/* Question instruction */}
         <Text color="gray" size="sm" mb="xs">
@@ -337,14 +426,15 @@ const AssessmentQuestionCard: React.FC<AssessmentQuestionCardProps> = ({
           <>
             <Slider
               value={scaleValue}
-              min={1}
+              min={minLabel.value}
               max={scaleMax}
               marks={[
-                { value: 1, label: labelMin },
-                { value: scaleMax, label: labelMax },
+                { value: minLabel.value, label: minLabel.label },
+                ...intermediateLabels.map((label) => ({ value: label.value, label: label.label })),
+                { value: maxLabel.value, label: maxLabel.label },
               ]}
               step={1}
-              style={{ padding: '0 20px', marginBottom: '20px' }} // Add padding for better visual spacing
+              style={{ padding: '0 20px', marginBottom: '20px' }}
               onChange={setScaleValue}
             />
             <Box style={{ marginTop: '24px' }} />
@@ -410,7 +500,7 @@ const AssessmentQuestionCard: React.FC<AssessmentQuestionCardProps> = ({
           />
         ) : null}
 
-        {/* Delete and Edit buttons */}
+        {/* Edit and Delete buttons */}
         {!isQuestionLocked && (
           <Group style={{ marginTop: '16px', gap: '8px' }}>
             <Button
@@ -484,6 +574,14 @@ const AssessmentQuestionCard: React.FC<AssessmentQuestionCardProps> = ({
         style={{ marginBottom: '16px' }}
       />
 
+      {/* Checkbox to toggle isRequired */}
+      <Checkbox
+        label="Required"
+        checked={isRequired}
+        onChange={(e) => setIsRequired(e.currentTarget.checked)}
+        style={{ marginBottom: '16px' }}
+      />
+
       {(questionType === 'Multiple Choice' || questionType === 'Multiple Response') && (
         <Box style={{ marginBottom: '16px' }}>
           <Text>Options:</Text>
@@ -495,55 +593,149 @@ const AssessmentQuestionCard: React.FC<AssessmentQuestionCardProps> = ({
                 onChange={(e) => handleOptionChange(index, e.currentTarget.value)}
                 style={{ flex: 1 }}
               />
-              <Button
-                color="red"
-                onClick={() => handleDeleteOption(index)}
-                variant="subtle"
-                size="xs"
-                style={{ padding: '4px 8px' }}
-              >
-                Remove
-              </Button>
+              <ActionIcon color="red" onClick={() => handleDeleteOption(index)}>
+                <IconTrash size={16} />
+              </ActionIcon>
             </Group>
           ))}
-          <Button style={{ marginTop: '8px' }} onClick={handleAddOption}>
+          <Button
+            variant="light"
+            color="blue"
+            leftSection={<IconPlus size={16} />}
+            onClick={handleAddOption}
+            style={{ marginTop: '8px' }}
+          >
             Add Option
           </Button>
         </Box>
       )}
 
       {questionType === 'Scale' && (
-        <Box style={{ marginBottom: '16px' }}>
-          <Group style={{ marginBottom: '8px', gap: '8px' }}>
-            <TextInput
-              label="Minimum Label"
-              value={labelMin}
-              onChange={(e) => {
-                setLabelMin(e.currentTarget.value);
-              }}
-              style={{ flex: 1 }}
+        <>
+          <Box style={{ marginBottom: '16px' }}>
+            <Group justify="space-between" mb="sm">
+              <Badge color={isQuestionLocked ? 'red' : 'blue'} size="sm">
+                {isQuestionLocked ? 'Locked' : questionType}
+              </Badge>
+              <Badge color={isRequired ? 'red' : 'blue'} size="sm">
+                {isRequired ? 'Required' : 'Optional'}
+              </Badge>
+            </Group>
+
+            <Text style={{ fontWeight: 'bold', marginBottom: '8px' }}>Scale Labels:</Text>
+
+            {/* Min Label */}
+            <Group style={{ marginTop: '8px', gap: '8px' }}>
+              <TextInput
+                label="Min Value"
+                type="number"
+                value={minLabel.value}
+                disabled // Fixed at 1
+                style={{ flex: 1 }}
+              />
+              <TextInput
+                label="Min Label"
+                placeholder="Enter min label"
+                value={minLabel.label}
+                onChange={(e) => setMinLabel({ ...minLabel, label: e.currentTarget.value })}
+                style={{ flex: 2 }}
+              />
+            </Group>
+
+            {/* Intermediate Labels */}
+            {intermediateLabels.map((label, index) => (
+              <Group key={index} style={{ marginTop: '8px', gap: '8px' }}>
+                <TextInput
+                  label={`Intermediate Value ${index + 1}`}
+                  type="number"
+                  value={label.value}
+                  onChange={(e) => handleIntermediateLabelChange(index, 'value', parseInt(e.currentTarget.value, 10))}
+                  style={{ flex: 1 }}
+                />
+                <TextInput
+                  label="Label"
+                  placeholder="Enter label"
+                  value={label.label}
+                  onChange={(e) => handleIntermediateLabelChange(index, 'label', e.currentTarget.value)}
+                  style={{ flex: 2 }}
+                />
+                <ActionIcon color="red" onClick={() => handleDeleteIntermediateLabel(index)}>
+                  <IconTrash size={16} />
+                </ActionIcon>
+              </Group>
+            ))}
+
+            <Button
+              variant="light"
+              color="blue"
+              leftSection={<IconPlus size={16} />}
+              onClick={handleAddIntermediateLabel}
+              style={{ marginTop: '8px' }}
+            >
+              Add Intermediate Label
+            </Button>
+
+            {/* Max Scale Value */}
+            <Group style={{ marginTop: '16px', gap: '8px' }}>
+              <TextInput
+                label="Max Scale Value"
+                type="number"
+                value={tempScaleMax}
+                onChange={(e) => {
+                  const value = e.currentTarget.value;
+                  // Remove leading zeros
+                  const trimmedValue = value.replace(/^0+/, '') || '';
+                  setTempScaleMax(trimmedValue);
+                }}
+                onBlur={() => {
+                  if (tempScaleMax !== '' && !isNaN(Number(tempScaleMax)) && Number(tempScaleMax) > 1) {
+                    const newScaleMax = Number(tempScaleMax);
+                    setPreviousScaleMax(scaleMax); // Store current scaleMax before updating
+                    setScaleMax(newScaleMax);
+                    setMaxLabel({ value: newScaleMax, label: maxLabel.label });
+                    // Remove intermediate labels that exceed newScaleMax
+                    const filteredIntermediates = intermediateLabels.filter(
+                      (label) => label.value < newScaleMax
+                    );
+                    setIntermediateLabels(filteredIntermediates);
+                  } else {
+                    alert('Max scale value must be a number greater than 1.');
+                    setTempScaleMax(previousScaleMax.toString()); // Reset to previous valid scaleMax
+                  }
+                }}
+                placeholder="Enter maximum scale value"
+                required
+                style={{ flex: 1 }}
+              />
+              <TextInput
+                label="Max Label"
+                placeholder="Enter max label"
+                value={maxLabel.label}
+                onChange={(e) => setMaxLabel({ ...maxLabel, label: e.currentTarget.value })}
+                style={{ flex: 2 }}
+              />
+            </Group>
+          </Box>
+
+          {/* Preview Section */}
+          <Box style={{ marginTop: '24px' }}>
+            <Text style={{ fontWeight: 'bold', marginBottom: '8px' }}>Preview:</Text>
+            <Slider
+              value={scaleValue}
+              min={minLabel.value}
+              max={scaleMax}
+              marks={[
+                { value: minLabel.value, label: minLabel.label },
+                ...intermediateLabels.map((label) => ({ value: label.value, label: label.label })),
+                { value: maxLabel.value, label: maxLabel.label },
+              ]}
+              step={1}
+              style={{ padding: '0 20px', marginBottom: '20px' }}
+              onChange={setScaleValue}
+              disabled // Disabled in edit mode to prevent interaction
             />
-            <TextInput
-              label="Maximum Label"
-              value={labelMax}
-              onChange={(e) => {
-                setLabelMax(e.currentTarget.value);
-              }}
-              style={{ flex: 1 }}
-            />
-          </Group>
-          <TextInput
-            label="Max Scale Value"
-            type="number"
-            value={scaleMax}
-            onChange={(e) => {
-              setScaleMax(parseInt(e.currentTarget.value, 10));
-              setScaleValue(Math.round(scaleMax / 2));
-            }}
-            placeholder="Enter maximum scale value"
-            style={{ marginTop: '8px' }}
-          />
-        </Box>
+          </Box>
+        </>
       )}
 
       {questionType === 'Short Response' && (
@@ -555,6 +747,7 @@ const AssessmentQuestionCard: React.FC<AssessmentQuestionCardProps> = ({
             onChange={(e) => {
               setShortResponsePlaceholder(e.currentTarget.value);
             }}
+            style={{ marginBottom: '16px' }}
           />
           <Text style={{ marginTop: '8px', marginBottom: '4px' }}>Preview:</Text>
           <TextInput placeholder={shortResponsePlaceholder} disabled />
@@ -570,6 +763,7 @@ const AssessmentQuestionCard: React.FC<AssessmentQuestionCardProps> = ({
             onChange={(e) => {
               setShortResponsePlaceholder(e.currentTarget.value);
             }}
+            style={{ marginBottom: '16px' }}
           />
           <Text style={{ marginTop: '8px', marginBottom: '4px' }}>Preview:</Text>
           <Textarea
@@ -627,6 +821,7 @@ const AssessmentQuestionCard: React.FC<AssessmentQuestionCardProps> = ({
         </Box>
       )}
 
+      {/* Delete and Save buttons */}
       <Group style={{ marginTop: '16px', gap: '8px' }}>
         <Button onClick={onDelete} color="red">
           Delete Question

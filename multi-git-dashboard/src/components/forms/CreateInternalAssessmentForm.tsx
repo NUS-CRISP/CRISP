@@ -1,4 +1,6 @@
-import { Button, Select, TextInput, Textarea, Text, Radio } from '@mantine/core';
+// CreateInternalForm.tsx
+
+import { Button, Select, TextInput, Textarea, Text, Radio, Checkbox } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { User } from '@shared/types/User';
 
@@ -25,6 +27,7 @@ const CreateInternalForm: React.FC<CreateInternalFormProps> = ({
       maxMarks: '',
       teamSetName: '',
       gradedBy: '', // Storing the gradedBy as the User's _id
+      areSubmissionsEditable: false, // New field added
     },
   });
 
@@ -37,7 +40,7 @@ const CreateInternalForm: React.FC<CreateInternalFormProps> = ({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          items: [form.values]
+          items: [form.values],
         }),
       });
 
@@ -111,6 +114,16 @@ const CreateInternalForm: React.FC<CreateInternalFormProps> = ({
         placeholder="Select a Teaching Assistant"
         data={teachingTeam.map(ta => ({ value: ta._id, label: ta.name }))} // Map teachingTeam User objects
         {...form.getInputProps('gradedBy')}
+      />
+
+      {/* New Checkbox for areSubmissionsEditable */}
+      <Checkbox
+        label="Allow Submissions to be Editable"
+        checked={form.values.areSubmissionsEditable}
+        onChange={(event) =>
+          form.setFieldValue('areSubmissionsEditable', event.currentTarget.checked)
+        }
+        style={{ marginTop: '16px' }}
       />
 
       <Button type="submit" mt="sm">

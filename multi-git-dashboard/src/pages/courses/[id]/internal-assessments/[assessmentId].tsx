@@ -7,7 +7,7 @@ import AssessmentInternalResults from '@/components/views/AssessmentInternalResu
 import { InternalAssessment } from '@shared/types/InternalAssessment';
 import { User } from '@shared/types/User';
 import { hasFacultyPermission } from '@/lib/auth/utils';
-import { Question, UndecidedQuestion } from '@shared/types/Question';
+import { Question } from '@shared/types/Question';
 
 const InternalAssessmentDetail: React.FC = () => {
   const router = useRouter();
@@ -75,7 +75,7 @@ const InternalAssessmentDetail: React.FC = () => {
 
   useEffect(() => {
     const savedTab = localStorage.getItem(`activeAssessmentTab_${assessmentId}`);
-    if (savedTab && ['Overview', 'Form Questions', 'Internal Results'].includes(savedTab)) {
+    if (savedTab && ['Overview', 'Questions', 'Internal Results'].includes(savedTab)) {
       setActiveTab(savedTab);
     }
   }, [assessmentId]);
@@ -95,8 +95,9 @@ const InternalAssessmentDetail: React.FC = () => {
       text: '',
       type: 'Undecided',
       isLocked: false,
+      isRequired: true,
       customInstruction: '',
-    } as UndecidedQuestion;
+    };
     setQuestions([...questions, newQuestion]);
   };
 
@@ -180,8 +181,8 @@ const InternalAssessmentDetail: React.FC = () => {
             Overview
           </Tabs.Tab>
 
-          <Tabs.Tab value="Form Questions" onClick={() => setActiveTabAndSave('Form Questions')}>
-            Form Questions
+          <Tabs.Tab value="Questions" onClick={() => setActiveTabAndSave('Questions')}>
+            Questions
           </Tabs.Tab>
 
           {permission && (
@@ -202,7 +203,7 @@ const InternalAssessmentDetail: React.FC = () => {
           )}
         </Tabs.Panel>
 
-        <Tabs.Panel value="Form Questions">
+        <Tabs.Panel value="Questions">
           <AssessmentInternalForm
             assessment={assessment}
             questions={questions}

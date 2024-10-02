@@ -31,6 +31,7 @@ const internalAssessmentSchema = new Schema<InternalAssessment>({
   },
   teamSet: { type: Schema.Types.ObjectId, ref: 'TeamSet', required: false },
   gradedBy: { type: Schema.Types.ObjectId, ref: 'User', required: false },
+  areSubmissionsEditable: { type: Schema.Types.Boolean, ref: 'IsReleased', required: true },
   results: [{ type: Schema.Types.ObjectId, ref: 'Result', required: false }],
   isReleased: { type: Schema.Types.Boolean, ref: 'IsReleased', required: true},
   questions: [{ type: Schema.Types.ObjectId, ref: 'Question', required: false}]

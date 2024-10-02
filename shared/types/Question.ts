@@ -5,6 +5,7 @@ export interface BaseQuestion {
   text: string;
   type: string; // Discriminator property
   customInstruction?: string;
+  isRequired: boolean;
   isLocked: boolean; // Indicates if the question is locked
 }
 
@@ -20,12 +21,17 @@ export interface MultipleResponseQuestion extends BaseQuestion {
   options: string[];
 }
 
+// Scale Label Interface
+export interface ScaleLabel {
+  value: number;
+  label: string;
+}
+
 // Scale Question
 export interface ScaleQuestion extends BaseQuestion {
   type: 'Scale';
   scaleMax: number;
-  labelMin: string;
-  labelMax: string;
+  labels: ScaleLabel[]; // Dynamic labels
 }
 
 // Short Response Question
@@ -72,3 +78,4 @@ export type QuestionUnion =
   | UndecidedQuestion;
 
 export type QuestionData = QuestionUnion;
+export type Question = QuestionUnion;

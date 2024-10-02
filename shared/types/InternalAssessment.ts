@@ -1,9 +1,8 @@
-// @shared/types/InternalAssessment.ts
+import { QuestionUnion } from '@models/QuestionTypes';
 import { Course } from './Course';
-import { Question } from './Question';
 import { Result } from './Result';
 import { TeamSet } from './TeamSet';
-import { User } from './User'; // Import the User type
+import { User } from './User';
 
 export interface InternalAssessment {
   _id: string;
@@ -15,8 +14,9 @@ export interface InternalAssessment {
   maxMarks?: number;
   granularity: 'individual' | 'team';
   teamSet?: TeamSet;
-  gradedBy?: User; // Use the User type here instead of string
+  gradedBy?: User;
+  areSubmissionsEditable: boolean;
   results: Result[];
   isReleased: boolean;
-  questions: Question[];
+  questions: QuestionUnion[];
 }
