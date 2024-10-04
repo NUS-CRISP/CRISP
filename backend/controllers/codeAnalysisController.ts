@@ -3,9 +3,9 @@ import {
   fetchAllCodeAnalysisData,
   fetchAllCodeAnalysisDataForOrg,
   getAuthorizedCodeAnalysisDataByCourse,
-} from 'services/codeAnalysisService';
-import { MissingAuthorizationError, NotFoundError } from 'services/errors';
-import { getAccountId } from 'utils/auth';
+} from '../services/codeAnalysisService';
+import { MissingAuthorizationError, NotFoundError } from '../services/errors';
+import { getAccountId } from '../utils/auth';
 
 export const getAllCodeAnalysisData = async (req: Request, res: Response) => {
   try {
@@ -32,10 +32,10 @@ export const getAllCodeAnalysisDataByOrg = async (
     if (error instanceof NotFoundError) {
       res.status(404).json({ message: error.message });
     } else {
-      console.error('Error retrieving team datas for org:', error);
+      console.error('Error retrieving code analysis datas for org:', error);
       return res
         .status(500)
-        .json({ error: 'Failed to get team datas for org' });
+        .json({ error: 'Failed to get code analysis datas for org' });
     }
   }
 };
