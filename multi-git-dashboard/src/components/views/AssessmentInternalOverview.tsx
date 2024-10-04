@@ -13,7 +13,7 @@ import {
   Badge,
   Box,
 } from '@mantine/core';
-import { InternalAssessment } from '@shared/types/InternalAssessment'; // Use InternalAssessment type
+import { InternalAssessment } from '@shared/types/InternalAssessment';
 import { useRouter } from 'next/router';
 import { IconEdit, IconTrash } from '@tabler/icons-react';
 import UpdateAssessmentInternalForm from '../forms/UpdateAssessmentInternalForm';
@@ -83,6 +83,10 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
     })
     .map((team) => ({ value: team, label: `${team}` }));
 
+  const handleTakeAssessment = () => {
+    router.push(`/courses/${courseId}/internal-assessments/${assessment?._id}/take`);
+  };
+
   return (
     <Box>
       <Modal opened={isEditModalOpen} onClose={toggleEditModal} title="Edit Assessment">
@@ -130,47 +134,55 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
             </Text>
           </Grid.Col>
         </Grid>
+        {/* Add Take Assessment Button for users without faculty permission */}
+        {!hasFacultyPermission && (
+          <Group justify='center' mt="md">
+            <Button onClick={handleTakeAssessment}>Take Assessment</Button>
+          </Group>
+        )}
       </Card>
 
       {hasFacultyPermission && (
-        <Card withBorder shadow="sm" mb="lg">
-          <Group justify="space-between">
-            <Select
-              label="Filter by Team"
-              placeholder="Select a team"
-              data={teamOptions}
-              value={teamFilter}
-              onChange={handleFilterChange}
-              style={{ minWidth: '200px' }}
-            />
-            <Badge color="blue" variant="light">
-              Showing: {teamFilter}
-            </Badge>
-          </Group>
-        </Card>
-      )}
+        <>
+          <Card withBorder shadow="sm" mb="lg">
+            <Group justify="space-between">
+              <Select
+                label="Filter by Team"
+                placeholder="Select a team"
+                data={teamOptions}
+                value={teamFilter}
+                onChange={handleFilterChange}
+                style={{ minWidth: '200px' }}
+              />
+              <Badge color="blue" variant="light">
+                Showing: {teamFilter}
+              </Badge>
+            </Group>
+          </Card>
 
-      <Card withBorder shadow="sm">
-        <Table striped highlightOnHover>
-          <thead>
-            <tr>
-              <th>Student Name</th>
-              <th>Team</th>
-              <th>Submission Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {/* Placeholder for data rows */}
-            <tr>
-              <td colSpan={3}>
-                <Text ta="center" c="dimmed">
-                  No data available
-                </Text>
-              </td>
-            </tr>
-          </tbody>
-        </Table>
-      </Card>
+          <Card withBorder shadow="sm">
+            <Table striped highlightOnHover>
+              <thead>
+                <tr>
+                  <th>Student Name</th>
+                  <th>Team</th>
+                  <th>Submission Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* Placeholder for data rows */}
+                <tr>
+                  <td colSpan={3}>
+                    <Text ta="center" c="dimmed">
+                      No data available
+                    </Text>
+                  </td>
+                </tr>
+              </tbody>
+            </Table>
+          </Card>
+        </>
+      )}
     </Box>
   );
 };

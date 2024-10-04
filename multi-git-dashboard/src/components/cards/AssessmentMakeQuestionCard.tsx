@@ -30,18 +30,20 @@ import {
 } from '@shared/types/Question';
 import { IconTrash, IconPencil, IconPlus } from '@tabler/icons-react';
 
-interface AssessmentQuestionCardProps {
+interface AssessmentMakeQuestionCardProps {
   questionData: QuestionUnion;
   onDelete: () => void;
   onSave: (updatedQuestion: QuestionUnion) => void;
   isLocked: boolean;
+  index: number;
 }
 
-const AssessmentQuestionCard: React.FC<AssessmentQuestionCardProps> = ({
+const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
   questionData,
   onDelete,
   onSave,
   isLocked,
+  index,
 }) => {
   const isQuestionLocked = isLocked || questionData.isLocked || false;
 
@@ -385,8 +387,10 @@ const AssessmentQuestionCard: React.FC<AssessmentQuestionCardProps> = ({
           {customInstruction || getDefaultInstruction()}
         </Text>
 
-        {/* Question text */}
-        <Text mb="sm">{questionText}</Text>
+        {/* Question text with numbering */}
+        <Text mb="sm">
+          {index + 1}. {questionText}
+        </Text>
 
         {/* Render based on question type */}
         {questionType === 'Multiple Choice' || questionType === 'Multiple Response' ? (
@@ -531,6 +535,9 @@ const AssessmentQuestionCard: React.FC<AssessmentQuestionCardProps> = ({
         borderRadius: '8px',
       }}
     >
+      <Text size="sm" mb="xs">
+        Question {index + 1}
+      </Text>
       <Group style={{ marginBottom: '16px' }}>
         <TextInput
           label="Question"
@@ -834,4 +841,4 @@ const AssessmentQuestionCard: React.FC<AssessmentQuestionCardProps> = ({
   );
 };
 
-export default AssessmentQuestionCard;
+export default AssessmentMakeQuestionCard;

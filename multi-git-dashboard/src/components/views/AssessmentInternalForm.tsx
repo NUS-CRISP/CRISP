@@ -1,6 +1,6 @@
 import { Button, Modal, Group, Text, Box } from '@mantine/core';
 import { Question } from '@shared/types/Question';
-import AssessmentQuestionCard from '@/components/cards/AssessmentQuestionCard';
+import AssessmentMakeQuestionCard from '@/components/cards/AssessmentMakeQuestionCard';
 import { InternalAssessment } from '@shared/types/InternalAssessment';
 import { useState } from 'react';
 
@@ -66,13 +66,14 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
   };
 
   return (
-    <>
+    <div>
       {/* Padding added above the first question card */}
       <Box pt={16}>
         {/* Questions list */}
-        {questions.map((question) => (
-          <AssessmentQuestionCard
+        {questions.map((question, index) => (
+          <AssessmentMakeQuestionCard
             key={question._id}
+            index={index}
             questionData={question}
             onSave={(updatedQuestion) => handleSaveQuestion(question._id, updatedQuestion)}
             onDelete={() => handleDeleteQuestion(question._id)}
@@ -135,7 +136,7 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
           </Button>
         </Group>
       </Modal>
-    </>
+    </div>
   );
 };
 

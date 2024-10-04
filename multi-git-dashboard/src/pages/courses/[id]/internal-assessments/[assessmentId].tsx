@@ -88,7 +88,6 @@ const InternalAssessmentDetail: React.FC = () => {
     }
   }, [router.isReady, fetchAssessment, fetchQuestions, fetchTeachingTeam]);
 
-
   const addQuestion = () => {
     const newQuestion: Question = {
       _id: `temp-${Date.now()}`,
@@ -105,26 +104,22 @@ const InternalAssessmentDetail: React.FC = () => {
     try {
       if (id.startsWith('temp-')) {
         // New question, send POST request
-        console.log(updatedQuestion);
         const response = await fetch(questionsApiRoute, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            ...updatedQuestion
+            ...updatedQuestion,
           }),
         });
-        console.log(response);
         if (!response.ok) {
           console.error('Error adding question:', response.statusText);
           return;
         }
         const createdQuestion: Question = await response.json();
         // Replace the local question with the one from the backend
-        setQuestions(
-          questions.map((q) => (q._id === id ? createdQuestion : q))
-        );
+        setQuestions(questions.map((q) => (q._id === id ? createdQuestion : q)));
       } else {
         // Existing question, send PATCH request
         const response = await fetch(`${questionsApiRoute}/${id}`, {
@@ -139,9 +134,7 @@ const InternalAssessmentDetail: React.FC = () => {
           return;
         }
         const updatedQuestionFromServer: Question = await response.json();
-        setQuestions(
-          questions.map((q) => (q._id === id ? updatedQuestionFromServer : q))
-        );
+        setQuestions(questions.map((q) => (q._id === id ? updatedQuestionFromServer : q)));
       }
     } catch (error) {
       console.error('Error saving question:', error);
@@ -181,9 +174,11 @@ const InternalAssessmentDetail: React.FC = () => {
             Overview
           </Tabs.Tab>
 
-          <Tabs.Tab value="Questions" onClick={() => setActiveTabAndSave('Questions')}>
-            Questions
-          </Tabs.Tab>
+          {permission && (
+            <Tabs.Tab value="Questions" onClick={() => setActiveTabAndSave('Questions')}>
+              Questions
+            </Tabs.Tab>
+          )}
 
           {permission && (
             <Tabs.Tab value="Internal Results" onClick={() => setActiveTabAndSave('Internal Results')}>
@@ -203,16 +198,18 @@ const InternalAssessmentDetail: React.FC = () => {
           )}
         </Tabs.Panel>
 
-        <Tabs.Panel value="Questions">
-          <AssessmentInternalForm
-            assessment={assessment}
-            questions={questions}
-            addQuestion={addQuestion}
-            handleSaveQuestion={handleSaveQuestion}
-            handleDeleteQuestion={handleDeleteQuestion}
-            onAssessmentUpdated={fetchAssessment}
-          />
-        </Tabs.Panel>
+        {permission && (
+          <Tabs.Panel value="Questions">
+            <AssessmentInternalForm
+              assessment={assessment}
+              questions={questions}
+              addQuestion={addQuestion}
+              handleSaveQuestion={handleSaveQuestion}
+              handleDeleteQuestion={handleDeleteQuestion}
+              onAssessmentUpdated={fetchAssessment}
+            />
+          </Tabs.Panel>
+        )}
 
         {permission && (
           <Tabs.Panel value="Internal Results">

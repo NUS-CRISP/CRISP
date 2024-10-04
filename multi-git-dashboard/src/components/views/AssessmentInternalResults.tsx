@@ -57,7 +57,7 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
   };
 
   return (
-    <>
+    <div>
       <Group>
         <div>
           <Text size="sm">Marker</Text>
@@ -114,7 +114,7 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
           assessmentId={assessmentId}
         />
       ))}
-    </>
+    </div>
   );
 };
 
