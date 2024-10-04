@@ -12,6 +12,7 @@ import metricRoutes from './routes/metricRoutes';
 import teamRoutes from './routes/teamRoutes';
 import teamSetRoutes from './routes/teamSetRoutes';
 import userRoutes from './routes/userRoutes';
+import codeAnalysisRoutes from './routes/codeAnalysisRoutes';
 import { connectToDatabase } from './utils/database';
 import setupCodeAnalysisJob from './jobs/codeAnalysisJob';
 
@@ -42,6 +43,7 @@ app.use('/api/assessments', assessmentRoutes);
 app.use('/api/jira', jiraRoutes);
 app.use('/api/metrics', metricRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/codeanalysis', codeAnalysisRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
