@@ -1,9 +1,10 @@
 import AssessmentsInfo from '@/components/views/AssessmentsInfo';
 import { Container } from '@mantine/core';
 import { Assessment } from '@shared/types/Assessment';
-import { InternalAssessment } from '@shared/types/InternalAssessment'; // Import the InternalAssessment type
+import { InternalAssessment } from '@shared/types/InternalAssessment';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import { hasFacultyPermission } from '@/lib/auth/utils';
 
 const AssessmentListPage: React.FC = () => {
   const router = useRouter();
@@ -12,28 +13,28 @@ const AssessmentListPage: React.FC = () => {
   };
 
   const assessmentsApiRoute = `/api/courses/${id}/assessments`;
-  const internalAssessmentsApiRoute = `/api/courses/${id}/internal-assessments`; // New internal assessments route
+  const internalAssessmentsApiRoute = `/api/courses/${id}/internal-assessments`;
   const courseTeamSetNamesApiRoute = `/api/courses/${id}/teamsets/names`;
 
   const [assessments, setAssessments] = useState<Assessment[]>([]);
-  const [internalAssessments, setInternalAssessments] = useState<InternalAssessment[]>([]); // State for internal assessments
+  const [internalAssessments, setInternalAssessments] = useState<InternalAssessment[]>([]);
   const [teamSetNames, setTeamSetNames] = useState<string[]>([]);
+  const permission = hasFacultyPermission();
 
   const onUpdate = () => {
     fetchAssessments();
-    fetchInternalAssessments(); // Fetch internal assessments when updating
+    fetchInternalAssessments();
     fetchTeamSetNames();
   };
 
   useEffect(() => {
     if (router.isReady) {
       fetchAssessments();
-      fetchInternalAssessments(); // Fetch internal assessments on mount
+      fetchInternalAssessments();
       fetchTeamSetNames();
     }
   }, [router.isReady]);
 
-  // Fetch regular assessments
   const fetchAssessments = async () => {
     try {
       const response = await fetch(assessmentsApiRoute, {
@@ -46,15 +47,16 @@ const AssessmentListPage: React.FC = () => {
       if (!response.ok) {
         console.error('Error fetching assessments:', response.statusText);
       } else {
-        const data = await response.json();
+        const data: Assessment[] = await response.json();
         setAssessments(data);
+        console.log('Assessments:', data);
       }
     } catch (error) {
       console.error('Error fetching assessments:', error);
     }
   };
 
-  // Fetch internal assessments
+  // New function to fetch internal assessments
   const fetchInternalAssessments = async () => {
     try {
       const response = await fetch(internalAssessmentsApiRoute, {
@@ -67,15 +69,21 @@ const AssessmentListPage: React.FC = () => {
       if (!response.ok) {
         console.error('Error fetching internal assessments:', response.statusText);
       } else {
-        const data = await response.json();
-        setInternalAssessments(data);
+        const data: InternalAssessment[] = await response.json();
+        console.log('Internal Assessments:', data);
+
+        if (permission) {
+          setInternalAssessments(data);
+        } else {
+          const releasedAssessments = data.filter((assessment) => assessment.isReleased);
+          setInternalAssessments(releasedAssessments);
+        }
       }
     } catch (error) {
       console.error('Error fetching internal assessments:', error);
     }
   };
 
-  // Fetch team set names
   const fetchTeamSetNames = async () => {
     try {
       const response = await fetch(courseTeamSetNamesApiRoute, {
@@ -88,8 +96,9 @@ const AssessmentListPage: React.FC = () => {
       if (!response.ok) {
         console.error('Error fetching team set names:', response.statusText);
       } else {
-        const data = await response.json();
+        const data: string[] = await response.json();
         setTeamSetNames(data);
+        console.log('Team Set Names:', data);
       }
     } catch (error) {
       console.error('Error fetching team set names:', error);
@@ -101,7 +110,7 @@ const AssessmentListPage: React.FC = () => {
       <AssessmentsInfo
         courseId={id}
         assessments={assessments}
-        internalAssessments={internalAssessments} // Pass internal assessments to the component
+        internalAssessments={internalAssessments}
         teamSetNames={teamSetNames}
         onUpdate={onUpdate}
       />

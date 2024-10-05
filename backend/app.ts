@@ -14,6 +14,7 @@ import teamRoutes from './routes/teamRoutes';
 import teamSetRoutes from './routes/teamSetRoutes';
 import userRoutes from './routes/userRoutes';
 import { connectToDatabase } from './utils/database';
+import submissionRoutes from 'routes/submissionRoutes';
 
 const env = process.env.NODE_ENV ?? 'development';
 config({ path: `.env.${env}` });
@@ -39,6 +40,7 @@ app.use('/api/teams', teamRoutes);
 app.use('/api/teamsets', teamSetRoutes);
 app.use('/api/assessments', assessmentRoutes);
 app.use('/api/internal-assessments', internalAssessmentRoutes);
+app.use('/api/submissions', submissionRoutes)
 app.use('/api/jira', jiraRoutes);
 app.use('/api/metrics', metricRoutes);
 app.use('/api/user', userRoutes);

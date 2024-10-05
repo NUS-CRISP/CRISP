@@ -1,5 +1,5 @@
-import { QuestionUnion } from '@models/QuestionTypes';
 import { Course } from './Course';
+import { QuestionUnion } from './Question';
 import { Result } from './Result';
 import { TeamSet } from './TeamSet';
 import { User } from './User';

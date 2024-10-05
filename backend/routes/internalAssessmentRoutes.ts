@@ -12,6 +12,7 @@ import {
   recallInternalAssessment,
   releaseInternalAssessment,
 } from '../controllers/internalAssessmentController';
+import { submitAssessment, getUserSubmissions, getAllSubmissions } from 'controllers/submissionController';
 
 const router = express.Router();
 
@@ -26,5 +27,8 @@ router.patch('/:assessmentId/questions/:questionId', updateQuestionByIdControlle
 router.delete('/:assessmentId/questions/:questionId', deleteQuestionByIdController);
 router.post('/:assessmentId/release', releaseInternalAssessment);
 router.post('/:assessmentId/recall', recallInternalAssessment);
+router.post('/:assessmentId/submit', submitAssessment);
+router.get('/:assessmentId/submissions', getUserSubmissions);
+router.get('/:assessmentId/all-submissions', getAllSubmissions);
 
 export default router;

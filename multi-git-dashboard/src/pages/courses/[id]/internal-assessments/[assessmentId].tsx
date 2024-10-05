@@ -15,7 +15,6 @@ const InternalAssessmentDetail: React.FC = () => {
     id: string;
     assessmentId: string;
   };
-
   const assessmentsApiRoute = `/api/internal-assessments/${assessmentId}`;
   const questionsApiRoute = `/api/internal-assessments/${assessmentId}/questions`;
   const teachingTeamApiRoute = `/api/courses/${id}/teachingteam`;
@@ -170,24 +169,24 @@ const InternalAssessmentDetail: React.FC = () => {
     <Container>
       <Tabs value={activeTab}>
         <Tabs.List>
-          <Tabs.Tab value="Overview" onClick={() => setActiveTabAndSave('Overview')}>
+          <Tabs.Tab value='Overview' onClick={() => setActiveTabAndSave('Overview')}>
             Overview
           </Tabs.Tab>
 
           {permission && (
-            <Tabs.Tab value="Questions" onClick={() => setActiveTabAndSave('Questions')}>
+            <Tabs.Tab value='Questions' onClick={() => setActiveTabAndSave('Questions')}>
               Questions
             </Tabs.Tab>
           )}
 
           {permission && (
-            <Tabs.Tab value="Internal Results" onClick={() => setActiveTabAndSave('Internal Results')}>
+            <Tabs.Tab value='Internal Results' onClick={() => setActiveTabAndSave('Internal Results')}>
               Results
             </Tabs.Tab>
           )}
         </Tabs.List>
 
-        <Tabs.Panel value="Overview">
+        <Tabs.Panel value='Overview'>
           {id && (
             <AssessmentInternalOverview
               courseId={id}
@@ -199,7 +198,7 @@ const InternalAssessmentDetail: React.FC = () => {
         </Tabs.Panel>
 
         {permission && (
-          <Tabs.Panel value="Questions">
+          <Tabs.Panel value='Questions'>
             <AssessmentInternalForm
               assessment={assessment}
               questions={questions}
@@ -212,7 +211,7 @@ const InternalAssessmentDetail: React.FC = () => {
         )}
 
         {permission && (
-          <Tabs.Panel value="Internal Results">
+          <Tabs.Panel value='Internal Results'>
             <AssessmentInternalResults
               assessmentId={assessmentId}
               teachingTeam={teachingTeam}
