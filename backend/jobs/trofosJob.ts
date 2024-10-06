@@ -2,6 +2,12 @@ import cron from 'node-cron';
 import { Course } from '@models/Course';
 import CourseModel from '@models/Course';
 import {
+  JiraBoardModel,
+  JiraIssueModel,
+  JiraSprintModel,
+} from '@models/JiraData';
+import { JiraBoard, JiraIssue, JiraSprint } from '@shared/types/JiraData';
+import {
   TROFOS_COURSE_URI,
   TROFOS_PROJECT_URI,
   TROFOS_SPRINT_PATH,
@@ -58,7 +64,7 @@ const fetchAndSaveTrofosData = async () => {
 
       for (const trofosProject of trofosProjectData) {
         const trofosProjectId = trofosProject.id;
-        await fetchSingleTrofosProject(trofosProjectId, apiKey);
+        await fetchSingleTrofosProject(course, trofosProjectId, apiKey);
       }
     } catch (error) {
       console.error('Error in fetching Trofos project:', error);
@@ -69,6 +75,7 @@ const fetchAndSaveTrofosData = async () => {
 };
 
 const fetchSingleTrofosProject = async (
+  course: any,
   trofosProjectId: number,
   apiKey: string
 ) => {
@@ -89,7 +96,38 @@ const fetchSingleTrofosProject = async (
     }
 
     const singleTrofosProjectData = await singleTrofosProjectResponse.json();
-    console.log(singleTrofosProjectData);
+
+    // Transform the trofos project data to fit the JiraBoard interface
+    const transformedJiraBoard: Omit<JiraBoard, '_id'> = {
+      id: singleTrofosProjectData.id,
+      self: singleTrofosProjectUri,
+      name: singleTrofosProjectData.pname,
+      type: 'Trofos',
+      jiraLocation: {
+        projectId: singleTrofosProjectData.id,
+        displayName: singleTrofosProjectData.pname,
+        projectName: singleTrofosProjectData.pname,
+        projectKey: singleTrofosProjectData.pkey,
+        projectTypeKey: undefined, // Optional field, set according to your logic
+        avatarURI: undefined, // Optional field, set if available
+        name: singleTrofosProjectData.pname,
+      },
+      columns: singleTrofosProjectData.backlogStatuses.map((status: { name: string; }) => ({
+        name: status.name,
+      })),
+      jiraSprints: [],
+      jiraIssues: [],
+      course: course._id
+    };
+
+    await JiraBoardModel.findOneAndUpdate(
+      { self: singleTrofosProjectUri },
+      transformedJiraBoard,
+      {
+        upsert: true,
+        new: true,
+      }
+    );
 
     await fetchSprintsFromSingleTrofosProject(trofosProjectId, apiKey);
   } catch (error) {
@@ -118,11 +156,56 @@ const fetchSprintsFromSingleTrofosProject = async (
     }
 
     const trofosSprintData = await trofosSprintResponse.json();
-    console.log(trofosSprintData);
+
+    const transformedSprints = trofosSprintData.sprints.map((sprint: any) => ({
+      id: sprint.id,
+      self: `${trofosSprintUri}/${sprint.id}`, // Assuming `trofosSprintUri` is defined elsewhere
+      state: sprint.status === 'current' ? 'active' : 'future', // Map status
+      name: sprint.name,
+      startDate: new Date(sprint.start_date),
+      endDate: new Date(sprint.end_date),
+      createdDate: new Date(sprint.start_date),
+      originBoardId: sprint.project_id, // Relating it to the board ID
+      goal: sprint.goals || '', // Default to empty string if no goals
+      jiraIssues: [] // You can populate this later or leave it empty for now
+    }));
+
+    // Iterate over each transformed sprint and save to the database
+    for (const sprintData of transformedSprints) {
+      try {
+        const sprint = await JiraSprintModel.findOneAndUpdate(
+          { self: sprintData.self },
+          sprintData,
+          {
+            upsert: true,
+            new: true,
+          }
+        );
+
+        const boardSelfUri = `${TROFOS_PROJECT_URI}/${trofosProjectId}`;
+        await JiraBoardModel.findOneAndUpdate(
+          { self: boardSelfUri },
+          { $push: { jiraSprints: sprint._id } },
+          {}
+        );
+
+        console.log(`Saved sprint with ID: ${sprintData.id}`);
+      } catch (error) {
+        console.error(`Error saving sprint with ID: ${sprintData.id}`, error);
+      }
+    }
+
+    await saveBacklogToDatabase(trofosSprintData);
+
   } catch (error) {
     console.error('Error in fetching sprints from a Trofos project:', error);
   }
 };
+
+const saveBacklogToDatabase = async (trofosSprintData: any[]) => {
+
+}
+
 
 const setupTrofosJob = () => {
   // Schedule the job to run every day at 03:00 hours
