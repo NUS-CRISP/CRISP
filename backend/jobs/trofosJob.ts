@@ -161,23 +161,24 @@ const fetchSprintsFromSingleTrofosProject = async (
 
     const trofosSprintData = await trofosSprintResponse.json();
 
-    const transformedSprints: Omit<JiraSprint, '_id'>[] = trofosSprintData.sprints.map((sprint: any) => ({
-      id: sprint.id,
-      self: `${trofosSprintUri}/${sprint.id}`, // Assuming `trofosSprintUri` is defined elsewhere
-      state:
-        sprint.status === 'current'
-          ? 'active'
-          : sprint.status === 'upcoming'
-            ? 'future'
-            : 'closed',
-      name: sprint.name,
-      startDate: new Date(sprint.start_date),
-      endDate: new Date(sprint.end_date),
-      createdDate: new Date(sprint.start_date),
-      originBoardId: sprint.project_id, // Relating it to the board ID
-      goal: sprint.goals || '', // Default to empty string if no goals
-      jiraIssues: [],
-    }));
+    const transformedSprints: Omit<JiraSprint, '_id'>[] =
+      trofosSprintData.sprints.map((sprint: any) => ({
+        id: sprint.id,
+        self: `${trofosSprintUri}/${sprint.id}`, // Assuming `trofosSprintUri` is defined elsewhere
+        state:
+          sprint.status === 'current'
+            ? 'active'
+            : sprint.status === 'upcoming'
+              ? 'future'
+              : 'closed',
+        name: sprint.name,
+        startDate: new Date(sprint.start_date),
+        endDate: new Date(sprint.end_date),
+        createdDate: new Date(sprint.start_date),
+        originBoardId: sprint.project_id, // Relating it to the board ID
+        goal: sprint.goals || '', // Default to empty string if no goals
+        jiraIssues: [],
+      }));
 
     // Iterate over each transformed sprint and save to the database
     for (const sprintData of transformedSprints) {
