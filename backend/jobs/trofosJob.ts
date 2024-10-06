@@ -1,7 +1,11 @@
 import cron from 'node-cron';
 import { Course } from '@models/Course';
 import CourseModel from '@models/Course';
-import { TROFOS_COURSE_URI, TROFOS_PROJECT_URI } from '../utils/endpoints';
+import {
+  TROFOS_COURSE_URI,
+  TROFOS_PROJECT_URI,
+  TROFOS_SPRINT_PATH,
+} from '../utils/endpoints';
 
 const fetchAndSaveTrofosData = async () => {
   const courses: Course[] = await CourseModel.find();
@@ -86,13 +90,42 @@ const fetchSingleTrofosProject = async (
 
     const singleTrofosProjectData = await singleTrofosProjectResponse.json();
     console.log(singleTrofosProjectData);
+
+    await fetchSprintsFromSingleTrofosProject(trofosProjectId, apiKey);
   } catch (error) {
     console.error('Error in fetching single Trofos project:', error);
   }
 };
 
+const fetchSprintsFromSingleTrofosProject = async (
+  trofosProjectId: number,
+  apiKey: string
+) => {
+  const trofosSprintUri = `${TROFOS_PROJECT_URI}/${trofosProjectId}${TROFOS_SPRINT_PATH}`;
+
+  try {
+    const trofosSprintResponse = await fetch(trofosSprintUri, {
+      method: 'GET',
+      headers: {
+        'x-api-key': apiKey,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!trofosSprintResponse.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    const trofosSprintData = await trofosSprintResponse.json();
+    console.log(trofosSprintData);
+  } catch (error) {
+    console.error('Error in fetching sprints from a Trofos project:', error);
+  }
+};
+
 const setupTrofosJob = () => {
-  // Schedule the job to run every day at 01:00 hours
+  // Schedule the job to run every day at 03:00 hours
   cron.schedule('0 3 * * *', async () => {
     console.log('Running fetchAndSaveTrofosData job:', new Date().toString());
     try {

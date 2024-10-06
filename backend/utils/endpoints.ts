@@ -12,6 +12,7 @@ export const ISSUE_API_PATH = '/rest/agile/1.0/issue';
 
 /*---------------------------------------Trofos---------------------------------------*/
 export const TROFOS_COURSE_URI =
-  'https://trofos.comp.nus.edu.sg/api/external/v1/course';
+  'https://trofos-production.comp.nus.edu.sg/api/external/v1/course';
 export const TROFOS_PROJECT_URI =
-  'https://trofos.comp.nus.edu.sg/api/external/v1/project';
+  'https://trofos-production.comp.nus.edu.sg/api/external/v1/project';
+export const TROFOS_SPRINT_PATH = '/sprint';
