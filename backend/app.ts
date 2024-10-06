@@ -1,6 +1,7 @@
 import cors from 'cors';
 import { config } from 'dotenv';
 import express, { Express } from 'express';
+import setupCodeAnalysisJob from './jobs/codeAnalysisJob';
 import setupGitHubJob from './jobs/githubJob';
 import setupJiraJob from './jobs/jiraJob';
 import setupTrofosJob from './jobs/trofosJob';
@@ -23,6 +24,7 @@ const setupApp = async () => {
   setupGitHubJob();
   setupJiraJob();
   setupTrofosJob();
+  setupCodeAnalysisJob();
 };
 setupApp();
 

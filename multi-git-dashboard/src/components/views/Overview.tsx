@@ -110,6 +110,7 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
             disabled={idx !== 0 || curTutorialStage !== 7}
           >
             <OverviewAccordionItem
+              index={idx}
               key={teamData._id}
               team={team}
               teamData={teamData}
