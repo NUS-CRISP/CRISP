@@ -1,6 +1,6 @@
 import { useState, forwardRef } from 'react';
 import { Card, Stack, Title, Center, Select, MultiSelect } from '@mantine/core';
-import { BarChart } from '@mantine/charts';
+import { AreaChart, BarChart } from '@mantine/charts';
 import { TeamData } from '@shared/types/TeamData';
 
 interface AllTeamsProps {
@@ -14,8 +14,9 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
       'commits',
       'issues',
     ]);
+    const [singleMetric, setSingleMetric] = useState<string>('commits');
+    const [topOrLowest, setTopOrLowest] = useState<string>('all');
 
-    // Prepare unique teams and data
     const uniqueTeams = new Set<string>();
     const data = teamDatas
       .filter(teamData => {
@@ -33,10 +34,6 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
         weeklyCommits: teamData.weeklyCommits.length,
       }))
       .sort((a, b) => a.teamName.localeCompare(b.teamName));
-      
-    // const data = [
-    //   { teamName: 'January', commits: 30, issues: 30, pullRequests: 30, weeklyCommits: 30 },
-    // ];
 
     const availableMetrics = [
       { value: 'commits', label: 'Commits' },
@@ -44,10 +41,8 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
       { value: 'pullRequests', label: 'Pull Requests' },
       { value: 'weeklyCommits', label: 'Weekly Commits' },
     ];
+    console.log("Available Metrics:", availableMetrics);
 
-    console.log("Available Metrics:", availableMetrics); // Debugging the available metrics
-
-    // Convert data for Mantine BarChart
     const chartData = data.map((team) => ({
       teamName: team.teamName,
       ...selectedMetrics.reduce(
@@ -55,53 +50,148 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
         {}
       ),
     }));
-
     console.log('Chart Data:', chartData); // Debugging the data format
+
+    const filterTopOrLowest = () => {
+      if (topOrLowest === 'all') {
+        // If "all" is selected, return all teams
+        return data;
+      }
+
+      const sortedData = [...data].sort((a, b) => {
+        const metricA = a[singleMetric as keyof typeof a];
+        const metricB = b[singleMetric as keyof typeof b];
+
+        const numA = typeof metricA === 'number' ? metricA : 0;
+        const numB = typeof metricB === 'number' ? metricB : 0;
+
+        return topOrLowest === 'top' ? numB - numA : numA - numB;
+      });
+      return sortedData.slice(0, 5);
+    };
+
+    const filteredData = filterTopOrLowest().map((team) => ({
+      teamName: team.teamName,
+      [singleMetric]: team[singleMetric as keyof typeof team],
+    }));
 
     const series = selectedMetrics.map((metric, index) => ({
       name: metric.charAt(0) + metric.slice(1),
       color: ['violet.6', 'blue.6', 'teal.6', 'orange.6'][index % 4],
     }));
+    console.log('Series:', series);
 
-    console.log('Series:', series); // Debugging the series format
+    const singleMetricSeries = [
+      {
+        name: singleMetric.charAt(0) + singleMetric.slice(1),
+        dataKey: singleMetric,
+        color: 'blue.6',
+      },
+    ];
 
-    return (
-      <Card withBorder ref={ref} style={{ marginBottom: '16px' }}>
-        <Stack>
-          <Center>
-            <Title order={3}>Customize Your Chart</Title>
-          </Center>
-
-          {/* Chart Type Selection */}
-          <Select
-            label="Chart Type"
-            placeholder="Select chart type"
-            value={chartType}
-            onChange={(value: string | null) => {
-              if (value) setChartType(value);
-            }}
-            data={[{ value: 'BarChart', label: 'Bar Chart' }]} // You can add more chart types later
-          />
-
-          {/* Metric Selection */}
-          <MultiSelect
-            label="Metrics"
-            placeholder="Select metrics to display"
-            value={selectedMetrics}
-            onChange={setSelectedMetrics}
-            data={availableMetrics}
-          />
-
-          {/* Render Bar Chart */}
+    const renderFirstChart = () => {
+      if (chartType === 'BarChart') {
+        return (
           <BarChart
             h={400}
             data={chartData}
-            dataKey="teamName" // x-axis key
-            series={series} // Ensure series is correctly mapping to data keys
-            tickLine="none"
+            dataKey="teamName"
+            series={series}
+            tickLine="xy"
           />
-        </Stack>
-      </Card>
+        );
+      } else if (chartType === 'AreaChart') {
+        return (
+          <AreaChart
+            h={400}
+            data={chartData}
+            dataKey="teamName"
+            series={series}
+            curveType="linear"
+            tickLine="xy"
+            gridAxis="xy"
+          />
+        );
+      }
+    };
+
+
+    return (
+      <div>
+        {/* <Center style={{ marginTop: "20px", marginBottom: '20px' }}>
+          <Title order={2}>Customize Your Charts</Title>
+        </Center> */}
+
+        {/* First Chart */}
+        <Card withBorder ref={ref} style={{ marginBottom: '20px' }}>
+          <Stack>
+            <Center >
+              <Title order={5}>Composed Charts</Title>
+            </Center>
+            <Select
+              label="Chart Type"
+              placeholder="Select chart type"
+              value={chartType}
+              onChange={(value: string | null) => {
+                if (value) setChartType(value);
+              }}
+              data={[
+                { value: 'BarChart', label: 'Bar Chart' },
+                { value: 'AreaChart', label: 'Area Chart' },
+              ]}
+            />
+
+            <MultiSelect
+              label="Metrics"
+              placeholder="Select metrics to display"
+              value={selectedMetrics}
+              onChange={setSelectedMetrics}
+              data={availableMetrics}
+            />
+
+            {renderFirstChart()}
+          </Stack>
+        </Card>
+        {/* Second Chart */}
+        <Card withBorder ref={ref} style={{ marginBottom: '16px' }}>
+          <Stack>
+            <Center >
+              <Title order={5}>Top/Lowest 5 Chart</Title>
+            </Center>
+            <Select
+              label="Single Metric"
+              placeholder="Select a metric to display"
+              value={singleMetric}
+              onChange={(value: string | null) => {
+                if (value) setSingleMetric(value);
+              }}
+              data={availableMetrics}
+            />
+
+            <Select
+              label="All/Top 5/Lowest 5 Teams"
+              placeholder="Select Top, Lowest, or All Teams"
+              value={topOrLowest}
+              onChange={(value: string | null) => {
+                if (value) setTopOrLowest(value);
+              }}
+              data={[
+                { value: 'all', label: 'All Teams' },
+                { value: 'top', label: 'Top 5 Teams' },
+                { value: 'lowest', label: 'Lowest 5 Teams' },
+              ]}
+            />
+
+            <BarChart
+              h={400}
+              data={filteredData}
+              dataKey="teamName"
+              series={singleMetricSeries}
+              tickLine="xy"
+            />
+          </Stack>
+        </Card>
+      </div>
     );
   }
 );
