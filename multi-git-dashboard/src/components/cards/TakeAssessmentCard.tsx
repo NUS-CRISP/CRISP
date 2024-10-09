@@ -12,6 +12,7 @@ import {
   Group,
   NumberInput,
   Badge,
+  MultiSelect,
 } from '@mantine/core';
 import {
   QuestionUnion,
@@ -32,6 +33,8 @@ interface TakeAssessmentCardProps {
   onAnswerChange: (answer: AnswerInput) => void;
   index: number;
   disabled?: boolean;
+  teamMembersOptions?: { value: string; label: string }[];
+  assessmentGranularity?: string; // Maybe make this enum, but probably this is ok
 }
 
 const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
@@ -40,11 +43,17 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
   onAnswerChange,
   index,
   disabled = false,
+  teamMembersOptions,
+  assessmentGranularity,
 }) => {
   const questionType = question.type;
   const isRequired = question.isRequired || false;
   const customInstruction = question.customInstruction || '';
   const questionText = question.text || '';
+  const maxSelections =
+    question.type === 'Team Member Selection' && assessmentGranularity === 'individual'
+      ? 1
+      : undefined;
 
   return (
     <Box
@@ -74,6 +83,17 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
       <Text mb="sm">
         {index + 1}. {questionText}
       </Text>
+
+
+      {question.type === 'Team Member Selection' && teamMembersOptions && (
+        <MultiSelect
+          data={teamMembersOptions}
+          value={(answer as string[]) || []}
+          onChange={(value) => onAnswerChange(value)}
+          disabled={disabled}
+          maxValues={maxSelections}
+        />
+      )}
 
       {/* Render based on question type */}
       {questionType === 'Multiple Choice' && (
@@ -168,15 +188,15 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
         </>
       )}
 
-      {questionType === 'Short Response' && (
+      {(question.type === 'Short Response' ||
+        question.type === 'NUSNET ID' ||
+        question.type === 'NUSNET Email') && (
         <TextInput
           placeholder={
-            (question as ShortResponseQuestion).shortResponsePlaceholder ||
-            'Enter your response here...'
+            (question as ShortResponseQuestion).shortResponsePlaceholder || 'Enter your response here...'
           }
-          value={answer !== undefined ? (answer as string) : ''}
+          value={answer as string}
           onChange={(e) => onAnswerChange(e.currentTarget.value)}
-          style={{ marginBottom: '16px' }}
           disabled={disabled}
         />
       )}

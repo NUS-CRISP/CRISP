@@ -11,6 +11,9 @@ import {
   LongResponseAnswer,
   DateAnswer,
   NumberAnswer,
+  NUSNETEmailAnswer,
+  NUSNETIDAnswer,
+  TeamMemberSelectionAnswer,
 } from '../models/Answer';
 import {
   QuestionUnion,
@@ -21,10 +24,22 @@ import {
   LongResponseQuestion,
   DateQuestion,
   NumberQuestion,
-} from '../models/QuestionTypes'; // Adjusted import
+} from '../models/QuestionTypes';
 import { NotFoundError, BadRequestError } from './errors';
 
 // Type guards for questions
+function isNUSNETIDAnswer(answer: AnswerUnion): answer is NUSNETIDAnswer {
+  return answer.type === 'NUSNET ID';
+}
+
+function isNUSNETEmailAnswer(answer: AnswerUnion): answer is NUSNETEmailAnswer {
+  return answer.type === 'NUSNET Email';
+}
+
+function isTeamMemberSelectionAnswer(answer: AnswerUnion): answer is TeamMemberSelectionAnswer {
+  return answer.type === 'Team Member Selection';
+}
+
 function isMultipleChoiceQuestion(question: QuestionUnion): question is MultipleChoiceQuestion {
   return question.type === 'Multiple Choice';
 }
@@ -106,6 +121,43 @@ async function validateAnswers(
     }
 
     switch (question.type) {
+
+      case 'NUSNET ID':
+        if (isNUSNETIDAnswer(answer)) {
+          if (typeof answer.value !== 'string') {
+            throw new BadRequestError(`Answer for question ${questionId} must be a string`);
+          }
+          // Optionally, add validation for NUSNET ID format
+        } else {
+          throw new BadRequestError(`Invalid NUSNET ID answer for question ${questionId}`);
+        }
+        break;
+
+      case 'NUSNET Email':
+        if (isNUSNETEmailAnswer(answer)) {
+          if (typeof answer.value !== 'string') {
+            throw new BadRequestError(`Answer for question ${questionId} must be a string`);
+          }
+          // Optionally, add validation for NUSNET Email format
+        } else {
+          throw new BadRequestError(`Invalid NUSNET Email answer for question ${questionId}`);
+        }
+        break;
+
+      case 'Team Member Selection':
+        if (isTeamMemberSelectionAnswer(answer)) {
+          if (!Array.isArray(answer.selectedUserIds)) {
+            throw new BadRequestError(`Answers for question ${questionId} must be an array`);
+          }
+          // Validate based on assessment granularity
+          if (assessment.granularity === 'individual' && answer.selectedUserIds.length > 1) {
+            throw new BadRequestError(`Only one team member can be selected for question ${questionId}`);
+          }
+        } else {
+          throw new BadRequestError(`Invalid Team Member Selection answer for question ${questionId}`);
+        }
+        break;
+
       case 'Multiple Choice':
         if (isMultipleChoiceQuestion(question) && isMultipleChoiceAnswer(answer)) {
           if (!question.options.includes(answer.value)) {
@@ -265,7 +317,7 @@ export const getSubmissionsByAssessmentAndUser = async (
   userId: string
 ): Promise<Submission[]> => {
   const submissions = await SubmissionModel.find({ assessment: assessmentId, user: userId })
-    .populate('answers.question')
+    .populate('answers')
     .populate('user')
     .populate('assessment');
   return submissions;
@@ -274,7 +326,7 @@ export const getSubmissionsByAssessmentAndUser = async (
 export const getSubmissionsByAssessment = async (assessmentId: string): Promise<Submission[]> => {
   const submissions = await SubmissionModel.find({ assessment: assessmentId })
     .populate('user')
-    .populate('answers.question');
+    .populate('answers');
   return submissions;
 };
 

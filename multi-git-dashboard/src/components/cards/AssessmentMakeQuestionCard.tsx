@@ -27,6 +27,9 @@ import {
   NumberQuestion,
   UndecidedQuestion,
   ScaleLabel,
+  NUSNETEmailQuestion,
+  NUSNETIDQuestion,
+  TeamMemberSelectionQuestion,
 } from '@shared/types/Question';
 import { IconTrash, IconPencil, IconPlus } from '@tabler/icons-react';
 
@@ -45,6 +48,7 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
   isLocked,
   index,
 }) => {
+  const enableNewQuestionTypesForTesting = true; // Set to false in production
   const isQuestionLocked = isLocked || questionData.isLocked || false;
 
   // Determine if this is a new question (temporary _id starting with 'temp-')
@@ -326,6 +330,38 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
           isRequired,
         } as UndecidedQuestion;
         break;
+      case 'NUSNET ID':
+        updatedQuestion = {
+          ...questionData,
+          text: questionText || 'Student NUSNET ID (EXXXXXXX)',
+          type: 'NUSNET ID',
+          shortResponsePlaceholder: shortResponsePlaceholder || 'E1234567',
+          customInstruction: customInstruction || getDefaultInstruction(),
+          isLocked: true,
+          isRequired: true,
+        } as NUSNETIDQuestion;
+        break;
+      case 'NUSNET Email':
+        updatedQuestion = {
+          ...questionData,
+          text: questionText || 'Student NUSNET Email',
+          type: 'NUSNET Email',
+          shortResponsePlaceholder: shortResponsePlaceholder || 'e1234567@u.nus.edu',
+          customInstruction: customInstruction || getDefaultInstruction(),
+          isLocked: true,
+          isRequired: true,
+        } as NUSNETEmailQuestion;
+        break;
+      case 'Team Member Selection':
+        updatedQuestion = {
+          ...questionData,
+          text: questionText || 'Select team members to evaluate',
+          type: 'Team Member Selection',
+          customInstruction: customInstruction || getDefaultInstruction(),
+          isLocked: true,
+          isRequired: true,
+        } as TeamMemberSelectionQuestion;
+        break;
       default:
         updatedQuestion = {
           ...questionData,
@@ -338,7 +374,7 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
     }
 
     onSave(updatedQuestion);
-    setIsEditing(false); // Switch to view mode after saving
+    setIsEditing(false);
   };
 
   const getDefaultInstruction = () => {
@@ -356,6 +392,12 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
         return isRange ? 'Select a date range.' : 'Select a single date.';
       case 'Number':
         return `Enter a number (maximum: ${numberValue || 100}).`;
+      case 'NUSNET ID':
+        return 'Enter your NUSNET ID starting with E followed by 7 digits.';
+      case 'NUSNET Email':
+        return 'Enter your NUSNET email address.';
+      case 'Team Member Selection':
+        return 'Select team members from your team to evaluate.';
       default:
         return '';
     }
@@ -445,7 +487,10 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
           </>
         ) : null}
 
-        {questionType === 'Short Response' && (
+
+        {(questionType === 'Short Response' ||
+          questionType === 'NUSNET ID' ||
+          questionType === 'NUSNET Email') && (
           <TextInput
             placeholder={shortResponsePlaceholder || 'Enter your response here...'}
             value={shortResponseValue}
@@ -565,6 +610,13 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
             { value: 'Long Response', label: 'Long Response' },
             { value: 'Date', label: 'Date' },
             { value: 'Number', label: 'Number' },
+            ...(enableNewQuestionTypesForTesting
+              ? [
+                  { value: 'NUSNET ID', label: 'NUSNET ID' },
+                  { value: 'NUSNET Email', label: 'NUSNET Email' },
+                  { value: 'Team Member Selection', label: 'Team Member Selection' },
+                ]
+              : []),
           ]}
           required
           style={{ flex: 1 }}
@@ -745,7 +797,9 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
         </>
       )}
 
-      {questionType === 'Short Response' && (
+      {(questionType === 'Short Response' ||
+        questionType === 'NUSNET ID' ||
+        questionType === 'NUSNET Email') && (
         <Box style={{ marginBottom: '16px' }}>
           <TextInput
             label="Predefined Placeholder"
@@ -825,6 +879,12 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
             }}
             placeholder="Enter maximum allowed number"
           />
+        </Box>
+      )}
+
+      {questionType === 'Team Member Selection' && (
+        <Box style={{ marginBottom: '16px' }}>
+          <Text>{'This question allows the form taker to select team members to evaluate.'}</Text>
         </Box>
       )}
 

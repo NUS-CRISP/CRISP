@@ -8,7 +8,7 @@ import { Team } from '@models/Team';
 import mongoose, { Types } from 'mongoose';
 import TeamSetModel from '@models/TeamSet';
 import QuestionModel from '@models/Question';
-import { DateQuestionModel, LongResponseQuestionModel, MultipleChoiceQuestionModel, MultipleResponseQuestionModel, NumberQuestionModel, QuestionUnion, ScaleQuestionModel, ShortResponseQuestionModel, UndecidedQuestionModel } from '@models/QuestionTypes';
+import { DateQuestionModel, LongResponseQuestionModel, MultipleChoiceQuestionModel, MultipleResponseQuestionModel, NumberQuestionModel, NUSNETEmailQuestionModel, NUSNETIDQuestionModel, QuestionUnion, ScaleQuestionModel, ShortResponseQuestionModel, TeamMemberSelectionQuestionModel, UndecidedQuestionModel } from '@models/QuestionTypes';
 
 export const getInternalAssessmentById = async (
   assessmentId: string,
@@ -245,25 +245,36 @@ export const addInternalAssessmentsToCourse = async (
       questions: [],
     });
     // Add locked questions
-    const nusnetIdQuestion = new ShortResponseQuestionModel({
+    const teamMemberSelectionQuestion = new TeamMemberSelectionQuestionModel({
+      text: 'Student Selection',
+      type: 'Team Member Selection',
+      customInstruction: 'Select team members from your team to evaluate.',
+      isLocked: true,
+      isRequired: true,
+    });
+
+    const nusnetIdQuestion = new NUSNETIDQuestionModel({
       text: 'Student NUSNET ID (EXXXXXXX)',
-      type: 'Short Response',
+      type: 'NUSNET ID',
       shortResponsePlaceholder: 'E1234567',
       customInstruction: 'Enter your NUSNET ID starting with E followed by 7 digits.',
       isLocked: true,
+      isRequired: true,
     });
 
-    const nusnetEmailQuestion = new ShortResponseQuestionModel({
+    const nusnetEmailQuestion = new NUSNETEmailQuestionModel({
       text: 'Student NUSNET Email',
-      type: 'Short Response',
+      type: 'NUSNET Email',
       shortResponsePlaceholder: 'e1234567@u.nus.edu',
       customInstruction: 'Enter your NUSNET email address.',
       isLocked: true,
+      isRequired: true,
     });
 
+    await teamMemberSelectionQuestion.save();
     await nusnetIdQuestion.save();
     await nusnetEmailQuestion.save();
-    assessment.questions = [nusnetIdQuestion._id, nusnetEmailQuestion._id];
+    assessment.questions = [teamMemberSelectionQuestion._id, nusnetIdQuestion._id, nusnetEmailQuestion._id];
 
     await assessment.save();
     const results: mongoose.Document[] = [];
@@ -376,6 +387,15 @@ export const addQuestionToAssessment = async (
   // Determine which model to use based on the question type
   let QuestionTypeModel;
   switch (validQuestionData.type) {
+    case 'NUSNET ID':
+      QuestionTypeModel = NUSNETIDQuestionModel;
+      break;
+    case 'NUSNET Email':
+      QuestionTypeModel = NUSNETEmailQuestionModel;
+      break;
+    case 'Team Member Selection':
+      QuestionTypeModel = TeamMemberSelectionQuestionModel;
+      break;
     case 'Multiple Choice':
       QuestionTypeModel = MultipleChoiceQuestionModel;
       break;
@@ -422,6 +442,15 @@ export const addQuestionToAssessment = async (
 
   let savedQuestion: QuestionUnion | null;
   switch (validQuestionData.type) {
+    case 'NUSNET ID':
+      savedQuestion = await NUSNETIDQuestionModel.findById(question._id);
+      break;
+    case 'NUSNET Email':
+      savedQuestion = await NUSNETEmailQuestionModel.findById(question._id);
+      break;
+    case 'Team Member Selection':
+      savedQuestion = await TeamMemberSelectionQuestionModel.findById(question._id);
+      break;
     case 'Multiple Choice':
       savedQuestion = await MultipleChoiceQuestionModel.findById(question._id);
       break;
@@ -505,6 +534,30 @@ export const updateQuestionById = async (
 
   let updatedQuestion: QuestionUnion | null;
   switch (existingQuestion.type) {
+    case 'NUSNET ID':
+      updatedQuestion = await NUSNETIDQuestionModel.findByIdAndUpdate(
+        questionId,
+        { ...updateData },
+        { new: true }
+      );
+      break;
+
+    case 'NUSNET Email':
+      updatedQuestion = await NUSNETEmailQuestionModel.findByIdAndUpdate(
+        questionId,
+        { ...updateData },
+        { new: true }
+      );
+      break;
+
+    case 'Team Member Selection':
+      updatedQuestion = await TeamMemberSelectionQuestionModel.findByIdAndUpdate(
+        questionId,
+        { ...updateData },
+        { new: true }
+      );
+      break;
+
     case 'Multiple Choice':
       updatedQuestion = await MultipleChoiceQuestionModel.findByIdAndUpdate(
         questionId,

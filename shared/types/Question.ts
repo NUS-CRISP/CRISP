@@ -9,6 +9,23 @@ export interface BaseQuestion {
   isLocked: boolean; // Indicates if the question is locked
 }
 
+// NUSNET ID Question
+export interface NUSNETIDQuestion extends BaseQuestion {
+  type: 'NUSNET ID';
+  shortResponsePlaceholder?: string;
+}
+
+// NUSNET Email Question
+export interface NUSNETEmailQuestion extends BaseQuestion {
+  type: 'NUSNET Email';
+  shortResponsePlaceholder?: string;
+}
+
+// Team Member Selection Question
+export interface TeamMemberSelectionQuestion extends BaseQuestion {
+  type: 'Team Member Selection';
+  // You can add additional properties if needed
+}
 // Multiple Choice Question
 export interface MultipleChoiceQuestion extends BaseQuestion {
   type: 'Multiple Choice';
@@ -68,6 +85,9 @@ export interface UndecidedQuestion extends BaseQuestion {
 
 // Union Type for all Question Types
 export type QuestionUnion =
+  | NUSNETIDQuestion
+  | NUSNETEmailQuestion
+  | TeamMemberSelectionQuestion
   | MultipleChoiceQuestion
   | MultipleResponseQuestion
   | ScaleQuestion

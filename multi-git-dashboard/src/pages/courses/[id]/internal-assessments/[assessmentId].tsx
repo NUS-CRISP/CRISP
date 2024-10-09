@@ -8,6 +8,7 @@ import { InternalAssessment } from '@shared/types/InternalAssessment';
 import { User } from '@shared/types/User';
 import { hasFacultyPermission } from '@/lib/auth/utils';
 import { Question } from '@shared/types/Question';
+import { Team } from '@shared/types/Team';
 
 const InternalAssessmentDetail: React.FC = () => {
   const router = useRouter();
@@ -19,15 +20,41 @@ const InternalAssessmentDetail: React.FC = () => {
   const questionsApiRoute = `/api/internal-assessments/${assessmentId}/questions`;
   const teachingTeamApiRoute = `/api/courses/${id}/teachingteam`;
 
+  const [userIdToNameMap, setUserIdToNameMap] = useState<{ [key: string]: string }>({});
   const [assessment, setAssessment] = useState<InternalAssessment | null>(null);
   const [teachingTeam, setTeachingTeam] = useState<User[]>([]);
   const [activeTab, setActiveTab] = useState<string>('Overview');
   const [questions, setQuestions] = useState<Question[]>([]);
   const permission = hasFacultyPermission();
 
+  const fetchTeamsAndCreateUserMap = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/teams/course/${id}`);
+      if (!response.ok) {
+        console.error('Error fetching teams:', response.statusText);
+        return;
+      }
+      const teams: Team[] = await response.json();
+      const userMap: { [key: string]: string } = {};
+      teams.forEach((team) => {
+        team.members.forEach((member) => {
+          userMap[member._id] = member.name;
+        });
+      });
+      setUserIdToNameMap(userMap);
+    } catch (error) {
+      console.error('Error fetching teams:', error);
+    }
+  }, [id]);
+
   const fetchAssessment = useCallback(async () => {
     try {
-      const response = await fetch(assessmentsApiRoute);
+      const response = await fetch(assessmentsApiRoute, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       if (!response.ok) {
         console.error('Error fetching assessment:', response.statusText);
         return;
@@ -41,7 +68,12 @@ const InternalAssessmentDetail: React.FC = () => {
 
   const fetchQuestions = useCallback(async () => {
     try {
-      const response = await fetch(questionsApiRoute);
+      const response = await fetch(questionsApiRoute, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       if (!response.ok) {
         console.error('Error fetching questions:', response.statusText);
         return;
@@ -55,7 +87,12 @@ const InternalAssessmentDetail: React.FC = () => {
 
   const fetchTeachingTeam = useCallback(async () => {
     try {
-      const response = await fetch(teachingTeamApiRoute);
+      const response = await fetch(teachingTeamApiRoute, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       if (!response.ok) {
         console.error('Error fetching Teaching Team:', response.statusText);
         return;
@@ -84,8 +121,9 @@ const InternalAssessmentDetail: React.FC = () => {
       fetchAssessment();
       fetchQuestions();
       fetchTeachingTeam();
+      fetchTeamsAndCreateUserMap();
     }
-  }, [router.isReady, fetchAssessment, fetchQuestions, fetchTeachingTeam]);
+  }, [router.isReady, fetchAssessment, fetchQuestions, fetchTeachingTeam, fetchTeamsAndCreateUserMap]);
 
   const addQuestion = () => {
     const newQuestion: Question = {
@@ -193,6 +231,8 @@ const InternalAssessmentDetail: React.FC = () => {
               assessment={assessment}
               hasFacultyPermission={permission}
               onUpdateAssessment={fetchAssessment}
+              questions={questions}
+              userIdToNameMap={userIdToNameMap}
             />
           )}
         </Tabs.Panel>

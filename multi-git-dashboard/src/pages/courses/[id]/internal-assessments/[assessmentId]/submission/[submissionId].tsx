@@ -56,7 +56,7 @@ const ViewSubmissionPage: React.FC = () => {
 
   return (
     <TakeAssessment
-      assessment={assessment}
+      inputAssessment={assessment}
       existingSubmission={submission}
       canEdit={canEdit}
     />

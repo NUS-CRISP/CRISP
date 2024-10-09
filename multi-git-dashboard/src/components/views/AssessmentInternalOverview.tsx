@@ -1,30 +1,22 @@
 // components/views/AssessmentInternalOverview.tsx
 
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Button,
-  Card,
-  Divider,
-  Grid,
-  Group,
-  Modal,
-  Text,
-  Title,
-  Box,
-  Table,
-  Badge,
-} from '@mantine/core';
+import { Button, Card, Divider, Group, Modal, Text, Title, Box } from '@mantine/core';
 import { InternalAssessment } from '@shared/types/InternalAssessment';
 import { Submission } from '@shared/types/Submission';
 import { useRouter } from 'next/router';
 import { IconEdit, IconTrash } from '@tabler/icons-react';
 import UpdateAssessmentInternalForm from '../forms/UpdateAssessmentInternalForm';
+import SubmissionCard from '../cards/SubmissionCard';
+import { QuestionUnion } from '@shared/types/Question';
 
 interface AssessmentInternalOverviewProps {
   courseId: string;
   assessment: InternalAssessment | null;
   hasFacultyPermission: boolean;
   onUpdateAssessment: () => void;
+  questions: QuestionUnion[];
+  userIdToNameMap: { [key: string]: string }; // Add this
 }
 
 const formatDate = (date: Date | string | undefined) => {
@@ -38,6 +30,8 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
   assessment,
   hasFacultyPermission,
   onUpdateAssessment,
+  questions,
+  userIdToNameMap,
 }) => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
@@ -66,7 +60,13 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
         return;
       }
 
-      const data: Submission[] = await response.json();
+      let data: Submission[] = await response.json();
+
+      // For faculty, filter out drafts
+      if (hasFacultyPermission) {
+        data = data.filter((submission) => !submission.isDraft);
+      }
+
       setSubmissions(data);
     } catch (error) {
       console.error('Error fetching submissions:', error);
@@ -122,7 +122,7 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
       {/* Delete Assessment Modal */}
       <Modal opened={isDeleteModalOpen} onClose={toggleDeleteModal} title="Confirm Delete">
         <Text>Are you sure you want to delete this assessment?</Text>
-        <Group mt="md" mb="md" justify="flex-end">
+        <Group mt="md" mb="md" p="right">
           <Button variant="default" onClick={toggleDeleteModal}>
             Cancel
           </Button>
@@ -134,10 +134,10 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
 
       {/* Assessment Details Card */}
       <Card withBorder shadow="sm" mb="lg">
-        <Group justify="space-between">
+        <Group p="apart">
           <Box>
             <Title order={2}>{assessment?.assessmentName}</Title>
-            <Text color="dimmed">{assessment?.description}</Text>
+            <Text c="dimmed">{assessment?.description}</Text>
           </Box>
           {hasFacultyPermission && (
             <Group>
@@ -161,74 +161,42 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
           )}
         </Group>
         <Divider my="sm" />
-        <Grid>
-          <Grid.Col span={6}>
-            <Text>
-              <strong>Start Date:</strong> {formatDate(assessment?.startDate)}
-            </Text>
-          </Grid.Col>
-          <Grid.Col span={6}>
-            <Text>
-              <strong>End Date:</strong> {formatDate(assessment?.endDate)}
-            </Text>
-          </Grid.Col>
-        </Grid>
+        <Group p="apart">
+          <Text>
+            <strong>Start Date:</strong> {formatDate(assessment?.startDate)}
+          </Text>
+          <Text>
+            <strong>End Date:</strong> {formatDate(assessment?.endDate)}
+          </Text>
+        </Group>
         {!hasFacultyPermission && assessment?.isReleased && (
-          <Group justify="center" mt="md">
+          <Group p="center" mt="md">
             <Button onClick={handleTakeAssessment}>Take Assessment</Button>
           </Group>
         )}
       </Card>
 
-      {/* Submissions Table */}
-    <Card withBorder shadow="sm">
-      <Title order={3} mb="sm">
-        Submissions
-      </Title>
-      {submissions.length === 0 ? (
-        <Text>No submissions available.</Text>
-      ) : (
-        <Table striped highlightOnHover>
-          <thead>
-            <tr>
-              {hasFacultyPermission && <th>Student Name</th>}
-              {hasFacultyPermission && <th>Team Number</th>}
-              <th>Submission Date</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {submissions.map((submission) => {
-              const user = submission.user;
-              const userName = user ? user.name : 'Unknown User';
-              // Assuming teamNumber is part of submission or user object
-
-              return (
-                <tr
-                  key={submission._id}
-                  style={{ cursor: 'pointer' }}
-                  onClick={() =>
-                    router.push(
-                      `/courses/${courseId}/internal-assessments/${assessment?._id}/submission/${submission._id}`
-                    )
-                  }
-                >
-                  {hasFacultyPermission && <td>{userName}</td>}
-                  <td>{formatDate(submission.submittedAt)}</td>
-                  <td>
-                    {submission.isDraft ? (
-                      <Badge color="yellow">Draft</Badge>
-                    ) : (
-                      <Badge color="green">Submitted</Badge>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </Table>
-      )}
-    </Card>
+      {/* Submissions Section */}
+      <Card withBorder shadow="sm">
+        <Title order={3} mb="sm">
+          Submissions
+        </Title>
+        {submissions.length === 0 ? (
+          <Text>No submissions available.</Text>
+        ) : (
+          submissions.map((submission) => (
+            <SubmissionCard
+              key={submission._id}
+              submission={submission}
+              hasFacultyPermission={hasFacultyPermission}
+              courseId={courseId}
+              assessmentId={assessment?._id}
+              questions={questions}
+              userIdToNameMap={userIdToNameMap} // Pass userIdToNameMap
+            />
+          ))
+        )}
+      </Card>
     </Box>
   );
 };

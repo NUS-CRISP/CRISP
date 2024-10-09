@@ -8,6 +8,48 @@ export interface BaseQuestion extends Document {
   isLocked: boolean;
 }
 
+export interface NUSNETIDQuestion extends BaseQuestion {
+  type: 'NUSNET ID';
+  shortResponsePlaceholder: string;
+}
+
+const NUSNETIDSchema = new Schema({
+  shortResponsePlaceholder: { type: String, required: true },
+});
+
+export const NUSNETIDQuestionModel = QuestionModel.discriminator<NUSNETIDQuestion>(
+  'NUSNET ID',
+  NUSNETIDSchema
+);
+
+export interface NUSNETEmailQuestion extends BaseQuestion {
+  type: 'NUSNET Email';
+  shortResponsePlaceholder: string;
+}
+
+const NUSNETEmailSchema = new Schema({
+  shortResponsePlaceholder: { type: String, required: true },
+});
+
+export const NUSNETEmailQuestionModel = QuestionModel.discriminator<NUSNETEmailQuestion>(
+  'NUSNET Email',
+  NUSNETEmailSchema
+);
+
+export interface TeamMemberSelectionQuestion extends BaseQuestion {
+  type: 'Team Member Selection';
+}
+
+const TeamMemberSelectionSchema = new Schema({
+  // No fields because this question is locked, and will always ask for array of userIds in Submission/Answer
+});
+
+export const TeamMemberSelectionQuestionModel = QuestionModel.discriminator<TeamMemberSelectionQuestion>(
+  'Team Member Selection',
+  TeamMemberSelectionSchema
+);
+
+
 export interface MultipleChoiceQuestion extends BaseQuestion {
   type: 'Multiple Choice';
   options: string[];
@@ -146,6 +188,9 @@ export const UndecidedQuestionModel = QuestionModel.discriminator<UndecidedQuest
 );
 
 export type QuestionUnion =
+  | TeamMemberSelectionQuestion
+  | NUSNETIDQuestion
+  | NUSNETEmailQuestion
   | MultipleChoiceQuestion
   | MultipleResponseQuestion
   | ScaleQuestion

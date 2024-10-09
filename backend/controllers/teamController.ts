@@ -3,14 +3,31 @@ import { NotFoundError } from '../services/errors';
 import {
   deleteTeamById,
   getTeamsByCourseId,
+  getTeamsByTAIdAndCourseId,
   removeMembersById,
   updateTeamById,
 } from '../services/teamService';
+import { getAccountId } from 'utils/auth';
+import { getUserIdByAccountId } from 'services/accountService';
 
 export const getTeamsByCourse = async (req: Request, res: Response) => {
   const { courseId } = req.params;
   try {
     const teams = await getTeamsByCourseId(courseId);
+    res.status(200).json(teams);
+  } catch (error) {
+    console.error('Error fetching teams:', error);
+    res.status(500).json({ error: 'Failed to fetch teams' });
+  }
+};
+
+// Note: Assumes that the one using this method is the TA themselves.
+export const getTeamsByTAAndCourse = async (req: Request, res: Response) => {
+  const { courseId } = req.params;
+  try {
+    const accountId = await getAccountId(req);
+    const userId = await getUserIdByAccountId(accountId);
+    const teams = await getTeamsByTAIdAndCourseId(userId, courseId)
     res.status(200).json(teams);
   } catch (error) {
     console.error('Error fetching teams:', error);

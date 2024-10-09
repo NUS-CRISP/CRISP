@@ -5,6 +5,24 @@ export interface BaseAnswer {
     question: string; // Reference to the question's _id
     type: string; // Discriminator property
   }
+
+  // Team Member Selection Answer
+  export interface TeamMemberSelectionAnswer extends BaseAnswer {
+    type: 'Team Member Selection';
+    selectedUserIds: string[];
+  }
+  // NUSNET ID Answer
+  export interface NUSNETIDAnswer extends BaseAnswer {
+    type: 'NUSNET ID';
+    value: string;
+  }
+  
+  // NUSNET Email Answer
+  export interface NUSNETEmailAnswer extends BaseAnswer {
+    type: 'NUSNET Email';
+    value: string;
+  }
+  
   
   // Multiple Choice Answer
   export interface MultipleChoiceAnswer extends BaseAnswer {
@@ -54,8 +72,11 @@ export interface BaseAnswer {
   export interface UndecidedAnswer extends BaseAnswer {
     type: 'Undecided';
   }
-  
+
   export type AnswerUnion =
+    | NUSNETIDAnswer
+    | NUSNETEmailAnswer
+    | TeamMemberSelectionAnswer
     | MultipleChoiceAnswer
     | MultipleResponseAnswer
     | ScaleAnswer

@@ -22,6 +22,39 @@ const BaseAnswerSchema = new Schema<BaseAnswer>(
 const AnswerSchema = BaseAnswerSchema;
 
 // Discriminator interfaces and schemas
+export interface NUSNETIDAnswer extends BaseAnswer {
+  value: string;
+}
+
+const NUSNETIDAnswerSchema = new Schema<NUSNETIDAnswer>(
+  {
+    value: { type: String, required: true },
+  },
+  options
+);
+
+export interface NUSNETEmailAnswer extends BaseAnswer {
+  value: string;
+}
+
+const NUSNETEmailAnswerSchema = new Schema<NUSNETEmailAnswer>(
+  {
+    value: { type: String, required: true },
+  },
+  options
+);
+
+export interface TeamMemberSelectionAnswer extends BaseAnswer {
+  selectedUserIds: string[];
+}
+
+const TeamMemberSelectionAnswerSchema = new Schema<TeamMemberSelectionAnswer>(
+  {
+    selectedUserIds: { type: [String], required: true },
+  },
+  options
+);
+
 export interface MultipleChoiceAnswer extends BaseAnswer {
   value: string;
 }
@@ -110,6 +143,9 @@ export interface UndecidedAnswer extends BaseAnswer {
 const UndecidedAnswerSchema = new Schema<UndecidedAnswer>({}, options);
 
 // Define discriminators without specifying the generic type parameter
+AnswerSchema.discriminator('NUSNET ID', NUSNETIDAnswerSchema);
+AnswerSchema.discriminator('NUSNET Email', NUSNETEmailAnswerSchema);
+AnswerSchema.discriminator('Team Member Selection', TeamMemberSelectionAnswerSchema);
 AnswerSchema.discriminator('Multiple Choice', MultipleChoiceAnswerSchema);
 AnswerSchema.discriminator('Multiple Response', MultipleResponseAnswerSchema);
 AnswerSchema.discriminator('Scale', ScaleAnswerSchema);
@@ -121,6 +157,9 @@ AnswerSchema.discriminator('Undecided', UndecidedAnswerSchema);
 
 // Union type for all possible answer types
 export type AnswerUnion =
+  | NUSNETIDAnswer
+  | NUSNETEmailAnswer
+  | TeamMemberSelectionAnswer
   | MultipleChoiceAnswer
   | MultipleResponseAnswer
   | ScaleAnswer

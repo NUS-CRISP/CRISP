@@ -10,15 +10,16 @@ import { AnswerUnion } from '@shared/types/Answer';
 import { AnswerInput } from '@shared/types/AnswerInput';
 import { Submission } from '@shared/types/Submission';
 import TakeAssessmentCard from '@/components/cards/TakeAssessmentCard';
+import { Team } from '@shared/types/Team';
 
 interface TakeAssessmentProps {
-  assessment: InternalAssessment;
+  inputAssessment: InternalAssessment;
   existingSubmission?: Submission;
   canEdit?: boolean;
 }
 
 const TakeAssessment: React.FC<TakeAssessmentProps> = ({
-  assessment,
+  inputAssessment,
   existingSubmission,
   canEdit = true,
 }) => {
@@ -30,7 +31,9 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
 
   const questionsApiRoute = `/api/internal-assessments/${assessmentId}/questions`;
   const submitAssessmentApiRoute = `/api/internal-assessments/${assessmentId}/submit`;
+  const assessmentApiRoute = `/api/internal-assessments/${assessmentId}`;
 
+  const [assessment, setAssessment] = useState<InternalAssessment | null>(inputAssessment);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<{ [questionId: string]: AnswerInput }>({});
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -38,10 +41,38 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
   const [missingRequiredQuestions, setMissingRequiredQuestions] = useState<string[]>([]);
   const [showErrorModal, setShowErrorModal] = useState<boolean>(false);
   const [showBackModal, setShowBackModal] = useState<boolean>(false);
+  const [teamMembersOptions, setTeamMembersOptions] = useState<{ value: string; label: string }[]>([]);
+
+
+  const fetchAssessment = useCallback(async () => {
+    if (assessment !== null && assessment !== undefined) return;
+    try {
+      const response = await fetch(assessmentApiRoute, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        console.error('Error fetching assessment:', response.statusText);
+        return;
+      }
+      const data: InternalAssessment = await response.json();
+      setAssessment(data);
+      console.log(data)
+    } catch (error) {
+      console.error('Error fetching assessment:', error);
+    }
+  }, [assessmentApiRoute]);
 
   const fetchQuestions = useCallback(async () => {
     try {
-      const response = await fetch(questionsApiRoute);
+      const response = await fetch(questionsApiRoute, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       if (!response.ok) {
         console.error('Error fetching questions:', response.statusText);
         return;
@@ -53,11 +84,44 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
     }
   }, [questionsApiRoute]);
 
+  // Fetch team members
+  const fetchTeamMembers = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/teams/course/${id}/ta`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!res.ok) throw new Error('Failed to fetch teams');
+      const teams: Team[] = await res.json();
+      // Extract team members
+      const teamMembers = teams.flatMap((team) => team.members);
+      // Remove duplicates
+      const uniqueMembers = Array.from(new Set(teamMembers.map((member) => member._id))).map((id) =>
+        teamMembers.find((member) => member._id === id)
+      );
+      if (uniqueMembers.length > 0) {
+        const options = uniqueMembers
+        .filter((member) => member !== undefined && member !== null)
+        .map((member) => ({
+          value: member._id,
+          label: member.name,
+        }));
+        setTeamMembersOptions(options);
+      }
+    } catch (error) {
+      console.error('Error fetching team members:', error);
+    }
+  }, [id]);
+
   useEffect(() => {
     if (router.isReady) {
+      fetchAssessment();
       fetchQuestions();
+      fetchTeamMembers();
     }
-  }, [router.isReady, fetchQuestions]);
+  }, [router.isReady, fetchAssessment, fetchQuestions, fetchTeamMembers]);
 
   useEffect(() => {
     if (existingSubmission) {
@@ -86,14 +150,17 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
   }, [existingSubmission, assessmentId]);
   const extractAnswerValue = (answer: AnswerUnion): AnswerInput => {
     switch (answer.type) {
-      case 'Multiple Choice':
-        return answer.value;
+      case 'Team Member Selection':
+        return answer.selectedUserIds;
       case 'Multiple Response':
         return answer.values;
+      case 'Multiple Choice':
       case 'Scale':
-        return answer.value;
       case 'Short Response':
       case 'Long Response':
+      case 'NUSNET ID':
+      case 'NUSNET Email':
+      case 'Number':
         return answer.value;
       case 'Date':
         if (answer.startDate && answer.endDate) {
@@ -103,8 +170,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         } else {
           return undefined;
         }
-      case 'Number':
-        return answer.value;
       default:
         return undefined;
     }
@@ -127,7 +192,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
     }
 
     if (typeof answer === 'number') {
-      return false; // Numbers are considered not empty
+      return false;
     }
 
     if (answer instanceof Date) {
@@ -138,17 +203,27 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
       if (answer.length === 0) {
         return true;
       }
-      // For date ranges or arrays, check if all elements are empty
-      return answer.every(
-        (item) => item === undefined || item === null || item === '' || isNaN((item as Date).getTime())
-      );
+
+      if (answer.every((item) => typeof item === 'string')) {
+        return answer.every((item) => item.trim() === '');
+      }
+
+      if (answer.every((item) => item instanceof Date)) {
+        return answer.every(
+          (item) => item === undefined || item === null || isNaN(new Date(item).getTime())
+        );
+      }
+
+      return false;
     }
 
     return false;
   };
 
   const handleSubmitClick = () => {
-    // Check for missing required questions
+    if (!canEdit) {
+      return;
+    }
     const missingQuestions = questions
       .map((question, index) => ({ question, index }))
       .filter(({ question }) => question.isRequired && isAnswerEmpty(answers[question._id]))
@@ -173,14 +248,18 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
     answer: AnswerInput
   ): Partial<AnswerUnion> => {
     switch (question.type) {
-      case 'Multiple Choice':
-        return { value: answer as string };
+      case 'Team Member Selection':
+        return { selectedUserIds: answer as string[] };
       case 'Multiple Response':
         return { values: answer as string[] };
       case 'Scale':
+      case 'Number':
         return { value: answer as number };
+      case 'Multiple Choice':
       case 'Short Response':
       case 'Long Response':
+      case 'NUSNET ID':
+      case 'NUSNET Email':
         return { value: answer as string };
       case 'Date':
         if (Array.isArray(answer)) {
@@ -192,8 +271,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         } else {
           return { value: (answer as Date) || undefined };
         }
-      case 'Number':
-        return { value: answer as number };
       default:
         return {};
     }
@@ -237,7 +314,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         setIsSubmitting(false);
         return;
       }
-      // Remove draft from local storage
+      // Remove draft from local storage (if it exists)
       localStorage.removeItem(`assessmentDraft_${assessmentId}`);
       // Handle successful submission
       showNotification({
@@ -260,7 +337,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
   const confirmBack = () => {
     setShowBackModal(false);
     // Navigate to the assessment overview or course page
-    router.push(`/courses/${id}/assessments/${assessmentId}`);
+    router.push(`/courses/${id}/internal-assessments/${assessmentId}`);
   };
 
   const handleSaveDraft = async () => {
@@ -312,14 +389,15 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
       return 'No answer provided';
     }
     switch (questionType) {
-      case 'Multiple Choice':
-        return answer as string;
       case 'Multiple Response':
         return Array.isArray(answer) ? (answer as string[]).join(', ') : answer.toString();
       case 'Scale':
         return (answer as number).toString();
+      case 'Multiple Choice':
       case 'Short Response':
       case 'Long Response':
+      case 'NUSNET ID':
+      case 'NUSNET Email':
         return answer as string;
       case 'Date':
         if (Array.isArray(answer)) {
@@ -330,6 +408,16 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         }
       case 'Number':
         return (answer as number).toString();
+      case 'Team Member Selection':
+        if (Array.isArray(answer)) {
+          const selectedMembers = answer as string[];
+          const selectedNames = selectedMembers
+            .map((id) => teamMembersOptions.find((option) => option.value === id)?.label || id)
+            .join(', ');
+          return selectedNames;
+        } else {
+          return 'No team members selected';
+        }
       default:
         return answer.toString();
     }
@@ -343,7 +431,13 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
           <p>{assessment.description}</p>
         </div>
       )}
-      {questions.map((question, index) => (
+      {inputAssessment && !canEdit && (
+        <Text c="red" mb="md">
+          You cannot edit this submission. While you can change the fields, you cannot submit the edits.
+        </Text>
+      )}
+
+      {assessment && questions.map((question, index) => (
         <TakeAssessmentCard
           key={question._id}
           index={index}
@@ -351,6 +445,10 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
           answer={answers[question._id]}
           onAnswerChange={(answer) => handleAnswerChange(question._id, answer)}
           disabled={!canEdit}
+          teamMembersOptions={
+            question.type === 'Team Member Selection' ? teamMembersOptions : undefined
+          }
+          assessmentGranularity={assessment.granularity}
         />
       ))}
 
@@ -360,10 +458,17 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
             Back
           </Button>
           <Group>
-            <Button variant="default" onClick={handleSaveDraft}>
-              Save Draft
-            </Button>
-            <Button onClick={handleSubmitClick} loading={isSubmitting}>
+            {((!inputAssessment && !existingSubmission) || (existingSubmission && existingSubmission.isDraft)) &&
+              <Button variant="default" onClick={handleSaveDraft}>
+                Save Draft
+              </Button>
+            }
+            <Button
+              onClick={handleSubmitClick}
+              loading={isSubmitting}
+              disabled={!canEdit && !(existingSubmission && existingSubmission.isDraft)}
+              variant={canEdit || (existingSubmission && existingSubmission.isDraft) ? 'filled' : 'outline'}
+            >
               Submit
             </Button>
           </Group>
