@@ -103,7 +103,6 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
         variant="separated"
         mx={20}
       >
-        <AllTeams teamDatas={teamDatas} />
 
         {data.map(({ team, teamData }, idx) => (
           <TutorialPopover

@@ -1,19 +1,6 @@
 import { useState, forwardRef } from 'react';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  Line,
-  ComposedChart,
-  Area,
-} from 'recharts';
-import { Carousel, Embla } from '@mantine/carousel';
-import { Card, Stack, Title, Center } from '@mantine/core';
+import { Card, Stack, Title, Center, Select, MultiSelect } from '@mantine/core';
+import { BarChart } from '@mantine/charts';
 import { TeamData } from '@shared/types/TeamData';
 
 interface AllTeamsProps {
@@ -22,8 +9,13 @@ interface AllTeamsProps {
 
 const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
   ({ teamDatas }, ref) => {
-    const [embla, setEmbla] = useState<Embla | null>(null);
+    const [chartType, setChartType] = useState<string>('BarChart');
+    const [selectedMetrics, setSelectedMetrics] = useState<string[]>([
+      'commits',
+      'issues',
+    ]);
 
+    // Prepare unique teams and data
     const uniqueTeams = new Set<string>();
     const data = teamDatas
       .filter(teamData => {
@@ -41,108 +33,74 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
         weeklyCommits: teamData.weeklyCommits.length,
       }))
       .sort((a, b) => a.teamName.localeCompare(b.teamName));
+      
+    // const data = [
+    //   { teamName: 'January', commits: 30, issues: 30, pullRequests: 30, weeklyCommits: 30 },
+    // ];
 
-    const CourseOverviewChart = () => (
-      <ResponsiveContainer width="100%" height={400}>
-        <ComposedChart
-          data={data}
-          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" />
-          <defs>
-            <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
-            </linearGradient>
-            <linearGradient id="colorPv" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <XAxis dataKey="teamName" />
-          <YAxis />
-          <Tooltip />
-          <Legend />
-          <Area
-            dataKey="commits"
-            name="Commits"
-            stroke="#8884d8"
-            fillOpacity={1}
-            fill="url(#colorUv)"
-          />
-          <Area
-            dataKey="issues"
-            name="Issues"
-            stroke="#82ca9d"
-            fillOpacity={1}
-            fill="url(#colorPv)"
-          />
-          <Line
-            dataKey="pullRequests"
-            name="Pull Requests"
-            stroke="#ff7300"
-            opacity="50"
-          />
-          <Line
-            dataKey="weeklyCommits"
-            name="Weekly Commits"
-            stroke="var(--mantine-color-blue-filled)"
-            opacity="50"
-          />
-        </ComposedChart>
-      </ResponsiveContainer>
-    );
-
-    const PRBarChart = () => (
-      <ResponsiveContainer width="100%" height={400}>
-        <BarChart
-          data={data}
-          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="teamName" />
-          <YAxis />
-          <Tooltip />
-          <Legend />
-          <Bar dataKey="pullRequests" fill="#82ca9d" name="Pull Requests" />
-        </BarChart>
-      </ResponsiveContainer>
-    );
-
-    const slides = [
-      {
-        title: 'Course Overview',
-        component: CourseOverviewChart,
-      },
-      {
-        title: 'Pull Requests',
-        component: PRBarChart,
-      },
+    const availableMetrics = [
+      { value: 'commits', label: 'Commits' },
+      { value: 'issues', label: 'Issues' },
+      { value: 'pullRequests', label: 'Pull Requests' },
+      { value: 'weeklyCommits', label: 'Weekly Commits' },
     ];
+
+    console.log("Available Metrics:", availableMetrics); // Debugging the available metrics
+
+    // Convert data for Mantine BarChart
+    const chartData = data.map((team) => ({
+      teamName: team.teamName,
+      ...selectedMetrics.reduce(
+        (acc, metric) => ({ ...acc, [metric]: team[metric as keyof typeof team] }),
+        {}
+      ),
+    }));
+
+    console.log('Chart Data:', chartData); // Debugging the data format
+
+    const series = selectedMetrics.map((metric, index) => ({
+      name: metric.charAt(0) + metric.slice(1),
+      color: ['violet.6', 'blue.6', 'teal.6', 'orange.6'][index % 4],
+    }));
+
+    console.log('Series:', series); // Debugging the series format
 
     return (
       <Card withBorder ref={ref} style={{ marginBottom: '16px' }}>
-        <Carousel
-          style={{ paddingRight: '24px' }}
-          getEmblaApi={setEmbla}
-          nextControlProps={{
-            onClick: () => embla?.reInit(),
-          }}
-          previousControlProps={{
-            onClick: () => embla?.reInit(),
-          }}
-        >
-          {slides.map(({ title, component: ChartComponent }, idx) => (
-            <Carousel.Slide key={idx}>
-              <Stack>
-                <Center>
-                  <Title order={3}>{title}</Title>
-                </Center>
-                <ChartComponent />
-              </Stack>
-            </Carousel.Slide>
-          ))}
-        </Carousel>
+        <Stack>
+          <Center>
+            <Title order={3}>Customize Your Chart</Title>
+          </Center>
+
+          {/* Chart Type Selection */}
+          <Select
+            label="Chart Type"
+            placeholder="Select chart type"
+            value={chartType}
+            onChange={(value: string | null) => {
+              if (value) setChartType(value);
+            }}
+            data={[{ value: 'BarChart', label: 'Bar Chart' }]} // You can add more chart types later
+          />
+
+          {/* Metric Selection */}
+          <MultiSelect
+            label="Metrics"
+            placeholder="Select metrics to display"
+            value={selectedMetrics}
+            onChange={setSelectedMetrics}
+            data={availableMetrics}
+          />
+
+          {/* Render Bar Chart */}
+          <BarChart
+            h={400}
+            data={chartData}
+            dataKey="teamName" // x-axis key
+            series={series} // Ensure series is correctly mapping to data keys
+            tickLine="none"
+          />
+        </Stack>
       </Card>
     );
   }
