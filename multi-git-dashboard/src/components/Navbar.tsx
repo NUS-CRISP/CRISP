@@ -90,11 +90,10 @@ const Navbar: React.FC = () => {
         const response = await fetch(`/api/courses/${courseId}`);
         const data: Course = await response.json();
 
-        // Check if students exist and update the state accordingly
         if (data.students.length > 0) {
-          setPeopleAdded(true); // Enable tabs when students are added
+          setPeopleAdded(true);
         } else {
-          setPeopleAdded(false); // Disable tabs when no students are added
+          setPeopleAdded(false);
         }
       } catch (error) {
         console.error('Failed to fetch course data:', error);
@@ -141,8 +140,10 @@ const Navbar: React.FC = () => {
       return 'Assessments';
     } else if (path.startsWith('/courses/[id]/project-management')) {
       return 'Project Management';
+    } else if (path.startsWith('/courses/[id]/class-review')) {
+      return 'Class Review';
     } else if (path.startsWith('/courses/[id]')) {
-      return 'Overview';
+      return 'Team Overview';
     } else {
       return '';
     }
@@ -182,8 +183,13 @@ const Navbar: React.FC = () => {
 
   const courseLinksData = [
     {
+      link: `/courses/${courseId}/class-review`,
+      label: 'Class Overview',
+      disabled: !peopleAdded,
+    },
+    {
       link: `/courses/${courseId}`,
-      label: 'Overview',
+      label: 'Team View',
       disabled: !peopleAdded,
     },
     {
@@ -329,7 +335,7 @@ const Navbar: React.FC = () => {
               }}
             >
               <NavbarLink
-                onClick={() => {}}
+                onClick={() => { }}
                 icon={IconUserCircle}
                 label={`Hello, ${session && session.user ? session.user.name : 'user'}`}
                 disabled
@@ -363,6 +369,7 @@ const Navbar: React.FC = () => {
           <nav
             className={classes.courseNavbar}
             style={{
+              width: '190px',
               backgroundColor: getTutorialHighlightColor(5),
             }}
           >
@@ -371,6 +378,7 @@ const Navbar: React.FC = () => {
                 order={3}
                 className={classes.title}
                 style={{
+                  marginBottom: '30px',
                   backgroundColor: getTutorialHighlightColor(5),
                 }}
               >
@@ -399,6 +407,7 @@ const Navbar: React.FC = () => {
       >
         <p>You need to add people for this course first.</p>
       </Alert>
+
     </div>
   );
 };
