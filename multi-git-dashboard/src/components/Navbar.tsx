@@ -166,7 +166,7 @@ const Navbar: React.FC = () => {
     {
       link: `/courses/${courseId}/code-analysis`,
       label: 'Code Analysis',
-    }
+    },
   ];
 
   const courseLinks = courseLinksData.map(item => (
@@ -271,7 +271,9 @@ const Navbar: React.FC = () => {
               <NavbarLink
                 onClick={() => {}}
                 icon={IconUserCircle}
-                label={`Hello, ${session && session.user ? session.user.name : 'user'}`}
+                label={`Hello, ${
+                  session && session.user ? session.user.name : 'user'
+                }`}
                 disabled
               />
 

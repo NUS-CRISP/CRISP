@@ -1,4 +1,8 @@
-import { getAllCodeAnalysisData, getAllCodeAnalysisDataByOrg, getAllCodeAnalysisDataByCourse } from 'controllers/codeAnalysisController';
+import {
+  getAllCodeAnalysisData,
+  getAllCodeAnalysisDataByOrg,
+  getAllCodeAnalysisDataByCourse,
+} from 'controllers/codeAnalysisController';
 import express from 'express';
 
 const router = express.Router();
