@@ -300,7 +300,7 @@ const Navbar: React.FC = () => {
 
   return (
     <div className={classes.navbarsContainer}>
-      <TutorialPopover stage={1} >
+      <TutorialPopover stage={1}>
         <nav
           className={classes.navbar}
           style={{
@@ -347,7 +347,7 @@ const Navbar: React.FC = () => {
               }}
             >
               <NavbarLink
-                onClick={() => { }}
+                onClick={() => {}}
                 icon={IconUserCircle}
                 label={`Hello, ${session && session.user ? session.user.name : 'user'}`}
                 disabled
@@ -397,7 +397,13 @@ const Navbar: React.FC = () => {
                 {courseCode}
               </Title>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '20px',
+                }}
+              >
                 {courseLinks}
               </div>
             </div>
@@ -422,7 +428,6 @@ const Navbar: React.FC = () => {
       >
         <p>You need to add people for this course first.</p>
       </Alert>
-
     </div>
   );
 };
