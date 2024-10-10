@@ -32,7 +32,7 @@ interface NavbarLinkProps {
   active?: boolean;
   disabled?: boolean;
   onClick: (event: React.MouseEvent) => void;
-  popoverOpened?: boolean;
+  popoverOpened?: boolean; 
 }
 
 const NavbarLink = forwardRef<HTMLButtonElement, NavbarLinkProps>(
@@ -186,35 +186,42 @@ const Navbar: React.FC = () => {
       link: `/courses/${courseId}/class-review`,
       label: 'Class Overview',
       disabled: !peopleAdded,
+      pngSrc: '/class-overview.png', 
     },
     {
       link: `/courses/${courseId}`,
       label: 'Team View',
       disabled: !peopleAdded,
+      pngSrc: '/team-view.png',
     },
     {
       link: `/courses/${courseId}/people`,
       label: 'People',
+      pngSrc: '/people.png',
     },
     {
       link: `/courses/${courseId}/teams`,
       label: 'Teams',
       disabled: !peopleAdded,
+      pngSrc: '/teams.png',
     },
     {
       link: `/courses/${courseId}/timeline`,
       label: 'Timeline',
       disabled: !peopleAdded,
+      pngSrc: '/timeline.png',
     },
     {
       link: `/courses/${courseId}/assessments`,
       label: 'Assessments',
       disabled: !peopleAdded,
+      pngSrc: '/assessments.png',
     },
     {
       link: `/courses/${courseId}/project-management`,
       label: 'Project Management',
       disabled: !peopleAdded,
+      pngSrc: '/jira.png',
     },
   ];
 
@@ -242,7 +249,12 @@ const Navbar: React.FC = () => {
         key={item.label}
         style={item.disabled ? { cursor: 'not-allowed', opacity: 0.5 } : {}}
       >
-        <span>{item.label}</span>
+        <img
+        src={item.pngSrc}
+        alt={`${item.label} icon`}
+        style={{ width: '25px', height: '25px', marginRight: '5px' }}
+      />
+        <span style ={{ fontSize: '14px'}}>{item.label}</span>
       </a>
     </TutorialPopover>
   ));
@@ -369,7 +381,7 @@ const Navbar: React.FC = () => {
           <nav
             className={classes.courseNavbar}
             style={{
-              width: '190px',
+              width: '200px',
               backgroundColor: getTutorialHighlightColor(5),
             }}
           >
@@ -384,7 +396,10 @@ const Navbar: React.FC = () => {
               >
                 {courseCode}
               </Title>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {courseLinks}
+              </div>
             </div>
           </nav>
         </TutorialPopover>
@@ -402,7 +417,7 @@ const Navbar: React.FC = () => {
           top: '30%',
           left: '55%',
           transform: 'translate(-50%, -50%)',
-          zIndex: 1000, // Ensure it's above other content
+          zIndex: 1000,
         }}
       >
         <p>You need to add people for this course first.</p>
