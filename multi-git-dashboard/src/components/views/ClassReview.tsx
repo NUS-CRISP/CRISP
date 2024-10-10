@@ -5,7 +5,6 @@ import { Team as SharedTeam } from '@shared/types/Team';
 import { TeamData } from '@shared/types/TeamData';
 import { Status } from '@shared/types/util/Status';
 import { useEffect, useState } from 'react';
-import { useTutorialContext } from '../tutorial/TutorialContext';
 import AllTeams from '../overview/analytics/team/AllTeams';
 
 interface OverviewProps {

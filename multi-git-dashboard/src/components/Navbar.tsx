@@ -25,6 +25,7 @@ import { useTutorialContext } from './tutorial/TutorialContext';
 import TutorialPopover from './tutorial/TutorialPopover';
 import { Course } from '@shared/types/Course';
 import { IconInfoCircle } from '@tabler/icons-react';
+import Image from 'next/image';
 
 interface NavbarLinkProps {
   icon: typeof IconHome2;
@@ -249,12 +250,15 @@ const Navbar: React.FC = () => {
         key={item.label}
         style={item.disabled ? { cursor: 'not-allowed', opacity: 0.5 } : {}}
       >
-        <img
-          src={item.pngSrc}
-          alt={`${item.label} icon`}
-          style={{ width: '25px', height: '25px', marginRight: '5px' }}
-        />
-        <span style={{ fontSize: '14px' }}>{item.label}</span>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <Image
+            src={item.pngSrc}
+            alt={`${item.label} icon`}
+            width={25} // Use width prop
+            height={25} // Use height prop
+          />
+          <span style={{ marginLeft: '5px' }}>{item.label}</span>
+        </div>
       </a>
     </TutorialPopover>
   ));
