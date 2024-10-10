@@ -1,5 +1,3 @@
-// components/TakeAssessment.tsx
-
 import { Container, Button, Text, Modal, Group, ScrollArea } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
 import { useRouter } from 'next/router';
@@ -38,11 +36,14 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
   const [answers, setAnswers] = useState<{ [questionId: string]: AnswerInput }>({});
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState<boolean>(false);
+  const [showDeleteDraftModal, setShowDeleteDraftModal] = useState<boolean>(false);
   const [missingRequiredQuestions, setMissingRequiredQuestions] = useState<string[]>([]);
   const [showErrorModal, setShowErrorModal] = useState<boolean>(false);
   const [showBackModal, setShowBackModal] = useState<boolean>(false);
-  const [teamMembersOptions, setTeamMembersOptions] = useState<{ value: string; label: string }[]>([]);
-
+  const [teamMembersOptions, setTeamMembersOptions] = useState<{ value: string; label: string }[]>(
+    []
+  );
+  const [submission, setSubmission] = useState<Submission | undefined>(existingSubmission);
 
   const fetchAssessment = useCallback(async () => {
     if (assessment !== null && assessment !== undefined) return;
@@ -59,11 +60,11 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
       }
       const data: InternalAssessment = await response.json();
       setAssessment(data);
-      console.log(data)
+      console.log(data);
     } catch (error) {
       console.error('Error fetching assessment:', error);
     }
-  }, [assessmentApiRoute]);
+  }, [assessmentApiRoute, assessment]);
 
   const fetchQuestions = useCallback(async () => {
     try {
@@ -103,11 +104,11 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
       );
       if (uniqueMembers.length > 0) {
         const options = uniqueMembers
-        .filter((member) => member !== undefined && member !== null)
-        .map((member) => ({
-          value: member._id,
-          label: member.name,
-        }));
+          .filter((member) => member !== undefined && member !== null)
+          .map((member) => ({
+            value: member._id,
+            label: member.name,
+          }));
         setTeamMembersOptions(options);
       }
     } catch (error) {
@@ -124,9 +125,9 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
   }, [router.isReady, fetchAssessment, fetchQuestions, fetchTeamMembers]);
 
   useEffect(() => {
-    if (existingSubmission) {
+    if (submission && submission.answers) {
       // Initialize answers from existing submission
-      const initialAnswers = existingSubmission.answers.reduce(
+      const initialAnswers = submission.answers.reduce(
         (acc, answer) => {
           // Extract the question ID correctly
           const questionId =
@@ -140,14 +141,9 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         {} as { [questionId: string]: AnswerInput }
       );
       setAnswers(initialAnswers);
-    } else {
-      // Load draft from localStorage if available
-      const savedDraft = localStorage.getItem(`assessmentDraft_${assessmentId}`);
-      if (savedDraft) {
-        setAnswers(JSON.parse(savedDraft));
-      }
     }
-  }, [existingSubmission, assessmentId]);
+  }, [submission]);
+
   const extractAnswerValue = (answer: AnswerUnion): AnswerInput => {
     switch (answer.type) {
       case 'Team Member Selection':
@@ -298,8 +294,9 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         answers: formattedAnswers,
         isDraft: false,
       };
-      if (existingSubmission && existingSubmission._id) {
-        submissionData.submissionId = existingSubmission._id;
+
+      if (submission && submission._id) {
+        submissionData.submissionId = submission._id;
       }
 
       const response = await fetch(submitAssessmentApiRoute, {
@@ -309,14 +306,17 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         },
         body: JSON.stringify(submissionData),
       });
+
       if (!response.ok) {
         console.error('Error submitting assessment:', response.statusText);
         setIsSubmitting(false);
         return;
       }
-      // Remove draft from local storage (if it exists)
-      localStorage.removeItem(`assessmentDraft_${assessmentId}`);
-      // Handle successful submission
+
+      const savedSubmission: Submission = (await response.json()).submission;
+
+      setSubmission(savedSubmission);
+
       showNotification({
         title: 'Submission Successful',
         message: 'Your assessment has been submitted.',
@@ -330,24 +330,15 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
   };
 
   const handleBackClick = () => {
-    // Show confirmation modal when back button is clicked
     setShowBackModal(true);
   };
 
   const confirmBack = () => {
     setShowBackModal(false);
-    // Navigate to the assessment overview or course page
     router.push(`/courses/${id}/internal-assessments/${assessmentId}`);
   };
 
   const handleSaveDraft = async () => {
-    // Save the answers to local storage
-    localStorage.setItem(`assessmentDraft_${assessmentId}`, JSON.stringify(answers));
-    showNotification({
-      title: 'Draft Saved',
-      message: 'Your answers have been saved as a draft.',
-    });
-    // Optionally, send the draft to the backend
     try {
       // Prepare the answers in the format expected by the backend
       const formattedAnswers = Object.entries(answers)
@@ -368,19 +359,85 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         answers: formattedAnswers,
         isDraft: true,
       };
-      if (existingSubmission && existingSubmission._id) {
-        submissionData.submissionId = existingSubmission._id;
+      if (submission && submission._id) {
+        submissionData.submissionId = submission._id;
       }
 
-      await fetch(submitAssessmentApiRoute, {
+      const response = await fetch(submitAssessmentApiRoute, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(submissionData),
       });
+
+      if (!response.ok) {
+        console.error('Error saving draft:', response.statusText);
+        return;
+      }
+
+      const savedSubmission: Submission = (await response.json()).submission;
+
+      setSubmission(savedSubmission);
+
+      showNotification({
+        title: 'Draft Saved',
+        message: 'Your answers have been saved as a draft.',
+      });
     } catch (error) {
       console.error('Error saving draft:', error);
+    }
+  };
+
+  const handleDeleteDraft = () => {
+    // Open the confirmation modal
+    setShowDeleteDraftModal(true);
+  };
+
+  const confirmDeleteDraft = async () => {
+    try {
+      if (!submission || !submission._id) {
+        return;
+      }
+
+      const response = await fetch(
+        `/api/submissions/${submission._id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.error('Error deleting draft submission:', response.statusText);
+        showNotification({
+          title: 'Error',
+          message: 'Failed to delete draft submission.',
+          color: 'red',
+        });
+        return;
+      }
+
+      // Update state
+      setSubmission(undefined);
+      setAnswers({});
+      setShowDeleteDraftModal(false);
+
+      showNotification({
+        title: 'Draft Deleted',
+        message: 'Your draft submission has been deleted.',
+        color: 'red'
+      });
+      router.back();
+    } catch (error) {
+      console.error('Error deleting draft submission:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Failed to delete draft submission.',
+        color: 'red',
+      });
     }
   };
 
@@ -402,7 +459,9 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
       case 'Date':
         if (Array.isArray(answer)) {
           const [start, end] = answer as [Date | null, Date | null];
-          return `${start ? start.toLocaleDateString() : 'N/A'} - ${end ? end.toLocaleDateString() : 'N/A'}`;
+          return `${
+            start ? new Date(start).toLocaleDateString() : 'N/A'
+          } - ${end ? new Date(end).toLocaleDateString() : 'N/A'}`;
         } else {
           return answer ? (answer as Date).toLocaleDateString() : 'No date selected';
         }
@@ -437,37 +496,47 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         </Text>
       )}
 
-      {assessment && questions.map((question, index) => (
-        <TakeAssessmentCard
-          key={question._id}
-          index={index}
-          question={question}
-          answer={answers[question._id]}
-          onAnswerChange={(answer) => handleAnswerChange(question._id, answer)}
-          disabled={!canEdit}
-          teamMembersOptions={
-            question.type === 'Team Member Selection' ? teamMembersOptions : undefined
-          }
-          assessmentGranularity={assessment.granularity}
-        />
-      ))}
+      {assessment &&
+        questions.map((question, index) => (
+          <TakeAssessmentCard
+            key={question._id}
+            index={index}
+            question={question}
+            answer={answers[question._id]}
+            onAnswerChange={(answer) => handleAnswerChange(question._id, answer)}
+            disabled={!canEdit}
+            teamMembersOptions={
+              question.type === 'Team Member Selection' ? teamMembersOptions : undefined
+            }
+            assessmentGranularity={assessment.granularity}
+          />
+        ))}
 
       {canEdit && (
-        <Group mt="md" justify="space-between">
+        <Group mt="md" justify='space-between'>
           <Button variant="default" onClick={handleBackClick}>
             Back
           </Button>
           <Group>
-            {((!inputAssessment && !existingSubmission) || (existingSubmission && existingSubmission.isDraft)) &&
+            {(submission && submission.isDraft) &&
+              <Button
+                variant="default"
+                c='red'
+                onClick={handleDeleteDraft}
+              >
+                Delete Draft
+              </Button>
+            }
+            {(!submission || submission.isDraft) && (
               <Button variant="default" onClick={handleSaveDraft}>
                 Save Draft
               </Button>
-            }
+            )}
             <Button
               onClick={handleSubmitClick}
               loading={isSubmitting}
-              disabled={!canEdit && !(existingSubmission && existingSubmission.isDraft)}
-              variant={canEdit || (existingSubmission && existingSubmission.isDraft) ? 'filled' : 'outline'}
+              disabled={!canEdit && !(submission && submission.isDraft)}
+              variant={canEdit || (submission && submission.isDraft) ? 'filled' : 'outline'}
             >
               Submit
             </Button>
@@ -493,7 +562,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
             </div>
           ))}
         </ScrollArea>
-        <Group justify="flex-end" mt="md">
+        <Group justify='flex-end' mt="md">
           <Button variant="default" onClick={() => setShowConfirmationModal(false)}>
             Cancel
           </Button>
@@ -528,12 +597,31 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
           You have unsaved progress. Are you sure you want to leave this page? Your unsaved changes
           will be lost.
         </Text>
-        <Group justify="flex-end" mt="md">
+        <Group justify='flex-end' mt="md">
           <Button variant="default" onClick={() => setShowBackModal(false)}>
             Cancel
           </Button>
           <Button color="red" onClick={confirmBack}>
             Leave Page
+          </Button>
+        </Group>
+      </Modal>
+
+      {/* Delete Draft Confirmation Modal */}
+      <Modal
+        opened={showDeleteDraftModal}
+        onClose={() => setShowDeleteDraftModal(false)}
+        title="Delete Draft Submission"
+      >
+        <Text>
+          Are you sure you want to delete your draft submission? This action cannot be undone.
+        </Text>
+        <Group justify='flex-end' mt="md">
+          <Button variant="default" onClick={() => setShowDeleteDraftModal(false)}>
+            Cancel
+          </Button>
+          <Button color="red" onClick={confirmDeleteDraft}>
+            Delete Draft
           </Button>
         </Group>
       </Modal>

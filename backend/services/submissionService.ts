@@ -306,7 +306,7 @@ export const updateSubmission = async (
   await validateAnswers(assessment, answers);
 
   // Check if submissions are editable
-  if (!bypass && !assessment.areSubmissionsEditable && !isDraft) {
+  if (!bypass && !assessment.areSubmissionsEditable && !submission.isDraft) {
     throw new BadRequestError('Submissions are not editable for this assessment');
   }
 
