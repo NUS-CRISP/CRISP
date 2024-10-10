@@ -1,10 +1,5 @@
 import { DateUtils } from '@/lib/utils';
-import {
-  Center,
-  Container,
-  Loader,
-  ScrollArea,
-} from '@mantine/core';
+import { Center, Container, Loader, ScrollArea } from '@mantine/core';
 import { Profile } from '@shared/types/Profile';
 import { Team as SharedTeam } from '@shared/types/Team';
 import { TeamData } from '@shared/types/TeamData';
@@ -24,7 +19,6 @@ export interface Team extends Omit<SharedTeam, 'teamData'> {
 export type ProfileGetter = (gitHandle: string) => Promise<Profile>;
 
 const ClassReview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
-
   const { curTutorialStage } = useTutorialContext();
 
   const [teams, setTeams] = useState<Team[]>([]);
@@ -93,13 +87,15 @@ const ClassReview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
     return <Center>No teams found.</Center>;
 
   return (
-    <ScrollArea m="md"
+    <ScrollArea
+      m="md"
       style={{
-        height: "97vh",
+        height: '97vh',
         paddingRight: '20px',
         overflowY: 'auto',
         scrollbarWidth: 'thin',
-      }} >
+      }}
+    >
       <AllTeams teamDatas={teamDatas} />
     </ScrollArea>
   );

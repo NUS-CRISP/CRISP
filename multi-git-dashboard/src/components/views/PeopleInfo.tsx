@@ -131,13 +131,15 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
   const csvHeaders = ['identifier', 'name', 'gitHandle'];
 
   return (
-    <ScrollArea m="md"
+    <ScrollArea
+      m="md"
       style={{
-        height: "97vh",
+        height: '97vh',
         paddingRight: '20px',
         overflowY: 'auto',
         scrollbarWidth: 'thin',
-      }} >
+      }}
+    >
       {hasFacultyPermission && (
         <Group my={16}>
           {isEditing ? (

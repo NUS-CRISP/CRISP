@@ -41,12 +41,15 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
       { value: 'pullRequests', label: 'Pull Requests' },
       { value: 'weeklyCommits', label: 'Weekly Commits' },
     ];
-    console.log("Available Metrics:", availableMetrics);
+    console.log('Available Metrics:', availableMetrics);
 
-    const chartData = data.map((team) => ({
+    const chartData = data.map(team => ({
       teamName: team.teamName,
       ...selectedMetrics.reduce(
-        (acc, metric) => ({ ...acc, [metric]: team[metric as keyof typeof team] }),
+        (acc, metric) => ({
+          ...acc,
+          [metric]: team[metric as keyof typeof team],
+        }),
         {}
       ),
     }));
@@ -70,7 +73,7 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
       return sortedData.slice(0, 5);
     };
 
-    const filteredData = filterTopOrLowest().map((team) => ({
+    const filteredData = filterTopOrLowest().map(team => ({
       teamName: team.teamName,
       [singleMetric]: team[singleMetric as keyof typeof team],
     }));
@@ -115,7 +118,6 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
       }
     };
 
-
     return (
       <div>
         {/* <Center style={{ marginTop: "20px", marginBottom: '20px' }}>
@@ -125,7 +127,7 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
         {/* First Chart */}
         <Card withBorder ref={ref} style={{ marginBottom: '20px' }}>
           <Stack>
-            <Center >
+            <Center>
               <Title order={5}>Composed Charts</Title>
             </Center>
             <Select
@@ -155,7 +157,7 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
         {/* Second Chart */}
         <Card withBorder ref={ref} style={{ marginBottom: '16px' }}>
           <Stack>
-            <Center >
+            <Center>
               <Title order={5}>Top/Lowest 5 Chart</Title>
             </Center>
             <Select

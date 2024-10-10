@@ -151,13 +151,15 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({
   ));
 
   return (
-    <ScrollArea m="md"
+    <ScrollArea
+      m="md"
       style={{
-        height: "97vh",
+        height: '97vh',
         paddingRight: '20px',
         overflowY: 'auto',
         scrollbarWidth: 'thin',
-      }} >
+      }}
+    >
       <Tabs value={activeTab}>
         <Tabs.List style={{ display: 'flex', justifyContent: 'space-evenly' }}>
           {headers}

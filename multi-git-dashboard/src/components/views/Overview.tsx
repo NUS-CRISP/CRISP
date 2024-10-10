@@ -102,7 +102,6 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
         variant="separated"
         mx={20}
       >
-
         {data.map(({ team, teamData }, idx) => (
           <TutorialPopover
             key={teamData._id}
