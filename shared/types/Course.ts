@@ -48,4 +48,9 @@ export interface Course {
     accessToken: string;
     refreshToken: string;
   };
+  trofos: {
+    isRegistered: boolean;
+    apiKey: string;
+    courseId: number;
+  }
 }
