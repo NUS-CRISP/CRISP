@@ -26,6 +26,7 @@ import {
   NumberQuestion,
 } from '../models/QuestionTypes';
 import { NotFoundError, BadRequestError } from './errors';
+import AccountModel from '@models/Account';
 
 // Type guards for questions
 function isNUSNETIDAnswer(answer: AnswerUnion): answer is NUSNETIDAnswer {
@@ -280,6 +281,7 @@ export const createSubmission = async (
 export const updateSubmission = async (
   submissionId: string,
   userId: string,
+  accountId: string,
   answers: AnswerUnion[],
   isDraft: boolean
 ): Promise<Submission> => {
@@ -287,9 +289,14 @@ export const updateSubmission = async (
   if (!submission) {
     throw new NotFoundError('Submission not found.');
   }
+  let bypass = false;
+  const account = await AccountModel.findById(accountId);
+  if (account && (account.role === 'Faculty member' || account.role === 'admin')) {
+    bypass = true;
+  }
 
-  // Ensure the submission belongs to the user
-  if (submission.user.toString() !== userId) {
+  // Ensure the submission belongs to the user or a admin/faculty member is editing the submission
+  if (!bypass && submission.user.toString() !== userId) {
     throw new BadRequestError('You do not have permission to update this submission.');
   }
 
@@ -299,7 +306,7 @@ export const updateSubmission = async (
   await validateAnswers(assessment, answers);
 
   // Check if submissions are editable
-  if (!assessment.areSubmissionsEditable && !isDraft) {
+  if (!bypass && !assessment.areSubmissionsEditable && !isDraft) {
     throw new BadRequestError('Submissions are not editable for this assessment');
   }
 

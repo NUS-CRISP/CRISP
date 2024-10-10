@@ -433,7 +433,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
       )}
       {inputAssessment && !canEdit && (
         <Text c="red" mb="md">
-          You cannot edit this submission. While you can change the fields, you cannot submit the edits.
+          You cannot edit this submission.
         </Text>
       )}
 

@@ -31,7 +31,7 @@ export const submitAssessment = async (req: Request, res: Response) => {
     let submission;
     if (submissionId) {
       // Update existing submission
-      submission = await updateSubmission(submissionId, userId, typedAnswers, isDraft);
+      submission = await updateSubmission(submissionId, userId, accountId, typedAnswers, isDraft);
     } else {
       // Create new submission
       submission = await createSubmission(assessmentId, userId, typedAnswers, isDraft);

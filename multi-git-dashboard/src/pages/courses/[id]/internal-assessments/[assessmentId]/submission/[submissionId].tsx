@@ -6,6 +6,7 @@ import { Submission } from '@shared/types/Submission';
 import { showNotification } from '@mantine/notifications';
 import { InternalAssessment } from '@shared/types/InternalAssessment';
 import TakeAssessment from '../take';
+import { hasFacultyPermission } from '@/lib/auth/utils';
 
 const ViewSubmissionPage: React.FC = () => {
   const router = useRouter();
@@ -17,6 +18,7 @@ const ViewSubmissionPage: React.FC = () => {
 
   const [submission, setSubmission] = useState<Submission | null>(null);
   const [assessment, setAssessment] = useState<InternalAssessment | null>(null);
+  const permission = hasFacultyPermission();
 
   useEffect(() => {
     if (router.isReady) {
@@ -52,7 +54,7 @@ const ViewSubmissionPage: React.FC = () => {
   }
 
   // Check if the assessment allows editing
-  const canEdit = assessment.areSubmissionsEditable;
+  const canEdit = assessment.areSubmissionsEditable || submission.isDraft || permission;
 
   return (
     <TakeAssessment
