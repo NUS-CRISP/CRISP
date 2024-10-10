@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json",
     "start": "NODE_ENV=production node dist/backend/app.js",
-    "dev": "cross-env NODE_ENV=development PORT=3003 nodemon -e ts,js --exec ts-node app.ts",
+    "dev": "NODE_ENV=development PORT=3003 nodemon -e ts,js --exec ts-node app.ts",
     "test": "jest",
     "prettier-format": "prettier --config .prettierrc.json ./**/*.ts --write",
     "prettier-check": "prettier --config .prettierrc.json ./**/*.ts --check"
@@ -41,7 +41,6 @@
     "@types/node": "^20.12.2",
     "@types/node-cron": "^3.0.11",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
-    "cross-env": "^7.0.3",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-config-standard-with-typescript": "^39.1.1",
