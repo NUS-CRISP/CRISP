@@ -1,6 +1,6 @@
 import { Course } from "./Course";
 
-export interface JiraSprint extends Document {
+export interface JiraSprint {
   _id: string;
   id: number;
   self: string;
@@ -14,7 +14,7 @@ export interface JiraSprint extends Document {
   jiraIssues: JiraIssue[];
 }
 
-export interface JiraIssue extends Document {
+export interface JiraIssue {
   _id: string;
   id: string;
   self: string;
@@ -22,7 +22,7 @@ export interface JiraIssue extends Document {
   storyPoints: number;
   fields: {
     summary: string;
-    statuscategorychangedate: Date;
+    statuscategorychangedate?: Date;
     issuetype: {
       name: string;
       subtask: boolean;
@@ -30,34 +30,34 @@ export interface JiraIssue extends Document {
     status: {
       name: string;
     };
-    assignee: {
+    assignee?: {
       displayName: string;
     };
-    resolution: {
+    resolution?: {
       name: string;
     };
-    sprint: {
+    sprint?: {
       self: string;
     };
-    closedSprints: {
+    closedSprints?: {
       self: string;
     }[];
   };
 }
 
-export interface JiraBoard extends Document {
+export interface JiraBoard {
   _id: string;
   id: number;
   self: string;
   name: string;
   type: string;
   jiraLocation: {
-    projectId: number;
+    projectId?: number;
     displayName: string;
     projectName: string;
-    projectKey: string;
-    projectTypeKey: string;
-    avatarURI: string;
+    projectKey?: string;
+    projectTypeKey?: string;
+    avatarURI?: string;
     name: string;
   };
   columns: {

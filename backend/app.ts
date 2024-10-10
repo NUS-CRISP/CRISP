@@ -1,13 +1,15 @@
 import cors from 'cors';
 import { config } from 'dotenv';
 import express, { Express } from 'express';
+import setupCodeAnalysisJob from './jobs/codeAnalysisJob';
 import setupGitHubJob from './jobs/githubJob';
 import setupJiraJob from './jobs/jiraJob';
+import setupTrofosJob from './jobs/trofosJob';
 import accountRoutes from './routes/accountRoutes';
 import assessmentRoutes from './routes/assessmentRoutes';
 import courseRoutes from './routes/courseRoutes';
 import githubRoutes from './routes/githubRoutes';
-import jiraRoutes from './routes/projectManagementRoutes';
+import jiraRoutes from './routes/jiraRoutes';
 import metricRoutes from './routes/metricRoutes';
 import teamRoutes from './routes/teamRoutes';
 import teamSetRoutes from './routes/teamSetRoutes';
@@ -21,6 +23,8 @@ const setupApp = async () => {
   await connectToDatabase();
   setupGitHubJob();
   setupJiraJob();
+  setupTrofosJob();
+  setupCodeAnalysisJob();
 };
 setupApp();
 
