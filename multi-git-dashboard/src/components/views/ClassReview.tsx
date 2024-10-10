@@ -1,6 +1,5 @@
 import { DateUtils } from '@/lib/utils';
 import {
-  Accordion,
   Center,
   Container,
   Loader,
@@ -11,9 +10,7 @@ import { Team as SharedTeam } from '@shared/types/Team';
 import { TeamData } from '@shared/types/TeamData';
 import { Status } from '@shared/types/util/Status';
 import { useEffect, useState } from 'react';
-import OverviewAccordionItem from '../overview/OverviewAccordionItem';
 import { useTutorialContext } from '../tutorial/TutorialContext';
-import TutorialPopover from '../tutorial/TutorialPopover';
 import AllTeams from '../overview/analytics/team/AllTeams';
 
 interface OverviewProps {

@@ -14,7 +14,6 @@ import { useEffect, useState } from 'react';
 import OverviewAccordionItem from '../overview/OverviewAccordionItem';
 import { useTutorialContext } from '../tutorial/TutorialContext';
 import TutorialPopover from '../tutorial/TutorialPopover';
-import AllTeams from '../overview/analytics/team/AllTeams';
 
 interface OverviewProps {
   courseId: string;
