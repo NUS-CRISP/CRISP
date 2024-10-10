@@ -32,7 +32,7 @@ interface NavbarLinkProps {
   active?: boolean;
   disabled?: boolean;
   onClick: (event: React.MouseEvent) => void;
-  popoverOpened?: boolean; 
+  popoverOpened?: boolean;
 }
 
 const NavbarLink = forwardRef<HTMLButtonElement, NavbarLinkProps>(
@@ -186,7 +186,7 @@ const Navbar: React.FC = () => {
       link: `/courses/${courseId}/class-review`,
       label: 'Class Overview',
       disabled: !peopleAdded,
-      pngSrc: '/class-overview.png', 
+      pngSrc: '/class-overview.png',
     },
     {
       link: `/courses/${courseId}`,
@@ -250,11 +250,11 @@ const Navbar: React.FC = () => {
         style={item.disabled ? { cursor: 'not-allowed', opacity: 0.5 } : {}}
       >
         <img
-        src={item.pngSrc}
-        alt={`${item.label} icon`}
-        style={{ width: '25px', height: '25px', marginRight: '5px' }}
-      />
-        <span style ={{ fontSize: '14px'}}>{item.label}</span>
+          src={item.pngSrc}
+          alt={`${item.label} icon`}
+          style={{ width: '25px', height: '25px', marginRight: '5px' }}
+        />
+        <span style={{ fontSize: '14px' }}>{item.label}</span>
       </a>
     </TutorialPopover>
   ));
@@ -300,7 +300,7 @@ const Navbar: React.FC = () => {
 
   return (
     <div className={classes.navbarsContainer}>
-      <TutorialPopover stage={1} position="right">
+      <TutorialPopover stage={1} >
         <nav
           className={classes.navbar}
           style={{
@@ -381,7 +381,7 @@ const Navbar: React.FC = () => {
           <nav
             className={classes.courseNavbar}
             style={{
-              width: '200px',
+              width: '180px',
               backgroundColor: getTutorialHighlightColor(5),
             }}
           >
@@ -398,7 +398,7 @@ const Navbar: React.FC = () => {
               </Title>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {courseLinks}
+                {courseLinks}
               </div>
             </div>
           </nav>

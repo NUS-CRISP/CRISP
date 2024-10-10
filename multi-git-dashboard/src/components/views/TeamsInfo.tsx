@@ -4,6 +4,7 @@ import {
   Group,
   Modal,
   Notification,
+  ScrollArea,
   Tabs,
 } from '@mantine/core';
 import { TeamSet } from '@shared/types/TeamSet';
@@ -151,7 +152,13 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({
   ));
 
   return (
-    <Container>
+    <ScrollArea m="md"
+      style={{
+        height: "97vh",
+        paddingRight: '20px',
+        overflowY: 'auto',
+        scrollbarWidth: 'thin',
+      }} >
       <Tabs value={activeTab}>
         <Tabs.List style={{ display: 'flex', justifyContent: 'space-evenly' }}>
           {headers}
@@ -229,7 +236,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({
         )}
         {panels}
       </Tabs>
-    </Container>
+    </ScrollArea>
   );
 };
 

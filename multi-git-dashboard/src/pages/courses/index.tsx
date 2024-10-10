@@ -66,7 +66,7 @@ const CourseListPage: React.FC = () => {
   };
 
   return (
-    <>
+    <div>
       <Modal opened={opened} onClose={close} title="Course Creation">
         <CreateCourseForm />
       </Modal>
@@ -75,7 +75,14 @@ const CourseListPage: React.FC = () => {
         {courses.length === 0 ? (
           <p>No courses to show</p>
         ) : (
-          <div>
+          <div
+            style={{
+              
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+              gap: '15px',
+            }}
+          >
             {courses.map((course, idx) => (
               <TutorialPopover
                 key={course._id}
@@ -104,7 +111,7 @@ const CourseListPage: React.FC = () => {
           <WelcomeMessage opened={curTutorialStage === 0} />
         )}
       </Box>
-    </>
+    </div>
   );
 };
 
