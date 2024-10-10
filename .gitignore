@@ -13,4 +13,3 @@ load-test/apache-jmeter-*
 # mongo
 data/
 mongo/dumps
-
