@@ -3,6 +3,7 @@ import { BarChart } from '@mantine/charts';
 import {
   Card,
   Group,
+  MultiSelect,
   Select,
   SimpleGrid,
   Stack,
@@ -46,7 +47,9 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
   const [embla, setEmbla] = useState<Embla | null>(null);
 
   const [selectedVelocityChart, setSelectedVelocityChart] =
-    useState<VelocityChartType>(VelocityChartType.Issues); // Default to 'issues'
+    useState<VelocityChartType>(VelocityChartType.StoryPoints); // Default to 'story points'
+
+  const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
 
   // const [storyPointsEstimate, setStoryPointsEstimate] = useState<number>(4);
 
@@ -66,18 +69,16 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
     return (
       jiraSprint &&
       columns && (
-        <Card withBorder>
-          <SimpleGrid cols={{ base: 1, xs: columns.length }} mt="md" mb="xs">
-            {columns.map((column, index) => (
-              <Stack key={index}>
-                <Text fw={600} size="sm">
-                  {column.name}
-                </Text>
-                {getJiraBoardColumn(jiraSprint, column.name)}
-              </Stack>
-            ))}
-          </SimpleGrid>
-        </Card>
+        <SimpleGrid cols={{ base: 1, xs: columns.length }} mt="md" mb="xs">
+          {columns.map((column, index) => (
+            <Stack key={index}>
+              <Text fw={600} size="sm">
+                {column.name}
+              </Text>
+              {getJiraBoardColumn(jiraSprint, column.name)}
+            </Stack>
+          ))}
+        </SimpleGrid>
       )
     );
   };
@@ -85,32 +86,39 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
   const getJiraBoardColumn = (jiraSprint: JiraSprint, status: string) => {
     return (
       jiraSprint.jiraIssues &&
-      jiraSprint.jiraIssues.map(
-        issue =>
-          issue.fields.status?.name.toLowerCase() === status.toLowerCase() &&
-          getJiraBoardCard(issue)
-      )
+      jiraSprint.jiraIssues
+        .filter(issue => {
+          // Filter by status and selected assignees
+          const issueAssignee =
+            issue.fields.assignee?.displayName ?? 'Unassigned';
+          return (
+            issue.fields.status?.name.toLowerCase() === status.toLowerCase() &&
+            (selectedAssignees.length === 0 ||
+              (issueAssignee && selectedAssignees.includes(issueAssignee)))
+          );
+        })
+        .map(issue => getJiraBoardCard(issue))
     );
   };
 
   const getJiraBoardCard = (issue: JiraIssue) => (
-    <Card key={issue.self} radius="md" shadow="sm" padding="lg" withBorder>
+    <Card key={issue.self} radius="md" shadow="sm" padding="sm" withBorder>
       <Group style={{ alignItems: 'center' }}>
-        <Text fw={600} size="sm">
+        <Text fw={600} size="xs">
           {issue.fields.summary || '-'}
         </Text>
       </Group>
       <Group style={{ alignItems: 'center' }}>
-        <Text size="sm">Issue Type:</Text>
-        <Text size="sm">{issue.fields.issuetype?.name || '-'}</Text>
+        <Text size="xs">Issue Type:</Text>
+        <Text size="xs">{issue.fields.issuetype?.name || '-'}</Text>
       </Group>
       <Group style={{ alignItems: 'center' }}>
-        <Text size="sm">Story Points:</Text>
-        <Text size="sm">{issue.storyPoints || '-'}</Text>
+        <Text size="xs">Story Points:</Text>
+        <Text size="xs">{issue.storyPoints || '-'}</Text>
       </Group>
       <Group style={{ alignItems: 'center' }}>
-        <Text size="sm">Assignee:</Text>
-        <Text size="sm">{issue.fields.assignee?.displayName || '-'}</Text>
+        <Text size="xs">Assignee:</Text>
+        <Text size="xs">{issue.fields.assignee?.displayName || '-'}</Text>
       </Group>
     </Card>
   );
@@ -455,11 +463,31 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
             <Text>End Date:</Text>
             {getActiveSprintEndDate(jiraBoard)}
           </Group>
-          {jiraBoard.jiraSprints &&
-            getActiveSprintBoard(
-              jiraBoard.jiraSprints.find(sprint => sprint.state === 'active'),
-              jiraBoard.columns
-            )}
+          {jiraBoard.jiraSprints && (
+            <Card withBorder>
+              <MultiSelect
+                data={[
+                  ...new Set(
+                    jiraBoard.jiraSprints
+                      .find(sprint => sprint.state === 'active')
+                      ?.jiraIssues.map(
+                        issue =>
+                          issue.fields.assignee?.displayName || 'Unassigned'
+                      )
+                  ),
+                ]}
+                value={selectedAssignees}
+                onChange={setSelectedAssignees}
+                placeholder="Select Assignees"
+                label="Filter by Assignee"
+              />
+              {getActiveSprintBoard(
+                jiraBoard.jiraSprints.find(sprint => sprint.state === 'active'),
+                jiraBoard.columns
+              )}
+            </Card>
+          )}
+
           {jiraBoard.jiraSprints && getStatsTable(jiraBoard.jiraSprints)}
           {jiraBoard.jiraSprints && getVelocityChart(jiraBoard.jiraSprints)}
         </>
