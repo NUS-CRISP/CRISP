@@ -256,7 +256,6 @@ const InternalAssessmentDetail: React.FC = () => {
               assessmentId={assessmentId}
               teachingTeam={teachingTeam}
               results={assessment?.results || []}
-              onResultsUploaded={fetchAssessment}
             />
           </Tabs.Panel>
         )}

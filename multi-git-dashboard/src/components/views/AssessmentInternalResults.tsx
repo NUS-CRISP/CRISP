@@ -1,6 +1,5 @@
 import { Button, Group, Modal, Select, Text } from '@mantine/core';
 import { useState } from 'react';
-import ResultForm from '@/components/forms/ResultForm';
 import ResultCard from '@/components/cards/ResultCard';
 import { Result } from '@shared/types/Result';
 import { User } from '@shared/types/User';
@@ -9,18 +8,16 @@ interface AssessmentInternalResultsProps {
   results: Result[];
   assessmentId: string;
   teachingTeam: User[];
-  onResultsUploaded: () => void;
 }
 
 const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
   results,
   assessmentId,
   teachingTeam,
-  onResultsUploaded,
 }) => {
   const [isResultFormOpen, setIsResultFormOpen] = useState<boolean>(false);
   const [markerFilter, setMarkerFilter] = useState<string | null>('All');
-  const [sortCriterion, setSortCriterion] = useState<string>('name'); // Sorting criterion
+  const [sortCriterion, setSortCriterion] = useState<string>('name');
 
   const toggleResultForm = () => {
     setIsResultFormOpen(!isResultFormOpen);
@@ -91,19 +88,16 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
         </div>
 
         <Button onClick={toggleResultForm} style={{ alignSelf: 'flex-end', marginLeft: 'auto' }}>
-          Upload Results
+          Download Results
         </Button>
       </Group>
 
       <Modal
         opened={isResultFormOpen}
         onClose={toggleResultForm}
-        title="Upload Results"
+        title="Download results"
       >
-        <ResultForm
-          assessmentId={assessmentId}
-          onResultsUploaded={onResultsUploaded}
-        />
+        {'TODO: Download file to upload to Canvas'}
       </Modal>
 
       {filterAndSortResultsByMarker(results).map((result) => (

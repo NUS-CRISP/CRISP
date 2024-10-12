@@ -1,6 +1,6 @@
 // components/cards/TakeAssessmentCard.tsx
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Text,
@@ -12,6 +12,7 @@ import {
   Group,
   NumberInput,
   Badge,
+  CloseButton,
   MultiSelect,
 } from '@mantine/core';
 import {
@@ -55,6 +56,20 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
       ? 1
       : undefined;
 
+  // Selected students from the answer
+  const selectedStudents = (answer as string[]) || [];
+
+  // Available students to select (excluding already selected ones)
+  const [availableStudents, setAvailableStudents] = useState<{ value: string; label: string }[]>(
+    teamMembersOptions ? teamMembersOptions.filter((student) => !selectedStudents.includes(student.value)) : []
+  );
+
+  // Update availableStudents whenever selectedStudents or teamMembersOptions change
+  useEffect(() => {
+    if (teamMembersOptions)
+      setAvailableStudents(teamMembersOptions.filter((student) => !selectedStudents.includes(student.value)));
+  }, [selectedStudents, teamMembersOptions]);
+
   return (
     <Box
       p="md"
@@ -75,7 +90,7 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
       </Group>
 
       {/* Question instruction */}
-      <Text color="gray" size="sm" mb="xs">
+      <Text c="gray" size="sm" mb="xs">
         {customInstruction}
       </Text>
 
@@ -85,14 +100,68 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
       </Text>
 
 
-      {question.type === 'Team Member Selection' && teamMembersOptions && (
-        <MultiSelect
-          data={teamMembersOptions}
-          value={(answer as string[]) || []}
-          onChange={(value) => onAnswerChange(value)}
-          disabled={disabled}
-          maxValues={maxSelections}
-        />
+      {/* Team Member Selection */}
+      {question.type === 'Team Member Selection' && (
+        <>
+          {/* Render selected students as badges */}
+          <Group gap="xs" mb="sm">
+            {teamMembersOptions && selectedStudents.map((userId) => {
+              const student = teamMembersOptions.find((option) => option.value === userId);
+              return (
+                <Badge
+                  key={userId}
+                  variant="filled"
+                  color="blue"
+                  rightSection={
+                    !disabled && (
+                      <CloseButton
+                        onClick={() => {
+                          const updatedSelection = selectedStudents.filter((id) => id !== userId);
+                          onAnswerChange(updatedSelection);
+                        }}
+                        size="xs"
+                        style={{ marginLeft: 4 }}
+                      />
+                    )
+                  }
+                >
+                  {student ? student.label : userId}
+                </Badge>
+              );
+            })}
+          </Group>
+
+          {/* Search and select students */}
+          {(!maxSelections || selectedStudents.length < maxSelections) ? (
+            <MultiSelect
+              data={availableStudents}
+              placeholder="Search and select students"
+              searchable
+              value={[]}
+              onChange={(value) => {
+                // value contains all selected values, but since we're managing selectedStudents separately,
+                // we'll only handle the last selected value
+                const newSelection = value[value.length - 1];
+                if (newSelection) {
+                  const updatedSelection = [...selectedStudents, newSelection];
+                  onAnswerChange(updatedSelection);
+                }
+              }}
+              disabled={disabled}
+              nothingFoundMessage="No students found"
+              maxValues={maxSelections}
+              onSearchChange={() => {}} // To prevent clearing search on selection
+              styles={{
+                input: { minWidth: '200px' },
+              }}
+            />
+          ) : (
+            // Max selections reached message
+            <Text size="sm" color="dimmed">
+              Maximum number of selections reached.
+            </Text>
+          )}
+        </>
       )}
 
       {/* Render based on question type */}
