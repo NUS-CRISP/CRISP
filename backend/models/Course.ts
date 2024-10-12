@@ -55,6 +55,11 @@ export const courseSchema = new Schema<Course>({
     accessToken: { type: String },
     refreshToken: { type: String },
   },
+  trofos: {
+    isRegistered: { type: Boolean, required: true, default: false },
+    apiKey: { type: String },
+    courseId: { type: Number },
+  },
 });
 
 const CourseModel = mongoose.model<Course>('Course', courseSchema);
