@@ -22,6 +22,7 @@ import {
   getTeamSetNamesFromCourse,
   getTeamSetsFromCourse,
   removeFacultyFromCourse,
+  removeRepositoryFromCourse,
   removeStudentsFromCourse,
   removeTAsFromCourse,
   updateCourseById,
@@ -355,6 +356,23 @@ export const addRepositories = async (req: Request, res: Response) => {
     } else {
       console.error('Error adding repositories:', error);
       res.status(500).json({ error: 'Failed to add repositories' });
+    }
+  }
+};
+
+export const deleteRepository = async (req: Request, res: Response) => {
+  const { id, repositoryIndex } = req.params;
+  try {
+    await removeRepositoryFromCourse(id, Number(repositoryIndex));
+    res
+      .status(200)
+      .json({ message: 'Repository removed from the course successfully' });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error removing repository:', error);
+      res.status(500).json({ error: 'Failed to remove repository' });
     }
   }
 };

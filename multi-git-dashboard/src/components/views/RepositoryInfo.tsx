@@ -35,9 +35,9 @@ const RepositoryInfo: React.FC<RepositoryInfoProps> = ({
   const toggleAddRepository = () => setIsAddingRepository(!isAddingRepository);
   const toggleIsEditing = () => setIsEditing(!isEditing);
 
-  const handleDeleteRepository = async (repository: string) => {
+  const handleDeleteRepository = async (repositoryIndex: number) => {
     try {
-      const response = await fetch(`${apiRouteRepository}${repository}`, {
+      const response = await fetch(`${apiRouteRepository}/${repositoryIndex}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -49,7 +49,7 @@ const RepositoryInfo: React.FC<RepositoryInfoProps> = ({
       }
 
       await response.json();
-      onUpdate();
+      onUpdate(); // Trigger an update after deletion
     } catch (error) {
       console.error('Error deleting repository:', error);
     }
@@ -106,8 +106,8 @@ const RepositoryInfo: React.FC<RepositoryInfoProps> = ({
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {repositories.map(repository => (
-              <Table.Tr key={repository}>
+            {repositories.map((repository, index) => (
+              <Table.Tr key={index}>
                 <Table.Td>{repository}</Table.Td>
                 {isEditing && (
                   <>
@@ -125,7 +125,7 @@ const RepositoryInfo: React.FC<RepositoryInfoProps> = ({
                         size="xs"
                         variant="light"
                         color="red"
-                        onClick={() => handleDeleteRepository(repository)}
+                        onClick={() => handleDeleteRepository(index)}
                       >
                         Remove
                       </Button>

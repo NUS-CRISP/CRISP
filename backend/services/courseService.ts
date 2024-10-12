@@ -469,6 +469,27 @@ export const addRepositoriesToCourse = async (
   await course.save();
 };
 
+export const removeRepositoryFromCourse = async (
+  courseId: string,
+  repositoryIndex: number
+) => {
+  const course = await CourseModel.findById(courseId);
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+
+  // Check if the repositoryIndex is valid
+  if (repositoryIndex < 0 || repositoryIndex >= course.gitHubRepoLinks.length) {
+    throw new NotFoundError('Repository not found');
+  }
+
+  // Remove the repository from the array
+  course.gitHubRepoLinks.splice(repositoryIndex, 1);
+
+  // Save the updated course
+  await course.save();
+};
+
 /*----------------------------------------TeamSet----------------------------------------*/
 export const getTeamSetsFromCourse = async (
   accountId: string,
