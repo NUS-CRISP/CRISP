@@ -232,7 +232,7 @@ const AdminPage: React.FC = () => {
   ));
 
   return (
-    <ScrollArea m="md">
+    <ScrollArea m="md" style={{ height: '100vh' }}>
       <TextInput
         placeholder="Search by any field"
         mb="md"
