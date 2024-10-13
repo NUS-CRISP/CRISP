@@ -10,6 +10,7 @@ import {
   Text,
 } from '@mantine/core';
 import RepositoryForm from '../forms/RepositoryForm';
+import UpdateRepositoryForm from '../forms/UpdateRepositoryForm';
 
 interface RepositoryInfoProps {
   courseId: string;
@@ -25,14 +26,20 @@ const RepositoryInfo: React.FC<RepositoryInfoProps> = ({
   onUpdate,
 }) => {
   const [isAddingRepository, setIsAddingRepository] = useState(false);
+  const [isEditingRepository, setIsEditingRepository] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedRepository, setSelectedRepository] = useState<string | null>(
     null
   );
+  const [selectedRepositoryIndex, setSelectedRepositoryIndex] = useState<
+    number | null
+  >(null);
 
   const apiRouteRepository = `/api/courses/${courseId}/repositories/`;
 
   const toggleAddRepository = () => setIsAddingRepository(!isAddingRepository);
+  const toggleEditRepository = () =>
+    setIsEditingRepository(!isEditingRepository);
   const toggleIsEditing = () => setIsEditing(!isEditing);
 
   const handleDeleteRepository = async (repositoryIndex: number) => {
@@ -55,14 +62,17 @@ const RepositoryInfo: React.FC<RepositoryInfoProps> = ({
     }
   };
 
-  const openEditModal = (repository: string) => {
+  const openEditModal = (repository: string, repositoryIndex: number) => {
     setSelectedRepository(repository);
-    setIsAddingRepository(true); // Reuse the same modal for adding and editing
+    setSelectedRepositoryIndex(repositoryIndex);
+    setIsEditingRepository(true); // Reuse the same modal for adding and editing
   };
 
   const handleUpdate = () => {
     setIsAddingRepository(false);
+    setIsEditingRepository(false);
     setSelectedRepository(null);
+    setSelectedRepositoryIndex(null);
     onUpdate();
   };
 
@@ -85,6 +95,19 @@ const RepositoryInfo: React.FC<RepositoryInfoProps> = ({
         <RepositoryForm
           courseId={courseId}
           onRepositoryCreated={handleUpdate}
+        />
+      </Modal>
+
+      <Modal
+        opened={isEditingRepository}
+        onClose={toggleEditRepository}
+        title="Edit Repository" // Update title
+      >
+        <UpdateRepositoryForm
+          courseId={courseId}
+          repository={selectedRepository}
+          repositoryIndex={selectedRepositoryIndex} // Pass the index as a prop
+          onRepositoryUpdated={handleUpdate}
         />
       </Modal>
 
@@ -115,7 +138,7 @@ const RepositoryInfo: React.FC<RepositoryInfoProps> = ({
                       <Button
                         size="xs"
                         variant="light"
-                        onClick={() => openEditModal(repository)}
+                        onClick={() => openEditModal(repository, index)}
                       >
                         Edit
                       </Button>

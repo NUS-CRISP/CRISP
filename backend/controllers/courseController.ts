@@ -9,6 +9,7 @@ import {
   addTAsToCourse,
   createNewCourse,
   deleteCourseById,
+  editRepository,
   getAssessmentsFromCourse,
   getCourseById,
   getCourseCodeById,
@@ -356,6 +357,23 @@ export const addRepositories = async (req: Request, res: Response) => {
     } else {
       console.error('Error adding repositories:', error);
       res.status(500).json({ error: 'Failed to add repositories' });
+    }
+  }
+};
+
+export const updateRepository = async (req: Request, res: Response) => {
+  const { id, repositoryIndex } = req.params;
+  const updateData = req.body;
+
+  try {
+    await editRepository(id, Number(repositoryIndex), updateData);
+    res.status(200).json({ message: 'Repository edited successfully' });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error editing repository:', error);
+      res.status(500).json({ error: 'Failed to edit repository' });
     }
   }
 };

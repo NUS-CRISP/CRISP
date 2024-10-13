@@ -32,6 +32,7 @@ import {
   getRepositories,
   addRepositories,
   deleteRepository,
+  updateRepository,
 } from '../controllers/courseController';
 import { noCache } from '../middleware/noCache';
 
@@ -56,7 +57,7 @@ router.delete('/:id/tas/:userId', removeTAs);
 router.get('/:id/people', getPeople);
 router.get('/:id/repositories', getRepositories);
 router.post('/:id/repositories', addRepositories);
-// router.put('/:id/repositories/:repositoryIndex', updateRepository);
+router.patch('/:id/repositories/:repositoryIndex', updateRepository);
 router.delete('/:id/repositories/:repositoryIndex', deleteRepository);
 router.get('/:id/teamsets', getTeamSets);
 router.post('/:id/teamsets', addTeamSet);
