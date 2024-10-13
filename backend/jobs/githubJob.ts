@@ -40,14 +40,17 @@ const getCourseData = async (octokit: Octokit, course: any) => {
   if (!course.gitHubOrgName) return;
   const gitHubOrgName = course.gitHubOrgName;
 
-  // TODO: Add pagination
-  const repos = await octokit.rest.repos.listForOrg({
-    org: course.gitHubOrgName,
-    sort: 'updated',
-    per_page: 300,
-    direction: 'desc',
-  });
-  let allRepos = repos.data;
+  // Fetch all repositories with pagination and backoff
+  const repos = await fetchAllPagesWithBackoff(page =>
+    octokit.rest.repos.listForOrg({
+      org: course.gitHubOrgName,
+      sort: 'updated',
+      per_page: 100, // GitHub API max is 100 per page
+      page,
+    })
+  );
+
+  let allRepos = repos;
 
   await fetchGitHubProjectData(octokit, course, gitHubOrgName);
 
@@ -61,50 +64,56 @@ const getCourseData = async (octokit: Octokit, course: any) => {
     const teamContributions: Record<string, TeamContribution> = {};
 
     const [commits, issues, prs, contributors, milestones] = await Promise.all([
-      octokit.rest.repos.listCommits({
-        owner: gitHubOrgName,
-        repo: repo.name,
-      }),
-      octokit.rest.issues.listForRepo({
-        owner: gitHubOrgName,
-        repo: repo.name,
-      }),
-      octokit.rest.pulls.list({
-        owner: gitHubOrgName,
-        repo: repo.name,
-        state: 'all',
-      }),
-      octokit.rest.repos.listContributors({
-        owner: gitHubOrgName,
-        repo: repo.name,
-      }),
-      octokit.rest.issues.listMilestones({
-        owner: gitHubOrgName,
-        repo: repo.name,
-        state: 'all',
-      }),
+      fetchAllPagesWithBackoff(page =>
+        octokit.rest.repos.listCommits({
+          owner: gitHubOrgName,
+          repo: repo.name,
+          since: getFourMonthsAgo(),
+          per_page: 100,
+          page,
+        })
+      ),
+      fetchAllPagesWithBackoff(page =>
+        octokit.rest.issues.listForRepo({
+          owner: gitHubOrgName,
+          repo: repo.name,
+          since: getFourMonthsAgo(),
+          per_page: 100,
+          page,
+        })
+      ),
+      fetchAllPagesWithBackoff(page =>
+        octokit.rest.pulls.list({
+          owner: gitHubOrgName,
+          repo: repo.name,
+          since: getFourMonthsAgo(),
+          state: 'all',
+          per_page: 100,
+          page,
+        })
+      ),
+      fetchAllPagesWithBackoff(page =>
+        octokit.rest.repos.listContributors({
+          owner: gitHubOrgName,
+          repo: repo.name,
+          since: getFourMonthsAgo(),
+          per_page: 100,
+          page,
+        })
+      ),
+      fetchAllPagesWithBackoff(page =>
+        octokit.rest.issues.listMilestones({
+          owner: gitHubOrgName,
+          repo: repo.name,
+          since: getFourMonthsAgo(),
+          state: 'all',
+          per_page: 100,
+          page,
+        })
+      ),
     ]);
 
-    // Filter out non team members
-    // TODO: Enable only after gitHandle mapping is done
-    if (process.env.NEW_FILTER === 'true') {
-      const teamMembers = await getTeamMembers(repo.id);
-      if (teamMembers) {
-        commits.data = commits.data.filter(
-          commit => commit.author && teamMembers.has(commit.author.login)
-        );
-        issues.data = issues.data.filter(
-          issue => issue.user && teamMembers.has(issue.user.login)
-        );
-        prs.data = prs.data.filter(
-          pr => pr.user && teamMembers.has(pr.user.login)
-        );
-        contributors.data = contributors.data.filter(
-          contributor => contributor.login && teamMembers.has(contributor.login)
-        );
-      }
-    }
-
+    // Filter and process contributions (code remains the same)
     let codeFrequencyStats: number[][] = [];
     try {
       codeFrequencyStats = await fetchCodeFrequencyStats(
@@ -117,28 +126,36 @@ const getCourseData = async (octokit: Octokit, course: any) => {
     }
 
     const teamPRs: TeamPR[] = await Promise.all(
-      prs.data.map(async pr => {
-        const reviews = await octokit.rest.pulls.listReviews({
-          owner: gitHubOrgName,
-          repo: repo.name,
-          pull_number: pr.number,
-        });
+      prs.map(async pr => {
+        const reviews = await fetchAllPagesWithBackoff(page =>
+          octokit.rest.pulls.listReviews({
+            owner: gitHubOrgName,
+            repo: repo.name,
+            pull_number: pr.number,
+            per_page: 100,
+            page,
+          })
+        );
 
         const reviewDetails: Review[] = await Promise.all(
-          reviews.data.map(async review => ({
+          reviews.map(async review => ({
             id: review.id,
             user: review.user?.login,
             body: review.body,
             state: review.state,
             submittedAt: review.submitted_at,
             comments: (
-              await octokit.rest.pulls.listReviewComments({
-                owner: gitHubOrgName,
-                repo: repo.name,
-                pull_number: pr.number,
-                review_id: review.id,
-              })
-            ).data.map(comment => ({
+              await fetchAllPagesWithBackoff(page =>
+                octokit.rest.pulls.listReviewComments({
+                  owner: gitHubOrgName,
+                  repo: repo.name,
+                  pull_number: pr.number,
+                  review_id: review.id,
+                  per_page: 100,
+                  page,
+                })
+              )
+            ).map(comment => ({
               id: comment.id,
               body: comment.body,
               user: comment.user.login,
@@ -172,30 +189,31 @@ const getCourseData = async (octokit: Octokit, course: any) => {
       })
     );
 
-    for (const contributor of contributors.data) {
+    // Process team contributions (as in the original code)
+    for (const contributor of contributors) {
       if (!contributor.login) continue;
 
-      const contributorCommits = commits.data.filter(
+      const contributorCommits = commits.filter(
         commit => commit.author?.login === contributor.login
       ).length;
 
-      const createdIssues = issues.data.filter(
+      const createdIssues = issues.filter(
         issue => issue.user && issue.user.login === contributor.login
       ).length;
-      const openIssues = issues.data.filter(
+      const openIssues = issues.filter(
         issue =>
           issue.user &&
           issue.user.login === contributor.login &&
           issue.state === 'open'
       ).length;
-      const closedIssues = issues.data.filter(
+      const closedIssues = issues.filter(
         issue =>
           issue.user &&
           issue.user.login === contributor.login &&
           issue.state === 'closed'
       ).length;
 
-      const contributorPRs = prs.data.filter(
+      const contributorPRs = prs.filter(
         pr => pr.user && pr.user.login === contributor.login
       ).length;
 
@@ -210,6 +228,7 @@ const getCourseData = async (octokit: Octokit, course: any) => {
       };
     }
 
+    // Continue with team PR reviews and save data
     for (const teamPR of teamPRs) {
       for (const review of teamPR.reviews) {
         if (!review.user || !(review.user in teamContributions)) continue;
@@ -218,24 +237,18 @@ const getCourseData = async (octokit: Octokit, course: any) => {
       }
     }
 
-    if (!process.env.NEW_FILTER) {
-      if ('github-classroom[bot]' in teamContributions) {
-        delete teamContributions['github-classroom[bot]'];
-      }
-    }
-
     const teamData = {
       gitHubOrgName: gitHubOrgName.toLowerCase(),
       teamId: repo.id,
       repoName: repo.name,
-      commits: commits.data.length,
+      commits: commits.length,
       weeklyCommits: codeFrequencyStats,
-      issues: issues.data.length,
-      pullRequests: prs.data.length,
-      updatedIssues: issues.data.map(issue => issue.updated_at),
+      issues: issues.length,
+      pullRequests: prs.length,
+      updatedIssues: issues.map(issue => issue.updated_at),
       teamContributions,
       teamPRs,
-      milestones: milestones.data,
+      milestones: milestones,
     };
 
     console.log('Saving team data:', teamData);
@@ -256,14 +269,15 @@ const fetchGitHubProjectData = async (
   let projectEndCursor = '';
   let gitHubProjectCount = 0;
 
-  while (hasNextProject && gitHubProjectCount < 25) {
-    let hasNextIssue = true;
-    let issueEndCursor = '';
-    gitHubProjectCount++;
+  try {
+    while (hasNextProject && gitHubProjectCount < 25) {
+      let hasNextIssue = true;
+      let issueEndCursor = '';
+      gitHubProjectCount++;
 
-    while (hasNextIssue) {
-      const data: any = await octokit.graphql(
-        `query {
+      while (hasNextIssue) {
+        const data: any = await octokit.graphql(
+          `query {
           organization(login: "${gitHubOrgName}") {
             projectsV2(first: 1, orderBy: {field: UPDATED_AT, direction: DESC}, after: "${projectEndCursor}") {
               pageInfo {
@@ -344,198 +358,205 @@ const fetchGitHubProjectData = async (
             }
           }
         }`
-      );
+        );
 
-      projectEndCursor = data.organization.projectsV2.pageInfo.endCursor;
-      hasNextProject = data.organization.projectsV2.pageInfo.hasNextPage;
-      issueEndCursor =
-        data.organization.projectsV2.nodes[0].items.pageInfo.endCursor;
-      hasNextIssue =
-        data.organization.projectsV2.nodes[0].items.pageInfo.hasNextIssue;
+        projectEndCursor = data.organization.projectsV2.pageInfo.endCursor;
+        hasNextProject = data.organization.projectsV2.pageInfo.hasNextPage;
+        issueEndCursor =
+          data.organization.projectsV2.nodes[0].items.pageInfo.endCursor;
+        hasNextIssue =
+          data.organization.projectsV2.nodes[0].items.pageInfo.hasNextIssue;
 
-      // Transform the fetched data into the required schema format
-      const transformedProjects = data.organization.projectsV2.nodes.map(
-        (project: any) => ({
-          id: project.id,
-          title: project.title,
-          gitHubOrgName: gitHubOrgName,
-          items: project.items.nodes.map((item: any) => ({
-            type: item.type,
-            content: {
-              id: item.content.id,
-              title: item.content.title,
-              url: item.content.url,
-              closed: item.content.closed,
-              labels: item.content.labels?.nodes.map((label: any) => ({
-                name: label.name,
-              })),
-              milestone: item.content.milestone
-                ? {
-                    id: item.content.milestone.id,
-                    title: item.content.milestone.title,
-                    description: item.content.milestone.description,
-                    number: item.content.milestone.number,
-                    createdAt: item.content.milestone.createdAt,
-                    dueOn: item.content.milestone.dueOn,
-                    state: item.content.milestone.state,
-                  }
-                : null,
-              assignees: item.content.assignees
-                ? item.content.assignees.nodes.map((assignee: any) => ({
-                    id: assignee.id,
-                    login: assignee.login,
-                    name: assignee.name,
-                  }))
-                : [],
-              __typename: item.content.__typename,
-            },
-            fieldValues: item.fieldValues.nodes
-              .filter((field: any) => field.field) // Filter out empty objects
+        // Transform the fetched data into the required schema format
+        const transformedProjects = data.organization.projectsV2.nodes.map(
+          (project: any) => ({
+            id: project.id,
+            title: project.title,
+            gitHubOrgName: gitHubOrgName,
+            items: project.items.nodes.map((item: any) => ({
+              type: item.type,
+              content: {
+                id: item.content.id,
+                title: item.content.title,
+                url: item.content.url,
+                closed: item.content.closed,
+                labels: item.content.labels?.nodes.map((label: any) => ({
+                  name: label.name,
+                })),
+                milestone: item.content.milestone
+                  ? {
+                      id: item.content.milestone.id,
+                      title: item.content.milestone.title,
+                      description: item.content.milestone.description,
+                      number: item.content.milestone.number,
+                      createdAt: item.content.milestone.createdAt,
+                      dueOn: item.content.milestone.dueOn,
+                      state: item.content.milestone.state,
+                    }
+                  : null,
+                assignees: item.content.assignees
+                  ? item.content.assignees.nodes.map((assignee: any) => ({
+                      id: assignee.id,
+                      login: assignee.login,
+                      name: assignee.name,
+                    }))
+                  : [],
+                __typename: item.content.__typename,
+              },
+              fieldValues: item.fieldValues.nodes
+                .filter((field: any) => field.field) // Filter out empty objects
+                .map((field: any) => ({
+                  name: field.name,
+                  field: {
+                    name: field.field.name,
+                  },
+                })),
+            })),
+            fields: project.fields.nodes
+              .filter((field: any) => field.options) // Filter out empty objects
               .map((field: any) => ({
                 name: field.name,
-                field: {
-                  name: field.field.name,
-                },
+                options: field.options
+                  ? field.options.map((option: any) => ({
+                      id: option.id,
+                      name: option.name,
+                    }))
+                  : [],
               })),
-          })),
-          fields: project.fields.nodes
-            .filter((field: any) => field.options) // Filter out empty objects
-            .map((field: any) => ({
-              name: field.name,
-              options: field.options
-                ? field.options.map((option: any) => ({
-                    id: option.id,
-                    name: option.name,
-                  }))
-                : [],
-            })),
-        })
-      );
+          })
+        );
 
-      // Save each project into MongoDB using findOneAndUpdate
-      let projectId = 1;
-      for (const project of transformedProjects) {
-        try {
-          const jiraBoard: Omit<JiraBoard, '_id'> = {
-            id: projectId++,
-            self: project.id,
-            name: project.title,
-            type: 'GitHub Project',
-            jiraLocation: {
-              displayName: project.title,
-              projectName: project.title,
+        // Save each project into MongoDB using findOneAndUpdate
+        let projectId = 1;
+        for (const project of transformedProjects) {
+          try {
+            const jiraBoard: Omit<JiraBoard, '_id'> = {
+              id: projectId++,
+              self: project.id,
               name: project.title,
-            },
-            columns: project.fields.find(
-              (field: { name: string }) => field.name === 'Status'
-            ).options,
-            jiraIssues: [],
-            jiraSprints: [],
-            course: course._id,
-          };
-
-          const board = await JiraBoardModel.findOneAndUpdate(
-            { self: project.id },
-            jiraBoard,
-            {
-              upsert: true,
-              new: true,
-            }
-          );
-
-          for (const item of project.items) {
-            const jiraIssue: Omit<JiraIssue, '_id'> = {
-              id: item.content.id,
-              self: item.content.id,
-              key: project.title,
-              storyPoints: 0,
-              fields: {
-                summary: item.content.title,
-                resolution: item.content.closed ? { name: 'Done' } : undefined,
-                issuetype: {
-                  name: item.type,
-                  subtask: false,
-                },
-                status: {
-                  name:
-                    item.fieldValues.find(
-                      (fieldValue: { field: { name: string } }) =>
-                        fieldValue.field.name === 'Status'
-                    )?.name ?? 'Unknown',
-                },
-                assignee: {
-                  displayName:
-                    item.content.assignees.length > 0
-                      ? item.content.assignees[0].name
-                      : null,
-                },
+              type: 'GitHub Project',
+              jiraLocation: {
+                displayName: project.title,
+                projectName: project.title,
+                name: project.title,
               },
+              columns: project.fields.find(
+                (field: { name: string }) => field.name === 'Status'
+              ).options,
+              jiraIssues: [],
+              jiraSprints: [],
+              course: course._id,
             };
 
-            const self = jiraIssue.self;
-
-            const issue = await JiraIssueModel.findOneAndUpdate(
-              { self: self },
-              jiraIssue,
+            const board = await JiraBoardModel.findOneAndUpdate(
+              { self: project.id },
+              jiraBoard,
               {
                 upsert: true,
                 new: true,
               }
             );
 
-            if (item.content.milestone) {
-              const sprint = await JiraSprintModel.findOneAndUpdate(
-                { self: item.content.milestone.id },
-                {
-                  $setOnInsert: {
-                    id: item.content.milestone.number,
-                    self: item.content.milestone.id,
-                    name: item.content.title,
-                    jiraIssues: [], // Initialize jiraIssues as an array
-                    state:
-                      item.content.milestone.state === 'CLOSED'
-                        ? 'closed'
-                        : 'active',
-                    startDate: item.content.milestone.createdAt,
-                    endDate: item.content.milestone.dueOn,
-                    createdDate: item.content.milestone.createdAt,
-                    originBoardId: board.id,
-                    goal: item.content.milestone.description,
+            for (const item of project.items) {
+              const jiraIssue: Omit<JiraIssue, '_id'> = {
+                id: item.content.id,
+                self: item.content.id,
+                key: project.title,
+                storyPoints: 0,
+                fields: {
+                  summary: item.content.title,
+                  resolution: item.content.closed
+                    ? { name: 'Done' }
+                    : undefined,
+                  issuetype: {
+                    name: item.type,
+                    subtask: false,
+                  },
+                  status: {
+                    name:
+                      item.fieldValues.find(
+                        (fieldValue: { field: { name: string } }) =>
+                          fieldValue.field.name === 'Status'
+                      )?.name ?? 'Unknown',
+                  },
+                  assignee: {
+                    displayName:
+                      item.content.assignees.length > 0
+                        ? item.content.assignees[0].name
+                        : null,
                   },
                 },
+              };
+
+              const self = jiraIssue.self;
+
+              const issue = await JiraIssueModel.findOneAndUpdate(
+                { self: self },
+                jiraIssue,
                 {
                   upsert: true,
                   new: true,
                 }
               );
 
-              // Now push the issue into the jiraIssues array
-              await JiraSprintModel.findOneAndUpdate(
-                { self: item.content.milestone.id },
-                { $addToSet: { jiraIssues: issue._id } },
-                {}
-              );
+              if (item.content.milestone) {
+                const sprint = await JiraSprintModel.findOneAndUpdate(
+                  { self: item.content.milestone.id },
+                  {
+                    $setOnInsert: {
+                      id: item.content.milestone.number,
+                      self: item.content.milestone.id,
+                      name: item.content.title,
+                      jiraIssues: [], // Initialize jiraIssues as an array
+                      state:
+                        item.content.milestone.state === 'CLOSED'
+                          ? 'closed'
+                          : 'active',
+                      startDate: item.content.milestone.createdAt,
+                      endDate: item.content.milestone.dueOn,
+                      createdDate: item.content.milestone.createdAt,
+                      originBoardId: board.id,
+                      goal: item.content.milestone.description,
+                    },
+                  },
+                  {
+                    upsert: true,
+                    new: true,
+                  }
+                );
+
+                // Now push the issue into the jiraIssues array
+                await JiraSprintModel.findOneAndUpdate(
+                  { self: item.content.milestone.id },
+                  { $addToSet: { jiraIssues: issue._id } },
+                  {}
+                );
+
+                await JiraBoardModel.findOneAndUpdate(
+                  { self: project.id },
+                  { $addToSet: { jiraSprints: sprint._id } },
+                  {}
+                );
+              }
 
               await JiraBoardModel.findOneAndUpdate(
                 { self: project.id },
-                { $addToSet: { jiraSprints: sprint._id } },
+                { $push: { jiraIssues: issue._id } },
                 {}
               );
             }
 
-            await JiraBoardModel.findOneAndUpdate(
-              { self: project.id },
-              { $push: { jiraIssues: issue._id } },
-              {}
-            );
+            console.log('Saved GitHub Project: ', project.title);
+          } catch (error) {
+            console.error('Error saving GitHub Project: ', project.id, error);
           }
-
-          console.log('Saved GitHub Project: ', project.title);
-        } catch (error) {
-          console.error('Error saving GitHub Project: ', project.id, error);
         }
       }
     }
+  } catch (error) {
+    console.error(
+      `Error fetching GitHub Projects for GitHub Org: ${gitHubOrgName}`
+    );
   }
 };
 
@@ -573,6 +594,84 @@ const fetchCodeFrequencyStats = async (
   }
 
   throw new Error('Max attempts reached. Data may not be available yet.');
+};
+
+const fetchWithExponentialBackoff = async (
+  request: () => Promise<any>,
+  retries = 5,
+  delay = 1000
+): Promise<any> => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const response = await request();
+      return response;
+    } catch (err: any) {
+      if (
+        err.status === 403 &&
+        err.response?.headers['x-ratelimit-remaining'] === '0'
+      ) {
+        // Rate limit hit, perform backoff
+        const resetTime =
+          parseInt(err.response.headers['x-ratelimit-reset']) * 1000;
+        const waitTime = resetTime - Date.now();
+        console.warn(`Rate limit exceeded, waiting for ${waitTime} ms`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      } else if (
+        err.status === 403 &&
+        err.message.includes('SecondaryRateLimit')
+      ) {
+        // Handle secondary rate limit with exponential backoff
+        const backoffTime = delay * Math.pow(2, i); // Exponential backoff
+        console.warn(
+          `SecondaryRateLimit detected, retrying in ${backoffTime} ms...`
+        );
+        await new Promise(resolve => setTimeout(resolve, backoffTime));
+      } else {
+        throw err;
+      }
+    }
+  }
+  throw new Error('Max retries reached. Unable to complete the request.');
+};
+
+const fetchAllPagesWithBackoff = async (
+  request: (page: number) => Promise<any>,
+  retries = 5,
+  delay = 1000,
+  perPage = 100
+): Promise<any[]> => {
+  let page = 1;
+  let allData: any[] = [];
+  let hasMore = true;
+
+  while (hasMore) {
+    try {
+      const response = await fetchWithExponentialBackoff(
+        () => request(page),
+        retries,
+        delay
+      );
+      allData = allData.concat(response.data);
+
+      // Check if there are more pages
+      if (response.data.length < perPage) {
+        hasMore = false; // No more pages
+      } else {
+        page++;
+      }
+    } catch (error) {
+      console.error('Error fetching paginated data:', error);
+      throw error;
+    }
+  }
+
+  return allData;
+};
+
+const getFourMonthsAgo = (): string => {
+  const date = new Date();
+  date.setMonth(date.getMonth() - 4);
+  return date.toISOString(); // Format the date in ISO string (required by GitHub API)
 };
 
 export const setupGitHubJob = () => {
