@@ -8,6 +8,7 @@ import TutorialPopover from '../tutorial/TutorialPopover';
 import { ProfileGetter, Team } from '../views/Overview';
 
 export interface OverviewProps {
+  index: number;
   team: Team;
   teamData: TeamData;
   teamDatas: TeamData[];
@@ -16,6 +17,7 @@ export interface OverviewProps {
 }
 
 export const OverviewCard: React.FC<OverviewProps> = ({
+  index,
   team,
   teamData,
   teamDatas,
@@ -32,7 +34,7 @@ export const OverviewCard: React.FC<OverviewProps> = ({
 
   return (
     <Stack>
-      <TutorialPopover stage={10} offset={30}>
+      <TutorialPopover stage={10} offset={30} disabled={index !== 0}>
         <RangeSlider
           value={selectedWeekRange}
           max={totalWeeks - 1}
@@ -47,7 +49,7 @@ export const OverviewCard: React.FC<OverviewProps> = ({
           mb={20}
         />
       </TutorialPopover>
-      <TutorialPopover stage={8} position="left">
+      <TutorialPopover stage={8} position="left" disabled={index !== 0}>
         <Analytics
           team={team}
           teamData={teamData}
@@ -56,7 +58,7 @@ export const OverviewCard: React.FC<OverviewProps> = ({
           dateUtils={dateUtils}
         />
       </TutorialPopover>
-      <TutorialPopover stage={9} position="top">
+      <TutorialPopover stage={9} position="top" disabled={index !== 0}>
         <PR
           team={team}
           teamData={teamData}
