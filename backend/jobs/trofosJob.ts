@@ -18,7 +18,7 @@ const fetchAndSaveTrofosData = async () => {
 
   for (const course of courses) {
     const {
-      trofos: { isRegistered, apiKey },
+      trofos: { isRegistered, apiKey, courseId },
     } = course;
 
     if (!isRegistered) {
@@ -64,7 +64,9 @@ const fetchAndSaveTrofosData = async () => {
 
       for (const trofosProject of trofosProjectData) {
         const trofosProjectId = trofosProject.id;
-        await fetchSingleTrofosProject(course, trofosProjectId, apiKey);
+        if (trofosProject.course.id === courseId) {
+          await fetchSingleTrofosProject(course, trofosProjectId, apiKey);
+        }
       }
     } catch (error) {
       console.error('Error in fetching Trofos project:', error);
@@ -236,6 +238,7 @@ const saveBacklogToDatabase = async (trofosSprintData: any) => {
           status: {
             name: backlog.status, // Status of the backlog item
           },
+          resolution: backlog.status === 'Done' ? { name: 'Done' } : undefined,
           assignee: backlog.assignee
             ? { displayName: backlog.assignee.user.user_display_name }
             : undefined, // If there's an assignee, map it
