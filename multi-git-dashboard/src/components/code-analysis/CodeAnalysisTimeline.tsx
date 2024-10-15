@@ -68,7 +68,9 @@ const CodeAnalysisTimeline: React.FC<CodeAnalysisTimelineProps> = ({
 
   for (const [dm, dateMap] of data) {
     for (const [date, metricMap] of dateMap) {
-      const datePoint: { [key: string]: number | Date } = { executionDate: date };
+      const datePoint: { [key: string]: number | Date } = {
+        executionDate: date,
+      };
       for (const [metric, value] of metricMap) {
         datePoint[metric] = value;
       }
