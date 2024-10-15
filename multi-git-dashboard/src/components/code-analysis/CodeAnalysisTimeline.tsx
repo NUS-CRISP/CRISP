@@ -48,7 +48,6 @@ const CodeAnalysisTimeline: React.FC<CodeAnalysisTimelineProps> = ({
     for (let i = 0; i < dataPoint.metrics.length; i++) {
       const metric = dataPoint.metrics[i];
       const value = dataPoint.values[i];
-      const type = dataPoint.types[i];
       const domain = dataPoint.domains[i];
 
       // Ignore metrics that are not of the above domains for timeline.
@@ -62,14 +61,14 @@ const CodeAnalysisTimeline: React.FC<CodeAnalysisTimelineProps> = ({
     }
   });
 
-  const chartData = new Map<string, { [key: string]: any }[]>();
+  const chartData = new Map<string, { [key: string]: number | Date }[]>();
   for (const d of domains) {
     chartData.set(d, []);
   }
 
   for (const [dm, dateMap] of data) {
     for (const [date, metricMap] of dateMap) {
-      const datePoint: { [key: string]: any } = { executionDate: date };
+      const datePoint: { [key: string]: number | Date } = { executionDate: date };
       for (const [metric, value] of metricMap) {
         datePoint[metric] = value;
       }
