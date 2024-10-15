@@ -1,9 +1,10 @@
-import { Center } from '@mantine/core';
+import { Center, ScrollArea, Accordion } from '@mantine/core';
 import { CodeAnalysisData } from '@shared/types/CodeAnalysisData';
 import { Team as SharedTeam } from '@shared/types/Team';
 import { TeamData } from '@shared/types/TeamData';
 import { Status } from '@shared/types/util/Status';
 import { useEffect, useState } from 'react';
+import CodeAnalysisAccordianItem from '../code-analysis/CodeAnalysisAccordianItem';
 
 interface CodeAnalysisProps {
   courseId: string;
@@ -77,31 +78,29 @@ const CodeAnalysis: React.FC<CodeAnalysisProps> = ({ courseId }) => {
   const data = codeAnalysisData.reduce(
     (
       acc: {
-        [key: number]: {
-          [key: string]: {
+        [teamNo: number]: {
+          [executeDate: string]: {
             metrics: string[];
             values: string[];
             types: string[];
             domains: string[];
           };
-        }[];
+        };
       },
       codeData: CodeAnalysisData
     ) => {
       const teamNumber = getTeamNumberByCodeData(codeData.teamId);
       if (teamNumber !== null) {
         if (!acc[teamNumber]) {
-          acc[teamNumber] = [];
+          acc[teamNumber] = {};
         }
 
-        acc[teamNumber].push({
-          [new Date(codeData.executionTime).toLocaleString()]: {
-            metrics: codeData.metrics,
-            values: codeData.values,
-            types: codeData.types,
-            domains: codeData.domains,
-          },
-        });
+        acc[teamNumber][new Date(codeData.executionTime).toISOString()] = {
+          metrics: codeData.metrics,
+          values: codeData.values,
+          types: codeData.types,
+          domains: codeData.domains,
+        };
       }
       return acc;
     },
@@ -111,6 +110,22 @@ const CodeAnalysis: React.FC<CodeAnalysisProps> = ({ courseId }) => {
   if (status === Status.Error) return <Center>No data</Center>;
 
   return (
+    <ScrollArea.Autosize mt={20}>
+      <Accordion
+        multiple
+        variant="separated"
+        mx={20}
+      >
+        {Object.keys(data).map(teamNumber => (
+          <CodeAnalysisAccordianItem
+            key={teamNumber}
+            codeData={data[Number(teamNumber)]}
+            teamNumber={Number(teamNumber)}
+          />
+        ))}
+      </Accordion>
+    </ScrollArea.Autosize>
+    /*
     <div>
       {Object.keys(data).map(teamNumber => (
         <div key={teamNumber}>
@@ -135,6 +150,7 @@ const CodeAnalysis: React.FC<CodeAnalysisProps> = ({ courseId }) => {
         </div>
       ))}
     </div>
+    */
   );
 };
 
