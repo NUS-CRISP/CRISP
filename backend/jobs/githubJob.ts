@@ -52,7 +52,7 @@ const getCourseData = async (octokit: Octokit, course: any) => {
 
   let allRepos = repos;
 
-  await fetchGitHubProjectData(octokit, course, gitHubOrgName);
+  // await fetchGitHubProjectData(octokit, course, gitHubOrgName);
 
   if (course.repoNameFilter) {
     allRepos = allRepos.filter(repo =>
@@ -259,6 +259,7 @@ const getCourseData = async (octokit: Octokit, course: any) => {
   }
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const fetchGitHubProjectData = async (
   octokit: Octokit,
   course: any,
