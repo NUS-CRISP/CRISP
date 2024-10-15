@@ -110,7 +110,7 @@ const CodeAnalysis: React.FC<CodeAnalysisProps> = ({ courseId }) => {
   if (status === Status.Error) return <Center>No data</Center>;
 
   return (
-    <ScrollArea.Autosize mt={20}>
+    <ScrollArea.Autosize mt={20} style={{ height: '95vh', overflow: 'auto' }}>
       <Accordion
         multiple
         variant="separated"
