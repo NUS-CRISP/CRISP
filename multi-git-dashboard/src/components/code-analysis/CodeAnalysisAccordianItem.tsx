@@ -36,14 +36,24 @@ const CodeAnalysisAccordionItem = forwardRef<
         <Title size="h3">{`Team ${teamNumber}`}</Title>
       </Accordion.Control>
       <Accordion.Panel bg={getTutorialHighlightColor(7)}>
-        <Tabs value={viewMode} onChange={(value) => setViewMode(value as 'overview' | 'timeline')}>
+        <Tabs
+          value={viewMode}
+          onChange={value => setViewMode(value as 'overview' | 'timeline')}
+        >
           <Tabs.List>
-            <Tabs.Tab value="overview" style={{ fontSize: '16px' }}>Overview</Tabs.Tab>
-            <Tabs.Tab value="timeline" style={{ fontSize: '16px' }}>Timeline</Tabs.Tab>
+            <Tabs.Tab value="overview" style={{ fontSize: '16px' }}>
+              Overview
+            </Tabs.Tab>
+            <Tabs.Tab value="timeline" style={{ fontSize: '16px' }}>
+              Timeline
+            </Tabs.Tab>
           </Tabs.List>
 
           <Tabs.Panel value="overview" pt="xs">
-            <CodeAnalysisOverview latestData={latestData} executedDate={latestExecutionDate} />
+            <CodeAnalysisOverview
+              latestData={latestData}
+              executedDate={latestExecutionDate}
+            />
           </Tabs.Panel>
           <Tabs.Panel value="timeline" pt="xs">
             <CodeAnalysisTimeline codeData={codeData} />
@@ -55,4 +65,3 @@ const CodeAnalysisAccordionItem = forwardRef<
 });
 
 export default CodeAnalysisAccordionItem;
-

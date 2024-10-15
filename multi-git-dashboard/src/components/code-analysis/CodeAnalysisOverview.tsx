@@ -183,14 +183,12 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
             >
               {quality_gate_status}
             </Text>
-            <Text
-              c={getColorForQualityGate(quality_gate_status)}
-            >
+            <Text c={getColorForQualityGate(quality_gate_status)}>
               {quality_gate_status === 'OK'
                 ? 'Code is free from critical errors.'
                 : quality_gate_status === 'WARN'
-                ? 'Code has some issues that need to be addressed.'
-                : 'Code has critical errors that need to be fixed.'}
+                  ? 'Code has some issues that need to be addressed.'
+                  : 'Code has critical errors that need to be fixed.'}
             </Text>
           </Card>
         </Grid.Col>

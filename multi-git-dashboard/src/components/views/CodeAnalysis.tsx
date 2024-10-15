@@ -111,11 +111,7 @@ const CodeAnalysis: React.FC<CodeAnalysisProps> = ({ courseId }) => {
 
   return (
     <ScrollArea.Autosize mt={20} style={{ height: '95vh', overflow: 'auto' }}>
-      <Accordion
-        multiple
-        variant="separated"
-        mx={20}
-      >
+      <Accordion multiple variant="separated" mx={20}>
         {Object.keys(data).map(teamNumber => (
           <CodeAnalysisAccordianItem
             key={teamNumber}
