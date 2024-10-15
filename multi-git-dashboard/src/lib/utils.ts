@@ -44,6 +44,36 @@ export const startCase = (s: string) => {
   return result.charAt(0).toUpperCase() + result.slice(1);
 };
 
+/* Metrics Utils */
+export const convertRating = (rating: string) => {
+  switch (rating) {
+    case '1.0':
+      return 'A';
+    case '2.0':
+      return 'B';
+    case '3.0':
+      return 'C';
+    case '4.0':
+      return 'D';
+    case '5.0':
+      return 'E';
+    case '6.0':
+      return 'F';
+    default:
+      return rating;
+  }
+};
+
+export const convertPercentage = (percentage: string) => {
+  if (percentage === 'N/A') return percentage;
+  return `${percentage}%`;
+};
+
+export const getQualityGateLevel = (qualityGateDetails: string) => {
+  const data = JSON.parse(qualityGateDetails);
+  return data.level;
+};
+
 /* Misc */
 export const getTutorialHighlightColor = (stage: number) => {
   const { curTutorialStage } = useTutorialContext();
