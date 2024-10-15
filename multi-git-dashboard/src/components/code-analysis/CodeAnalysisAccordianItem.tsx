@@ -1,7 +1,8 @@
 import { getTutorialHighlightColor } from '@/lib/utils';
-import { Accordion, Center, Tabs, Title } from '@mantine/core';
+import { Accordion, Tabs, Title } from '@mantine/core';
 import { forwardRef, useState } from 'react';
 import CodeAnalysisOverview from './CodeAnalysisOverview';
+import CodeAnalysisTimeline from './CodeAnalysisTimeline';
 
 interface CodeAnalysisAccordionItemProps {
   codeData: {
@@ -45,7 +46,7 @@ const CodeAnalysisAccordionItem = forwardRef<
             <CodeAnalysisOverview latestData={latestData} executedDate={latestExecutionDate} />
           </Tabs.Panel>
           <Tabs.Panel value="timeline" pt="xs">
-            <Center>Timeline Content</Center>
+            <CodeAnalysisTimeline codeData={codeData} />
           </Tabs.Panel>
         </Tabs>
       </Accordion.Panel>

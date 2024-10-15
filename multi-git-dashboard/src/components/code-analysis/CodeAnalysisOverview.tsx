@@ -1,10 +1,6 @@
-import {
-  convertPercentage,
-  convertRating,
-  getQualityGateLevel,
-} from '@/lib/utils';
+import { convertPercentage, convertRating } from '@/lib/utils';
 import React from 'react';
-import { Grid, Card, Text, Title } from '@mantine/core';
+import { Grid, Card, Text, Title, Container, Center } from '@mantine/core';
 
 interface CodeAnalysisOverviewProps {
   latestData: {
@@ -72,6 +68,7 @@ const getColorForQualityGate = (qualityGate: string) => {
 
 const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
   latestData,
+  executedDate,
 }) => {
   const security_rating_index = latestData.metrics.indexOf('security_rating');
   const security_rating =
@@ -111,88 +108,97 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
   const complexity =
     complexity_index === -1 ? '-' : latestData.values[complexity_index];
 
-  const quality_gate_details_index = latestData.metrics.indexOf(
-    'quality_gate_details'
-  );
-  const quality_gate_details =
-    quality_gate_details_index === -1
+  const quality_gate_status_index = latestData.metrics.indexOf('alert_status');
+  const quality_gate_status =
+    quality_gate_status_index === -1
       ? '-'
-      : getQualityGateLevel(latestData.values[quality_gate_details_index]);
+      : latestData.values[quality_gate_status_index];
 
   return (
-    <Grid gutter="lg">
-      <Grid.Col span={4}>
-        <Card padding="lg" shadow="sm" radius="md">
-          <Title order={5}>Security</Title>
-          <Text size="xl" fw={700} c={getColorForRating(security_rating)}>
-            {security_rating}
-          </Text>
-        </Card>
-      </Grid.Col>
-      <Grid.Col span={4}>
-        <Card padding="lg" shadow="sm" radius="md">
-          <Title order={5}>Reliability</Title>
-          <Text size="xl" fw={700} c={getColorForRating(reliability_rating)}>
-            {reliability_rating}
-          </Text>
-        </Card>
-      </Grid.Col>
-      <Grid.Col span={4}>
-        <Card padding="lg" shadow="sm" radius="md">
-          <Title order={5}>Maintainability</Title>
-          <Text
-            size="xl"
-            fw={700}
-            c={getColorForRating(maintainability_rating)}
-          >
-            {maintainability_rating}
-          </Text>
-        </Card>
-      </Grid.Col>
-      <Grid.Col span={4}>
-        <Card padding="lg" shadow="sm" radius="md">
-          <Title order={5}>Coverage</Title>
-          <Text size="xl" fw={700} c={getColorForCoverage(coverage)}>
-            {coverage}
-          </Text>
-        </Card>
-      </Grid.Col>
-      <Grid.Col span={4}>
-        <Card padding="lg" shadow="sm" radius="md">
-          <Title order={5}>Duplications</Title>
-          <Text size="xl" fw={700} c={getColorForDuplication(duplication)}>
-            {duplication}
-          </Text>
-        </Card>
-      </Grid.Col>
-      <Grid.Col span={4}>
-        <Card padding="lg" shadow="sm" radius="md">
-          <Title order={5}>Complexity</Title>
-          <Text
-            size="xl"
-            fw={700}
-            c={complexity === '-' ? '#666' : 'lightgray'}
-          >
-            {complexity}
-          </Text>
-        </Card>
-      </Grid.Col>
-      <Grid.Col span={12}>
-        <Card padding="lg" shadow="sm" radius="md">
-          <Title order={5}>Quality Gate</Title>
-          <Text size="sm" fw={500}>
-            Presence of critical issues
-          </Text>
-          <Text
-            size="xl"
-            fw={700}
-            c={getColorForQualityGate(quality_gate_details)}
-          >
-            {quality_gate_details}
-          </Text>
-        </Card>
-      </Grid.Col>
-    </Grid>
+    <Container>
+      <Grid gutter="lg">
+        <Grid.Col span={4}>
+          <Card padding="lg" shadow="sm" radius="md">
+            <Title order={5}>Security</Title>
+            <Text size="xl" fw={700} c={getColorForRating(security_rating)}>
+              {security_rating}
+            </Text>
+          </Card>
+        </Grid.Col>
+        <Grid.Col span={4}>
+          <Card padding="lg" shadow="sm" radius="md">
+            <Title order={5}>Reliability</Title>
+            <Text size="xl" fw={700} c={getColorForRating(reliability_rating)}>
+              {reliability_rating}
+            </Text>
+          </Card>
+        </Grid.Col>
+        <Grid.Col span={4}>
+          <Card padding="lg" shadow="sm" radius="md">
+            <Title order={5}>Maintainability</Title>
+            <Text
+              size="xl"
+              fw={700}
+              c={getColorForRating(maintainability_rating)}
+            >
+              {maintainability_rating}
+            </Text>
+          </Card>
+        </Grid.Col>
+        <Grid.Col span={4}>
+          <Card padding="lg" shadow="sm" radius="md">
+            <Title order={5}>Coverage</Title>
+            <Text size="xl" fw={700} c={getColorForCoverage(coverage)}>
+              {coverage}
+            </Text>
+          </Card>
+        </Grid.Col>
+        <Grid.Col span={4}>
+          <Card padding="lg" shadow="sm" radius="md">
+            <Title order={5}>Duplications</Title>
+            <Text size="xl" fw={700} c={getColorForDuplication(duplication)}>
+              {duplication}
+            </Text>
+          </Card>
+        </Grid.Col>
+        <Grid.Col span={4}>
+          <Card padding="lg" shadow="sm" radius="md">
+            <Title order={5}>Complexity</Title>
+            <Text
+              size="xl"
+              fw={700}
+              c={complexity === '-' ? '#666' : 'lightgray'}
+            >
+              {complexity}
+            </Text>
+          </Card>
+        </Grid.Col>
+        <Grid.Col span={12}>
+          <Card padding="lg" shadow="sm" radius="md">
+            <Title order={5}>Quality Gate</Title>
+            <Text
+              size="xl"
+              fw={700}
+              c={getColorForQualityGate(quality_gate_status)}
+            >
+              {quality_gate_status}
+            </Text>
+            <Text
+              c={getColorForQualityGate(quality_gate_status)}
+            >
+              {quality_gate_status === 'OK'
+                ? 'Code is free from critical errors.'
+                : quality_gate_status === 'WARN'
+                ? 'Code has some issues that need to be addressed.'
+                : 'Code has critical errors that need to be fixed.'}
+            </Text>
+          </Card>
+        </Grid.Col>
+      </Grid>
+      <Center mt={5} style={{ fontSize: '12px' }}>
+        As of {executedDate.toLocaleString()}
+      </Center>
+    </Container>
   );
 };
 
