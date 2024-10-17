@@ -20,6 +20,7 @@ import {
   getCourses,
   getPeople,
   getProjectManagementBoard,
+  getRepositories,
   getTeachingTeam,
   getTeamSets,
   getTeamSetsNames,
@@ -1005,6 +1006,55 @@ describe('courseController', () => {
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
         error: 'Failed to retrieve people',
+      });
+    });
+  });
+
+  describe('getRepositories', () => {
+    it('should get repositories in a course', async () => {
+      const req = mockRequest({}, { id: 'courseId' });
+      const res = mockResponse();
+      const mockRepositories = {
+        repositories: ['repo1', 'repo2'],
+      };
+
+      jest
+        .spyOn(courseService, 'getRepositoriesFromCourse')
+        .mockResolvedValue(mockRepositories as any);
+
+      await getRepositories(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(mockRepositories);
+    });
+
+    it('should handle NotFoundError and send a 404 status', async () => {
+      const req = mockRequest({}, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'getRepositoriesFromCourse')
+        .mockRejectedValue(new NotFoundError('Course not found'));
+
+      await getRepositories(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
+    });
+
+    it('should handle errors when getting repositories', async () => {
+      const req = mockRequest({}, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'getRepositoriesFromCourse')
+        .mockRejectedValue(new Error('Failed to retrieve repositories'));
+
+      await getRepositories(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to retrieve repositories',
       });
     });
   });
