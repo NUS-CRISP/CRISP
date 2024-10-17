@@ -367,18 +367,18 @@ export const updateRepository = async (req: Request, res: Response) => {
 
   try {
     await editRepository(id, Number(repositoryIndex), updateData);
-    res.status(200).json({ message: 'Repository edited successfully' });
+    res.status(200).json({ message: 'Repository updated successfully' });
   } catch (error) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
     } else {
       console.error('Error editing repository:', error);
-      res.status(500).json({ error: 'Failed to edit repository' });
+      res.status(500).json({ error: 'Failed to update repository' });
     }
   }
 };
 
-export const deleteRepository = async (req: Request, res: Response) => {
+export const removeRepository = async (req: Request, res: Response) => {
   const { id, repositoryIndex } = req.params;
   try {
     await removeRepositoryFromCourse(id, Number(repositoryIndex));

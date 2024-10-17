@@ -31,7 +31,7 @@ import {
   getCourseJiraRegistrationStatus,
   getRepositories,
   addRepositories,
-  deleteRepository,
+  removeRepository,
   updateRepository,
 } from '../controllers/courseController';
 import { noCache } from '../middleware/noCache';
@@ -58,7 +58,7 @@ router.get('/:id/people', getPeople);
 router.get('/:id/repositories', getRepositories);
 router.post('/:id/repositories', addRepositories);
 router.patch('/:id/repositories/:repositoryIndex', updateRepository);
-router.delete('/:id/repositories/:repositoryIndex', deleteRepository);
+router.delete('/:id/repositories/:repositoryIndex', removeRepository);
 router.get('/:id/teamsets', getTeamSets);
 router.post('/:id/teamsets', addTeamSet);
 router.get('/:id/teamsets/names', getTeamSetsNames);
