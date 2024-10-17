@@ -15,6 +15,7 @@ import {
   getCourseTeachingTeam,
   getCourseTimeline,
   getCoursesForUser,
+  getInternalAssessmentsFromCourse,
   getPeopleFromCourse,
   getProjectManagementBoardFromCourse,
   getTeamSetNamesFromCourse,
@@ -35,6 +36,7 @@ import {
 import { addStudentsToTeam, addTAsToTeam } from '../services/teamService';
 import { createTeamSet } from '../services/teamSetService';
 import { getAccountId } from '../utils/auth';
+import { addInternalAssessmentsToCourse } from 'services/internalAssessmentService';
 
 /*----------------------------------------Course----------------------------------------*/
 export const createCourse = async (req: Request, res: Response) => {
@@ -485,6 +487,40 @@ export const getAssessments = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   try {
     const assessments = await getAssessmentsFromCourse(courseId);
+    res.status(200).json(assessments);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error getting assessments:', error);
+      res.status(500).json({ error: 'Failed to get assessments' });
+    }
+  }
+};
+
+/*----------------------------------------Internal-Assessment----------------------------------------*/
+export const addInternalAssessments = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  const assessments = req.body.items;
+  try {
+    await addInternalAssessmentsToCourse(courseId, assessments);
+    res.status(201).json({ message: 'Assessments added successfully' });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else if (error instanceof BadRequestError) {
+      res.status(400).json({ error: error.message });
+    } else {
+      console.error('Error adding assessments:', error);
+      res.status(500).json({ error: 'Failed to add assessments' });
+    }
+  }
+};
+
+export const getInternalAssessments = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  try {
+    const assessments = await getInternalAssessmentsFromCourse(courseId);
     res.status(200).json(assessments);
   } catch (error) {
     if (error instanceof NotFoundError) {

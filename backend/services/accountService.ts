@@ -83,3 +83,13 @@ export const getAccountStatusesByUserIds = async (
 
   return accountStatusRecord;
 };
+
+export const getUserIdByAccountId = async (
+  accountId: string
+): Promise<string> => {
+  const account = await AccountModel.findOne({ _id: accountId });
+  if (account === null) {
+    throw new NotFoundError('No user found');
+  }
+  return account.user._id.toString();
+};

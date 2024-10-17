@@ -3,12 +3,12 @@ import { useForm } from '@mantine/form';
 import { Assessment } from '@shared/types/Assessment';
 import { useState } from 'react';
 
-interface UpdateAssessmentFormProps {
+interface UpdateAssessmentGoogleFormProps {
   assessment: Assessment | null;
   onAssessmentUpdated: () => void;
 }
 
-const UpdateAssessmentForm: React.FC<UpdateAssessmentFormProps> = ({
+const UpdateAssessmentGoogleForm: React.FC<UpdateAssessmentGoogleFormProps> = ({
   assessment,
   onAssessmentUpdated,
 }) => {
@@ -94,23 +94,19 @@ const UpdateAssessmentForm: React.FC<UpdateAssessmentFormProps> = ({
           {...form.getInputProps('frequency')}
         />
 
-        {form.values.formLink && (
-          <>
-            <TextInput
-              withAsterisk
-              label="Form Link"
-              {...form.getInputProps('formLink')}
-            />
-            <TextInput
-              label="Sheet ID"
-              {...form.getInputProps('sheetID')}
-            />
-            <TextInput
-              label="Sheet Tab"
-              {...form.getInputProps('sheetTab')}
-            />
-          </>
-        )}
+        <TextInput
+          withAsterisk
+          label="Form Link"
+          {...form.getInputProps('formLink')}
+        />
+        <TextInput
+          label="Sheet ID"
+          {...form.getInputProps('sheetID')}
+        />
+        <TextInput
+          label="Sheet Tab"
+          {...form.getInputProps('sheetTab')}
+        />
 
         <Group my={16}>
           <Button type="submit" style={{ marginTop: '16px' }}>
@@ -122,4 +118,4 @@ const UpdateAssessmentForm: React.FC<UpdateAssessmentFormProps> = ({
   );
 };
 
-export default UpdateAssessmentForm;
+export default UpdateAssessmentGoogleForm;
