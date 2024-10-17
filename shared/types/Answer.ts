@@ -4,6 +4,7 @@ export interface BaseAnswer {
     _id?: string;
     question: string; // Reference to the question's _id
     type: string; // Discriminator property
+    score?: number; // Optional score for this answer
   }
 
   // Team Member Selection Answer

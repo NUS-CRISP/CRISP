@@ -5,6 +5,7 @@ export interface BaseQuestion extends Document {
   text: string;
   type: string;
   customInstruction?: string;
+  isRequired: boolean;
   isLocked: boolean;
 }
 
@@ -50,13 +51,25 @@ export const TeamMemberSelectionQuestionModel = QuestionModel.discriminator<Team
 );
 
 
-export interface MultipleChoiceQuestion extends BaseQuestion {
-  type: 'Multiple Choice';
-  options: string[];
+export interface MultipleChoiceOption {
+  text: string;
+  points: number;
 }
 
+export interface MultipleChoiceQuestion extends BaseQuestion {
+  type: 'Multiple Choice';
+  options: MultipleChoiceOption[];
+  isScored: boolean;
+}
+
+const MultipleChoiceOptionSchema = new Schema({
+  text: { type: String, required: true },
+  points: { type: Number, required: true },
+});
+
 const MultipleChoiceSchema = new Schema({
-  options: { type: [String], required: true },
+  options: { type: [MultipleChoiceOptionSchema], required: true },
+  isScored: { type: Boolean, required: true },
 });
 
 export const MultipleChoiceQuestionModel = QuestionModel.discriminator<MultipleChoiceQuestion>(
@@ -64,13 +77,28 @@ export const MultipleChoiceQuestionModel = QuestionModel.discriminator<MultipleC
   MultipleChoiceSchema
 );
 
-export interface MultipleResponseQuestion extends BaseQuestion {
-  type: 'Multiple Response';
-  options: string[];
+export interface MultipleResponseOption {
+  text: string;
+  points: number; // Points can be negative
 }
 
+export interface MultipleResponseQuestion extends BaseQuestion {
+  type: 'Multiple Response';
+  options: MultipleResponseOption[];
+  isScored: boolean;
+  allowNegative: boolean;
+}
+
+const MultipleResponseOptionSchema = new Schema({
+  text: { type: String, required: true },
+  points: { type: Number, required: true },
+});
+
+// Define the question schema
 const MultipleResponseSchema = new Schema({
-  options: { type: [String], required: true },
+  options: { type: [MultipleResponseOptionSchema], required: true },
+  isScored: { type: Boolean, required: true },
+  allowNegative: { type: Boolean, required: true },
 });
 
 export const MultipleResponseQuestionModel = QuestionModel.discriminator<MultipleResponseQuestion>(
@@ -81,32 +109,43 @@ export const MultipleResponseQuestionModel = QuestionModel.discriminator<Multipl
 export interface ScaleLabel {
   value: number;
   label: string;
+  points: number;
 }
 
 export interface ScaleQuestion extends BaseQuestion {
   type: 'Scale';
   scaleMax: number;
   labels: ScaleLabel[];
+  isScored: boolean;
 }
 
 const ScaleLabelSchema = new Schema<ScaleLabel>({
   value: { type: Number, required: true },
   label: { type: String, required: true },
+  points: { type: Number, required: true },
 });
 
+// Define the question schema
 const ScaleQuestionSchema = new Schema({
   scaleMax: { type: Number, required: true },
-  labels: { type: [ScaleLabelSchema], required: true, validate: {
-    validator: function(v: ScaleLabel[]) {
-      if (!v || v.length < 2) return false; // At least min and max labels
-      const sorted = [...v].sort((a, b) => a.value - b.value);
-      for (let i = 1; i < sorted.length; i++) {
-        if (sorted[i].value <= sorted[i - 1].value) return false; // Values must be ascending
-      }
-      return true;
+  labels: {
+    type: [ScaleLabelSchema],
+    required: true,
+    validate: {
+      validator: function (v: ScaleLabel[]) {
+        if (!v || v.length < 2) return false; // At least min and max labels
+        const sorted = [...v].sort((a, b) => a.value - b.value);
+        for (let i = 1; i < sorted.length; i++) {
+          if (sorted[i].value <= sorted[i - 1].value) return false; // Values must be ascending
+          if (sorted[i].points < sorted[i - 1].points) return false; // Points must be ascending
+        }
+        return true;
+      },
+      message:
+        'Labels must have unique scale values, ascending point values, and at least two labels (min and max).',
     },
-    message: 'Labels must have unique, ascending values and at least two labels (min and max).',
-  }},
+  },
+  isScored: { type: Boolean, required: true },
 });
 
 export const ScaleQuestionModel = QuestionModel.discriminator<ScaleQuestion>(
@@ -161,16 +200,35 @@ export const DateQuestionModel = QuestionModel.discriminator<DateQuestion>(
   'Date',
   DateQuestionSchema
 );
+export interface NumberScoringRange {
+  minValue: number;
+  maxValue: number;
+  points: number;
+}
 
 export interface NumberQuestion extends BaseQuestion {
   type: 'Number';
   maxNumber: number;
+  isScored: boolean;
+  scoringMethod: 'direct' | 'range' | 'None';
+  maxPoints?: number;
+  scoringRanges?: NumberScoringRange[];
 }
 
-const NumberSchema = new Schema({
-  maxNumber: { type: Number, required: true },
+const NumberScoringRangeSchema = new Schema({
+  minValue: { type: Number, required: true },
+  maxValue: { type: Number, required: true },
+  points: { type: Number, required: true },
 });
 
+// Define the question schema
+const NumberSchema = new Schema({
+  maxNumber: { type: Number, required: true },
+  isScored: { type: Boolean, required: true },
+  scoringMethod: { type: String, enum: ['direct', 'range', 'None'], required: true },
+  maxPoints: { type: Number }, // For 'direct' method
+  scoringRanges: { type: [NumberScoringRangeSchema] }, // For 'range' method
+});
 export const NumberQuestionModel = QuestionModel.discriminator<NumberQuestion>(
   'Number',
   NumberSchema

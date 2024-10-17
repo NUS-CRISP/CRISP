@@ -7,6 +7,7 @@ const options = { discriminatorKey: 'type', _id: false };
 export interface BaseAnswer extends Document {
   question: ObjectId;
   type: string;
+  score?: number;
 }
 
 // BaseAnswer schema
@@ -14,6 +15,7 @@ const BaseAnswerSchema = new Schema<BaseAnswer>(
   {
     question: { type: Schema.Types.ObjectId, ref: 'Question', required: true },
     type: { type: String, required: true },
+    score: { type: Number, required: false },
   },
   options
 );

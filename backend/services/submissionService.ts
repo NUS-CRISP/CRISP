@@ -161,7 +161,7 @@ async function validateAnswers(
 
       case 'Multiple Choice':
         if (isMultipleChoiceQuestion(question) && isMultipleChoiceAnswer(answer)) {
-          if (!question.options.includes(answer.value)) {
+          if (!question.options.find((option) => option.text === answer.value)) {
             throw new BadRequestError(`Invalid option selected for question ${questionId}`);
           }
         } else {
@@ -175,7 +175,7 @@ async function validateAnswers(
             throw new BadRequestError(`Answers for question ${questionId} must be an array`);
           }
           for (const val of answer.values) {
-            if (!question.options.includes(val)) {
+            if (!question.options.find((option) => option.text === val)) {
               throw new BadRequestError(`Invalid option selected for question ${questionId}`);
             }
           }

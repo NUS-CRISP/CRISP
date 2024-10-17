@@ -1,3 +1,5 @@
+// services/internalAssessmentService.ts
+
 import { ObjectId } from 'mongodb';
 import InternalAssessmentModel from '../models/InternalAssessment';
 import AccountModel from '../models/Account';
@@ -8,7 +10,20 @@ import { Team } from '@models/Team';
 import mongoose, { Types } from 'mongoose';
 import TeamSetModel from '@models/TeamSet';
 import QuestionModel from '@models/Question';
-import { DateQuestionModel, LongResponseQuestionModel, MultipleChoiceQuestionModel, MultipleResponseQuestionModel, NumberQuestionModel, NUSNETEmailQuestionModel, NUSNETIDQuestionModel, QuestionUnion, ScaleQuestionModel, ShortResponseQuestionModel, TeamMemberSelectionQuestionModel, UndecidedQuestionModel } from '@models/QuestionTypes';
+import {
+  DateQuestionModel,
+  LongResponseQuestionModel,
+  MultipleChoiceQuestionModel,
+  MultipleResponseQuestionModel,
+  NumberQuestionModel,
+  NUSNETEmailQuestionModel,
+  NUSNETIDQuestionModel,
+  QuestionUnion,
+  ScaleQuestionModel,
+  ShortResponseQuestionModel,
+  TeamMemberSelectionQuestionModel,
+  UndecidedQuestionModel,
+} from '@models/QuestionTypes';
 
 export const getInternalAssessmentById = async (
   assessmentId: string,
@@ -45,6 +60,9 @@ export const getInternalAssessmentById = async (
         path: 'teams',
         model: 'Team',
       },
+    })
+    .populate({
+      path: 'questions',
     });
 
   if (!assessment) {
@@ -54,7 +72,7 @@ export const getInternalAssessmentById = async (
   // Filtering results based on the role and assigned marker for teaching assistants
   if (account.role === 'Teaching assistant') {
     const userId = account.user;
-    assessment.results = assessment.results.filter(result =>
+    assessment.results = assessment.results.filter((result) =>
       result.marker?.equals(userId)
     );
   }
@@ -73,7 +91,7 @@ export const getInternalAssessmentById = async (
       if (!teamB) return 1;
       return teamA.number - teamB.number;
     });
-    assessment.results.forEach(result => {
+    assessment.results.forEach((result) => {
       result.marks.sort((a, b) => a.name.localeCompare(b.name));
     });
   }
@@ -120,10 +138,12 @@ export const deleteInternalAssessmentById = async (assessmentId: string) => {
 
   // Remove the assessment from the associated course
   const course = await CourseModel.findById(assessment.course);
-  if (course && course.assessments) {
-    const index = course.assessments.findIndex(id => id.equals(assessment._id));
+  if (course && course.internalAssessments) {
+    const index = course.internalAssessments.findIndex((id) =>
+      id.equals(assessment._id)
+    );
     if (index !== -1) {
-      course.assessments.splice(index, 1);
+      course.internalAssessments.splice(index, 1);
       await course.save();
     }
   }
@@ -136,7 +156,9 @@ export const uploadInternalAssessmentResultsById = async (
   assessmentId: string,
   results: { studentId: string; mark: number }[]
 ) => {
-  const assessment = await InternalAssessmentModel.findById(assessmentId).populate('results');
+  const assessment = await InternalAssessmentModel.findById(assessmentId).populate(
+    'results'
+  );
 
   if (!assessment) {
     throw new NotFoundError('Assessment not found');
@@ -163,15 +185,19 @@ export const updateInternalAssessmentResultMarkerById = async (
   resultId: string,
   markerId: string
 ) => {
-  const assessment = await InternalAssessmentModel.findById(assessmentId)
-    .populate('results');
+  const assessment = await InternalAssessmentModel.findById(assessmentId).populate(
+    'results'
+  );
 
   if (!assessment) {
     throw new NotFoundError('Assessment not found');
   }
 
   const resultToUpdate = await ResultModel.findById(resultId);
-  if (!resultToUpdate || !resultToUpdate.assessment.equals(new ObjectId(assessment._id))) {
+  if (
+    !resultToUpdate ||
+    !resultToUpdate.assessment.equals(new ObjectId(assessment._id))
+  ) {
     throw new NotFoundError('Result not found');
   }
 
@@ -274,7 +300,11 @@ export const addInternalAssessmentsToCourse = async (
     await teamMemberSelectionQuestion.save();
     await nusnetIdQuestion.save();
     await nusnetEmailQuestion.save();
-    assessment.questions = [teamMemberSelectionQuestion._id, nusnetIdQuestion._id, nusnetEmailQuestion._id];
+    assessment.questions = [
+      teamMemberSelectionQuestion._id,
+      nusnetIdQuestion._id,
+      nusnetEmailQuestion._id,
+    ];
 
     await assessment.save();
     const results: mongoose.Document[] = [];
@@ -308,8 +338,8 @@ export const addInternalAssessmentsToCourse = async (
         assessment.teamSet = teamSet._id;
         course.students.forEach((student: any) => {
           const teams: Team[] = teamSet.teams as unknown as Team[];
-          const team = teams.find(t =>
-            t?.members?.some(member => member._id.equals(student._id))
+          const team = teams.find((t) =>
+            t?.members?.some((member) => member._id.equals(student._id))
           );
           const marker = team?.TA?._id || null;
           const result = new ResultModel({
@@ -339,10 +369,10 @@ export const addInternalAssessmentsToCourse = async (
       }
     }
 
-    assessment.results = results.map(result => result._id);
+    assessment.results = results.map((result) => result._id);
     course.internalAssessments.push(assessment._id);
     newAssessments.push(assessment);
-    await Promise.all(results.map(result => result.save()));
+    await Promise.all(results.map((result) => result.save()));
   }
 
   if (newAssessments.length === 0) {
@@ -350,7 +380,7 @@ export const addInternalAssessmentsToCourse = async (
   }
 
   await course.save();
-  await Promise.all(newAssessments.map(assessment => assessment.save()));
+  await Promise.all(newAssessments.map((assessment) => assessment.save()));
 };
 
 /*--------------------------Questions---------------------------------------------*/
@@ -384,53 +414,192 @@ export const addQuestionToAssessment = async (
     throw new BadRequestError('Both type and text fields are required');
   }
 
-  // Determine which model to use based on the question type
-  let QuestionTypeModel;
+  // Additional validation based on question type
   switch (validQuestionData.type) {
-    case 'NUSNET ID':
-      QuestionTypeModel = NUSNETIDQuestionModel;
-      break;
-    case 'NUSNET Email':
-      QuestionTypeModel = NUSNETEmailQuestionModel;
-      break;
-    case 'Team Member Selection':
-      QuestionTypeModel = TeamMemberSelectionQuestionModel;
-      break;
     case 'Multiple Choice':
-      QuestionTypeModel = MultipleChoiceQuestionModel;
+      if (
+        !Array.isArray(validQuestionData.options) ||
+        validQuestionData.options.length === 0
+      ) {
+        throw new BadRequestError('Options are required for Multiple Choice questions');
+      }
+      if (validQuestionData.isScored) {
+        for (const option of validQuestionData.options) {
+          if (typeof option.points !== 'number') {
+            throw new BadRequestError(
+              'Each option must have a points value when scoring is enabled'
+            );
+          }
+        }
+      }
       break;
     case 'Multiple Response':
-      QuestionTypeModel = MultipleResponseQuestionModel;
+      if (
+        !Array.isArray(validQuestionData.options) ||
+        validQuestionData.options.length === 0
+      ) {
+        throw new BadRequestError('Options are required for Multiple Response questions');
+      }
+      if (validQuestionData.isScored) {
+        for (const option of validQuestionData.options) {
+          if (typeof option.points !== 'number') {
+            throw new BadRequestError(
+              'Each option must have a points value when scoring is enabled'
+            );
+          }
+        }
+        if (typeof validQuestionData.allowNegative !== 'boolean') {
+          throw new BadRequestError(
+            'allowNegative must be specified when scoring is enabled for Multiple Response questions'
+          );
+        }
+      }
       break;
     case 'Scale':
-      QuestionTypeModel = ScaleQuestionModel;
-      break;
-    case 'Short Response':
-      QuestionTypeModel = ShortResponseQuestionModel;
-      break;
-    case 'Long Response':
-      QuestionTypeModel = LongResponseQuestionModel;
-      break;
-    case 'Date':
-      QuestionTypeModel = DateQuestionModel;
+      if (
+        typeof validQuestionData.scaleMax !== 'number'
+      ) {
+        throw new BadRequestError('scaleMax is required for Scale questions');
+      }
+      if (
+        !Array.isArray(validQuestionData.labels) ||
+        validQuestionData.labels.length < 2
+      ) {
+        throw new BadRequestError('At least two labels are required for Scale questions');
+      }
+      if (validQuestionData.isScored) {
+        for (const label of validQuestionData.labels) {
+          if (typeof label.points !== 'number') {
+            throw new BadRequestError(
+              'Each label must have a points value when scoring is enabled'
+            );
+          }
+        }
+      }
       break;
     case 'Number':
-      QuestionTypeModel = NumberQuestionModel;
-      break;
-    case 'Undecided':
-      QuestionTypeModel = UndecidedQuestionModel;
+      if (typeof validQuestionData.maxNumber !== 'number') {
+        throw new BadRequestError('maxNumber is required for Number questions');
+      }
+      if (validQuestionData.isScored) {
+        if (!validQuestionData.scoringMethod) {
+          throw new BadRequestError(
+            'scoringMethod is required when scoring is enabled for Number questions'
+          );
+        }
+        if (validQuestionData.scoringMethod === 'direct') {
+          if (typeof validQuestionData.maxPoints !== 'number') {
+            throw new BadRequestError('maxPoints is required for direct scoring method');
+          }
+        } else if (validQuestionData.scoringMethod === 'range') {
+          if (
+            !Array.isArray(validQuestionData.scoringRanges) ||
+            validQuestionData.scoringRanges.length === 0
+          ) {
+            throw new BadRequestError('scoringRanges are required for range scoring method');
+          }
+          for (const range of validQuestionData.scoringRanges) {
+            if (
+              typeof range.minValue !== 'number' ||
+              typeof range.maxValue !== 'number' ||
+              typeof range.points !== 'number'
+            ) {
+              throw new BadRequestError(
+                'Each scoring range must have minValue, maxValue, and points'
+              );
+            }
+          }
+        }
+      }
       break;
     default:
-      QuestionTypeModel = QuestionModel;
       break;
   }
 
+  // Determine which model to use based on the question type
+  let question: QuestionUnion;
+
   // Create a new question using the appropriate model
-  const question = new QuestionTypeModel({
-    ...validQuestionData,
-    customInstruction: validQuestionData.customInstruction || '',
-    isLocked: validQuestionData.isLocked || false,
-  });
+  switch (validQuestionData.type) {
+    case 'NUSNET ID':
+      question = new NUSNETIDQuestionModel({
+        ...validQuestionData,
+        customInstruction: validQuestionData.customInstruction || '',
+        isLocked: validQuestionData.isLocked || false,
+      });
+      break;
+    case 'NUSNET Email':
+      question = new NUSNETEmailQuestionModel({
+        ...validQuestionData,
+        customInstruction: validQuestionData.customInstruction || '',
+        isLocked: validQuestionData.isLocked || false,
+      });
+      break;
+    case 'Team Member Selection':
+      question = new TeamMemberSelectionQuestionModel({
+        ...validQuestionData,
+        customInstruction: validQuestionData.customInstruction || '',
+        isLocked: validQuestionData.isLocked || false,
+      });
+      break;
+    case 'Multiple Choice':
+      question = new MultipleChoiceQuestionModel({
+        ...validQuestionData,
+        customInstruction: validQuestionData.customInstruction || '',
+        isLocked: validQuestionData.isLocked || false,
+      });
+      break;
+    case 'Multiple Response':
+      question = new MultipleResponseQuestionModel({
+        ...validQuestionData,
+        customInstruction: validQuestionData.customInstruction || '',
+        isLocked: validQuestionData.isLocked || false,
+      });
+      break;
+    case 'Scale':
+      question = new ScaleQuestionModel({
+        ...validQuestionData,
+        customInstruction: validQuestionData.customInstruction || '',
+        isLocked: validQuestionData.isLocked || false,
+      });
+      break;
+    case 'Short Response':
+      question = new ShortResponseQuestionModel({
+        ...validQuestionData,
+        customInstruction: validQuestionData.customInstruction || '',
+        isLocked: validQuestionData.isLocked || false,
+      });
+      break;
+    case 'Long Response':
+      question = new LongResponseQuestionModel({
+        ...validQuestionData,
+        customInstruction: validQuestionData.customInstruction || '',
+        isLocked: validQuestionData.isLocked || false,
+      });
+      break;
+    case 'Date':
+      question = new DateQuestionModel({
+        ...validQuestionData,
+        customInstruction: validQuestionData.customInstruction || '',
+        isLocked: validQuestionData.isLocked || false,
+      });
+      break;
+    case 'Number':
+      question = new NumberQuestionModel({
+        ...validQuestionData,
+        customInstruction: validQuestionData.customInstruction || '',
+        isLocked: validQuestionData.isLocked || false,
+      });
+      break;
+    case 'Undecided':
+    default:
+      question = new UndecidedQuestionModel({
+        ...validQuestionData,
+        customInstruction: validQuestionData.customInstruction || '',
+        isLocked: validQuestionData.isLocked || false,
+      });
+      break;
+  }
 
   // Save the question
   await question.save();
@@ -440,52 +609,7 @@ export const addQuestionToAssessment = async (
   assessment.questions.push(question._id);
   await assessment.save();
 
-  let savedQuestion: QuestionUnion | null;
-  switch (validQuestionData.type) {
-    case 'NUSNET ID':
-      savedQuestion = await NUSNETIDQuestionModel.findById(question._id);
-      break;
-    case 'NUSNET Email':
-      savedQuestion = await NUSNETEmailQuestionModel.findById(question._id);
-      break;
-    case 'Team Member Selection':
-      savedQuestion = await TeamMemberSelectionQuestionModel.findById(question._id);
-      break;
-    case 'Multiple Choice':
-      savedQuestion = await MultipleChoiceQuestionModel.findById(question._id);
-      break;
-    case 'Multiple Response':
-      savedQuestion = await MultipleResponseQuestionModel.findById(question._id);
-      break;
-    case 'Scale':
-      savedQuestion = await ScaleQuestionModel.findById(question._id);
-      break;
-    case 'Short Response':
-      savedQuestion = await ShortResponseQuestionModel.findById(question._id);
-      break;
-    case 'Long Response':
-      savedQuestion = await LongResponseQuestionModel.findById(question._id);
-      break;
-    case 'Date':
-      savedQuestion = await DateQuestionModel.findById(question._id);
-      break;
-    case 'Number':
-      savedQuestion = await NumberQuestionModel.findById(question._id);
-      break;
-    case 'Undecided':
-      savedQuestion = await UndecidedQuestionModel.findById(question._id);
-      break;
-    default:
-      // If type is 'Undecided' or unrecognized, use the base model
-      savedQuestion = await QuestionModel.findById(question._id);
-      break;
-  }
-
-  if (!savedQuestion) {
-    throw new NotFoundError('Question not found after saving');
-  }
-
-  return savedQuestion as QuestionUnion;
+  return question;
 };
 
 // Get all questions for an internal assessment
@@ -498,7 +622,9 @@ export const getQuestionsByAssessmentId = async (
     throw new NotFoundError('Account not found');
   }
 
-  const assessment = await InternalAssessmentModel.findById(assessmentId).populate('questions');
+  const assessment = await InternalAssessmentModel.findById(assessmentId).populate(
+    'questions'
+  );
   if (!assessment) {
     throw new NotFoundError('Assessment not found');
   }
@@ -509,7 +635,7 @@ export const getQuestionsByAssessmentId = async (
 // Update a question by its ID
 export const updateQuestionById = async (
   questionId: string,
-  updateData: Partial<QuestionUnion>, // Use the QuestionUnion type for update data
+  updateData: Partial<QuestionUnion>,
   accountId: string
 ): Promise<QuestionUnion> => {
   const account = await AccountModel.findById(accountId);
@@ -532,101 +658,100 @@ export const updateQuestionById = async (
     throw new BadRequestError('Cannot modify a locked question');
   }
 
+  // Prevent changing the question type
+  if (updateData.type && updateData.type !== existingQuestion.type) {
+    throw new BadRequestError('Cannot change the type of an existing question');
+  }
+
+  // Additional validation based on question type (similar to addQuestionToAssessment)
+  // ...
+
+  // Determine which model to use based on the question type
   let updatedQuestion: QuestionUnion | null;
+
+  // Update the question using the appropriate model
   switch (existingQuestion.type) {
     case 'NUSNET ID':
       updatedQuestion = await NUSNETIDQuestionModel.findByIdAndUpdate(
         questionId,
-        { ...updateData },
+        updateData,
         { new: true }
       );
       break;
-
     case 'NUSNET Email':
       updatedQuestion = await NUSNETEmailQuestionModel.findByIdAndUpdate(
         questionId,
-        { ...updateData },
+        updateData,
         { new: true }
       );
       break;
-
     case 'Team Member Selection':
       updatedQuestion = await TeamMemberSelectionQuestionModel.findByIdAndUpdate(
         questionId,
-        { ...updateData },
+        updateData,
         { new: true }
       );
       break;
-
     case 'Multiple Choice':
       updatedQuestion = await MultipleChoiceQuestionModel.findByIdAndUpdate(
         questionId,
-        { ...updateData },
+        updateData,
         { new: true }
       );
       break;
-
     case 'Multiple Response':
       updatedQuestion = await MultipleResponseQuestionModel.findByIdAndUpdate(
         questionId,
-        { ...updateData },
+        updateData,
         { new: true }
       );
       break;
-
     case 'Scale':
       updatedQuestion = await ScaleQuestionModel.findByIdAndUpdate(
         questionId,
-        { ...updateData },
+        updateData,
         { new: true }
       );
       break;
-
     case 'Short Response':
       updatedQuestion = await ShortResponseQuestionModel.findByIdAndUpdate(
         questionId,
-        { ...updateData },
+        updateData,
         { new: true }
       );
       break;
-
     case 'Long Response':
       updatedQuestion = await LongResponseQuestionModel.findByIdAndUpdate(
         questionId,
-        { ...updateData },
+        updateData,
         { new: true }
       );
       break;
-
     case 'Date':
       updatedQuestion = await DateQuestionModel.findByIdAndUpdate(
         questionId,
-        { ...updateData },
+        updateData,
         { new: true }
       );
       break;
-
     case 'Number':
       updatedQuestion = await NumberQuestionModel.findByIdAndUpdate(
         questionId,
-        { ...updateData },
+        updateData,
         { new: true }
       );
       break;
-
     case 'Undecided':
       updatedQuestion = await UndecidedQuestionModel.findByIdAndUpdate(
         questionId,
-        { ...updateData },
+        updateData,
         { new: true }
       );
       break;
-
     default:
-      // Handle unknown types
       updatedQuestion = await QuestionModel.findByIdAndUpdate(
         questionId,
-        { ...updateData },
+        updateData,
         { new: true }
       );
       break;
@@ -636,7 +761,7 @@ export const updateQuestionById = async (
     throw new NotFoundError('Question not found after update');
   }
 
-  return updatedQuestion as QuestionUnion;
+  return updatedQuestion;
 };
 
 // Delete a question from an internal assessment
@@ -736,4 +861,3 @@ export const recallInternalAssessmentById = async (
 
   return updatedAssessment;
 };
-

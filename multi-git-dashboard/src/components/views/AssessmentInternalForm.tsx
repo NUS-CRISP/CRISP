@@ -1,8 +1,8 @@
 import { Button, Modal, Group, Text, Box } from '@mantine/core';
-import { Question } from '@shared/types/Question';
+import { MultipleChoiceQuestion, MultipleResponseQuestion, NumberQuestion, Question, ScaleQuestion } from '@shared/types/Question';
 import AssessmentMakeQuestionCard from '@/components/cards/AssessmentMakeQuestionCard';
 import { InternalAssessment } from '@shared/types/InternalAssessment';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface AssessmentInternalFormProps {
   assessment: InternalAssessment | null;
@@ -26,6 +26,56 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
 
   const isLocked = assessment?.isReleased || false;
   const isReleased = assessment?.isReleased || false;
+  const calculateTotalPossiblePoints = (): number => {
+    let totalPoints = 0;
+    questions.forEach((question) => {
+      switch (question.type) {
+        case 'Multiple Choice':
+          if ((question as MultipleChoiceQuestion).isScored) {
+            const maxOptionPoints = Math.max(
+              ...(question as MultipleChoiceQuestion).options.map((option) => option.points || 0)
+            );
+            totalPoints += maxOptionPoints;
+          }
+          break;
+        case 'Multiple Response':
+          if ((question as MultipleResponseQuestion).isScored) {
+            const optionsPoints = (question as MultipleResponseQuestion).options.map((option) => option.points || 0);
+            // Sum only positive points
+            const positiveOptionPoints = optionsPoints.filter((p) => p > 0);
+            const totalOptionPoints = positiveOptionPoints.reduce((sum, p) => sum + p, 0);
+            totalPoints += totalOptionPoints;
+          }
+          break;
+        case 'Scale':
+          if ((question as ScaleQuestion).isScored) {
+            const maxLabelPoints = Math.max(
+              ...(question as ScaleQuestion).labels.map((label) => label.points || 0)
+            );
+            totalPoints += maxLabelPoints;
+          }
+          break;
+        case 'Number':
+          if ((question as NumberQuestion).isScored) {
+            if ((question as NumberQuestion).scoringMethod === 'direct') {
+              totalPoints += (question as NumberQuestion).maxPoints || 0;
+            } else if ((question as NumberQuestion).scoringMethod === 'range') {
+              const maxRangePoints = Math.max(
+                ...((question as NumberQuestion).scoringRanges || []).map((range) => range.points || 0)
+              );
+              totalPoints += maxRangePoints;
+            }
+          }
+          break;
+        default:
+          break;
+      }
+    });
+    return totalPoints;
+  };
+  const [totalPossiblePoints, setTotalPossiblePoints] = useState(calculateTotalPossiblePoints());
+  const maxMarks = assessment?.maxMarks || 0;
+  const [scalingFactor, setScalingFactor] = useState(maxMarks && totalPossiblePoints > 0 ? maxMarks / totalPossiblePoints : 1);
 
   const releaseForm = async () => {
     try {
@@ -65,6 +115,69 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
     }
   };
 
+  useEffect(() => {
+    setTotalPossiblePoints(calculateTotalPossiblePoints());
+  }, questions)
+
+  useEffect(() => {
+    const calculateTotalPossiblePoints = (): number => {
+      let totalPoints = 0;
+      questions.forEach((question) => {
+        switch (question.type) {
+          case 'Multiple Choice':
+            if ((question as MultipleChoiceQuestion).isScored) {
+              const maxOptionPoints = Math.max(
+                ...(question as MultipleChoiceQuestion).options.map((option) => option.points || 0)
+              );
+              totalPoints += maxOptionPoints;
+            }
+            break;
+          case 'Multiple Response':
+            if ((question as MultipleResponseQuestion).isScored) {
+              const optionsPoints = (question as MultipleResponseQuestion).options.map(
+                (option) => option.points || 0
+              );
+              const positiveOptionPoints = optionsPoints.filter((p) => p > 0);
+              const totalOptionPoints = positiveOptionPoints.reduce((sum, p) => sum + p, 0);
+              totalPoints += totalOptionPoints;
+            }
+            break;
+          case 'Scale':
+            if ((question as ScaleQuestion).isScored) {
+              const maxLabelPoints = Math.max(
+                ...(question as ScaleQuestion).labels.map((label) => label.points || 0)
+              );
+              totalPoints += maxLabelPoints;
+            }
+            break;
+          case 'Number':
+            if ((question as NumberQuestion).isScored) {
+              if ((question as NumberQuestion).scoringMethod === 'direct') {
+                totalPoints += (question as NumberQuestion).maxPoints || 0;
+              } else if ((question as NumberQuestion).scoringMethod === 'range') {
+                const maxRangePoints = Math.max(
+                  ...((question as NumberQuestion).scoringRanges || []).map((range) => range.points || 0)
+                );
+                totalPoints += maxRangePoints;
+              }
+            }
+            break;
+          default:
+            break;
+        }
+      });
+      return totalPoints;
+    };
+
+    const totalPoints = calculateTotalPossiblePoints();
+    setTotalPossiblePoints(totalPoints);
+
+    const maxMarks = assessment?.maxMarks || 0;
+    const scaling = maxMarks && totalPoints > 0 ? maxMarks / totalPoints : 1;
+    setScalingFactor(scaling);
+  }, [questions, assessment?.maxMarks]);
+
+
   return (
     <div>
       {/* Padding added above the first question card */}
@@ -81,7 +194,19 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
           />
         ))}
       </Box>
-
+      <Box mt={24} pb={16}>
+        <Text>
+          Total Possible Points from Questions: {totalPossiblePoints}
+        </Text>
+        <Text>
+          Assessment Maximum Marks: {maxMarks}
+        </Text>
+        {maxMarks && totalPossiblePoints > 0 && (
+          <Text>
+            Points in this quiz will be adjusted by this factor to match max marks: x{scalingFactor.toFixed(2)}
+          </Text>
+        )}
+      </Box>
       <Group mt={24} pb={16}>
         {/* Add Question button moved to the bottom */}
         {!isLocked && (

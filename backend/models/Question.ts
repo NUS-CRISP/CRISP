@@ -6,7 +6,7 @@ export interface Question extends Document {
   text: string;
   type: string;
   customInstruction?: string;
-  isRequired?: boolean;
+  isRequired: boolean;
   isLocked?: boolean; // Indicates if the question is locked
 }
 

@@ -1,5 +1,4 @@
-// @shared/types/Question.ts
-
+// Base Question Interface
 export interface BaseQuestion {
   _id: string;
   text: string;
@@ -24,31 +23,50 @@ export interface NUSNETEmailQuestion extends BaseQuestion {
 // Team Member Selection Question
 export interface TeamMemberSelectionQuestion extends BaseQuestion {
   type: 'Team Member Selection';
-  // You can add additional properties if needed
+  // No scoring fields, as per requirements
 }
+
+// Multiple Choice Option Interface
+export interface MultipleChoiceOption {
+  text: string;
+  points: number; // Points assigned to this option
+}
+
 // Multiple Choice Question
 export interface MultipleChoiceQuestion extends BaseQuestion {
   type: 'Multiple Choice';
-  options: string[];
+  options: MultipleChoiceOption[];
+  isScored: boolean; // Toggle for scoring
+}
+
+// Multiple Response Option Interface
+export interface MultipleResponseOption {
+  text: string;
+  points: number; // Points can be negative
 }
 
 // Multiple Response Question
 export interface MultipleResponseQuestion extends BaseQuestion {
   type: 'Multiple Response';
-  options: string[];
+  options: MultipleResponseOption[];
+  isScored: boolean; // Toggle for scoring
+  allowNegative: boolean; // Whether negative scores are allowed
 }
 
 // Scale Label Interface
 export interface ScaleLabel {
   value: number;
   label: string;
+  points: number; // Points at this breakpoint
 }
 
 // Scale Question
 export interface ScaleQuestion extends BaseQuestion {
   type: 'Scale';
-  scaleMax: number;
-  labels: ScaleLabel[]; // Dynamic labels
+  scaleMin: number; // Minimum scale value
+  scaleMax: number; // Maximum scale value
+  labels: ScaleLabel[]; // Labels with points
+  isScored: boolean; // Toggle for scoring
 }
 
 // Short Response Question
@@ -72,10 +90,21 @@ export interface DateQuestion extends BaseQuestion {
   maxDate?: Date; // Maximum selectable date
 }
 
+// Number Scoring Range Interface
+export interface NumberScoringRange {
+  minValue: number;
+  maxValue: number;
+  points: number; // Points assigned to this range
+}
+
 // Number Question
 export interface NumberQuestion extends BaseQuestion {
   type: 'Number';
   maxNumber: number;
+  isScored: boolean; // Toggle for scoring
+  scoringMethod: 'direct' | 'range' | 'None'; // Scoring method
+  maxPoints?: number; // For 'direct' method
+  scoringRanges?: NumberScoringRange[]; // For 'range' method
 }
 
 // Undecided Question (used when the type is not yet chosen)

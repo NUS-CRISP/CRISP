@@ -8,6 +8,8 @@ export interface Submission {
   answers: AnswerUnion[];
   submittedAt: string;
   isDraft: boolean;
+  score: number;
+  adjustedScore?: number;
   createdAt?: string;
   updatedAt?: string;
 }
