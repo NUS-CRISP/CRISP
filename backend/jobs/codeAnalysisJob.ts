@@ -375,12 +375,12 @@ export const setupCodeAnalysisJob = () => {
   });
 
   // To run the job immediately for testing
-  // if (process.env.RUN_JOB_NOW === 'true') {
+  if (process.env.RUN_JOB_NOW === 'true') {
   console.log('Running fetchAndSaveCodeAnalysisData job');
   fetchAndSaveCodeAnalysisData().catch(err => {
     console.error('Error running job manually:', err);
   });
-  // }
+  }
 };
 
 export default setupCodeAnalysisJob;
