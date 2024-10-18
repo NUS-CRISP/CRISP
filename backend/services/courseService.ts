@@ -439,7 +439,7 @@ export const getPeopleFromCourse = async (courseId: string) => {
   };
 };
 
-/*----------------------------------------People----------------------------------------*/
+/*-------------------------------------Repositories-------------------------------------*/
 export const getRepositoriesFromCourse = async (courseId: string) => {
   const course = await CourseModel.findById(courseId);
 
