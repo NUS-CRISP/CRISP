@@ -9,3 +9,8 @@ export const REDIRECT_URI_PATH = '/api/jira/callback';
 export const JIRA_API_BASE_URL = 'https://api.atlassian.com/ex/jira';
 export const BOARD_API_PATH = '/rest/agile/1.0/board';
 export const ISSUE_API_PATH = '/rest/agile/1.0/issue';
+
+/*---------------------------------------Trofos---------------------------------------*/
+export const TROFOS_COURSE_PATH = '/course';
+export const TROFOS_PROJECT_PATH = '/project';
+export const TROFOS_SPRINT_PATH = '/sprint';
