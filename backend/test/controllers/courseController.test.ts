@@ -1064,10 +1064,15 @@ describe('courseController', () => {
 
   describe('addRepositories', () => {
     it('should add repositories to a course', async () => {
-      const req = mockRequest({ gitHubRepoLink: ['repo1', 'repo2'] }, { id: 'courseId' });
+      const req = mockRequest(
+        { gitHubRepoLink: ['repo1', 'repo2'] },
+        { id: 'courseId' }
+      );
       const res = mockResponse();
 
-      jest.spyOn(courseService, 'addRepositoriesToCourse').mockResolvedValue(undefined);
+      jest
+        .spyOn(courseService, 'addRepositoriesToCourse')
+        .mockResolvedValue(undefined);
 
       await addRepositories(req, res);
 
@@ -1078,7 +1083,10 @@ describe('courseController', () => {
     });
 
     it('should handle NotFoundError and send a 404 status', async () => {
-      const req = mockRequest({ gitHubRepoLink: ['repo1', 'repo2'] }, { id: 'courseId' });
+      const req = mockRequest(
+        { gitHubRepoLink: ['repo1', 'repo2'] },
+        { id: 'courseId' }
+      );
       const res = mockResponse();
 
       jest
@@ -1092,7 +1100,10 @@ describe('courseController', () => {
     });
 
     it('should handle errors when adding repositories', async () => {
-      const req = mockRequest({ gitHubRepoLink: ['repo1', 'repo2'] }, { id: 'courseId' });
+      const req = mockRequest(
+        { gitHubRepoLink: ['repo1', 'repo2'] },
+        { id: 'courseId' }
+      );
       const res = mockResponse();
 
       jest
@@ -1110,12 +1121,13 @@ describe('courseController', () => {
 
   describe('updateRepository', () => {
     it('should update repository in a course', async () => {
-      const req = mockRequest({ repoLink: 'repo3' }, { id: 'courseId', repositoryIndex: 1 });
+      const req = mockRequest(
+        { repoLink: 'repo3' },
+        { id: 'courseId', repositoryIndex: 1 }
+      );
       const res = mockResponse();
 
-      jest
-        .spyOn(courseService, 'editRepository')
-        .mockResolvedValue(undefined);
+      jest.spyOn(courseService, 'editRepository').mockResolvedValue(undefined);
 
       await updateRepository(req, res);
 
@@ -1126,7 +1138,10 @@ describe('courseController', () => {
     });
 
     it('should handle NotFoundError and send a 404 status', async () => {
-      const req = mockRequest({ repoLink: 'repo3' }, { id: 'courseId', repositoryIndex: 1 });
+      const req = mockRequest(
+        { repoLink: 'repo3' },
+        { id: 'courseId', repositoryIndex: 1 }
+      );
       const res = mockResponse();
 
       jest
@@ -1140,7 +1155,10 @@ describe('courseController', () => {
     });
 
     it('should handle errors when updating repository', async () => {
-      const req = mockRequest({ repoLink: 'repo3' }, { id: 'courseId', repositoryIndex: 1 });
+      const req = mockRequest(
+        { repoLink: 'repo3' },
+        { id: 'courseId', repositoryIndex: 1 }
+      );
       const res = mockResponse();
 
       jest

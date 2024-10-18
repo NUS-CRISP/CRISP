@@ -928,15 +928,17 @@ describe('courseService', () => {
 
   describe('getRepositoriesFromCourse', () => {
     it('should get repositories from a course', async () => {
-      // Mock course data
       const course = await CourseModel.findOne({ _id: courseId });
       if (!course) {
         throw new Error('Course not found');
       }
 
+      const repo1 = 'https://github.com/org/repo1';
+      const repo2 = 'https://github.com/org/repo2';
+
       // Add repository links to the course
-      course.gitHubRepoLinks.push('https://github.com/org/repo1');
-      course.gitHubRepoLinks.push('https://github.com/org/repo2');
+      course.gitHubRepoLinks.push(repo1);
+      course.gitHubRepoLinks.push(repo2);
       await course.save();
 
       const repositories = await getRepositoriesFromCourse(courseId);
@@ -944,8 +946,8 @@ describe('courseService', () => {
       // Ensure repositories are returned correctly
       expect(repositories).toBeDefined();
       expect(repositories.repositories.length).toBe(2);
-      expect(repositories.repositories).toContain('https://github.com/org/repo1');
-      expect(repositories.repositories).toContain('https://github.com/org/repo2');
+      expect(repositories.repositories).toContain(repo1);
+      expect(repositories.repositories).toContain(repo2);
     });
 
     it('should throw NotFoundError for invalid courseId', async () => {
@@ -1012,7 +1014,9 @@ describe('courseService', () => {
       await editRepository(courseId, repositoryIndex, updateData);
 
       const updatedCourse = await CourseModel.findById(courseId);
-      expect(updatedCourse?.gitHubRepoLinks[repositoryIndex]).toBe(updatedRepoLink);
+      expect(updatedCourse?.gitHubRepoLinks[repositoryIndex]).toBe(
+        updatedRepoLink
+      );
     });
 
     it('should throw NotFoundError for invalid courseId', async () => {
