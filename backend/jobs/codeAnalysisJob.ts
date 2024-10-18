@@ -185,6 +185,7 @@ const getLatestCommit = async (gitHubOrgName: string, repoName: string) => {
 
     if (!fs.existsSync(repoPath)) {
       console.log(`Cloning repository ${repoName}...`);
+      fs.mkdirSync(repoPath, { recursive: true });
       await execShellCommand(
         `git clone https://github.com/${gitHubOrgName}/${repoName}.git ${repoPath}`
       );
@@ -193,7 +194,7 @@ const getLatestCommit = async (gitHubOrgName: string, repoName: string) => {
     }
   } catch (error) {
     console.error(
-      `Error updating repository ${repoName}: ${(error as Error).message}`
+      `Error updating repository ${repoName}: ${error}`
     );
   }
 };
