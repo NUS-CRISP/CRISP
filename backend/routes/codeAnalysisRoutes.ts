@@ -2,7 +2,7 @@ import {
   getAllCodeAnalysisData,
   getAllCodeAnalysisDataByOrg,
   getAllCodeAnalysisDataByCourse,
-} from 'controllers/codeAnalysisController';
+} from '../controllers/codeAnalysisController';
 import express from 'express';
 
 const router = express.Router();
