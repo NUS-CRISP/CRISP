@@ -15,11 +15,13 @@ import UserModel from '../../models/User';
 import {
   addFacultyToCourse,
   addMilestoneToCourse,
+  addRepositoriesToCourse,
   addSprintToCourse,
   addStudentsToCourse,
   addTAsToCourse,
   createNewCourse,
   deleteCourseById,
+  editRepository,
   getAssessmentsFromCourse,
   getCourseById,
   getCourseCodeById,
@@ -29,9 +31,11 @@ import {
   getCoursesForUser,
   getPeopleFromCourse,
   getProjectManagementBoardFromCourse,
+  getRepositoriesFromCourse,
   getTeamSetNamesFromCourse,
   getTeamSetsFromCourse,
   removeFacultyFromCourse,
+  removeRepositoryFromCourse,
   removeStudentsFromCourse,
   removeTAsFromCourse,
   updateCourseById,
@@ -919,6 +923,177 @@ describe('courseService', () => {
       await expect(getPeopleFromCourse(invalidCourseId)).rejects.toThrow(
         NotFoundError
       );
+    });
+  });
+
+  describe('getRepositoriesFromCourse', () => {
+    it('should get repositories from a course', async () => {
+      const course = await CourseModel.findOne({ _id: courseId });
+      if (!course) {
+        throw new Error('Course not found');
+      }
+
+      const repo1 = 'https://github.com/org/repo1';
+      const repo2 = 'https://github.com/org/repo2';
+
+      // Add repository links to the course
+      course.gitHubRepoLinks.push(repo1);
+      course.gitHubRepoLinks.push(repo2);
+      await course.save();
+
+      const repositories = await getRepositoriesFromCourse(courseId);
+
+      // Ensure repositories are returned correctly
+      expect(repositories).toBeDefined();
+      expect(repositories.repositories.length).toBe(2);
+      expect(repositories.repositories).toContain(repo1);
+      expect(repositories.repositories).toContain(repo2);
+    });
+
+    it('should throw NotFoundError for invalid courseId', async () => {
+      const invalidCourseId = new mongoose.Types.ObjectId().toString();
+
+      // Ensure the function throws NotFoundError if course is not found
+      await expect(getRepositoriesFromCourse(invalidCourseId)).rejects.toThrow(
+        NotFoundError
+      );
+    });
+  });
+
+  describe('addRepositoriesToCourse', () => {
+    const repo1 = 'https://github.com/org/repo1';
+    const repo2 = 'https://github.com/org/repo2';
+
+    it('should add repositories to a course', async () => {
+      const repositories = [
+        { gitHubRepoLink: repo1 },
+        { gitHubRepoLink: repo2 },
+      ];
+
+      await addRepositoriesToCourse(courseId, repositories);
+
+      const updatedCourse = await CourseModel.findById(courseId);
+      expect(updatedCourse?.gitHubRepoLinks).toContain(repo1);
+      expect(updatedCourse?.gitHubRepoLinks).toContain(repo2);
+    });
+
+    it('should throw NotFoundError for invalid courseId', async () => {
+      const invalidCourseId = new mongoose.Types.ObjectId().toString();
+      const repositories = [{ gitHubRepoLink: repo1 }];
+
+      await expect(
+        addRepositoriesToCourse(invalidCourseId, repositories)
+      ).rejects.toThrow(NotFoundError);
+    });
+  });
+
+  describe('editRepository', () => {
+    const initialRepoLink = 'https://github.com/org/repo1';
+    const updatedRepoLink = 'https://github.com/org/repo1-updated';
+    const invalidRepoLink = 123; // To test invalid repo format
+
+    beforeEach(async () => {
+      // Find the course by ID
+      const course = await CourseModel.findById(courseId);
+
+      if (!course) {
+        throw new NotFoundError('Course not found');
+      }
+
+      // Add a repository directly to the course
+      course.gitHubRepoLinks.push(initialRepoLink);
+
+      // Save the updated course
+      await course.save();
+    });
+
+    it('should update a repository in a course', async () => {
+      const repositoryIndex = 0; // Assuming the repo added above is at index 0
+      const updateData = { repoLink: updatedRepoLink };
+
+      await editRepository(courseId, repositoryIndex, updateData);
+
+      const updatedCourse = await CourseModel.findById(courseId);
+      expect(updatedCourse?.gitHubRepoLinks[repositoryIndex]).toBe(
+        updatedRepoLink
+      );
+    });
+
+    it('should throw NotFoundError for invalid courseId', async () => {
+      const invalidCourseId = new mongoose.Types.ObjectId().toString();
+      const repositoryIndex = 0;
+      const updateData = { repoLink: updatedRepoLink };
+
+      await expect(
+        editRepository(invalidCourseId, repositoryIndex, updateData)
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should throw NotFoundError for invalid repositoryIndex', async () => {
+      const invalidRepositoryIndex = 999; // Out of bounds
+      const updateData = { repoLink: updatedRepoLink };
+
+      await expect(
+        editRepository(courseId, invalidRepositoryIndex, updateData)
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should throw an error for invalid repository link format', async () => {
+      const repositoryIndex = 0; // Valid repository index
+      const updateData = { repoLink: invalidRepoLink }; // Invalid repoLink format
+
+      await expect(
+        editRepository(courseId, repositoryIndex, updateData)
+      ).rejects.toThrow('Invalid repository link format');
+
+      // Ensure the repository was not updated
+      const course = await CourseModel.findById(courseId);
+      expect(course?.gitHubRepoLinks[repositoryIndex]).toBe(initialRepoLink);
+    });
+  });
+
+  describe('removeRepositoryFromCourse', () => {
+    const initialRepoLink = 'https://github.com/org/repo1';
+
+    beforeEach(async () => {
+      // Find the course by ID
+      const course = await CourseModel.findById(courseId);
+
+      if (!course) {
+        throw new NotFoundError('Course not found');
+      }
+
+      // Add a repository directly to the course
+      course.gitHubRepoLinks.push(initialRepoLink);
+
+      // Save the updated course
+      await course.save();
+    });
+
+    it('should remove a repository from a course', async () => {
+      const repositoryIndex = 0; // Assuming the repo added above is at index 0
+
+      await removeRepositoryFromCourse(courseId, repositoryIndex);
+
+      const updatedCourse = await CourseModel.findById(courseId);
+      expect(updatedCourse?.gitHubRepoLinks.length).toBe(0);
+    });
+
+    it('should throw NotFoundError for invalid courseId', async () => {
+      const invalidCourseId = new mongoose.Types.ObjectId().toString();
+      const repositoryIndex = 0; // Valid index
+
+      await expect(
+        removeRepositoryFromCourse(invalidCourseId, repositoryIndex)
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should throw NotFoundError for invalid repositoryIndex', async () => {
+      const invalidRepositoryIndex = 999; // Out of bounds
+
+      await expect(
+        removeRepositoryFromCourse(courseId, invalidRepositoryIndex)
+      ).rejects.toThrow(NotFoundError);
     });
   });
 

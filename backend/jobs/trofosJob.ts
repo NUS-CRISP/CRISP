@@ -66,7 +66,7 @@ const fetchAndSaveTrofosData = async () => {
 
       for (const trofosProject of trofosProjectData) {
         const trofosProjectId = trofosProject.id;
-        if (trofosProject.course.id === courseId) {
+        if (trofosProject.course_id === courseId) {
           await fetchSingleTrofosProject(course, trofosProjectId, apiKey);
         }
       }
