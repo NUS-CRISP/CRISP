@@ -57,7 +57,7 @@ const getCourseCodeData = async (octokit: Octokit, course: any) => {
 
     await createProjectIfNotExists(gitHubOrgName + '_' + repo.name);
 
-    await getLatestCommit(gitHubOrgName, repo.name);
+    await getLatestCommit(octokit, gitHubOrgName, repo, course);
 
     await scanRepo(gitHubOrgName, repo.name, buildTool);
 
@@ -175,25 +175,42 @@ const createProjectIfNotExists = async (repo: string) => {
   }
 };
 
-const getLatestCommit = async (gitHubOrgName: string, repoName: string) => {
+const getLatestCommit = async (
+  octokit: Octokit,
+  gitHubOrgName: string,
+  repo: any,
+  course: any
+) => {
   try {
     const repoPath = path.join(
       process.env.REPO_PATH || '',
       gitHubOrgName,
-      repoName
+      repo.name
     );
 
+    const installationTokenResponse =
+      await octokit.rest.apps.createInstallationAccessToken({
+        installation_id: course.installationId
+      });
+    const installationToken = installationTokenResponse.data.token;
+
+    const cloneUrl = `https://oauth2:${installationToken}@github.com/${gitHubOrgName}/${repo.name}.git`;
+
     if (!fs.existsSync(repoPath)) {
-      console.log(`Cloning repository ${repoName}...`);
       fs.mkdirSync(repoPath, { recursive: true });
-      await execShellCommand(
-        `git clone https://github.com/${gitHubOrgName}/${repoName}.git ${repoPath}`
-      );
+    }
+
+    if (!fs.existsSync(path.join(repoPath, '.git'))) {
+      console.log(`Cloning repository ${repo.name}...`);
+      fs.rmSync(repoPath, { recursive: true, force: true });
+      fs.mkdirSync(repoPath, { recursive: true });
+      await execShellCommand(`git clone ${cloneUrl} ${repoPath}`);
     } else {
-      await execShellCommand(`git -C ${repoPath} pull`);
+      console.log(`Pulling repository ${repo.name}`);
+      await execShellCommand(`git -C ${repoPath} pull ${cloneUrl}`);
     }
   } catch (error) {
-    console.error(`Error updating repository ${repoName}: ${error}`);
+    console.error(`Error updating repository ${repo.name}: ${error}`);
   }
 };
 
@@ -358,12 +375,12 @@ export const setupCodeAnalysisJob = () => {
   });
 
   // To run the job immediately for testing
-  if (process.env.RUN_JOB_NOW === 'true') {
-    console.log('Running fetchAndSaveCodeAnalysisData job');
-    fetchAndSaveCodeAnalysisData().catch(err => {
-      console.error('Error running job manually:', err);
-    });
-  }
+  // if (process.env.RUN_JOB_NOW === 'true') {
+  console.log('Running fetchAndSaveCodeAnalysisData job');
+  fetchAndSaveCodeAnalysisData().catch(err => {
+    console.error('Error running job manually:', err);
+  });
+  // }
 };
 
 export default setupCodeAnalysisJob;
