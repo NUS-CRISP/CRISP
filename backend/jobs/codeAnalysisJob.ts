@@ -193,9 +193,7 @@ const getLatestCommit = async (gitHubOrgName: string, repoName: string) => {
       await execShellCommand(`git -C ${repoPath} pull`);
     }
   } catch (error) {
-    console.error(
-      `Error updating repository ${repoName}: ${error}`
-    );
+    console.error(`Error updating repository ${repoName}: ${error}`);
   }
 };
 
