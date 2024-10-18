@@ -5,6 +5,7 @@ import { ReactNode, createContext, useContext, useState } from 'react';
 interface TutorialContextValue {
   curTutorialStage: number;
   nextTutorialStage: () => void;
+  previousTutorialStage: () => void;
   startTutorial: () => void;
   finishTutorial: () => void;
 }
@@ -41,11 +42,23 @@ export const TutorialContextProvider = ({
     setCurTutorialStage(-1);
   };
 
+  const previousTutorialStage = () => {
+    setCurTutorialStage(stage => {
+      if (stage > 0) {
+        const newStage = stage - 1;
+        nprogress.set((newStage / (tutorialContents.length - 1)) * 100);
+        return newStage;
+      }
+      return stage;
+    });
+  };
+
   return (
     <TutorialContext.Provider
       value={{
         curTutorialStage,
         nextTutorialStage,
+        previousTutorialStage,
         startTutorial,
         finishTutorial,
       }}
