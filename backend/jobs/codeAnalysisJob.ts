@@ -190,7 +190,7 @@ const getLatestCommit = async (
 
     const installationTokenResponse =
       await octokit.rest.apps.createInstallationAccessToken({
-        installation_id: course.installationId
+        installation_id: course.installationId,
       });
     const installationToken = installationTokenResponse.data.token;
 
