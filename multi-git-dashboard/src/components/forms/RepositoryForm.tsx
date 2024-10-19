@@ -67,7 +67,7 @@ const RepositoryForm: React.FC<RepositoryFormProps> = ({
           }
         />
         <Button type="submit" style={{ marginTop: '16px' }}>
-          Create Repository
+          Add Repository
         </Button>
       </form>
       <Divider label="or Upload CSV" size="lg" />

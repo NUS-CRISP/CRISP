@@ -257,31 +257,20 @@ const fetchCodeFrequencyStats = async (
   owner: string,
   repo: string
 ) => {
-  let attempt = 0;
-  const maxAttempts = 10;
-  const delayBetweenAttempts = 2000;
+  try {
+    const response = await octokit.rest.repos.getCodeFrequencyStats({
+      owner,
+      repo,
+    });
 
-  while (attempt < maxAttempts) {
-    try {
-      const response = await octokit.rest.repos.getCodeFrequencyStats({
-        owner,
-        repo,
-      });
-
-      if (response.status === 200) {
-        return response.data;
-      } else if (response.status === 202) {
-        await new Promise(resolve => setTimeout(resolve, delayBetweenAttempts));
-        attempt++;
-      } else {
-        throw new Error('Failed to fetch code frequency stats');
-      }
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        throw new Error(
-          `Error fetching code frequency stats: ${error.message}`
-        );
-      }
+    if (response.status === 200) {
+      return response.data;
+    } else {
+      throw new Error('Failed to fetch code frequency stats');
+    }
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      throw new Error(`Error fetching code frequency stats: ${error.message}`);
     }
   }
 
