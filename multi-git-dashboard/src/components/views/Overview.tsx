@@ -5,6 +5,7 @@ import {
   Container,
   Loader,
   ScrollArea,
+  Tabs,
 } from '@mantine/core';
 import { Profile } from '@shared/types/Profile';
 import { Team as SharedTeam } from '@shared/types/Team';
@@ -14,10 +15,12 @@ import { useEffect, useState } from 'react';
 import OverviewAccordionItem from '../overview/OverviewAccordionItem';
 import { useTutorialContext } from '../tutorial/TutorialContext';
 import TutorialPopover from '../tutorial/TutorialPopover';
+import { TeamSet } from '@shared/types/TeamSet';
 
 interface OverviewProps {
   courseId: string;
   dateUtils: DateUtils;
+  teamSets: TeamSet[];
 }
 
 export interface Team extends Omit<SharedTeam, 'teamData'> {
@@ -26,7 +29,7 @@ export interface Team extends Omit<SharedTeam, 'teamData'> {
 
 export type ProfileGetter = (gitHandle: string) => Promise<Profile>;
 
-const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
+const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils, teamSets, }) => {
   const { curTutorialStage } = useTutorialContext();
 
   const [teams, setTeams] = useState<Team[]>([]);
@@ -94,10 +97,10 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
   if (!teams.length || !teamDatas.length)
     return <Center>No teams found.</Center>;
 
-  return (
-    <ScrollArea.Autosize mt={20}>
+  const renderOverviewAccordion = (teamSet: TeamSet) => {
+    return (
       <Accordion
-        defaultValue={[teamDatas[0]._id]}
+        defaultValue={teamDatas.length > 0 ? [teamDatas[0]._id] : []}
         multiple
         variant="separated"
         mx={20}
@@ -121,8 +124,20 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
           </TutorialPopover>
         ))}
       </Accordion>
+    );
+  };
+  
+  return (
+    <ScrollArea.Autosize mt={20}>
+      {teamSets.map(teamSet => (
+        <Tabs.Panel key={teamSet._id} value={teamSet.name}>
+          {renderOverviewAccordion(teamSet)}
+        </Tabs.Panel>
+      ))}
     </ScrollArea.Autosize>
   );
+  
+  
 };
 
 export default Overview;

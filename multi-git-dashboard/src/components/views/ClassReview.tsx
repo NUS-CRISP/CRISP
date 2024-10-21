@@ -68,9 +68,8 @@ const ClassReview: React.FC<OverviewProps> = ({ courseId }) => {
 
   return (
     <ScrollArea
-      m="md"
       style={{
-        height: '97vh',
+        height: '100vh',
         paddingRight: '20px',
         overflowY: 'auto',
         scrollbarWidth: 'thin',
