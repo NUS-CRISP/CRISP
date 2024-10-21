@@ -21,6 +21,7 @@ interface OverviewProps {
   courseId: string;
   dateUtils: DateUtils;
   teamSets: TeamSet[];
+  onUpdate: () => void;
 }
 
 export interface Team extends Omit<SharedTeam, 'teamData'> {
@@ -29,7 +30,7 @@ export interface Team extends Omit<SharedTeam, 'teamData'> {
 
 export type ProfileGetter = (gitHandle: string) => Promise<Profile>;
 
-const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils, teamSets, }) => {
+const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils, teamSets, onUpdate,}) => {
   const { curTutorialStage } = useTutorialContext();
 
   const [teams, setTeams] = useState<Team[]>([]);
@@ -37,6 +38,10 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils, teamSets, }) =
   const [status, setStatus] = useState<Status>(Status.Loading);
 
   const [studentMap, setStudentMap] = useState<Record<string, Profile>>({});
+
+  const [activeTab, setActiveTab] = useState<string | null>(
+    teamSets ? teamSets[0]?.name : null
+  );
 
   const getTeams = async () => {
     const res = await fetch(`/api/teams/course/${courseId}`);
@@ -51,6 +56,33 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils, teamSets, }) =
     const teamDatas: TeamData[] = await res.json();
     return teamDatas;
   };
+
+  const setActiveTabAndSave = (tabName: string) => {
+    onUpdate();
+    setActiveTab(tabName);
+    localStorage.setItem(`activeTeamSetTab_${courseId}`, tabName);
+  };
+
+  useEffect(() => {
+    const savedTab = localStorage.getItem(`activeTeamSetTab_${courseId}`);
+    if (savedTab && teamSets.some(teamSet => teamSet.name === savedTab)) {
+      setActiveTab(savedTab);
+    }
+  }, [teamSets]);
+
+  console.log(teamSets);
+
+  const headers = teamSets.map((teamSet, index) => (
+    <Tabs.Tab
+      key={index}
+      value={teamSet.name}
+      onClick={() => {
+        setActiveTabAndSave(teamSet.name);
+      }}
+    >
+      {teamSet.name}
+    </Tabs.Tab>
+  ));
 
   const getStudentNameByGitHandle: ProfileGetter = async gitHandle => {
     if (!studentMap[gitHandle]) {
@@ -129,11 +161,19 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils, teamSets, }) =
   
   return (
     <ScrollArea.Autosize mt={20}>
+      <Tabs value={activeTab} mx={20}>
+      <Tabs.List
+            style={{ display: 'flex', justifyContent: 'space-evenly' }}
+          >
+            {headers}
+          </Tabs.List>
       {teamSets.map(teamSet => (
         <Tabs.Panel key={teamSet._id} value={teamSet.name}>
           {renderOverviewAccordion(teamSet)}
         </Tabs.Panel>
+        
       ))}
+      </Tabs>
     </ScrollArea.Autosize>
   );
   
