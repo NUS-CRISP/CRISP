@@ -21,6 +21,7 @@ const InternalAssessmentDetail: React.FC = () => {
   const teachingTeamApiRoute = `/api/courses/${id}/teachingteam`;
 
   const [userIdToNameMap, setUserIdToNameMap] = useState<{ [key: string]: string }>({});
+  const [teams, setTeams] = useState<Team[]>([]);
   const [assessment, setAssessment] = useState<InternalAssessment | null>(null);
   const [teachingTeam, setTeachingTeam] = useState<User[]>([]);
   const [activeTab, setActiveTab] = useState<string>('Overview');
@@ -35,6 +36,7 @@ const InternalAssessmentDetail: React.FC = () => {
         return;
       }
       const teams: Team[] = await response.json();
+      setTeams(teams);
       const userMap: { [key: string]: string } = {};
       teams.forEach((team) => {
         team.members.forEach((member) => {
@@ -233,6 +235,8 @@ const InternalAssessmentDetail: React.FC = () => {
               onUpdateAssessment={fetchAssessment}
               questions={questions}
               userIdToNameMap={userIdToNameMap}
+              teachingTeam={teachingTeam}
+              teams={teams}
             />
           )}
         </Tabs.Panel>

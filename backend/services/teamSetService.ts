@@ -9,6 +9,11 @@ export const getTeamSetsByCourseId = async (courseId: string) =>
     populate: {
       path: 'members',
     },
+  }).populate<{ teams: Team[] }>({
+    path: 'teams',
+    populate: {
+      path: 'TA',
+    },
   });
 
 export const deleteTeamSetById = async (teamSetId: string) => {
