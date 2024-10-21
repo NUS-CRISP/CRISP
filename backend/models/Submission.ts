@@ -18,7 +18,7 @@ const SubmissionSchema = new Schema<Submission>(
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     answers: { type: [AnswerSchema], required: true },
     submittedAt: { type: Date, default: Date.now },
-    score: { type: Number },
+    score: { type: Number, default: 0 },
     adjustedScore: { type: Number, required: false },
     isDraft: { type: Boolean, default: false },
   },

@@ -1,9 +1,12 @@
-import { Container, Button, Text, Modal, Group, ScrollArea } from '@mantine/core';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// pages/courses/[id]/internal-assessments/[assessmentId]/take.tsx
+
+import { Container, Button, Text, Modal, Group, ScrollArea, Divider, NumberInput, Paper } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
 import { InternalAssessment } from '@shared/types/InternalAssessment';
-import { Question, QuestionUnion } from '@shared/types/Question';
+import { MultipleChoiceQuestion, MultipleResponseQuestion, NumberQuestion, Question, QuestionUnion, ScaleQuestion } from '@shared/types/Question';
 import { AnswerUnion } from '@shared/types/Answer';
 import { AnswerInput } from '@shared/types/AnswerInput';
 import { Submission } from '@shared/types/Submission';
@@ -14,13 +17,16 @@ interface TakeAssessmentProps {
   inputAssessment: InternalAssessment;
   existingSubmission?: Submission;
   canEdit?: boolean;
+  isFaculty?: boolean;
 }
 
 const TakeAssessment: React.FC<TakeAssessmentProps> = ({
   inputAssessment,
   existingSubmission,
   canEdit = true,
+  isFaculty = false,
 }) => {
+  console.log(existingSubmission)
   const router = useRouter();
   const { id, assessmentId } = router.query as {
     id: string;
@@ -34,6 +40,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
   const [assessment, setAssessment] = useState<InternalAssessment | null>(inputAssessment);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<{ [questionId: string]: AnswerInput }>({});
+  const [totalScore, setTotalScore] = useState<number | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState<boolean>(false);
   const [showDeleteDraftModal, setShowDeleteDraftModal] = useState<boolean>(false);
@@ -44,6 +51,25 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
     []
   );
   const [submission, setSubmission] = useState<Submission | undefined>(existingSubmission);
+  const [showSummaryModal, setShowSummaryModal] = useState<boolean>(false);
+  const [showAdjustScoreModal, setShowAdjustScoreModal] = useState<boolean>(false);
+  const [newAdjustedScore, setNewAdjustedScore] = useState<number | undefined>(undefined);
+
+  const isScoredQuestion = (
+    question: QuestionUnion
+  ): question is
+    | MultipleChoiceQuestion
+    | MultipleResponseQuestion
+    | ScaleQuestion
+    | NumberQuestion => {
+    return (
+      (question.type === 'Multiple Choice' ||
+        question.type === 'Multiple Response' ||
+        question.type === 'Scale' ||
+        question.type === 'Number') &&
+      question.isScored
+    );
+  };
 
   const fetchAssessment = useCallback(async () => {
     if (assessment !== null && assessment !== undefined) return;
@@ -88,13 +114,15 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
   // Fetch team members
   const fetchTeamMembers = useCallback(async () => {
     try {
-      const res = await fetch(`/api/teams/course/${id}/ta`, {
+      const endpoint = isFaculty ? `/api/teams/course/${id}` : `/api/teams/course/${id}/ta`;
+      const res = await fetch(endpoint, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       });
       if (!res.ok) throw new Error('Failed to fetch teams');
+
       const teams: Team[] = await res.json();
       // Extract team members
       const teamMembers = teams.flatMap((team) => team.members);
@@ -114,7 +142,52 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
     } catch (error) {
       console.error('Error fetching team members:', error);
     }
-  }, [id]);
+  }, [id, isFaculty]);
+
+  /**
+   * Calculate the total score and per-question scores for the submission.
+   * This is useful for displaying in the summary modal.
+   */
+  const calculatePerQuestionScores = (): { question: Question; score: number }[] => {
+    if (!submission) return [];
+
+    return questions.map((question) => {
+      const answer = submission.answers.find(
+        (ans) => ans.question.toString() === question._id.toString()
+      );
+      return {
+        question,
+        score: answer?.score || 0,
+      };
+    }).filter(({ question }) => isScoredQuestion(question));
+  };
+
+  const adjustSubmissionScore = async (
+    submissionId: string,
+    adjustedScore: number
+  ) => {
+    try {
+      await fetch(`/api/submissions/${submissionId}/adjust-score`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          adjustedScore
+        })
+      });
+    } catch (error: any) {
+      // Handle errors appropriately
+      if (error.response && error.response.data && error.response.data.error) {
+        throw new Error(error.response.data.error);
+      }
+      showNotification({
+        title: 'Error',
+        message: 'Failed to adjust submission score.',
+        color: 'red',
+      });
+    }
+  };
 
   useEffect(() => {
     if (router.isReady) {
@@ -141,6 +214,11 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         {} as { [questionId: string]: AnswerInput }
       );
       setAnswers(initialAnswers);
+
+      const initialTotalScore = submission.adjustedScore !== undefined
+        ? submission.adjustedScore
+        : submission.score;
+      setTotalScore(initialTotalScore);
     }
   }, [submission]);
 
@@ -482,6 +560,49 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
     }
   };
 
+  const handleAdjustScore = () => {
+    setShowAdjustScoreModal(true);
+  };
+
+  const handleAdjustScoreSubmit = async () => {
+    if (newAdjustedScore === undefined) {
+      showNotification({
+        title: 'Error',
+        message: 'Please enter a valid score.',
+        color: 'red',
+      });
+      return;
+    }
+
+    try {
+      if (!submission || !submission._id) {
+        showNotification({
+          title: 'Error',
+          message: 'No submission available to adjust the score of.',
+          color: 'red',
+        });
+      }
+
+      await adjustSubmissionScore(submission!._id, newAdjustedScore);
+      setTotalScore(newAdjustedScore);
+
+      setShowAdjustScoreModal(false);
+      setNewAdjustedScore(undefined);
+
+      showNotification({
+        title: 'Score Adjusted',
+        message: 'The submission score has been successfully adjusted.',
+        color: 'green',
+      });
+    } catch (error: any) {
+      showNotification({
+        title: 'Error',
+        message: error.message || 'Failed to adjust score.',
+        color: 'red',
+      });
+    }
+  };
+
   return (
     <Container mb="xl">
       {assessment && (
@@ -509,6 +630,8 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
               question.type === 'Team Member Selection' ? teamMembersOptions : undefined
             }
             assessmentGranularity={assessment.granularity}
+            isFaculty={isFaculty}
+            submission={submission}
           />
         ))}
 
@@ -521,7 +644,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
             {(submission && submission.isDraft) &&
               <Button
                 variant="default"
-                c='red'
+                color='red'
                 onClick={handleDeleteDraft}
               >
                 Delete Draft
@@ -544,6 +667,88 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         </Group>
       )}
 
+      {/* Faculty Panel with Total Score and Adjust Score Button */}
+      {isFaculty && submission && (
+        <Paper shadow="sm" p="md" mt="xl" withBorder>
+          <Group justify="space-between" align="center" mb="md">
+            <Text size="lg">Submission Score</Text>
+            <Button onClick={handleAdjustScore} color="orange">
+              Adjust Score
+            </Button>
+          </Group>
+          <Divider mb="md" />
+          <Group justify="space-between" mb="md">
+            {/* Display adjusted score if it exists */}
+            {submission.adjustedScore !== undefined ? (
+              <>
+                <Text>Adjusted Score:</Text>
+                <Text>{totalScore}</Text>
+                <Text>Original Score:</Text>
+                <Text>{submission.score}</Text>
+              </>
+            ) : (
+              // Display only original score if no adjusted score exists
+              <>
+                <Text>Total Score:</Text>
+                <Text>{submission.score}</Text>
+              </>
+            )}
+          </Group>
+          <Button onClick={() => setShowSummaryModal(true)} variant="light" color="blue">
+            View Score Summary
+          </Button>
+        </Paper>
+      )}
+
+
+      {/* Adjust Score Modal */}
+      <Modal
+        opened={showAdjustScoreModal}
+        onClose={() => setShowAdjustScoreModal(false)}
+        title="Adjust Submission Score"
+      >
+        <NumberInput
+          label="New Score"
+          placeholder="Enter the adjusted score"
+          value={newAdjustedScore}
+          onChange={(value) => setNewAdjustedScore(value as number | undefined)}
+          min={0}
+          max={submission ? submission.score + 100 : undefined} // Example: allow up to original score + 100
+          required
+        />
+        <Group justify="flex-end" mt="md">
+          <Button variant="default" onClick={() => setShowAdjustScoreModal(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleAdjustScoreSubmit} color="green">
+            Submit
+          </Button>
+        </Group>
+      </Modal>
+
+      {/* Summary Modal */}
+      <Modal
+        opened={showSummaryModal}
+        onClose={() => setShowSummaryModal(false)}
+        title="Score Summary"
+        size="lg"
+      >
+        <ScrollArea style={{ height: '60vh' }}>
+          {calculatePerQuestionScores().map(({ question, score }, index) => (
+            <div key={question._id} style={{ marginBottom: '1rem' }}>
+              <Text>
+                {index + 1}. {question.text}
+              </Text>
+              <Text>Score: {score}</Text>
+              <Divider my="sm" />
+            </div>
+          ))}
+        </ScrollArea>
+        <Group justify="flex-end" mt="md">
+          <Button onClick={() => setShowSummaryModal(false)}>Close</Button>
+        </Group>
+      </Modal>
+
       {/* Confirmation Modal */}
       <Modal
         opened={showConfirmationModal}
@@ -559,6 +764,9 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
                 {index + 1}. {question.text}
               </Text>
               <Text>Answer: {formatAnswer(answers[question._id], question.type)}</Text>
+              {isFaculty && isScoredQuestion(question) && (
+                <Text>Score: {submission?.answers.find((a) => a.question.toString() === question._id.toString())?.score || 0}</Text>
+              )}
             </div>
           ))}
         </ScrollArea>

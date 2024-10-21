@@ -1,4 +1,4 @@
-// pages/courses/[id]/assessments/[assessmentId]/submission/[submissionId].tsx
+// pages/courses/[id]/internal-assessments/[assessmentId]/submission/[submissionId].tsx
 
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
@@ -53,7 +53,7 @@ const ViewSubmissionPage: React.FC = () => {
     return <div>Loading...</div>;
   }
 
-  // Check if the assessment allows editing
+  // Determine if the user can edit (faculty or draft submission)
   const canEdit = assessment.areSubmissionsEditable || submission.isDraft || permission;
 
   return (
@@ -61,6 +61,7 @@ const ViewSubmissionPage: React.FC = () => {
       inputAssessment={assessment}
       existingSubmission={submission}
       canEdit={canEdit}
+      isFaculty={permission}
     />
   );
 };

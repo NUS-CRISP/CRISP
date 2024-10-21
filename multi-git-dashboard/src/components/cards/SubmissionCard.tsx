@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// components/cards/SubmissionCard.tsx
-
 import React, { useState } from 'react';
 import {
   Card,
@@ -61,13 +58,17 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({
     (answer) => answer.type === 'Team Member Selection'
   );
 
+  // Get the score and adjusted score
+  const totalScore = submission.adjustedScore !== undefined ? submission.adjustedScore : submission.score;
+  const originalScore = submission.score;
+
   return (
     <>
       <Card withBorder shadow="sm" mb="md">
         {/* Submission Info */}
-        <Group justify='space-between' align="flex-start">
+        <Group justify="space-between" align="flex-start">
           <div>
-            <Group justify='flex-start' gap="xs">
+            <Group justify="flex-start" gap="xs">
               <Text>
                 {hasFacultyPermission ? `Submitted by: ${userName}` : 'Your Submission'}
               </Text>
@@ -95,11 +96,25 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({
             <Text size="sm" color="dimmed">
               Submitted at: {new Date(submission.submittedAt).toLocaleString()}
             </Text>
+
+            {/* Display score and adjusted score */}
+            <Text size="sm">
+              {hasFacultyPermission ? (
+                <>
+                  <strong>Adjusted Score:</strong> {totalScore} <br />
+                  <strong>Original Score:</strong> {originalScore}
+                </>
+              ) : (
+                <>
+                  <strong>Total Score:</strong> {totalScore}
+                </>
+              )}
+            </Text>
           </div>
         </Group>
 
         {/* Buttons at the bottom right */}
-        <Group justify='flex-end' mt="md">
+        <Group justify="flex-end" mt="md">
           {!submission.isDraft && (
             <Button
               onClick={handleSummaryClick}
@@ -149,11 +164,18 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({
                 <Text>
                   <strong>Answer:</strong> {formatAnswer(answer, userIdToNameMap)}
                 </Text>
+
+                {/* Show points earned if the user has faculty permissions */}
+                {hasFacultyPermission && answer.score !== undefined && (
+                  <Text>
+                    <strong>Points Earned:</strong> {answer.score}
+                  </Text>
+                )}
               </div>
             );
           })}
         </ScrollArea>
-        <Group justify='flex-end' mt="md">
+        <Group justify="flex-end" mt="md">
           <Button onClick={() => setOpened(false)}>Close</Button>
         </Group>
       </Modal>
@@ -161,6 +183,8 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({
   );
 };
 
+// Helper function to format answers based on type
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function formatAnswer(answer: any, userIdToNameMap: { [key: string]: string }): string {
   switch (answer.type) {
     case 'Multiple Choice':

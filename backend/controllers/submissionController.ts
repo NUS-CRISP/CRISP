@@ -7,6 +7,7 @@ import {
   deleteSubmission,
   getSubmissionsByAssessmentAndUser,
   getSubmissionsByAssessment,
+  adjustSubmissionScore,
 } from '../services/submissionService';
 import { getAccountId } from '../utils/auth';
 import { NotFoundError, BadRequestError, MissingAuthorizationError } from '../services/errors';
@@ -133,7 +134,6 @@ export const getSubmissionByIdController = async (req: Request, res: Response) =
     const { submissionId } = req.params;
 
     const submission = await SubmissionModel.findById(submissionId)
-      .populate('answers.question')
       .populate('user')
       .populate('assessment');
 
@@ -158,6 +158,41 @@ export const getSubmissionByIdController = async (req: Request, res: Response) =
     } else {
       console.error('Error retrieving submission:', error);
       res.status(500).json({ error: 'Failed to retrieve submission' });
+    }
+  }
+};
+
+/**
+ * Controller to adjust the score of a submission.
+ * Only accessible by faculty members and admins.
+ */
+export const adjustSubmissionScoreController = async (req: Request, res: Response) => {
+  try {
+    const accountId = await getAccountId(req);
+    const account = await AccountModel.findById(accountId);
+
+    if (!account || (account.role !== 'Faculty member' && account.role !== 'admin')) {
+      throw new MissingAuthorizationError('You do not have permission to adjust scores.');
+    }
+
+    const { submissionId } = req.params;
+    const { adjustedScore } = req.body;
+
+    if (typeof adjustedScore !== 'number' || adjustedScore < 0) {
+      throw new BadRequestError('Invalid adjusted score.');
+    }
+
+    const submission = await adjustSubmissionScore(submissionId, adjustedScore);
+
+    res.status(200).json({ message: 'Adjusted score submitted successfully.', submission });
+  } catch (error) {
+    if (error instanceof NotFoundError || error instanceof BadRequestError) {
+      res.status(400).json({ error: error.message });
+    } else if (error instanceof MissingAuthorizationError) {
+      res.status(403).json({ error: error.message });
+    } else {
+      console.error('Error adjusting submission score:', error);
+      res.status(500).json({ error: 'Failed to adjust submission score.' });
     }
   }
 };

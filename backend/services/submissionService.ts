@@ -24,6 +24,11 @@ import {
   LongResponseQuestion,
   DateQuestion,
   NumberQuestion,
+  NumberScoringRange,
+  MultipleResponseQuestionModel,
+  NumberQuestionModel,
+  ScaleQuestionModel,
+  MultipleChoiceQuestionModel,
 } from '../models/QuestionTypes';
 import { NotFoundError, BadRequestError } from './errors';
 import AccountModel from '@models/Account';
@@ -265,12 +270,59 @@ export const createSubmission = async (
   await validateSubmissionPeriod(assessment);
   await validateAnswers(assessment, answers);
 
+  // Calculate the total score
+  let totalScore = 0;
+
+  // Calculate score for each answer and assign it to the answer's `score` field
+  const scoredAnswers = await Promise.all(
+    answers.map(async (answer) => {
+      const questionId = assessment.questions.find((q) => q._id.toString() === answer.question.toString());
+      if (!questionId) {
+        // Handle the case where the question is not found
+        console.warn(`Question with ID ${answer.question} not found in assessment ${assessmentId}.`);
+        return { ...answer, score: 0 };
+      }
+
+      let question = null;
+
+      switch (answer.type) {
+        case 'Number':
+          question = await NumberQuestionModel.findById(questionId);
+          break;
+        case 'Scale':
+          question = await ScaleQuestionModel.findById(questionId);
+          break;
+        case 'Multiple Choice':
+          question = await MultipleChoiceQuestionModel.findById(questionId);
+          break;
+        case 'Multiple Response':
+          question = await MultipleResponseQuestionModel.findById(questionId);
+          break;
+        default:
+          return { ...answer, score: 0 };
+      }
+
+      if (!question) {
+        console.warn(`Question with ID ${answer.question} not found in assessment ${assessmentId}.`);
+        return { ...answer, score: 0 };
+      }
+      // Calculate the score for this answer based on the question type
+      const answerScore = await calculateAnswerScore(question, answer);
+      totalScore += answerScore;
+
+      // Assign the score to the answer
+      return { ...answer, score: answerScore };
+    })
+  );
+
+  // Create the submission with the calculated score
   const submission = new SubmissionModel({
     assessment: assessmentId,
     user: userId,
-    answers,
+    answers: scoredAnswers,
     isDraft,
     submittedAt: new Date(),
+    score: totalScore,
   });
 
   await submission.save();
@@ -289,6 +341,7 @@ export const updateSubmission = async (
   if (!submission) {
     throw new NotFoundError('Submission not found.');
   }
+
   let bypass = false;
   const account = await AccountModel.findById(accountId);
   if (account && (account.role === 'Faculty member' || account.role === 'admin')) {
@@ -310,9 +363,59 @@ export const updateSubmission = async (
     throw new BadRequestError('Submissions are not editable for this assessment');
   }
 
-  submission.answers = answers;
+  let totalScore = 0;
+
+  // Recalculate the score based on new answers
+  await Promise.all(
+    answers.map(async (answer) => {
+      const questionId = assessment.questions.find((q) => q._id.toString() === answer.question.toString());
+      if (!questionId) {
+        console.warn(`Question with ID ${answer.question} not found in assessment ${assessment.id}.`);
+        answer.score = 0; // Set score to 0 if the question is not found
+        return;
+      }
+
+      let question = null;
+
+      switch (answer.type) {
+        case 'Number':
+          question = await NumberQuestionModel.findById(questionId);
+          break;
+        case 'Scale':
+          question = await ScaleQuestionModel.findById(questionId);
+          break;
+        case 'Multiple Choice':
+          question = await MultipleChoiceQuestionModel.findById(questionId);
+          break;
+        case 'Multiple Response':
+          question = await MultipleResponseQuestionModel.findById(questionId);
+          break;
+        default:
+          answer.score = 0; // For unsupported question types, set score to 0
+          return;
+      }
+
+      if (!question) {
+        console.warn(`Question with ID ${answer.question} not found in assessment ${assessment.id}.`);
+        answer.score = 0; // Set score to 0 if the question is not found
+        return;
+      }
+
+      // Calculate the score for this answer based on the question type
+      const answerScore = await calculateAnswerScore(question, answer);
+      totalScore += answerScore;
+
+      // Directly update the answer's score
+      answer.score = answerScore;
+    })
+  );
+
+  // Update submission fields
+  submission.answers = answers; // No need to create new objects; just use the modified answers
   submission.isDraft = isDraft;
   submission.submittedAt = new Date();
+  submission.score = totalScore;
+  submission.adjustedScore = undefined; // Remove any existing adjusted score
 
   await submission.save();
   return submission;
@@ -363,3 +466,202 @@ async function validateSubmissionPeriod(assessment: InternalAssessment) {
     throw new BadRequestError('Assessment is not open for submissions at this time');
   }
 }
+
+
+/**
+ * Adjusts the score of a submission.
+ * @param submissionId - The ID of the submission to adjust.
+ * @param adjustedScore - The new adjusted score.
+ * @returns The updated Submission object.
+ */
+export const adjustSubmissionScore = async (
+  submissionId: string,
+  adjustedScore: number
+): Promise<Submission> => {
+  const submission = await SubmissionModel.findById(submissionId);
+  if (!submission) {
+    throw new NotFoundError('Submission not found.');
+  }
+
+  // Optionally, add validation to ensure adjustedScore is within acceptable limits
+  if (adjustedScore < 0) {
+    throw new BadRequestError('Adjusted score cannot be negative.');
+  }
+
+  submission.adjustedScore = adjustedScore;
+
+  await submission.save();
+  return submission;
+};
+
+/* --------------------------------------SCORING---------------------------------------------- */
+
+/**
+ * Calculates the score for a single answer based on the question configuration.
+ * @param question The question associated with the answer.
+ * @param answer The user's answer.
+ * @returns The score for this answer.
+ */
+export const calculateAnswerScore = async (question: QuestionUnion, answer: AnswerUnion): Promise<number> => {
+  switch (question.type) {
+    case 'Multiple Choice':
+      return calculateMultipleChoiceScore(question as MultipleChoiceQuestion, answer as MultipleChoiceAnswer);
+    case 'Multiple Response':
+      return calculateMultipleResponseScore(question as MultipleResponseQuestion, answer as MultipleResponseAnswer);
+    case 'Scale':
+      return calculateScaleScore(question as ScaleQuestion, answer as ScaleAnswer);
+    case 'Number':
+      return calculateNumberScore(question as NumberQuestion, answer as NumberAnswer);
+    // Add cases for other question types if they have scoring
+    default:
+      // For question types that don't have scoring, return 0
+      return 0;
+  }
+};
+
+/**
+ * Calculates the score for a Multiple Choice answer.
+ */
+const calculateMultipleChoiceScore = (question: MultipleChoiceQuestion, answer: MultipleChoiceAnswer): number => {
+  if (!question.isScored) return 0;
+
+  const selectedOption = question.options.find((option) => option.text === answer.value);
+  if (selectedOption) {
+    return selectedOption.points;
+  }
+  return 0;
+};
+
+/**
+ * Calculates the score for a Multiple Response answer.
+ */
+const calculateMultipleResponseScore = (question: MultipleResponseQuestion, answer: MultipleResponseAnswer): number => {
+  if (!question.isScored) return 0;
+
+  let score = 0;
+  for (const value of answer.values) {
+    const option = question.options.find((opt) => opt.text === value);
+    if (option) {
+      score += option.points;
+    }
+  }
+  return score;
+};
+
+/**
+ * Calculates the score for a Scale answer.
+ * Implements linear interpolation for values between defined scale breakpoints.
+ */
+const calculateScaleScore = (question: ScaleQuestion, answer: ScaleAnswer): number => {
+  if (!question.isScored) return 0;
+
+  const { value: answerValue } = answer;
+  const { labels } = question;
+
+  // Sort labels by scale value to ensure proper ordering
+  const sortedLabels = [...labels].sort((a, b) => a.value - b.value);
+
+  // Edge Cases: If answerValue is below the first breakpoint or above the last.
+  // Should not happen since the first and last breakpoints are fixed as min and max values.
+  if (answerValue <= sortedLabels[0].value) {
+    return sortedLabels[0].points;
+  }
+  if (answerValue >= sortedLabels[sortedLabels.length - 1].value) {
+    return sortedLabels[sortedLabels.length - 1].points;
+  }
+
+  // Iterate through sortedLabels to find the two breakpoints for interpolation
+  for (let i = 0; i < sortedLabels.length - 1; i++) {
+    const current = sortedLabels[i];
+    const next = sortedLabels[i + 1];
+
+    if (answerValue === current.value) {
+      return current.points;
+    }
+    if (answerValue === next.value) {
+      return next.points;
+    }
+    if (answerValue > current.value && answerValue < next.value) {
+      // Perform linear interpolation
+      const slope = (next.points - current.points) / (next.value - current.value);
+      const interpolatedPoints = current.points + slope * (answerValue - current.value);
+      return interpolatedPoints;
+    }
+  }
+
+  // If no matching range is found, return 0 as a fallback
+  return 0;
+};
+
+/**
+ * Calculates the score for a Number answer.
+ * Supports both direct and range-based scoring with interpolation.
+ */
+const calculateNumberScore = (question: NumberQuestion, answer: NumberAnswer): number => {
+  if (!question.isScored) return 0;
+
+  const { value: answerValue } = answer;
+  const { maxNumber, scoringMethod, maxPoints, scoringRanges } = question;
+
+  if (scoringMethod === 'direct') {
+    if (maxNumber === 0) {
+      // Avoid division by zero
+      return 0;
+    }
+    // Direct scoring: (value / maxNumber) * maxPoints
+    const directScore = (answerValue / maxNumber) * (maxPoints || 0);
+    return directScore;
+  }
+
+  if (scoringMethod === 'range' && scoringRanges && scoringRanges.length > 0) {
+    // Ensure scoringRanges are sorted by minValue
+    const sortedRanges = [...scoringRanges].sort((a, b) => a.minValue - b.minValue);
+
+    // Find the range that includes the answerValue
+    const matchingRange = sortedRanges.find(
+      (range) => answerValue >= range.minValue && answerValue <= range.maxValue
+    );
+
+    if (matchingRange) {
+      return matchingRange.points;
+    }
+
+    // If no matching range, perform interpolation
+    // Find the closest lower and higher ranges
+    let lowerRange: NumberScoringRange | null = null;
+    let higherRange: NumberScoringRange | null = null;
+
+    for (const range of sortedRanges) {
+      if (range.maxValue < answerValue) {
+        lowerRange = range;
+      } else if (range.minValue > answerValue) {
+        higherRange = range;
+        break;
+      }
+    }
+
+    if (lowerRange && higherRange) {
+      const { maxValue: lowerMax, points: lowerPoints } = lowerRange;
+      const { minValue: higherMin, points: higherPoints } = higherRange;
+
+      const slope = (higherPoints - lowerPoints) / (higherMin - lowerMax);
+      const interpolatedPoints = lowerPoints + slope * (answerValue - lowerMax);
+      return interpolatedPoints;
+    }
+
+    // If only lowerRange exists (answerValue > all ranges)
+    if (lowerRange && !higherRange) {
+      // Assign the points of the last range
+      return lowerRange.points;
+    }
+
+    // If only higherRange exists (answerValue < all ranges)
+    if (!lowerRange && higherRange) {
+      // Assign the points of the first range
+      return higherRange.points;
+    }
+  }
+
+  // If scoringMethod is 'None' or unrecognized, return 0
+  return 0;
+};

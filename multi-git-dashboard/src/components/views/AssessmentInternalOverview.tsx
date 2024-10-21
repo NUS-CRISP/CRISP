@@ -192,7 +192,7 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
               courseId={courseId}
               assessmentId={assessment?._id}
               questions={questions}
-              userIdToNameMap={userIdToNameMap} // Pass userIdToNameMap
+              userIdToNameMap={userIdToNameMap}
             />
           ))
         )}
