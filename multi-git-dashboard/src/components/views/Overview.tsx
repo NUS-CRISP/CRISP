@@ -5,6 +5,7 @@ import {
   Container,
   Loader,
   ScrollArea,
+  Tabs,
 } from '@mantine/core';
 import { Profile } from '@shared/types/Profile';
 import { Team as SharedTeam } from '@shared/types/Team';
@@ -14,19 +15,22 @@ import { useEffect, useState } from 'react';
 import OverviewAccordionItem from '../overview/OverviewAccordionItem';
 import { useTutorialContext } from '../tutorial/TutorialContext';
 import TutorialPopover from '../tutorial/TutorialPopover';
+import { TeamSet } from '@shared/types/TeamSet';
 
 interface OverviewProps {
   courseId: string;
   dateUtils: DateUtils;
+  teamSets: TeamSet[];
+  onUpdate: () => void;
 }
 
 export interface Team extends Omit<SharedTeam, 'teamData'> {
-  teamData: string; // TeamData not populated
+  teamData: TeamData; // TeamData not populated
 }
 
 export type ProfileGetter = (gitHandle: string) => Promise<Profile>;
 
-const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
+const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils, teamSets, onUpdate, }) => {
   const { curTutorialStage } = useTutorialContext();
 
   const [teams, setTeams] = useState<Team[]>([]);
@@ -35,19 +39,50 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
 
   const [studentMap, setStudentMap] = useState<Record<string, Profile>>({});
 
-  const getTeams = async () => {
-    const res = await fetch(`/api/teams/course/${courseId}`);
-    if (!res.ok) throw new Error('Failed to fetch teams');
-    const teams: Team[] = await res.json();
-    return teams;
+  const [activeTab, setActiveTab] = useState<string | null>(
+    teamSets ? teamSets[0]?.name : null
+  );
+
+  // const getTeams = async () => {
+  //   const res = await fetch(`/api/teams/course/${courseId}`);
+  //   if (!res.ok) throw new Error('Failed to fetch teams');
+  //   const teams: Team[] = await res.json();
+  //   return teams;
+  // };
+
+  // const getTeamDatas = async () => {
+  //   const res = await fetch(`/api/github/course/${courseId}`);
+  //   if (!res.ok) throw new Error('Failed to fetch team data');
+  //   const teamDatas: TeamData[] = await res.json();
+  //   return teamDatas;
+  // };
+
+  const setActiveTabAndSave = (tabName: string) => {
+    onUpdate();
+    setActiveTab(tabName);
+    localStorage.setItem(`activeTeamSetTab_${courseId}`, tabName);
   };
 
-  const getTeamDatas = async () => {
-    const res = await fetch(`/api/github/course/${courseId}`);
-    if (!res.ok) throw new Error('Failed to fetch team data');
-    const teamDatas: TeamData[] = await res.json();
-    return teamDatas;
-  };
+  useEffect(() => {
+    const savedTab = localStorage.getItem(`activeTeamSetTab_${courseId}`);
+    if (savedTab && teamSets.some(teamSet => teamSet.name === savedTab)) {
+      setActiveTab(savedTab);
+    }
+  }, [teamSets]);
+
+  console.log(teamSets);
+
+  const headers = teamSets.map((teamSet, index) => (
+    <Tabs.Tab
+      key={index}
+      value={teamSet.name}
+      onClick={() => {
+        setActiveTabAndSave(teamSet.name);
+      }}
+    >
+      {teamSet.name}
+    </Tabs.Tab>
+  ));
 
   const getStudentNameByGitHandle: ProfileGetter = async gitHandle => {
     if (!studentMap[gitHandle]) {
@@ -59,28 +94,29 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
     return studentMap[gitHandle];
   };
 
-  const data = teamDatas.map(teamData => {
-    const team = teams.find(team => team.teamData === teamData._id);
-    return { team, teamData };
-  });
+  // const data = teamSets.teamDatas.map(teamData => {
+  //   const team = teams.find(team => team.teamData === teamData._id);
+  //   return { team, teamData };
+  // });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setStatus(Status.Loading);
-      try {
-        const fetchedTeams = await getTeams();
-        setTeams(fetchedTeams);
-        const fetchedTeamDatas = await getTeamDatas();
-        setTeamDatas(fetchedTeamDatas);
-        setStatus(Status.Idle);
-      } catch (error) {
-        setStatus(Status.Error);
-        console.error(error);
-      }
-    };
 
-    fetchData();
-  }, [courseId]);
+
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     setStatus(Status.Loading);
+  //     try {
+  //       const fetchedTeams = await getTeams();
+  //       setTeams(fetchedTeams);
+  //       const fetchedTeamDatas = await getTeamDatas();
+  //       setTeamDatas(fetchedTeamDatas);
+  //       setStatus(Status.Idle);
+  //     } catch (error) {
+  //       setStatus(Status.Error);
+  //       console.error(error);
+  //     }
+  //   };
+  //   fetchData();
+  // }, [courseId]);
 
   if (status === Status.Loading)
     return (
@@ -90,30 +126,31 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
         </Container>
       </Center>
     );
-  if (status === Status.Error) return <Center>No data</Center>;
+  if (status === Status.Error) return <Center>No GitHub Data Available</Center>;
   if (!teams.length || !teamDatas.length)
     return <Center>No teams found.</Center>;
 
-  return (
-    <ScrollArea.Autosize mt={20}>
+  const renderOverviewAccordion = (teamSet: TeamSet) => {
+    return (
       <Accordion
-        defaultValue={[teamDatas[0]._id]}
+        defaultValue={teamDatas.length > 0 ? [teamDatas[0]._id] : []}
         multiple
         variant="separated"
         mx={20}
       >
-        {data.map(({ team, teamData }, idx) => (
+        {teamSet.teams.map((team, idx) => (
+          // {data.map(({ team, teamData, teamSet }, idx) => (
           <TutorialPopover
-            key={teamData._id}
+            key={team.teamData._id}
             stage={7}
             position="left"
             disabled={idx !== 0 || curTutorialStage !== 7}
           >
             <OverviewAccordionItem
               index={idx}
-              key={teamData._id}
+              key={team.teamData._id}
               team={team}
-              teamData={teamData}
+              teamData={team.teamData}
               teamDatas={teamDatas}
               dateUtils={dateUtils}
               getStudentNameByGitHandle={getStudentNameByGitHandle}
@@ -121,8 +158,28 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
           </TutorialPopover>
         ))}
       </Accordion>
+    );
+  };
+
+  return (
+    <ScrollArea.Autosize mt={20}>
+      <Tabs value={activeTab} mx={20}>
+        <Tabs.List
+          style={{ display: 'flex', justifyContent: 'space-evenly' }}
+        >
+          {headers}
+        </Tabs.List>
+        {teamSets.map(teamSet => (
+          <Tabs.Panel key={teamSet._id} value={teamSet.name}>
+            {renderOverviewAccordion(teamSet)}
+          </Tabs.Panel>
+
+        ))}
+      </Tabs>
     </ScrollArea.Autosize>
   );
+
+
 };
 
 export default Overview;

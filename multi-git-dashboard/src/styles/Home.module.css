@@ -41,6 +41,7 @@
 }
 
 .content {
+  height: 100%;
   padding-top: calc(var(--mantine-spacing-xl) * 2);
   padding-bottom: calc(var(--mantine-spacing-xl) * 2);
   margin-right: calc(var(--mantine-spacing-xl) * 3);

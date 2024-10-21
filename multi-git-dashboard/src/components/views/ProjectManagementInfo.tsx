@@ -95,7 +95,7 @@ const ProjectManagementInfo: React.FC<ProjectManagementProps> = ({
   return (
     <Container
       style={{
-        height: 'calc(100dvh - 2 * 20px)',
+        height: '100vh',
         display: 'flex',
         flexDirection: 'column',
       }}
