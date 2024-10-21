@@ -27,7 +27,7 @@ const CourseViewPage: React.FC = () => {
   const { id } = router.query as {
     id: string;
   };
-  const projectManagementApiRoute = `/api/courses/${id}/project-management`;
+  const projectManagementApiRoute = `/api/courses/${id}/teamsets`;
   const [teamSets, setTeamSets] = useState<TeamSet[]>([]);
 
   useEffect(() => {
@@ -89,6 +89,12 @@ const CourseViewPage: React.FC = () => {
   const onUpdate = () => {
     fetchTeamSets();
   };
+
+  useEffect(() => {
+    if (router.isReady) {
+      fetchTeamSets();
+    }
+  }, [router.isReady]);
 
   return (
     <Container

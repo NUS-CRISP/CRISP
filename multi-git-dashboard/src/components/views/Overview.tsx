@@ -25,12 +25,12 @@ interface OverviewProps {
 }
 
 export interface Team extends Omit<SharedTeam, 'teamData'> {
-  teamData: string; // TeamData not populated
+  teamData: TeamData; // TeamData not populated
 }
 
 export type ProfileGetter = (gitHandle: string) => Promise<Profile>;
 
-const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils, teamSets, onUpdate,}) => {
+const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils, teamSets, onUpdate, }) => {
   const { curTutorialStage } = useTutorialContext();
 
   const [teams, setTeams] = useState<Team[]>([]);
@@ -43,19 +43,19 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils, teamSets, onUp
     teamSets ? teamSets[0]?.name : null
   );
 
-  const getTeams = async () => {
-    const res = await fetch(`/api/teams/course/${courseId}`);
-    if (!res.ok) throw new Error('Failed to fetch teams');
-    const teams: Team[] = await res.json();
-    return teams;
-  };
+  // const getTeams = async () => {
+  //   const res = await fetch(`/api/teams/course/${courseId}`);
+  //   if (!res.ok) throw new Error('Failed to fetch teams');
+  //   const teams: Team[] = await res.json();
+  //   return teams;
+  // };
 
-  const getTeamDatas = async () => {
-    const res = await fetch(`/api/github/course/${courseId}`);
-    if (!res.ok) throw new Error('Failed to fetch team data');
-    const teamDatas: TeamData[] = await res.json();
-    return teamDatas;
-  };
+  // const getTeamDatas = async () => {
+  //   const res = await fetch(`/api/github/course/${courseId}`);
+  //   if (!res.ok) throw new Error('Failed to fetch team data');
+  //   const teamDatas: TeamData[] = await res.json();
+  //   return teamDatas;
+  // };
 
   const setActiveTabAndSave = (tabName: string) => {
     onUpdate();
@@ -94,28 +94,29 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils, teamSets, onUp
     return studentMap[gitHandle];
   };
 
-  const data = teamDatas.map(teamData => {
-    const team = teams.find(team => team.teamData === teamData._id);
-    return { team, teamData };
-  });
+  // const data = teamSets.teamDatas.map(teamData => {
+  //   const team = teams.find(team => team.teamData === teamData._id);
+  //   return { team, teamData };
+  // });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setStatus(Status.Loading);
-      try {
-        const fetchedTeams = await getTeams();
-        setTeams(fetchedTeams);
-        const fetchedTeamDatas = await getTeamDatas();
-        setTeamDatas(fetchedTeamDatas);
-        setStatus(Status.Idle);
-      } catch (error) {
-        setStatus(Status.Error);
-        console.error(error);
-      }
-    };
 
-    fetchData();
-  }, [courseId]);
+
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     setStatus(Status.Loading);
+  //     try {
+  //       const fetchedTeams = await getTeams();
+  //       setTeams(fetchedTeams);
+  //       const fetchedTeamDatas = await getTeamDatas();
+  //       setTeamDatas(fetchedTeamDatas);
+  //       setStatus(Status.Idle);
+  //     } catch (error) {
+  //       setStatus(Status.Error);
+  //       console.error(error);
+  //     }
+  //   };
+  //   fetchData();
+  // }, [courseId]);
 
   if (status === Status.Loading)
     return (
@@ -137,18 +138,19 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils, teamSets, onUp
         variant="separated"
         mx={20}
       >
-        {data.map(({ team, teamData }, idx) => (
+        {teamSet.teams.map((team, idx) => (
+          // {data.map(({ team, teamData, teamSet }, idx) => (
           <TutorialPopover
-            key={teamData._id}
+            key={team.teamData._id}
             stage={7}
             position="left"
             disabled={idx !== 0 || curTutorialStage !== 7}
           >
             <OverviewAccordionItem
               index={idx}
-              key={teamData._id}
+              key={team.teamData._id}
               team={team}
-              teamData={teamData}
+              teamData={team.teamData}
               teamDatas={teamDatas}
               dateUtils={dateUtils}
               getStudentNameByGitHandle={getStudentNameByGitHandle}
@@ -158,26 +160,26 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils, teamSets, onUp
       </Accordion>
     );
   };
-  
+
   return (
     <ScrollArea.Autosize mt={20}>
       <Tabs value={activeTab} mx={20}>
-      <Tabs.List
-            style={{ display: 'flex', justifyContent: 'space-evenly' }}
-          >
-            {headers}
-          </Tabs.List>
-      {teamSets.map(teamSet => (
-        <Tabs.Panel key={teamSet._id} value={teamSet.name}>
-          {renderOverviewAccordion(teamSet)}
-        </Tabs.Panel>
-        
-      ))}
+        <Tabs.List
+          style={{ display: 'flex', justifyContent: 'space-evenly' }}
+        >
+          {headers}
+        </Tabs.List>
+        {teamSets.map(teamSet => (
+          <Tabs.Panel key={teamSet._id} value={teamSet.name}>
+            {renderOverviewAccordion(teamSet)}
+          </Tabs.Panel>
+
+        ))}
       </Tabs>
     </ScrollArea.Autosize>
   );
-  
-  
+
+
 };
 
 export default Overview;
