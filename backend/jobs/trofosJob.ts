@@ -8,8 +8,8 @@ import {
 } from '@models/JiraData';
 import { JiraBoard, JiraIssue, JiraSprint } from '@shared/types/JiraData';
 import {
-  TROFOS_COURSE_URI,
-  TROFOS_PROJECT_URI,
+  TROFOS_COURSE_PATH,
+  TROFOS_PROJECT_PATH,
   TROFOS_SPRINT_PATH,
 } from '../utils/endpoints';
 
@@ -25,8 +25,9 @@ const fetchAndSaveTrofosData = async () => {
       continue;
     }
 
+    const trofosCourseUri = `${process.env.TROFOS_URI}${TROFOS_COURSE_PATH}`;
     try {
-      const trofosCourseResponse = await fetch(TROFOS_COURSE_URI, {
+      const trofosCourseResponse = await fetch(trofosCourseUri, {
         method: 'GET',
         headers: {
           'x-api-key': apiKey,
@@ -45,8 +46,9 @@ const fetchAndSaveTrofosData = async () => {
       console.error('Error in fetching Trofos course:', error);
     }
 
+    const trofosProjectUri = `${process.env.TROFOS_URI}${TROFOS_PROJECT_PATH}`;
     try {
-      const trofosProjectResponse = await fetch(TROFOS_PROJECT_URI, {
+      const trofosProjectResponse = await fetch(trofosProjectUri, {
         method: 'GET',
         headers: {
           'x-api-key': apiKey,
@@ -81,7 +83,7 @@ const fetchSingleTrofosProject = async (
   trofosProjectId: number,
   apiKey: string
 ) => {
-  const singleTrofosProjectUri = `${TROFOS_PROJECT_URI}/${trofosProjectId}`;
+  const singleTrofosProjectUri = `${process.env.TROFOS_URI}${TROFOS_PROJECT_PATH}/${trofosProjectId}`;
 
   try {
     const singleTrofosProjectResponse = await fetch(singleTrofosProjectUri, {
@@ -145,7 +147,7 @@ const fetchSprintsFromSingleTrofosProject = async (
   trofosProjectId: number,
   apiKey: string
 ) => {
-  const trofosSprintUri = `${TROFOS_PROJECT_URI}/${trofosProjectId}${TROFOS_SPRINT_PATH}`;
+  const trofosSprintUri = `${process.env.TROFOS_URI}${TROFOS_PROJECT_PATH}/${trofosProjectId}${TROFOS_SPRINT_PATH}`;
 
   try {
     const trofosSprintResponse = await fetch(trofosSprintUri, {
@@ -194,7 +196,7 @@ const fetchSprintsFromSingleTrofosProject = async (
           }
         );
 
-        const boardSelfUri = `${TROFOS_PROJECT_URI}/${trofosProjectId}`;
+        const boardSelfUri = `${process.env.TROFOS_URI}${TROFOS_PROJECT_PATH}/${trofosProjectId}`;
         await JiraBoardModel.findOneAndUpdate(
           { self: boardSelfUri },
           { $push: { jiraSprints: sprint._id } },
@@ -222,7 +224,7 @@ const saveBacklogToDatabase = async (trofosSprintData: any) => {
 
     // Iterate through each backlog item in the sprint
     for (const backlog of backlogItems) {
-      const trofosSprintUri = `${TROFOS_PROJECT_URI}/${sprint.project_id}${TROFOS_SPRINT_PATH}/${sprint.id}`;
+      const trofosSprintUri = `${process.env.TROFOS_URI}${TROFOS_PROJECT_PATH}/${sprint.project_id}${TROFOS_SPRINT_PATH}/${sprint.id}`;
 
       const transformedBacklog: Omit<JiraIssue, '_id'> = {
         id: backlog.backlog_id, // Assuming 'backlog_id' is the equivalent of 'id'
@@ -255,7 +257,7 @@ const saveBacklogToDatabase = async (trofosSprintData: any) => {
           }
         );
 
-        const boardSelfUri = `${TROFOS_PROJECT_URI}/${backlog.project_id}`;
+        const boardSelfUri = `${process.env.TROFOS_URI}${TROFOS_PROJECT_PATH}/${backlog.project_id}`;
         await JiraBoardModel.findOneAndUpdate(
           { self: boardSelfUri },
           { $push: { jiraIssues: issue._id } },
