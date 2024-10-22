@@ -12,7 +12,18 @@ import {
   recallInternalAssessment,
   releaseInternalAssessment,
 } from '../controllers/internalAssessmentController';
-import { submitAssessment, getUserSubmissions, getAllSubmissions } from 'controllers/submissionController';
+import {
+  submitAssessment,
+  getUserSubmissions,
+  getAllSubmissions,
+} from '../controllers/submissionController';
+import {
+  createAssignmentSetController,
+  getAssignmentSetController,
+  updateAssignmentSetController,
+  deleteAssignmentSetController,
+  getAssignmentsByTAIdController,
+} from '../controllers/assessmentAssignmentSetController';
 
 const router = express.Router();
 
@@ -30,5 +41,10 @@ router.post('/:assessmentId/recall', recallInternalAssessment);
 router.post('/:assessmentId/submit', submitAssessment);
 router.get('/:assessmentId/submissions', getUserSubmissions);
 router.get('/:assessmentId/all-submissions', getAllSubmissions);
+router.post('/:assessmentId/assignment-sets', createAssignmentSetController);
+router.get('/:assessmentId/assignment-sets', getAssignmentSetController);
+router.patch('/:assessmentId/assignment-sets', updateAssignmentSetController);
+router.delete('/:assessmentId/assignment-sets', deleteAssignmentSetController);
+router.get('/:assessmentId/assignment-sets/tas/:taId', getAssignmentsByTAIdController);
 
 export default router;

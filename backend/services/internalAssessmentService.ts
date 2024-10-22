@@ -24,6 +24,7 @@ import {
   TeamMemberSelectionQuestionModel,
   UndecidedQuestionModel,
 } from '@models/QuestionTypes';
+import { createAssignmentSet } from './assessmentAssignmentSetService';
 
 export const getInternalAssessmentById = async (
   assessmentId: string,
@@ -255,6 +256,15 @@ export const addInternalAssessmentsToCourse = async (
       continue; // Skip if assessment already exists
     }
 
+    const teamSet = await TeamSetModel.findOne({
+      course: courseId,
+      name: teamSetName,
+    }).populate({ path: 'teams', populate: ['members', 'TA'] });
+
+    if (!teamSet) {
+      console.error('Missing TeamSet data');
+    }
+
     const assessment = new InternalAssessmentModel({
       course: courseId,
       assessmentName,
@@ -264,17 +274,18 @@ export const addInternalAssessmentsToCourse = async (
       maxMarks,
       granularity,
       teamSet: null,
-      gradedBy: gradedBy ? new ObjectId(gradedBy) : null,
+      gradedBy: gradedBy ? new mongoose.Types.ObjectId(gradedBy) : null,
       areSubmissionsEditable,
       results: [],
       isReleased: false,
       questions: [],
     });
-    // Add locked questions
+
+    // Locked questions
     const teamMemberSelectionQuestion = new TeamMemberSelectionQuestionModel({
       text: 'Student Selection',
       type: 'Team Member Selection',
-      customInstruction: 'Select team members from your team to evaluate.',
+      customInstruction: 'Select students to evaluate.',
       isLocked: true,
       isRequired: true,
     });
@@ -300,6 +311,7 @@ export const addInternalAssessmentsToCourse = async (
     await teamMemberSelectionQuestion.save();
     await nusnetIdQuestion.save();
     await nusnetEmailQuestion.save();
+
     assessment.questions = [
       teamMemberSelectionQuestion._id,
       nusnetIdQuestion._id,
@@ -307,18 +319,15 @@ export const addInternalAssessmentsToCourse = async (
     ];
 
     await assessment.save();
-    const results: mongoose.Document[] = [];
 
-    const teamSet = await TeamSetModel.findOne({
-      course: courseId,
-      name: teamSetName,
-    }).populate({ path: 'teams', populate: ['members', 'TA'] });
+    const results: mongoose.Document[] = [];
 
     if (granularity === 'team') {
       if (!teamSet) {
         continue;
       }
       assessment.teamSet = teamSet._id;
+
       teamSet.teams.forEach((team: any) => {
         const initialMarks = team.members.map((member: any) => ({
           user: member.identifier,
@@ -328,7 +337,7 @@ export const addInternalAssessmentsToCourse = async (
         const result = new ResultModel({
           assessment: assessment._id,
           team: team._id,
-          marker: team.TA?._id,
+          marker: team.TA ? team.TA._id : null,
           marks: initialMarks,
         });
         results.push(result);
@@ -341,10 +350,10 @@ export const addInternalAssessmentsToCourse = async (
           const team = teams.find((t) =>
             t?.members?.some((member) => member._id.equals(student._id))
           );
-          const marker = team?.TA?._id || null;
+          const marker = team?.TA ? team.TA._id : null;
           const result = new ResultModel({
             assessment: assessment._id,
-            team: team?._id,
+            team: team ? team._id : null,
             marker,
             marks: [{ user: student.identifier, name: student.name, mark: 0 }],
           });
@@ -373,6 +382,12 @@ export const addInternalAssessmentsToCourse = async (
     course.internalAssessments.push(assessment._id);
     newAssessments.push(assessment);
     await Promise.all(results.map((result) => result.save()));
+
+    try {
+      await createAssignmentSet(assessment._id.toString(), teamSet!._id.toString()); // Null checked at the start
+    } catch (error) {
+      console.error(`Failed to create AssessmentAssignmentSet for assessment ${assessment._id}:`, error);
+    }
   }
 
   if (newAssessments.length === 0) {
@@ -382,6 +397,7 @@ export const addInternalAssessmentsToCourse = async (
   await course.save();
   await Promise.all(newAssessments.map((assessment) => assessment.save()));
 };
+
 
 /*--------------------------Questions---------------------------------------------*/
 // Add a question to an internal assessment
