@@ -27,7 +27,7 @@ const CourseViewPage: React.FC = () => {
   const { id } = router.query as {
     id: string;
   };
-  const projectManagementApiRoute = `/api/courses/${id}/teamsets`;
+  const teamReviewApiRoute = `/api/courses/${id}/teamsets `;
   const [teamSets, setTeamSets] = useState<TeamSet[]>([]);
 
   useEffect(() => {
@@ -74,7 +74,7 @@ const CourseViewPage: React.FC = () => {
 
   const fetchTeamSets = async () => {
     try {
-      const response = await fetch(projectManagementApiRoute);
+      const response = await fetch(teamReviewApiRoute);
       if (!response.ok) {
         console.error('Error fetching Team Sets:', response.statusText);
         return;

@@ -41,7 +41,7 @@ export const OverviewCard: React.FC<OverviewProps> = ({
           minRange={1}
           onChange={setSelectedWeekRange}
           label={value => `Week ${value + 1}`}
-          marks={Array.from({ length: totalWeeks }, (_, i) => ({
+          marks={Array.from({ length: 13 }, (_, i) => ({
             value: i,
             label: `Week ${i + 1}`,
           }))}

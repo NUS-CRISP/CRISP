@@ -31,27 +31,15 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
         commits: teamData.commits,
         issues: teamData.issues,
         pullRequests: teamData.pullRequests,
-        weeklyCommits: teamData.weeklyCommits.length,
-      }))
-      .sort((a, b) => a.teamName.localeCompare(b.teamName));
+        // weeklyCommits: teamData.weeklyCommits.length,
+      }));
 
     const availableMetrics = [
       { value: 'commits', label: 'Commits' },
       { value: 'issues', label: 'Issues' },
       { value: 'pullRequests', label: 'Pull Requests' },
-      { value: 'weeklyCommits', label: 'Weekly Commits' },
+      // { value: 'weeklyCommits', label: 'Weekly Commits' },
     ];
-
-    const chartData = data.map(team => ({
-      teamName: team.teamName,
-      ...selectedMetrics.reduce(
-        (acc, metric) => ({
-          ...acc,
-          [metric]: team[metric as keyof typeof team],
-        }),
-        {}
-      ),
-    }));
 
     const filterAndSortData = () => {
       let sortedData = [...data];
@@ -70,30 +58,23 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
 
           return (metricB as number) - (metricA as number);
         });
-      } else if (sortType === 'top') {
-        sortedData.sort((a, b) => {
-          const metricA = a[singleMetric as keyof typeof a];
-          const metricB = b[singleMetric as keyof typeof b];
-
-          return (metricB as number) - (metricA as number);
-        });
-        sortedData = sortedData.slice(0, 5);
-      } else if (sortType === 'lowest') {
-        sortedData.sort((a, b) => {
-          const metricA = a[singleMetric as keyof typeof a];
-          const metricB = b[singleMetric as keyof typeof b];
-
-          return (metricA as number) - (metricB as number);
-        });
-        sortedData = sortedData.slice(0, 5);
       }
 
       return sortedData;
     };
 
-    const filteredData = filterAndSortData().map(team => ({
+    // Use filtered data after sorting
+    const sortedData = filterAndSortData();
+
+    const chartData = sortedData.map(team => ({
       teamName: team.teamName,
-      [singleMetric]: team[singleMetric as keyof typeof team],
+      ...selectedMetrics.reduce(
+        (acc, metric) => ({
+          ...acc,
+          [metric]: team[metric as keyof typeof team],
+        }),
+        {}
+      ),
     }));
 
     const series = selectedMetrics.map((metric, index) => ({
@@ -101,15 +82,7 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
       color: ['violet.6', 'blue.6', 'teal.6', 'orange.6'][index % 4],
     }));
 
-    const singleMetricSeries = [
-      {
-        name: singleMetric.charAt(0) + singleMetric.slice(1),
-        dataKey: singleMetric,
-        color: 'blue.6',
-      },
-    ];
-
-    const renderFirstChart = () => {
+    const renderChart = () => {
       if (chartType === 'BarChart') {
         return (
           <BarChart
@@ -137,12 +110,12 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
 
     return (
       <div>
-        {/* First Chart */}
-        <Card withBorder ref={ref} style={{ marginBottom: '20px' }}>
+        {/* First Chart with Sorting */}
+        <Card withBorder ref={ref} style={{ marginTop:'10px', marginBottom: '10px' }}>
           <Stack>
-            <Center>
-              <Title order={5}>Composed Charts</Title>
-            </Center>
+            {/* <Center>
+              <Title order={5}>Composed Charts with Sorting</Title>
+            </Center> */}
 
             <Select
               label="Chart Type"
@@ -165,20 +138,9 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
               data={availableMetrics}
             />
 
-            {renderFirstChart()}
-          </Stack>
-        </Card>
-
-        {/* Second Chart */}
-        <Card withBorder ref={ref} style={{ marginBottom: '16px' }}>
-          <Stack>
-            <Center>
-              <Title order={5}>Top/Lowest/Sorted Chart</Title>
-            </Center>
-            
             <Select
-              label="Single Metric"
-              placeholder="Select a metric to display"
+              label="Single Metric for Sorting"
+              placeholder="Select a metric"
               value={singleMetric}
               onChange={(value: string | null) => {
                 if (value) setSingleMetric(value);
@@ -187,28 +149,20 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
             />
 
             <Select
-              label="Sorting Option"
-              placeholder="Select sorting/filtering method"
+              label="Sort By"
+              placeholder="Select sorting option"
               value={sortType}
               onChange={(value: string | null) => {
                 if (value) setSortType(value);
               }}
               data={[
-                { value: 'all', label: 'All Teams' },
+                { value: 'all', label: 'No Sorting' },
                 { value: 'ascending', label: 'Ascending Order' },
                 { value: 'descending', label: 'Descending Order' },
-                { value: 'top', label: 'Top 5 Teams' },
-                { value: 'lowest', label: 'Lowest 5 Teams' },
               ]}
             />
 
-            <BarChart
-              h={400}
-              data={filteredData}
-              dataKey="teamName"
-              series={singleMetricSeries}
-              tickLine="xy"
-            />
+            {renderChart()}
           </Stack>
         </Card>
       </div>

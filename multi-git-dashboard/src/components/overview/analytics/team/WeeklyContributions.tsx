@@ -13,15 +13,24 @@ import { AnalyticsProps } from '../Analytics';
 interface WeeklyContributionsProps extends Omit<AnalyticsProps, 'team'> {}
 
 const convertChartData = (data: number[][]) => {
-  return data.map(item => ({
-    weekStarting: new Date(item[0] * 1000).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    }),
-    additions: item[1],
-    deletions: Math.abs(item[2]), // Convert deletions to positive numbers for visualization
-  }));
+  const startDate = new Date(data[0][0] * 1000);
+  const endDate = new Date(startDate);
+  endDate.setMonth(startDate.getMonth() + 3.5);
+
+  return data
+    .filter(item => {
+      const itemDate = new Date(item[0] * 1000);
+      return itemDate >= startDate && itemDate <= endDate;
+    })
+    .map(item => ({
+      weekStarting: new Date(item[0] * 1000).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      }),
+      additions: item[1],
+      deletions: Math.abs(item[2]),
+    }));
 };
 
 const WeeklyContributions: React.FC<WeeklyContributionsProps> = ({
