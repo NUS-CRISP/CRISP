@@ -49,8 +49,8 @@ const WeeklyContributions: React.FC<WeeklyContributionsProps> = ({
         <YAxis />
         <Tooltip />
         <Legend />
-        <Line type="monotone" dataKey="additions" stroke="#8884d8" />
-        <Line type="monotone" dataKey="deletions" stroke="#82ca9d" />
+        <Line type="monotone" dataKey="additions" stroke="#00cc00" />
+        <Line type="monotone" dataKey="deletions" stroke="#ff5c33" />
       </LineChart>
     </ResponsiveContainer>
   );

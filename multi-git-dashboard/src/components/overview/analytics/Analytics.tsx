@@ -7,6 +7,7 @@ import { forwardRef, useState } from 'react';
 import IndividualAnalytics from './individual/IndividualAnalytics';
 import OverallActivity from './team/OverallActivity';
 import WeeklyContributions from './team/WeeklyContributions';
+import TeamIssuesTracker from './team/TeamIssuesTracker';
 
 export interface AnalyticsProps {
   team: Team;
@@ -24,6 +25,7 @@ const Analytics = forwardRef<HTMLDivElement, AnalyticsProps>(
     const charts = {
       Breakdown: OverallActivity,
       'Weekly Activity': WeeklyContributions,
+      'Issues Tracker': TeamIssuesTracker,
       'Individual Activity': IndividualAnalytics,
     };
 
