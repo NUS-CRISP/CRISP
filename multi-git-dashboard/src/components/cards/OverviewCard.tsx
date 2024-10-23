@@ -15,7 +15,6 @@ export interface OverviewProps {
   teamDatas: TeamData[];
   dateUtils: DateUtils;
   profileGetter: ProfileGetter;
-  user: User;
 }
 
 export const OverviewCard: React.FC<OverviewProps> = ({
@@ -25,7 +24,6 @@ export const OverviewCard: React.FC<OverviewProps> = ({
   teamDatas,
   dateUtils,
   profileGetter,
-  user,
 }) => {
   const { getCurrentWeek } = dateUtils;
   const totalWeeks = getCurrentWeek();
@@ -79,7 +77,6 @@ export const OverviewCard: React.FC<OverviewProps> = ({
           teamDatas={teamDatas}
           selectedWeekRange={selectedWeekRange}
           dateUtils={dateUtils}
-          user={user}
         />
       </TutorialPopover>
       <TutorialPopover stage={9} position="top" disabled={index !== 0}>

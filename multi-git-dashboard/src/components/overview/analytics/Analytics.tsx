@@ -16,12 +16,11 @@ export interface AnalyticsProps {
   teamDatas: TeamData[];
   selectedWeekRange: [number, number];
   dateUtils: DateUtils;
-  user: User;
 }
 
 // TODO: Migrate Recharts -> Mantine Charts
 const Analytics = forwardRef<HTMLDivElement, AnalyticsProps>(
-  ({ team, teamData, teamDatas, selectedWeekRange, dateUtils, user }, ref) => {
+  ({ team, teamData, teamDatas, selectedWeekRange, dateUtils }, ref) => {
     const [embla, setEmbla] = useState<Embla | null>(null);
 
     const charts = {
@@ -43,7 +42,6 @@ const Analytics = forwardRef<HTMLDivElement, AnalyticsProps>(
             teamDatas={teamDatas}
             selectedWeekRange={selectedWeekRange}
             dateUtils={dateUtils}
-            user={user}
           />
         </Stack>
       </Carousel.Slide>
