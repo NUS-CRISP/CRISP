@@ -51,7 +51,7 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
     ];
 
     const filterAndSortData = () => {
-      let sortedData = [...data];
+      const sortedData = [...data];
 
       if (sortType === 'ascending') {
         sortedData.sort((a, b) => {

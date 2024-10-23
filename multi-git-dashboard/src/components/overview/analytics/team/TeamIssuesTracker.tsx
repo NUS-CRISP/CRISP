@@ -3,7 +3,7 @@ import { Center } from '@mantine/core';
 import dayjs from 'dayjs';
 import { useEffect } from 'react';
 import { AnalyticsProps } from '../Analytics';
-import { Tooltip } from 'recharts';
+// import { Tooltip } from 'recharts';
 
 interface TeamIssuesTrackerProps extends AnalyticsProps {}
 
@@ -50,7 +50,7 @@ const TeamIssuesTracker: React.FC<TeamIssuesTrackerProps> = ({
     return milestonesData;
   };
 
-  let data = filterDataByWeekRange();
+  const data = filterDataByWeekRange();
 
   useEffect(() => {
     const startTime = Date.now();
@@ -98,15 +98,15 @@ const TeamIssuesTracker: React.FC<TeamIssuesTrackerProps> = ({
                         }
 
                         const createdAt = payload?.createdAt
-                            ? dayjs(payload.createdAt).format('YYYY-MM-DD HH:mm')  
-                            : 'Unknown date';  
+                            ? dayjs(payload.createdAt).format('YYYY-MM-DD HH:mm')
+                            : 'Unknown date';
 
                         return [
                             `${name}: ${_value}`,
                             `Created at: ${createdAt}`,
                         ];
                     }}
-                    separator=" - " 
+                    separator=" - "
                 /> */}
       </BarChart>
     </div>

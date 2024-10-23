@@ -143,7 +143,7 @@ const Overview: React.FC<OverviewProps> = ({
   //   return { team, teamData };
   // });
 
-  const renderOverviewAccordion = (teamSet: TeamSet) => {
+  const renderOverviewAccordion = () => {
     return (
       <Accordion
         defaultValue={teamDatas.length > 0 ? [teamDatas[0]._id] : []}
@@ -187,7 +187,7 @@ const Overview: React.FC<OverviewProps> = ({
         </Tabs.List>
         {teamSets.map(teamSet => (
           <Tabs.Panel key={teamSet._id} value={teamSet.name}>
-            {renderOverviewAccordion(teamSet)}
+            {renderOverviewAccordion()}
           </Tabs.Panel>
         ))}
       </Tabs>
