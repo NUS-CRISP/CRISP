@@ -19,7 +19,6 @@ const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
   teamData,
   selectedWeekRange,
   dateUtils,
-  user,
 }) => {
   const { weekToDate, getEndOfWeek } = dateUtils;
   const gitHandleToNameMap = new Map(
@@ -83,7 +82,7 @@ const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
   };
 
   let data = filterDataByWeekRange();
-  console.log('users', user);
+  // console.log('users', user);
   console.log('teamDatas', teamData);
 
   // filter only if gitHandle is populated
