@@ -24,7 +24,7 @@ const Analytics = forwardRef<HTMLDivElement, AnalyticsProps>(
 
     const charts = {
       Breakdown: OverallActivity,
-      'Weekly Activity': WeeklyContributions,
+      'Weekly Addition Deletion': WeeklyContributions,
       'Issues Tracker': TeamIssuesTracker,
       'Individual Activity': IndividualAnalytics,
     };
