@@ -1,4 +1,4 @@
-import Overview from '@/components/views/Overview';
+import ClassReview from '@/components/views/ClassReview';
 import {
   DateUtils,
   getCurrentWeekGenerator,
@@ -11,7 +11,6 @@ import { Course } from '@shared/types/Course';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
-import { TeamSet } from '@shared/types/TeamSet';
 
 const CourseViewPage: React.FC = () => {
   const router = useRouter();
@@ -23,12 +22,6 @@ const CourseViewPage: React.FC = () => {
 
   const [course, setCourse] = useState<Course>();
   const [dateUtils, setDateUtils] = useState<DateUtils>();
-
-  const { id } = router.query as {
-    id: string;
-  };
-  const teamReviewApiRoute = `/api/courses/${id}/teamsets `;
-  const [teamSets, setTeamSets] = useState<TeamSet[]>([]);
 
   useEffect(() => {
     if (isNewCourse) {
@@ -72,45 +65,16 @@ const CourseViewPage: React.FC = () => {
     }
   }, [courseId, fetchCourse]);
 
-  const fetchTeamSets = async () => {
-    try {
-      const response = await fetch(teamReviewApiRoute);
-      if (!response.ok) {
-        console.error('Error fetching Team Sets:', response.statusText);
-        return;
-      }
-      const data = await response.json();
-      setTeamSets(data);
-    } catch (error) {
-      console.error('Error fetching Team Sets:', error);
-    }
-  };
-
-  const onUpdate = () => {
-    fetchTeamSets();
-  };
-
-  useEffect(() => {
-    if (router.isReady) {
-      fetchTeamSets();
-    }
-  }, [router.isReady]);
-
   return (
     <Container
       style={{
-        height: 'calc(100dvh - 20px)',
+        height: '100vh',
         display: 'flex',
         flexDirection: 'column',
       }}
     >
       {course && dateUtils ? (
-        <Overview
-          courseId={courseId}
-          dateUtils={dateUtils}
-          teamSets={teamSets}
-          onUpdate={onUpdate}
-        />
+        <ClassReview courseId={courseId} dateUtils={dateUtils} />
       ) : (
         <Text>Course not available</Text>
       )}
