@@ -1,7 +1,7 @@
 import { DateUtils } from '@/lib/utils';
 import { RangeSlider, Stack } from '@mantine/core';
 import { TeamData } from '@shared/types/TeamData';
-import { User } from '@shared/types/User';
+// import { User } from '@shared/types/User';
 import { useState } from 'react';
 import Analytics from '../overview/analytics/Analytics';
 import PR from '../overview/pr/PR';

@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import { AnalyticsProps } from '../Analytics';
 // import { Tooltip } from 'recharts';
 
-interface TeamIssuesTrackerProps extends AnalyticsProps {}
+interface TeamIssuesTrackerProps extends AnalyticsProps { }
 
 interface TeamIssuesTrackersData {
   milestoneTitle: string;
