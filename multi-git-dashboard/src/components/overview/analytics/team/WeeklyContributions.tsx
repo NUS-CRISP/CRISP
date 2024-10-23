@@ -13,10 +13,13 @@ import {
 import { AnalyticsProps } from '../Analytics';
 
 interface WeeklyContributionsProps extends Omit<AnalyticsProps, 'team'> {
-  selectedWeekRange: [number, number]; // Add this prop to handle week range
+  selectedWeekRange: [number, number];
 }
 
-const convertChartData = (data: number[][], selectedWeekRange: [number, number]) => {
+const convertChartData = (
+  data: number[][],
+  selectedWeekRange: [number, number]
+) => {
   const startDate = new Date(data[0][0] * 1000);
   const endDate = new Date(startDate);
   endDate.setMonth(startDate.getMonth() + 3.5);
@@ -26,7 +29,10 @@ const convertChartData = (data: number[][], selectedWeekRange: [number, number])
       const itemDate = new Date(item[0] * 1000);
       return itemDate >= startDate && itemDate <= endDate;
     })
-    .filter((_, index) => index >= selectedWeekRange[0] && index <= selectedWeekRange[1]) // Filter by selected week range
+    .filter(
+      (_, index) =>
+        index >= selectedWeekRange[0] && index <= selectedWeekRange[1]
+    ) // Filter by selected week range
     .map(item => ({
       weekStarting: new Date(item[0] * 1000).toLocaleDateString('en-US', {
         year: 'numeric',
@@ -34,34 +40,34 @@ const convertChartData = (data: number[][], selectedWeekRange: [number, number])
         day: 'numeric',
       }),
       additions: item[1],
-      deletions: -Math.abs(item[2]), // Make deletions negative
+      deletions: -Math.abs(item[2]), // Negative for deletions
     }));
 };
 
 const WeeklyContributions: React.FC<WeeklyContributionsProps> = ({
   teamData,
-  selectedWeekRange, // Use the selected week range prop
+  selectedWeekRange,
 }) => {
-  const formattedData = convertChartData(teamData.weeklyCommits, selectedWeekRange);
+  const formattedData = convertChartData(
+    teamData.weeklyCommits,
+    selectedWeekRange
+  );
 
   return (
-<ResponsiveContainer width="100%" height={400}>
+    <ResponsiveContainer width="100%" height={400}>
       <AreaChart
         data={formattedData}
-        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+        margin={{ top: 5, right: 40, left: 20, bottom: 5 }}
       >
         <defs>
-          {/* Gradient for Additions */}
           <linearGradient id="colorAdditions" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#31a147" stopOpacity={0.8}/>
-            <stop offset="95%" stopColor="#31a147" stopOpacity={0.1}/>
+            <stop offset="5%" stopColor="#31a147" stopOpacity={0.8} />
+            <stop offset="95%" stopColor="#31a147" stopOpacity={0.1} />
           </linearGradient>
 
-          {/* Gradient for Deletions */}
           <linearGradient id="colorDeletions" x1="0" y1="0" x2="0" y2="1">
-            
-            <stop offset="5%" stopColor="#df0d23" stopOpacity={0.1}/>
-            <stop offset="95%" stopColor="#df0d23" stopOpacity={0.8}/>
+            <stop offset="5%" stopColor="#df0d23" stopOpacity={0.1} />
+            <stop offset="95%" stopColor="#df0d23" stopOpacity={0.8} />
           </linearGradient>
         </defs>
 
@@ -71,7 +77,6 @@ const WeeklyContributions: React.FC<WeeklyContributionsProps> = ({
         <Tooltip />
         <Legend />
 
-        {/* Area for additions */}
         <Area
           type="monotone"
           dataKey="additions"
@@ -79,8 +84,6 @@ const WeeklyContributions: React.FC<WeeklyContributionsProps> = ({
           fillOpacity={1}
           fill="url(#colorAdditions)"
         />
-        
-        {/* Area for deletions, which are negative */}
         <Area
           type="monotone"
           dataKey="deletions"

@@ -28,11 +28,14 @@ export interface Team extends Omit<SharedTeam, 'teamData'> {
   teamData: string; // TeamData not populated
 }
 
-
-
 export type ProfileGetter = (gitHandle: string) => Promise<Profile>;
 
-const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils, teamSets, onUpdate, }) => {
+const Overview: React.FC<OverviewProps> = ({
+  courseId,
+  dateUtils,
+  teamSets,
+  onUpdate,
+}) => {
   const { curTutorialStage } = useTutorialContext();
 
   const [teams, setTeams] = useState<Team[]>([]);
@@ -45,14 +48,12 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils, teamSets, onUp
     teamSets ? teamSets[0]?.name : null
   );
 
-
   const getTeams = async () => {
     const res = await fetch(`/api/teams/course/${courseId}`);
     if (!res.ok) throw new Error('Failed to fetch teams');
     const teams: Team[] = await res.json();
     return teams;
   };
-  
 
   const getTeamDatas = async () => {
     const res = await fetch(`/api/github/course/${courseId}`);
@@ -65,20 +66,15 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils, teamSets, onUp
     onUpdate();
     setActiveTab(tabName);
     localStorage.setItem(`activeTeamSetTab_${courseId}`, tabName);
-  
   };
-  
 
   useEffect(() => {
     const savedTab = localStorage.getItem(`activeTeamSetTab_${courseId}`);
     if (savedTab && teamSets.some(teamSet => teamSet.name === savedTab)) {
       setActiveTab(savedTab);
     }
-    
   }, [teamSets]);
 
-  
-  
   const headers = teamSets.map((teamSet, index) => (
     <Tabs.Tab
       key={index}
@@ -90,7 +86,6 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils, teamSets, onUp
       {teamSet.name}
     </Tabs.Tab>
   ));
- 
 
   const getStudentNameByGitHandle: ProfileGetter = async gitHandle => {
     if (!studentMap[gitHandle]) {
@@ -101,21 +96,17 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils, teamSets, onUp
     }
     return studentMap[gitHandle];
   };
-  
 
   // const data = teamSets.teamDatas.map(teamData => {
   //   const team = teams.find(team => team.teamData === teamData._id);
   //   return { team, teamData };
   // });
 
-
-
   const data = teamDatas.map(teamData => {
     const team = teams.find(team => team.teamData === teamData._id);
     return { team, teamData };
   });
-  
-  
+
   useEffect(() => {
     const fetchData = async () => {
       setStatus(Status.Loading);
@@ -146,7 +137,7 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils, teamSets, onUp
     return <Center>No teams found.</Center>;
 
   console.log(teamSets);
-  
+
   // const data = teamSets[0].teams.map(teamData => {
   //   const team = teams.find(team => team.teamData === teamData._id);
   //   return { team, teamData };
@@ -160,9 +151,7 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils, teamSets, onUp
         variant="separated"
         mx={20}
       >
-     
-
-     {data.map(({ team, teamData }, idx) => (
+        {data.map(({ team, teamData }, idx) => (
           <TutorialPopover
             key={teamData._id}
             stage={7}
@@ -184,12 +173,15 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils, teamSets, onUp
     );
   };
 
-
   return (
     <ScrollArea.Autosize mt={20}>
       <Tabs value={activeTab} mx={20}>
         <Tabs.List
-          style={{ display: 'flex', justifyContent: 'space-evenly', marginBottom: '20px' }}
+          style={{
+            display: 'flex',
+            justifyContent: 'space-evenly',
+            marginBottom: '20px',
+          }}
         >
           {headers}
         </Tabs.List>
@@ -197,13 +189,10 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils, teamSets, onUp
           <Tabs.Panel key={teamSet._id} value={teamSet.name}>
             {renderOverviewAccordion(teamSet)}
           </Tabs.Panel>
-
         ))}
       </Tabs>
     </ScrollArea.Autosize>
   );
-
-
 };
 
 export default Overview;

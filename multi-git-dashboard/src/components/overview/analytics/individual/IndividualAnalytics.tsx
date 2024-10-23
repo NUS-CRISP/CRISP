@@ -4,7 +4,7 @@ import dayjs from 'dayjs';
 import { useEffect } from 'react';
 import { AnalyticsProps } from '../Analytics';
 
-interface IndividualAnalyticsProps extends AnalyticsProps { }
+interface IndividualAnalyticsProps extends AnalyticsProps {}
 
 interface IndividualAnalyticsData {
   name: string;
@@ -19,6 +19,7 @@ const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
   teamData,
   selectedWeekRange,
   dateUtils,
+  user,
 }) => {
   const { weekToDate, getEndOfWeek } = dateUtils;
   const gitHandleToNameMap = new Map(
@@ -82,6 +83,8 @@ const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
   };
 
   let data = filterDataByWeekRange();
+  console.log('users', user);
+  console.log('teamDatas', teamData);
 
   // filter only if gitHandle is populated
   if (team.members.every(member => member.gitHandle !== '')) {
@@ -111,31 +114,29 @@ const IndividualAnalytics: React.FC<IndividualAnalyticsProps> = ({
     <Center>No data available.</Center>
   ) : (
     <div style={{ width: '100%' }}>
-    <BarChart
-      h={400}
-      w={'90%'}
-      ml={20}
-      mt={20}
-
-      xAxisProps={{
-        tickFormatter: (_value, index) => data[index].gitHandle,
-        angle: -30,
-        interval: 0,
-        tickLine: true, 
-      }}
-      data={data}
-      dataKey="name"
-      withLegend
-      legendProps={{ verticalAlign: 'bottom' }}
-      tooltipAnimationDuration={200}
-      series={[
-        { name: 'Pull Requests', color: 'red' },
-        { name: 'Code Reviews', color: 'green' },
-        { name: 'Comments', color: 'blue' },
-      ]}
-    />
-  </div>
-  
+      <BarChart
+        h={400}
+        w={'93%'}
+        ml={20}
+        mt={20}
+        xAxisProps={{
+          tickFormatter: (_value, index) => data[index].gitHandle,
+          angle: -30,
+          interval: 0,
+          tickLine: true,
+        }}
+        data={data}
+        dataKey="name"
+        withLegend
+        legendProps={{ verticalAlign: 'bottom' }}
+        tooltipAnimationDuration={200}
+        series={[
+          { name: 'Pull Requests', color: 'red' },
+          { name: 'Code Reviews', color: 'green' },
+          { name: 'Comments', color: 'blue' },
+        ]}
+      />
+    </div>
   );
 };
 

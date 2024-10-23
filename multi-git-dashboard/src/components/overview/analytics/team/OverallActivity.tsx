@@ -81,7 +81,7 @@ const OverallActivity: React.FC<OverallActivityProps> = ({
   }, [teamDatas]);
 
   return (
-    <>
+    <div>
       <ResponsiveContainer width="100%" height={400}>
         <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
           <PolarGrid />
@@ -105,7 +105,7 @@ const OverallActivity: React.FC<OverallActivityProps> = ({
           <Tooltip />
         </RadarChart>
       </ResponsiveContainer>
-    </>
+    </div>
   );
 };
 

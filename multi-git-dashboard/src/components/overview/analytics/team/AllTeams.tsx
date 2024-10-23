@@ -1,5 +1,15 @@
 import { useState, forwardRef } from 'react';
-import { Card, Stack, Select, MultiSelect, Group, Center, Title, Popover, Button } from '@mantine/core';
+import {
+  Card,
+  Stack,
+  Select,
+  MultiSelect,
+  Group,
+  Center,
+  Title,
+  Popover,
+  Button,
+} from '@mantine/core';
 import { AreaChart, BarChart } from '@mantine/charts';
 import { TeamData } from '@shared/types/TeamData';
 
@@ -12,13 +22,13 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
     const [chartType, setChartType] = useState<string>('AreaChart');
     const [selectedMetrics, setSelectedMetrics] = useState<string[]>([
       'issues',
-      'pullRequests',
     ]);
     const [singleMetric, setSingleMetric] = useState<string>('issues');
     const [sortType, setSortType] = useState<string>('all');
 
-    const uniqueTeamData = teamDatas.filter((team, index, self) =>
-      index === self.findIndex(t => t.repoName === team.repoName)
+    const uniqueTeamData = teamDatas.filter(
+      (team, index, self) =>
+        index === self.findIndex(t => t.repoName === team.repoName)
     );
 
     const [selectedTeams, setSelectedTeams] = useState<string[]>(
@@ -117,7 +127,11 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
 
     return (
       <div>
-        <Card withBorder ref={ref} style={{ marginTop: '10px', marginBottom: '10px' }}>
+        <Card
+          withBorder
+          ref={ref}
+          style={{ marginTop: '10px', marginBottom: '10px' }}
+        >
           <Stack>
             <Center>
               <Title order={5}>All Teams Overview</Title>
@@ -126,7 +140,9 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
             <Group justify="center">
               <Popover width={900} position="bottom" withArrow shadow="md">
                 <Popover.Target>
-                  <Button style={{ width: '250px' }}>Select team(s) to display</Button>
+                  <Button style={{ width: '250px' }}>
+                    Select team(s) to display
+                  </Button>
                 </Popover.Target>
                 <Popover.Dropdown>
                   <MultiSelect
@@ -138,7 +154,7 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
                     withScrollArea={true}
                     searchable
                     clearable
-                    maxDropdownHeight={200} 
+                    maxDropdownHeight={200}
                     styles={{
                       input: { minHeight: '36px' },
                     }}

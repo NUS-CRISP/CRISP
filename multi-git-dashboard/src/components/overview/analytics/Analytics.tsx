@@ -3,6 +3,7 @@ import { DateUtils, getTutorialHighlightColor } from '@/lib/utils';
 import { Carousel, Embla } from '@mantine/carousel';
 import { Card, Center, Stack, Title } from '@mantine/core';
 import { TeamData } from '@shared/types/TeamData';
+import { User } from '@shared/types/User';
 import { forwardRef, useState } from 'react';
 import IndividualAnalytics from './individual/IndividualAnalytics';
 import OverallActivity from './team/OverallActivity';
@@ -15,11 +16,12 @@ export interface AnalyticsProps {
   teamDatas: TeamData[];
   selectedWeekRange: [number, number];
   dateUtils: DateUtils;
+  user: User;
 }
 
 // TODO: Migrate Recharts -> Mantine Charts
 const Analytics = forwardRef<HTMLDivElement, AnalyticsProps>(
-  ({ team, teamData, teamDatas, selectedWeekRange, dateUtils }, ref) => {
+  ({ team, teamData, teamDatas, selectedWeekRange, dateUtils, user }, ref) => {
     const [embla, setEmbla] = useState<Embla | null>(null);
 
     const charts = {
@@ -41,6 +43,7 @@ const Analytics = forwardRef<HTMLDivElement, AnalyticsProps>(
             teamDatas={teamDatas}
             selectedWeekRange={selectedWeekRange}
             dateUtils={dateUtils}
+            user={user}
           />
         </Stack>
       </Carousel.Slide>

@@ -105,7 +105,12 @@ const CourseViewPage: React.FC = () => {
       }}
     >
       {course && dateUtils ? (
-        <Overview courseId={courseId} dateUtils={dateUtils} teamSets={teamSets} onUpdate={onUpdate}/>
+        <Overview
+          courseId={courseId}
+          dateUtils={dateUtils}
+          teamSets={teamSets}
+          onUpdate={onUpdate}
+        />
       ) : (
         <Text>Course not available</Text>
       )}
