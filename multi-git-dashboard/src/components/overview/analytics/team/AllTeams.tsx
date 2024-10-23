@@ -1,5 +1,5 @@
 import { useState, forwardRef } from 'react';
-import { Card, Stack, Title, Center, Select, MultiSelect } from '@mantine/core';
+import { Card, Stack, Select, MultiSelect, Group, Center, Title, Popover, Button } from '@mantine/core';
 import { AreaChart, BarChart } from '@mantine/charts';
 import { TeamData } from '@shared/types/TeamData';
 
@@ -9,36 +9,35 @@ interface AllTeamsProps {
 
 const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
   ({ teamDatas }, ref) => {
-    const [chartType, setChartType] = useState<string>('BarChart');
+    const [chartType, setChartType] = useState<string>('AreaChart');
     const [selectedMetrics, setSelectedMetrics] = useState<string[]>([
-      'commits',
       'issues',
+      'pullRequests',
     ]);
-    const [singleMetric, setSingleMetric] = useState<string>('commits');
+    const [singleMetric, setSingleMetric] = useState<string>('issues');
     const [sortType, setSortType] = useState<string>('all');
 
-    const uniqueTeams = new Set<string>();
-    const data = teamDatas
-      .filter(teamData => {
-        if (uniqueTeams.has(teamData.repoName)) {
-          return false;
-        }
-        uniqueTeams.add(teamData.repoName);
-        return true;
-      })
+    const uniqueTeamData = teamDatas.filter((team, index, self) =>
+      index === self.findIndex(t => t.repoName === team.repoName)
+    );
+
+    const [selectedTeams, setSelectedTeams] = useState<string[]>(
+      uniqueTeamData.map(team => team.repoName)
+    );
+
+    const data = uniqueTeamData
+      .filter(teamData => selectedTeams.includes(teamData.repoName))
       .map(teamData => ({
         teamName: teamData.repoName,
         commits: teamData.commits,
         issues: teamData.issues,
         pullRequests: teamData.pullRequests,
-        // weeklyCommits: teamData.weeklyCommits.length,
       }));
 
     const availableMetrics = [
-      { value: 'commits', label: 'Commits' },
       { value: 'issues', label: 'Issues' },
+      { value: 'commits', label: 'Commits' },
       { value: 'pullRequests', label: 'Pull Requests' },
-      // { value: 'weeklyCommits', label: 'Weekly Commits' },
     ];
 
     const filterAndSortData = () => {
@@ -63,7 +62,6 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
       return sortedData;
     };
 
-    // Use filtered data after sorting
     const sortedData = filterAndSortData();
 
     const chartData = sortedData.map(team => ({
@@ -85,82 +83,118 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
     const renderChart = () => {
       if (chartType === 'BarChart') {
         return (
-          <BarChart
-            h={400}
-            data={chartData}
-            dataKey="teamName"
-            series={series}
-            tickLine="xy"
-          />
+          <div style={{ paddingRight: '20px' }}>
+            <BarChart
+              h={460}
+              data={chartData}
+              dataKey="teamName"
+              series={series}
+              tickLine="xy"
+            />
+          </div>
         );
       } else if (chartType === 'AreaChart') {
         return (
-          <AreaChart
-            h={400}
-            data={chartData}
-            dataKey="teamName"
-            series={series}
-            curveType="linear"
-            tickLine="xy"
-            gridAxis="xy"
-          />
+          <div style={{ paddingRight: '20px' }}>
+            <AreaChart
+              h={460}
+              data={chartData}
+              dataKey="teamName"
+              series={series}
+              curveType="linear"
+              tickLine="xy"
+              gridAxis="xy"
+            />
+          </div>
         );
       }
     };
 
+    const teamNames = uniqueTeamData.map(teamName => ({
+      value: teamName.repoName,
+      label: teamName.repoName,
+    }));
+
     return (
       <div>
-        {/* First Chart with Sorting */}
-        <Card withBorder ref={ref} style={{ marginTop:'10px', marginBottom: '10px' }}>
+        <Card withBorder ref={ref} style={{ marginTop: '10px', marginBottom: '10px' }}>
           <Stack>
-            {/* <Center>
-              <Title order={5}>Composed Charts with Sorting</Title>
-            </Center> */}
+            <Center>
+              <Title order={5}>All Teams Overview</Title>
+            </Center>
 
-            <Select
-              label="Chart Type"
-              placeholder="Select chart type"
-              value={chartType}
-              onChange={(value: string | null) => {
-                if (value) setChartType(value);
-              }}
-              data={[
-                { value: 'BarChart', label: 'Bar Chart' },
-                { value: 'AreaChart', label: 'Area Chart' },
-              ]}
-            />
+            <Group justify="center">
+              <Popover width={900} position="bottom" withArrow shadow="md">
+                <Popover.Target>
+                  <Button style={{ width: '250px' }}>Select team(s) to display</Button>
+                </Popover.Target>
+                <Popover.Dropdown>
+                  <MultiSelect
+                    label="Select Teams"
+                    placeholder="Select teams to display"
+                    value={selectedTeams}
+                    onChange={setSelectedTeams}
+                    data={teamNames}
+                    withScrollArea={true}
+                    searchable
+                    clearable
+                    maxDropdownHeight={200} 
+                    styles={{
+                      input: { minHeight: '36px' },
+                    }}
+                    comboboxProps={{ withinPortal: false }}
+                  />
+                </Popover.Dropdown>
+              </Popover>
+            </Group>
 
-            <MultiSelect
-              label="Metrics"
-              placeholder="Select metrics to display"
-              value={selectedMetrics}
-              onChange={setSelectedMetrics}
-              data={availableMetrics}
-            />
+            <Group grow>
+              <Select
+                label="Chart Type"
+                placeholder="Select chart type"
+                value={chartType}
+                onChange={(value: string | null) => {
+                  if (value) setChartType(value);
+                }}
+                data={[
+                  { value: 'BarChart', label: 'Bar Chart' },
+                  { value: 'AreaChart', label: 'Area Chart' },
+                ]}
+              />
 
-            <Select
-              label="Single Metric for Sorting"
-              placeholder="Select a metric"
-              value={singleMetric}
-              onChange={(value: string | null) => {
-                if (value) setSingleMetric(value);
-              }}
-              data={availableMetrics}
-            />
+              <MultiSelect
+                label="Metrics"
+                value={selectedMetrics}
+                onChange={setSelectedMetrics}
+                data={availableMetrics}
+              />
+            </Group>
 
-            <Select
-              label="Sort By"
-              placeholder="Select sorting option"
-              value={sortType}
-              onChange={(value: string | null) => {
-                if (value) setSortType(value);
-              }}
-              data={[
-                { value: 'all', label: 'No Sorting' },
-                { value: 'ascending', label: 'Ascending Order' },
-                { value: 'descending', label: 'Descending Order' },
-              ]}
-            />
+            <Group grow>
+              <Select
+                label="Single Metric for Sorting"
+                placeholder="Select a metric"
+                value={singleMetric}
+                onChange={(value: string | null) => {
+                  if (value) setSingleMetric(value);
+                }}
+                data={availableMetrics}
+              />
+
+              <Select
+                label="Sort By"
+                placeholder="Select sorting option"
+                value={sortType}
+                onChange={(value: string | null) => {
+                  if (value) setSortType(value);
+                }}
+                data={[
+                  { value: 'all', label: 'No Sorting' },
+                  { value: 'ascending', label: 'Ascending Order' },
+                  { value: 'descending', label: 'Descending Order' },
+                ]}
+              />
+            </Group>
 
             {renderChart()}
           </Stack>

@@ -192,7 +192,7 @@ const Navbar: React.FC = () => {
     {
       link: `/courses/${courseId}`,
       label: 'Team View',
-      disabled: !peopleAdded,
+      // disabled: !peopleAdded,
       pngSrc: '/team-view.png',
     },
     {
@@ -203,25 +203,25 @@ const Navbar: React.FC = () => {
     {
       link: `/courses/${courseId}/teams`,
       label: 'Teams',
-      disabled: !peopleAdded,
+      // disabled: !peopleAdded,
       pngSrc: '/teams.png',
     },
     {
       link: `/courses/${courseId}/timeline`,
       label: 'Timeline',
-      disabled: !peopleAdded,
+      // disabled: !peopleAdded,
       pngSrc: '/timeline.png',
     },
     {
       link: `/courses/${courseId}/assessments`,
       label: 'Assessments',
-      disabled: !peopleAdded,
+      // disabled: !peopleAdded,
       pngSrc: '/assessments.png',
     },
     {
       link: `/courses/${courseId}/project-management`,
       label: 'Project Management',
-      disabled: !peopleAdded,
+      // disabled: !peopleAdded,
       pngSrc: '/jira.png',
     },
   ];
