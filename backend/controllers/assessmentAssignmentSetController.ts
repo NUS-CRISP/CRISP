@@ -44,7 +44,7 @@ export const getAssignmentSetController = async (req: Request, res: Response) =>
 
   try {
     const assignmentSet = await getAssignmentSetByAssessmentId(assessmentId);
-    res.status(200).json(assignmentSet.assignedTeams);
+    res.status(200).json(assignmentSet.assignedTeams === null ? assignmentSet.assignedUsers : assignmentSet.assignedTeams);
   } catch (error) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
@@ -60,15 +60,10 @@ export const getAssignmentSetController = async (req: Request, res: Response) =>
  */
 export const updateAssignmentSetController = async (req: Request, res: Response) => {
   const { assessmentId } = req.params;
-  const { assignedTeams } = req.body;
-
-  // Validate input
-  if (!Array.isArray(assignedTeams)) {
-    return res.status(400).json({ error: 'assignedTeams must be an array' });
-  }
+  const { assignedTeams, assignedUsers } = req.body;
 
   try {
-    const updatedSet = await updateAssignmentSet(assessmentId, assignedTeams);
+    const updatedSet = await updateAssignmentSet(assessmentId, assignedTeams, assignedUsers);
     res.status(200).json(updatedSet);
   } catch (error) {
     if (error instanceof NotFoundError || error instanceof BadRequestError) {

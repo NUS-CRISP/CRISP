@@ -171,6 +171,7 @@ export const updateAssignmentSet = async (
         if (!ta) {
           throw new NotFoundError(`TA with ID ${taId} not found`);
         }
+        console.log('adding ta:', ta)
       }
     }
 

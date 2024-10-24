@@ -407,6 +407,7 @@ export const addQuestionToAssessment = async (
   questionData: Partial<QuestionUnion>,
   accountId: string
 ): Promise<QuestionUnion> => {
+  console.log(questionData)
   const account = await AccountModel.findById(accountId);
   if (!account) {
     throw new NotFoundError('Account not found');

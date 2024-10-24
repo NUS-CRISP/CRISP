@@ -47,10 +47,12 @@ const InternalAssessmentDetail: React.FC = () => {
         const response = await fetch(`/api/internal-assessments/${assessmentId}/assignment-sets`);
         if (response.ok) {
           assignedTeams = await response.json();
-        } else {
+        }
+
+        if (!response.ok || assignedTeams === null) {
           // Fallback to the old API route if the assignment set is not available
           const fallbackResponse = await fetch(`/api/teams/course/${id}`);
-          if (!fallbackResponse.ok) {
+          if (!fallbackResponse.ok && response !== null) {
             console.error('Error fetching teams from fallback:', fallbackResponse.statusText);
             return;
           }
@@ -82,19 +84,25 @@ const InternalAssessmentDetail: React.FC = () => {
         const response = await fetch(`/api/internal-assessments/${assessmentId}/assignment-sets`);
         if (response.ok) {
           assignedUsers = await response.json();
-        } else {
+        }
+
+        if (!response.ok || assignedUsers === null) {
           // Fetch enrolled students as AssignedUsers
-          const studentsResponse = await fetch(`/api/courses/${id}/students`);
-          if (!studentsResponse.ok) {
-            console.error('Error fetching students:', studentsResponse.statusText);
+          const fallbackResponse = await fetch(`/api/teams/course/${id}`);
+          if (!fallbackResponse.ok) {
+            console.error('Error fetching teams from fallback:', fallbackResponse.statusText);
             return;
           }
-          const students: User[] = await studentsResponse.json();
+          const teams: Team[] = await fallbackResponse.json();
+          console.log(teams)
 
-          assignedUsers = students.map((student) => ({
-            user: student,
-            tas: [], // Initialize with empty tas
-          } as AssignedUser));
+          // Construct AssignedUser from old Team structure
+          assignedUsers = teams.flatMap((team) => team.members.map((member) => {
+            return {
+              user: member,
+              tas: team.TA ? [team.TA] : [],
+            } as AssignedUser
+          }));
         }
 
         const userMap: { [key: string]: string } = {};

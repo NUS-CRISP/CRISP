@@ -50,7 +50,7 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
   isLocked,
   index,
 }) => {
-  const enableNewQuestionTypesForTesting = true; // Set to false in production
+  const enableNewQuestionTypesForTesting = false; // Set to false in production
   const isQuestionLocked = isLocked || questionData.isLocked || false;
 
   // Determine if this is a new question (temporary _id starting with 'temp-')
@@ -379,7 +379,7 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
           ...questionData,
           text: questionText,
           type: questionType,
-          shortResponsePlaceholder,
+          shortResponsePlaceholder: shortResponsePlaceholder || 'Enter your response here...',
           customInstruction: customInstruction || getDefaultInstruction(),
           isLocked: questionData.isLocked || false,
           isRequired, // Added isRequired
@@ -390,10 +390,10 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
           ...questionData,
           text: questionText,
           type: questionType,
-          longResponsePlaceholder: shortResponsePlaceholder,
+          longResponsePlaceholder: shortResponsePlaceholder || 'Enter your response here...',
           customInstruction: customInstruction || getDefaultInstruction(),
           isLocked: questionData.isLocked || false,
-          isRequired, // Added isRequired
+          isRequired,
         } as LongResponseQuestion;
         break;
       case 'Date':
@@ -401,7 +401,7 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
           ...questionData,
           text: questionText,
           type: questionType,
-          isRange,
+          isRange: isRange || false,
           datePickerPlaceholder,
           minDate: minDate || undefined,
           maxDate: maxDate || undefined,
@@ -1042,16 +1042,21 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
           />
 
           <Group grow style={{ marginTop: '16px', gap: '16px' }}>
-            <DatePicker
-              placeholder="Select min date"
-              value={minDate}
-              onChange={(date) => setMinDate(date)}
-            />
-            <DatePicker
-              placeholder="Select max date"
-              value={maxDate}
-              onChange={(date) => setMaxDate(date)}
-            />
+            <Box>
+              <Text>{'Earliest Valid Date'}</Text>
+              <DatePicker
+                value={minDate}
+                onChange={(date) => setMinDate(date)}
+              />
+            </Box>
+            <Box>
+              <Text>{'Latest Valid Date'}</Text>
+              <DatePicker
+                placeholder="Select max date"
+                value={maxDate}
+                onChange={(date) => setMaxDate(date)}
+              />
+            </Box>
           </Group>
         </Box>
       )}
