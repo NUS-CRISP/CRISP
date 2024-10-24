@@ -32,7 +32,6 @@ const CreateAssessmentForm: React.FC<CreateAssessmentFormProps> = ({
           <CreateInternalForm
             courseId={courseId}
             teamSetNames={teamSetNames}
-            teachingTeam={teachingTeam}
             onAssessmentCreated={onAssessmentCreated}
           />
         </Tabs.Panel>

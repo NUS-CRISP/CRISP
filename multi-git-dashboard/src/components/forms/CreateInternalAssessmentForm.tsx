@@ -2,20 +2,17 @@
 
 import { Button, Select, TextInput, Textarea, Text, Radio, Checkbox } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { User } from '@shared/types/User';
 
 interface CreateInternalFormProps {
   courseId: string | string[] | undefined;
   onAssessmentCreated: () => void;
   teamSetNames: string[];
-  teachingTeam: User[]; // The list of teaching assistants
 }
 
 const CreateInternalForm: React.FC<CreateInternalFormProps> = ({
   courseId,
   onAssessmentCreated,
   teamSetNames,
-  teachingTeam,
 }) => {
   const form = useForm({
     initialValues: {
@@ -23,7 +20,7 @@ const CreateInternalForm: React.FC<CreateInternalFormProps> = ({
       description: '',
       startDate: '',
       endDate: '',
-      granularity: 'individual',
+      granularity: 'team',
       maxMarks: '',
       teamSetName: '',
       gradedBy: '', // Storing the gradedBy as the User's _id
@@ -90,8 +87,8 @@ const CreateInternalForm: React.FC<CreateInternalFormProps> = ({
           onChange={value => form.setFieldValue('granularity', value)}
         >
           <div style={{ display: 'flex', gap: '20px' }}>
+            <Radio label="Team" value="team"/>
             <Radio label="Individual" value="individual" />
-            <Radio label="Team" value="team" />
           </div>
         </Radio.Group>
       </div>
@@ -104,16 +101,9 @@ const CreateInternalForm: React.FC<CreateInternalFormProps> = ({
 
       <Select
         withAsterisk
-        label="Assigned to"
+        label="Which Team Assignment?"
         data={teamSetNames.map((name) => ({ value: name, label: name }))}
         {...form.getInputProps('teamSetName')}
-      />
-
-      <Select
-        label="Graded By (Optional)"
-        placeholder="Select a Teaching Assistant"
-        data={teachingTeam.map(ta => ({ value: ta._id, label: ta.name }))} // Map teachingTeam User objects
-        {...form.getInputProps('gradedBy')}
       />
 
       {/* New Checkbox for areSubmissionsEditable */}

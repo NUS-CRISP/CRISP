@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-case-declarations */
 // components/views/AssessmentInternalResults.tsx
 
 import { Button, Group, Modal, Select, Text } from '@mantine/core';
@@ -134,9 +132,39 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
     filterAndSortStudentResults();
   }, [studentResults, markerFilter, markedFilter, sortCriterion]);
 
+  // Function to generate CSV content
+  const generateCSV = () => {
+    const headers = ['StudentID', 'Marks'];
+    const rows = filteredAndSortedStudentResults.map((sr) => [
+      sr.student.identifier,
+      sr.result ? sr.result.averageScore.toString() : 'N/A',
+    ]);
+
+    // Combine headers and rows
+    const csvContent = [headers, ...rows]
+      .map((e) => e.join(','))
+      .join('\n');
+
+    return csvContent;
+  };
+
+  // Function to trigger CSV download
+  const downloadCSV = () => {
+    const csv = generateCSV();
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'assessment_results.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div>
-      <Group>
+      <Group mt='xs'>
         <div>
           <Text size="sm">Marker</Text>
           <Select
@@ -180,47 +208,60 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
             my={8}
           />
         </div>
-        <Button onClick={toggleResultForm} style={{ alignSelf: 'flex-end', marginLeft: 'auto' }}>
+        <Button onClick={toggleResultForm} style={{ marginBottom: '10px', alignSelf: 'flex-end', marginLeft: 'auto' }}>
           Download Results
         </Button>
       </Group>
 
       <Modal opened={isResultFormOpen} onClose={toggleResultForm} title="Download results">
-        {'TODO: Download file to upload to Canvas'}
+        <Group>
+          <Text>
+            Click the button below to download the assessment results as a CSV file. The CSV includes the following columns:
+            <ul>
+              <li><strong>StudentID</strong>: The identifier of the student.</li>
+              <li><strong>Marks</strong>: The average score of the student.</li>
+            </ul>
+          </Text>
+          <Button onClick={downloadCSV} color="blue">
+            Download CSV
+          </Button>
+        </Group>
       </Modal>
 
-      {sortCriterion === 'teamNumber' ? (
-        // Group by teams
-        Object.entries(
-          filteredAndSortedStudentResults.reduce((groups, sr) => {
-            const teamId = sr.team ? sr.team._id : 'No Team';
-            if (!groups[teamId]) {
-              groups[teamId] = [];
-            }
-            groups[teamId].push(sr);
-            return groups;
-          }, {} as { [teamId: string]: StudentResult[] })
-        ).map(([teamId, studentsInTeam]) => (
-          <div key={teamId} style={{ marginBottom: '1rem' }}>
-            <h3>{teamId === 'No Team' ? 'No Team' : `Team ${studentsInTeam[0].team!.number}`}</h3>
-            {studentsInTeam.map((sr) => (
-              <AssessmentResultCard
-                key={sr.student._id}
-                studentResult={sr}
-                maxScore={maxScore}
-              />
-            ))}
-          </div>
-        ))
-      ) : (
-        // Display students directly
-        filteredAndSortedStudentResults.map((sr) => (
-          <AssessmentResultCard
-            key={sr.student._id}
-            studentResult={sr}
-            maxScore={maxScore}
-          />
-        ))
+      {filteredAndSortedStudentResults && filteredAndSortedStudentResults.length > 0 && (
+        sortCriterion === 'teamNumber' ? (
+          // Group by teams
+          Object.entries(
+            filteredAndSortedStudentResults.reduce((groups, sr) => {
+              const teamId = sr.team ? sr.team._id : 'No Team';
+              if (!groups[teamId]) {
+                groups[teamId] = [];
+              }
+              groups[teamId].push(sr);
+              return groups;
+            }, {} as { [teamId: string]: StudentResult[] })
+          ).map(([teamId, studentsInTeam]) => (
+            <div key={teamId} style={{ marginBottom: '1rem' }}>
+              <h3>{teamId === 'No Team' ? 'No Team' : `Team ${studentsInTeam[0].team!.number}`}</h3>
+              {studentsInTeam.map((sr) => (
+                <AssessmentResultCard
+                  key={sr.student._id}
+                  studentResult={sr}
+                  maxScore={maxScore}
+                />
+              ))}
+            </div>
+          ))
+        ) : (
+          // Display students directly
+          filteredAndSortedStudentResults.map((sr) => (
+            <AssessmentResultCard
+              key={sr.student._id}
+              studentResult={sr}
+              maxScore={maxScore}
+            />
+          ))
+        )
       )}
     </div>
   );

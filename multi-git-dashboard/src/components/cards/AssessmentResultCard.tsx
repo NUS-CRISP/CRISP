@@ -48,7 +48,7 @@ const AssessmentResultCard: React.FC<AssessmentResultCardProps> = ({
         {result && result.marks.length > 0 ? (
           result.marks.map((markEntry, index) => (
             <Badge key={index} color="teal">
-              Score: {markEntry.score.toPrecision(3)}{maxScoreString}
+              Score: {markEntry.score.toPrecision(3)}{maxScoreString} by {markEntry.marker.name}
             </Badge>
           ))
         ) : (
