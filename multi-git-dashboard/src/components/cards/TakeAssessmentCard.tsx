@@ -12,8 +12,8 @@ import {
   Group,
   NumberInput,
   Badge,
-  CloseButton,
   MultiSelect,
+  CloseButton,
 } from '@mantine/core';
 import {
   QuestionUnion,
@@ -35,8 +35,9 @@ interface TakeAssessmentCardProps {
   onAnswerChange: (answer: AnswerInput) => void;
   index: number;
   disabled?: boolean;
-  teamMembersOptions?: { value: string; label: string }[];
-  assessmentGranularity?: string; // Maybe make this enum, but probably this is ok
+  teamMembersOptions?: { value: string; label: string }[]; // For individual granularity
+  teamOptions?: { value: string; label: string; members: { value: string; label: string }[] }[]; // For team granularity
+  assessmentGranularity?: string; // 'team' or 'individual'
   isFaculty?: boolean; // Indicates if the user has faculty permissions
   submission?: Submission; // Contains per-answer scores
 }
@@ -48,6 +49,7 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
   index,
   disabled = false,
   teamMembersOptions,
+  teamOptions,
   assessmentGranularity,
   isFaculty = false, // Default to false
   submission,
@@ -61,20 +63,33 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
       ? 1
       : undefined;
 
-  // Selected students from the answer
-  const selectedStudents = Array.isArray(answer) ? (answer as string[]) : [];
+  // Selected IDs (either student IDs or team IDs)
+  const selectedIds = Array.isArray(answer) ? (answer as string[]) : [];
 
-  // Available students to select (excluding already selected ones)
-  const [availableStudents, setAvailableStudents] = useState<{ value: string; label: string }[]>(
-    teamMembersOptions ? teamMembersOptions.filter((student) => !selectedStudents.includes(student.value)) : []
+  // Available options to select (excluding already selected ones)
+  const [availableOptions, setAvailableOptions] = useState<{ value: string; label: string }[]>(
+    []
   );
 
-  // Update availableStudents whenever selectedStudents or teamMembersOptions change
+  // Update availableOptions whenever selectedIds or teamMembersOptions/teamOptions change
   useEffect(() => {
-    if (teamMembersOptions) {
-      setAvailableStudents(teamMembersOptions.filter((student) => !selectedStudents.includes(student.value)));
+    if (question.type === 'Team Member Selection') {
+      if (assessmentGranularity === 'team' && teamOptions) {
+        // For team granularity, use teamOptions
+        setAvailableOptions(
+          teamOptions.filter((team) => !selectedIds.includes(team.value)).map((team) => ({
+            value: team.value,
+            label: team.label,
+          }))
+        );
+      } else if (assessmentGranularity === 'individual' && teamMembersOptions) {
+        // For individual granularity, use teamMembersOptions
+        setAvailableOptions(
+          teamMembersOptions.filter((student) => !selectedIds.includes(student.value))
+        );
+      }
     }
-  }, [selectedStudents, teamMembersOptions]);
+  }, [selectedIds, teamMembersOptions, teamOptions, assessmentGranularity, question.type]);
 
   // Type Guard to check if question is scored
   const isScoredQuestion = (
@@ -93,7 +108,7 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
     );
   };
 
-  // Extract the per-question score if available
+  // Extract the per-question score if available (for faculty)
   let perQuestionScore: number | null = null;
 
   if (isFaculty && isScoredQuestion(question) && submission) {
@@ -113,7 +128,7 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
       }}
     >
       {/* Top Badges */}
-      <Group justify="space-between" mb="sm">
+      <Group justify='space-between' mb="sm">
         <Badge color={isRequired ? 'red' : 'blue'} size="sm">
           {isRequired ? 'Required' : 'Optional'}
         </Badge>
@@ -123,7 +138,7 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
       </Group>
 
       {/* Question instruction */}
-      <Text c="gray" size="sm" mb="xs">
+      <Text color="gray" size="sm" mb="xs">
         {customInstruction}
       </Text>
 
@@ -140,12 +155,12 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
       )}
 
       {/* Team Member Selection */}
-      {question.type === 'Team Member Selection' && (
+      {questionType === 'Team Member Selection' &&
         <>
-          {/* Render selected students as badges */}
-          <Group gap="xs" mb="sm">
+
+        <Group gap="xs" mb="sm">
             {teamMembersOptions &&
-              selectedStudents.map((userId) => {
+              selectedIds.map((userId) => {
                 const student = teamMembersOptions.find((option) => option.value === userId);
                 return (
                   <Badge
@@ -156,7 +171,7 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
                       !disabled && (
                         <CloseButton
                           onClick={() => {
-                            const updatedSelection = selectedStudents.filter((id) => id !== userId);
+                            const updatedSelection = selectedIds.filter((id) => id !== userId);
                             onAnswerChange(updatedSelection);
                           }}
                           size="xs"
@@ -169,41 +184,60 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
                   </Badge>
                 );
               })}
+          {teamOptions &&
+            selectedIds.map((teamId) => {
+              const team = teamOptions.find((option) => option.value === teamId);
+              return (
+                <Badge
+                  key={teamId}
+                  variant="filled"
+                  color="blue"
+                  rightSection={
+                    !disabled && (
+                      <CloseButton
+                        onClick={() => {
+                          const updatedSelection = selectedIds.filter((id) => id !== teamId);
+                          onAnswerChange(updatedSelection);
+                        }}
+                        size="xs"
+                        style={{ marginLeft: 4 }}
+                      />
+                    )
+                  }
+                >
+                  {team ? team.label : teamId}
+                </Badge>
+              );
+            })}
           </Group>
-
-          {/* Search and select students */}
-          {(!maxSelections || selectedStudents.length < maxSelections) ? (
-            <MultiSelect
-              data={availableStudents}
-              placeholder="Search and select students"
-              searchable
-              value={[]}
-              onChange={(value) => {
-                // Handle only the last selected value
-                const newSelection = value[value.length - 1];
-                if (newSelection) {
-                  const updatedSelection = [...selectedStudents, newSelection];
-                  onAnswerChange(updatedSelection);
-                }
-              }}
-              disabled={disabled}
-              nothingFoundMessage="No students found"
-              maxValues={maxSelections}
-              onSearchChange={() => {}} // Prevent clearing search on selection
-              styles={{
-                input: { minWidth: '200px' },
-              }}
-            />
-          ) : (
-            // Max selections reached message
-            <Text size="sm" color="dimmed">
-              Maximum number of selections reached.
-            </Text>
-          )}
+          <MultiSelect
+            data={availableOptions}
+            placeholder={
+              assessmentGranularity === 'team'
+                ? 'Search and select teams'
+                : 'Search and select students'
+            }
+            searchable
+            value={[]}
+            onChange={(value) => {
+              // Handle only the last selected value
+              const newSelection = value[value.length - 1];
+              if (newSelection) {
+                const updatedSelection = [...selectedIds, newSelection];
+                onAnswerChange(updatedSelection);
+              }
+            }}
+            disabled={disabled}
+            maxValues={maxSelections}
+            onSearchChange={() => {}} // Prevent clearing search on selection
+            styles={{
+              input: { minWidth: '200px' },
+            }}
+          />
         </>
-      )}
+      }
 
-      {/* Render based on question type */}
+      {/* Render other question types as before */}
       {questionType === 'Multiple Choice' && (
         <Group align="stretch" style={{ flexGrow: 1, flexDirection: 'column' }}>
           {(question as MultipleChoiceQuestion).options.map((option, idx) => (

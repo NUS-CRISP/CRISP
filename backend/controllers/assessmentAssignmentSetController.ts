@@ -5,10 +5,11 @@ import {
   createAssignmentSet,
   getAssignmentSetByAssessmentId,
   updateAssignmentSet,
-  deleteAssignmentSet,
   getAssignmentsByTAId,
 } from '../services/assessmentAssignmentSetService';
 import { BadRequestError, NotFoundError } from '../services/errors';
+import { getAccountId } from 'utils/auth';
+import { getUserIdByAccountId } from 'services/accountService';
 
 /**
  * Controller to create a new AssessmentAssignmentSet.
@@ -43,7 +44,7 @@ export const getAssignmentSetController = async (req: Request, res: Response) =>
 
   try {
     const assignmentSet = await getAssignmentSetByAssessmentId(assessmentId);
-    res.status(200).json(assignmentSet);
+    res.status(200).json(assignmentSet.assignedTeams);
   } catch (error) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
@@ -80,33 +81,16 @@ export const updateAssignmentSetController = async (req: Request, res: Response)
 };
 
 /**
- * Controller to delete an AssessmentAssignmentSet by assessment ID.
- */
-export const deleteAssignmentSetController = async (req: Request, res: Response) => {
-  const { assessmentId } = req.params;
-
-  try {
-    await deleteAssignmentSet(assessmentId);
-    res.status(200).json({ message: 'AssessmentAssignmentSet deleted successfully' });
-  } catch (error) {
-    if (error instanceof NotFoundError) {
-      res.status(404).json({ error: error.message });
-    } else {
-      console.error('Error deleting AssessmentAssignmentSet:', error);
-      res.status(500).json({ error: 'Failed to delete AssessmentAssignmentSet' });
-    }
-  }
-};
-
-/**
  * Controller to retrieve all teams assigned to a specific TA within an assessment.
  */
 export const getAssignmentsByTAIdController = async (req: Request, res: Response) => {
-  const { assessmentId, taId } = req.params;
+  const { assessmentId } = req.params;
+  const accountId = await getAccountId(req);
+  const userId = await getUserIdByAccountId(accountId);
 
   try {
-    const teamIds = await getAssignmentsByTAId(taId, assessmentId);
-    res.status(200).json({ teams: teamIds });
+    const assignments = await getAssignmentsByTAId(userId, assessmentId);
+    res.status(200).json(assignments);
   } catch (error) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });

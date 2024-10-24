@@ -290,38 +290,39 @@ export const addInternalAssessmentsToCourse = async (
       isRequired: true,
     });
 
-    const nusnetIdQuestion = new NUSNETIDQuestionModel({
-      text: 'Student NUSNET ID (EXXXXXXX)',
-      type: 'NUSNET ID',
-      shortResponsePlaceholder: 'E1234567',
-      customInstruction: 'Enter your NUSNET ID starting with E followed by 7 digits.',
-      isLocked: true,
-      isRequired: true,
-    });
+    // const nusnetIdQuestion = new NUSNETIDQuestionModel({
+    //   text: 'Student NUSNET ID (EXXXXXXX)',
+    //   type: 'NUSNET ID',
+    //   shortResponsePlaceholder: 'E1234567',
+    //   customInstruction: 'Enter your NUSNET ID starting with E followed by 7 digits.',
+    //   isLocked: true,
+    //   isRequired: true,
+    // });
 
-    const nusnetEmailQuestion = new NUSNETEmailQuestionModel({
-      text: 'Student NUSNET Email',
-      type: 'NUSNET Email',
-      shortResponsePlaceholder: 'e1234567@u.nus.edu',
-      customInstruction: 'Enter your NUSNET email address.',
-      isLocked: true,
-      isRequired: true,
-    });
+    // const nusnetEmailQuestion = new NUSNETEmailQuestionModel({
+    //   text: 'Student NUSNET Email',
+    //   type: 'NUSNET Email',
+    //   shortResponsePlaceholder: 'e1234567@u.nus.edu',
+    //   customInstruction: 'Enter your NUSNET email address.',
+    //   isLocked: true,
+    //   isRequired: true,
+    // });
 
     await teamMemberSelectionQuestion.save();
-    await nusnetIdQuestion.save();
-    await nusnetEmailQuestion.save();
+    // await nusnetIdQuestion.save();
+    // await nusnetEmailQuestion.save();
 
     assessment.questions = [
       teamMemberSelectionQuestion._id,
-      nusnetIdQuestion._id,
-      nusnetEmailQuestion._id,
+      // nusnetIdQuestion._id,
+      // nusnetEmailQuestion._id,
     ];
 
     await assessment.save();
 
     const results: mongoose.Document[] = [];
 
+    // Legacy for Google Assessments
     if (granularity === 'team') {
       if (!teamSet) {
         continue;

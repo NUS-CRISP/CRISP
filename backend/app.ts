@@ -17,6 +17,8 @@ import teamSetRoutes from './routes/teamSetRoutes';
 import userRoutes from './routes/userRoutes';
 import { connectToDatabase } from './utils/database';
 import submissionRoutes from 'routes/submissionRoutes';
+import assessmentAssignmentSetRoutes from 'routes/assessmentAssignmentSetRoutes';
+import assessmentResultRoutes from 'routes/assessmentResultRoutes';
 
 const env = process.env.NODE_ENV ?? 'development';
 config({ path: `.env.${env}` });
@@ -48,6 +50,8 @@ app.use('/api/submissions', submissionRoutes)
 app.use('/api/jira', jiraRoutes);
 app.use('/api/metrics', metricRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/assessment-results', assessmentResultRoutes);
+app.use('/api/assignment-sets', assessmentAssignmentSetRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);

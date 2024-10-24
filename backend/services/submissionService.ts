@@ -32,6 +32,9 @@ import {
 } from '../models/QuestionTypes';
 import { NotFoundError, BadRequestError } from './errors';
 import AccountModel from '@models/Account';
+import AssessmentResultModel, { MarkEntry } from '@models/AssessmentResult';
+import UserModel, { User } from '@models/User';
+import { recalculateResult } from './assessmentResultService';
 
 // Type guards for questions
 function isNUSNETIDAnswer(answer: AnswerUnion): answer is NUSNETIDAnswer {
@@ -259,6 +262,21 @@ async function validateAnswers(
   }
 }
 
+export const checkSubmissionUniqueness = async (
+  assessment: InternalAssessment,
+  user: User,
+  targetStudentIds: string[],
+): Promise<boolean> => {
+  const userSubmissions = await SubmissionModel.find({
+    assessment: assessment,
+    user: user,
+  }).populate('answers.type').populate('answers.selectedUserIds');
+  const submittedUserIds = userSubmissions
+  .flatMap((sub) => (sub.answers.find((ans) => ans.type === 'Team Member Selection') as TeamMemberSelectionAnswer)
+  .selectedUserIds);
+  return !submittedUserIds.find((userId) => targetStudentIds.find((targetId) => targetId === userId));
+}
+
 export const createSubmission = async (
   assessmentId: string,
   userId: string,
@@ -266,19 +284,24 @@ export const createSubmission = async (
   isDraft: boolean
 ): Promise<Submission> => {
   const assessment = await getAssessmentWithQuestions(assessmentId);
+  const user = await UserModel.findById(userId);
+  if (!user) {
+    throw new NotFoundError('Submission creator not found');
+  }
 
   await validateSubmissionPeriod(assessment);
   await validateAnswers(assessment, answers);
+  const selectedStudentIds =
+    (answers.find((answer) => answer.type === 'Team Member Selection') as TeamMemberSelectionAnswer)
+    .selectedUserIds;
+  await checkSubmissionUniqueness(assessment, user, selectedStudentIds)
 
-  // Calculate the total score
   let totalScore = 0;
 
-  // Calculate score for each answer and assign it to the answer's `score` field
   const scoredAnswers = await Promise.all(
     answers.map(async (answer) => {
       const questionId = assessment.questions.find((q) => q._id.toString() === answer.question.toString());
       if (!questionId) {
-        // Handle the case where the question is not found
         console.warn(`Question with ID ${answer.question} not found in assessment ${assessmentId}.`);
         return { ...answer, score: 0 };
       }
@@ -306,16 +329,13 @@ export const createSubmission = async (
         console.warn(`Question with ID ${answer.question} not found in assessment ${assessmentId}.`);
         return { ...answer, score: 0 };
       }
-      // Calculate the score for this answer based on the question type
       const answerScore = await calculateAnswerScore(question, answer);
       totalScore += answerScore;
 
-      // Assign the score to the answer
       return { ...answer, score: answerScore };
     })
   );
 
-  // Create the submission with the calculated score
   const submission = new SubmissionModel({
     assessment: assessmentId,
     user: userId,
@@ -326,10 +346,39 @@ export const createSubmission = async (
   });
 
   await submission.save();
+
+  const assignment = answers.find((answer) => answer.type === 'Team Member Selection') as TeamMemberSelectionAnswer;
+
+  assignment.selectedUserIds.forEach(async (userId) => {
+    let assessmentResult = await AssessmentResultModel.findOne({
+      assessment: assessmentId,
+      student: userId,
+    });
+
+    if (!assessmentResult) {
+      assessmentResult = new AssessmentResultModel({
+        assessment: assessmentId,
+        student: userId,
+        marks: [],
+        averageScore: 0,
+      });
+
+      await assessmentResult.save();
+    }
+    const newMarkEntry: MarkEntry = {
+      marker: user,
+      submission: submission._id,
+      score: totalScore,
+    };
+    assessmentResult.marks.push(newMarkEntry);
+    assessmentResult.save();
+
+    await recalculateResult(assessmentResult.id);
+  })
+
   return submission;
 };
 
-// Update an existing submission (by submission ID)
 export const updateSubmission = async (
   submissionId: string,
   userId: string,
@@ -341,6 +390,10 @@ export const updateSubmission = async (
   if (!submission) {
     throw new NotFoundError('Submission not found.');
   }
+  const user = await UserModel.findById(userId);
+  if (!user) {
+    throw new NotFoundError('Submission updater not found');
+  }
 
   let bypass = false;
   const account = await AccountModel.findById(accountId);
@@ -348,7 +401,6 @@ export const updateSubmission = async (
     bypass = true;
   }
 
-  // Ensure the submission belongs to the user or a admin/faculty member is editing the submission
   if (!bypass && submission.user.toString() !== userId) {
     throw new BadRequestError('You do not have permission to update this submission.');
   }
@@ -358,20 +410,18 @@ export const updateSubmission = async (
   await validateSubmissionPeriod(assessment);
   await validateAnswers(assessment, answers);
 
-  // Check if submissions are editable
   if (!bypass && !assessment.areSubmissionsEditable && !submission.isDraft) {
     throw new BadRequestError('Submissions are not editable for this assessment');
   }
 
   let totalScore = 0;
 
-  // Recalculate the score based on new answers
   await Promise.all(
     answers.map(async (answer) => {
       const questionId = assessment.questions.find((q) => q._id.toString() === answer.question.toString());
       if (!questionId) {
         console.warn(`Question with ID ${answer.question} not found in assessment ${assessment.id}.`);
-        answer.score = 0; // Set score to 0 if the question is not found
+        answer.score = 0;
         return;
       }
 
@@ -391,33 +441,53 @@ export const updateSubmission = async (
           question = await MultipleResponseQuestionModel.findById(questionId);
           break;
         default:
-          answer.score = 0; // For unsupported question types, set score to 0
+          answer.score = 0;
           return;
       }
 
       if (!question) {
         console.warn(`Question with ID ${answer.question} not found in assessment ${assessment.id}.`);
-        answer.score = 0; // Set score to 0 if the question is not found
+        answer.score = 0;
         return;
       }
 
-      // Calculate the score for this answer based on the question type
       const answerScore = await calculateAnswerScore(question, answer);
       totalScore += answerScore;
 
-      // Directly update the answer's score
       answer.score = answerScore;
     })
   );
 
-  // Update submission fields
-  submission.answers = answers; // No need to create new objects; just use the modified answers
+  submission.answers = answers;
   submission.isDraft = isDraft;
   submission.submittedAt = new Date();
   submission.score = totalScore;
-  submission.adjustedScore = undefined; // Remove any existing adjusted score
+  submission.adjustedScore = undefined;
 
   await submission.save();
+
+  const assignment = answers.find((answer) => answer.type === 'Team Member Selection') as TeamMemberSelectionAnswer;
+
+  assignment.selectedUserIds.forEach(async (userId) => {
+    const assessmentResult = await AssessmentResultModel.findOne({
+      assessment: assessment.id,
+      student: userId,
+    });
+
+    if (!assessmentResult) {
+      // If not, create a new AssessmentResult for the user
+      throw new NotFoundError('No previous assessment result found. Something went wrong with the flow.')
+    }
+    const newMarkEntry: MarkEntry = {
+      marker: user,
+      submission: submission._id,
+      score: totalScore,
+    };
+    assessmentResult.marks.push(newMarkEntry);
+    assessmentResult.save();
+
+    await recalculateResult(assessmentResult.id);
+  });
   return submission;
 };
 

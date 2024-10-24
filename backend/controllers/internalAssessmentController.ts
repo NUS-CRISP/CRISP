@@ -14,6 +14,7 @@ import {
   releaseInternalAssessmentById,
   recallInternalAssessmentById,
 } from 'services/internalAssessmentService';
+import { checkMarkingCompletion, getOrCreateAssessmentResults, recalculateResult } from 'services/assessmentResultService';
 
 export const getInternalAssessment = async (req: Request, res: Response) => {
   try {
@@ -223,6 +224,123 @@ export const recallInternalAssessment = async (req: Request, res: Response) => {
     await recallInternalAssessmentById(assessmentId, accountId);
 
     res.status(200).json({ message: 'Assessment recalled successfully' });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else if (error instanceof BadRequestError) {
+      res.status(400).json({ error: error.message });
+    } else if (error instanceof MissingAuthorizationError) {
+      res.status(401).json({ error: 'Missing authorization' });
+    } else {
+      console.error('Error recalling assessment:', error);
+      res.status(500).json({ error: 'Failed to recall assessment' });
+    }
+  }
+};
+
+
+export const fetchAssessmentResults = async (
+  req: Request,
+  res: Response,
+) => {
+  const { assessmentId } = req.params;
+
+  try {
+    const assessmentResults = await getOrCreateAssessmentResults(assessmentId);
+    res.status(200).json({
+      success: true,
+      data: assessmentResults,
+    });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else if (error instanceof BadRequestError) {
+      res.status(400).json({ error: error.message });
+    } else if (error instanceof MissingAuthorizationError) {
+      res.status(401).json({ error: 'Missing authorization' });
+    } else {
+      console.error('Error recalling assessment:', error);
+      res.status(500).json({ error: 'Failed to recall assessment' });
+    }
+  }
+};
+
+/**
+ * Controller to retrieve or create AssessmentResults for an assessment.
+ * Route: GET /internal-assessments/:assessmentId/results
+ */
+export const getOrCreateAssessmentResultsController = async (
+  req: Request,
+  res: Response,
+) => {
+  const { assessmentId } = req.params;
+
+  try {
+    const assessmentResults = await getOrCreateAssessmentResults(assessmentId);
+    res.status(200).json({
+      success: true,
+      data: assessmentResults,
+    });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else if (error instanceof BadRequestError) {
+      res.status(400).json({ error: error.message });
+    } else if (error instanceof MissingAuthorizationError) {
+      res.status(401).json({ error: 'Missing authorization' });
+    } else {
+      console.error('Error recalling assessment:', error);
+      res.status(500).json({ error: 'Failed to recall assessment' });
+    }
+  }
+};
+
+/**
+ * Controller to recalculate the average score of an AssessmentResult.
+ * Route: POST /results/:resultId/recalculate
+ */
+export const recalculateResultController = async (
+  req: Request,
+  res: Response,
+) => {
+  const { resultId } = req.params;
+
+  try {
+    await recalculateResult(resultId);
+    res.status(200).json({
+      success: true,
+      message: 'Average score recalculated successfully.',
+    });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else if (error instanceof BadRequestError) {
+      res.status(400).json({ error: error.message });
+    } else if (error instanceof MissingAuthorizationError) {
+      res.status(401).json({ error: 'Missing authorization' });
+    } else {
+      console.error('Error recalling assessment:', error);
+      res.status(500).json({ error: 'Failed to recall assessment' });
+    }
+  }
+};
+
+/**
+ * Controller to check marking completion for an assessment.
+ * Route: GET /internal-assessments/:assessmentId/check-marking-completion
+ */
+export const checkMarkingCompletionController = async (
+  req: Request,
+  res: Response,
+) => {
+  const { assessmentId } = req.params;
+
+  try {
+    const unmarkedTeams = await checkMarkingCompletion(assessmentId);
+    res.status(200).json({
+      success: true,
+      data: unmarkedTeams,
+    });
   } catch (error) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });

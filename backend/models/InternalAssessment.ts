@@ -1,3 +1,5 @@
+// models/InternalAssessment.ts
+
 import { InternalAssessment as SharedInternalAssessment } from '@shared/types/InternalAssessment';
 import mongoose, { Schema, Types } from 'mongoose';
 
@@ -5,15 +7,16 @@ import mongoose, { Schema, Types } from 'mongoose';
 export interface InternalAssessment
   extends Omit<
       SharedInternalAssessment,
-      '_id' | 'course' | 'results' | 'teamSet' | 'gradedBy' | 'questions'
+      '_id' | 'course' | 'results' | 'teamSet' | 'gradedBy' | 'questions' | 'assessmentAssignmentSet'
     >,
     mongoose.Document {
   _id: Types.ObjectId;
   course: Types.ObjectId;
-  results: Types.ObjectId[];
+  results: Types.ObjectId[]; // References to AssessmentResult documents
   teamSet?: Types.ObjectId;
   gradedBy?: Types.ObjectId;
   questions: Types.ObjectId[];
+  assessmentAssignmentSet?: Types.ObjectId;
 }
 
 // Schema definition for InternalAssessment
@@ -22,22 +25,22 @@ const internalAssessmentSchema = new Schema<InternalAssessment>({
   assessmentName: { type: String, required: true },
   description: { type: String, required: true },
   startDate: { type: Date, required: true },
-  endDate: { type: Date, required: false },
-  maxMarks: { type: Number, required: false },
+  endDate: { type: Date },
+  maxMarks: { type: Number },
   granularity: {
     type: String,
     enum: ['individual', 'team'],
     required: true,
   },
-  teamSet: { type: Schema.Types.ObjectId, ref: 'TeamSet', required: false },
-  gradedBy: { type: Schema.Types.ObjectId, ref: 'User', required: false },
-  areSubmissionsEditable: { type: Schema.Types.Boolean, ref: 'IsReleased', required: true },
-  results: [{ type: Schema.Types.ObjectId, ref: 'Result', required: false }],
-  isReleased: { type: Schema.Types.Boolean, ref: 'IsReleased', required: true},
-  questions: [{ type: Schema.Types.ObjectId, ref: 'Question', required: false}]
+  teamSet: { type: Schema.Types.ObjectId, ref: 'TeamSet' },
+  gradedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+  areSubmissionsEditable: { type: Boolean, required: true },
+  results: [{ type: Schema.Types.ObjectId, ref: 'AssessmentResult' }],
+  isReleased: { type: Boolean, required: true },
+  questions: [{ type: Schema.Types.ObjectId, ref: 'Question' }],
+  assessmentAssignmentSet: { type: Schema.Types.ObjectId, ref: 'AssessmentAssignmentSet' },
 });
 
-// Creating and exporting the InternalAssessmentModel
 const InternalAssessmentModel = mongoose.model<InternalAssessment>(
   'InternalAssessment',
   internalAssessmentSchema
