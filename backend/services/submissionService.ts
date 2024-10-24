@@ -371,7 +371,7 @@ export const createSubmission = async (
       score: totalScore,
     };
     assessmentResult.marks.push(newMarkEntry);
-    assessmentResult.save();
+    await assessmentResult.save();
 
     await recalculateResult(assessmentResult.id);
   })
@@ -484,7 +484,7 @@ export const updateSubmission = async (
       score: totalScore,
     };
     assessmentResult.marks.push(newMarkEntry);
-    assessmentResult.save();
+    await assessmentResult.save();
 
     await recalculateResult(assessmentResult.id);
   });

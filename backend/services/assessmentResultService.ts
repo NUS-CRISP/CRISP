@@ -114,12 +114,26 @@ export const getOrCreateAssessmentResults = async (
 };
 
 export const recalculateResult = async (resultId: string) => {
-  const result = await AssessmentResultModel.findById(resultId).populate('marks.submission').populate('averageScore');
+  const result: any = await AssessmentResultModel
+    .findById(resultId)
+    .populate('marks.submission.adjustedScore')
+    .populate('marks.submission.score')
+    .populate('averageScore');
   if (!result) {
     throw new NotFoundError('Result not found');
   }
+
+  if (result.marks.length === 0) {
+    throw new BadRequestError('No marks to recalculate')
+  } else {
+    console.log('Result:', result);
+    result.marks.forEach((markEntry: any, index: any) => {
+      console.log(`Mark Entry ${index}:`, markEntry);
+    });
+  }
+
   result.averageScore = result.marks.reduce((accumulator: number, markEntry: any) =>
-    accumulator + (markEntry.submission.adjustedScore ?? markEntry.submission.score), 0)
+    accumulator + markEntry.score, 0)
   / result.marks.length;
   result.save();
 }

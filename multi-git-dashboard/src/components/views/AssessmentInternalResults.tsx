@@ -15,6 +15,7 @@ interface AssessmentInternalResultsProps {
   teachingTeam: User[];
   assignedTeams?: AssignedTeam[];
   assignedUsers?: AssignedUser[];
+  maxScore?: number;
 }
 
 export interface StudentResult {
@@ -29,6 +30,7 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
   teachingTeam,
   assignedTeams,
   assignedUsers,
+  maxScore,
 }) => {
   const [isResultFormOpen, setIsResultFormOpen] = useState<boolean>(false);
   const [markerFilter, setMarkerFilter] = useState<string>('All');
@@ -205,6 +207,7 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
               <AssessmentResultCard
                 key={sr.student._id}
                 studentResult={sr}
+                maxScore={maxScore}
               />
             ))}
           </div>
@@ -215,6 +218,7 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
           <AssessmentResultCard
             key={sr.student._id}
             studentResult={sr}
+            maxScore={maxScore}
           />
         ))
       )}

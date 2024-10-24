@@ -13,35 +13,42 @@ interface StudentResult {
 
 interface AssessmentResultCardProps {
   studentResult: StudentResult;
+  maxScore?: number;
 }
 
 const AssessmentResultCard: React.FC<AssessmentResultCardProps> = ({
   studentResult,
+  maxScore,
 }) => {
   const { student, team, result } = studentResult;
+  const maxScoreString = ` / ${maxScore}`;
 
   return (
     <Card withBorder shadow="sm" mb="sm">
-      <Group justify='space-between'>
-        <div>
+      <Group justify='space-between' flex='row'>
+        <Group>
           <Text>{student.name}</Text>
           <Text size="sm" c="dimmed">
             Student ID: {student.identifier}
           </Text>
           {team && (
-            <Text size="sm" color="dimmed">
+            <Text size="sm" c="dimmed">
               Team: {team.number}
             </Text>
           )}
-        </div>
+        </Group>
+        <Badge key={student._id} color="teal">
+          Average Score: {result?.averageScore.toPrecision(3)}{maxScoreString}
+        </Badge>
       </Group>
 
       {/* Display marks */}
       <Group mt="md">
+        <Text>Submitted Scores:</Text>
         {result && result.marks.length > 0 ? (
           result.marks.map((markEntry, index) => (
             <Badge key={index} color="teal">
-              Score: {markEntry.score}
+              Score: {markEntry.score.toPrecision(3)}{maxScoreString}
             </Badge>
           ))
         ) : (
