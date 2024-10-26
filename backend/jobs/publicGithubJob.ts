@@ -1,12 +1,11 @@
 import CourseModel from '@models/Course';
 import { Review, TeamContribution, TeamPR } from '@shared/types/TeamData';
 import cron from 'node-cron';
-import { Octokit } from 'octokit';
+import { App, Octokit } from 'octokit';
 import TeamData from '../models/TeamData';
+import { getGitHubApp } from 'utils/github';
 
 const fetchPublicRepoData = async () => {
-  const octokit = new Octokit(); // No need for GitHub App authentication for public repos
-
   const courses = await CourseModel.find();
 
   await Promise.all(
@@ -14,7 +13,7 @@ const fetchPublicRepoData = async () => {
       if (course && course.gitHubRepoLinks.length > 0) {
         try {
           // Call getPublicCourseData to process the course and repo data
-          await getPublicCourseData(octokit, course);
+          await getPublicCourseData(course);
         } catch (error) {
           console.error(
             `Error fetching repository data for ${course.name}:`,
@@ -28,13 +27,22 @@ const fetchPublicRepoData = async () => {
   console.log('fetchPublicRepoData job done');
 };
 
-const getPublicCourseData = async (octokit: Octokit, course: any) => {
+const getPublicCourseData = async (course: any) => {
   if (!course.gitHubRepoLinks || course.gitHubRepoLinks.length === 0) return;
+
+  const app: App = getGitHubApp();
+  const genericOctokit = app.octokit; // Use a generic octokit instance
 
   for (const repoUrl of course.gitHubRepoLinks) {
     const urlParts = repoUrl.split('/');
     const owner = urlParts[3]; // Get the 'owner' part of the URL
     const repo = urlParts[4]; // Get the 'repo' part of the URL
+
+    const installationId = await checkAppInstalled(owner);
+
+    const octokit = installationId
+      ? await app.getInstallationOctokit(installationId)
+      : genericOctokit;
 
     try {
       // Fetch repository data using public Octokit instance
@@ -42,16 +50,6 @@ const getPublicCourseData = async (octokit: Octokit, course: any) => {
         owner,
         repo,
       });
-
-      console.log('Repository Data:', repoData.data);
-
-      // Fetch branches or other details
-      const branches = await octokit.rest.repos.listBranches({
-        owner,
-        repo,
-      });
-
-      console.log('Branches:', branches.data);
 
       const teamContributions: Record<string, TeamContribution> = {};
 
@@ -252,25 +250,61 @@ const getPublicCourseData = async (octokit: Octokit, course: any) => {
   }
 };
 
+const checkAppInstalled = async (username: string) => {
+  try {
+    const app = getGitHubApp(); // Get the GitHub App instance
+    const octokit = app.octokit; // Create an Octokit instance authenticated as the App
+
+    const response = await octokit.rest.apps.getUserInstallation({
+      username,
+    });
+
+    if (response.status === 200) {
+      const installationId = response.data.id;
+      console.log(
+        `App is installed for user ${username}, Installation ID: ${installationId}`
+      );
+      return installationId;
+    }
+  } catch (error: any) {
+    if (error.status === 404) {
+      console.log(`App is not installed for user ${username}`);
+    } else {
+      console.error(`Error checking app installation: ${error.message}`);
+    }
+  }
+};
+
 const fetchCodeFrequencyStats = async (
   octokit: Octokit,
   owner: string,
   repo: string
 ) => {
-  try {
-    const response = await octokit.rest.repos.getCodeFrequencyStats({
-      owner,
-      repo,
-    });
+  let attempt = 0;
+  const maxAttempts = 10;
+  const delayBetweenAttempts = 2000;
 
-    if (response.status === 200) {
-      return response.data;
-    } else {
-      throw new Error('Failed to fetch code frequency stats');
-    }
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      throw new Error(`Error fetching code frequency stats: ${error.message}`);
+  while (attempt < maxAttempts) {
+    try {
+      const response = await octokit.rest.repos.getCodeFrequencyStats({
+        owner,
+        repo,
+      });
+
+      if (response.status === 200) {
+        return response.data;
+      } else if (response.status === 202) {
+        await new Promise(resolve => setTimeout(resolve, delayBetweenAttempts));
+        attempt++;
+      } else {
+        throw new Error('Failed to fetch code frequency stats');
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(
+          `Error fetching code frequency stats: ${error.message}`
+        );
+      }
     }
   }
 
