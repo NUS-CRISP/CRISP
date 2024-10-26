@@ -30,22 +30,19 @@ const fetchPublicRepoData = async () => {
 const getPublicCourseData = async (course: any) => {
   if (!course.gitHubRepoLinks || course.gitHubRepoLinks.length === 0) return;
 
-  const app: App = getGitHubApp();
-  const genericOctokit = app.octokit; // Use a generic octokit instance
-
   for (const repoUrl of course.gitHubRepoLinks) {
     const urlParts = repoUrl.split('/');
     const owner = urlParts[3]; // Get the 'owner' part of the URL
     const repo = urlParts[4]; // Get the 'repo' part of the URL
 
     const installationId = await checkAppInstalled(owner);
+    const app: App = getGitHubApp();
 
     const octokit = installationId
       ? await app.getInstallationOctokit(installationId)
-      : genericOctokit;
+      : new Octokit();
 
     try {
-      // Fetch repository data using public Octokit instance
       const repoData = await octokit.rest.repos.get({
         owner,
         repo,
