@@ -215,7 +215,6 @@ interface InternalAssessmentData {
   maxMarks?: number;
   granularity: string;
   teamSetName: string;
-  gradedBy?: string;
   areSubmissionsEditable: boolean;
 }
 
@@ -243,7 +242,6 @@ export const addInternalAssessmentsToCourse = async (
       maxMarks,
       granularity,
       teamSetName,
-      gradedBy,
       areSubmissionsEditable,
     } = data;
 
@@ -274,7 +272,6 @@ export const addInternalAssessmentsToCourse = async (
       maxMarks,
       granularity,
       teamSet: null,
-      gradedBy: gradedBy ? new mongoose.Types.ObjectId(gradedBy) : null,
       areSubmissionsEditable,
       results: [],
       isReleased: false,

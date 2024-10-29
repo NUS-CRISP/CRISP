@@ -21,7 +21,7 @@ const UploadInternalCSV: React.FC<UploadInternalCSVProps> = ({
         </Notification>
       )}
       <CSVUpload
-        headers={['assessmentType', 'markType', 'frequency', 'granularity', 'teamSetName', 'maxMarks', 'startDate', 'endDate', 'gradedBy']}
+        headers={['assessmentType', 'markType', 'frequency', 'granularity', 'teamSetName', 'maxMarks', 'startDate', 'endDate']}
         onProcessComplete={onAssessmentCreated}
         onError={setError}
         filename="internal_assessment_template.csv"

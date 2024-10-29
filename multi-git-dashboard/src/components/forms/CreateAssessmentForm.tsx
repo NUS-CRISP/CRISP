@@ -3,20 +3,17 @@ import CreateGoogleForm from './CreateGoogleAssessmentForm';
 import CreateInternalForm from './CreateInternalAssessmentForm';
 import UploadGoogleCSV from './UploadGoogleAssessmentFormCsv';
 import UploadInternalCSV from './UploadInternalAssessmentFormCsv';
-import { User } from '@shared/types/User';
 
 interface CreateAssessmentFormProps {
   courseId: string | string[] | undefined;
   onAssessmentCreated: () => void;
   teamSetNames: string[];
-  teachingTeam: User[];
 }
 
 const CreateAssessmentForm: React.FC<CreateAssessmentFormProps> = ({
   courseId,
   onAssessmentCreated,
   teamSetNames,
-  teachingTeam,
 }) => {
   return (
     <Box mx="auto">

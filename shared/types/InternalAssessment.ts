@@ -14,7 +14,6 @@ export interface InternalAssessment {
   maxMarks?: number;
   granularity: 'individual' | 'team';
   teamSet?: TeamSet;
-  gradedBy?: User;
   areSubmissionsEditable: boolean;
   results: Result[];
   isReleased: boolean;

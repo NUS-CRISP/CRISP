@@ -6,7 +6,6 @@ interface InternalAssessmentCardProps {
   endDate?: Date | null;
   description: string;
   granularity: 'individual' | 'team';
-  gradedBy?: string | null;
 }
 
 const InternalAssessmentCard: React.FC<InternalAssessmentCardProps> = ({
@@ -15,7 +14,6 @@ const InternalAssessmentCard: React.FC<InternalAssessmentCardProps> = ({
   endDate,
   description,
   granularity,
-  gradedBy,
 }) => {
   const formatDate = (date: Date | null) => {
     if (!date) return '';
@@ -54,12 +52,6 @@ const InternalAssessmentCard: React.FC<InternalAssessmentCardProps> = ({
         >
           {description}
         </Text>
-
-        {gradedBy && (
-          <Text size="sm" color="dimmed">
-            Graded by: {gradedBy}
-          </Text>
-        )}
       </Box>
     </Card>
   );

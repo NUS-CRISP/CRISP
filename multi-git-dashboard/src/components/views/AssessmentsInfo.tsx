@@ -2,9 +2,8 @@ import { hasFacultyPermission } from '@/lib/auth/utils';
 import { Button, Center, Container, Group, Modal, Text, Tabs } from '@mantine/core';
 import { Assessment } from '@shared/types/Assessment';
 import { InternalAssessment } from '@shared/types/InternalAssessment';
-import { User } from '@shared/types/User';
 import Link from 'next/link';
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import AssessmentCard from '../cards/AssessmentCard';
 import CreateAssessmentForm from '../forms/CreateAssessmentForm';
 import InternalAssessmentCard from '../cards/InternalAssessmentCard';
@@ -26,31 +25,6 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
 }) => {
   console.log(internalAssessments);
   const [isCreatingAssessment, setIsCreatingAssessment] = useState(false);
-  const [teachingTeam, setTeachingTeam] = useState<User[]>([]);
-
-  // API route to fetch teaching team
-  const teachingTeamApiRoute = `/api/courses/${courseId}/teachingteam`;
-
-  // Fetch teaching team data when component mounts
-  const fetchTeachingTeam = useCallback(async () => {
-    try {
-      const response = await fetch(teachingTeamApiRoute);
-      if (!response.ok) {
-        console.error('Error fetching Teaching Team:', response.statusText);
-        return;
-      }
-      const data: User[] = await response.json();
-      setTeachingTeam(data);
-    } catch (error) {
-      console.error('Error fetching Teaching Team:', error);
-    }
-  }, [courseId]);
-
-  useEffect(() => {
-    if (courseId) {
-      fetchTeachingTeam();
-    }
-  }, [courseId, fetchTeachingTeam]);
 
   const toggleForm = () => {
     setIsCreatingAssessment(o => !o);
@@ -94,7 +68,6 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
           endDate={assessment.endDate}
           description={assessment.description}
           granularity={assessment.granularity}
-          gradedBy={assessment.gradedBy?.name}
         />
       </Link>
     )
@@ -116,7 +89,6 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
           teamSetNames={teamSetNames}
           courseId={courseId}
           onAssessmentCreated={handleAssessmentCreated}
-          teachingTeam={teachingTeam} // Pass teaching team to form
         />
       </Modal>
 

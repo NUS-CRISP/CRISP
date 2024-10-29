@@ -23,7 +23,6 @@ const CreateInternalForm: React.FC<CreateInternalFormProps> = ({
       granularity: 'team',
       maxMarks: '',
       teamSetName: '',
-      gradedBy: '', // Storing the gradedBy as the User's _id
       areSubmissionsEditable: false, // New field added
     },
   });
