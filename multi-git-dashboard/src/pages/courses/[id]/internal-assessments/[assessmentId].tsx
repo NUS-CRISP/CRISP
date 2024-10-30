@@ -1,5 +1,3 @@
-// pages/courses/[id]/internal-assessments/[assessmentId]/index.tsx
-
 import { Container, Tabs } from '@mantine/core';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
@@ -37,12 +35,10 @@ const InternalAssessmentDetail: React.FC = () => {
   const fetchTeamsAndCreateUserMap = useCallback(async () => {
     try {
       if (!assessment) {
-        return; // Wait until assessment is loaded
+        return;
       }
 
-      // Depending on assessment.granularity, fetch assignedTeams or assignedUsers
       if (assessment.granularity === 'team') {
-        // Fetch assignedTeams
         let assignedTeams: AssignedTeam[] = [];
         const response = await fetch(`/api/internal-assessments/${assessmentId}/assignment-sets`);
         if (response.ok) {
@@ -50,7 +46,6 @@ const InternalAssessmentDetail: React.FC = () => {
         }
 
         if (!response.ok || assignedTeams === null) {
-          // Fallback to the old API route if the assignment set is not available
           const fallbackResponse = await fetch(`/api/teams/course/${id}`);
           if (!fallbackResponse.ok && response !== null) {
             console.error('Error fetching teams from fallback:', fallbackResponse.statusText);
@@ -58,16 +53,14 @@ const InternalAssessmentDetail: React.FC = () => {
           }
           const teams: Team[] = await fallbackResponse.json();
 
-          // Construct AssignedTeam from old Team structure
           assignedTeams = teams.map((team) => ({
             team,
-            tas: team.TA ? [team.TA] : [], // If the team has a TA, wrap it in an array
+            tas: team.TA ? [team.TA] : [],
           } as AssignedTeam));
         }
 
         const userMap: { [key: string]: string } = {};
         assignedTeams.forEach((assignedTeam: AssignedTeam) => {
-          // Map all the users (TAs and members) from the assignedTeam structure
           assignedTeam.team.members.forEach((member: User) => {
             userMap[member._id] = member.name;
           });
@@ -76,10 +69,9 @@ const InternalAssessmentDetail: React.FC = () => {
           });
         });
 
-        setAssignedTeams(assignedTeams); // Update the state with assignedTeams
-        setUserIdToNameMap(userMap); // Set the user map for names
+        setAssignedTeams(assignedTeams);
+        setUserIdToNameMap(userMap);
       } else if (assessment.granularity === 'individual') {
-        // Fetch assignedUsers
         let assignedUsers: AssignedUser[] = [];
         const response = await fetch(`/api/internal-assessments/${assessmentId}/assignment-sets`);
         if (response.ok) {
@@ -87,7 +79,6 @@ const InternalAssessmentDetail: React.FC = () => {
         }
 
         if (!response.ok || assignedUsers === null) {
-          // Fetch enrolled students as AssignedUsers
           const fallbackResponse = await fetch(`/api/teams/course/${id}`);
           if (!fallbackResponse.ok) {
             console.error('Error fetching teams from fallback:', fallbackResponse.statusText);
@@ -96,7 +87,6 @@ const InternalAssessmentDetail: React.FC = () => {
           const teams: Team[] = await fallbackResponse.json();
           console.log(teams)
 
-          // Construct AssignedUser from old Team structure
           assignedUsers = teams.flatMap((team) => team.members.map((member) => {
             return {
               user: member,
@@ -113,8 +103,8 @@ const InternalAssessmentDetail: React.FC = () => {
           });
         });
 
-        setAssignedUsers(assignedUsers); // Update the state with assignedUsers
-        setUserIdToNameMap(userMap); // Set the user map for names
+        setAssignedUsers(assignedUsers);
+        setUserIdToNameMap(userMap);
       }
     } catch (error) {
       console.error('Error fetching teams or users:', error);
@@ -178,7 +168,6 @@ const InternalAssessmentDetail: React.FC = () => {
     }
   }, [teachingTeamApiRoute]);
 
-  // New function to fetch AssessmentResults
   const fetchAssessmentResults = useCallback(async () => {
     try {
       const response = await fetch(`/api/assessment-results/${assessmentId}`, {
@@ -192,6 +181,7 @@ const InternalAssessmentDetail: React.FC = () => {
         return;
       }
       const data: AssessmentResult[] = (await response.json()).data;
+      console.log(data);
       setAssessmentResults(data);
     } catch (error) {
       console.error('Error fetching assessment results:', error);
@@ -250,7 +240,6 @@ const InternalAssessmentDetail: React.FC = () => {
   const handleSaveQuestion = async (id: string, updatedQuestion: Question) => {
     try {
       if (id.startsWith('temp-')) {
-        // New question, send POST request
         const response = await fetch(questionsApiRoute, {
           method: 'POST',
           headers: {
@@ -265,10 +254,8 @@ const InternalAssessmentDetail: React.FC = () => {
           return;
         }
         const createdQuestion: Question = await response.json();
-        // Replace the local question with the one from the backend
         setQuestions(questions.map((q) => (q._id === id ? createdQuestion : q)));
       } else {
-        // Existing question, send PATCH request
         const response = await fetch(`${questionsApiRoute}/${id}`, {
           method: 'PATCH',
           headers: {
@@ -295,7 +282,6 @@ const InternalAssessmentDetail: React.FC = () => {
       return;
     }
     if (id.startsWith('temp-')) {
-      // Unsaved question, just remove it from local state
       setQuestions(questions.filter((q) => q._id !== id));
     } else {
       try {
@@ -313,7 +299,6 @@ const InternalAssessmentDetail: React.FC = () => {
     }
   };
 
-  // Create a mapping from student IDs to team numbers
   const studentIdToTeamNumber: { [studentId: string]: number } = {};
   assignedTeams.forEach((assignedTeam) => {
     const teamNumber = assignedTeam.team.number;
