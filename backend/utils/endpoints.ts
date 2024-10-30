@@ -11,8 +11,6 @@ export const BOARD_API_PATH = '/rest/agile/1.0/board';
 export const ISSUE_API_PATH = '/rest/agile/1.0/issue';
 
 /*---------------------------------------Trofos---------------------------------------*/
-export const TROFOS_COURSE_URI =
-  'https://trofos-production.comp.nus.edu.sg/api/external/v1/course';
-export const TROFOS_PROJECT_URI =
-  'https://trofos-production.comp.nus.edu.sg/api/external/v1/project';
+export const TROFOS_COURSE_PATH = '/course';
+export const TROFOS_PROJECT_PATH = '/project';
 export const TROFOS_SPRINT_PATH = '/sprint';
