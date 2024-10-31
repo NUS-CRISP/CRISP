@@ -5,7 +5,10 @@ import { useState, useEffect } from 'react';
 import { AssessmentResult } from '@shared/types/AssessmentResults';
 import { User } from '@shared/types/User';
 import { Team } from '@shared/types/Team';
-import { AssignedTeam, AssignedUser } from '@shared/types/AssessmentAssignmentSet';
+import {
+  AssignedTeam,
+  AssignedUser,
+} from '@shared/types/AssessmentAssignmentSet';
 import AssessmentResultCard from '../cards/AssessmentResultCard';
 
 interface AssessmentInternalResultsProps {
@@ -35,13 +38,14 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
   const [markedFilter, setMarkedFilter] = useState<string>('All');
   const [sortCriterion, setSortCriterion] = useState<string>('name');
   const [studentResults, setStudentResults] = useState<StudentResult[]>([]);
-  const [filteredAndSortedStudentResults, setFilteredAndSortedStudentResults] = useState<StudentResult[]>([]);
+  const [filteredAndSortedStudentResults, setFilteredAndSortedStudentResults] =
+    useState<StudentResult[]>([]);
 
   const toggleResultForm = () => {
     setIsResultFormOpen(!isResultFormOpen);
   };
 
-  const taOptions = teachingTeam.map((user) => ({
+  const taOptions = teachingTeam.map(user => ({
     value: user._id,
     label: user.name,
   }));
@@ -51,23 +55,23 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
       const studentResultsArray: StudentResult[] = [];
       if (assignedUsers && assignedUsers.length > 0) {
         // Individual granularity
-        assignedUsers.forEach((assignedUser) => {
+        assignedUsers.forEach(assignedUser => {
           studentResultsArray.push({
             student: assignedUser.user,
-            assignedTAIds: assignedUser.tas.map((ta) => ta._id),
+            assignedTAIds: assignedUser.tas.map(ta => ta._id),
             team: null,
-            result: results.find((r) => r.student?._id === assignedUser.user._id),
+            result: results.find(r => r.student?._id === assignedUser.user._id),
           });
         });
       } else if (assignedTeams && assignedTeams.length > 0) {
         // Team granularity
-        assignedTeams.forEach((assignedTeam) => {
-          assignedTeam.team.members.forEach((member) => {
+        assignedTeams.forEach(assignedTeam => {
+          assignedTeam.team.members.forEach(member => {
             studentResultsArray.push({
               student: member,
-              assignedTAIds: assignedTeam.tas.map((ta) => ta._id),
+              assignedTAIds: assignedTeam.tas.map(ta => ta._id),
               team: assignedTeam.team,
-              result: results.find((r) => r.student?._id === member._id),
+              result: results.find(r => r.student?._id === member._id),
             });
           });
         });
@@ -85,28 +89,40 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
       // Apply Marker filter
       if (markerFilter !== 'All') {
         if (markerFilter === 'Unassigned') {
-          filteredResults = filteredResults.filter((sr) => sr.assignedTAIds.length === 0);
+          filteredResults = filteredResults.filter(
+            sr => sr.assignedTAIds.length === 0
+          );
         } else {
-          filteredResults = filteredResults.filter((sr) => sr.assignedTAIds.includes(markerFilter));
+          filteredResults = filteredResults.filter(sr =>
+            sr.assignedTAIds.includes(markerFilter)
+          );
         }
       }
 
       // Apply Marked filter
       if (markedFilter !== 'All') {
         if (markedFilter === 'Marked') {
-          filteredResults = filteredResults.filter((sr) => sr.result && sr.result.marks.length > 0);
+          filteredResults = filteredResults.filter(
+            sr => sr.result && sr.result.marks.length > 0
+          );
         } else if (markedFilter === 'Unmarked') {
-          filteredResults = filteredResults.filter((sr) => !sr.result || sr.result.marks.length === 0);
+          filteredResults = filteredResults.filter(
+            sr => !sr.result || sr.result.marks.length === 0
+          );
         }
       }
 
       // Sort the results
       switch (sortCriterion) {
         case 'name':
-          filteredResults.sort((a, b) => a.student.name.localeCompare(b.student.name));
+          filteredResults.sort((a, b) =>
+            a.student.name.localeCompare(b.student.name)
+          );
           break;
         case 'studentID':
-          filteredResults.sort((a, b) => a.student.studentId.localeCompare(b.student.studentId));
+          filteredResults.sort((a, b) =>
+            a.student.studentId.localeCompare(b.student.studentId)
+          );
           break;
         case 'marks':
           filteredResults.sort((a, b) => {
@@ -135,15 +151,13 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
   // Function to generate CSV content
   const generateCSV = () => {
     const headers = ['StudentID', 'Marks'];
-    const rows = filteredAndSortedStudentResults.map((sr) => [
+    const rows = filteredAndSortedStudentResults.map(sr => [
       sr.student.identifier,
       sr.result ? sr.result.averageScore.toString() : 'N/A',
     ]);
 
     // Combine headers and rows
-    const csvContent = [headers, ...rows]
-      .map((e) => e.join(','))
-      .join('\n');
+    const csvContent = [headers, ...rows].map(e => e.join(',')).join('\n');
 
     return csvContent;
   };
@@ -164,12 +178,12 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
 
   return (
     <div>
-      <Group mt='xs'>
+      <Group mt="xs">
         <div>
           <Text size="sm">Marker</Text>
           <Select
             value={markerFilter}
-            onChange={(value) => setMarkerFilter(value || 'All')}
+            onChange={value => setMarkerFilter(value || 'All')}
             data={[
               { value: 'All', label: 'All' },
               { value: 'Unassigned', label: 'Unassigned' },
@@ -183,7 +197,7 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
           <Text size="sm">Marked Status</Text>
           <Select
             value={markedFilter}
-            onChange={(value) => setMarkedFilter(value || 'All')}
+            onChange={value => setMarkedFilter(value || 'All')}
             data={[
               { value: 'All', label: 'All' },
               { value: 'Marked', label: 'Marked' },
@@ -197,7 +211,7 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
           <Text size="sm">Sort by</Text>
           <Select
             value={sortCriterion}
-            onChange={(value) => setSortCriterion(value || 'name')}
+            onChange={value => setSortCriterion(value || 'name')}
             data={[
               { value: 'name', label: 'Name' },
               { value: 'studentID', label: 'Student ID' },
@@ -208,18 +222,34 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
             my={8}
           />
         </div>
-        <Button onClick={toggleResultForm} style={{ marginBottom: '10px', alignSelf: 'flex-end', marginLeft: 'auto' }}>
+        <Button
+          onClick={toggleResultForm}
+          style={{
+            marginBottom: '10px',
+            alignSelf: 'flex-end',
+            marginLeft: 'auto',
+          }}
+        >
           Download Results
         </Button>
       </Group>
 
-      <Modal opened={isResultFormOpen} onClose={toggleResultForm} title="Download results">
+      <Modal
+        opened={isResultFormOpen}
+        onClose={toggleResultForm}
+        title="Download results"
+      >
         <Group>
           <Text>
-            Click the button below to download the assessment results as a CSV file. The CSV includes the following columns:
+            Click the button below to download the assessment results as a CSV
+            file. The CSV includes the following columns:
             <ul>
-              <li><strong>StudentID</strong>: The identifier of the student.</li>
-              <li><strong>Marks</strong>: The average score of the student.</li>
+              <li>
+                <strong>StudentID</strong>: The identifier of the student.
+              </li>
+              <li>
+                <strong>Marks</strong>: The average score of the student.
+              </li>
             </ul>
           </Text>
           <Button onClick={downloadCSV} color="blue">
@@ -228,41 +258,46 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
         </Group>
       </Modal>
 
-      {filteredAndSortedStudentResults && filteredAndSortedStudentResults.length > 0 && (
-        sortCriterion === 'teamNumber' ? (
-          // Group by teams
-          Object.entries(
-            filteredAndSortedStudentResults.reduce((groups, sr) => {
-              const teamId = sr.team ? sr.team._id : 'No Team';
-              if (!groups[teamId]) {
-                groups[teamId] = [];
-              }
-              groups[teamId].push(sr);
-              return groups;
-            }, {} as { [teamId: string]: StudentResult[] })
-          ).map(([teamId, studentsInTeam]) => (
-            <div key={teamId} style={{ marginBottom: '1rem' }}>
-              <h3>{teamId === 'No Team' ? 'No Team' : `Team ${studentsInTeam[0].team!.number}`}</h3>
-              {studentsInTeam.map((sr) => (
-                <AssessmentResultCard
-                  key={sr.student._id}
-                  studentResult={sr}
-                  maxScore={maxScore}
-                />
-              ))}
-            </div>
-          ))
-        ) : (
-          // Display students directly
-          filteredAndSortedStudentResults.map((sr) => (
-            <AssessmentResultCard
-              key={sr.student._id}
-              studentResult={sr}
-              maxScore={maxScore}
-            />
-          ))
-        )
-      )}
+      {filteredAndSortedStudentResults &&
+        filteredAndSortedStudentResults.length > 0 &&
+        (sortCriterion === 'teamNumber'
+          ? // Group by teams
+            Object.entries(
+              filteredAndSortedStudentResults.reduce(
+                (groups, sr) => {
+                  const teamId = sr.team ? sr.team._id : 'No Team';
+                  if (!groups[teamId]) {
+                    groups[teamId] = [];
+                  }
+                  groups[teamId].push(sr);
+                  return groups;
+                },
+                {} as { [teamId: string]: StudentResult[] }
+              )
+            ).map(([teamId, studentsInTeam]) => (
+              <div key={teamId} style={{ marginBottom: '1rem' }}>
+                <h3>
+                  {teamId === 'No Team'
+                    ? 'No Team'
+                    : `Team ${studentsInTeam[0].team!.number}`}
+                </h3>
+                {studentsInTeam.map(sr => (
+                  <AssessmentResultCard
+                    key={sr.student._id}
+                    studentResult={sr}
+                    maxScore={maxScore}
+                  />
+                ))}
+              </div>
+            ))
+          : // Display students directly
+            filteredAndSortedStudentResults.map(sr => (
+              <AssessmentResultCard
+                key={sr.student._id}
+                studentResult={sr}
+                maxScore={maxScore}
+              />
+            )))}
     </div>
   );
 };

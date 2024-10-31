@@ -147,7 +147,10 @@ const UndecidedAnswerSchema = new Schema<UndecidedAnswer>({}, options);
 // Define discriminators without specifying the generic type parameter
 AnswerSchema.discriminator('NUSNET ID', NUSNETIDAnswerSchema);
 AnswerSchema.discriminator('NUSNET Email', NUSNETEmailAnswerSchema);
-AnswerSchema.discriminator('Team Member Selection', TeamMemberSelectionAnswerSchema);
+AnswerSchema.discriminator(
+  'Team Member Selection',
+  TeamMemberSelectionAnswerSchema
+);
 AnswerSchema.discriminator('Multiple Choice', MultipleChoiceAnswerSchema);
 AnswerSchema.discriminator('Multiple Response', MultipleResponseAnswerSchema);
 AnswerSchema.discriminator('Scale', ScaleAnswerSchema);

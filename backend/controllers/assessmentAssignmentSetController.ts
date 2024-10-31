@@ -14,7 +14,10 @@ import { getUserIdByAccountId } from 'services/accountService';
 /**
  * Controller to create a new AssessmentAssignmentSet.
  */
-export const createAssignmentSetController = async (req: Request, res: Response) => {
+export const createAssignmentSetController = async (
+  req: Request,
+  res: Response
+) => {
   const { assessmentId } = req.params;
   const { originalTeamSetId } = req.body;
 
@@ -24,14 +27,19 @@ export const createAssignmentSetController = async (req: Request, res: Response)
   }
 
   try {
-    const assignmentSet = await createAssignmentSet(assessmentId, originalTeamSetId);
+    const assignmentSet = await createAssignmentSet(
+      assessmentId,
+      originalTeamSetId
+    );
     res.status(201).json(assignmentSet);
   } catch (error) {
     if (error instanceof BadRequestError || error instanceof NotFoundError) {
       res.status(400).json({ error: error.message });
     } else {
       console.error('Error creating AssessmentAssignmentSet:', error);
-      res.status(500).json({ error: 'Failed to create AssessmentAssignmentSet' });
+      res
+        .status(500)
+        .json({ error: 'Failed to create AssessmentAssignmentSet' });
     }
   }
 };
@@ -39,18 +47,29 @@ export const createAssignmentSetController = async (req: Request, res: Response)
 /**
  * Controller to retrieve an AssessmentAssignmentSet by assessment ID.
  */
-export const getAssignmentSetController = async (req: Request, res: Response) => {
+export const getAssignmentSetController = async (
+  req: Request,
+  res: Response
+) => {
   const { assessmentId } = req.params;
 
   try {
     const assignmentSet = await getAssignmentSetByAssessmentId(assessmentId);
-    res.status(200).json(assignmentSet.assignedTeams === null ? assignmentSet.assignedUsers : assignmentSet.assignedTeams);
+    res
+      .status(200)
+      .json(
+        assignmentSet.assignedTeams === null
+          ? assignmentSet.assignedUsers
+          : assignmentSet.assignedTeams
+      );
   } catch (error) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
     } else {
       console.error('Error fetching AssessmentAssignmentSet:', error);
-      res.status(500).json({ error: 'Failed to fetch AssessmentAssignmentSet' });
+      res
+        .status(500)
+        .json({ error: 'Failed to fetch AssessmentAssignmentSet' });
     }
   }
 };
@@ -58,19 +77,28 @@ export const getAssignmentSetController = async (req: Request, res: Response) =>
 /**
  * Controller to update the assignedTeams within an AssessmentAssignmentSet.
  */
-export const updateAssignmentSetController = async (req: Request, res: Response) => {
+export const updateAssignmentSetController = async (
+  req: Request,
+  res: Response
+) => {
   const { assessmentId } = req.params;
   const { assignedTeams, assignedUsers } = req.body;
 
   try {
-    const updatedSet = await updateAssignmentSet(assessmentId, assignedTeams, assignedUsers);
+    const updatedSet = await updateAssignmentSet(
+      assessmentId,
+      assignedTeams,
+      assignedUsers
+    );
     res.status(200).json(updatedSet);
   } catch (error) {
     if (error instanceof NotFoundError || error instanceof BadRequestError) {
       res.status(400).json({ error: error.message });
     } else {
       console.error('Error updating AssessmentAssignmentSet:', error);
-      res.status(500).json({ error: 'Failed to update AssessmentAssignmentSet' });
+      res
+        .status(500)
+        .json({ error: 'Failed to update AssessmentAssignmentSet' });
     }
   }
 };
@@ -78,7 +106,10 @@ export const updateAssignmentSetController = async (req: Request, res: Response)
 /**
  * Controller to retrieve all teams assigned to a specific TA within an assessment.
  */
-export const getAssignmentsByTAIdController = async (req: Request, res: Response) => {
+export const getAssignmentsByTAIdController = async (
+  req: Request,
+  res: Response
+) => {
   const { assessmentId } = req.params;
   const accountId = await getAccountId(req);
   const userId = await getUserIdByAccountId(accountId);

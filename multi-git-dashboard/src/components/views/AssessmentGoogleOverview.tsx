@@ -76,7 +76,9 @@ const AssessmentGoogleOverview: React.FC<AssessmentGoogleOverviewProps> = ({
     if (assessment.granularity === 'individual') {
       results.forEach((result: Result) => {
         result.marks.forEach((item: MarkItem) => {
-          const isSubmitted = sheetData.rows.some(row => row.includes(item.user));
+          const isSubmitted = sheetData.rows.some(row =>
+            row.includes(item.user)
+          );
           if (!isSubmitted) {
             const pendingRow = [
               item.user,
@@ -89,13 +91,18 @@ const AssessmentGoogleOverview: React.FC<AssessmentGoogleOverviewProps> = ({
         });
       });
     } else if (assessment.granularity === 'team') {
-      const teamNumbers = new Set(results.map(result => result.team?.number?.toString()));
+      const teamNumbers = new Set(
+        results.map(result => result.team?.number?.toString())
+      );
       teamNumbers.forEach(teamNumber => {
-        const isSubmitted = sheetData.rows.some(row => row.includes(teamNumber));
+        const isSubmitted = sheetData.rows.some(row =>
+          row.includes(teamNumber)
+        );
         if (!isSubmitted) {
           const markerName =
-            results.find(result => result.team?.number?.toString() === teamNumber)?.marker?.name ||
-            'EMPTY';
+            results.find(
+              result => result.team?.number?.toString() === teamNumber
+            )?.marker?.name || 'EMPTY';
           const pendingRow = [teamNumber, markerName];
           pending.push(pendingRow);
         }
@@ -105,8 +112,8 @@ const AssessmentGoogleOverview: React.FC<AssessmentGoogleOverviewProps> = ({
       teamFilter === 'All Teams'
         ? true
         : assessment?.granularity === 'individual'
-        ? row[2] === teamFilter
-        : row[0] === teamFilter
+          ? row[2] === teamFilter
+          : row[0] === teamFilter
     );
     setPendingSubmissions(filteredPendingSubmissions);
   };
@@ -146,8 +153,8 @@ const AssessmentGoogleOverview: React.FC<AssessmentGoogleOverviewProps> = ({
           teamFilter === 'All Teams'
             ? true
             : assessment?.granularity === 'individual'
-            ? row[2] === teamFilter
-            : row[0] === teamFilter
+              ? row[2] === teamFilter
+              : row[0] === teamFilter
         ),
       }
     : {

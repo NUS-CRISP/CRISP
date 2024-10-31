@@ -47,19 +47,22 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({
   };
 
   const emailAnswer: NUSNETEmailAnswer | undefined = submission.answers.find(
-    (answer) => answer.type === 'NUSNET Email'
+    answer => answer.type === 'NUSNET Email'
   );
 
   const nusnetIdAnswer = submission.answers.find(
-    (answer) => answer.type === 'NUSNET ID'
+    answer => answer.type === 'NUSNET ID'
   );
 
   const teamMemberSelectionAnswer = submission.answers.find(
-    (answer) => answer.type === 'Team Member Selection'
+    answer => answer.type === 'Team Member Selection'
   );
 
   // Get the score and adjusted score
-  const totalScore = submission.adjustedScore !== undefined ? submission.adjustedScore : submission.score;
+  const totalScore =
+    submission.adjustedScore !== undefined
+      ? submission.adjustedScore
+      : submission.score;
   const originalScore = submission.score;
 
   return (
@@ -70,7 +73,9 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({
           <div>
             <Group justify="flex-start" gap="xs">
               <Text>
-                {hasFacultyPermission ? `Submitted by: ${userName}` : 'Your Submission'}
+                {hasFacultyPermission
+                  ? `Submitted by: ${userName}`
+                  : 'Your Submission'}
               </Text>
               <Badge color={submission.isDraft ? 'yellow' : 'green'}>
                 {submission.isDraft ? 'Draft' : 'Submitted'}
@@ -79,12 +84,14 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({
 
             {emailAnswer && (
               <Text size="sm">
-                <strong>Email:</strong> {emailAnswer.value || 'No email provided'}
+                <strong>Email:</strong>{' '}
+                {emailAnswer.value || 'No email provided'}
               </Text>
             )}
             {nusnetIdAnswer && (
               <Text size="sm">
-                <strong>NUSNET ID:</strong> {nusnetIdAnswer.value || 'No NUSNET ID provided'}
+                <strong>NUSNET ID:</strong>{' '}
+                {nusnetIdAnswer.value || 'No NUSNET ID provided'}
               </Text>
             )}
             {teamMemberSelectionAnswer && (
@@ -140,7 +147,9 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({
       <Modal
         opened={opened}
         onClose={() => setOpened(false)}
-        title={hasFacultyPermission ? `Submission by ${userName}` : 'Your Submission'}
+        title={
+          hasFacultyPermission ? `Submission by ${userName}` : 'Your Submission'
+        }
         size="lg"
       >
         <ScrollArea style={{ height: '60vh' }}>
@@ -153,8 +162,10 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({
             )
               return null;
 
-            const question = questions.find((q) => q._id === answer.question);
-            const questionText = question ? question.text : 'Question text not available';
+            const question = questions.find(q => q._id === answer.question);
+            const questionText = question
+              ? question.text
+              : 'Question text not available';
 
             return (
               <div key={index} style={{ marginBottom: '1rem' }}>
@@ -162,7 +173,8 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({
                   <strong>Question:</strong> {questionText}
                 </Text>
                 <Text>
-                  <strong>Answer:</strong> {formatAnswer(answer, userIdToNameMap)}
+                  <strong>Answer:</strong>{' '}
+                  {formatAnswer(answer, userIdToNameMap)}
                 </Text>
 
                 {/* Show points earned if the user has faculty permissions */}
@@ -185,7 +197,10 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({
 
 // Helper function to format answers based on type
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function formatAnswer(answer: any, userIdToNameMap: { [key: string]: string }): string {
+function formatAnswer(
+  answer: any,
+  userIdToNameMap: { [key: string]: string }
+): string {
   switch (answer.type) {
     case 'Multiple Choice':
     case 'Short Response':
@@ -197,7 +212,9 @@ function formatAnswer(answer: any, userIdToNameMap: { [key: string]: string }): 
       return answer.values ? answer.values.join(', ') : 'No answer provided';
     case 'Scale':
     case 'Number':
-      return answer.value !== undefined ? answer.value.toString() : 'No answer provided';
+      return answer.value !== undefined
+        ? answer.value.toString()
+        : 'No answer provided';
     case 'Date':
       if (answer.startDate && answer.endDate) {
         return `${new Date(answer.startDate).toLocaleDateString()} - ${new Date(

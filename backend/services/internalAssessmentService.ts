@@ -73,7 +73,7 @@ export const getInternalAssessmentById = async (
   // Filtering results based on the role and assigned marker for teaching assistants
   if (account.role === 'Teaching assistant') {
     const userId = account.user;
-    assessment.results = assessment.results.filter((result) =>
+    assessment.results = assessment.results.filter(result =>
       result.marker?.equals(userId)
     );
   }
@@ -92,7 +92,7 @@ export const getInternalAssessmentById = async (
       if (!teamB) return 1;
       return teamA.number - teamB.number;
     });
-    assessment.results.forEach((result) => {
+    assessment.results.forEach(result => {
       result.marks.sort((a, b) => a.name.localeCompare(b.name));
     });
   }
@@ -140,7 +140,7 @@ export const deleteInternalAssessmentById = async (assessmentId: string) => {
   // Remove the assessment from the associated course
   const course = await CourseModel.findById(assessment.course);
   if (course && course.internalAssessments) {
-    const index = course.internalAssessments.findIndex((id) =>
+    const index = course.internalAssessments.findIndex(id =>
       id.equals(assessment._id)
     );
     if (index !== -1) {
@@ -157,9 +157,8 @@ export const uploadInternalAssessmentResultsById = async (
   assessmentId: string,
   results: { studentId: string; mark: number }[]
 ) => {
-  const assessment = await InternalAssessmentModel.findById(assessmentId).populate(
-    'results'
-  );
+  const assessment =
+    await InternalAssessmentModel.findById(assessmentId).populate('results');
 
   if (!assessment) {
     throw new NotFoundError('Assessment not found');
@@ -186,9 +185,8 @@ export const updateInternalAssessmentResultMarkerById = async (
   resultId: string,
   markerId: string
 ) => {
-  const assessment = await InternalAssessmentModel.findById(assessmentId).populate(
-    'results'
-  );
+  const assessment =
+    await InternalAssessmentModel.findById(assessmentId).populate('results');
 
   if (!assessment) {
     throw new NotFoundError('Assessment not found');
@@ -345,8 +343,8 @@ export const addInternalAssessmentsToCourse = async (
         assessment.teamSet = teamSet._id;
         course.students.forEach((student: any) => {
           const teams: Team[] = teamSet.teams as unknown as Team[];
-          const team = teams.find((t) =>
-            t?.members?.some((member) => member._id.equals(student._id))
+          const team = teams.find(t =>
+            t?.members?.some(member => member._id.equals(student._id))
           );
           const marker = team?.TA ? team.TA._id : null;
           const result = new ResultModel({
@@ -376,15 +374,21 @@ export const addInternalAssessmentsToCourse = async (
       }
     }
 
-    assessment.results = results.map((result) => result._id);
+    assessment.results = results.map(result => result._id);
     course.internalAssessments.push(assessment._id);
     newAssessments.push(assessment);
-    await Promise.all(results.map((result) => result.save()));
+    await Promise.all(results.map(result => result.save()));
 
     try {
-      await createAssignmentSet(assessment._id.toString(), teamSet!._id.toString()); // Null checked at the start
+      await createAssignmentSet(
+        assessment._id.toString(),
+        teamSet!._id.toString()
+      ); // Null checked at the start
     } catch (error) {
-      console.error(`Failed to create AssessmentAssignmentSet for assessment ${assessment._id}:`, error);
+      console.error(
+        `Failed to create AssessmentAssignmentSet for assessment ${assessment._id}:`,
+        error
+      );
     }
   }
 
@@ -393,9 +397,8 @@ export const addInternalAssessmentsToCourse = async (
   }
 
   await course.save();
-  await Promise.all(newAssessments.map((assessment) => assessment.save()));
+  await Promise.all(newAssessments.map(assessment => assessment.save()));
 };
-
 
 /*--------------------------Questions---------------------------------------------*/
 // Add a question to an internal assessment
@@ -404,7 +407,7 @@ export const addQuestionToAssessment = async (
   questionData: Partial<QuestionUnion>,
   accountId: string
 ): Promise<QuestionUnion> => {
-  console.log(questionData)
+  console.log(questionData);
   const account = await AccountModel.findById(accountId);
   if (!account) {
     throw new NotFoundError('Account not found');
@@ -436,7 +439,9 @@ export const addQuestionToAssessment = async (
         !Array.isArray(validQuestionData.options) ||
         validQuestionData.options.length === 0
       ) {
-        throw new BadRequestError('Options are required for Multiple Choice questions');
+        throw new BadRequestError(
+          'Options are required for Multiple Choice questions'
+        );
       }
       if (validQuestionData.isScored) {
         for (const option of validQuestionData.options) {
@@ -453,7 +458,9 @@ export const addQuestionToAssessment = async (
         !Array.isArray(validQuestionData.options) ||
         validQuestionData.options.length === 0
       ) {
-        throw new BadRequestError('Options are required for Multiple Response questions');
+        throw new BadRequestError(
+          'Options are required for Multiple Response questions'
+        );
       }
       if (validQuestionData.isScored) {
         for (const option of validQuestionData.options) {
@@ -471,16 +478,16 @@ export const addQuestionToAssessment = async (
       }
       break;
     case 'Scale':
-      if (
-        typeof validQuestionData.scaleMax !== 'number'
-      ) {
+      if (typeof validQuestionData.scaleMax !== 'number') {
         throw new BadRequestError('scaleMax is required for Scale questions');
       }
       if (
         !Array.isArray(validQuestionData.labels) ||
         validQuestionData.labels.length < 2
       ) {
-        throw new BadRequestError('At least two labels are required for Scale questions');
+        throw new BadRequestError(
+          'At least two labels are required for Scale questions'
+        );
       }
       if (validQuestionData.isScored) {
         for (const label of validQuestionData.labels) {
@@ -504,14 +511,18 @@ export const addQuestionToAssessment = async (
         }
         if (validQuestionData.scoringMethod === 'direct') {
           if (typeof validQuestionData.maxPoints !== 'number') {
-            throw new BadRequestError('maxPoints is required for direct scoring method');
+            throw new BadRequestError(
+              'maxPoints is required for direct scoring method'
+            );
           }
         } else if (validQuestionData.scoringMethod === 'range') {
           if (
             !Array.isArray(validQuestionData.scoringRanges) ||
             validQuestionData.scoringRanges.length === 0
           ) {
-            throw new BadRequestError('scoringRanges are required for range scoring method');
+            throw new BadRequestError(
+              'scoringRanges are required for range scoring method'
+            );
           }
           for (const range of validQuestionData.scoringRanges) {
             if (
@@ -637,9 +648,8 @@ export const getQuestionsByAssessmentId = async (
     throw new NotFoundError('Account not found');
   }
 
-  const assessment = await InternalAssessmentModel.findById(assessmentId).populate(
-    'questions'
-  );
+  const assessment =
+    await InternalAssessmentModel.findById(assessmentId).populate('questions');
   if (!assessment) {
     throw new NotFoundError('Assessment not found');
   }
@@ -701,11 +711,12 @@ export const updateQuestionById = async (
       );
       break;
     case 'Team Member Selection':
-      updatedQuestion = await TeamMemberSelectionQuestionModel.findByIdAndUpdate(
-        questionId,
-        updateData,
-        { new: true }
-      );
+      updatedQuestion =
+        await TeamMemberSelectionQuestionModel.findByIdAndUpdate(
+          questionId,
+          updateData,
+          { new: true }
+        );
       break;
     case 'Multiple Choice':
       updatedQuestion = await MultipleChoiceQuestionModel.findByIdAndUpdate(

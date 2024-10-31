@@ -14,7 +14,11 @@ export interface Submission extends Document {
 
 const SubmissionSchema = new Schema<Submission>(
   {
-    assessment: { type: Schema.Types.ObjectId, ref: 'InternalAssessment', required: true },
+    assessment: {
+      type: Schema.Types.ObjectId,
+      ref: 'InternalAssessment',
+      required: true,
+    },
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     answers: { type: [AnswerSchema], required: true },
     submittedAt: { type: Date, default: Date.now },
@@ -25,6 +29,9 @@ const SubmissionSchema = new Schema<Submission>(
   { timestamps: true }
 );
 
-const SubmissionModel = mongoose.model<Submission>('Submission', SubmissionSchema);
+const SubmissionModel = mongoose.model<Submission>(
+  'Submission',
+  SubmissionSchema
+);
 
 export default SubmissionModel;

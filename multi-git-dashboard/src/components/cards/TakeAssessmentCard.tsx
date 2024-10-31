@@ -36,7 +36,11 @@ interface TakeAssessmentCardProps {
   index: number;
   disabled?: boolean;
   teamMembersOptions?: { value: string; label: string }[]; // For individual granularity
-  teamOptions?: { value: string; label: string; members: { value: string; label: string }[] }[]; // For team granularity
+  teamOptions?: {
+    value: string;
+    label: string;
+    members: { value: string; label: string }[];
+  }[]; // For team granularity
   assessmentGranularity?: string; // 'team' or 'individual'
   isFaculty?: boolean; // Indicates if the user has faculty permissions
   submission?: Submission; // Contains per-answer scores
@@ -59,7 +63,8 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
   const customInstruction = question.customInstruction || '';
   const questionText = question.text || '';
   const maxSelections =
-    question.type === 'Team Member Selection' && assessmentGranularity === 'individual'
+    question.type === 'Team Member Selection' &&
+    assessmentGranularity === 'individual'
       ? 1
       : undefined;
 
@@ -67,9 +72,9 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
   const selectedIds = Array.isArray(answer) ? (answer as string[]) : [];
 
   // Available options to select (excluding already selected ones)
-  const [availableOptions, setAvailableOptions] = useState<{ value: string; label: string }[]>(
-    []
-  );
+  const [availableOptions, setAvailableOptions] = useState<
+    { value: string; label: string }[]
+  >([]);
 
   // Update availableOptions whenever selectedIds or teamMembersOptions/teamOptions change
   useEffect(() => {
@@ -77,19 +82,29 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
       if (assessmentGranularity === 'team' && teamOptions) {
         // For team granularity, use teamOptions
         setAvailableOptions(
-          teamOptions.filter((team) => !selectedIds.includes(team.value)).map((team) => ({
-            value: team.value,
-            label: team.label,
-          }))
+          teamOptions
+            .filter(team => !selectedIds.includes(team.value))
+            .map(team => ({
+              value: team.value,
+              label: team.label,
+            }))
         );
       } else if (assessmentGranularity === 'individual' && teamMembersOptions) {
         // For individual granularity, use teamMembersOptions
         setAvailableOptions(
-          teamMembersOptions.filter((student) => !selectedIds.includes(student.value))
+          teamMembersOptions.filter(
+            student => !selectedIds.includes(student.value)
+          )
         );
       }
     }
-  }, [selectedIds, teamMembersOptions, teamOptions, assessmentGranularity, question.type]);
+  }, [
+    selectedIds,
+    teamMembersOptions,
+    teamOptions,
+    assessmentGranularity,
+    question.type,
+  ]);
 
   // Type Guard to check if question is scored
   const isScoredQuestion = (
@@ -113,7 +128,7 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
 
   if (isFaculty && isScoredQuestion(question) && submission) {
     const answerInSubmission = submission.answers.find(
-      (ans) => ans.question.toString() === question._id.toString()
+      ans => ans.question.toString() === question._id.toString()
     );
     perQuestionScore = answerInSubmission?.score || 0;
   }
@@ -128,7 +143,7 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
       }}
     >
       {/* Top Badges */}
-      <Group justify='space-between' mb="sm">
+      <Group justify="space-between" mb="sm">
         <Badge color={isRequired ? 'red' : 'blue'} size="sm">
           {isRequired ? 'Required' : 'Optional'}
         </Badge>
@@ -155,13 +170,14 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
       )}
 
       {/* Team Member Selection */}
-      {questionType === 'Team Member Selection' &&
+      {questionType === 'Team Member Selection' && (
         <>
-
-        <Group gap="xs" mb="sm">
+          <Group gap="xs" mb="sm">
             {teamMembersOptions &&
-              selectedIds.map((userId) => {
-                const student = teamMembersOptions.find((option) => option.value === userId);
+              selectedIds.map(userId => {
+                const student = teamMembersOptions.find(
+                  option => option.value === userId
+                );
                 return (
                   <Badge
                     key={userId}
@@ -171,7 +187,9 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
                       !disabled && (
                         <CloseButton
                           onClick={() => {
-                            const updatedSelection = selectedIds.filter((id) => id !== userId);
+                            const updatedSelection = selectedIds.filter(
+                              id => id !== userId
+                            );
                             onAnswerChange(updatedSelection);
                           }}
                           size="xs"
@@ -184,31 +202,35 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
                   </Badge>
                 );
               })}
-          {teamOptions &&
-            selectedIds.map((teamId) => {
-              const team = teamOptions.find((option) => option.value === teamId);
-              return (
-                <Badge
-                  key={teamId}
-                  variant="filled"
-                  color="blue"
-                  rightSection={
-                    !disabled && (
-                      <CloseButton
-                        onClick={() => {
-                          const updatedSelection = selectedIds.filter((id) => id !== teamId);
-                          onAnswerChange(updatedSelection);
-                        }}
-                        size="xs"
-                        style={{ marginLeft: 4 }}
-                      />
-                    )
-                  }
-                >
-                  {team ? team.label : teamId}
-                </Badge>
-              );
-            })}
+            {teamOptions &&
+              selectedIds.map(teamId => {
+                const team = teamOptions.find(
+                  option => option.value === teamId
+                );
+                return (
+                  <Badge
+                    key={teamId}
+                    variant="filled"
+                    color="blue"
+                    rightSection={
+                      !disabled && (
+                        <CloseButton
+                          onClick={() => {
+                            const updatedSelection = selectedIds.filter(
+                              id => id !== teamId
+                            );
+                            onAnswerChange(updatedSelection);
+                          }}
+                          size="xs"
+                          style={{ marginLeft: 4 }}
+                        />
+                      )
+                    }
+                  >
+                    {team ? team.label : teamId}
+                  </Badge>
+                );
+              })}
           </Group>
           <MultiSelect
             data={availableOptions}
@@ -219,7 +241,7 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
             }
             searchable
             value={[]}
-            onChange={(value) => {
+            onChange={value => {
               // Handle only the last selected value
               const newSelection = value[value.length - 1];
               if (newSelection) {
@@ -235,7 +257,7 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
             }}
           />
         </>
-      }
+      )}
 
       {/* Render other question types as before */}
       {questionType === 'Multiple Choice' && (
@@ -266,7 +288,9 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
       {questionType === 'Multiple Response' && (
         <Group align="stretch" style={{ flexGrow: 1, flexDirection: 'column' }}>
           {(question as MultipleResponseQuestion).options.map((option, idx) => {
-            const multipleResponseAnswer = Array.isArray(answer) ? (answer as string[]) : [];
+            const multipleResponseAnswer = Array.isArray(answer)
+              ? (answer as string[])
+              : [];
             const isChecked = multipleResponseAnswer.includes(option.text);
 
             return (
@@ -286,11 +310,16 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
                   onChange={() => {
                     if (multipleResponseAnswer.includes(option.text)) {
                       // Remove the option
-                      const updatedAnswers = multipleResponseAnswer.filter((a) => a !== option.text);
+                      const updatedAnswers = multipleResponseAnswer.filter(
+                        a => a !== option.text
+                      );
                       onAnswerChange(updatedAnswers);
                     } else {
                       // Add the option
-                      const updatedAnswers = [...multipleResponseAnswer, option.text];
+                      const updatedAnswers = [
+                        ...multipleResponseAnswer,
+                        option.text,
+                      ];
                       onAnswerChange(updatedAnswers);
                     }
                   }}
@@ -313,13 +342,13 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
             }
             min={(question as ScaleQuestion).labels[0].value}
             max={(question as ScaleQuestion).scaleMax}
-            marks={(question as ScaleQuestion).labels.map((label) => ({
+            marks={(question as ScaleQuestion).labels.map(label => ({
               value: label.value,
               label: label.label,
             }))}
             step={1}
             style={{ padding: '0 20px', marginBottom: '20px' }}
-            onChange={(value) => onAnswerChange(value)}
+            onChange={value => onAnswerChange(value)}
             disabled={disabled}
           />
           <Box style={{ marginTop: '24px' }} />
@@ -331,10 +360,11 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
         question.type === 'NUSNET Email') && (
         <TextInput
           placeholder={
-            (question as ShortResponseQuestion).shortResponsePlaceholder || 'Enter your response here...'
+            (question as ShortResponseQuestion).shortResponsePlaceholder ||
+            'Enter your response here...'
           }
           value={typeof answer === 'string' ? answer : ''}
-          onChange={(e) => onAnswerChange(e.currentTarget.value)}
+          onChange={e => onAnswerChange(e.currentTarget.value)}
           disabled={disabled}
         />
       )}
@@ -346,7 +376,7 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
             'Enter your response here...'
           }
           value={typeof answer === 'string' ? answer : ''}
-          onChange={(e) => onAnswerChange(e.currentTarget.value)}
+          onChange={e => onAnswerChange(e.currentTarget.value)}
           minRows={5}
           autosize
           style={{ marginBottom: '16px' }}
@@ -361,11 +391,11 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
             <Text>
               {Array.isArray(answer)
                 ? (answer as [Date | null, Date | null])
-                    .map((date) => (date ? date.toLocaleDateString() : 'N/A'))
+                    .map(date => (date ? date.toLocaleDateString() : 'N/A'))
                     .join(' - ')
                 : answer instanceof Date
-                ? answer.toLocaleDateString()
-                : 'No date selected'}
+                  ? answer.toLocaleDateString()
+                  : 'No date selected'}
             </Text>
           ) : (question as DateQuestion).isRange ? (
             <Box>
@@ -387,7 +417,8 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
                     : undefined
                 }
                 value={
-                  Array.isArray(answer) && (answer as [Date | null, Date | null]).every(Boolean)
+                  Array.isArray(answer) &&
+                  (answer as [Date | null, Date | null]).every(Boolean)
                     ? (answer as [Date, Date])
                     : [null, null]
                 }
@@ -414,9 +445,7 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
                     ? new Date((question as DateQuestion).maxDate!)
                     : undefined
                 }
-                value={
-                  answer instanceof Date ? answer : null
-                }
+                value={answer instanceof Date ? answer : null}
                 onChange={(date: Date | null) => onAnswerChange(date)}
               />
             </Box>
@@ -432,7 +461,7 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
             (question as NumberQuestion).maxNumber || 100
           })`}
           value={typeof answer === 'number' ? answer : undefined}
-          onChange={(value) => onAnswerChange(value)}
+          onChange={value => onAnswerChange(value)}
           style={{ marginBottom: '16px' }}
           disabled={disabled}
         />

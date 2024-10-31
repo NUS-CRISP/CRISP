@@ -27,11 +27,20 @@ const InternalAssessmentCard: React.FC<InternalAssessmentCardProps> = ({
   return (
     <Card shadow="sm" padding="lg" radius="md" my={6} withBorder>
       <Box>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            marginBottom: '8px',
+          }}
+        >
           <Text size="lg" style={{ fontWeight: 500 }}>
             {assessmentName}
           </Text>
-          <Badge color={granularity === 'team' ? 'blue' : 'green'} variant="filled">
+          <Badge
+            color={granularity === 'team' ? 'blue' : 'green'}
+            variant="filled"
+          >
             {granularity === 'team' ? 'Team' : 'Individual'}
           </Badge>
         </div>

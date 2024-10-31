@@ -57,14 +57,26 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
   const isNewQuestion = questionData._id.startsWith('temp-');
 
   // Start in edit mode if it's a new question or question type is 'Undecided'
-  const [isEditing, setIsEditing] = useState<boolean>(isNewQuestion || questionData.type === 'Undecided');
+  const [isEditing, setIsEditing] = useState<boolean>(
+    isNewQuestion || questionData.type === 'Undecided'
+  );
 
-  const [questionText, setQuestionText] = useState<string>(questionData.text || '');
-  const [questionType, setQuestionType] = useState<QuestionUnion['type']>(questionData.type);
-  const [customInstruction, setCustomInstruction] = useState<string>(questionData.customInstruction || '');
-  const [isRequired, setIsRequired] = useState<boolean>(questionData.isRequired || false); // New state for isRequired
+  const [questionText, setQuestionText] = useState<string>(
+    questionData.text || ''
+  );
+  const [questionType, setQuestionType] = useState<QuestionUnion['type']>(
+    questionData.type
+  );
+  const [customInstruction, setCustomInstruction] = useState<string>(
+    questionData.customInstruction || ''
+  );
+  const [isRequired, setIsRequired] = useState<boolean>(
+    questionData.isRequired || false
+  ); // New state for isRequired
   // State for scoring-type questions
-  const [isScored, setIsScored] = useState<boolean>((questionData as any).isScored || false);
+  const [isScored, setIsScored] = useState<boolean>(
+    (questionData as any).isScored || false
+  );
 
   // Additional state based on question type
 
@@ -73,39 +85,64 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
   const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
   const [optionPoints, setOptionPoints] = useState<number[]>([]);
   // MRQ only
-  const [subtractPointsForWrongAnswers, setSubtractPointsForWrongAnswers] = useState<boolean>(
-    (questionData as MultipleResponseQuestion).allowNegative || false
-  );
+  const [subtractPointsForWrongAnswers, setSubtractPointsForWrongAnswers] =
+    useState<boolean>(
+      (questionData as MultipleResponseQuestion).allowNegative || false
+    );
   const [isOptionWrong, setIsOptionWrong] = useState<boolean[]>([]);
-
 
   // Scale
   const [scaleMax, setScaleMax] = useState<number>(5);
   const [scaleValue, setScaleValue] = useState<number>(1);
-  const [minLabel, setMinLabel] = useState<ScaleLabel>({ value: 1, label: 'Low', points: 0 });
-  const [maxLabel, setMaxLabel] = useState<ScaleLabel>({ value: 5, label: 'High', points: 0 });
-  const [intermediateLabels, setIntermediateLabels] = useState<ScaleLabel[]>([]);
+  const [minLabel, setMinLabel] = useState<ScaleLabel>({
+    value: 1,
+    label: 'Low',
+    points: 0,
+  });
+  const [maxLabel, setMaxLabel] = useState<ScaleLabel>({
+    value: 5,
+    label: 'High',
+    points: 0,
+  });
+  const [intermediateLabels, setIntermediateLabels] = useState<ScaleLabel[]>(
+    []
+  );
 
   // Short & Long Response
   const [shortResponseValue, setShortResponseValue] = useState<string>(''); // For submission
-  const [shortResponsePlaceholder, setShortResponsePlaceholder] = useState<string>(''); // For editing the placeholder
+  const [shortResponsePlaceholder, setShortResponsePlaceholder] =
+    useState<string>(''); // For editing the placeholder
   const [longResponseValue, setLongResponseValue] = useState<string>(''); // For Long Response submission
 
   // Date
   const [dateValue, setDateValue] = useState<DateValue>(null); // For Date Question (view mode)
   const [datesRangeValue, setDatesRangeValue] = useState<DatesRangeValue>(); // For Date Question (view mode)
-  const [isRange, setIsRange] = useState<boolean>((questionData as DateQuestion).isRange || false); // Edit mode toggle
+  const [isRange, setIsRange] = useState<boolean>(
+    (questionData as DateQuestion).isRange || false
+  ); // Edit mode toggle
   const [datePickerPlaceholder, setDatePickerPlaceholder] = useState<string>(
     (questionData as DateQuestion).datePickerPlaceholder || ''
   );
-  const [minDate, setMinDate] = useState<Date | null>((questionData as DateQuestion).minDate || null); // Edit mode
-  const [maxDate, setMaxDate] = useState<Date | null>((questionData as DateQuestion).maxDate || null); // Edit mode
+  const [minDate, setMinDate] = useState<Date | null>(
+    (questionData as DateQuestion).minDate || null
+  ); // Edit mode
+  const [maxDate, setMaxDate] = useState<Date | null>(
+    (questionData as DateQuestion).maxDate || null
+  ); // Edit mode
 
   // Number
-  const [numberValue, setNumberValue] = useState<number | undefined>((questionData as NumberQuestion).maxNumber || undefined);
-  const [scoringMethod, setScoringMethod] = useState<'direct' | 'range' | 'None'>((questionData as NumberQuestion).scoringMethod || 'None');
-  const [maxPoints, setMaxPoints] = useState<number>((questionData as NumberQuestion).maxPoints || 0);
-  const [scoringRanges, setScoringRanges] = useState<NumberScoringRange[]>((questionData as NumberQuestion).scoringRanges || []);
+  const [numberValue, setNumberValue] = useState<number | undefined>(
+    (questionData as NumberQuestion).maxNumber || undefined
+  );
+  const [scoringMethod, setScoringMethod] = useState<
+    'direct' | 'range' | 'None'
+  >((questionData as NumberQuestion).scoringMethod || 'None');
+  const [maxPoints, setMaxPoints] = useState<number>(
+    (questionData as NumberQuestion).maxPoints || 0
+  );
+  const [scoringRanges, setScoringRanges] = useState<NumberScoringRange[]>(
+    (questionData as NumberQuestion).scoringRanges || []
+  );
 
   // Temporary state for Max Scale Value as string to handle empty input and trimming
   const [tempScaleMax, setTempScaleMax] = useState<string>(scaleMax.toString());
@@ -117,10 +154,14 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
       case 'Multiple Choice':
       case 'Multiple Response':
         if ('options' in questionData && questionData.options) {
-          console.log(questionData.options)
-          setOptions(questionData.options.map((option) => option.text));
-          setOptionPoints(questionData.options.map((option) => Math.abs(option.points || 0)));
-          setIsOptionWrong(questionData.options.map((option) => (option.points || 0) < 0));
+          console.log(questionData.options);
+          setOptions(questionData.options.map(option => option.text));
+          setOptionPoints(
+            questionData.options.map(option => Math.abs(option.points || 0))
+          );
+          setIsOptionWrong(
+            questionData.options.map(option => (option.points || 0) < 0)
+          );
         } else {
           setOptions([]);
           setOptionPoints([]);
@@ -140,15 +181,23 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
           setScaleMax(questionData.scaleMax);
           setPreviousScaleMax(questionData.scaleMax);
           // Sort labels by value
-          const sortedLabels = [...questionData.labels].sort((a, b) => a.value - b.value);
-          const min = sortedLabels.find((label) => label.value === 1) || { value: 1, label: 'Low', points: 0 };
-          const max = sortedLabels.find((label) => label.value === questionData.scaleMax) || {
+          const sortedLabels = [...questionData.labels].sort(
+            (a, b) => a.value - b.value
+          );
+          const min = sortedLabels.find(label => label.value === 1) || {
+            value: 1,
+            label: 'Low',
+            points: 0,
+          };
+          const max = sortedLabels.find(
+            label => label.value === questionData.scaleMax
+          ) || {
             value: questionData.scaleMax,
             label: 'High',
             points: 0,
           };
           const intermediates = sortedLabels.filter(
-            (label) => label.value !== min.value && label.value !== max.value
+            label => label.value !== min.value && label.value !== max.value
           );
           setMinLabel(min);
           setMaxLabel(max);
@@ -165,11 +214,15 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
         setIsScored((questionData as any).isScored || false);
         break;
       case 'Short Response':
-        setShortResponsePlaceholder((questionData as ShortResponseQuestion).shortResponsePlaceholder || '');
+        setShortResponsePlaceholder(
+          (questionData as ShortResponseQuestion).shortResponsePlaceholder || ''
+        );
         setShortResponseValue(''); // Future submission handling
         break;
       case 'Long Response':
-        setShortResponsePlaceholder((questionData as LongResponseQuestion).longResponsePlaceholder || '');
+        setShortResponsePlaceholder(
+          (questionData as LongResponseQuestion).longResponsePlaceholder || ''
+        );
         setLongResponseValue(''); // Future submission handling
         break;
       case 'Date':
@@ -183,7 +236,9 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
       case 'Number':
         setNumberValue((questionData as NumberQuestion).maxNumber || undefined);
         setIsScored((questionData as any).isScored || false);
-        setScoringMethod((questionData as NumberQuestion).scoringMethod || 'None');
+        setScoringMethod(
+          (questionData as NumberQuestion).scoringMethod || 'None'
+        );
         setMaxPoints((questionData as NumberQuestion).maxPoints || 0);
         setScoringRanges((questionData as NumberQuestion).scoringRanges || []);
         break;
@@ -223,8 +278,8 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
     if (questionType === 'Multiple Choice') {
       setSelectedOptions(selectedOptions.includes(index) ? [] : [index]);
     } else if (questionType === 'Multiple Response') {
-      setSelectedOptions((prev) =>
-        prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+      setSelectedOptions(prev =>
+        prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
       );
     }
   };
@@ -239,19 +294,30 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
   // Handlers for dynamic intermediate labels
   const handleAddIntermediateLabel = () => {
     // Determine next available value between min and max
-    const existingValues = intermediateLabels.map((l) => l.value);
+    const existingValues = intermediateLabels.map(l => l.value);
     let newValue = Math.floor((minLabel.value + maxLabel.value) / 2);
-    while (existingValues.includes(newValue) && newValue > minLabel.value && newValue < maxLabel.value) {
+    while (
+      existingValues.includes(newValue) &&
+      newValue > minLabel.value &&
+      newValue < maxLabel.value
+    ) {
       newValue += 1;
     }
     if (newValue > minLabel.value && newValue < maxLabel.value) {
-      setIntermediateLabels([...intermediateLabels, { value: newValue, label: '', points: 0 }]);
+      setIntermediateLabels([
+        ...intermediateLabels,
+        { value: newValue, label: '', points: 0 },
+      ]);
     } else {
       alert('Cannot add more intermediate labels.');
     }
   };
 
-  const handleIntermediateLabelChange = (index: number, field: keyof ScaleLabel, value: string | number) => {
+  const handleIntermediateLabelChange = (
+    index: number,
+    field: keyof ScaleLabel,
+    value: string | number
+  ) => {
     const updatedLabels = [...intermediateLabels];
     updatedLabels[index] = { ...updatedLabels[index], [field]: value };
     setIntermediateLabels(updatedLabels);
@@ -260,11 +326,19 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
   const handleDeleteIntermediateLabel = (index: number) => {
     const updatedLabels = intermediateLabels.filter((_, i) => i !== index);
     setIntermediateLabels(updatedLabels);
-  };const handleAddScoringRange = () => {
-    setScoringRanges([...scoringRanges, { minValue: 0, maxValue: 0, points: 0 }]);
+  };
+  const handleAddScoringRange = () => {
+    setScoringRanges([
+      ...scoringRanges,
+      { minValue: 0, maxValue: 0, points: 0 },
+    ]);
   };
 
-  const handleScoringRangeChange = (index: number, field: keyof NumberScoringRange, value: number) => {
+  const handleScoringRangeChange = (
+    index: number,
+    field: keyof NumberScoringRange,
+    value: number
+  ) => {
     const updatedRanges = [...scoringRanges];
     updatedRanges[index] = { ...updatedRanges[index], [field]: value };
     setScoringRanges(updatedRanges);
@@ -284,7 +358,7 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
       }
 
       // Ensure no duplicate intermediate label values
-      const allValues = intermediateLabels.map((label) => label.value);
+      const allValues = intermediateLabels.map(label => label.value);
       const uniqueValues = new Set(allValues);
       if (uniqueValues.size !== allValues.length) {
         alert('Intermediate label values must be unique.');
@@ -293,10 +367,12 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
 
       // Ensure all intermediate labels are between min and max
       const invalidLabels = intermediateLabels.filter(
-        (label) => label.value <= minLabel.value || label.value >= maxLabel.value
+        label => label.value <= minLabel.value || label.value >= maxLabel.value
       );
       if (invalidLabels.length > 0) {
-        alert('Intermediate label values must be between min and max scale values.');
+        alert(
+          'Intermediate label values must be between min and max scale values.'
+        );
         return;
       }
     }
@@ -347,7 +423,7 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
           const sortedLabels = allLabels.sort((a, b) => a.value - b.value);
 
           // Check for duplicate values
-          const valuesSet = new Set(sortedLabels.map((label) => label.value));
+          const valuesSet = new Set(sortedLabels.map(label => label.value));
           if (valuesSet.size !== sortedLabels.length) {
             alert('Label values must be unique.');
             return;
@@ -367,7 +443,11 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
           text: questionText,
           type: questionType,
           scaleMax,
-          labels: [minLabel, ...intermediateLabels.sort((a, b) => a.value - b.value), maxLabel],
+          labels: [
+            minLabel,
+            ...intermediateLabels.sort((a, b) => a.value - b.value),
+            maxLabel,
+          ],
           isScored,
           customInstruction: customInstruction || getDefaultInstruction(),
           isLocked: questionData.isLocked || false,
@@ -379,7 +459,8 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
           ...questionData,
           text: questionText,
           type: questionType,
-          shortResponsePlaceholder: shortResponsePlaceholder || 'Enter your response here...',
+          shortResponsePlaceholder:
+            shortResponsePlaceholder || 'Enter your response here...',
           customInstruction: customInstruction || getDefaultInstruction(),
           isLocked: questionData.isLocked || false,
           isRequired, // Added isRequired
@@ -390,7 +471,8 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
           ...questionData,
           text: questionText,
           type: questionType,
-          longResponsePlaceholder: shortResponsePlaceholder || 'Enter your response here...',
+          longResponsePlaceholder:
+            shortResponsePlaceholder || 'Enter your response here...',
           customInstruction: customInstruction || getDefaultInstruction(),
           isLocked: questionData.isLocked || false,
           isRequired,
@@ -414,7 +496,9 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
         if (isScored) {
           if (scoringMethod === 'range') {
             // Validate scoring ranges
-            const ranges = scoringRanges.sort((a, b) => a.minValue - b.minValue);
+            const ranges = scoringRanges.sort(
+              (a, b) => a.minValue - b.minValue
+            );
             // Check for overlaps and increasing points
             let isValid = true;
             for (let i = 0; i < ranges.length; i++) {
@@ -422,13 +506,17 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
               const nextRange = ranges[i + 1];
               // Check for overlap
               if (nextRange && currentRange.maxValue >= nextRange.minValue) {
-                alert(`Ranges overlap between ${currentRange.minValue}-${currentRange.maxValue} and ${nextRange.minValue}-${nextRange.maxValue}. Please adjust the ranges.`);
+                alert(
+                  `Ranges overlap between ${currentRange.minValue}-${currentRange.maxValue} and ${nextRange.minValue}-${nextRange.maxValue}. Please adjust the ranges.`
+                );
                 isValid = false;
                 break;
               }
               // Check for increasing points
               if (nextRange && currentRange.points > nextRange.points) {
-                alert(`Points should increase with higher ranges. Range ${currentRange.minValue}-${currentRange.maxValue} has ${currentRange.points} points, which is higher than the next range.`);
+                alert(
+                  `Points should increase with higher ranges. Range ${currentRange.minValue}-${currentRange.maxValue} has ${currentRange.points} points, which is higher than the next range.`
+                );
                 isValid = false;
                 break;
               }
@@ -446,8 +534,10 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
           maxNumber: numberValue || 100,
           isScored,
           scoringMethod: isScored ? scoringMethod : 'None',
-          maxPoints: scoringMethod === 'direct' && isScored ? maxPoints : undefined,
-          scoringRanges: scoringMethod === 'range' && isScored ? scoringRanges : undefined,
+          maxPoints:
+            scoringMethod === 'direct' && isScored ? maxPoints : undefined,
+          scoringRanges:
+            scoringMethod === 'range' && isScored ? scoringRanges : undefined,
           customInstruction: customInstruction || getDefaultInstruction(),
           isLocked: questionData.isLocked || false,
           isRequired,
@@ -479,7 +569,8 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
           ...questionData,
           text: questionText || 'Student NUSNET Email',
           type: 'NUSNET Email',
-          shortResponsePlaceholder: shortResponsePlaceholder || 'e1234567@u.nus.edu',
+          shortResponsePlaceholder:
+            shortResponsePlaceholder || 'e1234567@u.nus.edu',
           customInstruction: customInstruction || getDefaultInstruction(),
           isLocked: true,
           isRequired: true,
@@ -568,8 +659,12 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
         </Text>
 
         {/* Render based on question type */}
-        {questionType === 'Multiple Choice' || questionType === 'Multiple Response' ? (
-          <Group align="stretch" style={{ flexGrow: 1, flexDirection: 'column' }}>
+        {questionType === 'Multiple Choice' ||
+        questionType === 'Multiple Response' ? (
+          <Group
+            align="stretch"
+            style={{ flexGrow: 1, flexDirection: 'column' }}
+          >
             {options.map((option, index) => (
               <Box
                 key={index}
@@ -609,7 +704,10 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
               max={scaleMax}
               marks={[
                 { value: minLabel.value, label: minLabel.label },
-                ...intermediateLabels.map((label) => ({ value: label.value, label: label.label })),
+                ...intermediateLabels.map(label => ({
+                  value: label.value,
+                  label: label.label,
+                })),
                 { value: maxLabel.value, label: maxLabel.label },
               ]}
               step={1}
@@ -620,23 +718,26 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
           </>
         ) : null}
 
-
         {(questionType === 'Short Response' ||
           questionType === 'NUSNET ID' ||
           questionType === 'NUSNET Email') && (
           <TextInput
-            placeholder={shortResponsePlaceholder || 'Enter your response here...'}
+            placeholder={
+              shortResponsePlaceholder || 'Enter your response here...'
+            }
             value={shortResponseValue}
-            onChange={(e) => setShortResponseValue(e.currentTarget.value)}
+            onChange={e => setShortResponseValue(e.currentTarget.value)}
             style={{ marginBottom: '16px' }}
           />
         )}
 
         {questionType === 'Long Response' && (
           <Textarea
-            placeholder={shortResponsePlaceholder || 'Enter your response here...'}
+            placeholder={
+              shortResponsePlaceholder || 'Enter your response here...'
+            }
             value={longResponseValue}
-            onChange={(e) => setLongResponseValue(e.currentTarget.value)}
+            onChange={e => setLongResponseValue(e.currentTarget.value)}
             minRows={5}
             autosize
             style={{ marginBottom: '16px' }}
@@ -677,7 +778,7 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
             type="number"
             placeholder={`Enter a number (Max: ${numberValue || 100})`}
             value={numberValue}
-            onChange={(e) => setNumberValue(parseInt(e.currentTarget.value, 10))}
+            onChange={e => setNumberValue(parseInt(e.currentTarget.value, 10))}
             style={{ marginBottom: '16px' }}
           />
         ) : null}
@@ -693,14 +794,17 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
             >
               Edit Question
             </Button>
-            <Button color="red" leftSection={<IconTrash size={16} />} onClick={onDelete}>
+            <Button
+              color="red"
+              leftSection={<IconTrash size={16} />}
+              onClick={onDelete}
+            >
               Delete Question
             </Button>
           </Group>
         )}
       </Box>
     );
-
   }
 
   // Edit mode
@@ -721,7 +825,7 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
           label="Question"
           placeholder="Enter the question"
           value={questionText}
-          onChange={(e) => {
+          onChange={e => {
             setQuestionText(e.currentTarget.value);
           }}
           required
@@ -731,7 +835,7 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
         <Select
           label="Question Type"
           value={questionType}
-          onChange={(value) => {
+          onChange={value => {
             setQuestionType(value as QuestionUnion['type']);
           }}
           data={[
@@ -747,7 +851,10 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
               ? [
                   { value: 'NUSNET ID', label: 'NUSNET ID' },
                   { value: 'NUSNET Email', label: 'NUSNET Email' },
-                  { value: 'Team Member Selection', label: 'Team Member Selection' },
+                  {
+                    value: 'Team Member Selection',
+                    label: 'Team Member Selection',
+                  },
                 ]
               : []),
           ]}
@@ -760,7 +867,7 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
         label="Instructions"
         placeholder={getDefaultInstruction()}
         value={customInstruction}
-        onChange={(e) => {
+        onChange={e => {
           setCustomInstruction(e.currentTarget.value);
         }}
         style={{ marginBottom: '16px' }}
@@ -770,23 +877,26 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
       <Checkbox
         label="Required"
         checked={isRequired}
-        onChange={(e) => setIsRequired(e.currentTarget.checked)}
+        onChange={e => setIsRequired(e.currentTarget.checked)}
         style={{ marginBottom: '16px' }}
       />
 
-      {(questionType === 'Multiple Choice' || questionType === 'Multiple Response') && (
+      {(questionType === 'Multiple Choice' ||
+        questionType === 'Multiple Response') && (
         <Box style={{ marginBottom: '16px' }}>
           <Checkbox
             label="Enable Scoring"
             checked={isScored}
-            onChange={(e) => setIsScored(e.currentTarget.checked)}
+            onChange={e => setIsScored(e.currentTarget.checked)}
             style={{ marginBottom: '8px' }}
           />
           {questionType === 'Multiple Response' && isScored && (
             <Checkbox
               label="Subtract points for wrong answers"
               checked={subtractPointsForWrongAnswers}
-              onChange={(e) => setSubtractPointsForWrongAnswers(e.currentTarget.checked)}
+              onChange={e =>
+                setSubtractPointsForWrongAnswers(e.currentTarget.checked)
+              }
               style={{ marginBottom: '8px' }}
             />
           )}
@@ -796,7 +906,7 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
               <TextInput
                 placeholder="Option text"
                 value={option}
-                onChange={(e) => handleOptionChange(index, e.currentTarget.value)}
+                onChange={e => handleOptionChange(index, e.currentTarget.value)}
                 style={{ flex: 2 }}
               />
               {isScored && (
@@ -804,7 +914,12 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
                   placeholder="Points"
                   type="number"
                   value={optionPoints[index]}
-                  onChange={(e) => handleOptionPointsChange(index, parseFloat(e.currentTarget.value))}
+                  onChange={e =>
+                    handleOptionPointsChange(
+                      index,
+                      parseFloat(e.currentTarget.value)
+                    )
+                  }
                   style={{ width: '80px' }}
                 />
               )}
@@ -812,7 +927,9 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
                 <Checkbox
                   label="Wrong Answer"
                   checked={isOptionWrong[index]}
-                  onChange={(e) => handleOptionWrongChange(index, e.currentTarget.checked)}
+                  onChange={e =>
+                    handleOptionWrongChange(index, e.currentTarget.checked)
+                  }
                 />
               )}
               <ActionIcon color="red" onClick={() => handleDeleteOption(index)}>
@@ -838,10 +955,12 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
             <Checkbox
               label="Enable Scoring"
               checked={isScored}
-              onChange={(e) => setIsScored(e.currentTarget.checked)}
+              onChange={e => setIsScored(e.currentTarget.checked)}
               style={{ marginBottom: '8px' }}
             />
-            <Text style={{ fontWeight: 'bold', marginBottom: '8px' }}>Scale Labels:</Text>
+            <Text style={{ fontWeight: 'bold', marginBottom: '8px' }}>
+              Scale Labels:
+            </Text>
 
             {/* Min Label */}
             <Group style={{ marginTop: '8px', gap: '8px' }}>
@@ -856,7 +975,9 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
                 label="Min Label"
                 placeholder="Enter min label"
                 value={minLabel.label}
-                onChange={(e) => setMinLabel({ ...minLabel, label: e.currentTarget.value })}
+                onChange={e =>
+                  setMinLabel({ ...minLabel, label: e.currentTarget.value })
+                }
                 style={{ flex: 2 }}
               />
               {isScored && (
@@ -865,7 +986,12 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
                   type="number"
                   min={0}
                   value={optionPoints[index]}
-                  onChange={(e) => handleOptionPointsChange(index, parseFloat(e.currentTarget.value))}
+                  onChange={e =>
+                    handleOptionPointsChange(
+                      index,
+                      parseFloat(e.currentTarget.value)
+                    )
+                  }
                   style={{ width: '80px' }}
                 />
               )}
@@ -878,14 +1004,26 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
                   label={`Intermediate Value ${index + 1}`}
                   type="number"
                   value={label.value}
-                  onChange={(e) => handleIntermediateLabelChange(index, 'value', parseInt(e.currentTarget.value, 10))}
+                  onChange={e =>
+                    handleIntermediateLabelChange(
+                      index,
+                      'value',
+                      parseInt(e.currentTarget.value, 10)
+                    )
+                  }
                   style={{ flex: 1 }}
                 />
                 <TextInput
                   label="Label"
                   placeholder="Enter label"
                   value={label.label}
-                  onChange={(e) => handleIntermediateLabelChange(index, 'label', e.currentTarget.value)}
+                  onChange={e =>
+                    handleIntermediateLabelChange(
+                      index,
+                      'label',
+                      e.currentTarget.value
+                    )
+                  }
                   style={{ flex: 2 }}
                 />
                 {isScored && (
@@ -893,11 +1031,20 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
                     label="Points"
                     type="number"
                     value={label.points}
-                    onChange={(e) => handleIntermediateLabelChange(index, 'points', parseFloat(e.currentTarget.value))}
+                    onChange={e =>
+                      handleIntermediateLabelChange(
+                        index,
+                        'points',
+                        parseFloat(e.currentTarget.value)
+                      )
+                    }
                     style={{ width: '80px' }}
                   />
                 )}
-                <ActionIcon color="red" onClick={() => handleDeleteIntermediateLabel(index)}>
+                <ActionIcon
+                  color="red"
+                  onClick={() => handleDeleteIntermediateLabel(index)}
+                >
                   <IconTrash size={16} />
                 </ActionIcon>
               </Group>
@@ -919,21 +1066,29 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
                 label="Max Scale Value"
                 type="number"
                 value={tempScaleMax}
-                onChange={(e) => {
+                onChange={e => {
                   const value = e.currentTarget.value;
                   // Remove leading zeros
                   const trimmedValue = value.replace(/^0+/, '') || '';
                   setTempScaleMax(trimmedValue);
                 }}
                 onBlur={() => {
-                  if (tempScaleMax !== '' && !isNaN(Number(tempScaleMax)) && Number(tempScaleMax) > 1) {
+                  if (
+                    tempScaleMax !== '' &&
+                    !isNaN(Number(tempScaleMax)) &&
+                    Number(tempScaleMax) > 1
+                  ) {
                     const newScaleMax = Number(tempScaleMax);
                     setPreviousScaleMax(scaleMax); // Store current scaleMax before updating
                     setScaleMax(newScaleMax);
-                    setMaxLabel({ value: newScaleMax, label: maxLabel.label, points: maxLabel.points });
+                    setMaxLabel({
+                      value: newScaleMax,
+                      label: maxLabel.label,
+                      points: maxLabel.points,
+                    });
                     // Remove intermediate labels that exceed newScaleMax
                     const filteredIntermediates = intermediateLabels.filter(
-                      (label) => label.value < newScaleMax
+                      label => label.value < newScaleMax
                     );
                     setIntermediateLabels(filteredIntermediates);
                   } else {
@@ -949,7 +1104,9 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
                 label="Max Label"
                 placeholder="Enter max label"
                 value={maxLabel.label}
-                onChange={(e) => setMaxLabel({ ...maxLabel, label: e.currentTarget.value })}
+                onChange={e =>
+                  setMaxLabel({ ...maxLabel, label: e.currentTarget.value })
+                }
                 style={{ flex: 2 }}
               />
               {isScored && (
@@ -957,7 +1114,12 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
                   label="Points"
                   type="number"
                   value={maxLabel.points}
-                  onChange={(e) => setMaxLabel({ ...maxLabel, points: parseFloat(e.currentTarget.value) })}
+                  onChange={e =>
+                    setMaxLabel({
+                      ...maxLabel,
+                      points: parseFloat(e.currentTarget.value),
+                    })
+                  }
                   style={{ width: '80px' }}
                 />
               )}
@@ -966,14 +1128,19 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
 
           {/* Preview Section */}
           <Box style={{ marginTop: '24px' }}>
-            <Text style={{ fontWeight: 'bold', marginBottom: '8px' }}>Preview:</Text>
+            <Text style={{ fontWeight: 'bold', marginBottom: '8px' }}>
+              Preview:
+            </Text>
             <Slider
               value={scaleValue}
               min={minLabel.value}
               max={scaleMax}
               marks={[
                 { value: minLabel.value, label: minLabel.label },
-                ...intermediateLabels.map((label) => ({ value: label.value, label: label.label })),
+                ...intermediateLabels.map(label => ({
+                  value: label.value,
+                  label: label.label,
+                })),
                 { value: maxLabel.value, label: maxLabel.label },
               ]}
               step={1}
@@ -993,12 +1160,14 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
             label="Predefined Placeholder"
             placeholder="Customize the placeholder"
             value={shortResponsePlaceholder}
-            onChange={(e) => {
+            onChange={e => {
               setShortResponsePlaceholder(e.currentTarget.value);
             }}
             style={{ marginBottom: '16px' }}
           />
-          <Text style={{ marginTop: '8px', marginBottom: '4px' }}>Preview:</Text>
+          <Text style={{ marginTop: '8px', marginBottom: '4px' }}>
+            Preview:
+          </Text>
           <TextInput placeholder={shortResponsePlaceholder} disabled />
         </Box>
       )}
@@ -1009,14 +1178,18 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
             label="Predefined Placeholder"
             placeholder="Customize the placeholder"
             value={shortResponsePlaceholder}
-            onChange={(e) => {
+            onChange={e => {
               setShortResponsePlaceholder(e.currentTarget.value);
             }}
             style={{ marginBottom: '16px' }}
           />
-          <Text style={{ marginTop: '8px', marginBottom: '4px' }}>Preview:</Text>
+          <Text style={{ marginTop: '8px', marginBottom: '4px' }}>
+            Preview:
+          </Text>
           <Textarea
-            placeholder={shortResponsePlaceholder || 'Enter your response here...'}
+            placeholder={
+              shortResponsePlaceholder || 'Enter your response here...'
+            }
             minRows={5}
             disabled
           />
@@ -1029,7 +1202,7 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
             <Checkbox
               label="Enable Date Range"
               checked={isRange}
-              onChange={(e) => setIsRange(e.currentTarget.checked)}
+              onChange={e => setIsRange(e.currentTarget.checked)}
             />
           </Group>
 
@@ -1037,24 +1210,21 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
             label="Date Picker Placeholder"
             placeholder="Customize the placeholder"
             value={datePickerPlaceholder}
-            onChange={(e) => setDatePickerPlaceholder(e.currentTarget.value)}
+            onChange={e => setDatePickerPlaceholder(e.currentTarget.value)}
             style={{ marginBottom: '16px' }}
           />
 
           <Group grow style={{ marginTop: '16px', gap: '16px' }}>
             <Box>
               <Text>{'Earliest Valid Date'}</Text>
-              <DatePicker
-                value={minDate}
-                onChange={(date) => setMinDate(date)}
-              />
+              <DatePicker value={minDate} onChange={date => setMinDate(date)} />
             </Box>
             <Box>
               <Text>{'Latest Valid Date'}</Text>
               <DatePicker
                 placeholder="Select max date"
                 value={maxDate}
-                onChange={(date) => setMaxDate(date)}
+                onChange={date => setMaxDate(date)}
               />
             </Box>
           </Group>
@@ -1067,7 +1237,7 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
             label="Max Number"
             type="number"
             value={numberValue}
-            onChange={(e) => {
+            onChange={e => {
               setNumberValue(parseInt(e.currentTarget.value, 10));
             }}
             placeholder="Enter maximum allowed number"
@@ -1077,7 +1247,7 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
           <Checkbox
             label="Enable Scoring"
             checked={isScored}
-            onChange={(e) => setIsScored(e.currentTarget.checked)}
+            onChange={e => setIsScored(e.currentTarget.checked)}
             style={{ marginBottom: '16px' }}
           />
 
@@ -1086,7 +1256,9 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
               <Select
                 label="Scoring Method"
                 value={scoringMethod}
-                onChange={(value) => setScoringMethod(value as 'direct' | 'range' | 'None')}
+                onChange={value =>
+                  setScoringMethod(value as 'direct' | 'range' | 'None')
+                }
                 data={[
                   { value: 'direct', label: 'Direct' },
                   { value: 'range', label: 'Range' },
@@ -1099,7 +1271,9 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
                   label="Max Points"
                   type="number"
                   value={maxPoints}
-                  onChange={(e) => setMaxPoints(parseFloat(e.currentTarget.value))}
+                  onChange={e =>
+                    setMaxPoints(parseFloat(e.currentTarget.value))
+                  }
                   placeholder="Enter maximum points"
                   style={{ marginBottom: '16px' }}
                 />
@@ -1107,7 +1281,9 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
 
               {scoringMethod === 'range' && (
                 <Box>
-                  <Text style={{ fontWeight: 'bold', marginBottom: '8px' }}>Scoring Ranges:</Text>
+                  <Text style={{ fontWeight: 'bold', marginBottom: '8px' }}>
+                    Scoring Ranges:
+                  </Text>
                   <Text size="sm" c="gray">
                     * Ranges are inclusive of both bounds.
                   </Text>
@@ -1117,24 +1293,45 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
                         label="Min Value"
                         type="number"
                         value={range.minValue}
-                        onChange={(e) => handleScoringRangeChange(index, 'minValue', parseFloat(e.currentTarget.value))}
+                        onChange={e =>
+                          handleScoringRangeChange(
+                            index,
+                            'minValue',
+                            parseFloat(e.currentTarget.value)
+                          )
+                        }
                         style={{ flex: 1 }}
                       />
                       <TextInput
                         label="Max Value"
                         type="number"
                         value={range.maxValue}
-                        onChange={(e) => handleScoringRangeChange(index, 'maxValue', parseFloat(e.currentTarget.value))}
+                        onChange={e =>
+                          handleScoringRangeChange(
+                            index,
+                            'maxValue',
+                            parseFloat(e.currentTarget.value)
+                          )
+                        }
                         style={{ flex: 1 }}
                       />
                       <TextInput
                         label="Points"
                         type="number"
                         value={range.points}
-                        onChange={(e) => handleScoringRangeChange(index, 'points', parseFloat(e.currentTarget.value))}
+                        onChange={e =>
+                          handleScoringRangeChange(
+                            index,
+                            'points',
+                            parseFloat(e.currentTarget.value)
+                          )
+                        }
                         style={{ flex: 1 }}
                       />
-                      <ActionIcon color="red" onClick={() => handleDeleteScoringRange(index)}>
+                      <ActionIcon
+                        color="red"
+                        onClick={() => handleDeleteScoringRange(index)}
+                      >
                         <IconTrash size={16} />
                       </ActionIcon>
                     </Group>
@@ -1157,7 +1354,11 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
 
       {questionType === 'Team Member Selection' && (
         <Box style={{ marginBottom: '16px' }}>
-          <Text>{'This question allows the form taker to select team members to evaluate.'}</Text>
+          <Text>
+            {
+              'This question allows the form taker to select team members to evaluate.'
+            }
+          </Text>
         </Box>
       )}
 

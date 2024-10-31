@@ -58,8 +58,15 @@ const assignedUserSchema = new Schema<AssignedUser>(
  */
 const assessmentAssignmentSetSchema = new Schema<AssessmentAssignmentSet>(
   {
-    assessment: { type: Schema.Types.ObjectId, ref: 'InternalAssessment', required: true, unique: true },
-    originalTeams: [{ type: Schema.Types.ObjectId, ref: 'Team', required: true }],
+    assessment: {
+      type: Schema.Types.ObjectId,
+      ref: 'InternalAssessment',
+      required: true,
+      unique: true,
+    },
+    originalTeams: [
+      { type: Schema.Types.ObjectId, ref: 'Team', required: true },
+    ],
     assignedTeams: [assignedTeamSchema],
     assignedUsers: [assignedUserSchema],
   },

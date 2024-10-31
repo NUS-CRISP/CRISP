@@ -19,12 +19,20 @@ import {
 import { InternalAssessment } from '@shared/types/InternalAssessment';
 import { Submission } from '@shared/types/Submission';
 import { useRouter } from 'next/router';
-import { IconEdit, IconTrash, IconUsers, IconSearch } from '@tabler/icons-react';
+import {
+  IconEdit,
+  IconTrash,
+  IconUsers,
+  IconSearch,
+} from '@tabler/icons-react';
 import UpdateAssessmentInternalForm from '../forms/UpdateAssessmentInternalForm';
 import SubmissionCard from '../cards/SubmissionCard';
 import { QuestionUnion } from '@shared/types/Question';
 import { User } from '@shared/types/User';
-import { AssignedTeam, AssignedUser } from '@shared/types/AssessmentAssignmentSet';
+import {
+  AssignedTeam,
+  AssignedUser,
+} from '@shared/types/AssessmentAssignmentSet';
 
 interface AssessmentInternalOverviewProps {
   courseId: string;
@@ -50,14 +58,19 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
   teachingStaff,
 }) => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [assignedTeams, setAssignedTeams] = useState<AssignedTeam[]>(initialAssignedTeams);
-  const [assignedUsers, setAssignedUsers] = useState<AssignedUser[]>(initialAssignedUsers);
+  const [assignedTeams, setAssignedTeams] =
+    useState<AssignedTeam[]>(initialAssignedTeams);
+  const [assignedUsers, setAssignedUsers] =
+    useState<AssignedUser[]>(initialAssignedUsers);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
-  const [isTeamAssignmentModalOpen, setIsTeamAssignmentModalOpen] = useState<boolean>(false);
+  const [isTeamAssignmentModalOpen, setIsTeamAssignmentModalOpen] =
+    useState<boolean>(false);
   const [gradeOriginalTeams, setGradeOriginalTeams] = useState<boolean>(false);
   const [teamsPerTA, setTeamsPerTA] = useState<number>(1);
-  const [selectedTeachingStaff, setSelectedTeachingStaff] = useState<string[]>([]);
+  const [selectedTeachingStaff, setSelectedTeachingStaff] = useState<string[]>(
+    []
+  );
   const router = useRouter();
   const deleteInternalAssessmentApiRoute = `/api/internal-assessments/${assessment?._id}`;
 
@@ -92,7 +105,7 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
 
       // For faculty, filter out drafts
       if (hasFacultyPermission) {
-        data = data.filter((submission) => !submission.isDraft);
+        data = data.filter(submission => !submission.isDraft);
       }
 
       setSubmissions(data);
@@ -120,28 +133,36 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
   };
 
   // Toggle modals
-  const toggleEditModal = () => setIsEditModalOpen((o) => !o);
-  const toggleDeleteModal = () => setIsDeleteModalOpen((o) => !o);
-  const toggleTeamAssignmentModal = () => setIsTeamAssignmentModalOpen((o) => {
-    console.log(assignedTeams)
-    return !o;
-  });
+  const toggleEditModal = () => setIsEditModalOpen(o => !o);
+  const toggleDeleteModal = () => setIsDeleteModalOpen(o => !o);
+  const toggleTeamAssignmentModal = () =>
+    setIsTeamAssignmentModalOpen(o => {
+      console.log(assignedTeams);
+      return !o;
+    });
 
   // Handle TA assignment changes by updating assignedTeams state
-  const handleTaAssignmentChange = (id: string, selectedTAIds: string[] | null) => {
+  const handleTaAssignmentChange = (
+    id: string,
+    selectedTAIds: string[] | null
+  ) => {
     if (assessment?.granularity === 'team') {
-      const updatedTeams = assignedTeams.map((assignedTeam) => {
+      const updatedTeams = assignedTeams.map(assignedTeam => {
         if (assignedTeam.team._id === id) {
-          const selectedTAs = teachingStaff.filter((ta) => selectedTAIds?.includes(ta._id) ?? false);
+          const selectedTAs = teachingStaff.filter(
+            ta => selectedTAIds?.includes(ta._id) ?? false
+          );
           return { ...assignedTeam, tas: selectedTAs };
         }
         return assignedTeam;
       });
       setAssignedTeams(updatedTeams);
     } else if (assessment?.granularity === 'individual') {
-      const updatedUsers = assignedUsers.map((assignedUser) => {
+      const updatedUsers = assignedUsers.map(assignedUser => {
         if (assignedUser.user._id === id) {
-          const selectedTAs = teachingStaff.filter((ta) => selectedTAIds?.includes(ta._id) ?? false);
+          const selectedTAs = teachingStaff.filter(
+            ta => selectedTAIds?.includes(ta._id) ?? false
+          );
           return { ...assignedUser, tas: selectedTAs };
         }
         return assignedUser;
@@ -153,8 +174,8 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
   // Helper function to merge and remove duplicates based on _id
   const mergeUniqueUsers = (existingTas: User[], newTas: User[]): User[] => {
     const combinedTas = [...existingTas];
-    newTas.forEach((newTa) => {
-      if (!combinedTas.some((existingTa) => existingTa._id === newTa._id)) {
+    newTas.forEach(newTa => {
+      if (!combinedTas.some(existingTa => existingTa._id === newTa._id)) {
         combinedTas.push(newTa);
       }
     });
@@ -163,18 +184,18 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
 
   // Handle Mass Assign Teaching Staff to All Teams or Users
   const handleMassAssign = () => {
-    const selectedTAs = teachingStaff.filter((ta) =>
+    const selectedTAs = teachingStaff.filter(ta =>
       selectedTeachingStaff.includes(ta._id)
     );
 
     if (assessment?.granularity === 'team') {
-      const updatedTeams = assignedTeams.map((assignedTeam) => ({
+      const updatedTeams = assignedTeams.map(assignedTeam => ({
         ...assignedTeam,
         tas: mergeUniqueUsers(assignedTeam.tas, selectedTAs),
       }));
       setAssignedTeams(updatedTeams);
     } else if (assessment?.granularity === 'individual') {
-      const updatedUsers = assignedUsers.map((assignedUser) => ({
+      const updatedUsers = assignedUsers.map(assignedUser => ({
         ...assignedUser,
         tas: mergeUniqueUsers(assignedUser.tas, selectedTAs),
       }));
@@ -185,7 +206,6 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
     setSelectedTeachingStaff([]);
   };
 
-
   // Randomize TA assignments
   const handleRandomizeTAs = () => {
     const numTeams = assignedTeams.length;
@@ -194,7 +214,7 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
     const tasToUse = shuffledTAs.slice(0, numTAsNeeded);
     let taIndex = 0;
 
-    const updatedTeams = assignedTeams.map((assignedTeam) => {
+    const updatedTeams = assignedTeams.map(assignedTeam => {
       const assignedTAs: User[] = [];
 
       // Include original TA if "Grade original teams" is checked
@@ -204,7 +224,7 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
 
       while (assignedTAs.length < teamsPerTA) {
         const ta = tasToUse[taIndex % tasToUse.length];
-        if (!assignedTAs.find((existingTa) => existingTa._id === ta._id)) {
+        if (!assignedTAs.find(existingTa => existingTa._id === ta._id)) {
           assignedTAs.push(ta);
         }
         taIndex++;
@@ -219,22 +239,31 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
   // Save TA assignments
   const handleSaveAssignments = async () => {
     try {
-      const response = await fetch(`/api/internal-assessments/${assessment!._id}/assignment-sets`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          assignedTeams: assessment?.granularity === 'team' ? assignedTeams.map((team) => ({
-            team: team.team._id,
-            tas: team.tas.map((ta) => ta._id),
-          })) : undefined,
-          assignedUsers: assessment?.granularity === 'individual' ? assignedUsers.map((user) => ({
-            user: user.user._id,
-            tas: user.tas.map((ta) => ta._id),
-          })) : undefined,
-        }),
-      });
+      const response = await fetch(
+        `/api/internal-assessments/${assessment!._id}/assignment-sets`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            assignedTeams:
+              assessment?.granularity === 'team'
+                ? assignedTeams.map(team => ({
+                    team: team.team._id,
+                    tas: team.tas.map(ta => ta._id),
+                  }))
+                : undefined,
+            assignedUsers:
+              assessment?.granularity === 'individual'
+                ? assignedUsers.map(user => ({
+                    user: user.user._id,
+                    tas: user.tas.map(ta => ta._id),
+                  }))
+                : undefined,
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error('Failed to save TA assignments');
@@ -257,20 +286,33 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
 
   // Handle "Take Assessment" button click
   const handleTakeAssessment = () => {
-    router.push(`/courses/${courseId}/internal-assessments/${assessment?._id}/take`);
+    router.push(
+      `/courses/${courseId}/internal-assessments/${assessment?._id}/take`
+    );
   };
 
   return (
     <Box>
       {/* Edit Assessment Modal */}
-      <Modal opened={isEditModalOpen} onClose={toggleEditModal} title="Edit Assessment">
-        <UpdateAssessmentInternalForm assessment={assessment} onAssessmentUpdated={onUpdateAssessment} />
+      <Modal
+        opened={isEditModalOpen}
+        onClose={toggleEditModal}
+        title="Edit Assessment"
+      >
+        <UpdateAssessmentInternalForm
+          assessment={assessment}
+          onAssessmentUpdated={onUpdateAssessment}
+        />
       </Modal>
 
       {/* Delete Assessment Modal */}
-      <Modal opened={isDeleteModalOpen} onClose={toggleDeleteModal} title="Confirm Delete">
+      <Modal
+        opened={isDeleteModalOpen}
+        onClose={toggleDeleteModal}
+        title="Confirm Delete"
+      >
         <Text>Are you sure you want to delete this assessment?</Text>
-        <Group mt="md" mb="md" justify='flex-end'>
+        <Group mt="md" mb="md" justify="flex-end">
           <Button variant="default" onClick={toggleDeleteModal}>
             Cancel
           </Button>
@@ -291,7 +333,10 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
           {/* Top Section: Search and Mass Assign Teaching Staff */}
           <Box mb="md">
             <MultiSelect
-              data={teachingStaff.map((staff) => ({ value: staff._id, label: staff.name }))}
+              data={teachingStaff.map(staff => ({
+                value: staff._id,
+                label: staff.name,
+              }))}
               label="Search Teaching Staff"
               placeholder="Select TAs to mass assign to all teams"
               searchable
@@ -308,110 +353,135 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
             </Button>
           </Box>
 
-          <Divider mt='xs' mb='xs' />
+          <Divider mt="xs" mb="xs" />
 
           {/* Middle Section: Teams or Users Display */}
           <ScrollArea type="auto" style={{ width: '100%', height: '40vh' }}>
             <Group
               align="flex-start"
               gap="md"
-              style={{ flexWrap: 'nowrap', minWidth: '100%', overflowX: 'auto' }}
+              style={{
+                flexWrap: 'nowrap',
+                minWidth: '100%',
+                overflowX: 'auto',
+              }}
             >
-              {assessment?.granularity === 'team' && assignedTeams.map((assignedTeam) => (
-                <Card key={assignedTeam.team._id} style={{ minWidth: 250 }}>
-                  <Group justify="space-between" mb="xs">
-                    <Text>Team {assignedTeam.team.number}</Text>
-                    {/* Display assigned TAs with badges */}
-                    {assignedTeam.tas.map((ta) => (
-                      <Badge
-                        key={ta._id}
-                        color={ta._id === assignedTeam.team.TA?._id ? 'green' : 'blue'}
-                        variant="light"
-                      >
-                        {ta.name} {ta._id === assignedTeam.team.TA?._id ? '(Original)' : ''}
-                      </Badge>
-                    ))}
-                  </Group>
+              {assessment?.granularity === 'team' &&
+                assignedTeams.map(assignedTeam => (
+                  <Card key={assignedTeam.team._id} style={{ minWidth: 250 }}>
+                    <Group justify="space-between" mb="xs">
+                      <Text>Team {assignedTeam.team.number}</Text>
+                      {/* Display assigned TAs with badges */}
+                      {assignedTeam.tas.map(ta => (
+                        <Badge
+                          key={ta._id}
+                          color={
+                            ta._id === assignedTeam.team.TA?._id
+                              ? 'green'
+                              : 'blue'
+                          }
+                          variant="light"
+                        >
+                          {ta.name}{' '}
+                          {ta._id === assignedTeam.team.TA?._id
+                            ? '(Original)'
+                            : ''}
+                        </Badge>
+                      ))}
+                    </Group>
 
-                  {/* TA selection */}
-                  <MultiSelect
-                    label="Assign TAs"
-                    data={teachingStaff.map((ta) => ({ value: ta._id, label: ta.name }))}
-                    value={assignedTeam.tas.map((ta) => ta._id) || []}
-                    onChange={(value) => handleTaAssignmentChange(assignedTeam.team._id, value)}
-                    clearable
-                    searchable
-                  />
+                    {/* TA selection */}
+                    <MultiSelect
+                      label="Assign TAs"
+                      data={teachingStaff.map(ta => ({
+                        value: ta._id,
+                        label: ta.name,
+                      }))}
+                      value={assignedTeam.tas.map(ta => ta._id) || []}
+                      onChange={value =>
+                        handleTaAssignmentChange(assignedTeam.team._id, value)
+                      }
+                      clearable
+                      searchable
+                    />
 
-                  <Divider my="sm" />
+                    <Divider my="sm" />
 
-                  {/* Team members */}
-                  <Text color="dimmed" size="sm">
-                    Members:
-                  </Text>
-                  {assignedTeam.team.members.map((member) => (
-                    <Text key={member._id} size="sm">
-                      {member.name}
+                    {/* Team members */}
+                    <Text color="dimmed" size="sm">
+                      Members:
                     </Text>
-                  ))}
-                </Card>
-              ))}
-
-              {assessment?.granularity === 'individual' && assignedUsers.map((assignedUser) => (
-                <Card key={assignedUser.user._id} style={{ minWidth: 250 }}>
-                  <Group justify='space-between' mb="xs">
-                    <Text>{assignedUser.user.name}</Text>
-                    {/* Display assigned TAs with badges */}
-                    {assignedUser.tas.map((ta) => (
-                      <Badge
-                        key={ta._id}
-                        color="blue"
-                        variant="light"
-                      >
-                        {ta.name}
-                      </Badge>
+                    {assignedTeam.team.members.map(member => (
+                      <Text key={member._id} size="sm">
+                        {member.name}
+                      </Text>
                     ))}
-                  </Group>
+                  </Card>
+                ))}
 
-                  {/* TA selection */}
-                  <MultiSelect
-                    label="Assign TAs"
-                    data={teachingStaff.map((ta) => ({ value: ta._id, label: ta.name }))}
-                    value={assignedUser.tas.map((ta) => ta._id) || []}
-                    onChange={(value) => handleTaAssignmentChange(assignedUser.user._id, value)}
-                    clearable
-                    searchable
-                  />
-                </Card>
-              ))}
+              {assessment?.granularity === 'individual' &&
+                assignedUsers.map(assignedUser => (
+                  <Card key={assignedUser.user._id} style={{ minWidth: 250 }}>
+                    <Group justify="space-between" mb="xs">
+                      <Text>{assignedUser.user.name}</Text>
+                      {/* Display assigned TAs with badges */}
+                      {assignedUser.tas.map(ta => (
+                        <Badge key={ta._id} color="blue" variant="light">
+                          {ta.name}
+                        </Badge>
+                      ))}
+                    </Group>
+
+                    {/* TA selection */}
+                    <MultiSelect
+                      label="Assign TAs"
+                      data={teachingStaff.map(ta => ({
+                        value: ta._id,
+                        label: ta.name,
+                      }))}
+                      value={assignedUser.tas.map(ta => ta._id) || []}
+                      onChange={value =>
+                        handleTaAssignmentChange(assignedUser.user._id, value)
+                      }
+                      clearable
+                      searchable
+                    />
+                  </Card>
+                ))}
             </Group>
           </ScrollArea>
 
-          <Divider mt='xs' mb='xs' />
+          <Divider mt="xs" mb="xs" />
 
           {/* Bottom Section: Randomization Options */}
-          {assessment?.granularity === 'team' && <Box mt="md">
-            <Text>Randomization: </Text>
-            <Group justify='space-between' align="flex-end">
-              <Checkbox
-                label="Grade original teams"
-                checked={gradeOriginalTeams}
-                onChange={(event) => setGradeOriginalTeams(event.currentTarget.checked)}
-              />
-              <NumberInput
-                label="Teams per TA"
-                value={teamsPerTA}
-                onChange={(value) => setTeamsPerTA(parseInt(value.toString()) || 1)}
-                min={1}
-              />
-              <Button onClick={handleRandomizeTAs}>Randomize</Button>
-            </Group>
-          </Box>}
+          {assessment?.granularity === 'team' && (
+            <Box mt="md">
+              <Text>Randomization: </Text>
+              <Group justify="space-between" align="flex-end">
+                <Checkbox
+                  label="Grade original teams"
+                  checked={gradeOriginalTeams}
+                  onChange={event =>
+                    setGradeOriginalTeams(event.currentTarget.checked)
+                  }
+                />
+                <NumberInput
+                  label="Teams per TA"
+                  value={teamsPerTA}
+                  onChange={value =>
+                    setTeamsPerTA(parseInt(value.toString()) || 1)
+                  }
+                  min={1}
+                />
+                <Button onClick={handleRandomizeTAs}>Randomize</Button>
+              </Group>
+            </Box>
+          )}
 
-          <Divider mt='xs' mb='xs' />
+          <Divider mt="xs" mb="xs" />
 
           {/* Save Assignments Button */}
-          <Group justify='flex-end' mt="md">
+          <Group justify="flex-end" mt="md">
             <Button onClick={handleSaveAssignments}>Save Assignments</Button>
           </Group>
         </Modal>
@@ -477,7 +547,7 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
         {submissions.length === 0 ? (
           <Text>No submissions available.</Text>
         ) : (
-          submissions.map((submission) => (
+          submissions.map(submission => (
             <SubmissionCard
               key={submission._id}
               submission={submission}

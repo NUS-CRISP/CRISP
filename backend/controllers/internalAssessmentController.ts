@@ -1,5 +1,9 @@
 import { Request, Response } from 'express';
-import { BadRequestError, NotFoundError, MissingAuthorizationError } from '../services/errors';
+import {
+  BadRequestError,
+  NotFoundError,
+  MissingAuthorizationError,
+} from '../services/errors';
 import { getAccountId } from '../utils/auth';
 import {
   getInternalAssessmentById,
@@ -83,11 +87,18 @@ export const uploadInternalResults = async (req: Request, res: Response) => {
   }
 };
 
-export const updateInternalResultMarker = async (req: Request, res: Response) => {
+export const updateInternalResultMarker = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { assessmentId, resultId } = req.params;
     const { markerId } = req.body;
-    await updateInternalAssessmentResultMarkerById(assessmentId, resultId, markerId);
+    await updateInternalAssessmentResultMarkerById(
+      assessmentId,
+      resultId,
+      markerId
+    );
     res.status(200).json({ message: 'Marker updated successfully' });
   } catch (error) {
     if (error instanceof NotFoundError) {
@@ -100,13 +111,20 @@ export const updateInternalResultMarker = async (req: Request, res: Response) =>
 };
 
 /*--------------------------Questions---------------------------------------------*/
-export const addQuestionToAssessmentController = async (req: Request, res: Response) => {
+export const addQuestionToAssessmentController = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const accountId = await getAccountId(req);
     const { assessmentId } = req.params;
     const questionData = req.body;
 
-    const question = await addQuestionToAssessment(assessmentId, questionData, accountId);
+    const question = await addQuestionToAssessment(
+      assessmentId,
+      questionData,
+      accountId
+    );
 
     res.status(201).json(question);
   } catch (error) {
@@ -123,7 +141,10 @@ export const addQuestionToAssessmentController = async (req: Request, res: Respo
   }
 };
 
-export const getQuestionsByAssessmentIdController = async (req: Request, res: Response) => {
+export const getQuestionsByAssessmentIdController = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const accountId = await getAccountId(req);
     const { assessmentId } = req.params;
@@ -143,13 +164,20 @@ export const getQuestionsByAssessmentIdController = async (req: Request, res: Re
   }
 };
 
-export const updateQuestionByIdController = async (req: Request, res: Response) => {
+export const updateQuestionByIdController = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const accountId = await getAccountId(req);
     const { questionId } = req.params;
     const updateData = req.body;
 
-    const updatedQuestion = await updateQuestionById(questionId, updateData, accountId);
+    const updatedQuestion = await updateQuestionById(
+      questionId,
+      updateData,
+      accountId
+    );
 
     res.status(200).json(updatedQuestion);
   } catch (error) {
@@ -166,7 +194,10 @@ export const updateQuestionByIdController = async (req: Request, res: Response) 
   }
 };
 
-export const deleteQuestionByIdController = async (req: Request, res: Response) => {
+export const deleteQuestionByIdController = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const accountId = await getAccountId(req);
     const { assessmentId, questionId } = req.params;
@@ -189,7 +220,10 @@ export const deleteQuestionByIdController = async (req: Request, res: Response) 
 };
 
 /*----------------------------Release-Form--------------------------*/
-export const releaseInternalAssessment = async (req: Request, res: Response) => {
+export const releaseInternalAssessment = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { assessmentId } = req.params;
     const accountId = await getAccountId(req);
@@ -232,4 +266,3 @@ export const recallInternalAssessment = async (req: Request, res: Response) => {
     }
   }
 };
-

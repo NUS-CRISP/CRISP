@@ -24,7 +24,7 @@ const AssessmentGoogleResults: React.FC<AssessmentGoogleResultsProps> = ({
 
   const toggleResultForm = () => {
     setIsResultFormOpen(!isResultFormOpen);
-  }
+  };
 
   const taOptions = teachingTeam.map(user => ({
     value: user._id,
@@ -37,9 +37,12 @@ const AssessmentGoogleResults: React.FC<AssessmentGoogleResultsProps> = ({
 
     // Filter by marker
     if (markerFilter !== 'All') {
-      filteredResults = markerFilter === 'Unassigned'
-        ? results.filter((result) => !result.marker)
-        : results.filter((result) => result.marker && result.marker._id === markerFilter);
+      filteredResults =
+        markerFilter === 'Unassigned'
+          ? results.filter(result => !result.marker)
+          : results.filter(
+              result => result.marker && result.marker._id === markerFilter
+            );
     }
 
     // Sort the filtered results based on the selected criterion
@@ -66,11 +69,11 @@ const AssessmentGoogleResults: React.FC<AssessmentGoogleResultsProps> = ({
           <Text size="sm">Marker</Text>
           <Select
             value={markerFilter}
-            onChange={(value) => setMarkerFilter(value || 'All')}
+            onChange={value => setMarkerFilter(value || 'All')}
             data={[
               { value: 'All', label: 'All' },
               { value: 'Unassigned', label: 'Unassigned' },
-              ...taOptions
+              ...taOptions,
             ]}
             placeholder="Select marker"
             my={8}
@@ -81,7 +84,7 @@ const AssessmentGoogleResults: React.FC<AssessmentGoogleResultsProps> = ({
           <Text size="sm">Sort by</Text>
           <Select
             value={sortCriterion}
-            onChange={(value) => setSortCriterion(value || 'name')}
+            onChange={value => setSortCriterion(value || 'name')}
             data={[
               { value: 'name', label: 'Student Name' },
               { value: 'teamNumber', label: 'Team Number' },
@@ -93,7 +96,10 @@ const AssessmentGoogleResults: React.FC<AssessmentGoogleResultsProps> = ({
           />
         </div>
 
-        <Button onClick={toggleResultForm} style={{ alignSelf: 'flex-end', marginLeft: 'auto' }}>
+        <Button
+          onClick={toggleResultForm}
+          style={{ alignSelf: 'flex-end', marginLeft: 'auto' }}
+        >
           Upload Results
         </Button>
       </Group>
@@ -109,7 +115,7 @@ const AssessmentGoogleResults: React.FC<AssessmentGoogleResultsProps> = ({
         />
       </Modal>
 
-      {filterAndSortResultsByMarker(results).map((result) => (
+      {filterAndSortResultsByMarker(results).map(result => (
         <ResultCard
           key={result._id}
           result={result}

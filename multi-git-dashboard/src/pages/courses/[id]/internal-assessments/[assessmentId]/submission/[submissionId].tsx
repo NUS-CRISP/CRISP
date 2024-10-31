@@ -24,11 +24,11 @@ const ViewSubmissionPage: React.FC = () => {
     if (router.isReady) {
       // Fetch the submission
       fetch(`/api/submissions/${submissionId}`)
-        .then((res) => res.json())
+        .then(res => res.json())
         .then((data: Submission) => {
           setSubmission(data);
         })
-        .catch((error) => {
+        .catch(error => {
           console.error('Error fetching submission:', error);
           showNotification({
             title: 'Error',
@@ -39,11 +39,11 @@ const ViewSubmissionPage: React.FC = () => {
 
       // Fetch the assessment
       fetch(`/api/internal-assessments/${assessmentId}`)
-        .then((res) => res.json())
+        .then(res => res.json())
         .then((data: InternalAssessment) => {
           setAssessment(data);
         })
-        .catch((error) => {
+        .catch(error => {
           console.error('Error fetching assessment:', error);
         });
     }
@@ -54,7 +54,8 @@ const ViewSubmissionPage: React.FC = () => {
   }
 
   // Determine if the user can edit (faculty or draft submission)
-  const canEdit = assessment.areSubmissionsEditable || submission.isDraft || permission;
+  const canEdit =
+    assessment.areSubmissionsEditable || submission.isDraft || permission;
 
   return (
     <TakeAssessment

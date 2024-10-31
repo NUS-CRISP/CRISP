@@ -37,7 +37,7 @@ const AssessmentResultCard: React.FC<AssessmentResultCardProps> = ({
   const maxScoreString = maxScore ? ` / ${maxScore}` : '';
 
   const hasMissingSubmissions =
-    result && result.marks.some((mark) => !mark.submission);
+    result && result.marks.some(mark => !mark.submission);
 
   const allSubmissionsPresent =
     result && result.marks.length > 0 && !hasMissingSubmissions;
@@ -46,9 +46,7 @@ const AssessmentResultCard: React.FC<AssessmentResultCardProps> = ({
     <Card withBorder shadow="sm" mb="md" radius="md">
       <Flex justify="space-between" align="center">
         <Group>
-          <Text size="lg">
-            {student.name}
-          </Text>
+          <Text size="lg">{student.name}</Text>
           <Text size="sm" color="dimmed">
             ID: {student.identifier}
           </Text>
@@ -101,17 +99,16 @@ const AssessmentResultCard: React.FC<AssessmentResultCardProps> = ({
               <Text size="sm" mb="xs">
                 Submitted Scores:
               </Text>
-              {result && result.marks.filter((mark) => mark.submission).length > 0 ? (
+              {result &&
+              result.marks.filter(mark => mark.submission).length > 0 ? (
                 <Grid>
                   {result.marks
-                    .filter((mark) => mark.submission)
+                    .filter(mark => mark.submission)
                     .map((markEntry, index) => (
                       <Grid.Col span={6} key={index}>
                         <Card shadow="xs" p="xs" radius="md" withBorder>
-                          <Group justify='space-between' align="center">
-                            <Text size="sm">
-                              {markEntry.marker.name}
-                            </Text>
+                          <Group justify="space-between" align="center">
+                            <Text size="sm">{markEntry.marker.name}</Text>
                             <Badge color="blue" variant="light">
                               {markEntry.score?.toFixed(2)}
                               {maxScore && maxScore > 0 ? ` / ${maxScore}` : ''}
@@ -141,14 +138,12 @@ const AssessmentResultCard: React.FC<AssessmentResultCardProps> = ({
                 </Text>
                 <Grid>
                   {result!.marks
-                    .filter((mark) => !mark.submission)
+                    .filter(mark => !mark.submission)
                     .map((markEntry, index) => (
                       <Grid.Col span={6} key={index}>
                         <Card shadow="xs" p="xs" radius="md" withBorder>
-                          <Group justify='space-between' align="center">
-                            <Text size="sm">
-                              {markEntry.marker.name}
-                            </Text>
+                          <Group justify="space-between" align="center">
+                            <Text size="sm">{markEntry.marker.name}</Text>
                             <Badge color="red" variant="filled">
                               <Group>
                                 <IconAlertCircle size={14} />

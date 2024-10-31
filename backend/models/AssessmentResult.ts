@@ -21,7 +21,11 @@ export interface AssessmentResult extends Document {
 const markEntrySchema = new Schema<MarkEntry>(
   {
     marker: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    submission: { type: Schema.Types.ObjectId, ref: 'Submission', required: true },
+    submission: {
+      type: Schema.Types.ObjectId,
+      ref: 'Submission',
+      required: true,
+    },
     score: { type: Number, required: true },
   },
   { _id: false }
@@ -29,7 +33,11 @@ const markEntrySchema = new Schema<MarkEntry>(
 
 const assessmentResultSchema = new Schema<AssessmentResult>(
   {
-    assessment: { type: Schema.Types.ObjectId, ref: 'InternalAssessment', required: true },
+    assessment: {
+      type: Schema.Types.ObjectId,
+      ref: 'InternalAssessment',
+      required: true,
+    },
     student: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     marks: [markEntrySchema],
     averageScore: { type: Number, default: 0 },

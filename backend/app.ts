@@ -46,7 +46,7 @@ app.use('/api/teams', teamRoutes);
 app.use('/api/teamsets', teamSetRoutes);
 app.use('/api/assessments', assessmentRoutes);
 app.use('/api/internal-assessments', internalAssessmentRoutes);
-app.use('/api/submissions', submissionRoutes)
+app.use('/api/submissions', submissionRoutes);
 app.use('/api/jira', jiraRoutes);
 app.use('/api/metrics', metricRoutes);
 app.use('/api/user', userRoutes);

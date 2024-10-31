@@ -72,8 +72,13 @@ const AssessmentDetail: React.FC = () => {
   };
 
   useEffect(() => {
-    const savedTab = localStorage.getItem(`activeAssessmentTab_${assessmentId}`);
-    if (savedTab && ['Overview', 'Preview Form', 'Results'].includes(savedTab)) {
+    const savedTab = localStorage.getItem(
+      `activeAssessmentTab_${assessmentId}`
+    );
+    if (
+      savedTab &&
+      ['Overview', 'Preview Form', 'Results'].includes(savedTab)
+    ) {
       setActiveTab(savedTab);
     }
   }, [assessmentId]);
@@ -90,18 +95,27 @@ const AssessmentDetail: React.FC = () => {
     <Container>
       <Tabs value={activeTab}>
         <Tabs.List>
-          <Tabs.Tab value="Overview" onClick={() => setActiveTabAndSave('Overview')}>
+          <Tabs.Tab
+            value="Overview"
+            onClick={() => setActiveTabAndSave('Overview')}
+          >
             Overview
           </Tabs.Tab>
 
           {assessment?.formLink && (
-            <Tabs.Tab value="Preview Form" onClick={() => setActiveTabAndSave('Preview Form')}>
+            <Tabs.Tab
+              value="Preview Form"
+              onClick={() => setActiveTabAndSave('Preview Form')}
+            >
               Preview Form
             </Tabs.Tab>
           )}
 
           {assessment?.formLink && permission && (
-            <Tabs.Tab value="Results" onClick={() => setActiveTabAndSave('Results')}>
+            <Tabs.Tab
+              value="Results"
+              onClick={() => setActiveTabAndSave('Results')}
+            >
               Google Form Results
             </Tabs.Tab>
           )}

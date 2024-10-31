@@ -33,7 +33,7 @@ const CreateGoogleForm: React.FC<CreateGoogleFormProps> = ({
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        items: [form.values]
+        items: [form.values],
       }),
     });
 
@@ -63,7 +63,9 @@ const CreateGoogleForm: React.FC<CreateGoogleFormProps> = ({
       />
 
       {/* Bold title and padding for granularity section */}
-      <Text style={{ fontWeight: 'bold', marginTop: '16px', marginBottom: '8px' }}>
+      <Text
+        style={{ fontWeight: 'bold', marginTop: '16px', marginBottom: '8px' }}
+      >
         Assessment Type
       </Text>
       <div style={{ marginBottom: '16px' }}>
@@ -81,7 +83,7 @@ const CreateGoogleForm: React.FC<CreateGoogleFormProps> = ({
       <Select
         withAsterisk
         label="Team Set"
-        data={teamSetNames.map((name) => ({ value: name, label: name }))}
+        data={teamSetNames.map(name => ({ value: name, label: name }))}
         {...form.getInputProps('teamSetName')}
       />
 
@@ -90,16 +92,12 @@ const CreateGoogleForm: React.FC<CreateGoogleFormProps> = ({
         label="Form Link"
         {...form.getInputProps('formLink')}
       />
-      <TextInput
-        label="Sheet ID"
-        {...form.getInputProps('sheetID')}
-      />
-      <TextInput
-        label="Sheet Tab"
-        {...form.getInputProps('sheetTab')}
-      />
+      <TextInput label="Sheet ID" {...form.getInputProps('sheetID')} />
+      <TextInput label="Sheet Tab" {...form.getInputProps('sheetTab')} />
 
-      <Button style={{ marginTop: '8px' }} type="submit">Create Google Forms Assessment</Button>
+      <Button style={{ marginTop: '8px' }} type="submit">
+        Create Google Forms Assessment
+      </Button>
     </form>
   );
 };

@@ -1,6 +1,14 @@
 // CreateInternalForm.tsx
 
-import { Button, Select, TextInput, Textarea, Text, Radio, Checkbox } from '@mantine/core';
+import {
+  Button,
+  Select,
+  TextInput,
+  Textarea,
+  Text,
+  Radio,
+  Checkbox,
+} from '@mantine/core';
 import { useForm } from '@mantine/form';
 
 interface CreateInternalFormProps {
@@ -30,15 +38,18 @@ const CreateInternalForm: React.FC<CreateInternalFormProps> = ({
   const handleSubmit = async () => {
     try {
       console.log(form.values);
-      const response = await fetch(`/api/courses/${courseId}/internal-assessments`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          items: [form.values],
-        }),
-      });
+      const response = await fetch(
+        `/api/courses/${courseId}/internal-assessments`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            items: [form.values],
+          }),
+        }
+      );
 
       if (response.ok) {
         onAssessmentCreated();
@@ -77,7 +88,9 @@ const CreateInternalForm: React.FC<CreateInternalFormProps> = ({
       />
 
       {/* Bold title and padding for granularity section */}
-      <Text style={{ fontWeight: 'bold', marginTop: '16px', marginBottom: '8px' }}>
+      <Text
+        style={{ fontWeight: 'bold', marginTop: '16px', marginBottom: '8px' }}
+      >
         Assessment Type
       </Text>
       <div style={{ marginBottom: '16px' }}>
@@ -86,7 +99,7 @@ const CreateInternalForm: React.FC<CreateInternalFormProps> = ({
           onChange={value => form.setFieldValue('granularity', value)}
         >
           <div style={{ display: 'flex', gap: '20px' }}>
-            <Radio label="Team" value="team"/>
+            <Radio label="Team" value="team" />
             <Radio label="Individual" value="individual" />
           </div>
         </Radio.Group>
@@ -101,7 +114,7 @@ const CreateInternalForm: React.FC<CreateInternalFormProps> = ({
       <Select
         withAsterisk
         label="Which Team Assignment?"
-        data={teamSetNames.map((name) => ({ value: name, label: name }))}
+        data={teamSetNames.map(name => ({ value: name, label: name }))}
         {...form.getInputProps('teamSetName')}
       />
 
@@ -109,8 +122,11 @@ const CreateInternalForm: React.FC<CreateInternalFormProps> = ({
       <Checkbox
         label="Allow Submissions to be Editable"
         checked={form.values.areSubmissionsEditable}
-        onChange={(event) =>
-          form.setFieldValue('areSubmissionsEditable', event.currentTarget.checked)
+        onChange={event =>
+          form.setFieldValue(
+            'areSubmissionsEditable',
+            event.currentTarget.checked
+          )
         }
         style={{ marginTop: '16px' }}
       />

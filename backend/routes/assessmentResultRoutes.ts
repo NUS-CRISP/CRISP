@@ -25,6 +25,9 @@ router.post('/:resultId/recalculate', recalculateResultController);
  * @route   GET /api/assessment-results/:assessmentId/check-marking-completion
  * @desc    Check marking completion status for an assessment
  */
-router.get('/:assessmentId/check-marking-completion', checkMarkingCompletionController);
+router.get(
+  '/:assessmentId/check-marking-completion',
+  checkMarkingCompletionController
+);
 
 export default router;

@@ -2,7 +2,11 @@
 // services/assessmentAssignmentSetService.ts
 
 import mongoose from 'mongoose';
-import AssessmentAssignmentSetModel, { AssessmentAssignmentSet, AssignedTeam, AssignedUser } from '../models/AssessmentAssignmentSet';
+import AssessmentAssignmentSetModel, {
+  AssessmentAssignmentSet,
+  AssignedTeam,
+  AssignedUser,
+} from '../models/AssessmentAssignmentSet';
 import InternalAssessmentModel from '../models/InternalAssessment';
 import TeamSetModel from '../models/TeamSet';
 import TeamModel from '../models/Team';
@@ -26,13 +30,19 @@ export const createAssignmentSet = async (
   }
 
   // Prevent duplicate AssignmentSets for the same assessment
-  const existingSet = await AssessmentAssignmentSetModel.findOne({ assessment: assessmentId });
+  const existingSet = await AssessmentAssignmentSetModel.findOne({
+    assessment: assessmentId,
+  });
   if (existingSet) {
-    throw new BadRequestError('AssessmentAssignmentSet already exists for this assessment');
+    throw new BadRequestError(
+      'AssessmentAssignmentSet already exists for this assessment'
+    );
   }
 
   // Retrieve the original TeamSet
-  const teamSet = await TeamSetModel.findById(originalTeamSetId ?? assessment.teamSet?._id).populate('teams');
+  const teamSet = await TeamSetModel.findById(
+    originalTeamSetId ?? assessment.teamSet?._id
+  ).populate('teams');
   if (!teamSet) {
     throw new NotFoundError('Original TeamSet not found');
   }
@@ -40,22 +50,26 @@ export const createAssignmentSet = async (
   const originalTeams = teamSet.teams.map((team: any) => team._id);
 
   // Initialize assignments based on granularity
-  const assignedTeams: AssignedTeam[] | null = assessment.granularity === 'team'
-  ? teamSet.teams.map((team: any) => ({
-    team: team._id,
-    tas: team.TA ? [team.TA] : [],
-  }))
-  : null;
+  const assignedTeams: AssignedTeam[] | null =
+    assessment.granularity === 'team'
+      ? teamSet.teams.map((team: any) => ({
+          team: team._id,
+          tas: team.TA ? [team.TA] : [],
+        }))
+      : null;
 
-  const assignedUsers: AssignedUser[] | null = assessment.granularity === 'individual'
-  ? teamSet.teams.flatMap((team: any) => {
-    const userAssignments: AssignedUser[] = team.members.map((user: any) => ({
-      user: user._id,
-      tas: team.TA ? [team.TA] : [],
-    }));
-    return userAssignments;
-  })
-  : null
+  const assignedUsers: AssignedUser[] | null =
+    assessment.granularity === 'individual'
+      ? teamSet.teams.flatMap((team: any) => {
+          const userAssignments: AssignedUser[] = team.members.map(
+            (user: any) => ({
+              user: user._id,
+              tas: team.TA ? [team.TA] : [],
+            })
+          );
+          return userAssignments;
+        })
+      : null;
 
   // Create the AssessmentAssignmentSet document
   const assignmentSet = new AssessmentAssignmentSetModel({
@@ -82,7 +96,9 @@ export const createAssignmentSet = async (
 export const getAssignmentSetByAssessmentId = async (
   assessmentId: string
 ): Promise<AssessmentAssignmentSet> => {
-  const assignmentSet = await AssessmentAssignmentSetModel.findOne({ assessment: assessmentId })
+  const assignmentSet = await AssessmentAssignmentSetModel.findOne({
+    assessment: assessmentId,
+  })
     .populate({
       path: 'originalTeams',
       populate: { path: 'members', select: 'name identifier' },
@@ -124,14 +140,18 @@ export const getAssignmentSetByAssessmentId = async (
 export const updateAssignmentSet = async (
   assessmentId: string,
   assignedTeams?: AssignedTeam[],
-  assignedUsers?: AssignedUser[],
+  assignedUsers?: AssignedUser[]
 ): Promise<AssessmentAssignmentSet> => {
-  let assignmentSet = await AssessmentAssignmentSetModel.findOne({ assessment: assessmentId });
+  let assignmentSet = await AssessmentAssignmentSetModel.findOne({
+    assessment: assessmentId,
+  });
   if (!assignmentSet) {
     await createAssignmentSet(assessmentId);
-    assignmentSet = await AssessmentAssignmentSetModel.findOne({ assessment: assessmentId });
+    assignmentSet = await AssessmentAssignmentSetModel.findOne({
+      assessment: assessmentId,
+    });
     if (!assignmentSet) {
-      throw new NotFoundError('Invalid assignment id')
+      throw new NotFoundError('Invalid assignment id');
     }
   }
 
@@ -152,7 +172,7 @@ export const updateAssignmentSet = async (
     }
 
     // Update the assignedTeams field
-    assignmentSet.assignedTeams = assignedTeams.map((at) => ({
+    assignmentSet.assignedTeams = assignedTeams.map(at => ({
       team: at.team,
       tas: at.tas,
     }));
@@ -171,12 +191,12 @@ export const updateAssignmentSet = async (
         if (!ta) {
           throw new NotFoundError(`TA with ID ${taId} not found`);
         }
-        console.log('adding ta:', ta)
+        console.log('adding ta:', ta);
       }
     }
 
     // Update the assignedUsers field
-    assignmentSet.assignedUsers = assignedUsers!.map((at) => ({
+    assignmentSet.assignedUsers = assignedUsers!.map(at => ({
       user: at.user,
       tas: at.tas,
     }));
@@ -196,7 +216,9 @@ export const getAssignmentsByTAId = async (
   taId: string,
   assessmentId: string
 ) => {
-  const assignmentSet = await AssessmentAssignmentSetModel.findOne({ assessment: assessmentId })
+  const assignmentSet = await AssessmentAssignmentSetModel.findOne({
+    assessment: assessmentId,
+  })
     .populate({
       path: 'assignedTeams.tas',
       match: { _id: taId },
@@ -207,7 +229,7 @@ export const getAssignmentsByTAId = async (
       path: 'assignedUsers.tas',
       match: { _id: taId },
       select: 'name identifier',
-    })
+    });
   if (!assignmentSet) {
     throw new NotFoundError('AssessmentAssignmentSet not found');
   }
@@ -215,21 +237,25 @@ export const getAssignmentsByTAId = async (
   if (assignmentSet.assignedTeams) {
     // Filter teams where the TA is assigned
     const teamIds: mongoose.Types.ObjectId[] = assignmentSet.assignedTeams
-      .filter((at) => at.tas.length > 0)
-      .map((at) => at.team as mongoose.Types.ObjectId);
+      .filter(at => at.tas.length > 0)
+      .map(at => at.team as mongoose.Types.ObjectId);
 
-    const teams = await Promise.all(teamIds.map(async (teamId) => {
-      return await TeamModel.findById(teamId).populate('members');
-    }));
+    const teams = await Promise.all(
+      teamIds.map(async teamId => {
+        return await TeamModel.findById(teamId).populate('members');
+      })
+    );
     return teams;
   } else {
-    const userIds: mongoose.Types.ObjectId[] = assignmentSet.assignedUsers!
-      .filter((at) => at.tas.length > 0)
-      .map((at) => at.user as mongoose.Types.ObjectId);
+    const userIds: mongoose.Types.ObjectId[] = assignmentSet
+      .assignedUsers!.filter(at => at.tas.length > 0)
+      .map(at => at.user as mongoose.Types.ObjectId);
 
-    const users = await Promise.all(userIds.map(async (userId) => {
-      return await UserModel.findById(userId);
-    }));
+    const users = await Promise.all(
+      userIds.map(async userId => {
+        return await UserModel.findById(userId);
+      })
+    );
     return users;
   }
 };

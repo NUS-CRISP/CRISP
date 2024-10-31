@@ -17,7 +17,9 @@ const AssessmentListPage: React.FC = () => {
   const courseTeamSetNamesApiRoute = `/api/courses/${id}/teamsets/names`;
 
   const [assessments, setAssessments] = useState<Assessment[]>([]);
-  const [internalAssessments, setInternalAssessments] = useState<InternalAssessment[]>([]);
+  const [internalAssessments, setInternalAssessments] = useState<
+    InternalAssessment[]
+  >([]);
   const [teamSetNames, setTeamSetNames] = useState<string[]>([]);
   const permission = hasFacultyPermission();
 
@@ -67,7 +69,10 @@ const AssessmentListPage: React.FC = () => {
       });
 
       if (!response.ok) {
-        console.error('Error fetching internal assessments:', response.statusText);
+        console.error(
+          'Error fetching internal assessments:',
+          response.statusText
+        );
       } else {
         const data: InternalAssessment[] = await response.json();
         console.log('Internal Assessments:', data);
@@ -75,7 +80,9 @@ const AssessmentListPage: React.FC = () => {
         if (permission) {
           setInternalAssessments(data);
         } else {
-          const releasedAssessments = data.filter((assessment) => assessment.isReleased);
+          const releasedAssessments = data.filter(
+            assessment => assessment.isReleased
+          );
           setInternalAssessments(releasedAssessments);
         }
       }

@@ -8,7 +8,10 @@ import { InternalAssessment } from '@shared/types/InternalAssessment';
 import { User } from '@shared/types/User';
 import { hasFacultyPermission } from '@/lib/auth/utils';
 import { Question } from '@shared/types/Question';
-import { AssignedTeam, AssignedUser } from '@shared/types/AssessmentAssignmentSet';
+import {
+  AssignedTeam,
+  AssignedUser,
+} from '@shared/types/AssessmentAssignmentSet';
 import { Team } from '@shared/types/Team';
 import { AssessmentResult } from '@shared/types/AssessmentResults';
 
@@ -22,14 +25,18 @@ const InternalAssessmentDetail: React.FC = () => {
   const questionsApiRoute = `/api/internal-assessments/${assessmentId}/questions`;
   const teachingTeamApiRoute = `/api/courses/${id}/teachingteam`;
 
-  const [userIdToNameMap, setUserIdToNameMap] = useState<{ [key: string]: string }>({});
+  const [userIdToNameMap, setUserIdToNameMap] = useState<{
+    [key: string]: string;
+  }>({});
   const [assignedTeams, setAssignedTeams] = useState<AssignedTeam[]>([]);
   const [assignedUsers, setAssignedUsers] = useState<AssignedUser[]>([]);
   const [assessment, setAssessment] = useState<InternalAssessment | null>(null);
   const [teachingTeam, setTeachingTeam] = useState<User[]>([]);
   const [activeTab, setActiveTab] = useState<string>('Overview');
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [assessmentResults, setAssessmentResults] = useState<AssessmentResult[]>([]);
+  const [assessmentResults, setAssessmentResults] = useState<
+    AssessmentResult[]
+  >([]);
   const permission = hasFacultyPermission();
 
   const fetchTeamsAndCreateUserMap = useCallback(async () => {
@@ -40,7 +47,9 @@ const InternalAssessmentDetail: React.FC = () => {
 
       if (assessment.granularity === 'team') {
         let assignedTeams: AssignedTeam[] = [];
-        const response = await fetch(`/api/internal-assessments/${assessmentId}/assignment-sets`);
+        const response = await fetch(
+          `/api/internal-assessments/${assessmentId}/assignment-sets`
+        );
         if (response.ok) {
           assignedTeams = await response.json();
         }
@@ -48,15 +57,21 @@ const InternalAssessmentDetail: React.FC = () => {
         if (!response.ok || assignedTeams === null) {
           const fallbackResponse = await fetch(`/api/teams/course/${id}`);
           if (!fallbackResponse.ok && response !== null) {
-            console.error('Error fetching teams from fallback:', fallbackResponse.statusText);
+            console.error(
+              'Error fetching teams from fallback:',
+              fallbackResponse.statusText
+            );
             return;
           }
           const teams: Team[] = await fallbackResponse.json();
 
-          assignedTeams = teams.map((team) => ({
-            team,
-            tas: team.TA ? [team.TA] : [],
-          } as AssignedTeam));
+          assignedTeams = teams.map(
+            team =>
+              ({
+                team,
+                tas: team.TA ? [team.TA] : [],
+              }) as AssignedTeam
+          );
         }
 
         const userMap: { [key: string]: string } = {};
@@ -73,7 +88,9 @@ const InternalAssessmentDetail: React.FC = () => {
         setUserIdToNameMap(userMap);
       } else if (assessment.granularity === 'individual') {
         let assignedUsers: AssignedUser[] = [];
-        const response = await fetch(`/api/internal-assessments/${assessmentId}/assignment-sets`);
+        const response = await fetch(
+          `/api/internal-assessments/${assessmentId}/assignment-sets`
+        );
         if (response.ok) {
           assignedUsers = await response.json();
         }
@@ -81,24 +98,29 @@ const InternalAssessmentDetail: React.FC = () => {
         if (!response.ok || assignedUsers === null) {
           const fallbackResponse = await fetch(`/api/teams/course/${id}`);
           if (!fallbackResponse.ok) {
-            console.error('Error fetching teams from fallback:', fallbackResponse.statusText);
+            console.error(
+              'Error fetching teams from fallback:',
+              fallbackResponse.statusText
+            );
             return;
           }
           const teams: Team[] = await fallbackResponse.json();
-          console.log(teams)
+          console.log(teams);
 
-          assignedUsers = teams.flatMap((team) => team.members.map((member) => {
-            return {
-              user: member,
-              tas: team.TA ? [team.TA] : [],
-            } as AssignedUser
-          }));
+          assignedUsers = teams.flatMap(team =>
+            team.members.map(member => {
+              return {
+                user: member,
+                tas: team.TA ? [team.TA] : [],
+              } as AssignedUser;
+            })
+          );
         }
 
         const userMap: { [key: string]: string } = {};
         assignedUsers.forEach((assignedUser: AssignedUser) => {
           userMap[assignedUser.user._id] = assignedUser.user.name;
-          assignedUser.tas.forEach((ta) => {
+          assignedUser.tas.forEach(ta => {
             userMap[ta._id] = ta.name;
           });
         });
@@ -177,7 +199,10 @@ const InternalAssessmentDetail: React.FC = () => {
         },
       });
       if (!response.ok) {
-        console.error('Error fetching assessment results:', response.statusText);
+        console.error(
+          'Error fetching assessment results:',
+          response.statusText
+        );
         return;
       }
       const data: AssessmentResult[] = (await response.json()).data;
@@ -194,12 +219,16 @@ const InternalAssessmentDetail: React.FC = () => {
   };
 
   useEffect(() => {
-    const savedTab = localStorage.getItem(`activeAssessmentTab_${assessmentId}`);
-    if (savedTab && ['Overview', 'Questions', 'Internal Results'].includes(savedTab)) {
+    const savedTab = localStorage.getItem(
+      `activeAssessmentTab_${assessmentId}`
+    );
+    if (
+      savedTab &&
+      ['Overview', 'Questions', 'Internal Results'].includes(savedTab)
+    ) {
       setActiveTab(savedTab);
     }
   }, [assessmentId]);
-
 
   useEffect(() => {
     if (router.isReady) {
@@ -254,7 +283,7 @@ const InternalAssessmentDetail: React.FC = () => {
           return;
         }
         const createdQuestion: Question = await response.json();
-        setQuestions(questions.map((q) => (q._id === id ? createdQuestion : q)));
+        setQuestions(questions.map(q => (q._id === id ? createdQuestion : q)));
       } else {
         const response = await fetch(`${questionsApiRoute}/${id}`, {
           method: 'PATCH',
@@ -268,7 +297,9 @@ const InternalAssessmentDetail: React.FC = () => {
           return;
         }
         const updatedQuestionFromServer: Question = await response.json();
-        setQuestions(questions.map((q) => (q._id === id ? updatedQuestionFromServer : q)));
+        setQuestions(
+          questions.map(q => (q._id === id ? updatedQuestionFromServer : q))
+        );
       }
     } catch (error) {
       console.error('Error saving question:', error);
@@ -276,13 +307,13 @@ const InternalAssessmentDetail: React.FC = () => {
   };
 
   const handleDeleteQuestion = async (id: string) => {
-    const questionToDelete = questions.find((q) => q._id === id);
+    const questionToDelete = questions.find(q => q._id === id);
     if (!questionToDelete) {
       console.error('Question not found');
       return;
     }
     if (id.startsWith('temp-')) {
-      setQuestions(questions.filter((q) => q._id !== id));
+      setQuestions(questions.filter(q => q._id !== id));
     } else {
       try {
         const response = await fetch(`${questionsApiRoute}/${id}`, {
@@ -292,7 +323,7 @@ const InternalAssessmentDetail: React.FC = () => {
           console.error('Error deleting question:', response.statusText);
           return;
         }
-        setQuestions(questions.filter((q) => q._id !== id));
+        setQuestions(questions.filter(q => q._id !== id));
       } catch (error) {
         console.error('Error deleting question:', error);
       }
@@ -300,9 +331,9 @@ const InternalAssessmentDetail: React.FC = () => {
   };
 
   const studentIdToTeamNumber: { [studentId: string]: number } = {};
-  assignedTeams.forEach((assignedTeam) => {
+  assignedTeams.forEach(assignedTeam => {
     const teamNumber = assignedTeam.team.number;
-    assignedTeam.team.members.forEach((member) => {
+    assignedTeam.team.members.forEach(member => {
       studentIdToTeamNumber[member._id] = teamNumber;
     });
   });
@@ -311,42 +342,59 @@ const InternalAssessmentDetail: React.FC = () => {
     <Container>
       <Tabs value={activeTab}>
         <Tabs.List>
-          <Tabs.Tab value='Overview' onClick={() => setActiveTabAndSave('Overview')}>
+          <Tabs.Tab
+            value="Overview"
+            onClick={() => setActiveTabAndSave('Overview')}
+          >
             Overview
           </Tabs.Tab>
 
           {permission && (
-            <Tabs.Tab value='Questions' onClick={() => setActiveTabAndSave('Questions')}>
+            <Tabs.Tab
+              value="Questions"
+              onClick={() => setActiveTabAndSave('Questions')}
+            >
               Questions
             </Tabs.Tab>
           )}
 
           {permission && (
-            <Tabs.Tab value='Internal Results' onClick={() => setActiveTabAndSave('Internal Results')}>
+            <Tabs.Tab
+              value="Internal Results"
+              onClick={() => setActiveTabAndSave('Internal Results')}
+            >
               Results
             </Tabs.Tab>
           )}
         </Tabs.List>
 
-
-        <Tabs.Panel value='Overview'>
-          {id && assessment && ((assignedTeams && assignedTeams.length > 0) || (assignedUsers && assignedUsers.length > 0)) && (
-            <AssessmentInternalOverview
-              courseId={id}
-              assessment={assessment}
-              hasFacultyPermission={permission}
-              onUpdateAssessment={fetchAssessment}
-              questions={questions}
-              userIdToNameMap={userIdToNameMap}
-              teachingStaff={teachingTeam}
-              initialAssignedTeams={assessment.granularity === 'team' ? assignedTeams : undefined}
-              initialAssignedUsers={assessment.granularity === 'individual' ? assignedUsers : undefined}
-            />
-          )}
+        <Tabs.Panel value="Overview">
+          {id &&
+            assessment &&
+            ((assignedTeams && assignedTeams.length > 0) ||
+              (assignedUsers && assignedUsers.length > 0)) && (
+              <AssessmentInternalOverview
+                courseId={id}
+                assessment={assessment}
+                hasFacultyPermission={permission}
+                onUpdateAssessment={fetchAssessment}
+                questions={questions}
+                userIdToNameMap={userIdToNameMap}
+                teachingStaff={teachingTeam}
+                initialAssignedTeams={
+                  assessment.granularity === 'team' ? assignedTeams : undefined
+                }
+                initialAssignedUsers={
+                  assessment.granularity === 'individual'
+                    ? assignedUsers
+                    : undefined
+                }
+              />
+            )}
         </Tabs.Panel>
 
         {permission && (
-          <Tabs.Panel value='Questions'>
+          <Tabs.Panel value="Questions">
             <AssessmentInternalForm
               assessment={assessment}
               questions={questions}
@@ -358,17 +406,20 @@ const InternalAssessmentDetail: React.FC = () => {
           </Tabs.Panel>
         )}
 
-        {permission && assessmentResults && assessmentResults.length > 0 && assessment && (
-          <Tabs.Panel value='Internal Results'>
-            <AssessmentInternalResults
-              teachingTeam={teachingTeam}
-              results={assessmentResults}
-              assignedTeams={assignedTeams}
-              assignedUsers={assignedUsers}
-              maxScore={assessment.maxMarks}
-            />
-          </Tabs.Panel>
-        )}
+        {permission &&
+          assessmentResults &&
+          assessmentResults.length > 0 &&
+          assessment && (
+            <Tabs.Panel value="Internal Results">
+              <AssessmentInternalResults
+                teachingTeam={teachingTeam}
+                results={assessmentResults}
+                assignedTeams={assignedTeams}
+                assignedUsers={assignedUsers}
+                maxScore={assessment.maxMarks}
+              />
+            </Tabs.Panel>
+          )}
       </Tabs>
     </Container>
   );

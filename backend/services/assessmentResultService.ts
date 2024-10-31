@@ -3,7 +3,9 @@
 
 import mongoose from 'mongoose';
 import AssessmentAssignmentSetModel from '../models/AssessmentAssignmentSet';
-import AssessmentResultModel, { AssessmentResult } from '../models/AssessmentResult';
+import AssessmentResultModel, {
+  AssessmentResult,
+} from '../models/AssessmentResult';
 import InternalAssessmentModel from '../models/InternalAssessment';
 import { BadRequestError, NotFoundError } from './errors';
 import { Team } from '@models/Team';
@@ -28,19 +30,21 @@ export const getOrCreateAssessmentResults = async (
   // Fetch the AssessmentAssignmentSet for the given assessment
   const assignmentSet = await AssessmentAssignmentSetModel.findOne({
     assessment: assessmentId,
-  }).populate({
-    path: 'assignedTeams.team',
-    populate: {
-      path: 'members',
-      model: 'User',
-    },
-  }).populate({
-    path: 'assignedUsers',
-    populate: {
-      path: 'user',
-      model: 'User',
-    },
-  });
+  })
+    .populate({
+      path: 'assignedTeams.team',
+      populate: {
+        path: 'members',
+        model: 'User',
+      },
+    })
+    .populate({
+      path: 'assignedUsers',
+      populate: {
+        path: 'user',
+        model: 'User',
+      },
+    });
 
   if (!assignmentSet) {
     throw new NotFoundError(
@@ -81,16 +85,16 @@ export const getOrCreateAssessmentResults = async (
   }).select('student');
 
   const existingStudentIds = new Set<string>(
-    existingResults.map((result) => result.student.toString())
+    existingResults.map(result => result.student.toString())
   );
 
   // Determine which students are missing AssessmentResults
   const missingStudentIds = allStudentIds.filter(
-    (studentId) => !existingStudentIds.has(studentId)
+    studentId => !existingStudentIds.has(studentId)
   );
 
   // Prepare new AssessmentResult documents for missing students
-  const newAssessmentResults = missingStudentIds.map((studentId) => ({
+  const newAssessmentResults = missingStudentIds.map(studentId => ({
     assessment: assessmentId,
     student: studentId,
     marks: [],
@@ -106,7 +110,8 @@ export const getOrCreateAssessmentResults = async (
   const allAssessmentResults = await AssessmentResultModel.find({
     assessment: assessmentId,
     student: { $in: allStudentIds },
-  }).populate('student', 'name email') // Populate student details as needed
+  })
+    .populate('student', 'name email') // Populate student details as needed
     .populate('marks.submission')
     .populate('marks.marker'); // Populate submission details if necessary
 
@@ -114,8 +119,7 @@ export const getOrCreateAssessmentResults = async (
 };
 
 export const recalculateResult = async (resultId: string) => {
-  const result: any = await AssessmentResultModel
-    .findById(resultId)
+  const result: any = await AssessmentResultModel.findById(resultId)
     .populate('marks.submission.adjustedScore')
     .populate('marks.submission.score')
     .populate('averageScore');
@@ -124,7 +128,7 @@ export const recalculateResult = async (resultId: string) => {
   }
 
   if (result.marks.length === 0) {
-    throw new BadRequestError('No marks to recalculate')
+    throw new BadRequestError('No marks to recalculate');
   } else {
     console.log('Result:', result);
     result.marks.forEach((markEntry: any, index: any) => {
@@ -132,20 +136,24 @@ export const recalculateResult = async (resultId: string) => {
     });
   }
 
-  result.averageScore = result.marks.reduce((accumulator: number, markEntry: any) =>
-    accumulator + markEntry.score, 0)
-  / result.marks.length;
+  result.averageScore =
+    result.marks.reduce(
+      (accumulator: number, markEntry: any) => accumulator + markEntry.score,
+      0
+    ) / result.marks.length;
   result.save();
-}
+};
 
 export const checkMarkingCompletion = async (assessmentId: string) => {
-  const assessment = await InternalAssessmentModel.findById(assessmentId).populate('results');
+  const assessment =
+    await InternalAssessmentModel.findById(assessmentId).populate('results');
   if (!assessment) {
     throw new NotFoundError('Assessment not found');
   }
 
-  const assignmentSet = await AssessmentAssignmentSetModel
-    .findOne({ assessment: assessmentId })
+  const assignmentSet = await AssessmentAssignmentSetModel.findOne({
+    assessment: assessmentId,
+  })
     .populate({
       path: 'originalTeams',
       populate: { path: 'members', select: 'name identifier' },
@@ -169,8 +177,7 @@ export const checkMarkingCompletion = async (assessmentId: string) => {
     .populate({
       path: 'assignedUsers.user',
       select: 'name identifier',
-    })
-    ;
+    });
   if (!assignmentSet) {
     throw new NotFoundError('AssessmentAssignmentSet not found');
   }
@@ -179,11 +186,11 @@ export const checkMarkingCompletion = async (assessmentId: string) => {
 
   if (assignmentSet.assignedTeams) {
     for (const assignedTeam of assignmentSet.assignedTeams) {
-      const assignedTAs = assignedTeam.tas.map((ta) => ta.toString());
+      const assignedTAs = assignedTeam.tas.map(ta => ta.toString());
       const team: any = assignedTeam.team;
       const assessmentResult = await AssessmentResultModel.findOne({
         assessment: assessmentId,
-        student: team.members[0]
+        student: team.members[0],
       }).populate('marks.marker');
 
       if (!assessmentResult) {
@@ -194,8 +201,12 @@ export const checkMarkingCompletion = async (assessmentId: string) => {
         continue;
       }
 
-      const submittedMarkers = assessmentResult.marks.map((mark) => mark.marker.toString());
-      const missingMarkers = assignedTAs.filter((taId) => !submittedMarkers.includes(taId));
+      const submittedMarkers = assessmentResult.marks.map(mark =>
+        mark.marker.toString()
+      );
+      const missingMarkers = assignedTAs.filter(
+        taId => !submittedMarkers.includes(taId)
+      );
 
       if (missingMarkers.length > 0) {
         unmarked.push({
@@ -206,7 +217,7 @@ export const checkMarkingCompletion = async (assessmentId: string) => {
     }
   } else {
     for (const assignedUser of assignmentSet.assignedUsers!) {
-      const assignedTAs = assignedUser.tas.map((ta) => ta.toString());
+      const assignedTAs = assignedUser.tas.map(ta => ta.toString());
       const assessmentResult = await AssessmentResultModel.findOne({
         assessment: assessmentId,
         student: assignedUser.user,
@@ -220,8 +231,12 @@ export const checkMarkingCompletion = async (assessmentId: string) => {
         continue;
       }
 
-      const submittedMarkers = assessmentResult.marks.map((mark) => mark.marker.toString());
-      const missingMarkers = assignedTAs.filter((taId) => !submittedMarkers.includes(taId));
+      const submittedMarkers = assessmentResult.marks.map(mark =>
+        mark.marker.toString()
+      );
+      const missingMarkers = assignedTAs.filter(
+        taId => !submittedMarkers.includes(taId)
+      );
 
       if (missingMarkers.length > 0) {
         unmarked.push({

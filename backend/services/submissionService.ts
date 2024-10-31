@@ -1,7 +1,9 @@
 // services/submissionService.ts
 
 import SubmissionModel, { Submission } from '../models/Submission';
-import InternalAssessmentModel, { InternalAssessment } from '../models/InternalAssessment';
+import InternalAssessmentModel, {
+  InternalAssessment,
+} from '../models/InternalAssessment';
 import {
   AnswerUnion,
   MultipleChoiceAnswer,
@@ -45,15 +47,21 @@ function isNUSNETEmailAnswer(answer: AnswerUnion): answer is NUSNETEmailAnswer {
   return answer.type === 'NUSNET Email';
 }
 
-function isTeamMemberSelectionAnswer(answer: AnswerUnion): answer is TeamMemberSelectionAnswer {
+function isTeamMemberSelectionAnswer(
+  answer: AnswerUnion
+): answer is TeamMemberSelectionAnswer {
   return answer.type === 'Team Member Selection';
 }
 
-function isMultipleChoiceQuestion(question: QuestionUnion): question is MultipleChoiceQuestion {
+function isMultipleChoiceQuestion(
+  question: QuestionUnion
+): question is MultipleChoiceQuestion {
   return question.type === 'Multiple Choice';
 }
 
-function isMultipleResponseQuestion(question: QuestionUnion): question is MultipleResponseQuestion {
+function isMultipleResponseQuestion(
+  question: QuestionUnion
+): question is MultipleResponseQuestion {
   return question.type === 'Multiple Response';
 }
 
@@ -61,11 +69,15 @@ function isScaleQuestion(question: QuestionUnion): question is ScaleQuestion {
   return question.type === 'Scale';
 }
 
-function isShortResponseQuestion(question: QuestionUnion): question is ShortResponseQuestion {
+function isShortResponseQuestion(
+  question: QuestionUnion
+): question is ShortResponseQuestion {
   return question.type === 'Short Response';
 }
 
-function isLongResponseQuestion(question: QuestionUnion): question is LongResponseQuestion {
+function isLongResponseQuestion(
+  question: QuestionUnion
+): question is LongResponseQuestion {
   return question.type === 'Long Response';
 }
 
@@ -78,11 +90,15 @@ function isNumberQuestion(question: QuestionUnion): question is NumberQuestion {
 }
 
 // Type guards for answers
-function isMultipleChoiceAnswer(answer: AnswerUnion): answer is MultipleChoiceAnswer {
+function isMultipleChoiceAnswer(
+  answer: AnswerUnion
+): answer is MultipleChoiceAnswer {
   return answer.type === 'Multiple Choice';
 }
 
-function isMultipleResponseAnswer(answer: AnswerUnion): answer is MultipleResponseAnswer {
+function isMultipleResponseAnswer(
+  answer: AnswerUnion
+): answer is MultipleResponseAnswer {
   return answer.type === 'Multiple Response';
 }
 
@@ -90,11 +106,15 @@ function isScaleAnswer(answer: AnswerUnion): answer is ScaleAnswer {
   return answer.type === 'Scale';
 }
 
-function isShortResponseAnswer(answer: AnswerUnion): answer is ShortResponseAnswer {
+function isShortResponseAnswer(
+  answer: AnswerUnion
+): answer is ShortResponseAnswer {
   return answer.type === 'Short Response';
 }
 
-function isLongResponseAnswer(answer: AnswerUnion): answer is LongResponseAnswer {
+function isLongResponseAnswer(
+  answer: AnswerUnion
+): answer is LongResponseAnswer {
   return answer.type === 'Long Response';
 }
 
@@ -120,7 +140,9 @@ async function validateAnswers(
     const question = questionMap.get(questionId);
 
     if (!question) {
-      throw new BadRequestError(`Question ${questionId} not found in this assessment`);
+      throw new BadRequestError(
+        `Question ${questionId} not found in this assessment`
+      );
     }
 
     if (answer.type !== question.type) {
@@ -130,95 +152,142 @@ async function validateAnswers(
     }
 
     switch (question.type) {
-
       case 'NUSNET ID':
         if (isNUSNETIDAnswer(answer)) {
           if (typeof answer.value !== 'string') {
-            throw new BadRequestError(`Answer for question ${questionId} must be a string`);
+            throw new BadRequestError(
+              `Answer for question ${questionId} must be a string`
+            );
           }
           // Optionally, add validation for NUSNET ID format
         } else {
-          throw new BadRequestError(`Invalid NUSNET ID answer for question ${questionId}`);
+          throw new BadRequestError(
+            `Invalid NUSNET ID answer for question ${questionId}`
+          );
         }
         break;
 
       case 'NUSNET Email':
         if (isNUSNETEmailAnswer(answer)) {
           if (typeof answer.value !== 'string') {
-            throw new BadRequestError(`Answer for question ${questionId} must be a string`);
+            throw new BadRequestError(
+              `Answer for question ${questionId} must be a string`
+            );
           }
           // Optionally, add validation for NUSNET Email format
         } else {
-          throw new BadRequestError(`Invalid NUSNET Email answer for question ${questionId}`);
+          throw new BadRequestError(
+            `Invalid NUSNET Email answer for question ${questionId}`
+          );
         }
         break;
 
       case 'Team Member Selection':
         if (isTeamMemberSelectionAnswer(answer)) {
           if (!Array.isArray(answer.selectedUserIds)) {
-            throw new BadRequestError(`Answers for question ${questionId} must be an array`);
+            throw new BadRequestError(
+              `Answers for question ${questionId} must be an array`
+            );
           }
           // Validate based on assessment granularity
-          if (assessment.granularity === 'individual' && answer.selectedUserIds.length > 1) {
-            throw new BadRequestError(`Only one team member can be selected for question ${questionId}`);
+          if (
+            assessment.granularity === 'individual' &&
+            answer.selectedUserIds.length > 1
+          ) {
+            throw new BadRequestError(
+              `Only one team member can be selected for question ${questionId}`
+            );
           }
         } else {
-          throw new BadRequestError(`Invalid Team Member Selection answer for question ${questionId}`);
+          throw new BadRequestError(
+            `Invalid Team Member Selection answer for question ${questionId}`
+          );
         }
         break;
 
       case 'Multiple Choice':
-        if (isMultipleChoiceQuestion(question) && isMultipleChoiceAnswer(answer)) {
-          if (!question.options.find((option) => option.text === answer.value)) {
-            throw new BadRequestError(`Invalid option selected for question ${questionId}`);
+        if (
+          isMultipleChoiceQuestion(question) &&
+          isMultipleChoiceAnswer(answer)
+        ) {
+          if (!question.options.find(option => option.text === answer.value)) {
+            throw new BadRequestError(
+              `Invalid option selected for question ${questionId}`
+            );
           }
         } else {
-          throw new BadRequestError(`Invalid Multiple Choice answer for question ${questionId}`);
+          throw new BadRequestError(
+            `Invalid Multiple Choice answer for question ${questionId}`
+          );
         }
         break;
 
       case 'Multiple Response':
-        if (isMultipleResponseQuestion(question) && isMultipleResponseAnswer(answer)) {
+        if (
+          isMultipleResponseQuestion(question) &&
+          isMultipleResponseAnswer(answer)
+        ) {
           if (!Array.isArray(answer.values)) {
-            throw new BadRequestError(`Answers for question ${questionId} must be an array`);
+            throw new BadRequestError(
+              `Answers for question ${questionId} must be an array`
+            );
           }
           for (const val of answer.values) {
-            if (!question.options.find((option) => option.text === val)) {
-              throw new BadRequestError(`Invalid option selected for question ${questionId}`);
+            if (!question.options.find(option => option.text === val)) {
+              throw new BadRequestError(
+                `Invalid option selected for question ${questionId}`
+              );
             }
           }
         } else {
-          throw new BadRequestError(`Invalid Multiple Response answer for question ${questionId}`);
+          throw new BadRequestError(
+            `Invalid Multiple Response answer for question ${questionId}`
+          );
         }
         break;
 
       case 'Scale':
         if (isScaleQuestion(question) && isScaleAnswer(answer)) {
           if (answer.value < 1 || answer.value > question.scaleMax) {
-            throw new BadRequestError(`Invalid scale value for question ${questionId}`);
+            throw new BadRequestError(
+              `Invalid scale value for question ${questionId}`
+            );
           }
         } else {
-          throw new BadRequestError(`Invalid Scale answer for question ${questionId}`);
+          throw new BadRequestError(
+            `Invalid Scale answer for question ${questionId}`
+          );
         }
         break;
 
       case 'Short Response':
-        if (isShortResponseQuestion(question) && isShortResponseAnswer(answer)) {
+        if (
+          isShortResponseQuestion(question) &&
+          isShortResponseAnswer(answer)
+        ) {
           if (typeof answer.value !== 'string') {
-            throw new BadRequestError(`Answer for question ${questionId} must be a string`);
+            throw new BadRequestError(
+              `Answer for question ${questionId} must be a string`
+            );
           }
         } else {
-          throw new BadRequestError(`Invalid Short Response answer for question ${questionId}`);
+          throw new BadRequestError(
+            `Invalid Short Response answer for question ${questionId}`
+          );
         }
         break;
 
       case 'Long Response':
         if (isLongResponseQuestion(question) && isLongResponseAnswer(answer)) {
           if (typeof answer.value !== 'string') {
-            throw new BadRequestError(`Answer for question ${questionId} must be a string`);
+            throw new BadRequestError(
+              `Answer for question ${questionId} must be a string`
+            );
           }
         } else {
-          throw new BadRequestError(`Invalid Long Response answer for question ${questionId}`);
+          throw new BadRequestError(
+            `Invalid Long Response answer for question ${questionId}`
+          );
         }
         break;
 
@@ -231,33 +300,47 @@ async function validateAnswers(
               isNaN(new Date(answer.startDate).getTime()) ||
               isNaN(new Date(answer.endDate).getTime())
             ) {
-              throw new BadRequestError(`Invalid date range provided for question ${questionId}`);
+              throw new BadRequestError(
+                `Invalid date range provided for question ${questionId}`
+              );
             }
           } else {
             if (!answer.value || isNaN(new Date(answer.value).getTime())) {
-              throw new BadRequestError(`Invalid date provided for question ${questionId}`);
+              throw new BadRequestError(
+                `Invalid date provided for question ${questionId}`
+              );
             }
           }
         } else {
-          throw new BadRequestError(`Invalid Date answer for question ${questionId}`);
+          throw new BadRequestError(
+            `Invalid Date answer for question ${questionId}`
+          );
         }
         break;
 
       case 'Number':
         if (isNumberQuestion(question) && isNumberAnswer(answer)) {
           if (typeof answer.value !== 'number') {
-            throw new BadRequestError(`Answer for question ${questionId} must be a number`);
+            throw new BadRequestError(
+              `Answer for question ${questionId} must be a number`
+            );
           }
           if (answer.value < 0 || answer.value > question.maxNumber) {
-            throw new BadRequestError(`Invalid number value for question ${questionId}`);
+            throw new BadRequestError(
+              `Invalid number value for question ${questionId}`
+            );
           }
         } else {
-          throw new BadRequestError(`Invalid Number answer for question ${questionId}`);
+          throw new BadRequestError(
+            `Invalid Number answer for question ${questionId}`
+          );
         }
         break;
 
       default:
-        throw new BadRequestError(`Unsupported question type for question ${questionId}`);
+        throw new BadRequestError(
+          `Unsupported question type for question ${questionId}`
+        );
     }
   }
 }
@@ -265,17 +348,26 @@ async function validateAnswers(
 export const checkSubmissionUniqueness = async (
   assessment: InternalAssessment,
   user: User,
-  targetStudentIds: string[],
+  targetStudentIds: string[]
 ): Promise<boolean> => {
   const userSubmissions = await SubmissionModel.find({
     assessment: assessment,
     user: user,
-  }).populate('answers.type').populate('answers.selectedUserIds');
-  const submittedUserIds = userSubmissions
-  .flatMap((sub) => (sub.answers.find((ans) => ans.type === 'Team Member Selection') as TeamMemberSelectionAnswer)
-  .selectedUserIds);
-  return !submittedUserIds.find((userId) => targetStudentIds.find((targetId) => targetId === userId));
-}
+  })
+    .populate('answers.type')
+    .populate('answers.selectedUserIds');
+  const submittedUserIds = userSubmissions.flatMap(
+    sub =>
+      (
+        sub.answers.find(
+          ans => ans.type === 'Team Member Selection'
+        ) as TeamMemberSelectionAnswer
+      ).selectedUserIds
+  );
+  return !submittedUserIds.find(userId =>
+    targetStudentIds.find(targetId => targetId === userId)
+  );
+};
 
 export const createSubmission = async (
   assessmentId: string,
@@ -291,18 +383,24 @@ export const createSubmission = async (
 
   await validateSubmissionPeriod(assessment);
   await validateAnswers(assessment, answers);
-  const selectedStudentIds =
-    (answers.find((answer) => answer.type === 'Team Member Selection') as TeamMemberSelectionAnswer)
-    .selectedUserIds;
-  await checkSubmissionUniqueness(assessment, user, selectedStudentIds)
+  const selectedStudentIds = (
+    answers.find(
+      answer => answer.type === 'Team Member Selection'
+    ) as TeamMemberSelectionAnswer
+  ).selectedUserIds;
+  await checkSubmissionUniqueness(assessment, user, selectedStudentIds);
 
   let totalScore = 0;
 
   const scoredAnswers = await Promise.all(
-    answers.map(async (answer) => {
-      const questionId = assessment.questions.find((q) => q._id.toString() === answer.question.toString());
+    answers.map(async answer => {
+      const questionId = assessment.questions.find(
+        q => q._id.toString() === answer.question.toString()
+      );
       if (!questionId) {
-        console.warn(`Question with ID ${answer.question} not found in assessment ${assessmentId}.`);
+        console.warn(
+          `Question with ID ${answer.question} not found in assessment ${assessmentId}.`
+        );
         return { ...answer, score: 0 };
       }
 
@@ -326,7 +424,9 @@ export const createSubmission = async (
       }
 
       if (!question) {
-        console.warn(`Question with ID ${answer.question} not found in assessment ${assessmentId}.`);
+        console.warn(
+          `Question with ID ${answer.question} not found in assessment ${assessmentId}.`
+        );
         return { ...answer, score: 0 };
       }
       const answerScore = await calculateAnswerScore(question, answer);
@@ -347,9 +447,11 @@ export const createSubmission = async (
 
   await submission.save();
 
-  const assignment = answers.find((answer) => answer.type === 'Team Member Selection') as TeamMemberSelectionAnswer;
+  const assignment = answers.find(
+    answer => answer.type === 'Team Member Selection'
+  ) as TeamMemberSelectionAnswer;
 
-  assignment.selectedUserIds.forEach(async (userId) => {
+  assignment.selectedUserIds.forEach(async userId => {
     let assessmentResult = await AssessmentResultModel.findOne({
       assessment: assessmentId,
       student: userId,
@@ -374,7 +476,7 @@ export const createSubmission = async (
     await assessmentResult.save();
 
     await recalculateResult(assessmentResult.id);
-  })
+  });
 
   return submission;
 };
@@ -397,30 +499,43 @@ export const updateSubmission = async (
 
   let bypass = false;
   const account = await AccountModel.findById(accountId);
-  if (account && (account.role === 'Faculty member' || account.role === 'admin')) {
+  if (
+    account &&
+    (account.role === 'Faculty member' || account.role === 'admin')
+  ) {
     bypass = true;
   }
 
   if (!bypass && submission.user.toString() !== userId) {
-    throw new BadRequestError('You do not have permission to update this submission.');
+    throw new BadRequestError(
+      'You do not have permission to update this submission.'
+    );
   }
 
-  const assessment = await getAssessmentWithQuestions(submission.assessment.toString());
+  const assessment = await getAssessmentWithQuestions(
+    submission.assessment.toString()
+  );
 
   await validateSubmissionPeriod(assessment);
   await validateAnswers(assessment, answers);
 
   if (!bypass && !assessment.areSubmissionsEditable && !submission.isDraft) {
-    throw new BadRequestError('Submissions are not editable for this assessment');
+    throw new BadRequestError(
+      'Submissions are not editable for this assessment'
+    );
   }
 
   let totalScore = 0;
 
   await Promise.all(
-    answers.map(async (answer) => {
-      const questionId = assessment.questions.find((q) => q._id.toString() === answer.question.toString());
+    answers.map(async answer => {
+      const questionId = assessment.questions.find(
+        q => q._id.toString() === answer.question.toString()
+      );
       if (!questionId) {
-        console.warn(`Question with ID ${answer.question} not found in assessment ${assessment.id}.`);
+        console.warn(
+          `Question with ID ${answer.question} not found in assessment ${assessment.id}.`
+        );
         answer.score = 0;
         return;
       }
@@ -446,7 +561,9 @@ export const updateSubmission = async (
       }
 
       if (!question) {
-        console.warn(`Question with ID ${answer.question} not found in assessment ${assessment.id}.`);
+        console.warn(
+          `Question with ID ${answer.question} not found in assessment ${assessment.id}.`
+        );
         answer.score = 0;
         return;
       }
@@ -466,9 +583,11 @@ export const updateSubmission = async (
 
   await submission.save();
 
-  const assignment = answers.find((answer) => answer.type === 'Team Member Selection') as TeamMemberSelectionAnswer;
+  const assignment = answers.find(
+    answer => answer.type === 'Team Member Selection'
+  ) as TeamMemberSelectionAnswer;
 
-  assignment.selectedUserIds.forEach(async (userId) => {
+  assignment.selectedUserIds.forEach(async userId => {
     const assessmentResult = await AssessmentResultModel.findOne({
       assessment: assessment.id,
       student: userId,
@@ -476,7 +595,9 @@ export const updateSubmission = async (
 
     if (!assessmentResult) {
       // If not, create a new AssessmentResult for the user
-      throw new NotFoundError('No previous assessment result found. Something went wrong with the flow.')
+      throw new NotFoundError(
+        'No previous assessment result found. Something went wrong with the flow.'
+      );
     }
     const newMarkEntry: MarkEntry = {
       marker: user,
@@ -496,14 +617,19 @@ export const getSubmissionsByAssessmentAndUser = async (
   assessmentId: string,
   userId: string
 ): Promise<Submission[]> => {
-  const submissions = await SubmissionModel.find({ assessment: assessmentId, user: userId })
+  const submissions = await SubmissionModel.find({
+    assessment: assessmentId,
+    user: userId,
+  })
     .populate('answers')
     .populate('user')
     .populate('assessment');
   return submissions;
 };
 
-export const getSubmissionsByAssessment = async (assessmentId: string): Promise<Submission[]> => {
+export const getSubmissionsByAssessment = async (
+  assessmentId: string
+): Promise<Submission[]> => {
   const submissions = await SubmissionModel.find({ assessment: assessmentId })
     .populate('user')
     .populate('answers');
@@ -519,7 +645,8 @@ export const deleteSubmission = async (submissionId: string): Promise<void> => {
 };
 
 async function getAssessmentWithQuestions(assessmentId: string) {
-  const assessmentDoc = await InternalAssessmentModel.findById(assessmentId).populate('questions');
+  const assessmentDoc =
+    await InternalAssessmentModel.findById(assessmentId).populate('questions');
   if (!assessmentDoc) {
     throw new NotFoundError('Assessment not found');
   }
@@ -532,11 +659,15 @@ async function getAssessmentWithQuestions(assessmentId: string) {
 
 async function validateSubmissionPeriod(assessment: InternalAssessment) {
   const now = new Date();
-  if (assessment.startDate > now || (assessment.endDate && assessment.endDate < now)) {
-    throw new BadRequestError('Assessment is not open for submissions at this time');
+  if (
+    assessment.startDate > now ||
+    (assessment.endDate && assessment.endDate < now)
+  ) {
+    throw new BadRequestError(
+      'Assessment is not open for submissions at this time'
+    );
   }
 }
-
 
 /**
  * Adjusts the score of a submission.
@@ -572,16 +703,31 @@ export const adjustSubmissionScore = async (
  * @param answer The user's answer.
  * @returns The score for this answer.
  */
-export const calculateAnswerScore = async (question: QuestionUnion, answer: AnswerUnion): Promise<number> => {
+export const calculateAnswerScore = async (
+  question: QuestionUnion,
+  answer: AnswerUnion
+): Promise<number> => {
   switch (question.type) {
     case 'Multiple Choice':
-      return calculateMultipleChoiceScore(question as MultipleChoiceQuestion, answer as MultipleChoiceAnswer);
+      return calculateMultipleChoiceScore(
+        question as MultipleChoiceQuestion,
+        answer as MultipleChoiceAnswer
+      );
     case 'Multiple Response':
-      return calculateMultipleResponseScore(question as MultipleResponseQuestion, answer as MultipleResponseAnswer);
+      return calculateMultipleResponseScore(
+        question as MultipleResponseQuestion,
+        answer as MultipleResponseAnswer
+      );
     case 'Scale':
-      return calculateScaleScore(question as ScaleQuestion, answer as ScaleAnswer);
+      return calculateScaleScore(
+        question as ScaleQuestion,
+        answer as ScaleAnswer
+      );
     case 'Number':
-      return calculateNumberScore(question as NumberQuestion, answer as NumberAnswer);
+      return calculateNumberScore(
+        question as NumberQuestion,
+        answer as NumberAnswer
+      );
     // Add cases for other question types if they have scoring
     default:
       // For question types that don't have scoring, return 0
@@ -592,10 +738,15 @@ export const calculateAnswerScore = async (question: QuestionUnion, answer: Answ
 /**
  * Calculates the score for a Multiple Choice answer.
  */
-const calculateMultipleChoiceScore = (question: MultipleChoiceQuestion, answer: MultipleChoiceAnswer): number => {
+const calculateMultipleChoiceScore = (
+  question: MultipleChoiceQuestion,
+  answer: MultipleChoiceAnswer
+): number => {
   if (!question.isScored) return 0;
 
-  const selectedOption = question.options.find((option) => option.text === answer.value);
+  const selectedOption = question.options.find(
+    option => option.text === answer.value
+  );
   if (selectedOption) {
     return selectedOption.points;
   }
@@ -605,12 +756,15 @@ const calculateMultipleChoiceScore = (question: MultipleChoiceQuestion, answer: 
 /**
  * Calculates the score for a Multiple Response answer.
  */
-const calculateMultipleResponseScore = (question: MultipleResponseQuestion, answer: MultipleResponseAnswer): number => {
+const calculateMultipleResponseScore = (
+  question: MultipleResponseQuestion,
+  answer: MultipleResponseAnswer
+): number => {
   if (!question.isScored) return 0;
 
   let score = 0;
   for (const value of answer.values) {
-    const option = question.options.find((opt) => opt.text === value);
+    const option = question.options.find(opt => opt.text === value);
     if (option) {
       score += option.points;
     }
@@ -622,7 +776,10 @@ const calculateMultipleResponseScore = (question: MultipleResponseQuestion, answ
  * Calculates the score for a Scale answer.
  * Implements linear interpolation for values between defined scale breakpoints.
  */
-const calculateScaleScore = (question: ScaleQuestion, answer: ScaleAnswer): number => {
+const calculateScaleScore = (
+  question: ScaleQuestion,
+  answer: ScaleAnswer
+): number => {
   if (!question.isScored) return 0;
 
   const { value: answerValue } = answer;
@@ -653,8 +810,10 @@ const calculateScaleScore = (question: ScaleQuestion, answer: ScaleAnswer): numb
     }
     if (answerValue > current.value && answerValue < next.value) {
       // Perform linear interpolation
-      const slope = (next.points - current.points) / (next.value - current.value);
-      const interpolatedPoints = current.points + slope * (answerValue - current.value);
+      const slope =
+        (next.points - current.points) / (next.value - current.value);
+      const interpolatedPoints =
+        current.points + slope * (answerValue - current.value);
       return interpolatedPoints;
     }
   }
@@ -667,7 +826,10 @@ const calculateScaleScore = (question: ScaleQuestion, answer: ScaleAnswer): numb
  * Calculates the score for a Number answer.
  * Supports both direct and range-based scoring with interpolation.
  */
-const calculateNumberScore = (question: NumberQuestion, answer: NumberAnswer): number => {
+const calculateNumberScore = (
+  question: NumberQuestion,
+  answer: NumberAnswer
+): number => {
   if (!question.isScored) return 0;
 
   const { value: answerValue } = answer;
@@ -685,11 +847,13 @@ const calculateNumberScore = (question: NumberQuestion, answer: NumberAnswer): n
 
   if (scoringMethod === 'range' && scoringRanges && scoringRanges.length > 0) {
     // Ensure scoringRanges are sorted by minValue
-    const sortedRanges = [...scoringRanges].sort((a, b) => a.minValue - b.minValue);
+    const sortedRanges = [...scoringRanges].sort(
+      (a, b) => a.minValue - b.minValue
+    );
 
     // Find the range that includes the answerValue
     const matchingRange = sortedRanges.find(
-      (range) => answerValue >= range.minValue && answerValue <= range.maxValue
+      range => answerValue >= range.minValue && answerValue <= range.maxValue
     );
 
     if (matchingRange) {

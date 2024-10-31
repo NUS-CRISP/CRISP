@@ -7,7 +7,12 @@ import mongoose, { Schema, Types } from 'mongoose';
 export interface InternalAssessment
   extends Omit<
       SharedInternalAssessment,
-      '_id' | 'course' | 'results' | 'teamSet' | 'questions' | 'assessmentAssignmentSet'
+      | '_id'
+      | 'course'
+      | 'results'
+      | 'teamSet'
+      | 'questions'
+      | 'assessmentAssignmentSet'
     >,
     mongoose.Document {
   _id: Types.ObjectId;
@@ -36,7 +41,10 @@ const internalAssessmentSchema = new Schema<InternalAssessment>({
   results: [{ type: Schema.Types.ObjectId, ref: 'AssessmentResult' }],
   isReleased: { type: Boolean, required: true },
   questions: [{ type: Schema.Types.ObjectId, ref: 'Question' }],
-  assessmentAssignmentSet: { type: Schema.Types.ObjectId, ref: 'AssessmentAssignmentSet' },
+  assessmentAssignmentSet: {
+    type: Schema.Types.ObjectId,
+    ref: 'AssessmentAssignmentSet',
+  },
 });
 
 const InternalAssessmentModel = mongoose.model<InternalAssessment>(

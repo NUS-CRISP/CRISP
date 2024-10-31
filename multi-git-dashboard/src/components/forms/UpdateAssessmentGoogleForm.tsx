@@ -99,14 +99,8 @@ const UpdateAssessmentGoogleForm: React.FC<UpdateAssessmentGoogleFormProps> = ({
           label="Form Link"
           {...form.getInputProps('formLink')}
         />
-        <TextInput
-          label="Sheet ID"
-          {...form.getInputProps('sheetID')}
-        />
-        <TextInput
-          label="Sheet Tab"
-          {...form.getInputProps('sheetTab')}
-        />
+        <TextInput label="Sheet ID" {...form.getInputProps('sheetID')} />
+        <TextInput label="Sheet Tab" {...form.getInputProps('sheetTab')} />
 
         <Group my={16}>
           <Button type="submit" style={{ marginTop: '16px' }}>

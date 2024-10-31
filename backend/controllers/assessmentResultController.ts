@@ -14,7 +14,10 @@ import { getInternalAssessmentById } from 'services/internalAssessmentService';
  * Controller to retrieve or create AssessmentResults for an assessment.
  * Route: GET /api/assessment-results/:assessmentId
  */
-export const getOrCreateAssessmentResultsController = async (req: Request, res: Response) => {
+export const getOrCreateAssessmentResultsController = async (
+  req: Request,
+  res: Response
+) => {
   const { assessmentId } = req.params;
   const accountId = await getAccountId(req);
 
@@ -31,18 +34,22 @@ export const getOrCreateAssessmentResultsController = async (req: Request, res: 
 
     const assessmentResults = await getOrCreateAssessmentResults(assessmentId);
     if (!assessmentResults) {
-      throw new NotFoundError('Assessment Results not found for this assessment');
+      throw new NotFoundError(
+        'Assessment Results not found for this assessment'
+      );
     }
 
     const assessmentResultMap = new Map<string, any>();
 
-    assessmentResults.forEach((result) => {
+    assessmentResults.forEach(result => {
       assessmentResultMap.set(result.student._id.toString(), result);
     });
 
     if (assessment.granularity === 'individual') {
       if (!assignmentSet.assignedUsers) {
-        throw new BadRequestError('Assessment is individual granularity, but assignments are for teams');
+        throw new BadRequestError(
+          'Assessment is individual granularity, but assignments are for teams'
+        );
       }
       for (const assignedUser of assignmentSet.assignedUsers) {
         const studentId = assignedUser.user._id.toString();
@@ -57,7 +64,8 @@ export const getOrCreateAssessmentResultsController = async (req: Request, res: 
         }
         for (const marker of assignedUser.tas) {
           const existingMarkEntry = assessmentResult.marks.find(
-            (markEntry: any) => markEntry.marker._id.toString() === marker._id.toString()
+            (markEntry: any) =>
+              markEntry.marker._id.toString() === marker._id.toString()
           );
           if (!existingMarkEntry) {
             const tempMarkEntry = {
@@ -72,7 +80,9 @@ export const getOrCreateAssessmentResultsController = async (req: Request, res: 
       }
     } else if (assessment.granularity === 'team') {
       if (!assignmentSet.assignedTeams) {
-        throw new BadRequestError('Assessment is team granularity, but assignments are for users');
+        throw new BadRequestError(
+          'Assessment is team granularity, but assignments are for users'
+        );
       }
       for (const assignedTeam of assignmentSet.assignedTeams) {
         const teamId = assignedTeam.team._id.toString();
@@ -87,7 +97,8 @@ export const getOrCreateAssessmentResultsController = async (req: Request, res: 
         }
         for (const marker of assignedTeam.tas) {
           const existingMarkEntry = assessmentResult.marks.find(
-            (markEntry: any) => markEntry.marker._id.toString() === marker._id.toString()
+            (markEntry: any) =>
+              markEntry.marker._id.toString() === marker._id.toString()
           );
           if (!existingMarkEntry) {
             const tempMarkEntry = {
@@ -112,7 +123,9 @@ export const getOrCreateAssessmentResultsController = async (req: Request, res: 
       res.status(404).json({ error: error.message });
     } else {
       console.error('Error retrieving or creating AssessmentResults:', error);
-      res.status(500).json({ error: 'Failed to retrieve or create AssessmentResults' });
+      res
+        .status(500)
+        .json({ error: 'Failed to retrieve or create AssessmentResults' });
     }
   }
 };
@@ -123,7 +136,7 @@ export const getOrCreateAssessmentResultsController = async (req: Request, res: 
  */
 export const recalculateResultController = async (
   req: Request,
-  res: Response,
+  res: Response
 ) => {
   const { resultId } = req.params;
 
@@ -149,7 +162,7 @@ export const recalculateResultController = async (
  */
 export const checkMarkingCompletionController = async (
   req: Request,
-  res: Response,
+  res: Response
 ) => {
   const { assessmentId } = req.params;
 

@@ -10,7 +10,11 @@ import {
   adjustSubmissionScore,
 } from '../services/submissionService';
 import { getAccountId } from '../utils/auth';
-import { NotFoundError, BadRequestError, MissingAuthorizationError } from '../services/errors';
+import {
+  NotFoundError,
+  BadRequestError,
+  MissingAuthorizationError,
+} from '../services/errors';
 import AccountModel from '../models/Account';
 import SubmissionModel from '../models/Submission';
 import { AnswerUnion } from '../models/Answer';
@@ -32,13 +36,26 @@ export const submitAssessment = async (req: Request, res: Response) => {
     let submission;
     if (submissionId) {
       // Update existing submission
-      submission = await updateSubmission(submissionId, userId, accountId, typedAnswers, isDraft);
+      submission = await updateSubmission(
+        submissionId,
+        userId,
+        accountId,
+        typedAnswers,
+        isDraft
+      );
     } else {
       // Create new submission
-      submission = await createSubmission(assessmentId, userId, typedAnswers, isDraft);
+      submission = await createSubmission(
+        assessmentId,
+        userId,
+        typedAnswers,
+        isDraft
+      );
     }
 
-    res.status(200).json({ message: 'Submission saved successfully', submission });
+    res
+      .status(200)
+      .json({ message: 'Submission saved successfully', submission });
   } catch (error) {
     if (error instanceof NotFoundError || error instanceof BadRequestError) {
       res.status(400).json({ error: error.message });
@@ -57,7 +74,10 @@ export const getUserSubmissions = async (req: Request, res: Response) => {
     const { assessmentId } = req.params;
     const userId = await getUserIdByAccountId(accountId);
 
-    const submissions = await getSubmissionsByAssessmentAndUser(assessmentId, userId);
+    const submissions = await getSubmissionsByAssessmentAndUser(
+      assessmentId,
+      userId
+    );
     res.status(200).json(submissions);
   } catch (error) {
     if (error instanceof NotFoundError) {
@@ -76,7 +96,10 @@ export const getAllSubmissions = async (req: Request, res: Response) => {
     const accountId = await getAccountId(req);
     const account = await AccountModel.findById(accountId);
 
-    if (!account || (account.role !== 'admin' && account.role !== 'Faculty member')) {
+    if (
+      !account ||
+      (account.role !== 'admin' && account.role !== 'Faculty member')
+    ) {
       throw new MissingAuthorizationError('Access denied');
     }
 
@@ -108,7 +131,9 @@ export const deleteUserSubmission = async (req: Request, res: Response) => {
     if (!submission.user.equals(userId)) {
       const account = await AccountModel.findById(accountId);
       if (!account || account.role !== 'admin') {
-        throw new MissingAuthorizationError('You do not have permission to delete this submission');
+        throw new MissingAuthorizationError(
+          'You do not have permission to delete this submission'
+        );
       }
     }
 
@@ -127,7 +152,10 @@ export const deleteUserSubmission = async (req: Request, res: Response) => {
 };
 
 // New controller to get a submission by ID
-export const getSubmissionByIdController = async (req: Request, res: Response) => {
+export const getSubmissionByIdController = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const accountId = await getAccountId(req);
     const userId = await getUserIdByAccountId(accountId);
@@ -144,8 +172,13 @@ export const getSubmissionByIdController = async (req: Request, res: Response) =
     // Ensure the user has permission to view the submission
     if (!submission.user.equals(userId)) {
       const account = await AccountModel.findById(accountId);
-      if (!account || (account.role !== 'admin' && account.role !== 'Faculty member')) {
-        throw new MissingAuthorizationError('You do not have permission to view this submission');
+      if (
+        !account ||
+        (account.role !== 'admin' && account.role !== 'Faculty member')
+      ) {
+        throw new MissingAuthorizationError(
+          'You do not have permission to view this submission'
+        );
       }
     }
 
@@ -166,13 +199,21 @@ export const getSubmissionByIdController = async (req: Request, res: Response) =
  * Controller to adjust the score of a submission.
  * Only accessible by faculty members and admins.
  */
-export const adjustSubmissionScoreController = async (req: Request, res: Response) => {
+export const adjustSubmissionScoreController = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const accountId = await getAccountId(req);
     const account = await AccountModel.findById(accountId);
 
-    if (!account || (account.role !== 'Faculty member' && account.role !== 'admin')) {
-      throw new MissingAuthorizationError('You do not have permission to adjust scores.');
+    if (
+      !account ||
+      (account.role !== 'Faculty member' && account.role !== 'admin')
+    ) {
+      throw new MissingAuthorizationError(
+        'You do not have permission to adjust scores.'
+      );
     }
 
     const { submissionId } = req.params;
@@ -184,7 +225,9 @@ export const adjustSubmissionScoreController = async (req: Request, res: Respons
 
     const submission = await adjustSubmissionScore(submissionId, adjustedScore);
 
-    res.status(200).json({ message: 'Adjusted score submitted successfully.', submission });
+    res
+      .status(200)
+      .json({ message: 'Adjusted score submitted successfully.', submission });
   } catch (error) {
     if (error instanceof NotFoundError || error instanceof BadRequestError) {
       res.status(400).json({ error: error.message });

@@ -101,14 +101,8 @@ const UpdateAssessmentForm: React.FC<UpdateAssessmentFormProps> = ({
               label="Form Link"
               {...form.getInputProps('formLink')}
             />
-            <TextInput
-              label="Sheet ID"
-              {...form.getInputProps('sheetID')}
-            />
-            <TextInput
-              label="Sheet Tab"
-              {...form.getInputProps('sheetTab')}
-            />
+            <TextInput label="Sheet ID" {...form.getInputProps('sheetID')} />
+            <TextInput label="Sheet Tab" {...form.getInputProps('sheetTab')} />
           </>
         )}
 

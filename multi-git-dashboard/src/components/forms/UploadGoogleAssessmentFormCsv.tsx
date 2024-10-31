@@ -21,7 +21,15 @@ const UploadGoogleCSV: React.FC<UploadGoogleCSVProps> = ({
         </Notification>
       )}
       <CSVUpload
-        headers={['assessmentType', 'markType', 'frequency', 'teamSetName', 'formLink', 'sheetID', 'sheetTab']}
+        headers={[
+          'assessmentType',
+          'markType',
+          'frequency',
+          'teamSetName',
+          'formLink',
+          'sheetID',
+          'sheetTab',
+        ]}
         onProcessComplete={onAssessmentCreated}
         onError={setError}
         filename="google_assessment_template.csv"

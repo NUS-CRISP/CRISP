@@ -1,5 +1,13 @@
 import { hasFacultyPermission } from '@/lib/auth/utils';
-import { Button, Center, Container, Group, Modal, Text, Tabs } from '@mantine/core';
+import {
+  Button,
+  Center,
+  Container,
+  Group,
+  Modal,
+  Text,
+  Tabs,
+} from '@mantine/core';
 import { Assessment } from '@shared/types/Assessment';
 import { InternalAssessment } from '@shared/types/InternalAssessment';
 import Link from 'next/link';
@@ -35,43 +43,45 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
     onUpdate();
   };
 
-  const assessmentCards = !(assessments === undefined || assessments === null) ?
-    assessments.map(assessment => (
-      <Link
-        key={assessment._id}
-        style={{ textDecoration: 'none' }}
-        href={`/courses/${courseId}/assessments/${assessment._id}`}
-        passHref
-      >
-        <AssessmentCard
+  const assessmentCards = !(assessments === undefined || assessments === null)
+    ? assessments.map(assessment => (
+        <Link
           key={assessment._id}
-          assessmentType={assessment.assessmentType}
-          markType={assessment.markType}
-          teamSetName={assessment.teamSet ? assessment.teamSet.name : null}
-        />
-      </Link>
-    )
-  ) : [];
+          style={{ textDecoration: 'none' }}
+          href={`/courses/${courseId}/assessments/${assessment._id}`}
+          passHref
+        >
+          <AssessmentCard
+            key={assessment._id}
+            assessmentType={assessment.assessmentType}
+            markType={assessment.markType}
+            teamSetName={assessment.teamSet ? assessment.teamSet.name : null}
+          />
+        </Link>
+      ))
+    : [];
 
-  const internalAssessmentCards = !(internalAssessments === undefined || internalAssessments === null) ?
-    internalAssessments.map(assessment => (
-      <Link
-        key={assessment._id}
-        style={{ textDecoration: 'none' }}
-        href={`/courses/${courseId}/internal-assessments/${assessment._id}`}
-        passHref
-      >
-        <InternalAssessmentCard
+  const internalAssessmentCards = !(
+    internalAssessments === undefined || internalAssessments === null
+  )
+    ? internalAssessments.map(assessment => (
+        <Link
           key={assessment._id}
-          assessmentName={assessment.assessmentName}
-          startDate={assessment.startDate}
-          endDate={assessment.endDate}
-          description={assessment.description}
-          granularity={assessment.granularity}
-        />
-      </Link>
-    )
-  ) : [];
+          style={{ textDecoration: 'none' }}
+          href={`/courses/${courseId}/internal-assessments/${assessment._id}`}
+          passHref
+        >
+          <InternalAssessmentCard
+            key={assessment._id}
+            assessmentName={assessment.assessmentName}
+            startDate={assessment.startDate}
+            endDate={assessment.endDate}
+            description={assessment.description}
+            granularity={assessment.granularity}
+          />
+        </Link>
+      ))
+    : [];
 
   return (
     <Container>
@@ -100,7 +110,9 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
 
         <Tabs.Panel value="assessments" pt="xs">
           {assessmentCards.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div
+              style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
+            >
               {assessmentCards}
             </div>
           ) : (
@@ -113,7 +125,9 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
         {/* Tab Panel for Internal Assessments */}
         <Tabs.Panel value="internalAssessments" pt="xs">
           {internalAssessmentCards.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div
+              style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
+            >
               {internalAssessmentCards}
             </div>
           ) : (

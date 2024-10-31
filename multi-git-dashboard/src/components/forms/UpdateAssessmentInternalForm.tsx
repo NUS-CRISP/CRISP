@@ -1,6 +1,13 @@
 // UpdateAssessmentInternalForm.tsx
 
-import { Box, Button, Group, Notification, TextInput, Checkbox } from '@mantine/core';
+import {
+  Box,
+  Button,
+  Group,
+  Notification,
+  TextInput,
+  Checkbox,
+} from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { InternalAssessment } from '@shared/types/InternalAssessment'; // Import InternalAssessment type
 import { useState } from 'react';
@@ -10,10 +17,9 @@ interface UpdateAssessmentInternalFormProps {
   onAssessmentUpdated: () => void;
 }
 
-const UpdateAssessmentInternalForm: React.FC<UpdateAssessmentInternalFormProps> = ({
-  assessment,
-  onAssessmentUpdated,
-}) => {
+const UpdateAssessmentInternalForm: React.FC<
+  UpdateAssessmentInternalFormProps
+> = ({ assessment, onAssessmentUpdated }) => {
   const apiRoute = `/api/internal-assessments/${assessment?._id}`; // Update the API route for internal assessments
 
   const form = useForm({
@@ -69,7 +75,12 @@ const UpdateAssessmentInternalForm: React.FC<UpdateAssessmentInternalFormProps> 
   return (
     <Box maw={500} mx="auto" p="md">
       {error && (
-        <Notification title="Error" color="red" onClose={() => setError(null)} mb="md">
+        <Notification
+          title="Error"
+          color="red"
+          onClose={() => setError(null)}
+          mb="md"
+        >
           {error}
         </Notification>
       )}
@@ -109,8 +120,11 @@ const UpdateAssessmentInternalForm: React.FC<UpdateAssessmentInternalFormProps> 
         <Checkbox
           label="Allow Submissions to be Editable"
           checked={form.values.areSubmissionsEditable}
-          onChange={(event) =>
-            form.setFieldValue('areSubmissionsEditable', event.currentTarget.checked)
+          onChange={event =>
+            form.setFieldValue(
+              'areSubmissionsEditable',
+              event.currentTarget.checked
+            )
           }
           mb="sm"
         />

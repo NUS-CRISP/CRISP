@@ -1,12 +1,29 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // pages/courses/[id]/internal-assessments/[assessmentId]/take.tsx
 
-import { Container, Button, Text, Modal, Group, ScrollArea, Divider, NumberInput, Paper } from '@mantine/core';
+import {
+  Container,
+  Button,
+  Text,
+  Modal,
+  Group,
+  ScrollArea,
+  Divider,
+  NumberInput,
+  Paper,
+} from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
 import { InternalAssessment } from '@shared/types/InternalAssessment';
-import { MultipleChoiceQuestion, MultipleResponseQuestion, NumberQuestion, Question, QuestionUnion, ScaleQuestion } from '@shared/types/Question';
+import {
+  MultipleChoiceQuestion,
+  MultipleResponseQuestion,
+  NumberQuestion,
+  Question,
+  QuestionUnion,
+  ScaleQuestion,
+} from '@shared/types/Question';
 import { AnswerUnion } from '@shared/types/Answer';
 import { AnswerInput } from '@shared/types/AnswerInput';
 import { Submission } from '@shared/types/Submission';
@@ -37,26 +54,43 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
   const submitAssessmentApiRoute = `/api/internal-assessments/${assessmentId}/submit`;
   const assessmentApiRoute = `/api/internal-assessments/${assessmentId}`;
 
-  const [assessment, setAssessment] = useState<InternalAssessment | null>(inputAssessment);
+  const [assessment, setAssessment] = useState<InternalAssessment | null>(
+    inputAssessment
+  );
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [answers, setAnswers] = useState<{ [questionId: string]: AnswerInput }>({});
+  const [answers, setAnswers] = useState<{ [questionId: string]: AnswerInput }>(
+    {}
+  );
   const [totalScore, setTotalScore] = useState<number | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [showConfirmationModal, setShowConfirmationModal] = useState<boolean>(false);
-  const [showDeleteDraftModal, setShowDeleteDraftModal] = useState<boolean>(false);
-  const [missingRequiredQuestions, setMissingRequiredQuestions] = useState<string[]>([]);
+  const [showConfirmationModal, setShowConfirmationModal] =
+    useState<boolean>(false);
+  const [showDeleteDraftModal, setShowDeleteDraftModal] =
+    useState<boolean>(false);
+  const [missingRequiredQuestions, setMissingRequiredQuestions] = useState<
+    string[]
+  >([]);
   const [showErrorModal, setShowErrorModal] = useState<boolean>(false);
   const [showBackModal, setShowBackModal] = useState<boolean>(false);
   const [teamOptions, setTeamOptions] = useState<
-    { value: string; label: string; members: { value: string; label: string }[] }[]
+    {
+      value: string;
+      label: string;
+      members: { value: string; label: string }[];
+    }[]
   >([]);
-  const [teamMembersOptions, setTeamMembersOptions] = useState<{ value: string; label: string }[]>(
-    []
+  const [teamMembersOptions, setTeamMembersOptions] = useState<
+    { value: string; label: string }[]
+  >([]);
+  const [submission, setSubmission] = useState<Submission | undefined>(
+    existingSubmission
   );
-  const [submission, setSubmission] = useState<Submission | undefined>(existingSubmission);
   const [showSummaryModal, setShowSummaryModal] = useState<boolean>(false);
-  const [showAdjustScoreModal, setShowAdjustScoreModal] = useState<boolean>(false);
-  const [newAdjustedScore, setNewAdjustedScore] = useState<number | undefined>(undefined);
+  const [showAdjustScoreModal, setShowAdjustScoreModal] =
+    useState<boolean>(false);
+  const [newAdjustedScore, setNewAdjustedScore] = useState<number | undefined>(
+    undefined
+  );
 
   const isScoredQuestion = (
     question: QuestionUnion
@@ -118,7 +152,9 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
   // Fetch team members
   const fetchTeamMembers = useCallback(async () => {
     try {
-      const endpoint = isFaculty ? `/api/teams/course/${id}` : `/api/teams/course/${id}/ta`;
+      const endpoint = isFaculty
+        ? `/api/teams/course/${id}`
+        : `/api/teams/course/${id}/ta`;
       const res = await fetch(endpoint, {
         method: 'GET',
         headers: {
@@ -129,15 +165,15 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
 
       const teams: Team[] = await res.json();
       // Extract team members
-      const teamMembers = teams.flatMap((team) => team.members);
+      const teamMembers = teams.flatMap(team => team.members);
       // Remove duplicates
-      const uniqueMembers = Array.from(new Set(teamMembers.map((member) => member._id))).map((id) =>
-        teamMembers.find((member) => member._id === id)
-      );
+      const uniqueMembers = Array.from(
+        new Set(teamMembers.map(member => member._id))
+      ).map(id => teamMembers.find(member => member._id === id));
       if (uniqueMembers.length > 0) {
         const options = uniqueMembers
-          .filter((member) => member !== undefined && member !== null)
-          .map((member) => ({
+          .filter(member => member !== undefined && member !== null)
+          .map(member => ({
             value: member._id,
             label: member.name,
           }));
@@ -170,10 +206,10 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
 
       if (assessment.granularity === 'team') {
         const teams = data as Team[];
-        const options = teams.map((team) => ({
+        const options = teams.map(team => ({
           value: team._id,
           label: `Team ${team.number}`,
-          members: team.members.map((member) => ({
+          members: team.members.map(member => ({
             value: member._id,
             label: member.name,
           })),
@@ -182,7 +218,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         setTeamOptions(options);
       } else if (assessment.granularity === 'individual') {
         const users = data as User[];
-        const options = users.map((user) => ({
+        const options = users.map(user => ({
           value: user._id,
           label: user.name,
         }));
@@ -198,13 +234,16 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
    * Calculate the total score and per-question scores for the submission.
    * This is useful for displaying in the summary modal.
    */
-  const calculatePerQuestionScores = (): { question: Question; score: number }[] => {
+  const calculatePerQuestionScores = (): {
+    question: Question;
+    score: number;
+  }[] => {
     if (!submission) return [];
 
     return questions
-      .map((question) => {
+      .map(question => {
         const answer = submission.answers.find(
-          (ans) => ans.question.toString() === question._id.toString()
+          ans => ans.question.toString() === question._id.toString()
         );
         return {
           question,
@@ -259,7 +298,8 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
     if (
       submission &&
       submission.answers &&
-      ((assessment?.granularity === 'individual' && teamMembersOptions.length > 0) ||
+      ((assessment?.granularity === 'individual' &&
+        teamMembersOptions.length > 0) ||
         (assessment?.granularity === 'team' && teamOptions.length > 0))
     ) {
       // Initialize answers from existing submission
@@ -279,7 +319,9 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
       setAnswers(initialAnswers);
 
       const initialTotalScore =
-        submission.adjustedScore !== undefined ? submission.adjustedScore : submission.score;
+        submission.adjustedScore !== undefined
+          ? submission.adjustedScore
+          : submission.score;
       setTotalScore(initialTotalScore);
     }
   }, [submission, teamOptions, teamMembersOptions, assessment]);
@@ -291,10 +333,10 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
           // Find team IDs that contain the selectedUserIds
           const userIds = answer.selectedUserIds;
           const teamIds = teamOptions
-            .filter((team) =>
-              team.members.some((member) => userIds.includes(member.value))
+            .filter(team =>
+              team.members.some(member => userIds.includes(member.value))
             )
-            .map((team) => team.value);
+            .map(team => team.value);
           return teamIds;
         } else {
           // Individual granularity
@@ -324,7 +366,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
   };
 
   const handleAnswerChange = (questionId: string, answer: AnswerInput) => {
-    setAnswers((prevAnswers) => ({
+    setAnswers(prevAnswers => ({
       ...prevAnswers,
       [questionId]: answer,
     }));
@@ -352,13 +394,16 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         return true;
       }
 
-      if (answer.every((item) => typeof item === 'string')) {
-        return answer.every((item) => item.trim() === '');
+      if (answer.every(item => typeof item === 'string')) {
+        return answer.every(item => item.trim() === '');
       }
 
-      if (answer.every((item) => item instanceof Date)) {
+      if (answer.every(item => item instanceof Date)) {
         return answer.every(
-          (item) => item === undefined || item === null || isNaN(new Date(item).getTime())
+          item =>
+            item === undefined ||
+            item === null ||
+            isNaN(new Date(item).getTime())
         );
       }
 
@@ -374,7 +419,10 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
     }
     const missingQuestions = questions
       .map((question, index) => ({ question, index }))
-      .filter(({ question }) => question.isRequired && isAnswerEmpty(answers[question._id]))
+      .filter(
+        ({ question }) =>
+          question.isRequired && isAnswerEmpty(answers[question._id])
+      )
       .map(({ index }) => `Question ${index + 1}`);
 
     if (missingQuestions.length > 0) {
@@ -400,9 +448,9 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         if (assessment?.granularity === 'team') {
           // Map team IDs to member IDs
           const selectedTeamIds = answer as string[];
-          const memberIds = selectedTeamIds.flatMap((teamId) => {
-            const team = teamOptions.find((t) => t.value === teamId);
-            return team ? team.members.map((member) => member.value) : [];
+          const memberIds = selectedTeamIds.flatMap(teamId => {
+            const team = teamOptions.find(t => t.value === teamId);
+            return team ? team.members.map(member => member.value) : [];
           });
           return { selectedUserIds: memberIds as string[] };
         } else {
@@ -440,7 +488,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
       // Prepare the answers in the format expected by the backend
       const formattedAnswers = Object.entries(answers)
         .map(([questionId, answer]) => {
-          const question = questions.find((q) => q._id === questionId);
+          const question = questions.find(q => q._id === questionId);
           if (!question) {
             return null;
           }
@@ -505,7 +553,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
       // Prepare the answers in the format expected by the backend
       const formattedAnswers = Object.entries(answers)
         .map(([questionId, answer]) => {
-          const question = questions.find((q) => q._id === questionId);
+          const question = questions.find(q => q._id === questionId);
           if (!question) {
             return null;
           }
@@ -601,65 +649,74 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
   };
 
   const formatAnswer = (answer: AnswerInput, questionType: string): string => {
-  if (answer === undefined || answer === null || answer === '') {
-    return 'No answer provided';
-  }
-  switch (questionType) {
-    case 'Multiple Response':
-      return Array.isArray(answer) ? (answer as string[]).join(', ') : answer.toString();
-    case 'Scale':
-      return (answer as number).toString();
-    case 'Multiple Choice':
-    case 'Short Response':
-    case 'Long Response':
-    case 'NUSNET ID':
-    case 'NUSNET Email':
-      return answer as string;
-    case 'Date':
-      if (Array.isArray(answer)) {
-        const [start, end] = answer as [Date | null, Date | null];
-        return `${
-          start ? new Date(start).toLocaleDateString() : 'N/A'
-        } - ${end ? new Date(end).toLocaleDateString() : 'N/A'}`;
-      } else {
-        return answer ? (answer as Date).toLocaleDateString() : 'No date selected';
-      }
-    case 'Number':
-      return (answer as number).toString();
-    case 'Team Member Selection':
-      if (Array.isArray(answer)) {
-        if (assessment?.granularity === 'team') {
-          // answer contains team IDs
-          const selectedTeams = answer as string[];
-          const selectedTeamDetails = selectedTeams.map((teamId) => {
-            const team = teamOptions.find((option) => option.value === teamId);
-            if (team) {
-              const memberNames = team.members.map((member) => member.label).join(', ');
-              return `${team.label}: ${memberNames}`;
-            } else {
-              return `Team ${teamId}`;
-            }
-          });
-          return selectedTeamDetails.join('; ');
-        } else if (assessment?.granularity === 'individual') {
-          // answer contains user IDs
-          const selectedMembers = answer as string[];
-          const selectedNames = selectedMembers
-            .map((id) => teamMembersOptions.find((option) => option.value === id)?.label || id)
-            .join(', ');
-          return selectedNames;
+    if (answer === undefined || answer === null || answer === '') {
+      return 'No answer provided';
+    }
+    switch (questionType) {
+      case 'Multiple Response':
+        return Array.isArray(answer)
+          ? (answer as string[]).join(', ')
+          : answer.toString();
+      case 'Scale':
+        return (answer as number).toString();
+      case 'Multiple Choice':
+      case 'Short Response':
+      case 'Long Response':
+      case 'NUSNET ID':
+      case 'NUSNET Email':
+        return answer as string;
+      case 'Date':
+        if (Array.isArray(answer)) {
+          const [start, end] = answer as [Date | null, Date | null];
+          return `${
+            start ? new Date(start).toLocaleDateString() : 'N/A'
+          } - ${end ? new Date(end).toLocaleDateString() : 'N/A'}`;
         } else {
-          console.log('Error; Should never reach here');
-          return '';
+          return answer
+            ? (answer as Date).toLocaleDateString()
+            : 'No date selected';
         }
-      } else {
-        return 'No selection made';
-      }
-    default:
-      return answer.toString();
-  }
-};
-
+      case 'Number':
+        return (answer as number).toString();
+      case 'Team Member Selection':
+        if (Array.isArray(answer)) {
+          if (assessment?.granularity === 'team') {
+            // answer contains team IDs
+            const selectedTeams = answer as string[];
+            const selectedTeamDetails = selectedTeams.map(teamId => {
+              const team = teamOptions.find(option => option.value === teamId);
+              if (team) {
+                const memberNames = team.members
+                  .map(member => member.label)
+                  .join(', ');
+                return `${team.label}: ${memberNames}`;
+              } else {
+                return `Team ${teamId}`;
+              }
+            });
+            return selectedTeamDetails.join('; ');
+          } else if (assessment?.granularity === 'individual') {
+            // answer contains user IDs
+            const selectedMembers = answer as string[];
+            const selectedNames = selectedMembers
+              .map(
+                id =>
+                  teamMembersOptions.find(option => option.value === id)
+                    ?.label || id
+              )
+              .join(', ');
+            return selectedNames;
+          } else {
+            console.log('Error; Should never reach here');
+            return '';
+          }
+        } else {
+          return 'No selection made';
+        }
+      default:
+        return answer.toString();
+    }
+  };
 
   const handleAdjustScore = () => {
     setShowAdjustScoreModal(true);
@@ -728,17 +785,22 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
             index={index}
             question={question}
             answer={answers[question._id]}
-            onAnswerChange={(answer) => handleAnswerChange(question._id, answer)}
+            onAnswerChange={answer => handleAnswerChange(question._id, answer)}
             disabled={
-              !canEdit || (question.type === 'Team Member Selection' && submission && !submission.isDraft)
+              !canEdit ||
+              (question.type === 'Team Member Selection' &&
+                submission &&
+                !submission.isDraft)
             }
             teamMembersOptions={
-              question.type === 'Team Member Selection' && assessment.granularity === 'individual'
+              question.type === 'Team Member Selection' &&
+              assessment.granularity === 'individual'
                 ? teamMembersOptions
                 : undefined
             }
             teamOptions={
-              question.type === 'Team Member Selection' && assessment.granularity === 'team'
+              question.type === 'Team Member Selection' &&
+              assessment.granularity === 'team'
                 ? teamOptions
                 : undefined
             }
@@ -749,7 +811,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         ))}
 
       {canEdit && (
-        <Group mt="md" justify='space-between'>
+        <Group mt="md" justify="space-between">
           <Button variant="default" onClick={handleBackClick}>
             Back
           </Button>
@@ -768,7 +830,11 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
               onClick={handleSubmitClick}
               loading={isSubmitting}
               disabled={!canEdit && !(submission && submission.isDraft)}
-              variant={canEdit || (submission && submission.isDraft) ? 'filled' : 'outline'}
+              variant={
+                canEdit || (submission && submission.isDraft)
+                  ? 'filled'
+                  : 'outline'
+              }
             >
               Submit
             </Button>
@@ -779,14 +845,14 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
       {/* Faculty Panel with Total Score and Adjust Score Button */}
       {isFaculty && submission && (
         <Paper shadow="sm" p="md" mt="xl" withBorder>
-          <Group justify='flex-end' align="center" mb="md">
+          <Group justify="flex-end" align="center" mb="md">
             <Text size="lg">Submission Score</Text>
             <Button onClick={handleAdjustScore} color="orange">
               Adjust Score
             </Button>
           </Group>
           <Divider mb="md" />
-          <Group justify='flex-end' mb="md">
+          <Group justify="flex-end" mb="md">
             {/* Display adjusted score if it exists */}
             {submission.adjustedScore !== undefined ? (
               <>
@@ -803,7 +869,11 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
               </>
             )}
           </Group>
-          <Button onClick={() => setShowSummaryModal(true)} variant="light" color="blue">
+          <Button
+            onClick={() => setShowSummaryModal(true)}
+            variant="light"
+            color="blue"
+          >
             View Score Summary
           </Button>
         </Paper>
@@ -819,13 +889,16 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
           label="New Score"
           placeholder="Enter the adjusted score"
           value={newAdjustedScore}
-          onChange={(value) => setNewAdjustedScore(value as number | undefined)}
+          onChange={value => setNewAdjustedScore(value as number | undefined)}
           min={0}
           max={submission ? submission.score + 100 : undefined} // Example: allow up to original score + 100
           required
         />
-        <Group justify='flex-end' mt="md">
-          <Button variant="default" onClick={() => setShowAdjustScoreModal(false)}>
+        <Group justify="flex-end" mt="md">
+          <Button
+            variant="default"
+            onClick={() => setShowAdjustScoreModal(false)}
+          >
             Cancel
           </Button>
           <Button onClick={handleAdjustScoreSubmit} color="green">
@@ -844,13 +917,10 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         <ScrollArea style={{ height: '60vh' }}>
           {calculatePerQuestionScores().map(({ question, score }, index) => {
             const answer = submission?.answers.find(
-              (ans) => ans.question.toString() === question._id.toString()
+              ans => ans.question.toString() === question._id.toString()
             );
             const formattedAnswer = answer
-              ? formatAnswer(
-                  extractAnswerValue(answer),
-                  question.type,
-                )
+              ? formatAnswer(extractAnswerValue(answer), question.type)
               : 'No answer provided';
             return (
               <div key={question._id} style={{ marginBottom: '1rem' }}>
@@ -864,7 +934,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
             );
           })}
         </ScrollArea>
-        <Group justify='flex-end' mt="md">
+        <Group justify="flex-end" mt="md">
           <Button onClick={() => setShowSummaryModal(false)}>Close</Button>
         </Group>
       </Modal>
@@ -884,25 +954,24 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
                 {index + 1}. {question.text}
               </Text>
               <Text>
-                Answer:{' '}
-                {formatAnswer(
-                  answers[question._id],
-                  question.type,
-                )}
+                Answer: {formatAnswer(answers[question._id], question.type)}
               </Text>
               {isFaculty && isScoredQuestion(question) && (
                 <Text>
                   Score:{' '}
                   {submission?.answers.find(
-                    (a) => a.question.toString() === question._id.toString()
+                    a => a.question.toString() === question._id.toString()
                   )?.score || 0}
                 </Text>
               )}
             </div>
           ))}
         </ScrollArea>
-        <Group justify='flex-end' mt="md">
-          <Button variant="default" onClick={() => setShowConfirmationModal(false)}>
+        <Group justify="flex-end" mt="md">
+          <Button
+            variant="default"
+            onClick={() => setShowConfirmationModal(false)}
+          >
             Cancel
           </Button>
           <Button onClick={handleSubmit}>Confirm</Button>
@@ -915,9 +984,11 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         onClose={() => setShowErrorModal(false)}
         title="Missing Required Questions"
       >
-        <Text>Please answer the following required questions before submitting:</Text>
+        <Text>
+          Please answer the following required questions before submitting:
+        </Text>
         <ul>
-          {missingRequiredQuestions.map((questionNumber) => (
+          {missingRequiredQuestions.map(questionNumber => (
             <li key={questionNumber}>{questionNumber}</li>
           ))}
         </ul>
@@ -933,10 +1004,10 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         title="Unsaved Progress"
       >
         <Text>
-          You have unsaved progress. Are you sure you want to leave this page? Your unsaved changes
-          will be lost.
+          You have unsaved progress. Are you sure you want to leave this page?
+          Your unsaved changes will be lost.
         </Text>
-        <Group justify='flex-end' mt="md">
+        <Group justify="flex-end" mt="md">
           <Button variant="default" onClick={() => setShowBackModal(false)}>
             Cancel
           </Button>
@@ -953,10 +1024,14 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         title="Delete Draft Submission"
       >
         <Text>
-          Are you sure you want to delete your draft submission? This action cannot be undone.
+          Are you sure you want to delete your draft submission? This action
+          cannot be undone.
         </Text>
-        <Group justify='flex-end' mt="md">
-          <Button variant="default" onClick={() => setShowDeleteDraftModal(false)}>
+        <Group justify="flex-end" mt="md">
+          <Button
+            variant="default"
+            onClick={() => setShowDeleteDraftModal(false)}
+          >
             Cancel
           </Button>
           <Button color="red" onClick={confirmDeleteDraft}>

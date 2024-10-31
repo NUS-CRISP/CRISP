@@ -27,7 +27,7 @@ export const getTeamsByTAAndCourse = async (req: Request, res: Response) => {
   try {
     const accountId = await getAccountId(req);
     const userId = await getUserIdByAccountId(accountId);
-    const teams = await getTeamsByTAIdAndCourseId(userId, courseId)
+    const teams = await getTeamsByTAIdAndCourseId(userId, courseId);
     res.status(200).json(teams);
   } catch (error) {
     console.error('Error fetching teams:', error);

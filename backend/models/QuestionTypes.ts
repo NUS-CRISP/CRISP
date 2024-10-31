@@ -18,10 +18,8 @@ const NUSNETIDSchema = new Schema({
   shortResponsePlaceholder: { type: String, required: true },
 });
 
-export const NUSNETIDQuestionModel = QuestionModel.discriminator<NUSNETIDQuestion>(
-  'NUSNET ID',
-  NUSNETIDSchema
-);
+export const NUSNETIDQuestionModel =
+  QuestionModel.discriminator<NUSNETIDQuestion>('NUSNET ID', NUSNETIDSchema);
 
 export interface NUSNETEmailQuestion extends BaseQuestion {
   type: 'NUSNET Email';
@@ -32,10 +30,11 @@ const NUSNETEmailSchema = new Schema({
   shortResponsePlaceholder: { type: String, required: true },
 });
 
-export const NUSNETEmailQuestionModel = QuestionModel.discriminator<NUSNETEmailQuestion>(
-  'NUSNET Email',
-  NUSNETEmailSchema
-);
+export const NUSNETEmailQuestionModel =
+  QuestionModel.discriminator<NUSNETEmailQuestion>(
+    'NUSNET Email',
+    NUSNETEmailSchema
+  );
 
 export interface TeamMemberSelectionQuestion extends BaseQuestion {
   type: 'Team Member Selection';
@@ -45,11 +44,11 @@ const TeamMemberSelectionSchema = new Schema({
   // No fields because this question is locked, and will always ask for array of userIds in Submission/Answer
 });
 
-export const TeamMemberSelectionQuestionModel = QuestionModel.discriminator<TeamMemberSelectionQuestion>(
-  'Team Member Selection',
-  TeamMemberSelectionSchema
-);
-
+export const TeamMemberSelectionQuestionModel =
+  QuestionModel.discriminator<TeamMemberSelectionQuestion>(
+    'Team Member Selection',
+    TeamMemberSelectionSchema
+  );
 
 export interface MultipleChoiceOption {
   text: string;
@@ -72,10 +71,11 @@ const MultipleChoiceSchema = new Schema({
   isScored: { type: Boolean, required: true },
 });
 
-export const MultipleChoiceQuestionModel = QuestionModel.discriminator<MultipleChoiceQuestion>(
-  'Multiple Choice',
-  MultipleChoiceSchema
-);
+export const MultipleChoiceQuestionModel =
+  QuestionModel.discriminator<MultipleChoiceQuestion>(
+    'Multiple Choice',
+    MultipleChoiceSchema
+  );
 
 export interface MultipleResponseOption {
   text: string;
@@ -101,10 +101,11 @@ const MultipleResponseSchema = new Schema({
   allowNegative: { type: Boolean, required: true },
 });
 
-export const MultipleResponseQuestionModel = QuestionModel.discriminator<MultipleResponseQuestion>(
-  'Multiple Response',
-  MultipleResponseSchema
-);
+export const MultipleResponseQuestionModel =
+  QuestionModel.discriminator<MultipleResponseQuestion>(
+    'Multiple Response',
+    MultipleResponseSchema
+  );
 
 export interface ScaleLabel {
   value: number;
@@ -162,10 +163,11 @@ const ShortResponseSchema = new Schema({
   shortResponsePlaceholder: { type: String, required: true },
 });
 
-export const ShortResponseQuestionModel = QuestionModel.discriminator<ShortResponseQuestion>(
-  'Short Response',
-  ShortResponseSchema
-);
+export const ShortResponseQuestionModel =
+  QuestionModel.discriminator<ShortResponseQuestion>(
+    'Short Response',
+    ShortResponseSchema
+  );
 
 export interface LongResponseQuestion extends BaseQuestion {
   type: 'Long Response';
@@ -176,10 +178,11 @@ const LongResponseSchema = new Schema({
   longResponsePlaceholder: { type: String, required: true },
 });
 
-export const LongResponseQuestionModel = QuestionModel.discriminator<LongResponseQuestion>(
-  'Long Response',
-  LongResponseSchema
-);
+export const LongResponseQuestionModel =
+  QuestionModel.discriminator<LongResponseQuestion>(
+    'Long Response',
+    LongResponseSchema
+  );
 
 export interface DateQuestion extends BaseQuestion {
   type: 'Date';
@@ -225,7 +228,11 @@ const NumberScoringRangeSchema = new Schema({
 const NumberSchema = new Schema({
   maxNumber: { type: Number, required: true },
   isScored: { type: Boolean, required: true },
-  scoringMethod: { type: String, enum: ['direct', 'range', 'None'], required: true },
+  scoringMethod: {
+    type: String,
+    enum: ['direct', 'range', 'None'],
+    required: true,
+  },
   maxPoints: { type: Number }, // For 'direct' method
   scoringRanges: { type: [NumberScoringRangeSchema] }, // For 'range' method
 });
@@ -240,10 +247,8 @@ export interface UndecidedQuestion extends BaseQuestion {
 
 const UndecidedSchema = new Schema({});
 
-export const UndecidedQuestionModel = QuestionModel.discriminator<UndecidedQuestion>(
-  'Undecided',
-  UndecidedSchema
-);
+export const UndecidedQuestionModel =
+  QuestionModel.discriminator<UndecidedQuestion>('Undecided', UndecidedSchema);
 
 export type QuestionUnion =
   | TeamMemberSelectionQuestion
