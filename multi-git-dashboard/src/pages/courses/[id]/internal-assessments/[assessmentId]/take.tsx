@@ -174,8 +174,8 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         const options = uniqueMembers
           .filter(member => member !== undefined && member !== null)
           .map(member => ({
-            value: member._id,
-            label: member.name,
+            value: member!._id,
+            label: member!.name,
           }));
         setTeamMembersOptions(options);
       }
@@ -390,16 +390,17 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
     }
 
     if (Array.isArray(answer)) {
-      if (answer.length === 0) {
+      const arrayAnswer = answer as any[]; // npm run build needs this to be any to compile
+      if (arrayAnswer.length === 0) {
         return true;
       }
 
-      if (answer.every(item => typeof item === 'string')) {
-        return answer.every(item => item.trim() === '');
+      if (arrayAnswer.every(item => typeof item === 'string')) {
+        return arrayAnswer.every(item => item.trim() === '');
       }
 
-      if (answer.every(item => item instanceof Date)) {
-        return answer.every(
+      if (arrayAnswer.every(item => item instanceof Date)) {
+        return arrayAnswer.every(
           item =>
             item === undefined ||
             item === null ||
