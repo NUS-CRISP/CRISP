@@ -11,7 +11,6 @@ import {
 } from '@mantine/core';
 import { Submission } from '@shared/types/Submission';
 import { useRouter } from 'next/router';
-import { NUSNETEmailAnswer } from '@shared/types/Answer';
 import { QuestionUnion } from '@shared/types/Question';
 import { IconListDetails, IconEye } from '@tabler/icons-react';
 
@@ -47,14 +46,6 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({
     );
   };
 
-  const emailAnswer: NUSNETEmailAnswer | undefined = submission.answers.find(
-    answer => answer.type === 'NUSNET Email'
-  );
-
-  const nusnetIdAnswer = submission.answers.find(
-    answer => answer.type === 'NUSNET ID'
-  );
-
   const teamMemberSelectionAnswer = submission.answers.find(
     answer => answer.type === 'Team Member Selection'
   );
@@ -83,18 +74,6 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({
               </Badge>
             </Group>
 
-            {emailAnswer && (
-              <Text size="sm">
-                <strong>Email:</strong>{' '}
-                {emailAnswer.value || 'No email provided'}
-              </Text>
-            )}
-            {nusnetIdAnswer && (
-              <Text size="sm">
-                <strong>NUSNET ID:</strong>{' '}
-                {nusnetIdAnswer.value || 'No NUSNET ID provided'}
-              </Text>
-            )}
             {teamMemberSelectionAnswer && (
               <Text size="sm">
                 <strong>Selected Team Member(s):</strong>{' '}
