@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
 import {
   Card,
@@ -196,7 +197,6 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({
 };
 
 // Helper function to format answers based on type
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function formatAnswer(
   answer: any,
   userIdToNameMap: { [key: string]: string }
