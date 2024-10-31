@@ -17,7 +17,7 @@ import {
   updateQuestionById,
   releaseInternalAssessmentById,
   recallInternalAssessmentById,
-} from 'services/internalAssessmentService';
+} from '../services/internalAssessmentService';
 
 export const getInternalAssessment = async (req: Request, res: Response) => {
   try {

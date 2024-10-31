@@ -6,9 +6,9 @@ import {
   checkMarkingCompletion,
 } from '../services/assessmentResultService';
 import { BadRequestError, NotFoundError } from '../services/errors';
-import { getAssignmentSetByAssessmentId } from 'services/assessmentAssignmentSetService';
-import { getAccountId } from 'utils/auth';
-import { getInternalAssessmentById } from 'services/internalAssessmentService';
+import { getAssignmentSetByAssessmentId } from '../services/assessmentAssignmentSetService';
+import { getAccountId } from '../utils/auth';
+import { getInternalAssessmentById } from '../services/internalAssessmentService';
 
 /**
  * Controller to retrieve or create AssessmentResults for an assessment.

@@ -8,8 +8,8 @@ import {
   getAssignmentsByTAId,
 } from '../services/assessmentAssignmentSetService';
 import { BadRequestError, NotFoundError } from '../services/errors';
-import { getAccountId } from 'utils/auth';
-import { getUserIdByAccountId } from 'services/accountService';
+import { getAccountId } from '../utils/auth';
+import { getUserIdByAccountId } from '../services/accountService';
 
 /**
  * Controller to create a new AssessmentAssignmentSet.

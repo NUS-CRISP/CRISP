@@ -18,7 +18,7 @@ import {
 import AccountModel from '../models/Account';
 import SubmissionModel from '../models/Submission';
 import { AnswerUnion } from '../models/Answer';
-import { getUserIdByAccountId } from 'services/accountService';
+import { getUserIdByAccountId } from '../services/accountService';
 
 export const submitAssessment = async (req: Request, res: Response) => {
   try {
