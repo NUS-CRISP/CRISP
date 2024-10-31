@@ -16,6 +16,7 @@ interface TableUser extends Omit<User, '_id' | 'enrolledCourses'> {
 export const getTableUser = (user: User): TableUser => {
   const { identifier, name, enrolledCourses, gitHandle } = user;
   return {
+    studentId: identifier,
     identifier,
     name,
     enrolledCourses: enrolledCourses.map((c) => c.name),
