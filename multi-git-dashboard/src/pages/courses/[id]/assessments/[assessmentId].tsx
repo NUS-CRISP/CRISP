@@ -100,7 +100,7 @@ const AssessmentDetail: React.FC = () => {
             </Tabs.Tab>
           )}
 
-          {assessment?.formLink && hasFacultyPermission() && (
+          {assessment?.formLink && permission && (
             <Tabs.Tab value="Results" onClick={() => setActiveTabAndSave('Results')}>
               Google Form Results
             </Tabs.Tab>
