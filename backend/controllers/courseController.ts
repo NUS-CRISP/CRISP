@@ -36,7 +36,7 @@ import {
 import { addStudentsToTeam, addTAsToTeam } from '../services/teamService';
 import { createTeamSet } from '../services/teamSetService';
 import { getAccountId } from '../utils/auth';
-import { addInternalAssessmentsToCourse } from 'services/internalAssessmentService';
+import { addInternalAssessmentsToCourse } from '../services/internalAssessmentService';
 
 /*----------------------------------------Course----------------------------------------*/
 export const createCourse = async (req: Request, res: Response) => {

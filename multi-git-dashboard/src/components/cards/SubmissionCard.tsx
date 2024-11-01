@@ -47,7 +47,7 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({
   };
 
   const teamMemberSelectionAnswer = submission.answers.find(
-    answer => answer.type === 'Team Member Selection'
+    answer => answer.type === 'Team Member Selection Answer'
   );
 
   // Get the score and adjusted score
@@ -136,9 +136,9 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({
           {/* Display submission details here */}
           {submission.answers.map((answer, index) => {
             if (
-              answer.type === 'NUSNET Email' ||
-              answer.type === 'NUSNET ID' ||
-              answer.type === 'Team Member Selection'
+              answer.type === 'NUSNET Email Answer' ||
+              answer.type === 'NUSNET ID Answer' ||
+              answer.type === 'Team Member Selection Answer'
             )
               return null;
 
@@ -181,20 +181,20 @@ function formatAnswer(
   userIdToNameMap: { [key: string]: string }
 ): string {
   switch (answer.type) {
-    case 'Multiple Choice':
-    case 'Short Response':
-    case 'Long Response':
-    case 'NUSNET ID':
-    case 'NUSNET Email':
+    case 'Multiple Choice Answer':
+    case 'Short Response Answer':
+    case 'Long Response Answer':
+    case 'NUSNET ID Answer':
+    case 'NUSNET Email Answer':
       return answer.value || 'No answer provided';
-    case 'Multiple Response':
+    case 'Multiple Response Answer':
       return answer.values ? answer.values.join(', ') : 'No answer provided';
-    case 'Scale':
-    case 'Number':
+    case 'Scale Answer':
+    case 'Number Answer':
       return answer.value !== undefined
         ? answer.value.toString()
         : 'No answer provided';
-    case 'Date':
+    case 'Date Answer':
       if (answer.startDate && answer.endDate) {
         return `${new Date(answer.startDate).toLocaleDateString()} - ${new Date(
           answer.endDate
@@ -204,7 +204,7 @@ function formatAnswer(
       } else {
         return 'No date selected';
       }
-    case 'Team Member Selection':
+    case 'Team Member Selection Answer':
       if (answer.selectedUserIds && Array.isArray(answer.selectedUserIds)) {
         const names = answer.selectedUserIds.map(
           (userId: string) => userIdToNameMap[userId] || userId

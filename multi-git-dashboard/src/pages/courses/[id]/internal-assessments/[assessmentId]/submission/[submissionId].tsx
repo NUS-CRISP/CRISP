@@ -26,6 +26,7 @@ const ViewSubmissionPage: React.FC = () => {
       fetch(`/api/submissions/${submissionId}`)
         .then(res => res.json())
         .then((data: Submission) => {
+          console.log(data)
           setSubmission(data);
         })
         .catch(error => {
@@ -58,12 +59,16 @@ const ViewSubmissionPage: React.FC = () => {
     assessment.areSubmissionsEditable || submission.isDraft || permission;
 
   return (
-    <TakeAssessment
-      inputAssessment={assessment}
-      existingSubmission={submission}
-      canEdit={canEdit}
-      isFaculty={permission}
-    />
+    <>
+      {submission &&
+        <TakeAssessment
+          inputAssessment={assessment}
+          existingSubmission={submission}
+          canEdit={canEdit}
+          isFaculty={permission}
+        />
+      }
+    </>
   );
 };
 

@@ -1,7 +1,7 @@
-import { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose';
 import { ObjectId } from 'mongodb';
 
-const options = { discriminatorKey: 'type', _id: false };
+const options = { discriminatorKey: 'type', timestamps: true };
 
 // BaseAnswer interface
 export interface BaseAnswer extends Document {
@@ -28,7 +28,7 @@ export interface NUSNETIDAnswer extends BaseAnswer {
   value: string;
 }
 
-const NUSNETIDAnswerSchema = new Schema<NUSNETIDAnswer>(
+export const NUSNETIDAnswerSchema = new Schema<NUSNETIDAnswer>(
   {
     value: { type: String, required: true },
   },
@@ -39,7 +39,7 @@ export interface NUSNETEmailAnswer extends BaseAnswer {
   value: string;
 }
 
-const NUSNETEmailAnswerSchema = new Schema<NUSNETEmailAnswer>(
+export const NUSNETEmailAnswerSchema = new Schema<NUSNETEmailAnswer>(
   {
     value: { type: String, required: true },
   },
@@ -50,7 +50,7 @@ export interface TeamMemberSelectionAnswer extends BaseAnswer {
   selectedUserIds: string[];
 }
 
-const TeamMemberSelectionAnswerSchema = new Schema<TeamMemberSelectionAnswer>(
+export const TeamMemberSelectionAnswerSchema = new Schema<TeamMemberSelectionAnswer>(
   {
     selectedUserIds: { type: [String], required: true },
   },
@@ -61,7 +61,7 @@ export interface MultipleChoiceAnswer extends BaseAnswer {
   value: string;
 }
 
-const MultipleChoiceAnswerSchema = new Schema<MultipleChoiceAnswer>(
+export const MultipleChoiceAnswerSchema = new Schema<MultipleChoiceAnswer>(
   {
     value: { type: String, required: true },
   },
@@ -72,7 +72,7 @@ export interface MultipleResponseAnswer extends BaseAnswer {
   values: string[];
 }
 
-const MultipleResponseAnswerSchema = new Schema<MultipleResponseAnswer>(
+export const MultipleResponseAnswerSchema = new Schema<MultipleResponseAnswer>(
   {
     values: { type: [String], required: true },
   },
@@ -83,7 +83,7 @@ export interface ScaleAnswer extends BaseAnswer {
   value: number;
 }
 
-const ScaleAnswerSchema = new Schema<ScaleAnswer>(
+export const ScaleAnswerSchema = new Schema<ScaleAnswer>(
   {
     value: { type: Number, required: true },
   },
@@ -94,7 +94,7 @@ export interface ShortResponseAnswer extends BaseAnswer {
   value: string;
 }
 
-const ShortResponseAnswerSchema = new Schema<ShortResponseAnswer>(
+export const ShortResponseAnswerSchema = new Schema<ShortResponseAnswer>(
   {
     value: { type: String, required: true },
   },
@@ -105,7 +105,7 @@ export interface LongResponseAnswer extends BaseAnswer {
   value: string;
 }
 
-const LongResponseAnswerSchema = new Schema<LongResponseAnswer>(
+export const LongResponseAnswerSchema = new Schema<LongResponseAnswer>(
   {
     value: { type: String, required: true },
   },
@@ -118,7 +118,7 @@ export interface DateAnswer extends BaseAnswer {
   endDate?: Date;
 }
 
-const DateAnswerSchema = new Schema<DateAnswer>(
+export const DateAnswerSchema = new Schema<DateAnswer>(
   {
     value: { type: Date },
     startDate: { type: Date },
@@ -131,7 +131,7 @@ export interface NumberAnswer extends BaseAnswer {
   value: number;
 }
 
-const NumberAnswerSchema = new Schema<NumberAnswer>(
+export const NumberAnswerSchema = new Schema<NumberAnswer>(
   {
     value: { type: Number, required: true },
   },
@@ -142,23 +142,64 @@ export interface UndecidedAnswer extends BaseAnswer {
   // No additional fields
 }
 
-const UndecidedAnswerSchema = new Schema<UndecidedAnswer>({}, options);
+export const UndecidedAnswerSchema = new Schema<UndecidedAnswer>({}, options);
 
-// Define discriminators without specifying the generic type parameter
-AnswerSchema.discriminator('NUSNET ID', NUSNETIDAnswerSchema);
-AnswerSchema.discriminator('NUSNET Email', NUSNETEmailAnswerSchema);
-AnswerSchema.discriminator(
-  'Team Member Selection',
+export const AnswerModel = mongoose.model<BaseAnswer>('Answer', AnswerSchema);
+
+export const NUSNETIDAnswerModel = AnswerModel.discriminator<NUSNETIDAnswer>(
+  'NUSNET ID Answer',
+  NUSNETIDAnswerSchema
+);
+
+export const NUSNETEmailAnswerModel = AnswerModel.discriminator<NUSNETEmailAnswer>(
+  'NUSNET Email Answer',
+  NUSNETEmailAnswerSchema
+);
+
+export const TeamMemberSelectionAnswerModel = AnswerModel.discriminator<TeamMemberSelectionAnswer>(
+  'Team Member Selection Answer',
   TeamMemberSelectionAnswerSchema
 );
-AnswerSchema.discriminator('Multiple Choice', MultipleChoiceAnswerSchema);
-AnswerSchema.discriminator('Multiple Response', MultipleResponseAnswerSchema);
-AnswerSchema.discriminator('Scale', ScaleAnswerSchema);
-AnswerSchema.discriminator('Short Response', ShortResponseAnswerSchema);
-AnswerSchema.discriminator('Long Response', LongResponseAnswerSchema);
-AnswerSchema.discriminator('Date', DateAnswerSchema);
-AnswerSchema.discriminator('Number', NumberAnswerSchema);
-AnswerSchema.discriminator('Undecided', UndecidedAnswerSchema);
+
+export const MultipleChoiceAnswerModel = AnswerModel.discriminator<MultipleChoiceAnswer>(
+  'Multiple Choice Answer',
+  MultipleChoiceAnswerSchema
+);
+
+export const MultipleResponseAnswerModel = AnswerModel.discriminator<MultipleResponseAnswer>(
+  'Multiple Response Answer',
+  MultipleResponseAnswerSchema
+);
+
+export const ScaleAnswerModel = AnswerModel.discriminator<ScaleAnswer>(
+  'Scale Answer',
+  ScaleAnswerSchema
+);
+
+export const ShortResponseAnswerModel = AnswerModel.discriminator<ShortResponseAnswer>(
+  'Short Response Answer',
+  ShortResponseAnswerSchema
+);
+
+export const LongResponseAnswerModel = AnswerModel.discriminator<LongResponseAnswer>(
+  'Long Response Answer',
+  LongResponseAnswerSchema
+);
+
+export const DateAnswerModel = AnswerModel.discriminator<DateAnswer>(
+  'Date Answer',
+  DateAnswerSchema
+);
+
+export const NumberAnswerModel = AnswerModel.discriminator<NumberAnswer>(
+  'Number Answer',
+  NumberAnswerSchema
+);
+
+export const UndecidedAnswerModel = AnswerModel.discriminator<UndecidedAnswer>(
+  'Undecided Answer',
+  UndecidedAnswerSchema
+);
 
 // Union type for all possible answer types
 export type AnswerUnion =

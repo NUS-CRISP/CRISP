@@ -7,8 +7,8 @@ import {
   removeMembersById,
   updateTeamById,
 } from '../services/teamService';
-import { getAccountId } from 'utils/auth';
-import { getUserIdByAccountId } from 'services/accountService';
+import { getAccountId } from '../utils/auth';
+import { getUserIdByAccountId } from '../services/accountService';
 
 export const getTeamsByCourse = async (req: Request, res: Response) => {
   const { courseId } = req.params;

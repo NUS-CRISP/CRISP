@@ -44,6 +44,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
   canEdit = true,
   isFaculty = false,
 }) => {
+  console.log(existingSubmission)
   const router = useRouter();
   const { id, assessmentId } = router.query as {
     id: string;
@@ -328,7 +329,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
 
   const extractAnswerValue = (answer: AnswerUnion): AnswerInput => {
     switch (answer.type) {
-      case 'Team Member Selection':
+      case 'Team Member Selection Answer':
         if (assessment?.granularity === 'team') {
           // Find team IDs that contain the selectedUserIds
           const userIds = answer.selectedUserIds;
@@ -342,17 +343,17 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
           // Individual granularity
           return answer.selectedUserIds;
         }
-      case 'Multiple Response':
+      case 'Multiple Response Answer':
         return answer.values;
-      case 'Multiple Choice':
-      case 'Scale':
-      case 'Short Response':
-      case 'Long Response':
-      case 'NUSNET ID':
-      case 'NUSNET Email':
-      case 'Number':
+      case 'Multiple Choice Answer':
+      case 'Scale Answer':
+      case 'Short Response Answer':
+      case 'Long Response Answer':
+      case 'NUSNET ID Answer':
+      case 'NUSNET Email Answer':
+      case 'Number Answer':
         return answer.value;
-      case 'Date':
+      case 'Date Answer':
         if (answer.startDate && answer.endDate) {
           return [new Date(answer.startDate), new Date(answer.endDate)];
         } else if (answer.value) {

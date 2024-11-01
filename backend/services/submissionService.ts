@@ -16,6 +16,15 @@ import {
   NUSNETEmailAnswer,
   NUSNETIDAnswer,
   TeamMemberSelectionAnswer,
+  UndecidedAnswerModel,
+  NumberAnswerModel,
+  ScaleAnswerModel,
+  MultipleChoiceAnswerModel,
+  MultipleResponseAnswerModel,
+  TeamMemberSelectionAnswerModel,
+  DateAnswerModel,
+  ShortResponseAnswerModel,
+  LongResponseAnswerModel,
 } from '../models/Answer';
 import {
   QuestionUnion,
@@ -31,6 +40,11 @@ import {
   NumberQuestionModel,
   ScaleQuestionModel,
   MultipleChoiceQuestionModel,
+  TeamMemberSelectionQuestionModel,
+  DateQuestionModel,
+  ShortResponseQuestionModel,
+  LongResponseQuestionModel,
+  UndecidedQuestionModel,
 } from '../models/QuestionTypes';
 import { NotFoundError, BadRequestError } from './errors';
 import AccountModel from '@models/Account';
@@ -40,17 +54,17 @@ import { recalculateResult } from './assessmentResultService';
 
 // Type guards for questions
 function isNUSNETIDAnswer(answer: AnswerUnion): answer is NUSNETIDAnswer {
-  return answer.type === 'NUSNET ID';
+  return answer.type === 'NUSNET ID Answer';
 }
 
 function isNUSNETEmailAnswer(answer: AnswerUnion): answer is NUSNETEmailAnswer {
-  return answer.type === 'NUSNET Email';
+  return answer.type === 'NUSNET Email Answer';
 }
 
 function isTeamMemberSelectionAnswer(
   answer: AnswerUnion
 ): answer is TeamMemberSelectionAnswer {
-  return answer.type === 'Team Member Selection';
+  return answer.type === 'Team Member Selection Answer';
 }
 
 function isMultipleChoiceQuestion(
@@ -355,7 +369,10 @@ export const checkSubmissionUniqueness = async (
     user: user,
   })
     .populate('answers.type')
-    .populate('answers.selectedUserIds');
+    .populate({
+      path: 'answers.selectedUserIds',
+      strictPopulate: false,
+    });
   const submittedUserIds = userSubmissions.flatMap(
     sub =>
       (
@@ -405,22 +422,52 @@ export const createSubmission = async (
       }
 
       let question = null;
+      let SaveAnswerModel = null;
 
       switch (answer.type) {
         case 'Number':
           question = await NumberQuestionModel.findById(questionId);
+          SaveAnswerModel = NumberAnswerModel;
           break;
         case 'Scale':
           question = await ScaleQuestionModel.findById(questionId);
+          SaveAnswerModel = ScaleAnswerModel;
           break;
         case 'Multiple Choice':
           question = await MultipleChoiceQuestionModel.findById(questionId);
+          SaveAnswerModel = MultipleChoiceAnswerModel;
           break;
         case 'Multiple Response':
           question = await MultipleResponseQuestionModel.findById(questionId);
+          SaveAnswerModel = MultipleResponseAnswerModel;
           break;
-        default:
-          return { ...answer, score: 0 };
+        case 'Team Member Selection':
+          question = await TeamMemberSelectionQuestionModel.findById(questionId);
+          SaveAnswerModel = TeamMemberSelectionAnswerModel;
+          break;
+        case 'Date':
+          question = await DateQuestionModel.findById(questionId);
+          SaveAnswerModel = DateAnswerModel;
+          break;
+        case 'Short Response':
+          question = await ShortResponseQuestionModel.findById(questionId);
+          SaveAnswerModel = ShortResponseAnswerModel;
+          break;
+        case 'Long Response':
+          question = await LongResponseQuestionModel.findById(questionId);
+          SaveAnswerModel = LongResponseAnswerModel;
+          break;
+        case 'Undecided':
+          question = await UndecidedQuestionModel.findById(questionId);
+          SaveAnswerModel = UndecidedAnswerModel;
+          break;
+      }
+
+      if (!SaveAnswerModel) {
+        console.warn(
+          `Cannot parse question type ${answer.type}`
+        )
+        return { ...answer, score: 0 };
       }
 
       if (!question) {
@@ -431,8 +478,12 @@ export const createSubmission = async (
       }
       const answerScore = await calculateAnswerScore(question, answer);
       totalScore += answerScore;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { type, ...scoredAnswer} = { ...answer, score: answerScore }; // type is unused but we need to extract it
 
-      return { ...answer, score: answerScore };
+      const newAnswer = new SaveAnswerModel(scoredAnswer);
+      await newAnswer.save();
+      return newAnswer;
     })
   );
 
@@ -541,24 +592,56 @@ export const updateSubmission = async (
       }
 
       let question = null;
+      let SaveAnswerModel = null;
 
       switch (answer.type) {
         case 'Number':
           question = await NumberQuestionModel.findById(questionId);
+          SaveAnswerModel = NumberAnswerModel;
           break;
         case 'Scale':
           question = await ScaleQuestionModel.findById(questionId);
+          SaveAnswerModel = ScaleAnswerModel;
           break;
         case 'Multiple Choice':
           question = await MultipleChoiceQuestionModel.findById(questionId);
+          SaveAnswerModel = MultipleChoiceAnswerModel;
           break;
         case 'Multiple Response':
           question = await MultipleResponseQuestionModel.findById(questionId);
+          SaveAnswerModel = MultipleResponseAnswerModel;
+          break;
+        case 'Team Member Selection':
+          question = await TeamMemberSelectionQuestionModel.findById(questionId);
+          SaveAnswerModel = TeamMemberSelectionAnswerModel;
+          break;
+        case 'Date':
+          question = await DateQuestionModel.findById(questionId);
+          SaveAnswerModel = DateAnswerModel;
+          break;
+        case 'Short Response':
+          question = await ShortResponseQuestionModel.findById(questionId);
+          SaveAnswerModel = ShortResponseAnswerModel;
+          break;
+        case 'Long Response':
+          question = await LongResponseQuestionModel.findById(questionId);
+          SaveAnswerModel = LongResponseAnswerModel;
+          break;
+        case 'Undecided':
+          question = await UndecidedQuestionModel.findById(questionId);
+          SaveAnswerModel = UndecidedAnswerModel;
           break;
         default:
           answer.score = 0;
-          return;
       }
+
+      if (!SaveAnswerModel) {
+        console.warn(
+          `Cannot parse question type ${answer.type}`
+        )
+        return;
+      }
+
 
       if (!question) {
         console.warn(

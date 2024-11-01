@@ -25,11 +25,12 @@ afterAll(async () => {
 describe('Question Model', () => {
   it('should create and save a NUSNETIDQuestion', async () => {
     const question = new NUSNETIDQuestionModel({
-      text: 'Enter your NUSNET ID',
+      text: 'Student NUSNET ID (EXXXXXXX)',
       type: 'NUSNET ID',
       shortResponsePlaceholder: 'E1234567',
+      customInstruction: 'Enter your NUSNET ID starting with E followed by 7 digits.',
+      isLocked: true,
       isRequired: true,
-      isLocked: false,
     });
 
     const savedQuestion = await question.save();

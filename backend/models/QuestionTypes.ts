@@ -17,10 +17,6 @@ export interface NUSNETIDQuestion extends BaseQuestion {
 const NUSNETIDSchema = new Schema({
   shortResponsePlaceholder: { type: String, required: true },
 });
-
-export const NUSNETIDQuestionModel =
-  QuestionModel.discriminator<NUSNETIDQuestion>('NUSNET ID', NUSNETIDSchema);
-
 export interface NUSNETEmailQuestion extends BaseQuestion {
   type: 'NUSNET Email';
   shortResponsePlaceholder: string;
@@ -30,12 +26,6 @@ const NUSNETEmailSchema = new Schema({
   shortResponsePlaceholder: { type: String, required: true },
 });
 
-export const NUSNETEmailQuestionModel =
-  QuestionModel.discriminator<NUSNETEmailQuestion>(
-    'NUSNET Email',
-    NUSNETEmailSchema
-  );
-
 export interface TeamMemberSelectionQuestion extends BaseQuestion {
   type: 'Team Member Selection';
 }
@@ -43,12 +33,6 @@ export interface TeamMemberSelectionQuestion extends BaseQuestion {
 const TeamMemberSelectionSchema = new Schema({
   // No fields because this question is locked, and will always ask for array of userIds in Submission/Answer
 });
-
-export const TeamMemberSelectionQuestionModel =
-  QuestionModel.discriminator<TeamMemberSelectionQuestion>(
-    'Team Member Selection',
-    TeamMemberSelectionSchema
-  );
 
 export interface MultipleChoiceOption {
   text: string;
@@ -70,12 +54,6 @@ const MultipleChoiceSchema = new Schema({
   options: { type: [MultipleChoiceOptionSchema], required: true },
   isScored: { type: Boolean, required: true },
 });
-
-export const MultipleChoiceQuestionModel =
-  QuestionModel.discriminator<MultipleChoiceQuestion>(
-    'Multiple Choice',
-    MultipleChoiceSchema
-  );
 
 export interface MultipleResponseOption {
   text: string;
@@ -100,12 +78,6 @@ const MultipleResponseSchema = new Schema({
   isScored: { type: Boolean, required: true },
   allowNegative: { type: Boolean, required: true },
 });
-
-export const MultipleResponseQuestionModel =
-  QuestionModel.discriminator<MultipleResponseQuestion>(
-    'Multiple Response',
-    MultipleResponseSchema
-  );
 
 export interface ScaleLabel {
   value: number;
@@ -149,11 +121,6 @@ const ScaleQuestionSchema = new Schema({
   isScored: { type: Boolean, required: true },
 });
 
-export const ScaleQuestionModel = QuestionModel.discriminator<ScaleQuestion>(
-  'Scale',
-  ScaleQuestionSchema
-);
-
 export interface ShortResponseQuestion extends BaseQuestion {
   type: 'Short Response';
   shortResponsePlaceholder: string;
@@ -163,12 +130,6 @@ const ShortResponseSchema = new Schema({
   shortResponsePlaceholder: { type: String, required: true },
 });
 
-export const ShortResponseQuestionModel =
-  QuestionModel.discriminator<ShortResponseQuestion>(
-    'Short Response',
-    ShortResponseSchema
-  );
-
 export interface LongResponseQuestion extends BaseQuestion {
   type: 'Long Response';
   longResponsePlaceholder: string;
@@ -177,12 +138,6 @@ export interface LongResponseQuestion extends BaseQuestion {
 const LongResponseSchema = new Schema({
   longResponsePlaceholder: { type: String, required: true },
 });
-
-export const LongResponseQuestionModel =
-  QuestionModel.discriminator<LongResponseQuestion>(
-    'Long Response',
-    LongResponseSchema
-  );
 
 export interface DateQuestion extends BaseQuestion {
   type: 'Date';
@@ -198,11 +153,6 @@ const DateQuestionSchema = new Schema({
   minDate: { type: Date, required: false },
   maxDate: { type: Date, required: false },
 });
-
-export const DateQuestionModel = QuestionModel.discriminator<DateQuestion>(
-  'Date',
-  DateQuestionSchema
-);
 export interface NumberScoringRange {
   minValue: number;
   maxValue: number;
@@ -236,16 +186,69 @@ const NumberSchema = new Schema({
   maxPoints: { type: Number }, // For 'direct' method
   scoringRanges: { type: [NumberScoringRangeSchema] }, // For 'range' method
 });
-export const NumberQuestionModel = QuestionModel.discriminator<NumberQuestion>(
-  'Number',
-  NumberSchema
-);
 
 export interface UndecidedQuestion extends BaseQuestion {
   type: 'Undecided';
 }
 
 const UndecidedSchema = new Schema({});
+
+export const NUSNETIDQuestionModel =
+  QuestionModel.discriminator<NUSNETIDQuestion>('NUSNET ID', NUSNETIDSchema);
+
+export const NUSNETEmailQuestionModel =
+  QuestionModel.discriminator<NUSNETEmailQuestion>(
+    'NUSNET Email',
+    NUSNETEmailSchema
+  );
+
+export const TeamMemberSelectionQuestionModel =
+  QuestionModel.discriminator<TeamMemberSelectionQuestion>(
+    'Team Member Selection',
+    TeamMemberSelectionSchema
+  );
+
+export const MultipleChoiceQuestionModel =
+  QuestionModel.discriminator<MultipleChoiceQuestion>(
+    'Multiple Choice',
+    MultipleChoiceSchema
+  );
+
+export const MultipleResponseQuestionModel =
+  QuestionModel.discriminator<MultipleResponseQuestion>(
+    'Multiple Response',
+    MultipleResponseSchema
+  );
+
+export const ScaleQuestionModel =
+  QuestionModel.discriminator<ScaleQuestion>(
+  'Scale',
+  ScaleQuestionSchema
+);
+
+export const ShortResponseQuestionModel =
+  QuestionModel.discriminator<ShortResponseQuestion>(
+    'Short Response',
+    ShortResponseSchema
+  );
+
+export const LongResponseQuestionModel =
+  QuestionModel.discriminator<LongResponseQuestion>(
+    'Long Response',
+    LongResponseSchema
+  );
+
+export const DateQuestionModel =
+  QuestionModel.discriminator<DateQuestion>(
+  'Date',
+  DateQuestionSchema
+);
+
+export const NumberQuestionModel =
+  QuestionModel.discriminator<NumberQuestion>(
+  'Number',
+  NumberSchema
+);
 
 export const UndecidedQuestionModel =
   QuestionModel.discriminator<UndecidedQuestion>('Undecided', UndecidedSchema);
