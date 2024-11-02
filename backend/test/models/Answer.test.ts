@@ -43,6 +43,7 @@ describe('Answer Model', () => {
     const question = new MultipleChoiceQuestionModel({
       text: 'Choose your favorite color',
       isRequired: true,
+      isScored: false,
     });
     await question.save();
 

@@ -164,14 +164,14 @@ describe('assessmentResultController', () => {
       const res = mockResponse();
 
       const accountId = 'account123';
-      const mockAssessment = { id: 'assessment123', granularity: 'individual' };
+      const mockAssessment = { id: 'assessment123', granularity: 'team' };
       const mockAssignmentSet = {
         assignedUsers: [
           { user: { _id: 'user1' }, tas: [{ _id: 'ta1' }] },
           { user: { _id: 'user2' }, tas: [{ _id: 'ta2' }] },
         ],
       };
-      const mockAssessmentResults: any = []; // No results
+      const mockAssessmentResults: any = [];
 
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
       jest
@@ -190,7 +190,7 @@ describe('assessmentResultController', () => {
       // Modify the service mock or controller logic as needed
 
       // For this example, assuming it proceeds and returns empty data
-      expect(res.json).toHaveBeenCalledWith({ data: mockAssessmentResults });
+      expect(res.json).toHaveBeenCalledWith({ 'error': 'Assessment is team granularity, but assignments are for users' });
     });
 
     it('should handle unexpected errors and return 500', async () => {

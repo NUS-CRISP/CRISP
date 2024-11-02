@@ -44,9 +44,6 @@ afterAll(async () => {
 });
 
 const setupData = async () => {
-  const course = new CourseModel({ name: 'Course', code: 'CS101' });
-  await course.save();
-
   const account = new AccountModel({
     email: 'faculty@example.com',
     password: 'password',
@@ -56,13 +53,23 @@ const setupData = async () => {
   });
   await account.save();
 
-  const assessment = new InternalAssessmentModel({
-    course: course._id,
-    assessmentName: 'Midterm Exam',
-    results: [],
-    granularity: 'individual',
+  const course = await CourseModel.create({
+    name: 'Introduction to Computer Science',
+    code: 'CS101',
+    semester: 'Fall 2024',
+    startDate: new Date('2024-08-15'),
+    courseType: 'Normal',
   });
-  await assessment.save();
+  await course.save();
+  const assessment = await InternalAssessmentModel.create({
+    course: course._id,
+    assessmentName: 'Test Assessment',
+    description: 'A test assessment for unit tests.',
+    granularity: 'team',
+    isReleased: true,
+    areSubmissionsEditable: true,
+    startDate: new Date(),
+  });
 
   const result = new ResultModel({
     assessment: assessment._id,

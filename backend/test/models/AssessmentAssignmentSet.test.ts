@@ -3,6 +3,7 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import AssessmentAssignmentSetModel from '../../models/AssessmentAssignmentSet';
 import InternalAssessmentModel from '../../models/InternalAssessment';
 import TeamModel from '../../models/Team';
+import CourseModel from '@models/Course';
 
 let mongoServer: MongoMemoryServer;
 
@@ -18,15 +19,24 @@ afterAll(async () => {
 
 describe('AssessmentAssignmentSet Model', () => {
   it('should create and save an AssessmentAssignmentSet', async () => {
-    const assessment = new InternalAssessmentModel({
-      assessmentName: 'Midterm Exam',
-      description: 'Midterm assessment',
-      startDate: new Date(),
-      granularity: 'team',
-      areSubmissionsEditable: true,
-      isReleased: false,
+    const course = await CourseModel.create({
+      name: 'Introduction to Computer Science',
+      code: 'CS101',
+      semester: 'Fall 2024',
+      startDate: new Date('2024-08-15'),
+      courseType: 'Normal',
     });
-    await assessment.save();
+    await course.save();
+    const assessment = await InternalAssessmentModel.create({
+      course: course._id,
+      assessmentName: 'Test Assessment',
+      description: 'A test assessment for unit tests.',
+      granularity: 'team',
+      isReleased: true,
+      areSubmissionsEditable: true,
+      startDate: new Date(),
+    });
+    assessment.save();
 
     const team1 = new TeamModel({ number: 1 });
     const team2 = new TeamModel({ number: 2 });

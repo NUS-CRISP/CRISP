@@ -12,6 +12,7 @@ import {
   checkMarkingCompletion,
 } from '../../services/assessmentResultService';
 import { BadRequestError, NotFoundError } from '../../services/errors';
+import CourseModel from '@models/Course';
 
 let mongo: MongoMemoryServer;
 
@@ -40,12 +41,25 @@ describe('assessmentResultService', () => {
 
   beforeEach(async () => {
     // Setup test data
+    const course = await CourseModel.create({
+      name: 'Introduction to Computer Science',
+      code: 'CS101',
+      semester: 'Fall 2024',
+      startDate: new Date('2024-08-15'),
+      courseType: 'Normal',
+    });
+    await course.save();
     const assessment = await InternalAssessmentModel.create({
-      assessmentName: 'Sample Assessment',
-      description: 'A sample assessment',
-      granularity: 'individual',
+      course: course._id,
+      assessmentName: 'Test Assessment',
+      description: 'A test assessment for unit tests.',
+      granularity: 'team',
+      isReleased: true,
+      areSubmissionsEditable: true,
+      startDate: new Date(),
     });
     assessmentId = assessment._id;
+    assessment.save();
 
     const student = await UserModel.create({
       identifier: 'studentUser',

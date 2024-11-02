@@ -4,6 +4,7 @@ import AssessmentResultModel from '../../models/AssessmentResult';
 import InternalAssessmentModel from '../../models/InternalAssessment';
 import UserModel from '../../models/User';
 import SubmissionModel from '../../models/Submission';
+import CourseModel from '@models/Course';
 
 let mongoServer: MongoMemoryServer;
 
@@ -19,15 +20,24 @@ afterAll(async () => {
 
 describe('AssessmentResult Model', () => {
   it('should create and save an AssessmentResult', async () => {
-    const assessment = new InternalAssessmentModel({
-      assessmentName: 'Quiz 1',
-      description: 'First quiz',
-      startDate: new Date(),
-      granularity: 'individual',
-      areSubmissionsEditable: true,
-      isReleased: false,
+    const course = await CourseModel.create({
+      name: 'Introduction to Computer Science',
+      code: 'CS101',
+      semester: 'Fall 2024',
+      startDate: new Date('2024-08-15'),
+      courseType: 'Normal',
     });
-    await assessment.save();
+    await course.save();
+    const assessment = await InternalAssessmentModel.create({
+      course: course._id,
+      assessmentName: 'Test Assessment',
+      description: 'A test assessment for unit tests.',
+      granularity: 'team',
+      isReleased: true,
+      areSubmissionsEditable: true,
+      startDate: new Date(),
+    });
+    assessment.save();
 
     const student = new UserModel({
       identifier: 'student1',

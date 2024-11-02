@@ -13,6 +13,7 @@ import {
   getAssignmentsByTAId,
 } from '../../services/assessmentAssignmentSetService';
 import { NotFoundError, BadRequestError } from '../../services/errors';
+import CourseModel from '@models/Course';
 
 let mongo: MongoMemoryServer;
 
@@ -42,12 +43,26 @@ describe('assessmentAssignmentSetService', () => {
 
   beforeEach(async () => {
     // Create mock data
+
+    const course = await CourseModel.create({
+      name: 'Introduction to Computer Science',
+      code: 'CS101',
+      semester: 'Fall 2024',
+      startDate: new Date('2024-08-15'),
+      courseType: 'Normal',
+    });
+    await course.save();
     const internalAssessment = await InternalAssessmentModel.create({
+      course: course._id,
       assessmentName: 'Test Assessment',
       description: 'A test assessment for unit tests.',
       granularity: 'team',
+      isReleased: true,
+      areSubmissionsEditable: true,
+      startDate: new Date(),
     });
     assessmentId = internalAssessment._id;
+    internalAssessment.save();
 
     const teamSet = await TeamSetModel.create({
       course: new mongoose.Types.ObjectId(),
