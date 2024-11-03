@@ -7,12 +7,23 @@ import QuestionModel from '../../models/Question';
 import { CourseType } from '@shared/types/Course';
 import CourseModel from '@models/Course';
 import { NUSNETIDAnswerModel } from '@models/Answer';
+import TeamSetModel from '@models/TeamSet';
 
 let mongoServer: MongoMemoryServer;
 
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
   await mongoose.connect(mongoServer.getUri());
+});
+
+beforeEach(async () => {
+  await InternalAssessmentModel.deleteMany({});
+  await UserModel.deleteMany({});
+  await QuestionModel.deleteMany({});
+  await CourseModel.deleteMany({});
+  await TeamSetModel.deleteMany({});
+  await NUSNETIDAnswerModel.deleteMany({});
+  await SubmissionModel.deleteMany({});
 });
 
 afterAll(async () => {
@@ -27,6 +38,7 @@ describe('Submission Model', () => {
       name: 'Student One',
     });
     await user.save();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const courseData: any = {
       name: 'Test Course',
       code: 'COURSE101',
@@ -37,16 +49,26 @@ describe('Submission Model', () => {
 
     const course = new CourseModel(courseData);
 
-    const savedCourse = await course.save();
+    const teamSet = new TeamSetModel({
+      name: 'Team Set 1',
+      course: course._id,
+      teams: [],
+    });
+    await teamSet.save();
 
     const assessment = new InternalAssessmentModel({
-      assessmentName: 'Quiz 1',
-      description: 'First quiz',
+      course: course._id,
+      assessmentName: 'Midterm Exam',
+      description: 'Midterm assessment',
       startDate: new Date(),
-      granularity: 'individual',
+      endDate: new Date(),
+      maxMarks: 100,
+      granularity: 'team',
+      teamSet: teamSet._id,
       areSubmissionsEditable: true,
+      results: [],
       isReleased: false,
-      course: savedCourse._id,
+      questions: [],
     });
     await assessment.save();
 

@@ -11,6 +11,12 @@ beforeAll(async () => {
   await mongoose.connect(mongoServer.getUri());
 });
 
+beforeEach(async () => {
+  await InternalAssessmentModel.deleteMany({});
+  await CourseModel.deleteMany({});
+  await TeamSetModel.deleteMany({});
+});
+
 afterAll(async () => {
   await mongoose.disconnect();
   await mongoServer.stop();
@@ -30,6 +36,7 @@ describe('InternalAssessment Model', () => {
     const teamSet = new TeamSetModel({
       name: 'Team Set 1',
       course: course._id,
+      teams: [],
     });
     await teamSet.save();
 

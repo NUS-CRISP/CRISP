@@ -5,12 +5,22 @@ import InternalAssessmentModel from '../../models/InternalAssessment';
 import UserModel from '../../models/User';
 import SubmissionModel from '../../models/Submission';
 import CourseModel from '@models/Course';
+import TeamSetModel from '@models/TeamSet';
 
 let mongoServer: MongoMemoryServer;
 
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
   await mongoose.connect(mongoServer.getUri());
+});
+
+beforeEach(async () => {
+  await InternalAssessmentModel.deleteMany({});
+  await CourseModel.deleteMany({});
+  await SubmissionModel.deleteMany({});
+  await UserModel.deleteMany({});
+  await TeamSetModel.deleteMany({});
+  await AssessmentResultModel.deleteMany({});
 });
 
 afterAll(async () => {
@@ -28,16 +38,28 @@ describe('AssessmentResult Model', () => {
       courseType: 'Normal',
     });
     await course.save();
-    const assessment = await InternalAssessmentModel.create({
+
+    const teamSet = new TeamSetModel({
+      name: 'Team Set 1',
       course: course._id,
-      assessmentName: 'Test Assessment',
-      description: 'A test assessment for unit tests.',
-      granularity: 'team',
-      isReleased: true,
-      areSubmissionsEditable: true,
-      startDate: new Date(),
+      teams: [],
     });
-    assessment.save();
+    await teamSet.save();
+
+    const assessment = new InternalAssessmentModel({
+      course: course._id,
+      assessmentName: 'Midterm Exam',
+      description: 'Midterm assessment',
+      startDate: new Date(),
+      endDate: new Date(),
+      maxMarks: 100,
+      granularity: 'team',
+      teamSet: teamSet._id,
+      areSubmissionsEditable: true,
+      results: [],
+      isReleased: false,
+      questions: [],
+    });
 
     const student = new UserModel({
       identifier: 'student1',

@@ -13,6 +13,13 @@ beforeAll(async () => {
   } as ConnectOptions);
 });
 
+beforeEach(async () => {
+  await MultipleChoiceAnswerModel.deleteMany({});
+  await MultipleChoiceQuestionModel.deleteMany({});
+  await NUSNETIDAnswerModel.deleteMany({});
+  await NUSNETIDQuestionModel.deleteMany({});
+});
+
 afterAll(async () => {
   await mongoose.disconnect();
   await mongoServer.stop();

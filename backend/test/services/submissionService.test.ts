@@ -14,8 +14,11 @@ import {
   adjustSubmissionScore,
 } from '../../services/submissionService';
 import { BadRequestError, NotFoundError } from '../../services/errors';
-import { ShortResponseAnswer } from '@models/Answer';
+import { AnswerModel, ShortResponseAnswer, TeamMemberSelectionAnswerModel } from '@models/Answer';
 import CourseModel from '@models/Course';
+import TeamSetModel from '@models/TeamSet';
+import QuestionModel from '@models/Question';
+import { TeamMemberSelectionQuestionModel } from '@models/QuestionTypes';
 
 let mongo: MongoMemoryServer;
 
@@ -63,36 +66,60 @@ const setupData = async () => {
     courseType: 'Normal',
   });
   await course.save();
-  const assessment = await InternalAssessmentModel.create({
+  const teamSet = new TeamSetModel({
+    name: 'Team Set 1',
     course: course._id,
-    assessmentName: 'Test Assessment',
-    description: 'A test assessment for unit tests.',
-    granularity: 'team',
-    isReleased: true,
-    areSubmissionsEditable: true,
-    startDate: new Date(),
+    teams: [],
   });
-  assessment.save();
+  await teamSet.save();
 
-  return { account, user, assessment };
+  const question = new TeamMemberSelectionQuestionModel({
+    text: 'Select students',
+    type: 'Team Member Selection',
+    isRequired: true,
+    isLocked: true,
+  });
+  await question.save();
+
+  const assessment = new InternalAssessmentModel({
+    course: course._id,
+    assessmentName: 'Midterm Exam',
+    description: 'Midterm assessment',
+    startDate: new Date(),
+    endDate: new Date(),
+    maxMarks: 100,
+    granularity: 'team',
+    teamSet: teamSet._id,
+    areSubmissionsEditable: true,
+    results: [],
+    isReleased: false,
+    questions: [question],
+  });
+  await assessment.save();
+
+  return { account, user, assessment, question };
 };
 
 describe('submissionService', () => {
   let account: any;
   let user: any;
   let assessment: any;
+  let question: any;
 
   beforeEach(async () => {
-    ({ account, user, assessment } = await setupData());
+    ({ account, user, assessment, question } = await setupData());
   });
 
   describe('createSubmission', () => {
     it('should create a new submission', async () => {
-      const answers = [{ question: new mongoose.Types.ObjectId(), type: 'Short Response', value: 'Answer' } as ShortResponseAnswer];
+      const answer = new TeamMemberSelectionAnswerModel({
+        question: question._id,
+        selectedUserIds: [user._id],
+      })
       const submission = await createSubmission(
         assessment._id.toString(),
         user._id.toString(),
-        answers,
+        [answer],
         false
       );
 
@@ -110,23 +137,26 @@ describe('submissionService', () => {
 
   describe('updateSubmission', () => {
     it('should update a submission', async () => {
-      const answers = [{ question: new mongoose.Types.ObjectId(), type: 'Short Response', value: 'Answer' } as ShortResponseAnswer];
+      const answer = new TeamMemberSelectionAnswerModel({
+        question: question._id,
+        selectedUserIds: [user._id],
+      })
       const submission = await createSubmission(
         assessment._id.toString(),
         user._id.toString(),
-        answers,
-        false
+        [answer],
+        true
       );
 
       const updatedSubmission = await updateSubmission(
         submission._id.toString(),
         user._id.toString(),
         account._id.toString(),
-        answers,
-        true
+        [answer],
+        false
       );
 
-      expect(updatedSubmission.isDraft).toBe(true);
+      expect(updatedSubmission.isDraft).toBe(false);
     });
 
     it('should throw NotFoundError if submission not found', async () => {

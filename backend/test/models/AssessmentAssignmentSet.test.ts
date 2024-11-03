@@ -4,12 +4,21 @@ import AssessmentAssignmentSetModel from '../../models/AssessmentAssignmentSet';
 import InternalAssessmentModel from '../../models/InternalAssessment';
 import TeamModel from '../../models/Team';
 import CourseModel from '@models/Course';
+import TeamSetModel from '@models/TeamSet';
 
 let mongoServer: MongoMemoryServer;
 
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
   await mongoose.connect(mongoServer.getUri());
+});
+
+beforeEach(async () => {
+  await TeamModel.deleteMany({});
+  await InternalAssessmentModel.deleteMany({});
+  await AssessmentAssignmentSetModel.deleteMany({});
+  await CourseModel.deleteMany({});
+  await TeamSetModel.deleteMany({});
 });
 
 afterAll(async () => {
@@ -27,14 +36,25 @@ describe('AssessmentAssignmentSet Model', () => {
       courseType: 'Normal',
     });
     await course.save();
-    const assessment = await InternalAssessmentModel.create({
+    const teamSet = new TeamSetModel({
+      name: 'Team Set 1',
       course: course._id,
-      assessmentName: 'Test Assessment',
-      description: 'A test assessment for unit tests.',
-      granularity: 'team',
-      isReleased: true,
-      areSubmissionsEditable: true,
+      teams: [],
+    });
+    await teamSet.save();
+    const assessment = new InternalAssessmentModel({
+      course: course._id,
+      assessmentName: 'Midterm Exam',
+      description: 'Midterm assessment',
       startDate: new Date(),
+      endDate: new Date(),
+      maxMarks: 100,
+      granularity: 'team',
+      teamSet: teamSet._id,
+      areSubmissionsEditable: true,
+      results: [],
+      isReleased: false,
+      questions: [],
     });
     assessment.save();
 
@@ -60,13 +80,32 @@ describe('AssessmentAssignmentSet Model', () => {
   });
 
   it('should enforce unique assessment per AssessmentAssignmentSet', async () => {
+    const course = await CourseModel.create({
+      name: 'Introduction to Computer Science',
+      code: 'CS101',
+      semester: 'Fall 2024',
+      startDate: new Date('2024-08-15'),
+      courseType: 'Normal',
+    });
+    await course.save();
+    const teamSet = new TeamSetModel({
+      name: 'Team Set 1',
+      course: course._id,
+      teams: [],
+    });
+    await teamSet.save();
+
     const assessment = new InternalAssessmentModel({
+      course: course._id,
       assessmentName: 'Final Exam',
       description: 'Final assessment',
       startDate: new Date(),
       granularity: 'team',
       areSubmissionsEditable: true,
       isReleased: false,
+      teamSet: teamSet._id,
+      results: [],
+      questions: [],
     });
     await assessment.save();
 
