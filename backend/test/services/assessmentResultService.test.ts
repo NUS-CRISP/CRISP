@@ -77,23 +77,24 @@ describe('assessmentResultService', () => {
     });
     await teamSet.save();
 
-    const assignmentSet = await AssessmentAssignmentSetModel.create({
-      assessment: assessmentId,
-      assignedUsers: [{ user: studentId, tas: [taId] }],
-    });
-    await assignmentSet.save()
     const assessment = await InternalAssessmentModel.create({
       course: course._id,
       assessmentName: 'Test Assessment',
       description: 'A test assessment for unit tests.',
       granularity: 'team',
       teamSet: teamSet,
-      assessmentAssignmentSet: assignmentSet,
       isReleased: true,
       areSubmissionsEditable: true,
       startDate: new Date(),
     });
     assessmentId = assessment._id;
+    await assessment.save();
+    const assignmentSet = await AssessmentAssignmentSetModel.create({
+      assessment: assessment._id,
+      assignedUsers: [{ user: studentId, tas: [taId] }],
+    });
+    await assignmentSet.save();
+    assessment.assessmentAssignmentSet = assignmentSet._id;
     await assessment.save();
   });
 
