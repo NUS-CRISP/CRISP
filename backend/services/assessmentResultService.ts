@@ -82,7 +82,8 @@ export const getOrCreateAssessmentResults = async (
   const existingResults = await AssessmentResultModel.find({
     assessment: assessmentId,
     student: { $in: allStudentIds },
-  }).select('student');
+  }).select('student').populate('marks.submission');
+  console.log(existingResults[50])
 
   const existingStudentIds = new Set<string>(
     existingResults.map(result => result.student.toString())

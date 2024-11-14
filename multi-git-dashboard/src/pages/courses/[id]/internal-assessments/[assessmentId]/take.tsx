@@ -298,10 +298,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
   useEffect(() => {
     if (
       submission &&
-      submission.answers &&
-      ((assessment?.granularity === 'individual' &&
-        teamMembersOptions.length > 0) ||
-        (assessment?.granularity === 'team' && teamOptions.length > 0))
+      submission.answers // Removed checks as a temporary fix
     ) {
       // Initialize answers from existing submission
       const initialAnswers = submission.answers.reduce(
@@ -317,6 +314,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         },
         {} as { [questionId: string]: AnswerInput }
       );
+      console.log("INIT ANS", initialAnswers)
       setAnswers(initialAnswers);
 
       const initialTotalScore =
@@ -496,7 +494,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
           }
           return {
             question: questionId,
-            type: question.type,
+            type: question.type + ' Answer',
             ...formatAnswerForSubmission(question, answer),
           };
         })

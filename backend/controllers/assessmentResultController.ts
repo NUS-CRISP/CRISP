@@ -9,6 +9,7 @@ import { BadRequestError, NotFoundError } from '../services/errors';
 import { getAssignmentSetByAssessmentId } from '../services/assessmentAssignmentSetService';
 import { getAccountId } from '../utils/auth';
 import { getInternalAssessmentById } from '../services/internalAssessmentService';
+import TeamModel from '@models/Team';
 
 /**
  * Controller to retrieve or create AssessmentResults for an assessment.
@@ -86,30 +87,37 @@ export const getOrCreateAssessmentResultsController = async (
       }
       for (const assignedTeam of assignmentSet.assignedTeams) {
         const teamId = assignedTeam.team._id.toString();
-        let assessmentResult = assessmentResultMap.get('team-' + teamId);
-        if (!assessmentResult) {
-          assessmentResult = {
-            _id: 'temp-team-' + teamId,
-            assessment: assessmentId,
-            team: assignedTeam.team,
-            marks: [],
-          };
+        const team = await TeamModel.findById(teamId).populate('members');
+        if (!team || !team.members || team.members.length === 0) {
+          continue;
         }
-        for (const marker of assignedTeam.tas) {
-          const existingMarkEntry = assessmentResult.marks.find(
-            (markEntry: any) =>
-              markEntry.marker._id.toString() === marker._id.toString()
-          );
-          if (!existingMarkEntry) {
-            const tempMarkEntry = {
-              marker: marker,
-              submission: null,
-              score: null,
+        team.members.forEach((member) => {
+          const studentId = member._id.toString();
+          let assessmentResult = assessmentResultMap.get(studentId);
+          if (!assessmentResult) {
+            assessmentResult = {
+              _id: 'temp-team-' + studentId,
+              assessment: assessmentId,
+              team: assignedTeam.team,
+              marks: [],
             };
-            assessmentResult.marks.push(tempMarkEntry);
           }
-        }
-        assessmentResultMap.set('team-' + teamId, assessmentResult);
+          for (const marker of assignedTeam.tas) {
+            const existingMarkEntry = assessmentResult.marks.find(
+              (markEntry: any) =>
+                markEntry.marker._id.toString() === marker._id.toString()
+            );
+            if (!existingMarkEntry) {
+              const tempMarkEntry = {
+                marker: marker,
+                submission: null,
+                score: null,
+              };
+              assessmentResult.marks.push(tempMarkEntry);
+            }
+          }
+          assessmentResultMap.set(studentId, assessmentResult);
+        })
       }
     }
 

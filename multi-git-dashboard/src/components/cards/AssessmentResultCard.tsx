@@ -16,6 +16,7 @@ import { IconAlertCircle, IconCheck } from '@tabler/icons-react';
 import { User } from '@shared/types/User';
 import { Team } from '@shared/types/Team';
 import { AssessmentResult } from '@shared/types/AssessmentResults';
+import { useRouter } from 'next/router';
 
 interface StudentResult {
   student: User;
@@ -33,11 +34,19 @@ const AssessmentResultCard: React.FC<AssessmentResultCardProps> = ({
   studentResult,
   maxScore,
 }) => {
+  const router = useRouter();
+  const { id, assessmentId } = router.query as {
+    id: string;
+    assessmentId: string;
+  };
   const { student, team, result } = studentResult;
   const maxScoreString = maxScore ? ` / ${maxScore}` : '';
 
   const hasMissingSubmissions =
     result && result.marks.some(mark => !mark.submission);
+  if (result?.averageScore === 8.50) {
+    console.log(result.marks.filter(mark => mark.submission).length > 0);
+  }
 
   const allSubmissionsPresent =
     result && result.marks.length > 0 && !hasMissingSubmissions;
@@ -107,7 +116,7 @@ const AssessmentResultCard: React.FC<AssessmentResultCardProps> = ({
                     .map((markEntry, index) => (
                       <Grid.Col span={6} key={index}>
                         <Card shadow="xs" p="xs" radius="md" withBorder>
-                          <Group justify="space-between" align="center">
+                          <Group justify="space-between" align="center" onClick={() => router.push(`/courses/${id}/internal-assessments/${assessmentId}/submission/${markEntry.submission!._id}`)}>
                             <Text size="sm">{markEntry.marker.name}</Text>
                             <Badge color="blue" variant="light">
                               {markEntry.score?.toFixed(2)}

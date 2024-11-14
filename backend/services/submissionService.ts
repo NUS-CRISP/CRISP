@@ -107,37 +107,37 @@ function isNumberQuestion(question: QuestionUnion): question is NumberQuestion {
 function isMultipleChoiceAnswer(
   answer: AnswerUnion
 ): answer is MultipleChoiceAnswer {
-  return answer.type === 'Multiple Choice';
+  return answer.type === 'Multiple Choice Answer';
 }
 
 function isMultipleResponseAnswer(
   answer: AnswerUnion
 ): answer is MultipleResponseAnswer {
-  return answer.type === 'Multiple Response';
+  return answer.type === 'Multiple Response Answer';
 }
 
 function isScaleAnswer(answer: AnswerUnion): answer is ScaleAnswer {
-  return answer.type === 'Scale';
+  return answer.type === 'Scale Answer';
 }
 
 function isShortResponseAnswer(
   answer: AnswerUnion
 ): answer is ShortResponseAnswer {
-  return answer.type === 'Short Response';
+  return answer.type === 'Short Response Answer';
 }
 
 function isLongResponseAnswer(
   answer: AnswerUnion
 ): answer is LongResponseAnswer {
-  return answer.type === 'Long Response';
+  return answer.type === 'Long Response Answer';
 }
 
 function isDateAnswer(answer: AnswerUnion): answer is DateAnswer {
-  return answer.type === 'Date';
+  return answer.type === 'Date Answer';
 }
 
 function isNumberAnswer(answer: AnswerUnion): answer is NumberAnswer {
-  return answer.type === 'Number';
+  return answer.type === 'Number Answer';
 }
 
 async function validateAnswers(
@@ -159,7 +159,7 @@ async function validateAnswers(
       );
     }
 
-    if (answer.type !== question.type) {
+    if (answer.type !== question.type + ' Answer') {
       throw new BadRequestError(
         `Answer type "${answer.type}" does not match question type "${question.type}" for question ${questionId}`
       );
@@ -377,7 +377,7 @@ export const checkSubmissionUniqueness = async (
     sub =>
       (
         sub.answers.find(
-          ans => ans.type === 'Team Member Selection'
+          ans => ans.type === 'Team Member Selection Answer'
         ) as TeamMemberSelectionAnswer
       ).selectedUserIds
   );
@@ -402,7 +402,7 @@ export const createSubmission = async (
   await validateAnswers(assessment, answers);
   const selectedStudentIds = (
     answers.find(
-      answer => answer.type === 'Team Member Selection'
+      answer => answer.type === 'Team Member Selection Answer'
     ) as TeamMemberSelectionAnswer
   ).selectedUserIds;
   await checkSubmissionUniqueness(assessment, user, selectedStudentIds);
@@ -425,39 +425,39 @@ export const createSubmission = async (
       let SaveAnswerModel = null;
 
       switch (answer.type) {
-        case 'Number':
+        case 'Number Answer':
           question = await NumberQuestionModel.findById(questionId);
           SaveAnswerModel = NumberAnswerModel;
           break;
-        case 'Scale':
+        case 'Scale Answer':
           question = await ScaleQuestionModel.findById(questionId);
           SaveAnswerModel = ScaleAnswerModel;
           break;
-        case 'Multiple Choice':
+        case 'Multiple Choice Answer':
           question = await MultipleChoiceQuestionModel.findById(questionId);
           SaveAnswerModel = MultipleChoiceAnswerModel;
           break;
-        case 'Multiple Response':
+        case 'Multiple Response Answer':
           question = await MultipleResponseQuestionModel.findById(questionId);
           SaveAnswerModel = MultipleResponseAnswerModel;
           break;
-        case 'Team Member Selection':
+        case 'Team Member Selection Answer':
           question = await TeamMemberSelectionQuestionModel.findById(questionId);
           SaveAnswerModel = TeamMemberSelectionAnswerModel;
           break;
-        case 'Date':
+        case 'Date Answer':
           question = await DateQuestionModel.findById(questionId);
           SaveAnswerModel = DateAnswerModel;
           break;
-        case 'Short Response':
+        case 'Short Response Answer':
           question = await ShortResponseQuestionModel.findById(questionId);
           SaveAnswerModel = ShortResponseAnswerModel;
           break;
-        case 'Long Response':
+        case 'Long Response Answer':
           question = await LongResponseQuestionModel.findById(questionId);
           SaveAnswerModel = LongResponseAnswerModel;
           break;
-        case 'Undecided':
+        case 'Undecided Answer':
           question = await UndecidedQuestionModel.findById(questionId);
           SaveAnswerModel = UndecidedAnswerModel;
           break;
@@ -499,7 +499,7 @@ export const createSubmission = async (
   await submission.save();
 
   const assignment = answers.find(
-    answer => answer.type === 'Team Member Selection'
+    answer => answer.type === 'Team Member Selection Answer'
   ) as TeamMemberSelectionAnswer;
 
   assignment.selectedUserIds.forEach(async userId => {
@@ -593,43 +593,53 @@ export const updateSubmission = async (
 
       let question = null;
       let SaveAnswerModel = null;
+      let savedAnswer = null;
 
       switch (answer.type) {
-        case 'Number':
+        case 'Number Answer':
           question = await NumberQuestionModel.findById(questionId);
           SaveAnswerModel = NumberAnswerModel;
+          savedAnswer = NumberAnswerModel.findById(answer.id);
           break;
-        case 'Scale':
+        case 'Scale Answer':
           question = await ScaleQuestionModel.findById(questionId);
           SaveAnswerModel = ScaleAnswerModel;
+          savedAnswer = ScaleAnswerModel.findById(answer.id);
           break;
-        case 'Multiple Choice':
+        case 'Multiple Choice Answer':
           question = await MultipleChoiceQuestionModel.findById(questionId);
           SaveAnswerModel = MultipleChoiceAnswerModel;
+          savedAnswer = MultipleChoiceAnswerModel.findById(answer.id);
           break;
-        case 'Multiple Response':
+        case 'Multiple Response Answer':
           question = await MultipleResponseQuestionModel.findById(questionId);
           SaveAnswerModel = MultipleResponseAnswerModel;
+          savedAnswer = MultipleResponseAnswerModel.findById(answer.id);
           break;
-        case 'Team Member Selection':
+        case 'Team Member Selection Answer':
           question = await TeamMemberSelectionQuestionModel.findById(questionId);
           SaveAnswerModel = TeamMemberSelectionAnswerModel;
+          savedAnswer = TeamMemberSelectionAnswerModel.findById(answer.id);
           break;
-        case 'Date':
+        case 'Date Answer':
           question = await DateQuestionModel.findById(questionId);
           SaveAnswerModel = DateAnswerModel;
+          savedAnswer = DateAnswerModel.findById(answer.id);
           break;
-        case 'Short Response':
+        case 'Short Response Answer':
           question = await ShortResponseQuestionModel.findById(questionId);
           SaveAnswerModel = ShortResponseAnswerModel;
+          savedAnswer = ShortResponseAnswerModel.findById(answer.id);
           break;
-        case 'Long Response':
+        case 'Long Response Answer':
           question = await LongResponseQuestionModel.findById(questionId);
           SaveAnswerModel = LongResponseAnswerModel;
+          savedAnswer = LongResponseAnswerModel.findById(answer.id);
           break;
-        case 'Undecided':
+        case 'Undecided Answer':
           question = await UndecidedQuestionModel.findById(questionId);
           SaveAnswerModel = UndecidedAnswerModel;
+          savedAnswer = UndecidedAnswerModel.findById(answer.id);
           break;
         default:
           answer.score = 0;
@@ -637,7 +647,7 @@ export const updateSubmission = async (
 
       if (!SaveAnswerModel) {
         console.warn(
-          `Cannot parse question type ${answer.type}`
+          `Cannot parse answer type ${answer.type}`
         )
         return;
       }
@@ -653,8 +663,20 @@ export const updateSubmission = async (
 
       const answerScore = await calculateAnswerScore(question, answer);
       totalScore += answerScore;
+      totalScore += answerScore;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { type, ...scoredAnswer} = { ...answer, score: answerScore }; // type is unused but we need to extract it
 
       answer.score = answerScore;
+      if (!savedAnswer) {
+        console.warn(
+          'Answer does not exist!'
+        );
+        const newAnswer = new SaveAnswerModel(scoredAnswer);
+        await newAnswer.save();
+      } else {
+        savedAnswer.model.findByIdAndUpdate(answer._id, answer);
+      }
     })
   );
 
@@ -667,7 +689,7 @@ export const updateSubmission = async (
   await submission.save();
 
   const assignment = answers.find(
-    answer => answer.type === 'Team Member Selection'
+    answer => answer.type === 'Team Member Selection Answer'
   ) as TeamMemberSelectionAnswer;
 
   assignment.selectedUserIds.forEach(async userId => {
