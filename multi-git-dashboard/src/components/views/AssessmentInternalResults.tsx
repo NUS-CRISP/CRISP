@@ -1,5 +1,3 @@
-// components/views/AssessmentInternalResults.tsx
-
 import { Button, Group, Modal, Select, Text } from '@mantine/core';
 import { useState, useEffect } from 'react';
 import { AssessmentResult } from '@shared/types/AssessmentResults';
@@ -99,16 +97,30 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
         }
       }
 
-      // Apply Marked filter
+      // Apply Marked Status filter
       if (markedFilter !== 'All') {
-        if (markedFilter === 'Marked') {
-          filteredResults = filteredResults.filter(
-            sr => sr.result && sr.result.marks.length > 0
-          );
-        } else if (markedFilter === 'Unmarked') {
-          filteredResults = filteredResults.filter(
-            sr => !sr.result || sr.result.marks.length === 0
-          );
+        if (markedFilter === 'Complete') {
+          filteredResults = filteredResults.filter(sr => {
+            if (sr.result && sr.result.marks.length > 0) {
+              // Check if any marks have submission: null
+              const hasNullSubmissions = sr.result.marks.some(
+                mark => !mark.submission
+              );
+              return !hasNullSubmissions;
+            }
+            return false; // No marks or empty marks array, marking is incomplete
+          });
+        } else if (markedFilter === 'Incomplete') {
+          filteredResults = filteredResults.filter(sr => {
+            if (!sr.result || sr.result.marks.length === 0) {
+              return true; // No results or marks, marking is incomplete
+            }
+            // Check if any marks have submission: null
+            const hasNullSubmissions = sr.result.marks.some(
+              mark => !mark.submission
+            );
+            return hasNullSubmissions;
+          });
         }
       }
 
@@ -121,7 +133,7 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
           break;
         case 'studentID':
           filteredResults.sort((a, b) =>
-            a.student.studentId.localeCompare(b.student.studentId)
+            a.student.identifier.localeCompare(b.student.identifier)
           );
           break;
         case 'marks':
@@ -178,7 +190,7 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
 
   return (
     <div>
-      <Group mt="xs">
+      <Group mt="xs" align="flex-end">
         <div>
           <Text size="sm">Marker</Text>
           <Select
@@ -200,8 +212,8 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
             onChange={value => setMarkedFilter(value || 'All')}
             data={[
               { value: 'All', label: 'All' },
-              { value: 'Marked', label: 'Marked' },
-              { value: 'Unmarked', label: 'Unmarked' },
+              { value: 'Complete', label: 'Marking completed' },
+              { value: 'Incomplete', label: 'Marking incomplete' },
             ]}
             placeholder="Select marked status"
             my={8}
