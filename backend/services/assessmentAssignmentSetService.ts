@@ -9,9 +9,11 @@ import AssessmentAssignmentSetModel, {
 } from '../models/AssessmentAssignmentSet';
 import InternalAssessmentModel from '../models/InternalAssessment';
 import TeamSetModel from '../models/TeamSet';
-import TeamModel from '../models/Team';
+import TeamModel, { Team } from '../models/Team';
 import UserModel from '../models/User';
 import { NotFoundError, BadRequestError } from './errors';
+import { getSubmissionsByAssessmentAndUser } from './submissionService';
+import { TeamMemberSelectionAnswer } from '@models/Answer';
 
 /**
  * Creates a new AssessmentAssignmentSet based on the provided assessment and original TeamSet.
@@ -259,3 +261,70 @@ export const getAssignmentsByTAId = async (
     return users;
   }
 };
+
+/**
+ * Retrieves all unmarked assignments to a specific TA within an assessment.
+ * @param taId - The ID of the TA.
+ * @param assessmentId - The ID of the assessment.
+ * @returns An array of unmarked Teams OR Users. (Not AssignedTeams or AssignedUsers)
+ */
+export const getUnmarkedAssignmentsByTAId = async (
+  taId: string,
+  assessmentId: string
+) => {
+  const assignmentSet = await AssessmentAssignmentSetModel.findOne({
+    assessment: assessmentId,
+  })
+    .populate({
+      path: 'assignedTeams.tas',
+      match: { _id: taId },
+      select: 'name identifier',
+    })
+    .populate({
+      path: 'assignedTeams.team',
+    })
+    .populate('assignedTeams.team.members')
+    .populate({
+      path: 'assignedUsers.tas',
+      match: { _id: taId },
+      select: 'name identifier',
+    });
+  if (!assignmentSet) {
+    throw new NotFoundError('AssessmentAssignmentSet not found');
+  }
+
+  const submissions = await getSubmissionsByAssessmentAndUser(assessmentId, taId);
+
+  const submittedUserIds = submissions
+    .flatMap((sub) =>
+      (sub.answers.find((ans) => ans.type === 'Team Member Selection Answer')!.toObject() as TeamMemberSelectionAnswer).selectedUserIds);
+
+  if (assignmentSet.assignedTeams) {
+    // Filter teams where the TA is assigned
+    const teamIds: mongoose.Types.ObjectId[] = assignmentSet.assignedTeams
+      .filter(at => at.tas.length > 0
+        && submittedUserIds.every((uid) => // Every submitted uid...
+          !(at.team as Team).members!.find((member) => member._id.toString() === uid))) // is not in one of the teams being returned
+      .map(at => at.team as mongoose.Types.ObjectId);
+
+    const teams = await Promise.all(
+      teamIds.map(async teamId => {
+        return await TeamModel.findById(teamId).populate('members');
+      })
+    );
+    return teams;
+  } else {
+    const userIds: mongoose.Types.ObjectId[] = assignmentSet
+      .assignedUsers!.filter(as => as.tas.length > 0
+        && submittedUserIds.every((uid) => uid !== as.user._id.toString())) // Ensures the userIds have no submissions from this TA
+      .map(at => at.user as mongoose.Types.ObjectId);
+
+    const users = await Promise.all(
+      userIds.map(async userId => {
+        return await UserModel.findById(userId);
+      })
+    );
+    return users;
+  }
+};
+

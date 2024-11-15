@@ -190,7 +190,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
     if (!assessment) return;
     try {
       const response = await fetch(
-        `/api/assignment-sets/${assessmentId}/assignment-sets/ta`,
+        `/api/assignment-sets/${assessmentId}/assignment-sets/taunmarked`,
         {
           method: 'GET',
           headers: {
@@ -290,7 +290,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
   useEffect(() => {
     if (assessment) {
       fetchQuestions();
-      fetchTeamMembers();
+      // fetchTeamMembers();
       fetchAssignedEntities();
     }
   }, [assessment, fetchQuestions, fetchAssignedEntities, fetchTeamMembers]);

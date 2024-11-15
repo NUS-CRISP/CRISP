@@ -6,6 +6,7 @@ import {
   getAssignmentSetByAssessmentId,
   updateAssignmentSet,
   getAssignmentsByTAId,
+  getUnmarkedAssignmentsByTAId,
 } from '../services/assessmentAssignmentSetService';
 import { BadRequestError, NotFoundError } from '../services/errors';
 import { getAccountId } from '../utils/auth';
@@ -116,6 +117,30 @@ export const getAssignmentsByTAIdController = async (
 
   try {
     const assignments = await getAssignmentsByTAId(userId, assessmentId);
+    res.status(200).json(assignments);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error fetching assignments by TA:', error);
+      res.status(500).json({ error: 'Failed to fetch assignments by TA' });
+    }
+  }
+};
+
+/**
+ * Controller to retrieve all unmarked teams assigned to a specific TA within an assessment.
+ */
+export const getUnmarkedAssignmentsByTAIdController = async (
+  req: Request,
+  res: Response
+) => {
+  const { assessmentId } = req.params;
+  const accountId = await getAccountId(req);
+  const userId = await getUserIdByAccountId(accountId);
+
+  try {
+    const assignments = await getUnmarkedAssignmentsByTAId(userId, assessmentId);
     res.status(200).json(assignments);
   } catch (error) {
     if (error instanceof NotFoundError) {

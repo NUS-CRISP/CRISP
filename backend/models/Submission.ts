@@ -19,7 +19,7 @@ const SubmissionSchema = new Schema<Submission>(
       ref: 'InternalAssessment',
       required: true,
     },
-    user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    user: { type: Schema.Types.ObjectId, ref: 'User', required: true }, // The marker
     answers: { type: [AnswerSchema], required: true },
     submittedAt: { type: Date, default: Date.now },
     score: { type: Number, default: 0 },

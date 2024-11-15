@@ -52,7 +52,7 @@ export interface TeamMemberSelectionAnswer extends BaseAnswer {
 
 export const TeamMemberSelectionAnswerSchema = new Schema<TeamMemberSelectionAnswer>(
   {
-    selectedUserIds: { type: [String], required: true },
+    selectedUserIds: [{ type: String, required: true }],
   },
   options
 );
