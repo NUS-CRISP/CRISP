@@ -314,7 +314,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         },
         {} as { [questionId: string]: AnswerInput }
       );
-      console.log("INIT ANS", initialAnswers)
+      console.log('INIT ANS', initialAnswers)
       setAnswers(initialAnswers);
 
       const initialTotalScore =
