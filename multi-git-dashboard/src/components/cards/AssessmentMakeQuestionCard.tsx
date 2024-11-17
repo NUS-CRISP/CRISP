@@ -839,22 +839,36 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
             setQuestionType(value as QuestionUnion['type']);
           }}
           data={[
-            { value: 'Undecided', label: 'Undecided' },
-            { value: 'Multiple Choice', label: 'Multiple Choice' },
-            { value: 'Multiple Response', label: 'Multiple Response' },
-            { value: 'Scale', label: 'Scale' },
-            { value: 'Short Response', label: 'Short Response' },
-            { value: 'Long Response', label: 'Long Response' },
-            { value: 'Date', label: 'Date' },
-            { value: 'Number', label: 'Number' },
+            {
+              group: 'Auto-Grading Supported',
+              items: [
+                { value: 'Multiple Choice', label: 'Multiple Choice' },
+                { value: 'Multiple Response', label: 'Multiple Response' },
+                { value: 'Scale', label: 'Scale' },
+                { value: 'Number', label: 'Number' },
+              ]
+            },
+            {
+              group: 'No Grading', items: [
+                { value: 'Short Response', label: 'Short Response' },
+                { value: 'Long Response', label: 'Long Response' },
+                { value: 'Date', label: 'Date' },
+                { value: 'Undecided', label: 'Undecided' },
+              ]
+            },
             ...(enableNewQuestionTypesForTesting
               ? [
-                  { value: 'NUSNET ID', label: 'NUSNET ID' },
-                  { value: 'NUSNET Email', label: 'NUSNET Email' },
                   {
-                    value: 'Team Member Selection',
-                    label: 'Team Member Selection',
-                  },
+                    group: 'Special Questions (Testing)',
+                    items: [
+                      { value: 'NUSNET ID', label: 'NUSNET ID' },
+                      { value: 'NUSNET Email', label: 'NUSNET Email' },
+                      {
+                        value: 'Team Member Selection',
+                        label: 'Team Member Selection',
+                      },
+                    ]
+                  }
                 ]
               : []),
           ]}
