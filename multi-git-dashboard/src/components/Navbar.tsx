@@ -1,5 +1,6 @@
 import { getTutorialHighlightColor } from '@/lib/utils';
 import {
+  Alert,
   Center,
   Stack,
   Title,
@@ -22,6 +23,9 @@ import { forwardRef, useEffect, useState } from 'react';
 import classes from '../styles/Navbar.module.css';
 import { useTutorialContext } from './tutorial/TutorialContext';
 import TutorialPopover from './tutorial/TutorialPopover';
+import { Course } from '@shared/types/Course';
+import { IconInfoCircle } from '@tabler/icons-react';
+import Image from 'next/image';
 
 interface NavbarLinkProps {
   icon: typeof IconHome2;
@@ -29,11 +33,12 @@ interface NavbarLinkProps {
   active?: boolean;
   disabled?: boolean;
   onClick: (event: React.MouseEvent) => void;
+  popoverOpened?: boolean;
 }
 
 const NavbarLink = forwardRef<HTMLButtonElement, NavbarLinkProps>(
-  ({ icon: Icon, label, active, disabled, onClick }, ref) => (
-    <Tooltip label={label} position="right" transitionProps={{ duration: 0 }}>
+  ({ icon: Icon, label, active, disabled, onClick, popoverOpened }, ref) =>
+    popoverOpened ? (
       <UnstyledButton
         onClick={onClick}
         style={disabled ? { cursor: 'default' } : undefined}
@@ -43,8 +48,19 @@ const NavbarLink = forwardRef<HTMLButtonElement, NavbarLinkProps>(
       >
         <Icon style={{ width: rem(20), height: rem(20) }} stroke={1.5} />
       </UnstyledButton>
-    </Tooltip>
-  )
+    ) : (
+      <Tooltip label={label} position="right" transitionProps={{ duration: 0 }}>
+        <UnstyledButton
+          onClick={onClick}
+          style={disabled ? { cursor: 'default' } : undefined}
+          className={classes.link}
+          data-active={active || undefined}
+          ref={ref}
+        >
+          <Icon style={{ width: rem(20), height: rem(20) }} stroke={1.5} />
+        </UnstyledButton>
+      </Tooltip>
+    )
 );
 
 const Navbar: React.FC = () => {
@@ -57,11 +73,38 @@ const Navbar: React.FC = () => {
   const isCourseRoute = pathname.includes('/courses/[id]');
   const courseId = isCourseRoute ? (router.query.id as string) : null;
 
+  const [peopleAdded, setPeopleAdded] = useState(false);
+  const [alertOpened, setAlertOpened] = useState(false);
+
   const [activeMainTab, setActiveMainTab] = useState('Home');
   const [courseCode, setCourseCode] = useState('');
 
   const [activeCourseTab, setActiveCourseTab] = useState('Overview');
   const [startTime, setStartTime] = useState<Date>(new Date());
+
+  const [mainLinkPopoverOpened, setMainLinkPopoverOpened] = useState(false);
+  const [questionPopoverOpened, setQuestionPopoverOpened] = useState(false);
+
+  useEffect(() => {
+    const fetchCourseData = async () => {
+      try {
+        const response = await fetch(`/api/courses/${courseId}`);
+        const data: Course = await response.json();
+
+        if (data.students.length > 0) {
+          setPeopleAdded(true);
+        } else {
+          setPeopleAdded(false);
+        }
+      } catch (error) {
+        console.error('Failed to fetch course data:', error);
+      }
+    };
+
+    if (courseId) {
+      fetchCourseData();
+    }
+  }, [courseId]);
 
   const logSessionTime = async (newTab: string, isTabClosing: boolean) => {
     if (newTab === activeCourseTab && !isTabClosing) return;
@@ -100,10 +143,12 @@ const Navbar: React.FC = () => {
       return 'Assessments';
     } else if (path.startsWith('/courses/[id]/project-management')) {
       return 'Project Management';
+    } else if (path.startsWith('/courses/[id]/class-review')) {
+      return 'Class Review';
     } else if (path.startsWith('/courses/[id]/code-analysis')) {
       return 'Code Analysis';
     } else if (path.startsWith('/courses/[id]')) {
-      return 'Overview';
+      return 'Team Overview';
     } else {
       return '';
     }
@@ -137,17 +182,27 @@ const Navbar: React.FC = () => {
         router.push(item.link);
       }}
       key={item.label}
+      popoverOpened={mainLinkPopoverOpened}
     />
   ));
 
   const courseLinksData = [
     {
+      link: `/courses/${courseId}/class-review`,
+      label: 'Class Overview',
+      disabled: !peopleAdded,
+      pngSrc: '/class-overview.png',
+    },
+    {
       link: `/courses/${courseId}`,
-      label: 'Overview',
+      label: 'Team Review',
+      disabled: !peopleAdded,
+      pngSrc: '/team-view.png',
     },
     {
       link: `/courses/${courseId}/people`,
       label: 'People',
+      pngSrc: '/people.png',
     },
     {
       link: `/courses/${courseId}/repositories`,
@@ -156,18 +211,26 @@ const Navbar: React.FC = () => {
     {
       link: `/courses/${courseId}/teams`,
       label: 'Teams',
+      disabled: !peopleAdded,
+      pngSrc: '/teams.png',
     },
     {
       link: `/courses/${courseId}/timeline`,
       label: 'Timeline',
+      disabled: !peopleAdded,
+      pngSrc: '/timeline.png',
     },
     {
       link: `/courses/${courseId}/assessments`,
       label: 'Assessments',
+      disabled: !peopleAdded,
+      pngSrc: '/assessments.png',
     },
     {
       link: `/courses/${courseId}/project-management`,
       label: 'Project Management',
+      disabled: !peopleAdded,
+      pngSrc: '/jira.png',
     },
     {
       link: `/courses/${courseId}/code-analysis`,
@@ -188,12 +251,26 @@ const Navbar: React.FC = () => {
         href={item.link}
         onClick={event => {
           event.preventDefault();
-          logSessionTime(item.label, false);
-          setActiveCourseTab(item.label);
-          router.push(item.link);
+          if (!item.disabled) {
+            logSessionTime(item.label, false);
+            setActiveCourseTab(item.label);
+            router.push(item.link);
+          } else {
+            setAlertOpened(true); // Show alert if people are not added
+          }
         }}
+        key={item.label}
+        style={item.disabled ? { cursor: 'not-allowed', opacity: 0.5 } : {}}
       >
-        <span>{item.label}</span>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <Image
+            src={item.pngSrc}
+            alt={`${item.label} icon`}
+            width={25} // Use width prop
+            height={25} // Use height prop
+          />
+          <span style={{ marginLeft: '5px' }}>{item.label}</span>
+        </div>
       </a>
     </TutorialPopover>
   ));
@@ -239,7 +316,7 @@ const Navbar: React.FC = () => {
 
   return (
     <div className={classes.navbarsContainer}>
-      <TutorialPopover stage={1} position="right">
+      <TutorialPopover stage={1}>
         <nav
           className={classes.navbar}
           style={{
@@ -251,11 +328,17 @@ const Navbar: React.FC = () => {
           </Center>
 
           <div className={classes.navbarMain}>
-            <TutorialPopover stage={2} position="right">
+            <TutorialPopover
+              stage={2}
+              position="right"
+              onOpen={() => setMainLinkPopoverOpened(true)}
+              onClose={() => setMainLinkPopoverOpened(false)}
+            >
               <Stack
                 justify="center"
                 gap={0}
                 style={{
+                  width: '50px',
                   borderRadius: 10,
                   backgroundColor: getTutorialHighlightColor(2),
                 }}
@@ -265,7 +348,12 @@ const Navbar: React.FC = () => {
             </TutorialPopover>
           </div>
 
-          <TutorialPopover stage={3} position="right">
+          <TutorialPopover
+            stage={3}
+            position="right"
+            onOpen={() => setQuestionPopoverOpened(true)}
+            onClose={() => setQuestionPopoverOpened(false)}
+          >
             <Stack
               justify="center"
               gap={0}
@@ -281,6 +369,7 @@ const Navbar: React.FC = () => {
                   session && session.user ? session.user.name : 'user'
                 }`}
                 disabled
+                popoverOpened={questionPopoverOpened}
               />
 
               <TutorialPopover stage={11} position="right-end" w={250} finish>
@@ -290,6 +379,7 @@ const Navbar: React.FC = () => {
                   }
                   icon={IconHelp}
                   label="Submit issue / feature"
+                  popoverOpened={questionPopoverOpened}
                 />
               </TutorialPopover>
 
@@ -297,16 +387,19 @@ const Navbar: React.FC = () => {
                 onClick={handleSignOut}
                 icon={IconLogout}
                 label="Sign out"
+                popoverOpened={questionPopoverOpened}
               />
             </Stack>
           </TutorialPopover>
         </nav>
       </TutorialPopover>
+
       {isCourseRoute && courseId && (
         <TutorialPopover stage={5} position="right">
           <nav
             className={classes.courseNavbar}
             style={{
+              width: '180px',
               backgroundColor: getTutorialHighlightColor(5),
             }}
           >
@@ -315,16 +408,45 @@ const Navbar: React.FC = () => {
                 order={3}
                 className={classes.title}
                 style={{
+                  marginBottom: '30px',
                   backgroundColor: getTutorialHighlightColor(5),
                 }}
               >
                 {courseCode}
               </Title>
-              {courseLinks}
+
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '20px',
+                }}
+              >
+                {courseLinks}
+              </div>
             </div>
           </nav>
         </TutorialPopover>
       )}
+
+      <Alert
+        icon={<IconInfoCircle />}
+        title="Action Required"
+        color="blue"
+        withCloseButton
+        onClose={() => setAlertOpened(false)}
+        style={{
+          display: alertOpened ? 'block' : 'none',
+          width: '300px',
+          position: 'absolute',
+          top: '50%',
+          left: '800px',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 1000,
+        }}
+      >
+        <p>You need to add people for this course first.</p>
+      </Alert>
     </div>
   );
 };

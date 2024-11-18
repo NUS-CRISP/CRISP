@@ -15,19 +15,28 @@ import classes from '@styles/ContactUs.module.css';
 import { IconBrandGithub } from '@tabler/icons-react';
 import ContactIcons from './ContactIcons';
 
-const social = [IconBrandGithub];
+const social = [
+  {
+    icon: IconBrandGithub,
+    link: 'https://github.com/NUS-CRISP/CRISP',
+  },
+];
 
 const ContactUs: React.FC = () => {
   const theme = useMantineTheme();
 
-  const icons = social.map((Icon, index) => (
+  const icons = social.map((item, index) => (
     <ActionIcon
       key={index}
       size={28}
       className={classes.social}
       variant="transparent"
+      component="a"
+      href={item.link}
+      target="_blank"
+      rel="noopener noreferrer"
     >
-      <Icon size="1.4rem" stroke={1.5} />
+      <item.icon size="1.4rem" stroke={1.5} />
     </ActionIcon>
   ));
 

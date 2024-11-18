@@ -29,6 +29,7 @@ export interface Course {
   code: string;
   semester: string;
   startDate: Date;
+  durationWeeks: number;
   faculty: User[];
   TAs: User[];
   students: User[];
