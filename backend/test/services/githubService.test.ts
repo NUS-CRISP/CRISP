@@ -96,8 +96,8 @@ describe('gitHubService', () => {
       commits: 0,
       teamId: 1,
     });
-    teamData1.save();
-    teamData2.save();
+    await teamData1.save();
+    await teamData2.save();
   });
 
   describe('fetchAllTeamData', () => {

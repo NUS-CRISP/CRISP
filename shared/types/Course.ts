@@ -38,6 +38,8 @@ export interface Course {
   sprints: Sprint[];
   milestones: Milestone[];
   courseType: CourseType;
+  // GitHub Repo for non GitHub Org
+  gitHubRepoLinks: String[]
   // start 'GitHubOrg' fields
   gitHubOrgName?: string;
   repoNameFilter?: string;

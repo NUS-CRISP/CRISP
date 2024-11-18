@@ -133,6 +133,8 @@ const Navbar: React.FC = () => {
   const determineActiveTab = (path: string) => {
     if (path.startsWith('/courses/[id]/people')) {
       return 'People';
+    } else if (path.startsWith('/courses/[id]/repositories')) {
+      return 'Repositories';
     } else if (path.startsWith('/courses/[id]/teams')) {
       return 'Teams';
     } else if (path.startsWith('/courses/[id]/timeline')) {
@@ -143,6 +145,8 @@ const Navbar: React.FC = () => {
       return 'Project Management';
     } else if (path.startsWith('/courses/[id]/class-review')) {
       return 'Class Review';
+    } else if (path.startsWith('/courses/[id]/code-analysis')) {
+      return 'Code Analysis';
     } else if (path.startsWith('/courses/[id]')) {
       return 'Team Overview';
     } else {
@@ -201,6 +205,10 @@ const Navbar: React.FC = () => {
       pngSrc: '/people.png',
     },
     {
+      link: `/courses/${courseId}/repositories`,
+      label: 'Repositories',
+    },
+    {
       link: `/courses/${courseId}/teams`,
       label: 'Teams',
       disabled: !peopleAdded,
@@ -223,6 +231,10 @@ const Navbar: React.FC = () => {
       label: 'Project Management',
       disabled: !peopleAdded,
       pngSrc: '/jira.png',
+    },
+    {
+      link: `/courses/${courseId}/code-analysis`,
+      label: 'Code Analysis',
     },
   ];
 
@@ -353,7 +365,9 @@ const Navbar: React.FC = () => {
               <NavbarLink
                 onClick={() => {}}
                 icon={IconUserCircle}
-                label={`Hello, ${session && session.user ? session.user.name : 'user'}`}
+                label={`Hello, ${
+                  session && session.user ? session.user.name : 'user'
+                }`}
                 disabled
                 popoverOpened={questionPopoverOpened}
               />
