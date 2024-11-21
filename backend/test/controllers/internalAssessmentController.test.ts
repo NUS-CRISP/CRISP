@@ -1,13 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// tests/controllers/internalAssessmentController.test.ts
-
 import { Request, Response } from 'express';
 import {
   getInternalAssessment,
   updateInternalAssessment,
   deleteInternalAssessment,
-  uploadInternalResults,
-  updateInternalResultMarker,
   addQuestionToAssessmentController,
   getQuestionsByAssessmentIdController,
   updateQuestionByIdController,
@@ -239,113 +235,6 @@ describe('internalAssessmentController', () => {
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete assessment' });
-    });
-  });
-
-  describe('uploadInternalResults', () => {
-    it('should upload internal assessment results and return 200', async () => {
-      const req = mockRequest();
-      req.params = { assessmentId: 'assessment123' };
-      req.body = { items: [{ studentId: 'student1', score: 85 }] };
-      const res = mockResponse();
-
-      jest
-        .spyOn(internalAssessmentService, 'uploadInternalAssessmentResultsById')
-        .mockResolvedValue(undefined);
-
-      await uploadInternalResults(req, res);
-
-      expect(internalAssessmentService.uploadInternalAssessmentResultsById).toHaveBeenCalledWith(
-        'assessment123',
-        [{ studentId: 'student1', score: 85 }]
-      );
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Results uploaded successfully' });
-    });
-
-    it('should handle NotFoundError and return 404', async () => {
-      const req = mockRequest();
-      req.params = { assessmentId: 'assessment123' };
-      req.body = { items: [{ studentId: 'student1', score: 85 }] };
-      const res = mockResponse();
-
-      jest
-        .spyOn(internalAssessmentService, 'uploadInternalAssessmentResultsById')
-        .mockRejectedValue(new NotFoundError('Assessment not found'));
-
-      await uploadInternalResults(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Assessment not found' });
-    });
-
-    it('should handle unexpected errors and return 500', async () => {
-      const req = mockRequest();
-      req.params = { assessmentId: 'assessment123' };
-      req.body = { items: [{ studentId: 'student1', score: 85 }] };
-      const res = mockResponse();
-
-      jest
-        .spyOn(internalAssessmentService, 'uploadInternalAssessmentResultsById')
-        .mockRejectedValue(new Error('Unexpected error'));
-
-      await uploadInternalResults(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to upload results' });
-    });
-  });
-
-  describe('updateInternalResultMarker', () => {
-    it('should update the marker of an internal assessment result and return 200', async () => {
-      const req = mockRequest();
-      req.params = { assessmentId: 'assessment123', resultId: 'result123' };
-      req.body = { markerId: 'marker123' };
-      const res = mockResponse();
-
-      jest
-        .spyOn(internalAssessmentService, 'updateInternalAssessmentResultMarkerById')
-        .mockResolvedValue(undefined);
-
-      await updateInternalResultMarker(req, res);
-
-      expect(
-        internalAssessmentService.updateInternalAssessmentResultMarkerById
-      ).toHaveBeenCalledWith('assessment123', 'result123', 'marker123');
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Marker updated successfully' });
-    });
-
-    it('should handle NotFoundError and return 404', async () => {
-      const req = mockRequest();
-      req.params = { assessmentId: 'assessment123', resultId: 'result123' };
-      req.body = { markerId: 'marker123' };
-      const res = mockResponse();
-
-      jest
-        .spyOn(internalAssessmentService, 'updateInternalAssessmentResultMarkerById')
-        .mockRejectedValue(new NotFoundError('Result not found'));
-
-      await updateInternalResultMarker(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Result not found' });
-    });
-
-    it('should handle unexpected errors and return 500', async () => {
-      const req = mockRequest();
-      req.params = { assessmentId: 'assessment123', resultId: 'result123' };
-      req.body = { markerId: 'marker123' };
-      const res = mockResponse();
-
-      jest
-        .spyOn(internalAssessmentService, 'updateInternalAssessmentResultMarkerById')
-        .mockRejectedValue(new Error('Unexpected error'));
-
-      await updateInternalResultMarker(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update result marker' });
     });
   });
 

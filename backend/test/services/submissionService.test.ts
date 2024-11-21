@@ -80,11 +80,13 @@ const setupData = async () => {
   });
   await question.save();
 
+  const startDate = new Date();
+  startDate.setUTCFullYear(new Date().getUTCFullYear() - 1);
   const assessment = new InternalAssessmentModel({
     course: course._id,
     assessmentName: 'Midterm Exam',
     description: 'Midterm assessment',
-    startDate: new Date().setUTCFullYear(new Date().getUTCFullYear() - 1),
+    startDate: startDate,
     maxMarks: 100,
     granularity: 'team',
     teamSet: teamSet._id,

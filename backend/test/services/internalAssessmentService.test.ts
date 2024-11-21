@@ -3,14 +3,11 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
 import InternalAssessmentModel from '../../models/InternalAssessment';
 import AccountModel from '../../models/Account';
-import ResultModel from '../../models/Result';
 import CourseModel from '../../models/Course';
 import {
   getInternalAssessmentById,
   updateInternalAssessmentById,
   deleteInternalAssessmentById,
-  uploadInternalAssessmentResultsById,
-  updateInternalAssessmentResultMarkerById,
   addInternalAssessmentsToCourse,
   addQuestionToAssessment,
   getQuestionsByAssessmentId,
@@ -19,7 +16,14 @@ import {
   recallInternalAssessmentById,
 } from '../../services/internalAssessmentService';
 import { NotFoundError } from '../../services/errors';
-import { MultipleChoiceQuestion } from '@models/QuestionTypes';
+import { MultipleChoiceOption, MultipleChoiceQuestion, MultipleChoiceQuestionModel, TeamMemberSelectionQuestionModel } from '@models/QuestionTypes';
+import { TeamMemberSelectionAnswerModel, MultipleChoiceAnswerModel } from '@models/Answer';
+import AssessmentAssignmentSetModel, { AssignedUser } from '@models/AssessmentAssignmentSet';
+import SubmissionModel from '@models/Submission';
+import TeamModel from '@models/Team';
+import TeamSetModel from '@models/TeamSet';
+import UserModel from '@models/User';
+import AssessmentResultModel from '@models/AssessmentResult';
 
 let mongo: MongoMemoryServer;
 
@@ -61,35 +65,131 @@ const setupData = async () => {
     courseType: 'Normal',
   });
   await course.save();
-  const assessment = await InternalAssessmentModel.create({
+
+  const student = await UserModel.create({
+    identifier: 'studentUser',
+    name: 'Test Student',
+  });
+
+  const ta = await UserModel.create({
+    identifier: 'taUser',
+    name: 'Test TA',
+  });
+  const team = new TeamModel({
+    number: 1,
+    members: [student],
+    TA: ta,
+  });
+  await team.save();
+
+  const teamSet = new TeamSetModel({
+    name: 'Team Set 1',
     course: course._id,
-    assessmentName: 'Test Assessment',
-    description: 'A test assessment for unit tests.',
+    teams: [team],
+  });
+  await teamSet.save();
+
+  const teamMemberQuestion = new TeamMemberSelectionQuestionModel({
+    text: 'Select students',
+    type: 'Team Member Selection',
+    isRequired: true,
+    isLocked: true,
+  });
+  await teamMemberQuestion.save();
+  const teamMemberAnswer = new TeamMemberSelectionAnswerModel({
+    question: teamMemberQuestion._id,
+    type: 'Team Member Selection Answer',
+    selectedUserIds: [student._id],
+  })
+  await teamMemberAnswer.save();
+
+  const mcQuestion = new MultipleChoiceQuestionModel({
+    text: '星街すいせいは。。。',
+    type: 'Multiple Choice',
+    isRequired: true,
+    isLocked: false,
+    isScored: true,
+    options: [{
+      text: '今日もかわいい',
+      points: 10,
+    }, {
+      text: '今日も怖い',
+      points: 5,
+    }] as MultipleChoiceOption[]
+  });
+  await mcQuestion.save();
+  const mcAnswer = new MultipleChoiceAnswerModel({
+    question: mcQuestion._id,
+    type: 'Multiple Choice Answer',
+    value: '今日も怖い'
+  });
+  await mcAnswer.save();
+
+  const startDate = new Date();
+  startDate.setUTCFullYear(new Date().getUTCFullYear() - 1);
+  const assessment = new InternalAssessmentModel({
+    course: course._id,
+    assessmentName: 'Midterm Exam',
+    description: 'Midterm assessment',
+    startDate: startDate,
+    maxMarks: 10,
     granularity: 'team',
-    isReleased: true,
+    teamSet: teamSet._id,
     areSubmissionsEditable: true,
-    startDate: new Date().setUTCFullYear(new Date().getUTCFullYear() - 1),
+    results: [],
+    isReleased: false,
+    questions: [teamMemberQuestion, mcQuestion],
   });
-
-  const result = new ResultModel({
-    assessment: assessment._id,
-    marks: [{ user: new mongoose.Types.ObjectId(), name: 'Student 1', mark: 0 }],
-  });
-  await result.save();
-  assessment.results.push(result._id);
   await assessment.save();
+  const assignmentSet = await AssessmentAssignmentSetModel.create({
+    assessment: assessment._id,
+    assignedUsers: [{ user: student._id, tas: [ta._id] } as AssignedUser],
+  });
+  await assignmentSet.save();
+  assessment.assessmentAssignmentSet = assignmentSet._id;
+  await assessment.save();
+  const submission = new SubmissionModel({
+    assessment: assessment._id,
+    user: ta._id,
+    answers: [
+      teamMemberAnswer, mcAnswer,
+    ],
+    isDraft: false,
+    submittedAt: new Date(),
+    score: 5,
+  });
+  await submission.save();
+  const result = new AssessmentResultModel({
+    assessment: assessment._id,
+    student: student._id,
+    marker: ta._id,
+    marks: {
+      marker: student._id,
+      submission: submission._id,
+      score: 5,
+    },
+    averageScore: 5,
+  })
+  await result.save();
 
-  return { course, account, assessment, result };
+  return { course, account, teamSet, teamMemberQuestion, teamMemberAnswer, mcQuestion, mcAnswer, ta, student, assessment, result };
 };
 
 describe('internalAssessmentService', () => {
   let course: any;
   let account: any;
+  let teamSet: any;
   let assessment: any;
-  let result: any;
+  // let result: any;
+  // let teamMemberQuestion: any;
+  // let teamMemberAnswer: any;
+  let mcQuestion: any;
+  // let mcAnswer: any;
+  // let ta: any;
+  // let student: any;
 
   beforeEach(async () => {
-    ({ course, account, assessment, result } = await setupData());
+    ({ course, account, teamSet, mcQuestion, assessment } = await setupData());
   });
 
   describe('getInternalAssessmentById', () => {
@@ -128,31 +228,19 @@ describe('internalAssessmentService', () => {
     });
   });
 
-  describe('uploadInternalAssessmentResultsById', () => {
-    it('should upload results for an assessment', async () => {
-      const results = [{ studentId: result.marks[0].user, mark: 85 }];
-      await uploadInternalAssessmentResultsById(assessment._id.toString(), results);
-      const updatedResult = await ResultModel.findById(result._id);
-      expect(updatedResult?.marks[0].mark).toEqual(85);
-    });
-  });
-
-  describe('updateInternalAssessmentResultMarkerById', () => {
-    it('should update the marker for a result', async () => {
-      const markerId = new mongoose.Types.ObjectId().toString();
-      await updateInternalAssessmentResultMarkerById(
-        assessment._id.toString(),
-        result._id.toString(),
-        markerId
-      );
-      const updatedResult = await ResultModel.findById(result._id);
-      expect(updatedResult?.marker?.toString()).toEqual(markerId);
-    });
-  });
-
   describe('addInternalAssessmentsToCourse', () => {
     it('should add internal assessments to a course', async () => {
-      const assessmentsData = [{ assessmentName: 'Final Exam', description: 'Final assessment', granularity: 'team', startDate: new Date(), teamSetName: 'Team Set A', areSubmissionsEditable: true }];
+      const startDate = new Date();
+      startDate.setUTCFullYear(new Date().getUTCFullYear() - 1);
+      const assessmentsData = [{
+        assessmentName: 'Final Exam',
+        description: 'Final assessment',
+        startDate: startDate,
+        maxMarks: 10,
+        granularity: 'individual',
+        teamSetName: teamSet.name,
+        areSubmissionsEditable: true,
+      }];
       await addInternalAssessmentsToCourse(course._id.toString(), assessmentsData);
       const updatedCourse = await CourseModel.findById(course._id).populate('internalAssessments');
       expect(updatedCourse?.internalAssessments.length).toBeGreaterThan(0);
@@ -187,7 +275,7 @@ describe('internalAssessmentService', () => {
 
   describe('updateQuestionById', () => {
     it('should update a question by ID', async () => {
-      const questionId = new mongoose.Types.ObjectId().toString();
+      const questionId = mcQuestion._id;
       const updatedQuestion = await updateQuestionById(
         questionId,
         { text: 'Updated question text' },

@@ -1,6 +1,4 @@
-// services/internalAssessmentService.ts
-
-import { ObjectId } from 'mongodb';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import InternalAssessmentModel from '../models/InternalAssessment';
 import AccountModel from '../models/Account';
 import ResultModel, { Result } from '../models/Result';
@@ -151,58 +149,6 @@ export const deleteInternalAssessmentById = async (assessmentId: string) => {
 
   // Delete the assessment
   await InternalAssessmentModel.findByIdAndDelete(assessmentId);
-};
-
-export const uploadInternalAssessmentResultsById = async (
-  assessmentId: string,
-  results: { studentId: string; mark: number }[]
-) => {
-  const assessment =
-    await InternalAssessmentModel.findById(assessmentId).populate('results');
-
-  if (!assessment) {
-    throw new NotFoundError('Assessment not found');
-  }
-
-  const resultMap: Record<string, number> = {};
-  results.forEach(({ studentId, mark }) => {
-    resultMap[studentId] = mark;
-  });
-
-  // Update marks for each result in the assessment
-  for (const result of assessment.results as unknown as Result[]) {
-    const userId = new ObjectId(result.marks[0]?.user); // Ensure userId is an ObjectId
-    const mark = resultMap[userId.toString()];
-    if (mark !== undefined) {
-      result.marks[0].mark = mark;
-      await result.save();
-    }
-  }
-};
-
-export const updateInternalAssessmentResultMarkerById = async (
-  assessmentId: string,
-  resultId: string,
-  markerId: string
-) => {
-  const assessment =
-    await InternalAssessmentModel.findById(assessmentId).populate('results');
-
-  if (!assessment) {
-    throw new NotFoundError('Assessment not found');
-  }
-
-  const resultToUpdate = await ResultModel.findById(resultId);
-  if (
-    !resultToUpdate ||
-    !resultToUpdate.assessment.equals(new ObjectId(assessment._id))
-  ) {
-    throw new NotFoundError('Result not found');
-  }
-
-  // Update the marker (ensure ObjectId conversion)
-  resultToUpdate.marker = new ObjectId(markerId);
-  await resultToUpdate.save();
 };
 
 interface InternalAssessmentData {

@@ -3,8 +3,6 @@ import {
   getInternalAssessment,
   updateInternalAssessment,
   deleteInternalAssessment,
-  uploadInternalResults,
-  updateInternalResultMarker,
   addQuestionToAssessmentController,
   getQuestionsByAssessmentIdController,
   updateQuestionByIdController,
@@ -29,11 +27,6 @@ const router = express.Router();
 router.get('/:assessmentId', getInternalAssessment);
 router.patch('/:assessmentId', updateInternalAssessment);
 router.delete('/:assessmentId', deleteInternalAssessment);
-router.post('/:assessmentId/results/', uploadInternalResults);
-router.patch(
-  '/:assessmentId/results/:resultId/marker',
-  updateInternalResultMarker
-);
 router.post('/:assessmentId/questions', addQuestionToAssessmentController);
 router.get('/:assessmentId/questions', getQuestionsByAssessmentIdController);
 router.patch(

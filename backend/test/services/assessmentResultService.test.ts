@@ -102,7 +102,7 @@ describe('assessmentResultService', () => {
       isLocked: false,
       isScored: true,
       options: [{
-        text: '今日もかわいいね',
+        text: '今日もかわいい',
         points: 10,
       }, {
         text: '今日も怖い',
@@ -118,11 +118,13 @@ describe('assessmentResultService', () => {
     });
     await mcAnswer.save();
 
+    const startDate = new Date();
+    startDate.setUTCFullYear(new Date().getUTCFullYear() - 1);
     const assessment = new InternalAssessmentModel({
       course: course._id,
       assessmentName: 'Midterm Exam',
       description: 'Midterm assessment',
-      startDate: new Date().setUTCFullYear(new Date().getUTCFullYear() - 1),
+      startDate: startDate,
       maxMarks: 10,
       granularity: 'team',
       teamSet: teamSet._id,

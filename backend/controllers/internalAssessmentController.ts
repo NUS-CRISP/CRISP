@@ -9,8 +9,6 @@ import {
   getInternalAssessmentById,
   updateInternalAssessmentById,
   deleteInternalAssessmentById,
-  uploadInternalAssessmentResultsById,
-  updateInternalAssessmentResultMarkerById,
   addQuestionToAssessment,
   deleteQuestionById,
   getQuestionsByAssessmentId,
@@ -67,45 +65,6 @@ export const deleteInternalAssessment = async (req: Request, res: Response) => {
     } else {
       console.error('Error deleting assessment:', error);
       res.status(500).json({ error: 'Failed to delete assessment' });
-    }
-  }
-};
-
-export const uploadInternalResults = async (req: Request, res: Response) => {
-  try {
-    const { assessmentId } = req.params;
-    const results = req.body.items;
-    await uploadInternalAssessmentResultsById(assessmentId, results);
-    res.status(200).json({ message: 'Results uploaded successfully' });
-  } catch (error) {
-    if (error instanceof NotFoundError) {
-      res.status(404).json({ error: error.message });
-    } else {
-      console.error('Error uploading results:', error);
-      res.status(500).json({ error: 'Failed to upload results' });
-    }
-  }
-};
-
-export const updateInternalResultMarker = async (
-  req: Request,
-  res: Response
-) => {
-  try {
-    const { assessmentId, resultId } = req.params;
-    const { markerId } = req.body;
-    await updateInternalAssessmentResultMarkerById(
-      assessmentId,
-      resultId,
-      markerId
-    );
-    res.status(200).json({ message: 'Marker updated successfully' });
-  } catch (error) {
-    if (error instanceof NotFoundError) {
-      res.status(404).json({ error: error.message });
-    } else {
-      console.error('Error updating result marker:', error);
-      res.status(500).json({ error: 'Failed to update result marker' });
     }
   }
 };
