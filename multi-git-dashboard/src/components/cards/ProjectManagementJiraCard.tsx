@@ -351,7 +351,7 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
           Velocity Chart
         </Text>
         {selectedVelocityChart === VelocityChartType.StoryPoints && (
-          <>
+          <div>
             <BarChart
               h={400}
               data={sprintData}
@@ -369,10 +369,10 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
               <Text size="sm">Team's Velocity:</Text>
               <Text size="sm">{storyPointsVelocity.toFixed(2)}</Text>
             </Group>
-          </>
+          </div>
         )}
         {selectedVelocityChart === VelocityChartType.Issues && (
-          <>
+          <div>
             <BarChart
               h={400}
               data={sprintData}
@@ -390,7 +390,7 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
               <Text size="sm">Team's Velocity:</Text>
               <Text size="sm">{issuesVelocity.toFixed(2)}</Text>
             </Group>
-          </>
+          </div>
         )}
       </Card>
     );
@@ -450,7 +450,7 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
         <Text>{jiraBoard ? jiraBoard.jiraLocation.projectName : 'None'}</Text>
       </Group>
       {jiraBoard && (
-        <>
+        <div>
           <Group>
             <Text>Current Sprint:</Text>
             {getActiveSprintName(jiraBoard)}
@@ -490,7 +490,7 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
 
           {jiraBoard.jiraSprints && getStatsTable(jiraBoard.jiraSprints)}
           {jiraBoard.jiraSprints && getVelocityChart(jiraBoard.jiraSprints)}
-        </>
+        </div>
       )}
     </Stack>
   );

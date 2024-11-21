@@ -5,6 +5,7 @@ import {
   Container,
   Loader,
   ScrollArea,
+  Tabs,
 } from '@mantine/core';
 import { Profile } from '@shared/types/Profile';
 import { Team as SharedTeam } from '@shared/types/Team';
@@ -14,10 +15,13 @@ import { useEffect, useState } from 'react';
 import OverviewAccordionItem from '../overview/OverviewAccordionItem';
 import { useTutorialContext } from '../tutorial/TutorialContext';
 import TutorialPopover from '../tutorial/TutorialPopover';
+import { TeamSet } from '@shared/types/TeamSet';
 
 interface OverviewProps {
   courseId: string;
   dateUtils: DateUtils;
+  teamSets: TeamSet[];
+  onUpdate: () => void;
 }
 
 export interface Team extends Omit<SharedTeam, 'teamData'> {
@@ -26,14 +30,23 @@ export interface Team extends Omit<SharedTeam, 'teamData'> {
 
 export type ProfileGetter = (gitHandle: string) => Promise<Profile>;
 
-const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
+const Overview: React.FC<OverviewProps> = ({
+  courseId,
+  dateUtils,
+  teamSets,
+  onUpdate,
+}) => {
   const { curTutorialStage } = useTutorialContext();
 
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamDatas, setTeamDatas] = useState<TeamData[]>([]);
-  const [status, setStatus] = useState<Status>(Status.Loading);
+  const [status, setStatus] = useState<Status>(Status.Idle);
 
   const [studentMap, setStudentMap] = useState<Record<string, Profile>>({});
+
+  const [activeTab, setActiveTab] = useState<string | null>(
+    teamSets ? teamSets[0]?.name : null
+  );
 
   const getTeams = async () => {
     const res = await fetch(`/api/teams/course/${courseId}`);
@@ -49,6 +62,31 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
     return teamDatas;
   };
 
+  const setActiveTabAndSave = (tabName: string) => {
+    onUpdate();
+    setActiveTab(tabName);
+    localStorage.setItem(`activeTeamSetTab_${courseId}`, tabName);
+  };
+
+  useEffect(() => {
+    const savedTab = localStorage.getItem(`activeTeamSetTab_${courseId}`);
+    if (savedTab && teamSets.some(teamSet => teamSet.name === savedTab)) {
+      setActiveTab(savedTab);
+    }
+  }, [teamSets]);
+
+  const headers = teamSets.map((teamSet, index) => (
+    <Tabs.Tab
+      key={index}
+      value={teamSet.name}
+      onClick={() => {
+        setActiveTabAndSave(teamSet.name);
+      }}
+    >
+      {teamSet.name}
+    </Tabs.Tab>
+  ));
+
   const getStudentNameByGitHandle: ProfileGetter = async gitHandle => {
     if (!studentMap[gitHandle]) {
       const res = await fetch(`/api/user/profile?gitHandle=${gitHandle}`);
@@ -58,6 +96,11 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
     }
     return studentMap[gitHandle];
   };
+
+  // const data = teamSets.teamDatas.map(teamData => {
+  //   const team = teams.find(team => team.teamData === teamData._id);
+  //   return { team, teamData };
+  // });
 
   const data = teamDatas.map(teamData => {
     const team = teams.find(team => team.teamData === teamData._id);
@@ -78,7 +121,6 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
         console.error(error);
       }
     };
-
     fetchData();
   }, [courseId]);
 
@@ -90,14 +132,21 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
         </Container>
       </Center>
     );
-  if (status === Status.Error) return <Center>No data</Center>;
+  if (status === Status.Error) return <Center>No GitHub Data Available</Center>;
   if (!teams.length || !teamDatas.length)
     return <Center>No teams found.</Center>;
 
-  return (
-    <ScrollArea.Autosize mt={20}>
+  console.log(teamSets);
+
+  // const data = teamSets[0].teams.map(teamData => {
+  //   const team = teams.find(team => team.teamData === teamData._id);
+  //   return { team, teamData };
+  // });
+
+  const renderOverviewAccordion = () => {
+    return (
       <Accordion
-        defaultValue={[teamDatas[0]._id]}
+        defaultValue={teamDatas.length > 0 ? [teamDatas[0]._id] : []}
         multiple
         variant="separated"
         mx={20}
@@ -121,6 +170,27 @@ const Overview: React.FC<OverviewProps> = ({ courseId, dateUtils }) => {
           </TutorialPopover>
         ))}
       </Accordion>
+    );
+  };
+
+  return (
+    <ScrollArea.Autosize mt={20}>
+      <Tabs value={activeTab} mx={20}>
+        <Tabs.List
+          style={{
+            display: 'flex',
+            justifyContent: 'space-evenly',
+            marginBottom: '20px',
+          }}
+        >
+          {headers}
+        </Tabs.List>
+        {teamSets.map(teamSet => (
+          <Tabs.Panel key={teamSet._id} value={teamSet.name}>
+            {renderOverviewAccordion()}
+          </Tabs.Panel>
+        ))}
+      </Tabs>
     </ScrollArea.Autosize>
   );
 };

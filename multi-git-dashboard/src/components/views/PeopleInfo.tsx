@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import {
   Button,
-  Container,
   Divider,
   Group,
   Modal,
+  ScrollArea,
   Space,
   Table,
 } from '@mantine/core';
@@ -131,21 +131,28 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
   const csvHeaders = ['identifier', 'name', 'gitHandle'];
 
   return (
-    <Container>
+    <ScrollArea
+      style={{
+        height: '100vh',
+        paddingRight: '20px',
+        overflowY: 'auto',
+        scrollbarWidth: 'thin',
+      }}
+    >
       {hasFacultyPermission && (
         <Group my={16}>
           {isEditing ? (
-            <>
+            <div>
               <Button onClick={toggleUpdateFaculty}>Update Faculty</Button>
               <Button onClick={toggleUpdateTA}>Update TA</Button>
               <Button onClick={toggleUpdateStudent}>Update Student</Button>
-            </>
+            </div>
           ) : (
-            <>
-              <Button onClick={toggleAddFaculty}>Add Faculty</Button>
+            <div>
+              <Button onClick={toggleAddFaculty}>Add Faculty Member</Button>
               <Button onClick={toggleAddTA}>Add TA</Button>
               <Button onClick={toggleAddStudent}>Add Student</Button>
-            </>
+            </div>
           )}
           <Button onClick={toggleIsExportingData}>Export Data</Button>
           <Button onClick={toggleIsEditing}>
@@ -414,7 +421,7 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
           </Table.Tbody>
         </Table>
       )}
-    </Container>
+    </ScrollArea>
   );
 };
 

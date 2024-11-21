@@ -3,11 +3,13 @@ import { addAssessmentsToCourse } from '../services/assessmentService';
 import {
   addFacultyToCourse,
   addMilestoneToCourse,
+  addRepositoriesToCourse,
   addSprintToCourse,
   addStudentsToCourse,
   addTAsToCourse,
   createNewCourse,
   deleteCourseById,
+  editRepository,
   getAssessmentsFromCourse,
   getCourseById,
   getCourseCodeById,
@@ -18,9 +20,11 @@ import {
   getInternalAssessmentsFromCourse,
   getPeopleFromCourse,
   getProjectManagementBoardFromCourse,
+  getRepositoriesFromCourse,
   getTeamSetNamesFromCourse,
   getTeamSetsFromCourse,
   removeFacultyFromCourse,
+  removeRepositoryFromCourse,
   removeStudentsFromCourse,
   removeTAsFromCourse,
   updateCourseById,
@@ -321,6 +325,74 @@ export const getPeople = async (req: Request, res: Response) => {
     } else {
       console.error('Error fetching people:', error);
       res.status(500).json({ error: 'Failed to retrieve people' });
+    }
+  }
+};
+
+/*-------------------------------------Repositories-------------------------------------*/
+export const getRepositories = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  try {
+    const repositories = await getRepositoriesFromCourse(courseId);
+    res.status(200).json(repositories);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error fetching repositories:', error);
+      res.status(500).json({ error: 'Failed to retrieve repositories' });
+    }
+  }
+};
+
+export const addRepositories = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  const repositories = req.body.items;
+  try {
+    await addRepositoriesToCourse(courseId, repositories);
+    res
+      .status(200)
+      .json({ message: 'Repositories added to the course successfully' });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error adding repositories:', error);
+      res.status(500).json({ error: 'Failed to add repositories' });
+    }
+  }
+};
+
+export const updateRepository = async (req: Request, res: Response) => {
+  const { id, repositoryIndex } = req.params;
+  const updateData = req.body;
+
+  try {
+    await editRepository(id, Number(repositoryIndex), updateData);
+    res.status(200).json({ message: 'Repository updated successfully' });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error editing repository:', error);
+      res.status(500).json({ error: 'Failed to update repository' });
+    }
+  }
+};
+
+export const removeRepository = async (req: Request, res: Response) => {
+  const { id, repositoryIndex } = req.params;
+  try {
+    await removeRepositoryFromCourse(id, Number(repositoryIndex));
+    res
+      .status(200)
+      .json({ message: 'Repository removed from the course successfully' });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error removing repository:', error);
+      res.status(500).json({ error: 'Failed to remove repository' });
     }
   }
 };
