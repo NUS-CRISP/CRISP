@@ -58,15 +58,22 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
   teachingStaff,
 }) => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [assignedTeams, setAssignedTeams] = useState<AssignedTeam[]>(initialAssignedTeams);
-  const [assignedUsers, setAssignedUsers] = useState<AssignedUser[]>(initialAssignedUsers);
+  const [assignedTeams, setAssignedTeams] =
+    useState<AssignedTeam[]>(initialAssignedTeams);
+  const [assignedUsers, setAssignedUsers] =
+    useState<AssignedUser[]>(initialAssignedUsers);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
-  const [isTeamAssignmentModalOpen, setIsTeamAssignmentModalOpen] = useState<boolean>(false);
+  const [isTeamAssignmentModalOpen, setIsTeamAssignmentModalOpen] =
+    useState<boolean>(false);
   const [gradeOriginalTeams, setGradeOriginalTeams] = useState<boolean>(false);
   const [teamsPerTA, setTeamsPerTA] = useState<number>(1);
-  const [selectedTeachingStaff, setSelectedTeachingStaff] = useState<string[]>([]);
-  const [excludedTeachingStaff, setExcludedTeachingStaff] = useState<string[]>([]);
+  const [selectedTeachingStaff, setSelectedTeachingStaff] = useState<string[]>(
+    []
+  );
+  const [excludedTeachingStaff, setExcludedTeachingStaff] = useState<string[]>(
+    []
+  );
   const router = useRouter();
   const deleteInternalAssessmentApiRoute = `/api/internal-assessments/${assessment?._id}`;
 
@@ -139,7 +146,10 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
   const toggleTeamAssignmentModal = () => setIsTeamAssignmentModalOpen(o => !o);
 
   // Handle TA assignment changes by updating assignedTeams state
-  const handleTaAssignmentChange = (id: string, selectedTAIds: string[] | null) => {
+  const handleTaAssignmentChange = (
+    id: string,
+    selectedTAIds: string[] | null
+  ) => {
     if (assessment?.granularity === 'team') {
       const updatedTeams = assignedTeams.map(assignedTeam => {
         if (assignedTeam.team._id === id) {

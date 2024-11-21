@@ -44,7 +44,7 @@ const AssessmentResultCard: React.FC<AssessmentResultCardProps> = ({
 
   const hasMissingSubmissions =
     result && result.marks.some(mark => !mark.submission);
-  if (result?.averageScore === 8.50) {
+  if (result?.averageScore === 8.5) {
     console.log(result.marks.filter(mark => mark.submission).length > 0);
   }
 
@@ -116,7 +116,15 @@ const AssessmentResultCard: React.FC<AssessmentResultCardProps> = ({
                     .map((markEntry, index) => (
                       <Grid.Col span={6} key={index}>
                         <Card shadow="xs" p="xs" radius="md" withBorder>
-                          <Group justify="space-between" align="center" onClick={() => router.push(`/courses/${id}/internal-assessments/${assessmentId}/submission/${markEntry.submission!._id}`)}>
+                          <Group
+                            justify="space-between"
+                            align="center"
+                            onClick={() =>
+                              router.push(
+                                `/courses/${id}/internal-assessments/${assessmentId}/submission/${markEntry.submission!._id}`
+                              )
+                            }
+                          >
                             <Text size="sm">{markEntry.marker.name}</Text>
                             <Badge color="blue" variant="light">
                               {markEntry.score?.toFixed(2)}

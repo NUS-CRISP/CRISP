@@ -448,7 +448,8 @@ export const createSubmission = async (
           SaveAnswerModel = MultipleResponseAnswerModel;
           break;
         case 'Team Member Selection Answer':
-          question = await TeamMemberSelectionQuestionModel.findById(questionId);
+          question =
+            await TeamMemberSelectionQuestionModel.findById(questionId);
           SaveAnswerModel = TeamMemberSelectionAnswerModel;
           break;
         case 'Date Answer':
@@ -470,9 +471,7 @@ export const createSubmission = async (
       }
 
       if (!SaveAnswerModel) {
-        console.warn(
-          `Cannot parse question type ${answer.type}`
-        )
+        console.warn(`Cannot parse question type ${answer.type}`);
         return { ...answer, score: 0 };
       }
 
@@ -485,7 +484,7 @@ export const createSubmission = async (
       const answerScore = await calculateAnswerScore(question, answer);
       totalScore += answerScore;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { type, ...scoredAnswer} = { ...answer, score: answerScore }; // type is unused but we need to extract it
+      const { type, ...scoredAnswer } = { ...answer, score: answerScore }; // type is unused but we need to extract it
 
       const newAnswer = new SaveAnswerModel(scoredAnswer);
       await newAnswer.save();
@@ -637,7 +636,8 @@ export const updateSubmission = async (
           savedAnswer = MultipleResponseAnswerModel.findById(answer.id);
           break;
         case 'Team Member Selection Answer':
-          question = await TeamMemberSelectionQuestionModel.findById(questionId);
+          question =
+            await TeamMemberSelectionQuestionModel.findById(questionId);
           SaveAnswerModel = TeamMemberSelectionAnswerModel;
           savedAnswer = TeamMemberSelectionAnswerModel.findById(answer.id);
           break;
@@ -666,12 +666,9 @@ export const updateSubmission = async (
       }
 
       if (!SaveAnswerModel) {
-        console.warn(
-          `Cannot parse answer type ${answer.type}`
-        )
+        console.warn(`Cannot parse answer type ${answer.type}`);
         return;
       }
-
 
       if (!question) {
         console.warn(
@@ -685,13 +682,11 @@ export const updateSubmission = async (
       totalScore += answerScore;
       totalScore += answerScore;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { type, ...scoredAnswer} = { ...answer, score: answerScore }; // type is unused but we need to extract it
+      const { type, ...scoredAnswer } = { ...answer, score: answerScore }; // type is unused but we need to extract it
 
       answer.score = answerScore;
       if (!savedAnswer) {
-        console.warn(
-          'Answer does not exist!'
-        );
+        console.warn('Answer does not exist!');
         const newAnswer = new SaveAnswerModel(scoredAnswer);
         await newAnswer.save();
       } else {
@@ -727,7 +722,7 @@ export const updateSubmission = async (
 
     // Find existing mark entry for this submission
     const markEntryIndex = assessmentResult.marks.findIndex(
-      (mark) => mark.submission.toString() === submission._id.toString()
+      mark => mark.submission.toString() === submission._id.toString()
     );
 
     if (markEntryIndex !== -1) {

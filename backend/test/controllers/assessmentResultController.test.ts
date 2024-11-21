@@ -71,16 +71,15 @@ describe('assessmentResultController', () => {
       await getOrCreateAssessmentResultsController(req, res);
 
       expect(authUtils.getAccountId).toHaveBeenCalledWith(req);
-      expect(internalAssessmentService.getInternalAssessmentById).toHaveBeenCalledWith(
-        'assessment123',
-        accountId
-      );
-      expect(assessmentAssignmentSetService.getAssignmentSetByAssessmentId).toHaveBeenCalledWith(
-        'assessment123'
-      );
-      expect(assessmentResultService.getOrCreateAssessmentResults).toHaveBeenCalledWith(
-        'assessment123'
-      );
+      expect(
+        internalAssessmentService.getInternalAssessmentById
+      ).toHaveBeenCalledWith('assessment123', accountId);
+      expect(
+        assessmentAssignmentSetService.getAssignmentSetByAssessmentId
+      ).toHaveBeenCalledWith('assessment123');
+      expect(
+        assessmentResultService.getOrCreateAssessmentResults
+      ).toHaveBeenCalledWith('assessment123');
       expect(res.json).toHaveBeenCalledWith({ data: mockAssessmentResults });
     });
 
@@ -114,7 +113,9 @@ describe('assessmentResultController', () => {
         .mockResolvedValue(mockAssessment as any);
       jest
         .spyOn(assessmentAssignmentSetService, 'getAssignmentSetByAssessmentId')
-        .mockRejectedValue(new NotFoundError('Assignment Set not found for this assessment'));
+        .mockRejectedValue(
+          new NotFoundError('Assignment Set not found for this assessment')
+        );
 
       await getOrCreateAssessmentResultsController(req, res);
 
@@ -147,7 +148,9 @@ describe('assessmentResultController', () => {
         .mockResolvedValue(mockAssignmentSet as any);
       jest
         .spyOn(assessmentResultService, 'getOrCreateAssessmentResults')
-        .mockRejectedValue(new NotFoundError('Assessment Results not found for this assessment'));
+        .mockRejectedValue(
+          new NotFoundError('Assessment Results not found for this assessment')
+        );
 
       await getOrCreateAssessmentResultsController(req, res);
 
@@ -189,7 +192,9 @@ describe('assessmentResultController', () => {
       // Modify the service mock or controller logic as needed
 
       // For this example, assuming it proceeds and returns empty data
-      expect(res.json).toHaveBeenCalledWith({ 'error': 'Assessment is team granularity, but assignments are for users' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Assessment is team granularity, but assignments are for users',
+      });
     });
 
     it('should handle unexpected errors and return 500', async () => {
@@ -200,7 +205,10 @@ describe('assessmentResultController', () => {
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account123');
       jest
         .spyOn(internalAssessmentService, 'getInternalAssessmentById')
-        .mockResolvedValue({ id: 'assessment123', granularity: 'individual' } as any);
+        .mockResolvedValue({
+          id: 'assessment123',
+          granularity: 'individual',
+        } as any);
       jest
         .spyOn(assessmentAssignmentSetService, 'getAssignmentSetByAssessmentId')
         .mockResolvedValue({
@@ -228,11 +236,15 @@ describe('assessmentResultController', () => {
       req.params = { resultId: 'result123' };
       const res = mockResponse();
 
-      jest.spyOn(assessmentResultService, 'recalculateResult').mockResolvedValue(undefined);
+      jest
+        .spyOn(assessmentResultService, 'recalculateResult')
+        .mockResolvedValue(undefined);
 
       await recalculateResultController(req, res);
 
-      expect(assessmentResultService.recalculateResult).toHaveBeenCalledWith('result123');
+      expect(assessmentResultService.recalculateResult).toHaveBeenCalledWith(
+        'result123'
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         success: true,
@@ -245,9 +257,9 @@ describe('assessmentResultController', () => {
       req.params = { resultId: 'result123' };
       const res = mockResponse();
 
-      jest.spyOn(assessmentResultService, 'recalculateResult').mockRejectedValue(
-        new NotFoundError('Result not found')
-      );
+      jest
+        .spyOn(assessmentResultService, 'recalculateResult')
+        .mockRejectedValue(new NotFoundError('Result not found'));
 
       await recalculateResultController(req, res);
 
@@ -260,9 +272,9 @@ describe('assessmentResultController', () => {
       req.params = { resultId: 'result123' };
       const res = mockResponse();
 
-      jest.spyOn(assessmentResultService, 'recalculateResult').mockRejectedValue(
-        new Error('Unexpected error')
-      );
+      jest
+        .spyOn(assessmentResultService, 'recalculateResult')
+        .mockRejectedValue(new Error('Unexpected error'));
 
       await recalculateResultController(req, res);
 

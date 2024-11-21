@@ -51,9 +51,14 @@ export const getOrCreateAssessmentResults = async (
     );
   }
 
-  if ((!assignmentSet.assignedTeams || assignmentSet.assignedTeams.length === 0)
-    && (!assignmentSet.assignedUsers || assignmentSet.assignedUsers.length === 0)) {
-    throw new BadRequestError('AssessmentAssignmentSet does not have assignments');
+  if (
+    (!assignmentSet.assignedTeams ||
+      assignmentSet.assignedTeams.length === 0) &&
+    (!assignmentSet.assignedUsers || assignmentSet.assignedUsers.length === 0)
+  ) {
+    throw new BadRequestError(
+      'AssessmentAssignmentSet does not have assignments'
+    );
   }
 
   // Extract all student IDs from the assigned teams
@@ -86,8 +91,10 @@ export const getOrCreateAssessmentResults = async (
   const existingResults = await AssessmentResultModel.find({
     assessment: assessmentId,
     student: { $in: allStudentIds },
-  }).select('student').populate('marks.submission');
-  console.log(existingResults[50])
+  })
+    .select('student')
+    .populate('marks.submission');
+  console.log(existingResults[50]);
 
   const existingStudentIds = new Set<string>(
     existingResults.map(result => result.student.toString())

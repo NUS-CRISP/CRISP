@@ -50,12 +50,13 @@ export interface TeamMemberSelectionAnswer extends BaseAnswer {
   selectedUserIds: string[];
 }
 
-export const TeamMemberSelectionAnswerSchema = new Schema<TeamMemberSelectionAnswer>(
-  {
-    selectedUserIds: [{ type: String, required: true }],
-  },
-  options
-);
+export const TeamMemberSelectionAnswerSchema =
+  new Schema<TeamMemberSelectionAnswer>(
+    {
+      selectedUserIds: [{ type: String, required: true }],
+    },
+    options
+  );
 
 export interface MultipleChoiceAnswer extends BaseAnswer {
   value: string;
@@ -151,40 +152,46 @@ export const NUSNETIDAnswerModel = AnswerModel.discriminator<NUSNETIDAnswer>(
   NUSNETIDAnswerSchema
 );
 
-export const NUSNETEmailAnswerModel = AnswerModel.discriminator<NUSNETEmailAnswer>(
-  'NUSNET Email Answer',
-  NUSNETEmailAnswerSchema
-);
+export const NUSNETEmailAnswerModel =
+  AnswerModel.discriminator<NUSNETEmailAnswer>(
+    'NUSNET Email Answer',
+    NUSNETEmailAnswerSchema
+  );
 
-export const TeamMemberSelectionAnswerModel = AnswerModel.discriminator<TeamMemberSelectionAnswer>(
-  'Team Member Selection Answer',
-  TeamMemberSelectionAnswerSchema
-);
+export const TeamMemberSelectionAnswerModel =
+  AnswerModel.discriminator<TeamMemberSelectionAnswer>(
+    'Team Member Selection Answer',
+    TeamMemberSelectionAnswerSchema
+  );
 
-export const MultipleChoiceAnswerModel = AnswerModel.discriminator<MultipleChoiceAnswer>(
-  'Multiple Choice Answer',
-  MultipleChoiceAnswerSchema
-);
+export const MultipleChoiceAnswerModel =
+  AnswerModel.discriminator<MultipleChoiceAnswer>(
+    'Multiple Choice Answer',
+    MultipleChoiceAnswerSchema
+  );
 
-export const MultipleResponseAnswerModel = AnswerModel.discriminator<MultipleResponseAnswer>(
-  'Multiple Response Answer',
-  MultipleResponseAnswerSchema
-);
+export const MultipleResponseAnswerModel =
+  AnswerModel.discriminator<MultipleResponseAnswer>(
+    'Multiple Response Answer',
+    MultipleResponseAnswerSchema
+  );
 
 export const ScaleAnswerModel = AnswerModel.discriminator<ScaleAnswer>(
   'Scale Answer',
   ScaleAnswerSchema
 );
 
-export const ShortResponseAnswerModel = AnswerModel.discriminator<ShortResponseAnswer>(
-  'Short Response Answer',
-  ShortResponseAnswerSchema
-);
+export const ShortResponseAnswerModel =
+  AnswerModel.discriminator<ShortResponseAnswer>(
+    'Short Response Answer',
+    ShortResponseAnswerSchema
+  );
 
-export const LongResponseAnswerModel = AnswerModel.discriminator<LongResponseAnswer>(
-  'Long Response Answer',
-  LongResponseAnswerSchema
-);
+export const LongResponseAnswerModel =
+  AnswerModel.discriminator<LongResponseAnswer>(
+    'Long Response Answer',
+    LongResponseAnswerSchema
+  );
 
 export const DateAnswerModel = AnswerModel.discriminator<DateAnswer>(
   'Date Answer',

@@ -293,18 +293,35 @@ export const getUnmarkedAssignmentsByTAId = async (
     throw new NotFoundError('AssessmentAssignmentSet not found');
   }
 
-  const submissions = await getSubmissionsByAssessmentAndUser(assessmentId, taId);
+  const submissions = await getSubmissionsByAssessmentAndUser(
+    assessmentId,
+    taId
+  );
 
-  const submittedUserIds = submissions
-    .flatMap((sub) =>
-      (sub.answers.find((ans) => ans.type === 'Team Member Selection Answer')!.toObject() as TeamMemberSelectionAnswer).selectedUserIds);
+  const submittedUserIds = submissions.flatMap(
+    sub =>
+      (
+        sub.answers
+          .find(ans => ans.type === 'Team Member Selection Answer')!
+          .toObject() as TeamMemberSelectionAnswer
+      ).selectedUserIds
+  );
 
   if (assignmentSet.assignedTeams) {
     // Filter teams where the TA is assigned
     const teamIds: mongoose.Types.ObjectId[] = assignmentSet.assignedTeams
-      .filter(at => at.tas.length > 0
-        && submittedUserIds.every((uid) => // Every submitted uid...
-          !(at.team as Team).members!.find((member) => member._id.toString() === uid))) // is not in one of the teams being returned
+      .filter(
+        at =>
+          at.tas.length > 0 &&
+          submittedUserIds.every(
+            (
+              uid // Every submitted uid...
+            ) =>
+              !(at.team as Team).members!.find(
+                member => member._id.toString() === uid
+              )
+          )
+      ) // is not in one of the teams being returned
       .map(at => at.team as mongoose.Types.ObjectId);
 
     const teams = await Promise.all(
@@ -315,8 +332,11 @@ export const getUnmarkedAssignmentsByTAId = async (
     return teams;
   } else {
     const userIds: mongoose.Types.ObjectId[] = assignmentSet
-      .assignedUsers!.filter(as => as.tas.length > 0
-        && submittedUserIds.every((uid) => uid !== as.user._id.toString())) // Ensures the userIds have no submissions from this TA
+      .assignedUsers!.filter(
+        as =>
+          as.tas.length > 0 &&
+          submittedUserIds.every(uid => uid !== as.user._id.toString())
+      ) // Ensures the userIds have no submissions from this TA
       .map(at => at.user as mongoose.Types.ObjectId);
 
     const users = await Promise.all(
@@ -327,4 +347,3 @@ export const getUnmarkedAssignmentsByTAId = async (
     return users;
   }
 };
-

@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import AssessmentAssignmentSetModel, { AssignedUser } from '../../models/AssessmentAssignmentSet';
+import AssessmentAssignmentSetModel, {
+  AssignedUser,
+} from '../../models/AssessmentAssignmentSet';
 import AssessmentResultModel from '../../models/AssessmentResult';
 import InternalAssessmentModel from '../../models/InternalAssessment';
 import UserModel from '../../models/User';
@@ -13,8 +15,15 @@ import CourseModel from '@models/Course';
 import TeamModel from '@models/Team';
 import TeamSetModel from '@models/TeamSet';
 import SubmissionModel from '@models/Submission';
-import { MultipleChoiceOption, MultipleChoiceQuestionModel, TeamMemberSelectionQuestionModel } from '@models/QuestionTypes';
-import { MultipleChoiceAnswerModel, TeamMemberSelectionAnswerModel } from '@models/Answer';
+import {
+  MultipleChoiceOption,
+  MultipleChoiceQuestionModel,
+  TeamMemberSelectionQuestionModel,
+} from '@models/QuestionTypes';
+import {
+  MultipleChoiceAnswerModel,
+  TeamMemberSelectionAnswerModel,
+} from '@models/Answer';
 
 let mongo: MongoMemoryServer;
 
@@ -92,7 +101,7 @@ describe('assessmentResultService', () => {
       question: teamMemberQuestionId,
       type: 'Team Member Selection Answer',
       selectedUserIds: [studentId],
-    })
+    });
     await teamMemberAnswer.save();
 
     const mcQuestion = new MultipleChoiceQuestionModel({
@@ -101,20 +110,23 @@ describe('assessmentResultService', () => {
       isRequired: true,
       isLocked: false,
       isScored: true,
-      options: [{
-        text: '今日もかわいい',
-        points: 10,
-      }, {
-        text: '今日も怖い',
-        points: 5,
-      }] as MultipleChoiceOption[]
+      options: [
+        {
+          text: '今日もかわいい',
+          points: 10,
+        },
+        {
+          text: '今日も怖い',
+          points: 5,
+        },
+      ] as MultipleChoiceOption[],
     });
     await mcQuestion.save();
     mcQuestionId = mcQuestion._id;
     const mcAnswer = new MultipleChoiceAnswerModel({
       question: mcQuestionId,
       type: 'Multiple Choice Answer',
-      value: '今日も怖い'
+      value: '今日も怖い',
     });
     await mcAnswer.save();
 
@@ -146,9 +158,7 @@ describe('assessmentResultService', () => {
     const submission = new SubmissionModel({
       assessment: assessmentId,
       user: taId,
-      answers: [
-        teamMemberAnswer, mcAnswer,
-      ],
+      answers: [teamMemberAnswer, mcAnswer],
       isDraft: false,
       submittedAt: new Date(),
       score: 10, //Incorrect score for testing recalculate score
@@ -159,7 +169,9 @@ describe('assessmentResultService', () => {
 
   describe('getOrCreateAssessmentResults', () => {
     it('should create assessment results for assigned students', async () => {
-      const results = await getOrCreateAssessmentResults(assessmentId.toString());
+      const results = await getOrCreateAssessmentResults(
+        assessmentId.toString()
+      );
 
       expect(results).toHaveLength(1);
       expect(results[0].student._id.toString()).toEqual(studentId.toString());
@@ -168,7 +180,9 @@ describe('assessmentResultService', () => {
     it('should retrieve existing assessment results if they already exist', async () => {
       await getOrCreateAssessmentResults(assessmentId.toString());
 
-      const results = await getOrCreateAssessmentResults(assessmentId.toString());
+      const results = await getOrCreateAssessmentResults(
+        assessmentId.toString()
+      );
 
       expect(results).toHaveLength(1);
     });

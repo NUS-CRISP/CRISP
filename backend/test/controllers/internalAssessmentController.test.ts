@@ -13,7 +13,11 @@ import {
 } from '../../controllers/internalAssessmentController';
 import * as internalAssessmentService from '../../services/internalAssessmentService';
 import * as authUtils from '../../utils/auth';
-import { BadRequestError, NotFoundError, MissingAuthorizationError } from '../../services/errors';
+import {
+  BadRequestError,
+  NotFoundError,
+  MissingAuthorizationError,
+} from '../../services/errors';
 
 jest.mock('../../services/internalAssessmentService');
 jest.mock('../../utils/auth');
@@ -56,10 +60,9 @@ describe('internalAssessmentController', () => {
       await getInternalAssessment(req, res);
 
       expect(authUtils.getAccountId).toHaveBeenCalledWith(req);
-      expect(internalAssessmentService.getInternalAssessmentById).toHaveBeenCalledWith(
-        'assessment123',
-        accountId
-      );
+      expect(
+        internalAssessmentService.getInternalAssessmentById
+      ).toHaveBeenCalledWith('assessment123', accountId);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockAssessment);
     });
@@ -85,7 +88,11 @@ describe('internalAssessmentController', () => {
       req.params = { assessmentId: 'assessment123' };
       const res = mockResponse();
 
-      jest.spyOn(authUtils, 'getAccountId').mockRejectedValue(new MissingAuthorizationError('Missing Authorization'));
+      jest
+        .spyOn(authUtils, 'getAccountId')
+        .mockRejectedValue(
+          new MissingAuthorizationError('Missing Authorization')
+        );
 
       await getInternalAssessment(req, res);
 
@@ -106,7 +113,9 @@ describe('internalAssessmentController', () => {
       await getInternalAssessment(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to retrieve assessment' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to retrieve assessment',
+      });
     });
   });
 
@@ -127,13 +136,15 @@ describe('internalAssessmentController', () => {
       await updateInternalAssessment(req, res);
 
       expect(authUtils.getAccountId).toHaveBeenCalledWith(req);
-      expect(internalAssessmentService.updateInternalAssessmentById).toHaveBeenCalledWith(
-        'assessment123',
-        accountId,
-        { name: 'Updated Assessment' }
-      );
+      expect(
+        internalAssessmentService.updateInternalAssessmentById
+      ).toHaveBeenCalledWith('assessment123', accountId, {
+        name: 'Updated Assessment',
+      });
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Assessment updated successfully' });
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Assessment updated successfully',
+      });
     });
 
     it('should handle NotFoundError and return 404', async () => {
@@ -184,7 +195,9 @@ describe('internalAssessmentController', () => {
       await updateInternalAssessment(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update assessment' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to update assessment',
+      });
     });
   });
 
@@ -200,11 +213,13 @@ describe('internalAssessmentController', () => {
 
       await deleteInternalAssessment(req, res);
 
-      expect(internalAssessmentService.deleteInternalAssessmentById).toHaveBeenCalledWith(
-        'assessment123'
-      );
+      expect(
+        internalAssessmentService.deleteInternalAssessmentById
+      ).toHaveBeenCalledWith('assessment123');
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Assessment deleted successfully' });
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Assessment deleted successfully',
+      });
     });
 
     it('should handle NotFoundError and return 404', async () => {
@@ -234,7 +249,9 @@ describe('internalAssessmentController', () => {
       await deleteInternalAssessment(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete assessment' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to delete assessment',
+      });
     });
   });
 
@@ -248,7 +265,10 @@ describe('internalAssessmentController', () => {
       const res = mockResponse();
 
       const accountId = 'account123';
-      const mockQuestion = { id: 'question123', questionText: 'What is your name?' };
+      const mockQuestion = {
+        id: 'question123',
+        questionText: 'What is your name?',
+      };
 
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
       jest
@@ -258,7 +278,9 @@ describe('internalAssessmentController', () => {
       await addQuestionToAssessmentController(req, res);
 
       expect(authUtils.getAccountId).toHaveBeenCalledWith(req);
-      expect(internalAssessmentService.addQuestionToAssessment).toHaveBeenCalledWith(
+      expect(
+        internalAssessmentService.addQuestionToAssessment
+      ).toHaveBeenCalledWith(
         'assessment123',
         { questionText: 'What is your name?' },
         accountId
@@ -307,7 +329,11 @@ describe('internalAssessmentController', () => {
       req.body = { questionText: 'What is your name?' };
       const res = mockResponse();
 
-      jest.spyOn(authUtils, 'getAccountId').mockRejectedValue(new MissingAuthorizationError('Missing Authorization'));
+      jest
+        .spyOn(authUtils, 'getAccountId')
+        .mockRejectedValue(
+          new MissingAuthorizationError('Missing Authorization')
+        );
 
       await addQuestionToAssessmentController(req, res);
 
@@ -329,7 +355,9 @@ describe('internalAssessmentController', () => {
       await addQuestionToAssessmentController(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to add question' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to add question',
+      });
     });
   });
 
@@ -353,10 +381,9 @@ describe('internalAssessmentController', () => {
       await getQuestionsByAssessmentIdController(req, res);
 
       expect(authUtils.getAccountId).toHaveBeenCalledWith(req);
-      expect(internalAssessmentService.getQuestionsByAssessmentId).toHaveBeenCalledWith(
-        'assessment123',
-        accountId
-      );
+      expect(
+        internalAssessmentService.getQuestionsByAssessmentId
+      ).toHaveBeenCalledWith('assessment123', accountId);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockQuestions);
     });
@@ -382,7 +409,11 @@ describe('internalAssessmentController', () => {
       req.params = { assessmentId: 'assessment123' };
       const res = mockResponse();
 
-      jest.spyOn(authUtils, 'getAccountId').mockRejectedValue(new MissingAuthorizationError('Missing Authorization'));
+      jest
+        .spyOn(authUtils, 'getAccountId')
+        .mockRejectedValue(
+          new MissingAuthorizationError('Missing Authorization')
+        );
 
       await getQuestionsByAssessmentIdController(req, res);
 
@@ -403,7 +434,9 @@ describe('internalAssessmentController', () => {
       await getQuestionsByAssessmentIdController(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to retrieve questions' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to retrieve questions',
+      });
     });
   });
 
@@ -415,7 +448,10 @@ describe('internalAssessmentController', () => {
       const res = mockResponse();
 
       const accountId = 'account123';
-      const mockUpdatedQuestion = { id: 'question123', questionText: 'Updated Question' };
+      const mockUpdatedQuestion = {
+        id: 'question123',
+        questionText: 'Updated Question',
+      };
 
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
       jest
@@ -474,7 +510,11 @@ describe('internalAssessmentController', () => {
       req.body = { questionText: 'Updated Question' };
       const res = mockResponse();
 
-      jest.spyOn(authUtils, 'getAccountId').mockRejectedValue(new MissingAuthorizationError('Missing Authorization'));
+      jest
+        .spyOn(authUtils, 'getAccountId')
+        .mockRejectedValue(
+          new MissingAuthorizationError('Missing Authorization')
+        );
 
       await updateQuestionByIdController(req, res);
 
@@ -496,7 +536,9 @@ describe('internalAssessmentController', () => {
       await updateQuestionByIdController(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update question' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to update question',
+      });
     });
   });
 
@@ -562,7 +604,11 @@ describe('internalAssessmentController', () => {
       req.params = { assessmentId: 'assessment123', questionId: 'question123' };
       const res = mockResponse();
 
-      jest.spyOn(authUtils, 'getAccountId').mockRejectedValue(new MissingAuthorizationError('Missing Authorization'));
+      jest
+        .spyOn(authUtils, 'getAccountId')
+        .mockRejectedValue(
+          new MissingAuthorizationError('Missing Authorization')
+        );
 
       await deleteQuestionByIdController(req, res);
 
@@ -583,7 +629,9 @@ describe('internalAssessmentController', () => {
       await deleteQuestionByIdController(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete question' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to delete question',
+      });
     });
   });
 
@@ -605,12 +653,13 @@ describe('internalAssessmentController', () => {
       await releaseInternalAssessment(req, res);
 
       expect(authUtils.getAccountId).toHaveBeenCalledWith(req);
-      expect(internalAssessmentService.releaseInternalAssessmentById).toHaveBeenCalledWith(
-        'assessment123',
-        accountId
-      );
+      expect(
+        internalAssessmentService.releaseInternalAssessmentById
+      ).toHaveBeenCalledWith('assessment123', accountId);
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Assessment released successfully' });
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Assessment released successfully',
+      });
     });
 
     it('should handle NotFoundError and return 404', async () => {
@@ -650,7 +699,11 @@ describe('internalAssessmentController', () => {
       req.params = { assessmentId: 'assessment123' };
       const res = mockResponse();
 
-      jest.spyOn(authUtils, 'getAccountId').mockRejectedValue(new MissingAuthorizationError('Missing Authorization'));
+      jest
+        .spyOn(authUtils, 'getAccountId')
+        .mockRejectedValue(
+          new MissingAuthorizationError('Missing Authorization')
+        );
 
       await releaseInternalAssessment(req, res);
 
@@ -671,7 +724,9 @@ describe('internalAssessmentController', () => {
       await releaseInternalAssessment(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to release assessment' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to release assessment',
+      });
     });
   });
 
@@ -691,12 +746,13 @@ describe('internalAssessmentController', () => {
       await recallInternalAssessment(req, res);
 
       expect(authUtils.getAccountId).toHaveBeenCalledWith(req);
-      expect(internalAssessmentService.recallInternalAssessmentById).toHaveBeenCalledWith(
-        'assessment123',
-        accountId
-      );
+      expect(
+        internalAssessmentService.recallInternalAssessmentById
+      ).toHaveBeenCalledWith('assessment123', accountId);
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Assessment recalled successfully' });
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Assessment recalled successfully',
+      });
     });
 
     it('should handle NotFoundError and return 404', async () => {
@@ -736,7 +792,11 @@ describe('internalAssessmentController', () => {
       req.params = { assessmentId: 'assessment123' };
       const res = mockResponse();
 
-      jest.spyOn(authUtils, 'getAccountId').mockRejectedValue(new MissingAuthorizationError('Missing Authorization'));
+      jest
+        .spyOn(authUtils, 'getAccountId')
+        .mockRejectedValue(
+          new MissingAuthorizationError('Missing Authorization')
+        );
 
       await recallInternalAssessment(req, res);
 
@@ -757,7 +817,9 @@ describe('internalAssessmentController', () => {
       await recallInternalAssessment(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to recall assessment' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to recall assessment',
+      });
     });
   });
 });

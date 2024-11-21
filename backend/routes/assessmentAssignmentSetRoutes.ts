@@ -16,6 +16,9 @@ router.patch('/:assessmentId/assignment-sets', updateAssignmentSetController);
 
 // TA Assignment Routes
 router.get('/:assessmentId/assignment-sets/ta', getAssignmentsByTAIdController);
-router.get('/:assessmentId/assignment-sets/taunmarked', getUnmarkedAssignmentsByTAIdController);
+router.get(
+  '/:assessmentId/assignment-sets/taunmarked',
+  getUnmarkedAssignmentsByTAIdController
+);
 
 export default router;

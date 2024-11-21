@@ -846,15 +846,16 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
                 { value: 'Multiple Response', label: 'Multiple Response' },
                 { value: 'Scale', label: 'Scale' },
                 { value: 'Number', label: 'Number' },
-              ]
+              ],
             },
             {
-              group: 'No Grading', items: [
+              group: 'No Grading',
+              items: [
                 { value: 'Short Response', label: 'Short Response' },
                 { value: 'Long Response', label: 'Long Response' },
                 { value: 'Date', label: 'Date' },
                 { value: 'Undecided', label: 'Undecided' },
-              ]
+              ],
             },
             ...(enableNewQuestionTypesForTesting
               ? [
@@ -867,8 +868,8 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
                         value: 'Team Member Selection',
                         label: 'Team Member Selection',
                       },
-                    ]
-                  }
+                    ],
+                  },
                 ]
               : []),
           ]}

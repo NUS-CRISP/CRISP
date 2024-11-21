@@ -28,7 +28,8 @@ describe('Question Model', () => {
       text: 'Student NUSNET ID (EXXXXXXX)',
       type: 'NUSNET ID',
       shortResponsePlaceholder: 'E1234567',
-      customInstruction: 'Enter your NUSNET ID starting with E followed by 7 digits.',
+      customInstruction:
+        'Enter your NUSNET ID starting with E followed by 7 digits.',
       isLocked: true,
       isRequired: true,
     });

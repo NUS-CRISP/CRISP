@@ -220,8 +220,7 @@ export const MultipleResponseQuestionModel =
     MultipleResponseSchema
   );
 
-export const ScaleQuestionModel =
-  QuestionModel.discriminator<ScaleQuestion>(
+export const ScaleQuestionModel = QuestionModel.discriminator<ScaleQuestion>(
   'Scale',
   ScaleQuestionSchema
 );
@@ -238,14 +237,12 @@ export const LongResponseQuestionModel =
     LongResponseSchema
   );
 
-export const DateQuestionModel =
-  QuestionModel.discriminator<DateQuestion>(
+export const DateQuestionModel = QuestionModel.discriminator<DateQuestion>(
   'Date',
   DateQuestionSchema
 );
 
-export const NumberQuestionModel =
-  QuestionModel.discriminator<NumberQuestion>(
+export const NumberQuestionModel = QuestionModel.discriminator<NumberQuestion>(
   'Number',
   NumberSchema
 );

@@ -13,11 +13,20 @@ import {
   getSubmissionsByAssessment,
   adjustSubmissionScore,
 } from '../../services/submissionService';
-import { MultipleChoiceAnswer, TeamMemberSelectionAnswer } from '@models/Answer';
+import {
+  MultipleChoiceAnswer,
+  TeamMemberSelectionAnswer,
+} from '@models/Answer';
 import CourseModel from '@models/Course';
 import TeamSetModel from '@models/TeamSet';
-import { MultipleChoiceOption, MultipleChoiceQuestionModel, TeamMemberSelectionQuestionModel } from '@models/QuestionTypes';
-import AssessmentAssignmentSetModel, { AssignedUser } from '@models/AssessmentAssignmentSet';
+import {
+  MultipleChoiceOption,
+  MultipleChoiceQuestionModel,
+  TeamMemberSelectionQuestionModel,
+} from '@models/QuestionTypes';
+import AssessmentAssignmentSetModel, {
+  AssignedUser,
+} from '@models/AssessmentAssignmentSet';
 import TeamModel from '@models/Team';
 import AssessmentResultModel from '@models/AssessmentResult';
 
@@ -99,13 +108,16 @@ const setupData = async () => {
     isRequired: true,
     isLocked: false,
     isScored: true,
-    options: [{
-      text: '今日もかわいい',
-      points: 10,
-    }, {
-      text: '今日も怖い',
-      points: 5,
-    }] as MultipleChoiceOption[]
+    options: [
+      {
+        text: '今日もかわいい',
+        points: 10,
+      },
+      {
+        text: '今日も怖い',
+        points: 5,
+      },
+    ] as MultipleChoiceOption[],
   });
   await mcQuestion.save();
 
@@ -145,7 +157,8 @@ describe('submissionService', () => {
   let mcQuestion: any;
 
   beforeEach(async () => {
-    ({ account, student, ta, assessment, teamMemberQuestion, mcQuestion } = await setupData());
+    ({ account, student, ta, assessment, teamMemberQuestion, mcQuestion } =
+      await setupData());
   });
 
   describe('createSubmission', () => {
@@ -158,7 +171,7 @@ describe('submissionService', () => {
       const mcAnswer = {
         question: mcQuestion._id,
         type: 'Multiple Choice Answer',
-        value: '今日も怖い'
+        value: '今日も怖い',
       } as MultipleChoiceAnswer;
       const submission = await createSubmission(
         assessment._id.toString(),
@@ -181,10 +194,15 @@ describe('submissionService', () => {
       const mcAnswer = {
         question: mcQuestion._id,
         type: 'Multiple Choice Answer',
-        value: '今日も怖い'
+        value: '今日も怖い',
       } as MultipleChoiceAnswer;
       await expect(
-        createSubmission(assessment._id.toString(), invalidUserId, [teamMemberAnswer, mcAnswer], false)
+        createSubmission(
+          assessment._id.toString(),
+          invalidUserId,
+          [teamMemberAnswer, mcAnswer],
+          false
+        )
       ).rejects.toThrow();
     });
   });
@@ -199,7 +217,7 @@ describe('submissionService', () => {
       const mcAnswer = {
         question: mcQuestion._id,
         type: 'Multiple Choice Answer',
-        value: '今日も怖い'
+        value: '今日も怖い',
       } as MultipleChoiceAnswer;
       const submission = await createSubmission(
         assessment._id.toString(),
@@ -234,10 +252,16 @@ describe('submissionService', () => {
       const mcAnswer = {
         question: mcQuestion._id,
         type: 'Multiple Choice Answer',
-        value: '今日も怖い'
+        value: '今日も怖い',
       } as MultipleChoiceAnswer;
       await expect(
-        updateSubmission(invalidSubmissionId, ta._id.toString(), account._id.toString(), [teamMemberAnswer, mcAnswer], false)
+        updateSubmission(
+          invalidSubmissionId,
+          ta._id.toString(),
+          account._id.toString(),
+          [teamMemberAnswer, mcAnswer],
+          false
+        )
       ).rejects.toThrow();
     });
   });
@@ -252,7 +276,7 @@ describe('submissionService', () => {
       const mcAnswer = {
         question: mcQuestion._id,
         type: 'Multiple Choice Answer',
-        value: '今日も怖い'
+        value: '今日も怖い',
       } as MultipleChoiceAnswer;
       const submission = await createSubmission(
         assessment._id.toString(),
@@ -282,9 +306,14 @@ describe('submissionService', () => {
       const mcAnswer = {
         question: mcQuestion._id,
         type: 'Multiple Choice Answer',
-        value: '今日も怖い'
+        value: '今日も怖い',
       } as MultipleChoiceAnswer;
-      await createSubmission(assessment._id.toString(), ta._id.toString(), [teamMemberAnswer, mcAnswer], false);
+      await createSubmission(
+        assessment._id.toString(),
+        ta._id.toString(),
+        [teamMemberAnswer, mcAnswer],
+        false
+      );
       const submissions = await getSubmissionsByAssessmentAndUser(
         assessment._id.toString(),
         ta._id.toString()
@@ -303,10 +332,17 @@ describe('submissionService', () => {
       const mcAnswer = {
         question: mcQuestion._id,
         type: 'Multiple Choice Answer',
-        value: '今日も怖い'
+        value: '今日も怖い',
       } as MultipleChoiceAnswer;
-      await createSubmission(assessment._id.toString(), ta._id.toString(), [teamMemberAnswer, mcAnswer], false);
-      const submissions = await getSubmissionsByAssessment(assessment._id.toString());
+      await createSubmission(
+        assessment._id.toString(),
+        ta._id.toString(),
+        [teamMemberAnswer, mcAnswer],
+        false
+      );
+      const submissions = await getSubmissionsByAssessment(
+        assessment._id.toString()
+      );
       expect(submissions.length).toBeGreaterThan(0);
     });
   });
@@ -321,7 +357,7 @@ describe('submissionService', () => {
       const mcAnswer = {
         question: mcQuestion._id,
         type: 'Multiple Choice Answer',
-        value: '今日も怖い'
+        value: '今日も怖い',
       } as MultipleChoiceAnswer;
       const submission = await createSubmission(
         assessment._id.toString(),
@@ -346,7 +382,7 @@ describe('submissionService', () => {
       const mcAnswer = {
         question: mcQuestion._id,
         type: 'Multiple Choice Answer',
-        value: '今日も怖い'
+        value: '今日も怖い',
       } as MultipleChoiceAnswer;
       const submission = await createSubmission(
         assessment._id.toString(),

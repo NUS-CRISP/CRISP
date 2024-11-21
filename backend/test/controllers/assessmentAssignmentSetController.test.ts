@@ -49,10 +49,9 @@ describe('assessmentAssignmentSetController', () => {
 
       await createAssignmentSetController(req, res);
 
-      expect(assessmentAssignmentSetService.createAssignmentSet).toHaveBeenCalledWith(
-        'assessment123',
-        'teamSet123'
-      );
+      expect(
+        assessmentAssignmentSetService.createAssignmentSet
+      ).toHaveBeenCalledWith('assessment123', 'teamSet123');
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith(mockAssignmentSet);
     });
@@ -66,7 +65,9 @@ describe('assessmentAssignmentSetController', () => {
       await createAssignmentSetController(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'originalTeamSetId is required' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'originalTeamSetId is required',
+      });
     });
 
     it('should handle BadRequestError and return 400', async () => {
@@ -140,7 +141,9 @@ describe('assessmentAssignmentSetController', () => {
       await getAssignmentSetController(req, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'AssignmentSet not found' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'AssignmentSet not found',
+      });
     });
 
     it('should handle unexpected errors and return 500', async () => {
@@ -168,7 +171,10 @@ describe('assessmentAssignmentSetController', () => {
       req.body = { assignedTeams: ['team1', 'team2'], assignedUsers: null };
       const res = mockResponse();
 
-      const updatedSet = { assignedTeams: ['team1', 'team2'], assignedUsers: null };
+      const updatedSet = {
+        assignedTeams: ['team1', 'team2'],
+        assignedUsers: null,
+      };
 
       jest
         .spyOn(assessmentAssignmentSetService, 'updateAssignmentSet')
@@ -176,11 +182,9 @@ describe('assessmentAssignmentSetController', () => {
 
       await updateAssignmentSetController(req, res);
 
-      expect(assessmentAssignmentSetService.updateAssignmentSet).toHaveBeenCalledWith(
-        'assessment123',
-        ['team1', 'team2'],
-        null
-      );
+      expect(
+        assessmentAssignmentSetService.updateAssignmentSet
+      ).toHaveBeenCalledWith('assessment123', ['team1', 'team2'], null);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(updatedSet);
     });
@@ -214,7 +218,9 @@ describe('assessmentAssignmentSetController', () => {
       await updateAssignmentSetController(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'AssignmentSet not found' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'AssignmentSet not found',
+      });
     });
 
     it('should handle unexpected errors and return 500', async () => {
@@ -247,7 +253,9 @@ describe('assessmentAssignmentSetController', () => {
       const assignments = ['team1', 'team2'];
 
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
-      jest.spyOn(accountService, 'getUserIdByAccountId').mockResolvedValue(userId);
+      jest
+        .spyOn(accountService, 'getUserIdByAccountId')
+        .mockResolvedValue(userId);
       jest
         .spyOn(assessmentAssignmentSetService, 'getAssignmentsByTAId')
         .mockResolvedValue(assignments as any);
@@ -255,11 +263,12 @@ describe('assessmentAssignmentSetController', () => {
       await getAssignmentsByTAIdController(req, res);
 
       expect(authUtils.getAccountId).toHaveBeenCalledWith(req);
-      expect(accountService.getUserIdByAccountId).toHaveBeenCalledWith(accountId);
-      expect(assessmentAssignmentSetService.getAssignmentsByTAId).toHaveBeenCalledWith(
-        userId,
-        'assessment123'
+      expect(accountService.getUserIdByAccountId).toHaveBeenCalledWith(
+        accountId
       );
+      expect(
+        assessmentAssignmentSetService.getAssignmentsByTAId
+      ).toHaveBeenCalledWith(userId, 'assessment123');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(assignments);
     });
@@ -273,7 +282,9 @@ describe('assessmentAssignmentSetController', () => {
       const userId = 'user123';
 
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
-      jest.spyOn(accountService, 'getUserIdByAccountId').mockResolvedValue(userId);
+      jest
+        .spyOn(accountService, 'getUserIdByAccountId')
+        .mockResolvedValue(userId);
       jest
         .spyOn(assessmentAssignmentSetService, 'getAssignmentsByTAId')
         .mockRejectedValue(new NotFoundError('Assignments not found'));
@@ -293,7 +304,9 @@ describe('assessmentAssignmentSetController', () => {
       const userId = 'user123';
 
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
-      jest.spyOn(accountService, 'getUserIdByAccountId').mockResolvedValue(userId);
+      jest
+        .spyOn(accountService, 'getUserIdByAccountId')
+        .mockResolvedValue(userId);
       jest
         .spyOn(assessmentAssignmentSetService, 'getAssignmentsByTAId')
         .mockRejectedValue(new Error('Some error'));

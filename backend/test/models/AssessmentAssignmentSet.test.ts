@@ -125,5 +125,4 @@ describe('AssessmentAssignmentSet Model', () => {
 
     await expect(assessmentAssignmentSet2.save()).rejects.toThrow();
   });
-
 });

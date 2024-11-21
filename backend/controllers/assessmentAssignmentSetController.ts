@@ -140,7 +140,10 @@ export const getUnmarkedAssignmentsByTAIdController = async (
   const userId = await getUserIdByAccountId(accountId);
 
   try {
-    const assignments = await getUnmarkedAssignmentsByTAId(userId, assessmentId);
+    const assignments = await getUnmarkedAssignmentsByTAId(
+      userId,
+      assessmentId
+    );
     res.status(200).json(assignments);
   } catch (error) {
     if (error instanceof NotFoundError) {

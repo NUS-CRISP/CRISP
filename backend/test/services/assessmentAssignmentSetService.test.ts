@@ -106,7 +106,10 @@ describe('assessmentAssignmentSetService', () => {
 
     it('should throw NotFoundError if assessment is not found', async () => {
       await expect(
-        createAssignmentSet(new mongoose.Types.ObjectId().toString(), teamSetId.toString())
+        createAssignmentSet(
+          new mongoose.Types.ObjectId().toString(),
+          teamSetId.toString()
+        )
       ).rejects.toThrow(NotFoundError);
     });
 
@@ -177,7 +180,10 @@ describe('assessmentAssignmentSetService', () => {
     it('should retrieve assignments by TA ID', async () => {
       await createAssignmentSet(assessmentId.toString(), teamSetId.toString());
 
-      const teams = await getAssignmentsByTAId(taId.toString(), assessmentId.toString());
+      const teams = await getAssignmentsByTAId(
+        taId.toString(),
+        assessmentId.toString()
+      );
 
       expect(teams).toHaveLength(1);
       expect(teams[0]!._id.toString()).toEqual(teamId.toString());
@@ -185,7 +191,10 @@ describe('assessmentAssignmentSetService', () => {
 
     it('should throw NotFoundError if no assignment set is found', async () => {
       await expect(
-        getAssignmentsByTAId(taId.toString(), new mongoose.Types.ObjectId().toString())
+        getAssignmentsByTAId(
+          taId.toString(),
+          new mongoose.Types.ObjectId().toString()
+        )
       ).rejects.toThrow(NotFoundError);
     });
   });

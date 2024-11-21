@@ -1,7 +1,13 @@
 import mongoose, { ConnectOptions } from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import { MultipleChoiceAnswerModel, NUSNETIDAnswerModel } from '../../models/Answer';
-import { MultipleChoiceQuestionModel, NUSNETIDQuestionModel } from '@models/QuestionTypes';
+import {
+  MultipleChoiceAnswerModel,
+  NUSNETIDAnswerModel,
+} from '../../models/Answer';
+import {
+  MultipleChoiceQuestionModel,
+  NUSNETIDQuestionModel,
+} from '@models/QuestionTypes';
 let mongoServer: MongoMemoryServer;
 
 beforeAll(async () => {
@@ -30,7 +36,8 @@ describe('Answer Model', () => {
     const question = new NUSNETIDQuestionModel({
       text: 'Student NUSNET ID (EXXXXXXX)',
       shortResponsePlaceholder: 'E1234567',
-      customInstruction: 'Enter your NUSNET ID starting with E followed by 7 digits.',
+      customInstruction:
+        'Enter your NUSNET ID starting with E followed by 7 digits.',
       isLocked: true,
       isRequired: true,
     });

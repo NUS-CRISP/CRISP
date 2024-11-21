@@ -90,7 +90,7 @@ export const getOrCreateAssessmentResultsController = async (
         if (!team || !team.members || team.members.length === 0) {
           continue;
         }
-        team.members.forEach((member) => {
+        team.members.forEach(member => {
           const studentId = member._id.toString();
           let assessmentResult = assessmentResultMap.get(studentId);
           if (!assessmentResult) {
@@ -116,7 +116,7 @@ export const getOrCreateAssessmentResultsController = async (
             }
           }
           assessmentResultMap.set(studentId, assessmentResult);
-        })
+        });
       }
     }
 

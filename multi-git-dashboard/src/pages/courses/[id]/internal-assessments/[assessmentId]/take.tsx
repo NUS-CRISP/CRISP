@@ -44,7 +44,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
   canEdit = true,
   isFaculty = false,
 }) => {
-  console.log(existingSubmission)
+  console.log(existingSubmission);
   const router = useRouter();
   const { id, assessmentId } = router.query as {
     id: string;
@@ -191,8 +191,8 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
     try {
       const response = await fetch(
         existingSubmission
-        ? `/api/assignment-sets/${assessmentId}/assignment-sets/ta`
-        : `/api/assignment-sets/${assessmentId}/assignment-sets/taunmarked`,
+          ? `/api/assignment-sets/${assessmentId}/assignment-sets/ta`
+          : `/api/assignment-sets/${assessmentId}/assignment-sets/taunmarked`,
         {
           method: 'GET',
           headers: {
@@ -316,7 +316,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         },
         {} as { [questionId: string]: AnswerInput }
       );
-      console.log('INIT ANS', initialAnswers)
+      console.log('INIT ANS', initialAnswers);
       setAnswers(initialAnswers);
 
       const initialTotalScore =
