@@ -493,6 +493,14 @@ export const createSubmission = async (
     })
   );
 
+  const assignment = answers.find(
+    answer => answer.type === 'Team Member Selection Answer'
+  ) as TeamMemberSelectionAnswer;
+
+  if (!assignment) {
+    throw new BadRequestError('Student(s) must be selected!');
+  }
+
   const submission = new SubmissionModel({
     assessment: assessmentId,
     user: userId,
@@ -503,12 +511,7 @@ export const createSubmission = async (
   });
 
   await submission.save();
-
-  const assignment = answers.find(
-    answer => answer.type === 'Team Member Selection Answer'
-  ) as TeamMemberSelectionAnswer;
-
-  assignment.selectedUserIds.forEach(async userId => {
+  for (const userId of assignment.selectedUserIds) {
     let assessmentResult = await AssessmentResultModel.findOne({
       assessment: assessmentId,
       student: userId,
@@ -533,7 +536,7 @@ export const createSubmission = async (
     await assessmentResult.save();
 
     await recalculateResult(assessmentResult.id);
-  });
+  }
 
   return submission;
 };
@@ -709,10 +712,11 @@ export const updateSubmission = async (
     answer => answer.type === 'Team Member Selection Answer'
   ) as TeamMemberSelectionAnswer;
 
-  for (const userId of assignment.selectedUserIds) {
+  for (const selectedUserId of assignment.selectedUserIds) {
+    console.log(selectedUserId, assessment._id);
     const assessmentResult = await AssessmentResultModel.findOne({
-      assessment: assessment.id,
-      student: userId,
+      assessment: assessment._id,
+      student: selectedUserId,
     });
 
     if (!assessmentResult) {
@@ -721,16 +725,25 @@ export const updateSubmission = async (
       );
     }
 
-    const newMarkEntry: MarkEntry = {
-      marker: user,
-      submission: submission._id,
-      score: totalScore,
-    };
-    assessmentResult.marks.push(newMarkEntry);
+    // Find existing mark entry for this submission
+    const markEntryIndex = assessmentResult.marks.findIndex(
+      (mark) => mark.submission.toString() === submission._id.toString()
+    );
+
+    if (markEntryIndex !== -1) {
+      assessmentResult.marks[markEntryIndex].marker = user;
+      assessmentResult.marks[markEntryIndex].score = totalScore;
+    } else {
+      throw new NotFoundError(
+        'Mark entry for this submission not found in assessment result.'
+      );
+    }
+
     await assessmentResult.save();
 
     await recalculateResult(assessmentResult.id);
   }
+
   return submission;
 };
 
