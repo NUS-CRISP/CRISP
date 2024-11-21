@@ -59,7 +59,7 @@ describe('assessmentAssignmentSetService', () => {
       granularity: 'team',
       isReleased: true,
       areSubmissionsEditable: true,
-      startDate: new Date(),
+      startDate: new Date().setUTCFullYear(new Date().getUTCFullYear() - 1),
     });
     assessmentId = internalAssessment._id;
     internalAssessment.save();

@@ -6,7 +6,6 @@ import AssessmentAssignmentSetModel from '../models/AssessmentAssignmentSet';
 import AssessmentResultModel, {
   AssessmentResult,
 } from '../models/AssessmentResult';
-import InternalAssessmentModel from '../models/InternalAssessment';
 import { BadRequestError, NotFoundError } from './errors';
 import { Team } from '@models/Team';
 import { User } from '@models/User';
@@ -52,9 +51,14 @@ export const getOrCreateAssessmentResults = async (
     );
   }
 
+  if ((!assignmentSet.assignedTeams || assignmentSet.assignedTeams.length === 0)
+    && (!assignmentSet.assignedUsers || assignmentSet.assignedUsers.length === 0)) {
+    throw new BadRequestError('AssessmentAssignmentSet does not have assignments');
+  }
+
   // Extract all student IDs from the assigned teams
   const studentIdSet = new Set<string>();
-  if (assignmentSet.assignedTeams) {
+  if (assignmentSet.assignedTeams && assignmentSet.assignedTeams.length > 0) {
     for (const assignedTeam of assignmentSet.assignedTeams) {
       const team = assignedTeam.team as Team;
       if (team && team.members && Array.isArray(team.members)) {
@@ -143,110 +147,4 @@ export const recalculateResult = async (resultId: string) => {
       0
     ) / result.marks.length;
   result.save();
-};
-
-export const checkMarkingCompletion = async (assessmentId: string) => {
-  const assessment =
-    await InternalAssessmentModel.findById(assessmentId).populate('results');
-  if (!assessment) {
-    throw new NotFoundError('Assessment not found');
-  }
-
-  const assignmentSet = await AssessmentAssignmentSetModel.findOne({
-    assessment: assessmentId,
-  })
-    .populate({
-      path: 'originalTeams',
-      populate: { path: 'members', select: 'name identifier' },
-    })
-    .populate({
-      path: 'assignedTeams.tas',
-      select: 'name identifier',
-    })
-    .populate({
-      path: 'assignedTeams.team',
-      populate: { path: 'members', select: 'name identifier' },
-    })
-    .populate({
-      path: 'assignedTeams.team',
-      populate: { path: 'TA', select: 'name identifier' },
-    })
-    .populate({
-      path: 'assignedUsers.tas',
-      select: 'name identifier',
-    })
-    .populate({
-      path: 'assignedUsers.user',
-      select: 'name identifier',
-    });
-  if (!assignmentSet) {
-    throw new NotFoundError('AssessmentAssignmentSet not found');
-  }
-
-  const unmarked = [];
-
-  if (assignmentSet.assignedTeams) {
-    for (const assignedTeam of assignmentSet.assignedTeams) {
-      const assignedTAs = assignedTeam.tas.map(ta => ta.toString());
-      const team: any = assignedTeam.team;
-      const assessmentResult = await AssessmentResultModel.findOne({
-        assessment: assessmentId,
-        student: team.members[0],
-      }).populate('marks.marker');
-
-      if (!assessmentResult) {
-        unmarked.push({
-          team: team,
-          missingMarkers: assignedTAs,
-        });
-        continue;
-      }
-
-      const submittedMarkers = assessmentResult.marks.map(mark =>
-        mark.marker.toString()
-      );
-      const missingMarkers = assignedTAs.filter(
-        taId => !submittedMarkers.includes(taId)
-      );
-
-      if (missingMarkers.length > 0) {
-        unmarked.push({
-          team: team,
-          missingMarkers,
-        });
-      }
-    }
-  } else {
-    for (const assignedUser of assignmentSet.assignedUsers!) {
-      const assignedTAs = assignedUser.tas.map(ta => ta.toString());
-      const assessmentResult = await AssessmentResultModel.findOne({
-        assessment: assessmentId,
-        student: assignedUser.user,
-      });
-
-      if (!assessmentResult) {
-        unmarked.push({
-          student: assignedUser.user,
-          missingMarkers: assignedTAs,
-        });
-        continue;
-      }
-
-      const submittedMarkers = assessmentResult.marks.map(mark =>
-        mark.marker.toString()
-      );
-      const missingMarkers = assignedTAs.filter(
-        taId => !submittedMarkers.includes(taId)
-      );
-
-      if (missingMarkers.length > 0) {
-        unmarked.push({
-          student: assignedUser.user,
-          missingMarkers,
-        });
-      }
-    }
-  }
-
-  return unmarked;
 };

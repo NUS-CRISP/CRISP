@@ -14,10 +14,9 @@ import {
   adjustSubmissionScore,
 } from '../../services/submissionService';
 import { BadRequestError, NotFoundError } from '../../services/errors';
-import { AnswerModel, ShortResponseAnswer, TeamMemberSelectionAnswerModel } from '@models/Answer';
+import { TeamMemberSelectionAnswerModel } from '@models/Answer';
 import CourseModel from '@models/Course';
 import TeamSetModel from '@models/TeamSet';
-import QuestionModel from '@models/Question';
 import { TeamMemberSelectionQuestionModel } from '@models/QuestionTypes';
 
 let mongo: MongoMemoryServer;
@@ -85,8 +84,7 @@ const setupData = async () => {
     course: course._id,
     assessmentName: 'Midterm Exam',
     description: 'Midterm assessment',
-    startDate: new Date(),
-    endDate: new Date(),
+    startDate: new Date().setUTCFullYear(new Date().getUTCFullYear() - 1),
     maxMarks: 100,
     granularity: 'team',
     teamSet: teamSet._id,

@@ -317,7 +317,6 @@ export const addInternalAssessmentsToCourse = async (
 
     const results: mongoose.Document[] = [];
 
-    // Legacy for Google Assessments
     if (granularity === 'team') {
       if (!teamSet) {
         continue;

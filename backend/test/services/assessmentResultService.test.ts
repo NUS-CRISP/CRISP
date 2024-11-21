@@ -1,20 +1,20 @@
-// tests/services/assessmentResultService.test.ts
-
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import AssessmentAssignmentSetModel from '../../models/AssessmentAssignmentSet';
+import AssessmentAssignmentSetModel, { AssignedUser } from '../../models/AssessmentAssignmentSet';
 import AssessmentResultModel from '../../models/AssessmentResult';
 import InternalAssessmentModel from '../../models/InternalAssessment';
 import UserModel from '../../models/User';
 import {
   getOrCreateAssessmentResults,
   recalculateResult,
-  checkMarkingCompletion,
 } from '../../services/assessmentResultService';
 import { BadRequestError, NotFoundError } from '../../services/errors';
 import CourseModel from '@models/Course';
 import TeamModel from '@models/Team';
 import TeamSetModel from '@models/TeamSet';
+import SubmissionModel from '@models/Submission';
+import { MultipleChoiceOption, MultipleChoiceQuestionModel, TeamMemberSelectionQuestionModel } from '@models/QuestionTypes';
+import { MultipleChoiceAnswerModel, TeamMemberSelectionAnswerModel } from '@models/Answer';
 
 let mongo: MongoMemoryServer;
 
@@ -40,6 +40,9 @@ describe('assessmentResultService', () => {
   let assessmentId: mongoose.Types.ObjectId;
   let studentId: mongoose.Types.ObjectId;
   let taId: mongoose.Types.ObjectId;
+  let teamMemberQuestionId: mongoose.Types.ObjectId;
+  let mcQuestionId: mongoose.Types.ObjectId;
+  let submissionId: mongoose.Types.ObjectId;
 
   beforeEach(async () => {
     // Setup test data
@@ -77,25 +80,79 @@ describe('assessmentResultService', () => {
     });
     await teamSet.save();
 
-    const assessment = await InternalAssessmentModel.create({
-      course: course._id,
-      assessmentName: 'Test Assessment',
-      description: 'A test assessment for unit tests.',
-      granularity: 'team',
-      teamSet: teamSet,
-      isReleased: true,
-      areSubmissionsEditable: true,
-      startDate: new Date(),
+    const teamMemberQuestion = new TeamMemberSelectionQuestionModel({
+      text: 'Select students',
+      type: 'Team Member Selection',
+      isRequired: true,
+      isLocked: true,
     });
+    await teamMemberQuestion.save();
+    teamMemberQuestionId = teamMemberQuestion._id;
+    const teamMemberAnswer = new TeamMemberSelectionAnswerModel({
+      question: teamMemberQuestionId,
+      type: 'Team Member Selection Answer',
+      selectedUserIds: [studentId],
+    })
+    await teamMemberAnswer.save();
+
+    const mcQuestion = new MultipleChoiceQuestionModel({
+      text: '星街すいせいは。。。',
+      type: 'Multiple Choice',
+      isRequired: true,
+      isLocked: false,
+      isScored: true,
+      options: [{
+        text: '今日もかわいいね',
+        points: 10,
+      }, {
+        text: '今日も怖い',
+        points: 5,
+      }] as MultipleChoiceOption[]
+    });
+    await mcQuestion.save();
+    mcQuestionId = mcQuestion._id;
+    const mcAnswer = new MultipleChoiceAnswerModel({
+      question: mcQuestionId,
+      type: 'Multiple Choice Answer',
+      value: '今日も怖い'
+    });
+    await mcAnswer.save();
+
+    const assessment = new InternalAssessmentModel({
+      course: course._id,
+      assessmentName: 'Midterm Exam',
+      description: 'Midterm assessment',
+      startDate: new Date().setUTCFullYear(new Date().getUTCFullYear() - 1),
+      maxMarks: 10,
+      granularity: 'team',
+      teamSet: teamSet._id,
+      areSubmissionsEditable: true,
+      results: [],
+      isReleased: false,
+      questions: [teamMemberQuestion, mcQuestion],
+    });
+    await assessment.save();
     assessmentId = assessment._id;
     await assessment.save();
     const assignmentSet = await AssessmentAssignmentSetModel.create({
       assessment: assessment._id,
-      assignedUsers: [{ user: studentId, tas: [taId] }],
+      assignedUsers: [{ user: studentId, tas: [taId] } as AssignedUser],
     });
     await assignmentSet.save();
     assessment.assessmentAssignmentSet = assignmentSet._id;
     await assessment.save();
+    const submission = new SubmissionModel({
+      assessment: assessmentId,
+      user: taId,
+      answers: [
+        teamMemberAnswer, mcAnswer,
+      ],
+      isDrafr: false,
+      submittedAt: new Date(),
+      score: 10, //Incorrect score for testing recalculate score
+    });
+    await submission.save();
+    submissionId = submission._id;
   });
 
   describe('getOrCreateAssessmentResults', () => {
@@ -103,7 +160,7 @@ describe('assessmentResultService', () => {
       const results = await getOrCreateAssessmentResults(assessmentId.toString());
 
       expect(results).toHaveLength(1);
-      expect(results[0].student.toString()).toEqual(studentId.toString());
+      expect(results[0].student._id.toString()).toEqual(studentId.toString());
     });
 
     it('should retrieve existing assessment results if they already exist', async () => {
@@ -121,19 +178,24 @@ describe('assessmentResultService', () => {
       );
     });
   });
-
+  /**
+   * Disambiguation: This method is for updating a submission after a new result object is created.
+   * It can be used to reset the scores if they are inaccurate, but this is not the main purpose of the function.
+   * So, it is expected that the scores in the AssessmentResults are accurate, even if the submission's score may
+   * not be accurate.
+   */
   describe('recalculateResult', () => {
     it('should recalculate the average score for a result', async () => {
       const result = await AssessmentResultModel.create({
         assessment: assessmentId,
         student: studentId,
-        marks: [{ marker: taId, score: 80 }],
+        marks: [{ marker: taId, submission: submissionId, score: 5 }], // The score here should be the correct one
       });
 
       await recalculateResult(result._id.toString());
 
       const updatedResult = await AssessmentResultModel.findById(result._id);
-      expect(updatedResult?.averageScore).toEqual(80);
+      expect(updatedResult?.averageScore).toEqual(5);
     });
 
     it('should throw NotFoundError if the result is not found', async () => {
@@ -150,24 +212,6 @@ describe('assessmentResultService', () => {
 
       await expect(recalculateResult(result._id.toString())).rejects.toThrow(
         BadRequestError
-      );
-    });
-  });
-
-  describe('checkMarkingCompletion', () => {
-    it('should return unmarked teams or users for an assessment', async () => {
-      await getOrCreateAssessmentResults(assessmentId.toString());
-
-      const unmarkedTeams = await checkMarkingCompletion(assessmentId.toString());
-
-      expect(unmarkedTeams).toHaveLength(1);
-      expect(unmarkedTeams[0].student!.toString()).toEqual(studentId.toString());
-    });
-
-    it('should throw NotFoundError if the assessment is not found', async () => {
-      const invalidId = new mongoose.Types.ObjectId().toString();
-      await expect(checkMarkingCompletion(invalidId)).rejects.toThrow(
-        NotFoundError
       );
     });
   });

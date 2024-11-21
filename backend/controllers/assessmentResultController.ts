@@ -3,7 +3,6 @@ import { Request, Response } from 'express';
 import {
   getOrCreateAssessmentResults,
   recalculateResult,
-  checkMarkingCompletion,
 } from '../services/assessmentResultService';
 import { BadRequestError, NotFoundError } from '../services/errors';
 import { getAssignmentSetByAssessmentId } from '../services/assessmentAssignmentSetService';
@@ -160,32 +159,6 @@ export const recalculateResultController = async (
     } else {
       console.error('Error recalculating AssessmentResult:', error);
       res.status(500).json({ error: 'Failed to recalculate AssessmentResult' });
-    }
-  }
-};
-
-/**
- * Controller to check marking completion for an assessment.
- * Route: GET /api/assessment-results/:assessmentId/check-marking-completion
- */
-export const checkMarkingCompletionController = async (
-  req: Request,
-  res: Response
-) => {
-  const { assessmentId } = req.params;
-
-  try {
-    const unmarkedTeams = await checkMarkingCompletion(assessmentId);
-    res.status(200).json({
-      success: true,
-      data: unmarkedTeams,
-    });
-  } catch (error) {
-    if (error instanceof NotFoundError) {
-      res.status(404).json({ error: error.message });
-    } else {
-      console.error('Error checking marking completion:', error);
-      res.status(500).json({ error: 'Failed to check marking completion' });
     }
   }
 };

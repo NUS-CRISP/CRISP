@@ -5,7 +5,6 @@ import { Request, Response } from 'express';
 import {
   getOrCreateAssessmentResultsController,
   recalculateResultController,
-  checkMarkingCompletionController,
 } from '../../controllers/assessmentResultController';
 import * as assessmentResultService from '../../services/assessmentResultService';
 import * as assessmentAssignmentSetService from '../../services/assessmentAssignmentSetService';
@@ -270,63 +269,6 @@ describe('assessmentResultController', () => {
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
         error: 'Failed to recalculate AssessmentResult',
-      });
-    });
-  });
-
-  describe('checkMarkingCompletionController', () => {
-    it('should check marking completion and return 200 with unmarked teams', async () => {
-      const req = mockRequest();
-      req.params = { assessmentId: 'assessment123' };
-      const res = mockResponse();
-
-      const mockUnmarkedTeams = ['team1', 'team2'];
-
-      jest.spyOn(assessmentResultService, 'checkMarkingCompletion').mockResolvedValue(
-        mockUnmarkedTeams as any
-      );
-
-      await checkMarkingCompletionController(req, res);
-
-      expect(assessmentResultService.checkMarkingCompletion).toHaveBeenCalledWith(
-        'assessment123'
-      );
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({
-        success: true,
-        data: mockUnmarkedTeams,
-      });
-    });
-
-    it('should handle NotFoundError and return 404', async () => {
-      const req = mockRequest();
-      req.params = { assessmentId: 'assessment123' };
-      const res = mockResponse();
-
-      jest.spyOn(assessmentResultService, 'checkMarkingCompletion').mockRejectedValue(
-        new NotFoundError('Assessment not found')
-      );
-
-      await checkMarkingCompletionController(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Assessment not found' });
-    });
-
-    it('should handle unexpected errors and return 500', async () => {
-      const req = mockRequest();
-      req.params = { assessmentId: 'assessment123' };
-      const res = mockResponse();
-
-      jest.spyOn(assessmentResultService, 'checkMarkingCompletion').mockRejectedValue(
-        new Error('Unexpected error')
-      );
-
-      await checkMarkingCompletionController(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({
-        error: 'Failed to check marking completion',
       });
     });
   });
