@@ -147,7 +147,7 @@ describe('assessmentResultService', () => {
       answers: [
         teamMemberAnswer, mcAnswer,
       ],
-      isDrafr: false,
+      isDraft: false,
       submittedAt: new Date(),
       score: 10, //Incorrect score for testing recalculate score
     });
