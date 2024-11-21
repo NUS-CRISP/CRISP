@@ -15,6 +15,7 @@ import metricRoutes from './routes/metricRoutes';
 import teamRoutes from './routes/teamRoutes';
 import teamSetRoutes from './routes/teamSetRoutes';
 import userRoutes from './routes/userRoutes';
+import codeAnalysisRoutes from './routes/codeAnalysisRoutes';
 import { connectToDatabase } from './utils/database';
 import submissionRoutes from 'routes/submissionRoutes';
 import assessmentAssignmentSetRoutes from 'routes/assessmentAssignmentSetRoutes';
@@ -52,6 +53,7 @@ app.use('/api/metrics', metricRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/assessment-results', assessmentResultRoutes);
 app.use('/api/assignment-sets', assessmentAssignmentSetRoutes);
+app.use('/api/codeanalysis', codeAnalysisRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);

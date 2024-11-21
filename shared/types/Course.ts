@@ -30,6 +30,7 @@ export interface Course {
   code: string;
   semester: string;
   startDate: Date;
+  durationWeeks: number;
   faculty: User[];
   TAs: User[];
   students: User[];
@@ -39,6 +40,8 @@ export interface Course {
   sprints: Sprint[];
   milestones: Milestone[];
   courseType: CourseType;
+  // GitHub Repo for non GitHub Org
+  gitHubRepoLinks: String[]
   // start 'GitHubOrg' fields
   gitHubOrgName?: string;
   repoNameFilter?: string;

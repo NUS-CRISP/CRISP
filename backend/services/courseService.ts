@@ -440,6 +440,83 @@ export const getPeopleFromCourse = async (courseId: string) => {
   };
 };
 
+/*-------------------------------------Repositories-------------------------------------*/
+export const getRepositoriesFromCourse = async (courseId: string) => {
+  const course = await CourseModel.findById(courseId);
+
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+
+  return {
+    repositories: course.gitHubRepoLinks,
+  };
+};
+
+export const addRepositoriesToCourse = async (
+  courseId: string,
+  repositories: { gitHubRepoLink: string }[]
+) => {
+  const course = await CourseModel.findById(courseId);
+
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+
+  for (const repository of repositories) {
+    course.gitHubRepoLinks.push(repository.gitHubRepoLink);
+  }
+
+  await course.save();
+};
+
+export const editRepository = async (
+  courseId: string,
+  repositoryIndex: number,
+  updateData: Record<string, unknown>
+) => {
+  const course = await CourseModel.findById(courseId);
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+
+  // Check if the repositoryIndex is valid
+  if (repositoryIndex < 0 || repositoryIndex >= course.gitHubRepoLinks.length) {
+    throw new NotFoundError('Repository not found');
+  }
+
+  // Make sure you're only updating the repoLink (a string) instead of an object
+  if (typeof updateData.repoLink === 'string') {
+    course.gitHubRepoLinks[repositoryIndex] = updateData.repoLink; // Directly set the new repo link
+  } else {
+    throw new Error('Invalid repository link format');
+  }
+
+  // Save the updated course
+  await course.save();
+};
+
+export const removeRepositoryFromCourse = async (
+  courseId: string,
+  repositoryIndex: number
+) => {
+  const course = await CourseModel.findById(courseId);
+  if (!course) {
+    throw new NotFoundError('Course not found');
+  }
+
+  // Check if the repositoryIndex is valid
+  if (repositoryIndex < 0 || repositoryIndex >= course.gitHubRepoLinks.length) {
+    throw new NotFoundError('Repository not found');
+  }
+
+  // Remove the repository from the array
+  course.gitHubRepoLinks.splice(repositoryIndex, 1);
+
+  // Save the updated course
+  await course.save();
+};
+
 /*----------------------------------------TeamSet----------------------------------------*/
 export const getTeamSetsFromCourse = async (
   accountId: string,
