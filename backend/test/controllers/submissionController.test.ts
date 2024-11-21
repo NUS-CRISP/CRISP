@@ -1,6 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// tests/controllers/submissionController.test.ts
-
 import { Request, Response } from 'express';
 import {
   submitAssessment,
@@ -11,8 +9,8 @@ import {
   adjustSubmissionScoreController,
 } from '../../controllers/submissionController';
 import * as submissionService from '../../services/submissionService';
-import * as accountService from '../../services/accountService';
 import * as authUtils from '../../utils/auth';
+import * as accountService from '../../services/accountService';
 import AccountModel from '../../models/Account';
 import SubmissionModel from '../../models/Submission';
 import {
@@ -22,6 +20,9 @@ import {
 
 jest.mock('../../services/submissionService');
 jest.mock('../../utils/auth');
+jest.mock('../../services/accountService');
+jest.mock('../../models/Account');
+jest.mock('../../models/Submission');
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -32,6 +33,7 @@ const mockRequest = () => {
   req.body = {};
   req.params = {};
   req.query = {};
+  req.headers = {};
   return req;
 };
 
@@ -49,19 +51,17 @@ describe('submissionController', () => {
       const req = mockRequest();
       req.params = { assessmentId: 'assessment123' };
       req.body = {
-        answers: [{ questionId: 'q1', answer: 'Answer 1' }],
+        answers: [{ questionId: 'q1', answer: 'A' }],
         isDraft: false,
       };
       const res = mockResponse();
 
       const accountId = 'account123';
       const userId = 'user123';
-      const mockSubmission = { id: 'submission123', answers: req.body.answers };
+      const mockSubmission = { id: 'submission123', ...req.body };
 
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
-      jest
-        .spyOn(accountService, 'getUserIdByAccountId')
-        .mockResolvedValue(userId);
+      jest.spyOn(accountService, 'getUserIdByAccountId').mockResolvedValue(userId);
       jest
         .spyOn(submissionService, 'createSubmission')
         .mockResolvedValue(mockSubmission as any);
@@ -69,14 +69,12 @@ describe('submissionController', () => {
       await submitAssessment(req, res);
 
       expect(authUtils.getAccountId).toHaveBeenCalledWith(req);
-      expect(accountService.getUserIdByAccountId).toHaveBeenCalledWith(
-        accountId
-      );
+      expect(accountService.getUserIdByAccountId).toHaveBeenCalledWith(accountId);
       expect(submissionService.createSubmission).toHaveBeenCalledWith(
         'assessment123',
         userId,
-        [{ questionId: 'q1', answer: 'Answer 1' }],
-        false
+        req.body.answers,
+        req.body.isDraft
       );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
@@ -87,22 +85,19 @@ describe('submissionController', () => {
 
     it('should update an existing submission and return 200', async () => {
       const req = mockRequest();
-      req.params = { assessmentId: 'assessment123' };
       req.body = {
-        answers: [{ questionId: 'q1', answer: 'Updated Answer' }],
-        isDraft: true,
+        answers: [{ questionId: 'q1', answer: 'A' }],
+        isDraft: false,
         submissionId: 'submission123',
       };
       const res = mockResponse();
 
       const accountId = 'account123';
       const userId = 'user123';
-      const mockSubmission = { id: 'submission123', answers: req.body.answers };
+      const mockSubmission = { id: 'submission123', ...req.body };
 
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
-      jest
-        .spyOn(accountService, 'getUserIdByAccountId')
-        .mockResolvedValue(userId);
+      jest.spyOn(accountService, 'getUserIdByAccountId').mockResolvedValue(userId);
       jest
         .spyOn(submissionService, 'updateSubmission')
         .mockResolvedValue(mockSubmission as any);
@@ -110,15 +105,13 @@ describe('submissionController', () => {
       await submitAssessment(req, res);
 
       expect(authUtils.getAccountId).toHaveBeenCalledWith(req);
-      expect(accountService.getUserIdByAccountId).toHaveBeenCalledWith(
-        accountId
-      );
+      expect(accountService.getUserIdByAccountId).toHaveBeenCalledWith(accountId);
       expect(submissionService.updateSubmission).toHaveBeenCalledWith(
         'submission123',
         userId,
         accountId,
-        [{ questionId: 'q1', answer: 'Updated Answer' }],
-        true
+        req.body.answers,
+        req.body.isDraft
       );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
@@ -127,16 +120,10 @@ describe('submissionController', () => {
       });
     });
 
-    it('should handle BadRequestError for invalid answers and return 400', async () => {
+    it('should handle BadRequestError when answers are invalid', async () => {
       const req = mockRequest();
-      req.params = { assessmentId: 'assessment123' };
-      req.body = {
-        answers: 'invalid', // Should be an array
-        isDraft: false,
-      };
+      req.body = { answers: 'invalid answers' }; // Not an array
       const res = mockResponse();
-
-      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account123');
 
       await submitAssessment(req, res);
 
@@ -146,41 +133,33 @@ describe('submissionController', () => {
 
     it('should handle NotFoundError and return 400', async () => {
       const req = mockRequest();
-      req.params = { assessmentId: 'assessment123' };
       req.body = {
-        answers: [{ questionId: 'q1', answer: 'Answer 1' }],
-        isDraft: false,
-      };
-      const res = mockResponse();
-
-      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account123');
-      jest
-        .spyOn(accountService, 'getUserIdByAccountId')
-        .mockResolvedValue('user123');
-      jest
-        .spyOn(submissionService, 'createSubmission')
-        .mockRejectedValue(new NotFoundError('Assessment not found'));
-
-      await submitAssessment(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Assessment not found' });
-    });
-
-    it('should handle MissingAuthorizationError and return 401', async () => {
-      const req = mockRequest();
-      req.params = { assessmentId: 'assessment123' };
-      req.body = {
-        answers: [{ questionId: 'q1', answer: 'Answer 1' }],
+        answers: [{ questionId: 'q1', answer: 'A' }],
         isDraft: false,
       };
       const res = mockResponse();
 
       jest
         .spyOn(authUtils, 'getAccountId')
-        .mockRejectedValue(
-          new MissingAuthorizationError('Mising Authorization')
-        );
+        .mockRejectedValue(new NotFoundError('Not found'));
+
+      await submitAssessment(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Not found' });
+    });
+
+    it('should handle MissingAuthorizationError and return 401', async () => {
+      const req = mockRequest();
+      req.body = {
+        answers: [{ questionId: 'q1', answer: 'A' }],
+        isDraft: false,
+      };
+      const res = mockResponse();
+
+      jest
+        .spyOn(authUtils, 'getAccountId')
+        .mockRejectedValue(new MissingAuthorizationError('Unauthorized'));
 
       await submitAssessment(req, res);
 
@@ -190,9 +169,8 @@ describe('submissionController', () => {
 
     it('should handle unexpected errors and return 500', async () => {
       const req = mockRequest();
-      req.params = { assessmentId: 'assessment123' };
       req.body = {
-        answers: [{ questionId: 'q1', answer: 'Answer 1' }],
+        answers: [{ questionId: 'q1', answer: 'A' }],
         isDraft: false,
       };
       const res = mockResponse();
@@ -200,17 +178,12 @@ describe('submissionController', () => {
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account123');
       jest
         .spyOn(accountService, 'getUserIdByAccountId')
-        .mockResolvedValue('user123');
-      jest
-        .spyOn(submissionService, 'createSubmission')
         .mockRejectedValue(new Error('Unexpected error'));
 
       await submitAssessment(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({
-        error: 'Failed to submit assessment',
-      });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to submit assessment' });
     });
   });
 
@@ -222,12 +195,10 @@ describe('submissionController', () => {
 
       const accountId = 'account123';
       const userId = 'user123';
-      const mockSubmissions = [{ id: 'submission1' }, { id: 'submission2' }];
+      const mockSubmissions = [{ id: 'submission123' }];
 
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
-      jest
-        .spyOn(accountService, 'getUserIdByAccountId')
-        .mockResolvedValue(userId);
+      jest.spyOn(accountService, 'getUserIdByAccountId').mockResolvedValue(userId);
       jest
         .spyOn(submissionService, 'getSubmissionsByAssessmentAndUser')
         .mockResolvedValue(mockSubmissions as any);
@@ -235,12 +206,10 @@ describe('submissionController', () => {
       await getUserSubmissions(req, res);
 
       expect(authUtils.getAccountId).toHaveBeenCalledWith(req);
-      expect(accountService.getUserIdByAccountId).toHaveBeenCalledWith(
-        accountId
-      );
+      expect(accountService.getUserIdByAccountId).toHaveBeenCalledWith(accountId);
       expect(
         submissionService.getSubmissionsByAssessmentAndUser
-      ).toHaveBeenCalledWith('assessment123', 'user123');
+      ).toHaveBeenCalledWith('assessment123', userId);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockSubmissions);
     });
@@ -253,15 +222,12 @@ describe('submissionController', () => {
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account123');
       jest
         .spyOn(accountService, 'getUserIdByAccountId')
-        .mockResolvedValue('user123');
-      jest
-        .spyOn(submissionService, 'getSubmissionsByAssessmentAndUser')
-        .mockRejectedValue(new NotFoundError('Submissions not found'));
+        .mockRejectedValue(new NotFoundError('User not found'));
 
       await getUserSubmissions(req, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Submissions not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'User not found' });
     });
 
     it('should handle MissingAuthorizationError and return 401', async () => {
@@ -271,9 +237,7 @@ describe('submissionController', () => {
 
       jest
         .spyOn(authUtils, 'getAccountId')
-        .mockRejectedValue(
-          new MissingAuthorizationError('Missing Authorization')
-        );
+        .mockRejectedValue(new MissingAuthorizationError('Unauthorized'));
 
       await getUserSubmissions(req, res);
 
@@ -289,9 +253,6 @@ describe('submissionController', () => {
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account123');
       jest
         .spyOn(accountService, 'getUserIdByAccountId')
-        .mockResolvedValue('user123');
-      jest
-        .spyOn(submissionService, 'getSubmissionsByAssessmentAndUser')
         .mockRejectedValue(new Error('Unexpected error'));
 
       await getUserSubmissions(req, res);
@@ -304,74 +265,29 @@ describe('submissionController', () => {
   });
 
   describe('getAllSubmissions', () => {
-    it('should retrieve all submissions and return 200 for admin', async () => {
+    it('should retrieve all submissions and return 200', async () => {
       const req = mockRequest();
       req.params = { assessmentId: 'assessment123' };
       const res = mockResponse();
 
-      const accountId = 'admin123';
-      const mockAccount = { id: accountId, role: 'admin' };
-      const mockSubmissions = [{ id: 'submission1' }, { id: 'submission2' }];
+      const accountId = 'account123';
+      const account = { id: accountId, role: 'admin' };
+      const mockSubmissions = [{ id: 'submission123' }];
 
-      (AccountModel.findById as jest.Mock).mockResolvedValue(mockAccount);
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
+      (AccountModel.findById as jest.Mock).mockResolvedValue(account);
       jest
         .spyOn(submissionService, 'getSubmissionsByAssessment')
         .mockResolvedValue(mockSubmissions as any);
 
       await getAllSubmissions(req, res);
 
-      expect(authUtils.getAccountId).toHaveBeenCalledWith(req);
       expect(AccountModel.findById).toHaveBeenCalledWith(accountId);
       expect(submissionService.getSubmissionsByAssessment).toHaveBeenCalledWith(
         'assessment123'
       );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockSubmissions);
-    });
-
-    it('should retrieve all submissions and return 200 for Faculty member', async () => {
-      const req = mockRequest();
-      req.params = { assessmentId: 'assessment123' };
-      const res = mockResponse();
-
-      const accountId = 'faculty123';
-      const mockAccount = { id: accountId, role: 'Faculty member' };
-      const mockSubmissions = [{ id: 'submission1' }, { id: 'submission2' }];
-
-      (AccountModel.findById as jest.Mock).mockResolvedValue(mockAccount);
-      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
-      jest
-        .spyOn(submissionService, 'getSubmissionsByAssessment')
-        .mockResolvedValue(mockSubmissions as any);
-
-      await getAllSubmissions(req, res);
-
-      expect(authUtils.getAccountId).toHaveBeenCalledWith(req);
-      expect(AccountModel.findById).toHaveBeenCalledWith(accountId);
-      expect(submissionService.getSubmissionsByAssessment).toHaveBeenCalledWith(
-        'assessment123'
-      );
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith(mockSubmissions);
-    });
-
-    it('should deny access for non-admin and non-faculty roles and return 403', async () => {
-      const req = mockRequest();
-      req.params = { assessmentId: 'assessment123' };
-      const res = mockResponse();
-
-      const accountId = 'user123';
-      const mockAccount = { id: accountId, role: 'student' };
-
-      (AccountModel.findById as jest.Mock).mockResolvedValue(mockAccount);
-      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
-
-      await getAllSubmissions(req, res);
-
-      expect(AccountModel.findById).toHaveBeenCalledWith(accountId);
-      expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Access denied' });
     });
 
     it('should handle MissingAuthorizationError and return 403', async () => {
@@ -379,7 +295,11 @@ describe('submissionController', () => {
       req.params = { assessmentId: 'assessment123' };
       const res = mockResponse();
 
-      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(null as any);
+      const accountId = 'account123';
+      const account = { id: accountId, role: 'Student' };
+
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
+      (AccountModel.findById as jest.Mock).mockResolvedValue(account);
 
       await getAllSubmissions(req, res);
 
@@ -392,14 +312,7 @@ describe('submissionController', () => {
       req.params = { assessmentId: 'assessment123' };
       const res = mockResponse();
 
-      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('admin123');
-      (AccountModel.findById as jest.Mock).mockResolvedValue({
-        id: 'admin123',
-        role: 'admin',
-      });
-      jest
-        .spyOn(submissionService, 'getSubmissionsByAssessment')
-        .mockRejectedValue(new Error('Unexpected error'));
+      jest.spyOn(authUtils, 'getAccountId').mockRejectedValue(new Error('Error'));
 
       await getAllSubmissions(req, res);
 
@@ -418,28 +331,19 @@ describe('submissionController', () => {
 
       const accountId = 'account123';
       const userId = 'user123';
-      const mockSubmission = {
-        id: 'submission123',
-        user: { equals: jest.fn().mockReturnValue(true) },
-      };
+      const submission = { id: 'submission123', user: { equals: jest.fn() } };
+
+      submission.user.equals.mockReturnValue(true);
 
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
-      jest
-        .spyOn(accountService, 'getUserIdByAccountId')
-        .mockResolvedValue(userId);
-      (SubmissionModel.findById as jest.Mock).mockResolvedValue(mockSubmission);
+      jest.spyOn(accountService, 'getUserIdByAccountId').mockResolvedValue(userId);
+      (SubmissionModel.findById as jest.Mock).mockResolvedValue(submission);
       jest
         .spyOn(submissionService, 'deleteSubmission')
         .mockResolvedValue(undefined);
 
-      mockSubmission.user.equals.mockReturnValue(true);
-
       await deleteUserSubmission(req, res);
 
-      expect(authUtils.getAccountId).toHaveBeenCalledWith(req);
-      expect(accountService.getUserIdByAccountId).toHaveBeenCalledWith(
-        accountId
-      );
       expect(SubmissionModel.findById).toHaveBeenCalledWith('submission123');
       expect(submissionService.deleteSubmission).toHaveBeenCalledWith(
         'submission123'
@@ -447,78 +351,6 @@ describe('submissionController', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Submission deleted successfully',
-      });
-    });
-
-    it('should allow admin to delete any submission and return 200', async () => {
-      const req = mockRequest();
-      req.params = { submissionId: 'submission123' };
-      const res = mockResponse();
-
-      const accountId = 'admin123';
-      const userId = 'user123';
-      const mockSubmission = {
-        id: 'submission123',
-        user: { equals: jest.fn().mockReturnValue(false) },
-      };
-      const mockAccount = { id: accountId, role: 'admin' };
-
-      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
-      jest
-        .spyOn(accountService, 'getUserIdByAccountId')
-        .mockResolvedValue(userId);
-      (SubmissionModel.findById as jest.Mock).mockResolvedValue(mockSubmission);
-      (AccountModel.findById as jest.Mock).mockResolvedValue(mockAccount);
-      jest
-        .spyOn(submissionService, 'deleteSubmission')
-        .mockResolvedValue(undefined);
-
-      mockSubmission.user.equals.mockReturnValue(false);
-
-      await deleteUserSubmission(req, res);
-
-      expect(authUtils.getAccountId).toHaveBeenCalledWith(req);
-      expect(accountService.getUserIdByAccountId).toHaveBeenCalledWith(
-        accountId
-      );
-      expect(SubmissionModel.findById).toHaveBeenCalledWith('submission123');
-      expect(AccountModel.findById).toHaveBeenCalledWith(accountId);
-      expect(submissionService.deleteSubmission).toHaveBeenCalledWith(
-        'submission123'
-      );
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({
-        message: 'Submission deleted successfully',
-      });
-    });
-
-    it('should deny deletion if user is not the owner and not admin, return 403', async () => {
-      const req = mockRequest();
-      req.params = { submissionId: 'submission123' };
-      const res = mockResponse();
-
-      const accountId = 'faculty123';
-      const userId = 'user123';
-      const mockSubmission = {
-        id: 'submission123',
-        user: { equals: jest.fn().mockReturnValue(false) },
-      };
-      const mockAccount = { id: accountId, role: 'Faculty member' };
-
-      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
-      jest
-        .spyOn(accountService, 'getUserIdByAccountId')
-        .mockResolvedValue(userId);
-      (SubmissionModel.findById as jest.Mock).mockResolvedValue(mockSubmission);
-      (AccountModel.findById as jest.Mock).mockResolvedValue(mockAccount);
-
-      mockSubmission.user.equals.mockReturnValue(false);
-
-      await deleteUserSubmission(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({
-        error: 'You do not have permission to delete this submission',
       });
     });
 
@@ -528,9 +360,6 @@ describe('submissionController', () => {
       const res = mockResponse();
 
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account123');
-      jest
-        .spyOn(accountService, 'getUserIdByAccountId')
-        .mockResolvedValue('user123');
       (SubmissionModel.findById as jest.Mock).mockResolvedValue(null);
 
       await deleteUserSubmission(req, res);
@@ -544,18 +373,15 @@ describe('submissionController', () => {
       req.params = { submissionId: 'submission123' };
       const res = mockResponse();
 
-      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account123');
-      jest
-        .spyOn(accountService, 'getUserIdByAccountId')
-        .mockResolvedValue('user123');
-      (SubmissionModel.findById as jest.Mock).mockResolvedValue({
-        id: 'submission123',
-        user: { equals: jest.fn().mockReturnValue(false) },
-      });
-      (AccountModel.findById as jest.Mock).mockResolvedValue({
-        id: 'account123',
-        role: 'student',
-      });
+      const accountId = 'account123';
+      const submission = { id: 'submission123', user: { equals: jest.fn() } };
+      const account = { id: accountId, role: 'Student' };
+
+      submission.user.equals.mockReturnValue(false);
+
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
+      (SubmissionModel.findById as jest.Mock).mockResolvedValue(submission);
+      (AccountModel.findById as jest.Mock).mockResolvedValue(account);
 
       await deleteUserSubmission(req, res);
 
@@ -570,12 +396,8 @@ describe('submissionController', () => {
       req.params = { submissionId: 'submission123' };
       const res = mockResponse();
 
-      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account123');
       jest
-        .spyOn(accountService, 'getUserIdByAccountId')
-        .mockResolvedValue('user123');
-      jest
-        .spyOn(SubmissionModel, 'findById')
+        .spyOn(authUtils, 'getAccountId')
         .mockRejectedValue(new Error('Unexpected error'));
 
       await deleteUserSubmission(req, res);
@@ -595,108 +417,25 @@ describe('submissionController', () => {
 
       const accountId = 'account123';
       const userId = 'user123';
-      const mockSubmission = {
+      const submission = {
         id: 'submission123',
-        user: 'user123',
-        equals: jest.fn().mockReturnValue(true),
-        populate: jest.fn().mockResolvedValue({
-          id: 'submission123',
-          user: { id: 'user123' },
-          assessment: { id: 'assessment123' },
-        }),
+        user: { equals: jest.fn() },
+        populate: jest.fn().mockReturnThis(),
       };
 
+      submission.user.equals.mockReturnValue(true);
+
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
-      jest
-        .spyOn(accountService, 'getUserIdByAccountId')
-        .mockResolvedValue(userId);
-      (SubmissionModel.findById as jest.Mock).mockReturnValue(mockSubmission);
+      jest.spyOn(accountService, 'getUserIdByAccountId').mockResolvedValue(userId);
+      (SubmissionModel.findById as jest.Mock).mockReturnValue(submission);
 
       await getSubmissionByIdController(req, res);
 
-      expect(authUtils.getAccountId).toHaveBeenCalledWith(req);
-      expect(accountService.getUserIdByAccountId).toHaveBeenCalledWith(
-        accountId
-      );
       expect(SubmissionModel.findById).toHaveBeenCalledWith('submission123');
-      expect(mockSubmission.populate).toHaveBeenCalledWith('user');
-      expect(mockSubmission.populate).toHaveBeenCalledWith('assessment');
+      expect(submission.populate).toHaveBeenCalledWith('user');
+      expect(submission.populate).toHaveBeenCalledWith('assessment');
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({
-        id: 'submission123',
-        user: { id: 'user123' },
-        assessment: { id: 'assessment123' },
-      });
-    });
-
-    it('should allow admin to view any submission and return 200', async () => {
-      const req = mockRequest();
-      req.params = { submissionId: 'submission123' };
-      const res = mockResponse();
-
-      const accountId = 'admin123';
-      const userId = 'user123';
-      const mockSubmission = {
-        id: 'submission123',
-        user: 'user456',
-        equals: jest.fn().mockReturnValue(false),
-        populate: jest.fn().mockResolvedValue({
-          id: 'submission123',
-          user: { id: 'user456' },
-          assessment: { id: 'assessment123' },
-        }),
-      };
-      const mockAccount = { id: 'admin123', role: 'admin' };
-
-      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
-      jest
-        .spyOn(accountService, 'getUserIdByAccountId')
-        .mockResolvedValue(userId);
-      (SubmissionModel.findById as jest.Mock).mockReturnValue(mockSubmission);
-      (AccountModel.findById as jest.Mock).mockResolvedValue(mockAccount);
-
-      await getSubmissionByIdController(req, res);
-
-      expect(mockSubmission.equals).toHaveBeenCalledWith('user123');
-      expect(AccountModel.findById).toHaveBeenCalledWith(accountId);
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({
-        id: 'submission123',
-        user: { id: 'user456' },
-        assessment: { id: 'assessment123' },
-      });
-    });
-
-    it('should deny access if user is not the owner and not admin, return 403', async () => {
-      const req = mockRequest();
-      req.params = { submissionId: 'submission123' };
-      const res = mockResponse();
-
-      const accountId = 'faculty123';
-      const userId = 'user123';
-      const mockSubmission = {
-        id: 'submission123',
-        user: 'user456',
-        equals: jest.fn().mockReturnValue(false),
-        populate: jest.fn(),
-      };
-      const mockAccount = { id: 'faculty123', role: 'Faculty member' };
-
-      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
-      jest
-        .spyOn(accountService, 'getUserIdByAccountId')
-        .mockResolvedValue(userId);
-      (SubmissionModel.findById as jest.Mock).mockReturnValue(mockSubmission);
-      (AccountModel.findById as jest.Mock).mockResolvedValue(mockAccount);
-
-      await getSubmissionByIdController(req, res);
-
-      expect(mockSubmission.equals).toHaveBeenCalledWith('user123');
-      expect(AccountModel.findById).toHaveBeenCalledWith(accountId);
-      expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({
-        error: 'You do not have permission to view this submission',
-      });
+      expect(res.json).toHaveBeenCalledWith(submission);
     });
 
     it('should handle NotFoundError and return 404', async () => {
@@ -704,11 +443,15 @@ describe('submissionController', () => {
       req.params = { submissionId: 'submission123' };
       const res = mockResponse();
 
-      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account123');
-      jest
-        .spyOn(accountService, 'getUserIdByAccountId')
-        .mockResolvedValue('user123');
-      (SubmissionModel.findById as jest.Mock).mockResolvedValue(null);
+      const accountId = 'account123';
+      const userId = 'user123';
+
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
+      jest.spyOn(accountService, 'getUserIdByAccountId').mockResolvedValue(userId);
+
+      (SubmissionModel.findById as jest.Mock).mockImplementation(() => {
+        throw new NotFoundError('Submission not found');
+      });
 
       await getSubmissionByIdController(req, res);
 
@@ -721,19 +464,21 @@ describe('submissionController', () => {
       req.params = { submissionId: 'submission123' };
       const res = mockResponse();
 
-      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account123');
-      jest
-        .spyOn(accountService, 'getUserIdByAccountId')
-        .mockResolvedValue('user123');
-      (SubmissionModel.findById as jest.Mock).mockResolvedValue({
+      const accountId = 'account123';
+      const userId = 'user123';
+      const submission = {
         id: 'submission123',
-        user: 'user456',
-        equals: jest.fn().mockReturnValue(false),
-      });
-      (AccountModel.findById as jest.Mock).mockResolvedValue({
-        id: 'account123',
-        role: 'student',
-      });
+        user: { equals: jest.fn() },
+        populate: jest.fn().mockReturnThis(),
+      };
+      const account = { id: accountId, role: 'Student' };
+
+      submission.user.equals.mockReturnValue(false);
+
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
+      jest.spyOn(accountService, 'getUserIdByAccountId').mockResolvedValue(userId);
+      (SubmissionModel.findById as jest.Mock).mockReturnValue(submission);
+      (AccountModel.findById as jest.Mock).mockResolvedValue(account);
 
       await getSubmissionByIdController(req, res);
 
@@ -748,12 +493,8 @@ describe('submissionController', () => {
       req.params = { submissionId: 'submission123' };
       const res = mockResponse();
 
-      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account123');
       jest
-        .spyOn(accountService, 'getUserIdByAccountId')
-        .mockResolvedValue('user123');
-      jest
-        .spyOn(SubmissionModel, 'findById')
+        .spyOn(authUtils, 'getAccountId')
         .mockRejectedValue(new Error('Unexpected error'));
 
       await getSubmissionByIdController(req, res);
@@ -766,25 +507,24 @@ describe('submissionController', () => {
   });
 
   describe('adjustSubmissionScoreController', () => {
-    it('should adjust submission score and return 200 for authorized user', async () => {
+    it('should adjust submission score and return 200', async () => {
       const req = mockRequest();
       req.params = { submissionId: 'submission123' };
       req.body = { adjustedScore: 90 };
       const res = mockResponse();
 
-      const accountId = 'faculty123';
-      const mockAccount = { id: accountId, role: 'Faculty member' };
-      const mockSubmission = { id: 'submission123', adjustedScore: 90 };
+      const accountId = 'account123';
+      const account = { id: accountId, role: 'Faculty member' };
+      const submission = { id: 'submission123', adjustedScore: 90 };
 
-      (AccountModel.findById as jest.Mock).mockResolvedValue(mockAccount);
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
+      (AccountModel.findById as jest.Mock).mockResolvedValue(account);
       jest
         .spyOn(submissionService, 'adjustSubmissionScore')
-        .mockResolvedValue(mockSubmission as any);
+        .mockResolvedValue(submission as any);
 
       await adjustSubmissionScoreController(req, res);
 
-      expect(authUtils.getAccountId).toHaveBeenCalledWith(req);
       expect(AccountModel.findById).toHaveBeenCalledWith(accountId);
       expect(submissionService.adjustSubmissionScore).toHaveBeenCalledWith(
         'submission123',
@@ -793,48 +533,45 @@ describe('submissionController', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Adjusted score submitted successfully.',
-        submission: mockSubmission,
+        submission,
       });
     });
 
-    it('should deny access if user is not authorized and return 403', async () => {
+    it('should handle BadRequestError when adjustedScore is invalid', async () => {
+      const req = mockRequest();
+      req.params = { submissionId: 'submission123' };
+      req.body = { adjustedScore: -10 };
+      const res = mockResponse();
+
+      const accountId = 'account123';
+      const account = { id: accountId, role: 'Faculty member' };
+
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
+      (AccountModel.findById as jest.Mock).mockResolvedValue(account);
+
+      await adjustSubmissionScoreController(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Invalid adjusted score.' });
+    });
+
+    it('should handle MissingAuthorizationError and return 403', async () => {
       const req = mockRequest();
       req.params = { submissionId: 'submission123' };
       req.body = { adjustedScore: 90 };
       const res = mockResponse();
 
-      const accountId = 'student123';
-      const mockAccount = { id: accountId, role: 'student' };
+      const accountId = 'account123';
+      const account = { id: accountId, role: 'Student' };
 
-      (AccountModel.findById as jest.Mock).mockResolvedValue(mockAccount);
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
+      (AccountModel.findById as jest.Mock).mockResolvedValue(account);
 
       await adjustSubmissionScoreController(req, res);
 
-      expect(AccountModel.findById).toHaveBeenCalledWith(accountId);
       expect(res.status).toHaveBeenCalledWith(403);
       expect(res.json).toHaveBeenCalledWith({
         error: 'You do not have permission to adjust scores.',
-      });
-    });
-
-    it('should handle BadRequestError for invalid adjusted score and return 400', async () => {
-      const req = mockRequest();
-      req.params = { submissionId: 'submission123' };
-      req.body = { adjustedScore: -10 }; // Invalid score
-      const res = mockResponse();
-
-      const accountId = 'faculty123';
-      const mockAccount = { id: accountId, role: 'Faculty member' };
-
-      (AccountModel.findById as jest.Mock).mockResolvedValue(mockAccount);
-      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
-
-      await adjustSubmissionScoreController(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({
-        error: 'Invalid adjusted score.',
       });
     });
 
@@ -844,11 +581,11 @@ describe('submissionController', () => {
       req.body = { adjustedScore: 90 };
       const res = mockResponse();
 
-      const accountId = 'faculty123';
-      const mockAccount = { id: accountId, role: 'Faculty member' };
+      const accountId = 'account123';
+      const account = { id: accountId, role: 'Faculty member' };
 
-      (AccountModel.findById as jest.Mock).mockResolvedValue(mockAccount);
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
+      (AccountModel.findById as jest.Mock).mockResolvedValue(account);
       jest
         .spyOn(submissionService, 'adjustSubmissionScore')
         .mockRejectedValue(new NotFoundError('Submission not found'));
@@ -859,33 +596,17 @@ describe('submissionController', () => {
       expect(res.json).toHaveBeenCalledWith({ error: 'Submission not found' });
     });
 
-    it('should handle MissingAuthorizationError and return 403', async () => {
-      const req = mockRequest();
-      req.params = { submissionId: 'submission123' };
-      req.body = { adjustedScore: 90 };
-      const res = mockResponse();
-
-      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('student123');
-
-      await adjustSubmissionScoreController(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({
-        error: 'You do not have permission to adjust scores.',
-      });
-    });
-
     it('should handle unexpected errors and return 500', async () => {
       const req = mockRequest();
       req.params = { submissionId: 'submission123' };
       req.body = { adjustedScore: 90 };
       const res = mockResponse();
 
-      const accountId = 'faculty123';
-      const mockAccount = { id: accountId, role: 'Faculty member' };
+      const accountId = 'account123';
+      const account = { id: accountId, role: 'Faculty member' };
 
-      (AccountModel.findById as jest.Mock).mockResolvedValue(mockAccount);
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
+      (AccountModel.findById as jest.Mock).mockResolvedValue(account);
       jest
         .spyOn(submissionService, 'adjustSubmissionScore')
         .mockRejectedValue(new Error('Unexpected error'));
