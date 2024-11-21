@@ -130,7 +130,7 @@ describe('assessmentResultService', () => {
       teamSet: teamSet._id,
       areSubmissionsEditable: true,
       results: [],
-      isReleased: false,
+      isReleased: true,
       questions: [teamMemberQuestion, mcQuestion],
     });
     await assessment.save();

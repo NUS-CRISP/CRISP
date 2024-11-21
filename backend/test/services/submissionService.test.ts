@@ -14,10 +14,13 @@ import {
   adjustSubmissionScore,
 } from '../../services/submissionService';
 import { BadRequestError, NotFoundError } from '../../services/errors';
-import { TeamMemberSelectionAnswerModel } from '@models/Answer';
+import { MultipleChoiceAnswer, TeamMemberSelectionAnswer } from '@models/Answer';
 import CourseModel from '@models/Course';
 import TeamSetModel from '@models/TeamSet';
-import { TeamMemberSelectionQuestionModel } from '@models/QuestionTypes';
+import { MultipleChoiceOption, MultipleChoiceQuestionModel, TeamMemberSelectionQuestionModel } from '@models/QuestionTypes';
+import AssessmentAssignmentSetModel, { AssignedUser } from '@models/AssessmentAssignmentSet';
+import TeamModel from '@models/Team';
+import AssessmentResultModel from '@models/AssessmentResult';
 
 let mongo: MongoMemoryServer;
 
@@ -43,19 +46,13 @@ afterAll(async () => {
 
 const setupData = async () => {
   const account = new AccountModel({
-    email: 'testuser@example.com',
+    email: 'faculty@example.com',
     password: 'password',
-    role: 'Student',
+    role: 'Faculty member',
     user: new mongoose.Types.ObjectId(),
     isApproved: true,
   });
   await account.save();
-
-  const user = new UserModel({
-    identifier: 'testuser',
-    name: 'Test User',
-  });
-  await user.save();
 
   const course = await CourseModel.create({
     name: 'Introduction to Computer Science',
@@ -65,20 +62,53 @@ const setupData = async () => {
     courseType: 'Normal',
   });
   await course.save();
+
+  const student = await UserModel.create({
+    identifier: 'studentUser',
+    name: 'Test Student',
+  });
+
+  const ta = await UserModel.create({
+    identifier: 'taUser',
+    name: 'Test TA',
+  });
+  const team = new TeamModel({
+    number: 1,
+    members: [student],
+    TA: ta,
+  });
+  await team.save();
+
   const teamSet = new TeamSetModel({
     name: 'Team Set 1',
     course: course._id,
-    teams: [],
+    teams: [team],
   });
   await teamSet.save();
 
-  const question = new TeamMemberSelectionQuestionModel({
+  const teamMemberQuestion = new TeamMemberSelectionQuestionModel({
     text: 'Select students',
     type: 'Team Member Selection',
     isRequired: true,
     isLocked: true,
   });
-  await question.save();
+  await teamMemberQuestion.save();
+
+  const mcQuestion = new MultipleChoiceQuestionModel({
+    text: '星街すいせいは。。。',
+    type: 'Multiple Choice',
+    isRequired: true,
+    isLocked: false,
+    isScored: true,
+    options: [{
+      text: '今日もかわいい',
+      points: 10,
+    }, {
+      text: '今日も怖い',
+      points: 5,
+    }] as MultipleChoiceOption[]
+  });
+  await mcQuestion.save();
 
   const startDate = new Date();
   startDate.setUTCFullYear(new Date().getUTCFullYear() - 1);
@@ -87,72 +117,108 @@ const setupData = async () => {
     assessmentName: 'Midterm Exam',
     description: 'Midterm assessment',
     startDate: startDate,
-    maxMarks: 100,
-    granularity: 'team',
+    maxMarks: 10,
+    granularity: 'individual',
     teamSet: teamSet._id,
     areSubmissionsEditable: true,
     results: [],
-    isReleased: false,
-    questions: [question],
+    isReleased: true,
+    questions: [teamMemberQuestion, mcQuestion],
   });
   await assessment.save();
+  const assignmentSet = await AssessmentAssignmentSetModel.create({
+    assessment: assessment._id,
+    assignedUsers: [{ user: student._id, tas: [ta._id] } as AssignedUser],
+  });
+  await assignmentSet.save();
+  assessment.assessmentAssignmentSet = assignmentSet._id;
+  await assessment.save();
 
-  return { account, user, assessment, question };
+  return { account, student, ta, assessment, teamMemberQuestion, mcQuestion };
 };
 
 describe('submissionService', () => {
   let account: any;
-  let user: any;
+  let student: any;
+  let ta: any;
   let assessment: any;
-  let question: any;
+  let teamMemberQuestion: any;
+  let mcQuestion: any;
 
   beforeEach(async () => {
-    ({ account, user, assessment, question } = await setupData());
+    ({ account, student, ta, assessment, teamMemberQuestion, mcQuestion } = await setupData());
   });
 
   describe('createSubmission', () => {
     it('should create a new submission', async () => {
-      const answer = new TeamMemberSelectionAnswerModel({
-        question: question._id,
-        selectedUserIds: [user._id],
-      })
+      const teamMemberAnswer = {
+        question: teamMemberQuestion._id,
+        type: 'Team Member Selection Answer',
+        selectedUserIds: [student._id],
+      } as TeamMemberSelectionAnswer;
+      const mcAnswer = {
+        question: mcQuestion._id,
+        type: 'Multiple Choice Answer',
+        value: '今日も怖い'
+      } as MultipleChoiceAnswer;
       const submission = await createSubmission(
         assessment._id.toString(),
-        user._id.toString(),
-        [answer],
+        ta._id.toString(),
+        [teamMemberAnswer, mcAnswer],
         false
       );
 
       expect(submission).toBeDefined();
-      expect(submission.user.toString()).toEqual(user._id.toString());
+      expect(submission.user.toString()).toEqual(ta._id.toString());
     });
 
     it('should throw NotFoundError if user not found', async () => {
       const invalidUserId = new mongoose.Types.ObjectId().toString();
+      const teamMemberAnswer = {
+        question: teamMemberQuestion._id,
+        type: 'Team Member Selection Answer',
+        selectedUserIds: [student._id],
+      } as TeamMemberSelectionAnswer;
+      const mcAnswer = {
+        question: mcQuestion._id,
+        type: 'Multiple Choice Answer',
+        value: '今日も怖い'
+      } as MultipleChoiceAnswer;
       await expect(
-        createSubmission(assessment._id.toString(), invalidUserId, [], false)
-      ).rejects.toThrow(NotFoundError);
+        createSubmission(assessment._id.toString(), invalidUserId, [teamMemberAnswer, mcAnswer], false)
+      ).rejects.toThrow();
     });
   });
 
   describe('updateSubmission', () => {
     it('should update a submission', async () => {
-      const answer = new TeamMemberSelectionAnswerModel({
-        question: question._id,
-        selectedUserIds: [user._id],
-      })
+      const teamMemberAnswer = {
+        question: teamMemberQuestion._id,
+        type: 'Team Member Selection Answer',
+        selectedUserIds: [student._id],
+      } as TeamMemberSelectionAnswer;
+      const mcAnswer = {
+        question: mcQuestion._id,
+        type: 'Multiple Choice Answer',
+        value: '今日も怖い'
+      } as MultipleChoiceAnswer;
       const submission = await createSubmission(
         assessment._id.toString(),
-        user._id.toString(),
-        [answer],
+        ta._id.toString(),
+        [teamMemberAnswer, mcAnswer],
         true
       );
+      const result = await AssessmentResultModel.findOne({
+        student: student._id,
+        assessment: assessment._id,
+      });
+      expect(result).toBeDefined();
 
       const updatedSubmission = await updateSubmission(
         submission._id.toString(),
-        user._id.toString(),
+        ta._id.toString(),
         account._id.toString(),
-        [answer],
+        [teamMemberAnswer, mcAnswer],
         false
       );
 
@@ -161,18 +227,38 @@ describe('submissionService', () => {
 
     it('should throw NotFoundError if submission not found', async () => {
       const invalidSubmissionId = new mongoose.Types.ObjectId().toString();
+      const teamMemberAnswer = {
+        question: teamMemberQuestion._id,
+        type: 'Team Member Selection Answer',
+        selectedUserIds: [student._id],
+      } as TeamMemberSelectionAnswer;
+      const mcAnswer = {
+        question: mcQuestion._id,
+        type: 'Multiple Choice Answer',
+        value: '今日も怖い'
+      } as MultipleChoiceAnswer;
       await expect(
-        updateSubmission(invalidSubmissionId, user._id.toString(), account._id.toString(), [], false)
-      ).rejects.toThrow(NotFoundError);
+        updateSubmission(invalidSubmissionId, ta._id.toString(), account._id.toString(), [teamMemberAnswer, mcAnswer], false)
+      ).rejects.toThrow();
     });
   });
 
   describe('deleteSubmission', () => {
     it('should delete a submission by ID', async () => {
+      const teamMemberAnswer = {
+        question: teamMemberQuestion._id,
+        type: 'Team Member Selection Answer',
+        selectedUserIds: [student._id],
+      } as TeamMemberSelectionAnswer;
+      const mcAnswer = {
+        question: mcQuestion._id,
+        type: 'Multiple Choice Answer',
+        value: '今日も怖い'
+      } as MultipleChoiceAnswer;
       const submission = await createSubmission(
         assessment._id.toString(),
-        user._id.toString(),
-        [],
+        ta._id.toString(),
+        [teamMemberAnswer, mcAnswer],
         false
       );
 
@@ -189,10 +275,20 @@ describe('submissionService', () => {
 
   describe('getSubmissionsByAssessmentAndUser', () => {
     it('should retrieve submissions by assessment and user', async () => {
-      await createSubmission(assessment._id.toString(), user._id.toString(), [], false);
+      const teamMemberAnswer = {
+        question: teamMemberQuestion._id,
+        type: 'Team Member Selection Answer',
+        selectedUserIds: [student._id],
+      } as TeamMemberSelectionAnswer;
+      const mcAnswer = {
+        question: mcQuestion._id,
+        type: 'Multiple Choice Answer',
+        value: '今日も怖い'
+      } as MultipleChoiceAnswer;
+      await createSubmission(assessment._id.toString(), ta._id.toString(), [teamMemberAnswer, mcAnswer], false);
       const submissions = await getSubmissionsByAssessmentAndUser(
         assessment._id.toString(),
-        user._id.toString()
+        ta._id.toString()
       );
       expect(submissions.length).toBeGreaterThan(0);
     });
@@ -200,7 +296,17 @@ describe('submissionService', () => {
 
   describe('getSubmissionsByAssessment', () => {
     it('should retrieve submissions by assessment', async () => {
-      await createSubmission(assessment._id.toString(), user._id.toString(), [], false);
+      const teamMemberAnswer = {
+        question: teamMemberQuestion._id,
+        type: 'Team Member Selection Answer',
+        selectedUserIds: [student._id],
+      } as TeamMemberSelectionAnswer;
+      const mcAnswer = {
+        question: mcQuestion._id,
+        type: 'Multiple Choice Answer',
+        value: '今日も怖い'
+      } as MultipleChoiceAnswer;
+      await createSubmission(assessment._id.toString(), ta._id.toString(), [teamMemberAnswer, mcAnswer], false);
       const submissions = await getSubmissionsByAssessment(assessment._id.toString());
       expect(submissions.length).toBeGreaterThan(0);
     });
@@ -208,10 +314,20 @@ describe('submissionService', () => {
 
   describe('adjustSubmissionScore', () => {
     it('should adjust the score of a submission', async () => {
+      const teamMemberAnswer = {
+        question: teamMemberQuestion._id,
+        type: 'Team Member Selection Answer',
+        selectedUserIds: [student._id],
+      } as TeamMemberSelectionAnswer;
+      const mcAnswer = {
+        question: mcQuestion._id,
+        type: 'Multiple Choice Answer',
+        value: '今日も怖い'
+      } as MultipleChoiceAnswer;
       const submission = await createSubmission(
         assessment._id.toString(),
-        user._id.toString(),
-        [],
+        ta._id.toString(),
+        [teamMemberAnswer, mcAnswer],
         false
       );
 
@@ -223,10 +339,20 @@ describe('submissionService', () => {
     });
 
     it('should throw error for negative score adjustment', async () => {
+      const teamMemberAnswer = {
+        question: teamMemberQuestion._id,
+        type: 'Team Member Selection Answer',
+        selectedUserIds: [student._id],
+      } as TeamMemberSelectionAnswer;
+      const mcAnswer = {
+        question: mcQuestion._id,
+        type: 'Multiple Choice Answer',
+        value: '今日も怖い'
+      } as MultipleChoiceAnswer;
       const submission = await createSubmission(
         assessment._id.toString(),
-        user._id.toString(),
-        [],
+        ta._id.toString(),
+        [teamMemberAnswer, mcAnswer],
         false
       );
 

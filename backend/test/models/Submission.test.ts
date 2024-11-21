@@ -68,7 +68,7 @@ describe('Submission Model', () => {
       teamSet: teamSet._id,
       areSubmissionsEditable: true,
       results: [],
-      isReleased: false,
+      isReleased: true,
       questions: [],
     });
     await assessment.save();

@@ -54,7 +54,7 @@ describe('AssessmentAssignmentSet Model', () => {
       teamSet: teamSet._id,
       areSubmissionsEditable: true,
       results: [],
-      isReleased: false,
+      isReleased: true,
       questions: [],
     });
     assessment.save();
@@ -105,7 +105,7 @@ describe('AssessmentAssignmentSet Model', () => {
       startDate: startDate,
       granularity: 'team',
       areSubmissionsEditable: true,
-      isReleased: false,
+      isReleased: true,
       teamSet: teamSet._id,
       results: [],
       questions: [],

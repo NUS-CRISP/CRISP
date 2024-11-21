@@ -393,8 +393,14 @@ export const createSubmission = async (
   isDraft: boolean
 ): Promise<Submission> => {
   const assessment = await getAssessmentWithQuestions(assessmentId);
-  const user = await UserModel.findById(userId);
-  if (!user) {
+
+  let user: User | null = null;
+  try {
+    user = await UserModel.findById(userId);
+    if (!user) {
+      throw new NotFoundError('Submission creator not found');
+    }
+  } catch (e) {
     throw new NotFoundError('Submission creator not found');
   }
 
@@ -539,12 +545,23 @@ export const updateSubmission = async (
   answers: AnswerUnion[],
   isDraft: boolean
 ): Promise<Submission> => {
-  const submission = await SubmissionModel.findById(submissionId);
-  if (!submission) {
-    throw new NotFoundError('Submission not found.');
+  let submission: Submission | null = null;
+  try {
+    submission = await SubmissionModel.findById(submissionId);
+    if (!submission) {
+      throw new NotFoundError('Submission not found.');
+    }
+  } catch (e) {
+    throw new NotFoundError('Submission not found');
   }
-  const user = await UserModel.findById(userId);
-  if (!user) {
+
+  let user: User | null = null;
+  try {
+    user = await UserModel.findById(userId);
+    if (!user) {
+      throw new NotFoundError('Submission updater not found');
+    }
+  } catch (e) {
     throw new NotFoundError('Submission updater not found');
   }
 
@@ -692,18 +709,18 @@ export const updateSubmission = async (
     answer => answer.type === 'Team Member Selection Answer'
   ) as TeamMemberSelectionAnswer;
 
-  assignment.selectedUserIds.forEach(async userId => {
+  for (const userId of assignment.selectedUserIds) {
     const assessmentResult = await AssessmentResultModel.findOne({
       assessment: assessment.id,
       student: userId,
     });
 
     if (!assessmentResult) {
-      // If not, create a new AssessmentResult for the user
       throw new NotFoundError(
         'No previous assessment result found. Something went wrong with the flow.'
       );
     }
+
     const newMarkEntry: MarkEntry = {
       marker: user,
       submission: submission._id,
@@ -713,7 +730,7 @@ export const updateSubmission = async (
     await assessmentResult.save();
 
     await recalculateResult(assessmentResult.id);
-  });
+  }
   return submission;
 };
 

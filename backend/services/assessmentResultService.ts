@@ -129,7 +129,7 @@ export const recalculateResult = async (resultId: string) => {
     .populate('marks.submission.score')
     .populate('averageScore');
   if (!result) {
-    throw new NotFoundError('Result not found');
+    throw new NotFoundError('Result not found' + resultId);
   }
 
   if (result.marks.length === 0) {

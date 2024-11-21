@@ -190,7 +190,9 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
     if (!assessment) return;
     try {
       const response = await fetch(
-        `/api/assignment-sets/${assessmentId}/assignment-sets/taunmarked`,
+        existingSubmission
+        ? `/api/assignment-sets/${assessmentId}/assignment-sets/ta`
+        : `/api/assignment-sets/${assessmentId}/assignment-sets/taunmarked`,
         {
           method: 'GET',
           headers: {
