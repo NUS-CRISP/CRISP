@@ -126,7 +126,7 @@ describe('codeAnalysisService', () => {
       expect(result).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ repoName: 'team1' }),
-          expect.objectContaining({ repoName: 'team2' })
+          expect.objectContaining({ repoName: 'team2' }),
         ])
       );
     });
