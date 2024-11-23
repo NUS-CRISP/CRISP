@@ -264,10 +264,10 @@ const Navbar: React.FC = () => {
       >
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <Image
-            src={item.pngSrc}
+            src={item.pngSrc ?? ''}
             alt={`${item.label} icon`}
-            width={25} // Use width prop
-            height={25} // Use height prop
+            width={25}
+            height={25}
           />
           <span style={{ marginLeft: '5px' }}>{item.label}</span>
         </div>
