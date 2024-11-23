@@ -30,7 +30,9 @@ export const OverviewCard: React.FC<OverviewProps> = ({
     totalWeeks - 1,
   ]);
 
-  const [weekAliases, setWeekAliases] = useState<string[]>(Array(totalWeeks).fill(''));
+  const [weekAliases, setWeekAliases] = useState<string[]>(
+    Array(totalWeeks).fill('')
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [aliasInput, setAliasInput] = useState('');
   const [editingWeek, setEditingWeek] = useState<number | null>(null);
@@ -62,7 +64,9 @@ export const OverviewCard: React.FC<OverviewProps> = ({
   const handleSliderDoubleClick = (event: React.MouseEvent<HTMLDivElement>) => {
     const slider = event.currentTarget.getBoundingClientRect();
     const clickPosition = event.clientX - slider.left;
-    const weekValue = Math.round((clickPosition / slider.width) * (totalWeeks - 1));
+    const weekValue = Math.round(
+      (clickPosition / slider.width) * (totalWeeks - 1)
+    );
     openAliasModal(weekValue);
   };
 
@@ -74,7 +78,7 @@ export const OverviewCard: React.FC<OverviewProps> = ({
           max={totalWeeks - 1}
           minRange={1}
           onChange={setSelectedWeekRange}
-          label={(value) => weekAliases[value] || `Week ${value + 1}`}
+          label={value => weekAliases[value] || `Week ${value + 1}`}
           marks={marks}
           mx={20}
           mb={30}
@@ -108,10 +112,12 @@ export const OverviewCard: React.FC<OverviewProps> = ({
       >
         <TextInput
           value={aliasInput}
-          onChange={(e) => setAliasInput(e.currentTarget.value)}
+          onChange={e => setAliasInput(e.currentTarget.value)}
           placeholder="Enter week alias"
         />
-        <Button onClick={saveAlias} mt="md">Save</Button>
+        <Button onClick={saveAlias} mt="md">
+          Save
+        </Button>
       </Modal>
     </Stack>
   );
