@@ -1,11 +1,9 @@
 .navbarsContainer {
-  position: relative;
-  display: flex;
+  display: flex; /* Align children side by side */
   height: 100vh;
 }
 
 .navbar {
-  position: sticky;
   height: 100vh;
   width: rem(80px);
   padding: var(--mantine-spacing-md);
@@ -16,7 +14,6 @@
 }
 
 .navbarMain {
-  position: sticky;
   flex: 1;
   margin-top: rem(40px);
 }

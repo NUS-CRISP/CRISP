@@ -20,7 +20,6 @@ export const courseSchema = new Schema<Course>({
   code: { type: String, required: true },
   semester: { type: String, required: true },
   startDate: { type: Date, required: true },
-  durationWeeks: { type: Number, required: false },
   faculty: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   TAs: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   students: [{ type: Schema.Types.ObjectId, ref: 'User' }],

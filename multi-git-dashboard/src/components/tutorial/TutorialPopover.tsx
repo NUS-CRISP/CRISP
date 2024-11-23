@@ -21,8 +21,6 @@ interface TutorialPopoverProps {
   offset?: number;
   w?: number;
   finish?: boolean;
-  onOpen?: () => void;
-  onClose?: () => void;
 }
 
 const TutorialPopover: React.FC<TutorialPopoverProps> = ({
@@ -31,22 +29,18 @@ const TutorialPopover: React.FC<TutorialPopoverProps> = ({
   hideButton = false,
   disabled = false,
   offset,
+  w,
   finish,
   children,
-  onOpen,
-  onClose,
 }) => {
-  const {
-    curTutorialStage,
-    nextTutorialStage,
-    previousTutorialStage,
-    startTutorial,
-  } = useTutorialContext();
+  const { curTutorialStage, nextTutorialStage, startTutorial } =
+    useTutorialContext();
 
   const router = useRouter();
 
   return (
     <Popover
+      width={w ?? 200}
       position={position}
       withArrow
       classNames={{
@@ -60,15 +54,9 @@ const TutorialPopover: React.FC<TutorialPopoverProps> = ({
       offset={offset ?? 12}
       opened={curTutorialStage === stage}
       disabled={disabled}
-      onOpen={onOpen}
-      onClose={onClose}
     >
       <Popover.Target>{children}</Popover.Target>
-
-      <Popover.Dropdown
-        className={classes.popoverDropdown}
-        style={{ width: '240px' }}
-      >
+      <Popover.Dropdown className={classes.popoverDropdown}>
         <Stack>
           <Text>
             {finish
@@ -88,9 +76,6 @@ const TutorialPopover: React.FC<TutorialPopoverProps> = ({
                   Restart
                 </Button>
               )}
-              <Button variant="outline" mb={1} onClick={previousTutorialStage}>
-                Back
-              </Button>
               <Button variant="outline" mb={1} onClick={nextTutorialStage}>
                 {finish ? 'Finish' : 'Next'}
               </Button>

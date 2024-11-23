@@ -3,12 +3,10 @@ import { DateUtils, getTutorialHighlightColor } from '@/lib/utils';
 import { Carousel, Embla } from '@mantine/carousel';
 import { Card, Center, Stack, Title } from '@mantine/core';
 import { TeamData } from '@shared/types/TeamData';
-// import { User } from '@shared/types/User';
 import { forwardRef, useState } from 'react';
 import IndividualAnalytics from './individual/IndividualAnalytics';
 import OverallActivity from './team/OverallActivity';
 import WeeklyContributions from './team/WeeklyContributions';
-import TeamIssuesTracker from './team/TeamIssuesTracker';
 
 export interface AnalyticsProps {
   team: Team;
@@ -25,8 +23,7 @@ const Analytics = forwardRef<HTMLDivElement, AnalyticsProps>(
 
     const charts = {
       Breakdown: OverallActivity,
-      'Weekly Addition Deletion': WeeklyContributions,
-      'Issues Tracker': TeamIssuesTracker,
+      'Weekly Activity': WeeklyContributions,
       'Individual Activity': IndividualAnalytics,
     };
 

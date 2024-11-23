@@ -232,11 +232,10 @@ const AdminPage: React.FC = () => {
   ));
 
   return (
-    <ScrollArea style={{ height: '100vh' }}>
+    <ScrollArea m="md">
       <TextInput
         placeholder="Search by any field"
         mb="md"
-        style={{ margin: '20px' }}
         leftSection={
           <IconSearch
             style={{ width: rem(16), height: rem(16) }}
@@ -281,7 +280,7 @@ const AdminPage: React.FC = () => {
           )}
         </Table.Tbody>
       </Table>
-      <Group justify="flex-end" mb="md" mr="lg">
+      <Group justify="flex-end">
         <Button
           onClick={() => handleApprove(selectedRows)}
           disabled={selectedRows.length === 0}

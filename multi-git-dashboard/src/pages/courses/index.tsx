@@ -3,7 +3,7 @@ import { useTutorialContext } from '@/components/tutorial/TutorialContext';
 import TutorialPopover from '@/components/tutorial/TutorialPopover';
 import WelcomeMessage from '@/components/views/WelcomeMessage';
 import { hasFacultyPermission } from '@/lib/auth/utils';
-import { Box, Button, Modal, ScrollArea } from '@mantine/core';
+import { Box, Button, Modal } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Course } from '@shared/types/Course';
 import { signOut } from 'next-auth/react';
@@ -66,15 +66,8 @@ const CourseListPage: React.FC = () => {
   };
 
   return (
-    <ScrollArea
-      style={{
-        height: '100vh',
-        paddingRight: '20px',
-        overflowY: 'auto',
-        scrollbarWidth: 'thin',
-      }}
-    >
-      <Modal opened={opened} onClose={close} title="Course Creation">
+    <>
+      <Modal opened={opened} onClose={close} title="Create Course">
         <CreateCourseForm />
       </Modal>
       <Box pl={20}>
@@ -82,13 +75,7 @@ const CourseListPage: React.FC = () => {
         {courses.length === 0 ? (
           <p>No courses to show</p>
         ) : (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-              gap: '15px',
-            }}
-          >
+          <div>
             {courses.map((course, idx) => (
               <TutorialPopover
                 key={course._id}
@@ -108,7 +95,7 @@ const CourseListPage: React.FC = () => {
         )}
         {hasFacultyPermission() && (
           <div>
-            <Button onClick={open} mt={16} mb={20}>
+            <Button onClick={open} mt={16}>
               Create Course
             </Button>
           </div>
@@ -117,7 +104,7 @@ const CourseListPage: React.FC = () => {
           <WelcomeMessage opened={curTutorialStage === 0} />
         )}
       </Box>
-    </ScrollArea>
+    </>
   );
 };
 
