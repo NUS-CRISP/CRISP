@@ -3,6 +3,8 @@ import ss1 from '@public/ss-1.png';
 import ss2 from '@public/ss-2.png';
 import ss3 from '@public/ss-3.png';
 import ss4 from '@public/ss-4.png';
+import ss5 from '@public/ss-5.png';
+import ss6 from '@public/ss-6.png';
 import classes from '@styles/FeatureShowcase.module.css';
 import NextImage, { StaticImageData } from 'next/image';
 import React, { useEffect, useState } from 'react';
@@ -42,14 +44,14 @@ const FeatureShowcase: React.FC = () => {
       cols: 4.3,
     },
     {
-      description: 'Manage multiple teams and repositories with ease',
-      src: ss2,
+      description: 'Visualize team contribution over time',
+      src: ss5,
       cols: 7.7,
     },
     {
-      description: 'View pull requests and code reviews at a glance',
-      src: ss3,
-      cols: 8.2,
+      description: 'View entire cohort performance',
+      src: ss6,
+      cols: 7.3,
     },
     {
       description: 'Compare activity between members',
