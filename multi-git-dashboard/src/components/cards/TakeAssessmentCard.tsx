@@ -1,20 +1,5 @@
-// components/cards/TakeAssessmentCard.tsx
-
-import React, { useEffect, useState } from 'react';
-import {
-  Box,
-  Text,
-  Radio,
-  Checkbox,
-  Slider,
-  TextInput,
-  Textarea,
-  Group,
-  NumberInput,
-  Badge,
-  MultiSelect,
-  CloseButton,
-} from '@mantine/core';
+import React from 'react';
+import { Box, Text, Group, Badge } from '@mantine/core';
 import {
   QuestionUnion,
   MultipleChoiceQuestion,
@@ -25,9 +10,16 @@ import {
   DateQuestion,
   NumberQuestion,
 } from '@shared/types/Question';
-import { DatePicker } from '@mantine/dates';
 import { AnswerInput } from '@shared/types/AnswerInput';
 import { Submission } from '@shared/types/Submission';
+import TakeDateQuestionView from './TakeAssessmentCardComponents/TakeDateQuestionView';
+import TakeLongResponseQuestionView from './TakeAssessmentCardComponents/TakeLongResponseQuestionView';
+import TakeMultipleChoiceQuestionView from './TakeAssessmentCardComponents/TakeMultipleChoiceQuestionView';
+import TakeMultipleResponseQuestionView from './TakeAssessmentCardComponents/TakeMultipleResponseQuestionView';
+import TakeNumberQuestionView from './TakeAssessmentCardComponents/TakeNumberQuestionView';
+import TakeScaleQuestionView from './TakeAssessmentCardComponents/TakeScaleQuestionView';
+import TakeShortResponseQuestionView from './TakeAssessmentCardComponents/TakeShortResponseQuestionView';
+import TakeTeamMemberSelectionQuestionView from './TakeAssessmentCardComponents/TakeTeamMemberSelectionQuestionView';
 
 interface TakeAssessmentCardProps {
   question: QuestionUnion;
@@ -62,49 +54,6 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
   const isRequired = question.isRequired || false;
   const customInstruction = question.customInstruction || '';
   const questionText = question.text || '';
-  const maxSelections =
-    question.type === 'Team Member Selection' &&
-    assessmentGranularity === 'individual'
-      ? 1
-      : undefined;
-
-  // Selected IDs (either student IDs or team IDs)
-  const selectedIds = Array.isArray(answer) ? (answer as string[]) : [];
-
-  // Available options to select (excluding already selected ones)
-  const [availableOptions, setAvailableOptions] = useState<
-    { value: string; label: string }[]
-  >([]);
-
-  // Update availableOptions whenever selectedIds or teamMembersOptions/teamOptions change
-  useEffect(() => {
-    if (question.type === 'Team Member Selection') {
-      if (assessmentGranularity === 'team' && teamOptions) {
-        // For team granularity, use teamOptions
-        setAvailableOptions(
-          teamOptions
-            .filter(team => !selectedIds.includes(team.value))
-            .map(team => ({
-              value: team.value,
-              label: team.label,
-            }))
-        );
-      } else if (assessmentGranularity === 'individual' && teamMembersOptions) {
-        // For individual granularity, use teamMembersOptions
-        setAvailableOptions(
-          teamMembersOptions.filter(
-            student => !selectedIds.includes(student.value)
-          )
-        );
-      }
-    }
-  }, [
-    selectedIds,
-    teamMembersOptions,
-    teamOptions,
-    assessmentGranularity,
-    question.type,
-  ]);
 
   // Type Guard to check if question is scored
   const isScoredQuestion = (
@@ -153,7 +102,7 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
       </Group>
 
       {/* Question instruction */}
-      <Text color="gray" size="sm" mb="xs">
+      <Text c="gray" size="sm" mb="xs">
         {customInstruction}
       </Text>
 
@@ -169,301 +118,80 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
         </Badge>
       )}
 
-      {/* Team Member Selection */}
-      {questionType === 'Team Member Selection' && (
-        <>
-          <Group gap="xs" mb="sm">
-            {teamMembersOptions &&
-              selectedIds.map(userId => {
-                const student = teamMembersOptions.find(
-                  option => option.value === userId
-                );
-                return (
-                  <Badge
-                    key={userId}
-                    variant="filled"
-                    color="blue"
-                    rightSection={
-                      !disabled && (
-                        <CloseButton
-                          onClick={() => {
-                            const updatedSelection = selectedIds.filter(
-                              id => id !== userId
-                            );
-                            onAnswerChange(updatedSelection);
-                          }}
-                          size="xs"
-                          style={{ marginLeft: 4 }}
-                        />
-                      )
-                    }
-                  >
-                    {student ? student.label : userId}
-                  </Badge>
-                );
-              })}
-            {teamOptions &&
-              selectedIds.map(teamId => {
-                const team = teamOptions.find(
-                  option => option.value === teamId
-                );
-                return (
-                  <Badge
-                    key={teamId}
-                    variant="filled"
-                    color="blue"
-                    rightSection={
-                      !disabled && (
-                        <CloseButton
-                          onClick={() => {
-                            const updatedSelection = selectedIds.filter(
-                              id => id !== teamId
-                            );
-                            onAnswerChange(updatedSelection);
-                          }}
-                          size="xs"
-                          style={{ marginLeft: 4 }}
-                        />
-                      )
-                    }
-                  >
-                    {team ? team.label : teamId}
-                  </Badge>
-                );
-              })}
-          </Group>
-          <MultiSelect
-            data={availableOptions}
-            placeholder={
-              assessmentGranularity === 'team'
-                ? 'Search and select teams'
-                : 'Search and select students'
-            }
-            searchable
-            value={[]}
-            onChange={value => {
-              // Handle only the last selected value
-              const newSelection = value[value.length - 1];
-              if (newSelection) {
-                const updatedSelection = [...selectedIds, newSelection];
-                onAnswerChange(updatedSelection);
-              }
-            }}
-            disabled={disabled}
-            maxValues={maxSelections}
-            onSearchChange={() => {}} // Prevent clearing search on selection
-            styles={{
-              input: { minWidth: '200px' },
-            }}
-          />
-        </>
-      )}
-
-      {/* Render other question types as before */}
+      {/* Render based on question type */}
       {questionType === 'Multiple Choice' && (
-        <Group align="stretch" style={{ flexGrow: 1, flexDirection: 'column' }}>
-          {(question as MultipleChoiceQuestion).options.map((option, idx) => (
-            <Box
-              key={idx}
-              p="xs"
-              style={{
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                backgroundColor: '#fff',
-                width: '100%',
-              }}
-            >
-              <Radio
-                label={option.text}
-                checked={answer === option.text}
-                onChange={() => onAnswerChange(option.text)}
-                style={{ width: '100%' }}
-                disabled={disabled}
-              />
-            </Box>
-          ))}
-        </Group>
+        <TakeMultipleChoiceQuestionView
+          question={question as MultipleChoiceQuestion}
+          answer={answer}
+          onAnswerChange={onAnswerChange}
+          disabled={disabled}
+        />
       )}
 
       {questionType === 'Multiple Response' && (
-        <Group align="stretch" style={{ flexGrow: 1, flexDirection: 'column' }}>
-          {(question as MultipleResponseQuestion).options.map((option, idx) => {
-            const multipleResponseAnswer = Array.isArray(answer)
-              ? (answer as string[])
-              : [];
-            const isChecked = multipleResponseAnswer.includes(option.text);
-
-            return (
-              <Box
-                key={idx}
-                p="xs"
-                style={{
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                  backgroundColor: '#fff',
-                  width: '100%',
-                }}
-              >
-                <Checkbox
-                  label={option.text}
-                  checked={isChecked}
-                  onChange={() => {
-                    if (multipleResponseAnswer.includes(option.text)) {
-                      // Remove the option
-                      const updatedAnswers = multipleResponseAnswer.filter(
-                        a => a !== option.text
-                      );
-                      onAnswerChange(updatedAnswers);
-                    } else {
-                      // Add the option
-                      const updatedAnswers = [
-                        ...multipleResponseAnswer,
-                        option.text,
-                      ];
-                      onAnswerChange(updatedAnswers);
-                    }
-                  }}
-                  style={{ width: '100%' }}
-                  disabled={disabled}
-                />
-              </Box>
-            );
-          })}
-        </Group>
+        <TakeMultipleResponseQuestionView
+          question={question as MultipleResponseQuestion}
+          answer={answer}
+          onAnswerChange={onAnswerChange}
+          disabled={disabled}
+        />
       )}
 
       {questionType === 'Scale' && (
-        <>
-          <Slider
-            value={
-              typeof answer === 'number'
-                ? answer
-                : (question as ScaleQuestion).labels[0].value
-            }
-            min={(question as ScaleQuestion).labels[0].value}
-            max={(question as ScaleQuestion).scaleMax}
-            marks={(question as ScaleQuestion).labels.map(label => ({
-              value: label.value,
-              label: label.label,
-            }))}
-            step={1}
-            style={{ padding: '0 20px', marginBottom: '20px' }}
-            onChange={value => onAnswerChange(value)}
-            disabled={disabled}
-          />
-          <Box style={{ marginTop: '24px' }} />
-        </>
+        <TakeScaleQuestionView
+          question={question as ScaleQuestion}
+          answer={answer}
+          onAnswerChange={onAnswerChange}
+          disabled={disabled}
+        />
       )}
 
-      {(question.type === 'Short Response' ||
-        question.type === 'NUSNET ID' ||
-        question.type === 'NUSNET Email') && (
-        <TextInput
-          placeholder={
-            (question as ShortResponseQuestion).shortResponsePlaceholder ||
-            'Enter your response here...'
-          }
-          value={typeof answer === 'string' ? answer : ''}
-          onChange={e => onAnswerChange(e.currentTarget.value)}
+      {(questionType === 'Short Response' ||
+        questionType === 'NUSNET ID' ||
+        questionType === 'NUSNET Email') && (
+        <TakeShortResponseQuestionView
+          question={question as ShortResponseQuestion}
+          answer={answer}
+          onAnswerChange={onAnswerChange}
           disabled={disabled}
         />
       )}
 
       {questionType === 'Long Response' && (
-        <Textarea
-          placeholder={
-            (question as LongResponseQuestion).longResponsePlaceholder ||
-            'Enter your response here...'
-          }
-          value={typeof answer === 'string' ? answer : ''}
-          onChange={e => onAnswerChange(e.currentTarget.value)}
-          minRows={5}
-          autosize
-          style={{ marginBottom: '16px' }}
+        <TakeLongResponseQuestionView
+          question={question as LongResponseQuestion}
+          answer={answer}
+          onAnswerChange={onAnswerChange}
           disabled={disabled}
         />
       )}
 
       {questionType === 'Date' && (
-        <Box style={{ marginBottom: '16px' }}>
-          {disabled ? (
-            // Display date as string if disabled
-            <Text>
-              {Array.isArray(answer)
-                ? (answer as [Date | null, Date | null])
-                    .map(date => (date ? date.toLocaleDateString() : 'N/A'))
-                    .join(' - ')
-                : answer instanceof Date
-                  ? answer.toLocaleDateString()
-                  : 'No date selected'}
-            </Text>
-          ) : (question as DateQuestion).isRange ? (
-            <Box>
-              <Text>
-                {(question as DateQuestion).datePickerPlaceholder ||
-                  'Select a date range'}
-              </Text>
-              <DatePicker
-                type="range"
-                style={{ marginTop: '8px', width: '100%' }}
-                minDate={
-                  (question as DateQuestion).minDate
-                    ? new Date((question as DateQuestion).minDate!)
-                    : undefined
-                }
-                maxDate={
-                  (question as DateQuestion).maxDate
-                    ? new Date((question as DateQuestion).maxDate!)
-                    : undefined
-                }
-                value={
-                  Array.isArray(answer) &&
-                  (answer as [Date | null, Date | null]).every(Boolean)
-                    ? (answer as [Date, Date])
-                    : [null, null]
-                }
-                onChange={(dates: [Date | null, Date | null]) =>
-                  onAnswerChange(dates)
-                }
-              />
-            </Box>
-          ) : (
-            <Box>
-              <Text>
-                {(question as DateQuestion).datePickerPlaceholder ||
-                  'Select a date'}
-              </Text>
-              <DatePicker
-                style={{ marginTop: '8px', width: '100%' }}
-                minDate={
-                  (question as DateQuestion).minDate
-                    ? new Date((question as DateQuestion).minDate!)
-                    : undefined
-                }
-                maxDate={
-                  (question as DateQuestion).maxDate
-                    ? new Date((question as DateQuestion).maxDate!)
-                    : undefined
-                }
-                value={answer instanceof Date ? answer : null}
-                onChange={(date: Date | null) => onAnswerChange(date)}
-              />
-            </Box>
-          )}
-        </Box>
+        <TakeDateQuestionView
+          question={question as DateQuestion}
+          answer={answer}
+          onAnswerChange={onAnswerChange}
+          disabled={disabled}
+        />
       )}
 
       {questionType === 'Number' && (
-        <NumberInput
-          min={0}
-          max={(question as NumberQuestion).maxNumber || 100}
-          placeholder={`Enter a number (Max: ${
-            (question as NumberQuestion).maxNumber || 100
-          })`}
-          value={typeof answer === 'number' ? answer : undefined}
-          onChange={value => onAnswerChange(value)}
-          style={{ marginBottom: '16px' }}
+        <TakeNumberQuestionView
+          question={question as NumberQuestion}
+          answer={answer}
+          onAnswerChange={onAnswerChange}
           disabled={disabled}
+        />
+      )}
+
+      {questionType === 'Team Member Selection' && (
+        <TakeTeamMemberSelectionQuestionView
+          answer={answer}
+          onAnswerChange={onAnswerChange}
+          disabled={disabled}
+          teamMembersOptions={teamMembersOptions}
+          teamOptions={teamOptions}
+          assessmentGranularity={assessmentGranularity}
         />
       )}
     </Box>
