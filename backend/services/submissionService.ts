@@ -886,21 +886,60 @@ const calculateMultipleChoiceScore = (
 };
 
 /**
- * Calculates the score for a Multiple Response answer.
+ * Calculates the score for a Multiple Response answer considering partial marks,
+ * penalties for wrong answers, and negative scoring allowances.
  */
 const calculateMultipleResponseScore = (
   question: MultipleResponseQuestion,
-  answer: MultipleResponseAnswer
+  answer: { values: string[] } // MultipleResponseAnswer structure
 ): number => {
   if (!question.isScored) return 0;
 
-  let score = 0;
-  for (const value of answer.values) {
-    const option = question.options.find(opt => opt.text === value);
-    if (option) {
-      score += option.points;
+  // Map chosen answers to their corresponding options
+  const chosenOptions = answer.values
+    .map(value => question.options.find(opt => opt.text === value))
+    .filter((opt): opt is typeof question.options[number] => Boolean(opt));
+
+  // Identify correct (positively scored) and incorrect (zero or negative scored) options
+  const correctOptions = question.options.filter(o => o.points > 0);
+  const allCorrectChosen = correctOptions.every(co =>
+    answer.values.includes(co.text)
+  );
+  const chosenHasIncorrect = chosenOptions.some(o => o.points <= 0);
+
+  // If partial marks are NOT allowed, must have a perfect answer:
+  // Perfect means all correct chosen and no incorrect chosen.
+  if (!question.allowPartialMarks) {
+    if (!allCorrectChosen || chosenHasIncorrect) {
+      // Not perfect, no points
+      return 0;
+    } else {
+      // Perfect answer: sum of chosen (all correct)
+      const perfectScore = chosenOptions.reduce((acc, o) => acc + o.points, 0);
+      // Since no partial marks and presumably no negative scenario here,
+      // Just ensure no negative final:
+      return Math.max(perfectScore, 0);
     }
   }
+
+  // If partial marks are allowed:
+  // Simply sum the chosen options' points.
+  let score = chosenOptions.reduce((acc, o) => acc + o.points, 0);
+
+  // Now apply logic for penalties and negative scores:
+  if (!question.areWrongAnswersPenalized) {
+    // No penalty means no negative from penalties, ensure non-negative final
+    score = Math.max(score, 0);
+  } else {
+    // Wrong answers are penalized:
+    // If negative scores are not allowed, clamp final score to 0 minimum
+    if (!question.allowNegative) {
+      score = Math.max(score, 0);
+    }
+    // If areWrongAnswersPenalized is true and allowNegative is true, negative final allowed
+    // no change needed here
+  }
+
   return score;
 };
 

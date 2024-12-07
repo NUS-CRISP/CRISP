@@ -50,7 +50,10 @@ export interface MultipleResponseQuestion extends BaseQuestion {
   type: 'Multiple Response';
   options: MultipleResponseOption[];
   isScored: boolean; // Toggle for scoring
-  allowNegative: boolean; // Whether negative scores are allowed
+  allowPartialMarks: boolean; // Whether all correct choices are required for full credit.
+  areWrongAnswersPenalized: boolean; // Whether to subtract marks from wrong answers. Needs allowPartialMarks to be true to take effect, irrelevant otherwise.
+  allowNegative: boolean; // Whether negative scores are allowed. Requires areWrongAnswersPenalized to be true to take effect, irrelevant otherwise.
+
 }
 
 // Scale Label Interface

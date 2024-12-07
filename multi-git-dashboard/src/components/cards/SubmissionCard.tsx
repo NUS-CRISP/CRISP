@@ -80,7 +80,7 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({
                 {formatAnswer(teamMemberSelectionAnswer, userIdToNameMap)}
               </Text>
             )}
-            <Text size="sm" color="dimmed">
+            <Text size="sm" c="dimmed">
               Submitted at: {new Date(submission.submittedAt).toLocaleString()}
             </Text>
 

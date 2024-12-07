@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Text,
   TextInput,
   Checkbox,
   Button,
   Group,
   ActionIcon,
+  Text,
 } from '@mantine/core';
 import { IconTrash, IconPlus } from '@tabler/icons-react';
 import { MultipleResponseQuestion } from '@shared/types/Question';
@@ -18,29 +18,46 @@ interface MultipleResponseQuestionEditProps {
   isValid: boolean;
 }
 
-const MultipleResponseQuestionEdit: React.FC<
-  MultipleResponseQuestionEditProps
-> = ({ questionData, onSave, onDelete, isValid }) => {
+const MultipleResponseQuestionEdit: React.FC<MultipleResponseQuestionEditProps> = ({
+  questionData,
+  onSave,
+  onDelete,
+  isValid,
+}) => {
   const [options, setOptions] = useState<string[]>([]);
-  const [isScored, setIsScored] = useState<boolean>(false);
+  const [isScored, setIsScored] = useState<boolean>(questionData.isScored || false);
   const [optionPoints, setOptionPoints] = useState<number[]>([]);
   const [isOptionWrong, setIsOptionWrong] = useState<boolean[]>([]);
-  const [subtractPointsForWrongAnswers, setSubtractPointsForWrongAnswers] =
-    useState<boolean>(false);
+
+  // States for scoring behavior
+  const [allowPartialMarks, setAllowPartialMarks] = useState<boolean>(questionData.allowPartialMarks || false);
+  const [areWrongAnswersPenalized, setAreWrongAnswersPenalized] = useState<boolean>(questionData.areWrongAnswersPenalized || false);
+  const [allowNegative, setAllowNegative] = useState<boolean>(questionData.allowNegative || false);
 
   useEffect(() => {
     if (questionData.options) {
       setOptions(questionData.options.map(option => option.text));
-      setOptionPoints(
-        questionData.options.map(option => Math.abs(option.points || 0))
-      );
-      setIsOptionWrong(
-        questionData.options.map(option => (option.points || 0) < 0)
-      );
+      setOptionPoints(questionData.options.map(option => Math.abs(option.points || 0)));
+      setIsOptionWrong(questionData.options.map(option => (option.points || 0) < 0));
     }
-    setIsScored(questionData.isScored || false);
-    setSubtractPointsForWrongAnswers(questionData.allowNegative || false);
   }, [questionData]);
+
+  // Adjusting states based on prerequisites:
+  // If partial marks are not allowed, disable penalties and negative scores.
+  useEffect(() => {
+    if (!allowPartialMarks) {
+      // Can't penalize wrong answers without partial marks
+      setAreWrongAnswersPenalized(false);
+      setAllowNegative(false);
+    }
+  }, [allowPartialMarks]);
+
+  // If not penalizing wrong answers, disable negative scores
+  useEffect(() => {
+    if (!areWrongAnswersPenalized) {
+      setAllowNegative(false);
+    }
+  }, [areWrongAnswersPenalized]);
 
   const handleAddOption = () => {
     setOptions([...options, '']);
@@ -73,19 +90,32 @@ const MultipleResponseQuestionEdit: React.FC<
   };
 
   const saveOptions = () => {
-    const updatedOptions = options.map((text, index) => ({
-      text,
-      points: isScored
-        ? subtractPointsForWrongAnswers && isOptionWrong[index]
-          ? -Math.abs(optionPoints[index] || 0)
-          : Math.abs(optionPoints[index] || 0)
-        : 0,
-    }));
+    const updatedOptions = options.map((text, index) => {
+      let points = 0;
+      if (isScored) {
+        const basePoints = Math.abs(optionPoints[index] || 0);
+
+        if (areWrongAnswersPenalized && isOptionWrong[index]) {
+          // Wrong answer scenario
+          if (allowNegative) {
+            points = -basePoints; // Negative marking allowed
+          } else {
+            points = 0; // Penalized but not negative
+          }
+        } else {
+          // Correct answer or no penalty scenario
+          points = basePoints;
+        }
+      }
+      return { text, points };
+    });
 
     onSave({
       options: updatedOptions,
       isScored,
-      allowNegative: subtractPointsForWrongAnswers,
+      areWrongAnswersPenalized,
+      allowNegative,
+      allowPartialMarks,
     });
   };
 
@@ -98,15 +128,30 @@ const MultipleResponseQuestionEdit: React.FC<
         mb="sm"
       />
       {isScored && (
-        <Checkbox
-          label="Subtract points for wrong answers"
-          checked={subtractPointsForWrongAnswers}
-          onChange={e =>
-            setSubtractPointsForWrongAnswers(e.currentTarget.checked)
-          }
-          mb="sm"
-        />
+        <>
+          <Checkbox
+            label="Allow Partial Marking"
+            checked={allowPartialMarks}
+            onChange={e => setAllowPartialMarks(e.currentTarget.checked)}
+            mb="sm"
+          />
+          <Checkbox
+            label="Penalize Wrong Answers (Add penalty in the score box)"
+            checked={areWrongAnswersPenalized}
+            onChange={e => setAreWrongAnswersPenalized(e.currentTarget.checked)}
+            mb="sm"
+            disabled={!allowPartialMarks}
+          />
+          <Checkbox
+            label="Allow Negative Scores"
+            checked={allowNegative}
+            onChange={e => setAllowNegative(e.currentTarget.checked)}
+            mb="sm"
+            disabled={!areWrongAnswersPenalized} // Requires penalty first
+          />
+        </>
       )}
+
       <Text fw={500} mb="sm">
         Options:
       </Text>
@@ -123,22 +168,15 @@ const MultipleResponseQuestionEdit: React.FC<
               placeholder="Points"
               type="number"
               value={optionPoints[index]}
-              onChange={e =>
-                handleOptionPointsChange(
-                  index,
-                  parseFloat(e.currentTarget.value)
-                )
-              }
+              onChange={e => handleOptionPointsChange(index, parseFloat(e.currentTarget.value))}
               style={{ width: '80px' }}
             />
           )}
-          {isScored && subtractPointsForWrongAnswers && (
+          {isScored && allowPartialMarks && areWrongAnswersPenalized && allowNegative && (
             <Checkbox
               label="Wrong Answer"
               checked={isOptionWrong[index]}
-              onChange={e =>
-                handleOptionWrongChange(index, e.currentTarget.checked)
-              }
+              onChange={e => handleOptionWrongChange(index, e.currentTarget.checked)}
             />
           )}
           <ActionIcon color="red" onClick={() => handleDeleteOption(index)}>
@@ -160,8 +198,9 @@ const MultipleResponseQuestionEdit: React.FC<
           onClick={saveOptions}
           mt="md"
           disabled={
-            !isValid &&
-            (options.length < 1 || options.some(option => option.trim() === ''))
+            !isValid ||
+            options.length < 1 ||
+            options.some(option => option.trim() === '')
           }
         >
           Save Question
