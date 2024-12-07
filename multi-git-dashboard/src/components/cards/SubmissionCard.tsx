@@ -86,14 +86,18 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({
 
             {/* Display score and adjusted score */}
             <Text size="sm">
-              {hasFacultyPermission ? (
+              {hasFacultyPermission ? submission.adjustedScore ? (
                 <>
                   <strong>Adjusted Score:</strong> {totalScore} <br />
                   <strong>Original Score:</strong> {originalScore}
                 </>
               ) : (
                 <>
-                  <strong>Total Score:</strong> {totalScore}
+                  <strong>Score:</strong> {originalScore}
+                </>
+              ) : (
+                <>
+                  <strong>Score:</strong> {totalScore}
                 </>
               )}
             </Text>

@@ -698,8 +698,10 @@ export const updateSubmission = async (
   submission.answers = answers;
   submission.isDraft = isDraft;
   submission.submittedAt = new Date();
-  submission.score = totalScore;
-  submission.adjustedScore = undefined;
+  if (submission.score !== totalScore) {
+    submission.score = totalScore;
+    submission.adjustedScore = undefined;
+  }
 
   await submission.save();
 
