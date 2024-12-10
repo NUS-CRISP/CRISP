@@ -287,7 +287,7 @@ const ScaleQuestionEdit: React.FC<ScaleQuestionEditProps> = ({
       </Group>
 
       {/* Preview Section */}
-      <Box style={{ marginTop: '24px' }}>
+      <Box style={{ marginTop: '24px', marginBottom: '48px' }}>
         <Text style={{ fontWeight: 'bold', marginBottom: '8px' }}>
           Preview:
         </Text>

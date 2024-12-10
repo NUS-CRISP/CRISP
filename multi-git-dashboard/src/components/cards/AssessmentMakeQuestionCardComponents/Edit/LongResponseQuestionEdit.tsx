@@ -36,6 +36,7 @@ const LongResponseQuestionEdit: React.FC<LongResponseQuestionEditProps> = ({
       />
       <Textarea
         label="Preview"
+        style={{ marginBottom: '24px' }}
         placeholder={placeholder}
         disabled
         minRows={5}
