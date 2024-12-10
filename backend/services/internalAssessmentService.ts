@@ -205,6 +205,7 @@ export const addInternalAssessmentsToCourse = async (
 
     if (!teamSet) {
       console.error('Missing TeamSet data');
+      continue;
     }
 
     const assessment = new InternalAssessmentModel({
