@@ -29,7 +29,7 @@ const CreateInternalForm: React.FC<CreateInternalFormProps> = ({
       startDate: '',
       endDate: '',
       granularity: 'team',
-      maxMarks: '',
+      maxMarks: '0',
       teamSetName: '',
       areSubmissionsEditable: false, // New field added
     },
@@ -37,7 +37,6 @@ const CreateInternalForm: React.FC<CreateInternalFormProps> = ({
 
   const handleSubmit = async () => {
     try {
-      console.log(form.values);
       const response = await fetch(
         `/api/courses/${courseId}/internal-assessments`,
         {
@@ -106,9 +105,11 @@ const CreateInternalForm: React.FC<CreateInternalFormProps> = ({
       </div>
 
       <TextInput
-        label="Maximum Marks (Optional)"
+        withAsterisk
+        label="Maximum Marks (0 if ungraded)"
         {...form.getInputProps('maxMarks')}
         placeholder="Enter max marks"
+        type='number'
       />
 
       <Select
