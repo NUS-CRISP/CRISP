@@ -1,5 +1,3 @@
-// components/AssessmentInternalOverview.tsx
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Button,
@@ -58,22 +56,17 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
   teachingStaff,
 }) => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [assignedTeams, setAssignedTeams] =
-    useState<AssignedTeam[]>(initialAssignedTeams);
-  const [assignedUsers, setAssignedUsers] =
-    useState<AssignedUser[]>(initialAssignedUsers);
+  const [assignedTeams, setAssignedTeams] = useState<AssignedTeam[]>(initialAssignedTeams);
+  const [assignedUsers, setAssignedUsers] = useState<AssignedUser[]>(initialAssignedUsers);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
-  const [isTeamAssignmentModalOpen, setIsTeamAssignmentModalOpen] =
-    useState<boolean>(false);
+  const [isTeamAssignmentModalOpen, setIsTeamAssignmentModalOpen] = useState<boolean>(false);
   const [gradeOriginalTeams, setGradeOriginalTeams] = useState<boolean>(false);
   const [teamsPerTA, setTeamsPerTA] = useState<number>(1);
-  const [selectedTeachingStaff, setSelectedTeachingStaff] = useState<string[]>(
-    []
-  );
-  const [excludedTeachingStaff, setExcludedTeachingStaff] = useState<string[]>(
-    []
-  );
+  const [selectedTeachingStaff, setSelectedTeachingStaff] = useState<string[]>([]);
+  const [excludedTeachingStaff, setExcludedTeachingStaff] = useState<string[]>([]);
+  const [assignedEntitiesAvailable, setAssignedEntitiesAvailable] = useState<boolean>(true); // New state
+
   const router = useRouter();
   const deleteInternalAssessmentApiRoute = `/api/internal-assessments/${assessment?._id}`;
 
@@ -145,11 +138,8 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
   const toggleDeleteModal = () => setIsDeleteModalOpen(o => !o);
   const toggleTeamAssignmentModal = () => setIsTeamAssignmentModalOpen(o => !o);
 
-  // Handle TA assignment changes by updating assignedTeams state
-  const handleTaAssignmentChange = (
-    id: string,
-    selectedTAIds: string[] | null
-  ) => {
+  // Handle TA assignment changes
+  const handleTaAssignmentChange = (id: string, selectedTAIds: string[] | null) => {
     if (assessment?.granularity === 'team') {
       const updatedTeams = assignedTeams.map(assignedTeam => {
         if (assignedTeam.team._id === id) {
@@ -175,7 +165,6 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
     }
   };
 
-  // Helper function to merge and remove duplicates based on _id
   const mergeUniqueUsers = (existingTas: User[], newTas: User[]): User[] => {
     const combinedTas = [...existingTas];
     newTas.forEach(newTa => {
@@ -186,7 +175,7 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
     return combinedTas;
   };
 
-  // Handle Mass Assign Teaching Staff to All Teams or Users
+  // Handle Mass Assign Teaching Staff
   const handleMassAssign = () => {
     const selectedTAs = teachingStaff.filter(ta =>
       selectedTeachingStaff.includes(ta._id)
@@ -206,7 +195,6 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
       setAssignedUsers(updatedUsers);
     }
 
-    // Clear the selection after mass assignment
     setSelectedTeachingStaff([]);
   };
 
@@ -221,7 +209,7 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
     const updatedTeams = assignedTeams.map(assignedTeam => {
       const assignedTAs: User[] = [];
 
-      // Include original TA if "Grade original teams" is checked and the TA is not excluded
+      // Include original TA if "Grade original teams" is checked and not excluded
       if (
         gradeOriginalTeams &&
         assignedTeam.team.TA &&
@@ -230,11 +218,7 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
         assignedTAs.push(assignedTeam.team.TA);
       }
 
-      while (assignedTAs.length < teamsPerTA) {
-        if (tasToUse.length === 0) {
-          // No available TAs to assign
-          break;
-        }
+      while (assignedTAs.length < teamsPerTA && tasToUse.length > 0) {
         const ta = tasToUse[taIndex % tasToUse.length];
         if (!assignedTAs.find(existingTa => existingTa._id === ta._id)) {
           assignedTAs.push(ta);
@@ -283,18 +267,52 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
 
       const data = await response.json();
       console.log('TA assignments saved successfully:', data);
-
-      // Close the modal after successful save
       toggleTeamAssignmentModal();
     } catch (error) {
       console.error('Error saving TA assignments:', error);
     }
   };
 
-  // Fetch submissions on component mount or when dependencies change
+  // Fetch assigned entities (teams or users) that need grading
+  const fetchAssignedEntities = useCallback(async () => {
+    if (!assessment) return;
+    try {
+      const response = await fetch(
+        `/api/assignment-sets/${assessment._id}/assignment-sets/taunmarked`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      if (!response.ok) {
+        console.error('Error fetching assigned entities:', response.statusText);
+        return;
+      }
+      const data = await response.json();
+
+      // If empty array, no assigned entities left to grade
+      if (Array.isArray(data) && data.length === 0) {
+        setAssignedEntitiesAvailable(false);
+      } else {
+        setAssignedEntitiesAvailable(true);
+      }
+    } catch (error) {
+      console.error('Error fetching assigned entities:', error);
+    }
+  }, [assessment]);
+
   useEffect(() => {
     fetchSubmissions();
   }, [fetchSubmissions]);
+
+  useEffect(() => {
+    if (hasFacultyPermission && assessment && assessment.isReleased) {
+      // Fetch assigned entities if faculty and assessment is released
+      fetchAssignedEntities();
+    }
+  }, [hasFacultyPermission, assessment, fetchAssignedEntities]);
 
   // Handle "Take Assessment" button click
   const handleTakeAssessment = () => {
@@ -383,7 +401,6 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
                   <Card key={assignedTeam.team._id} style={{ minWidth: 250 }}>
                     <Group justify="space-between" mb="xs">
                       <Text>Team {assignedTeam.team.number}</Text>
-                      {/* Display assigned TAs with badges */}
                       {assignedTeam.tas.map(ta => (
                         <Badge
                           key={ta._id}
@@ -402,7 +419,6 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
                       ))}
                     </Group>
 
-                    {/* TA selection */}
                     <MultiSelect
                       label="Assign Graders"
                       data={teachingStaff.map(ta => ({
@@ -419,7 +435,6 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
 
                     <Divider my="sm" />
 
-                    {/* Team members */}
                     <Text color="dimmed" size="sm">
                       Members:
                     </Text>
@@ -436,7 +451,6 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
                   <Card key={assignedUser.user._id} style={{ minWidth: 250 }}>
                     <Group justify="space-between" mb="xs">
                       <Text>{assignedUser.user.name}</Text>
-                      {/* Display assigned TAs with badges */}
                       {assignedUser.tas.map(ta => (
                         <Badge key={ta._id} color="blue" variant="light">
                           {ta.name}
@@ -444,7 +458,6 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
                       ))}
                     </Group>
 
-                    {/* TA selection */}
                     <MultiSelect
                       label="Assign Graders"
                       data={teachingStaff.map(ta => ({
@@ -465,7 +478,6 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
 
           <Divider mt="xs" mb="xs" />
 
-          {/* Bottom Section: Randomization Options */}
           {assessment?.granularity === 'team' && (
             <Box mt="md">
               <Text>Randomization: </Text>
@@ -480,14 +492,11 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
                 <NumberInput
                   label="Teams per TA"
                   value={teamsPerTA}
-                  onChange={value =>
-                    setTeamsPerTA(parseInt(value.toString()) || 1)
-                  }
+                  onChange={value => setTeamsPerTA(parseInt(value.toString()) || 1)}
                   min={1}
                 />
               </Group>
 
-              {/* Exclude Graders MultiSelect */}
               <MultiSelect
                 data={teachingStaff.map(ta => ({
                   value: ta._id,
@@ -513,14 +522,12 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
 
           <Divider mt="xs" mb="xs" />
 
-          {/* Save Assignments Button */}
           <Group justify="flex-end" mt="md">
             <Button onClick={handleSaveAssignments}>Save Assignments</Button>
           </Group>
         </Modal>
       )}
 
-      {/* Assessment Details Card */}
       <Card withBorder shadow="sm" mb="lg">
         <Group justify="space-between">
           <Box>
@@ -567,12 +574,17 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
         </Group>
         {assessment?.isReleased && (
           <Group justify="center" mt="md">
-            <Button onClick={handleTakeAssessment}>Submit Assessment</Button>
+            {assignedEntitiesAvailable ? (
+              <Button onClick={handleTakeAssessment}>Submit Assessment</Button>
+            ) : (
+              <Text c="dimmed">
+                All assigned teams/users have been graded
+              </Text>
+            )}
           </Group>
         )}
       </Card>
 
-      {/* Submissions Section */}
       <Card withBorder shadow="sm">
         <Title order={3} mb="sm">
           Submissions
