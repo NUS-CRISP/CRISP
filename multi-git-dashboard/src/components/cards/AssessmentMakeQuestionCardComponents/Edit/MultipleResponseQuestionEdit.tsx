@@ -172,7 +172,7 @@ const MultipleResponseQuestionEdit: React.FC<MultipleResponseQuestionEditProps> 
               style={{ width: '80px' }}
             />
           )}
-          {isScored && allowPartialMarks && areWrongAnswersPenalized && allowNegative && (
+          {isScored && allowPartialMarks && areWrongAnswersPenalized && (
             <Checkbox
               label="Wrong Answer"
               checked={isOptionWrong[index]}

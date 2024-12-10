@@ -205,7 +205,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         return;
       }
       const data = await response.json();
-      console.log(data);
 
       if (assessment.granularity === 'team') {
         const teams = data as Team[];
