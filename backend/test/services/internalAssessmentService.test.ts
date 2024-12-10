@@ -317,7 +317,23 @@ describe('internalAssessmentService', () => {
       const questionId = mcQuestion._id;
       const updatedQuestion = await updateQuestionById(
         questionId,
-        { text: 'Updated question text' },
+        {
+          text: 'Updated question text',
+          type: 'Multiple Choice',
+          isRequired: true,
+          isLocked: false,
+          isScored: true,
+          options: [
+            {
+              text: '今日もかわいい',
+              points: 10,
+            },
+            {
+              text: '今日も怖い',
+              points: 5,
+            },
+          ] as MultipleChoiceOption[],
+        },
         account._id.toString()
       );
       expect(updatedQuestion.text).toEqual('Updated question text');

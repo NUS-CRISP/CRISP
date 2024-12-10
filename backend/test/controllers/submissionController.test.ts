@@ -206,6 +206,7 @@ describe('submissionController', () => {
       const accountId = 'account123';
       const userId = 'user123';
       const mockSubmissions = [{ id: 'submission123' }];
+      const account = {};
 
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
       jest
@@ -214,6 +215,9 @@ describe('submissionController', () => {
       jest
         .spyOn(submissionService, 'getSubmissionsByAssessmentAndUser')
         .mockResolvedValue(mockSubmissions as any);
+      jest
+        .spyOn(AccountModel, 'findById')
+        .mockResolvedValue(account);
 
       await getUserSubmissions(req, res);
 

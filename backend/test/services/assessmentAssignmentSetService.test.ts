@@ -57,6 +57,7 @@ describe('assessmentAssignmentSetService', () => {
       assessmentName: 'Test Assessment',
       description: 'A test assessment for unit tests.',
       granularity: 'team',
+      maxMarks: 0,
       isReleased: true,
       areSubmissionsEditable: true,
       startDate: new Date().setUTCFullYear(new Date().getUTCFullYear() - 1),

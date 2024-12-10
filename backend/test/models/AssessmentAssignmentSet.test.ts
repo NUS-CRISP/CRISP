@@ -105,6 +105,7 @@ describe('AssessmentAssignmentSet Model', () => {
       startDate: startDate,
       granularity: 'team',
       areSubmissionsEditable: true,
+      maxMarks: 0,
       isReleased: true,
       teamSet: teamSet._id,
       results: [],
