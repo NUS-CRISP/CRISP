@@ -13,6 +13,7 @@ import {
   ScrollArea,
   MultiSelect,
   Badge,
+  Alert,
 } from '@mantine/core';
 import { InternalAssessment } from '@shared/types/InternalAssessment';
 import { Submission } from '@shared/types/Submission';
@@ -27,10 +28,7 @@ import UpdateAssessmentInternalForm from '../forms/UpdateAssessmentInternalForm'
 import SubmissionCard from '../cards/SubmissionCard';
 import { QuestionUnion } from '@shared/types/Question';
 import { User } from '@shared/types/User';
-import {
-  AssignedTeam,
-  AssignedUser,
-} from '@shared/types/AssessmentAssignmentSet';
+import { AssignedTeam, AssignedUser } from '@shared/types/AssessmentAssignmentSet';
 
 interface AssessmentInternalOverviewProps {
   courseId: string;
@@ -65,7 +63,10 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
   const [teamsPerTA, setTeamsPerTA] = useState<number>(1);
   const [selectedTeachingStaff, setSelectedTeachingStaff] = useState<string[]>([]);
   const [excludedTeachingStaff, setExcludedTeachingStaff] = useState<string[]>([]);
-  const [assignedEntitiesAvailable, setAssignedEntitiesAvailable] = useState<boolean>(true); // New state
+  const [assignedEntitiesAvailable, setAssignedEntitiesAvailable] = useState<boolean>(true);
+
+  const [errorMessage, setErrorMessage] = useState<string>(''); // For user feedback on errors
+  const [warningMessage, setWarningMessage] = useState<string>(''); // For warnings (like distribution issues)
 
   const router = useRouter();
   const deleteInternalAssessmentApiRoute = `/api/internal-assessments/${assessment?._id}`;
@@ -80,6 +81,16 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
   const availableTAs = useMemo(() => {
     return teachingStaff.filter(ta => !excludedTeachingStaff.includes(ta._id));
   }, [teachingStaff, excludedTeachingStaff]);
+
+  // Check if assignments are valid (every team/user has at least one TA)
+  const validateAssignments = (): boolean => {
+    if (!assessment) return true;
+    if (assessment.granularity === 'team') {
+      return assignedTeams.every(team => team.tas.length > 0);
+    } else {
+      return assignedUsers.every(user => user.tas.length > 0);
+    }
+  };
 
   // Fetch submissions based on user permissions
   const fetchSubmissions = useCallback(async () => {
@@ -136,7 +147,11 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
   // Toggle modals
   const toggleEditModal = () => setIsEditModalOpen(o => !o);
   const toggleDeleteModal = () => setIsDeleteModalOpen(o => !o);
-  const toggleTeamAssignmentModal = () => setIsTeamAssignmentModalOpen(o => !o);
+  const toggleTeamAssignmentModal = () => {
+    setErrorMessage('');
+    setWarningMessage('');
+    setIsTeamAssignmentModalOpen(o => !o);
+  };
 
   // Handle TA assignment changes
   const handleTaAssignmentChange = (id: string, selectedTAIds: string[] | null) => {
@@ -198,42 +213,90 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
     setSelectedTeachingStaff([]);
   };
 
-  // Randomize TA assignments
-  const handleRandomizeTAs = () => {
-    const numTeams = assignedTeams.length;
-    const numTAsNeeded = Math.ceil(numTeams / teamsPerTA);
-    const shuffledTAs = [...availableTAs].sort(() => 0.5 - Math.random());
-    const tasToUse = shuffledTAs.slice(0, numTAsNeeded);
-    let taIndex = 0;
+  // Even distribution helper: Assign TAs fairly
+  const distributeTAsEvenly = (teamsToAssign: AssignedTeam[], tasAvailable: User[]) => {
+    // Reset warning message
+    setWarningMessage('');
 
-    const updatedTeams = assignedTeams.map(assignedTeam => {
+    // Steps:
+    // 1. For each team, if gradeOriginalTeams is checked and it has an original TA not excluded, assign that TA first.
+    // 2. Assign additional TAs until teamsPerTA reached, choosing TAs with the least number of assigned teams.
+    // 3. Check distribution difference.
+
+    // Map TA _id to count of assigned teams
+    const taCountMap = new Map<string, number>();
+    tasAvailable.forEach(ta => taCountMap.set(ta._id, 0));
+
+    for (const teamObj of teamsToAssign) {
       const assignedTAs: User[] = [];
 
-      // Include original TA if "Grade original teams" is checked and not excluded
+      // If gradeOriginalTeams and teamObj.team.TA available and not excluded
       if (
         gradeOriginalTeams &&
-        assignedTeam.team.TA &&
-        !excludedTeachingStaff.includes(assignedTeam.team.TA._id)
+        teamObj.team.TA &&
+        !excludedTeachingStaff.includes(teamObj.team.TA._id)
       ) {
-        assignedTAs.push(assignedTeam.team.TA);
+        assignedTAs.push(teamObj.team.TA);
+        taCountMap.set(teamObj.team.TA._id, (taCountMap.get(teamObj.team.TA._id) || 0) + 1);
       }
 
-      while (assignedTAs.length < teamsPerTA && tasToUse.length > 0) {
-        const ta = tasToUse[taIndex % tasToUse.length];
-        if (!assignedTAs.find(existingTa => existingTa._id === ta._id)) {
-          assignedTAs.push(ta);
-        }
-        taIndex++;
+      // Assign more TAs until we reach teamsPerTA
+      while (assignedTAs.length < teamsPerTA && tasAvailable.length > 0) {
+        // Pick TA with least assigned teams
+        const sortedTAs = tasAvailable
+          .filter(ta => !assignedTAs.includes(ta))
+          .sort((a, b) => (taCountMap.get(a._id)! - taCountMap.get(b._id)!));
+
+        if (sortedTAs.length === 0) break;
+
+        const taToAssign = sortedTAs[0];
+        assignedTAs.push(taToAssign);
+        taCountMap.set(taToAssign._id, (taCountMap.get(taToAssign._id)! + 1));
       }
 
-      return { ...assignedTeam, tas: assignedTAs };
-    });
+      teamObj.tas = assignedTAs;
+    }
 
-    setAssignedTeams(updatedTeams);
+    // Check distribution difference
+    const counts = Array.from(taCountMap.values());
+    const maxCount = Math.max(...counts);
+    const minCount = Math.min(...counts);
+    if (maxCount - minCount > 1) {
+      setWarningMessage('Warning: TA assignment distribution is uneven (difference > 1).');
+    }
+
+    setAssignedTeams([...teamsToAssign]);
+  };
+
+  // Randomize TA assignments for teams
+  const handleRandomizeTAs = () => {
+    if (!assessment || assessment.granularity !== 'team') return;
+
+    const numTeams = assignedTeams.length;
+    const numTAsNeeded = Math.ceil(numTeams / teamsPerTA);
+
+    // Filter out excluded TAs
+    const tasToUse = [...availableTAs].slice(0, numTAsNeeded);
+    if (tasToUse.length === 0) {
+      setWarningMessage('No available TAs to assign.');
+      return;
+    }
+
+    distributeTAsEvenly(assignedTeams, tasToUse);
   };
 
   // Save TA assignments
   const handleSaveAssignments = async () => {
+    setErrorMessage('');
+    setWarningMessage('');
+
+    // Validate assignments before saving
+    const isValid = validateAssignments();
+    if (!isValid) {
+      setWarningMessage('Some teams/users have no assigned graders. Please assign at least one grader each.');
+      return;
+    }
+
     try {
       const response = await fetch(
         `/api/internal-assessments/${assessment!._id}/assignment-sets`,
@@ -262,7 +325,11 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
       );
 
       if (!response.ok) {
-        throw new Error('Failed to save TA assignments');
+        const errorData = await response.json();
+        setErrorMessage(
+          errorData.message || 'Failed to save TA assignments due to a server error.'
+        );
+        return;
       }
 
       const data = await response.json();
@@ -270,6 +337,7 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
       toggleTeamAssignmentModal();
     } catch (error) {
       console.error('Error saving TA assignments:', error);
+      setErrorMessage('Failed to save TA assignments due to a network error.');
     }
   };
 
@@ -320,6 +388,8 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
       `/courses/${courseId}/internal-assessments/${assessment?._id}/take`
     );
   };
+
+  const isAssignmentsValid = validateAssignments();
 
   return (
     <Box>
@@ -492,7 +562,9 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
                 <NumberInput
                   label="Teams per TA"
                   value={teamsPerTA}
-                  onChange={value => setTeamsPerTA(parseInt(value.toString()) || 1)}
+                  onChange={value =>
+                    setTeamsPerTA(parseInt(value.toString()) || 1)
+                  }
                   min={1}
                 />
               </Group>
@@ -522,8 +594,28 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
 
           <Divider mt="xs" mb="xs" />
 
+          {!isAssignmentsValid && (
+            <Text c="red" mb="sm">
+              Some teams/users have no assigned graders. Please assign at least one grader each.
+            </Text>
+          )}
+
+          {/* Error or Warning Messages */}
+          {errorMessage && (
+            <Alert color="red" mb="sm">
+              {errorMessage}
+            </Alert>
+          )}
+          {warningMessage && (
+            <Alert color="yellow" mb="sm">
+              {warningMessage}
+            </Alert>
+          )}
+
           <Group justify="flex-end" mt="md">
-            <Button onClick={handleSaveAssignments}>Save Assignments</Button>
+            <Button onClick={handleSaveAssignments} disabled={!isAssignmentsValid}>
+              Save Assignments
+            </Button>
           </Group>
         </Modal>
       )}
