@@ -1002,11 +1002,11 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
       <Modal
         opened={showBackModal}
         onClose={() => setShowBackModal(false)}
-        title="Unsaved Progress"
+        title="Leaving submission"
       >
         <Text>
-          You have unsaved progress. Are you sure you want to leave this page?
-          Your unsaved changes will be lost.
+          Are you sure you want to leave this page? <br/>
+          Any unsaved changes will be lost.
         </Text>
         <Group justify="flex-end" mt="md">
           <Button variant="default" onClick={() => setShowBackModal(false)}>

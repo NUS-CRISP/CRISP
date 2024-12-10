@@ -36,14 +36,14 @@ const ScaleQuestionEdit: React.FC<ScaleQuestionEditProps> = ({
   const [minLabel, setMinLabel] = useState<ScaleLabel>({
     value: scaleMin,
     label: questionData.labels ? questionData.labels[0].label || '' : '',
-    points: questionData.scaleMin || 0,
+    points: questionData.labels ? questionData.labels[0].points || 0 : 0,
   });
   const [maxLabel, setMaxLabel] = useState<ScaleLabel>({
     value: scaleMax,
     label: questionData.labels
       ? questionData.labels[questionData.labels.length - 1].label || ''
       : '',
-    points: questionData.scaleMax || 0,
+    points: questionData.labels ? questionData.labels[questionData.labels.length - 1].points || 0 : 0,
   });
   const [intermediateLabels, setIntermediateLabels] = useState<ScaleLabel[]>(
     questionData.labels ? questionData.labels.slice(1, -1) || [] : []

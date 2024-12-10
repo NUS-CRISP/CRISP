@@ -31,6 +31,7 @@ const internalAssessmentSchema = new Schema<InternalAssessment>({
   startDate: { type: Date, required: true },
   endDate: { type: Date },
   maxMarks: { type: Number, required: true },
+  questionsTotalMarks: { type: Number, default: 0 },
   granularity: {
     type: String,
     enum: ['individual', 'team'],

@@ -71,6 +71,10 @@ export const submitAssessment = async (req: Request, res: Response) => {
 export const getUserSubmissions = async (req: Request, res: Response) => {
   try {
     const accountId = await getAccountId(req);
+    const account = await AccountModel.findById(accountId);
+    if (!account) {
+      throw new MissingAuthorizationError('Access denied');
+    }
     const { assessmentId } = req.params;
     const userId = await getUserIdByAccountId(accountId);
 
@@ -78,6 +82,12 @@ export const getUserSubmissions = async (req: Request, res: Response) => {
       assessmentId,
       userId
     );
+    if (account.role !== 'admin' && account.role !== 'Faculty member') {
+      submissions.forEach((sub) => {
+        sub.score = -1;
+        sub.adjustedScore = -1;
+      })
+    }
     res.status(200).json(submissions);
   } catch (error) {
     if (error instanceof NotFoundError) {
@@ -105,6 +115,12 @@ export const getAllSubmissions = async (req: Request, res: Response) => {
 
     const { assessmentId } = req.params;
     const submissions = await getSubmissionsByAssessment(assessmentId);
+    if (account.role !== 'admin' && account.role !== 'Faculty member') {
+      submissions.forEach((sub) => {
+        sub.score = -1;
+        sub.adjustedScore = -1;
+      })
+    }
     res.status(200).json(submissions);
   } catch (error) {
     if (error instanceof MissingAuthorizationError) {
