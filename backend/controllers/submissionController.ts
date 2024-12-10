@@ -83,10 +83,10 @@ export const getUserSubmissions = async (req: Request, res: Response) => {
       userId
     );
     if (account.role !== 'admin' && account.role !== 'Faculty member') {
-      submissions.forEach((sub) => {
+      submissions.forEach(sub => {
         sub.score = -1;
         sub.adjustedScore = -1;
-      })
+      });
     }
     res.status(200).json(submissions);
   } catch (error) {
@@ -116,10 +116,10 @@ export const getAllSubmissions = async (req: Request, res: Response) => {
     const { assessmentId } = req.params;
     const submissions = await getSubmissionsByAssessment(assessmentId);
     if (account.role !== 'admin' && account.role !== 'Faculty member') {
-      submissions.forEach((sub) => {
+      submissions.forEach(sub => {
         sub.score = -1;
         sub.adjustedScore = -1;
-      })
+      });
     }
     res.status(200).json(submissions);
   } catch (error) {

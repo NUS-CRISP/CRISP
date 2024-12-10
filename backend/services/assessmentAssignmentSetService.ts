@@ -91,28 +91,22 @@ export const createAssignmentSet = async (
   if (assessment.granularity === 'team' && assignedTeams) {
     // Build a pool of TAs from teams that have assigned TAs
     const allTAs = assignedTeams.flatMap(at => at.tas as User[]);
-    const uniqueTAIds = Array.from(new Set(allTAs.map(id => id.toString()))).map(
-      idStr => new mongoose.Types.ObjectId(idStr)
-    );
+    const uniqueTAIds = Array.from(
+      new Set(allTAs.map(id => id.toString()))
+    ).map(idStr => new mongoose.Types.ObjectId(idStr));
 
     // Assign a random TA from the pool to teams with no TAs
-    ensureAtLeastOneTA(
-      assignedTeams,
-      uniqueTAIds
-    );
+    ensureAtLeastOneTA(assignedTeams, uniqueTAIds);
   }
 
   // If granularity is 'individual', ensure every user has at least one TA
   if (assessment.granularity === 'individual' && assignedUsers) {
     const allTAIds = assignedUsers.flatMap(au => au.tas as User[]);
-    const uniqueTAIds = Array.from(new Set(allTAIds.map(id => id.toString()))).map(
-      idStr => new mongoose.Types.ObjectId(idStr)
-    );
+    const uniqueTAIds = Array.from(
+      new Set(allTAIds.map(id => id.toString()))
+    ).map(idStr => new mongoose.Types.ObjectId(idStr));
 
-    ensureAtLeastOneTA(
-      assignedUsers,
-      uniqueTAIds
-    );
+    ensureAtLeastOneTA(assignedUsers, uniqueTAIds);
   }
 
   // Create the AssessmentAssignmentSet document
@@ -222,9 +216,13 @@ export const updateAssignmentSet = async (
     }));
 
     // Ensure every team has at least one TA
-    const anyTeamWithoutTA = assignmentSet.assignedTeams.some(at => at.tas.length === 0);
+    const anyTeamWithoutTA = assignmentSet.assignedTeams.some(
+      at => at.tas.length === 0
+    );
     if (anyTeamWithoutTA) {
-      throw new BadRequestError('Each team must have at least one grader assigned.');
+      throw new BadRequestError(
+        'Each team must have at least one grader assigned.'
+      );
     }
 
     await assignmentSet.save();
@@ -249,9 +247,13 @@ export const updateAssignmentSet = async (
     }));
 
     // Ensure every user has at least one TA
-    const anyUserWithoutTA = assignmentSet.assignedUsers.some(au => au.tas.length === 0);
+    const anyUserWithoutTA = assignmentSet.assignedUsers.some(
+      au => au.tas.length === 0
+    );
     if (anyUserWithoutTA) {
-      throw new BadRequestError('Each user must have at least one grader assigned.');
+      throw new BadRequestError(
+        'Each user must have at least one grader assigned.'
+      );
     }
 
     await assignmentSet.save();

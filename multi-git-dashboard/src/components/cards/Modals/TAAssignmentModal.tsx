@@ -16,7 +16,10 @@ import {
 } from '@mantine/core';
 import { IconSearch } from '@tabler/icons-react';
 import { User } from '@shared/types/User';
-import { AssignedTeam, AssignedUser } from '@shared/types/AssessmentAssignmentSet';
+import {
+  AssignedTeam,
+  AssignedUser,
+} from '@shared/types/AssessmentAssignmentSet';
 
 interface TAAssignmentModalProps {
   opened: boolean;
@@ -40,7 +43,10 @@ interface TAAssignmentModalProps {
   availableTAs: User[];
   isAssignmentsValid: boolean;
   assessmentGranularity: 'team' | 'individual' | undefined;
-  handleTaAssignmentChange: (id: string, selectedTAIds: string[] | null) => void;
+  handleTaAssignmentChange: (
+    id: string,
+    selectedTAIds: string[] | null
+  ) => void;
 }
 
 const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
@@ -68,12 +74,7 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
   handleTaAssignmentChange,
 }) => {
   return (
-    <Modal
-      opened={opened}
-      onClose={onClose}
-      size="xl"
-      title="Assign Graders"
-    >
+    <Modal opened={opened} onClose={onClose} size="xl" title="Assign Graders">
       {/* Top Section: Search and Mass Assign Teaching Staff */}
       <Box mb="md">
         <MultiSelect
@@ -119,16 +120,12 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
                     <Badge
                       key={ta._id}
                       color={
-                        ta._id === assignedTeam.team.TA?._id
-                          ? 'green'
-                          : 'blue'
+                        ta._id === assignedTeam.team.TA?._id ? 'green' : 'blue'
                       }
                       variant="light"
                     >
                       {ta.name}{' '}
-                      {ta._id === assignedTeam.team.TA?._id
-                        ? '(Original)'
-                        : ''}
+                      {ta._id === assignedTeam.team.TA?._id ? '(Original)' : ''}
                     </Badge>
                   ))}
                 </Group>
@@ -240,7 +237,8 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
 
       {!isAssignmentsValid && (
         <Text c="red" mb="sm">
-          Some teams/users have no assigned graders. Please assign at least one grader each.
+          Some teams/users have no assigned graders. Please assign at least one
+          grader each.
         </Text>
       )}
 

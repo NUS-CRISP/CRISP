@@ -1005,7 +1005,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         title="Leaving submission"
       >
         <Text>
-          Are you sure you want to leave this page? <br/>
+          Are you sure you want to leave this page? <br />
           Any unsaved changes will be lost.
         </Text>
         <Group justify="flex-end" mt="md">

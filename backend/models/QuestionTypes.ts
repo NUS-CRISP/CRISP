@@ -79,7 +79,7 @@ const MultipleResponseSchema = new Schema({
   options: { type: [MultipleResponseOptionSchema], required: true },
   isScored: { type: Boolean, required: true },
   allowNegative: { type: Boolean, required: true },
-  areWrongAnswersPenalized : { type: Boolean, required: true },
+  areWrongAnswersPenalized: { type: Boolean, required: true },
   allowPartialMarks: { type: Boolean, required: true },
 });
 

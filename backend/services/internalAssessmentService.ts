@@ -550,7 +550,9 @@ export const addQuestionToAssessment = async (
         isLocked: validQuestionData.isLocked || false,
       });
       if (validQuestionData.isScored) {
-        addedMaxScore = validQuestionData.labels![validQuestionData.labels!.length - 1].points; // Assumes last in the array is max points, labels must exist, validated in validation step.
+        addedMaxScore =
+          validQuestionData.labels![validQuestionData.labels!.length - 1]
+            .points; // Assumes last in the array is max points, labels must exist, validated in validation step.
       }
       break;
     case 'Short Response':
@@ -580,11 +582,20 @@ export const addQuestionToAssessment = async (
         customInstruction: validQuestionData.customInstruction || '',
         isLocked: validQuestionData.isLocked || false,
       });
-      if (validQuestionData.isScored && validQuestionData.scoringMethod === 'direct') {
+      if (
+        validQuestionData.isScored &&
+        validQuestionData.scoringMethod === 'direct'
+      ) {
         addedMaxScore = validQuestionData.maxPoints!;
       }
-      if (validQuestionData.isScored && validQuestionData.scoringMethod === 'range') {
-        addedMaxScore = validQuestionData.scoringRanges![validQuestionData.scoringRanges!.length - 1].points; // Assumes last element of scoringRanges is max, ! operator is validated in validation step before this
+      if (
+        validQuestionData.isScored &&
+        validQuestionData.scoringMethod === 'range'
+      ) {
+        addedMaxScore =
+          validQuestionData.scoringRanges![
+            validQuestionData.scoringRanges!.length - 1
+          ].points; // Assumes last element of scoringRanges is max, ! operator is validated in validation step before this
       }
       break;
     case 'Undecided':
@@ -603,7 +614,9 @@ export const addQuestionToAssessment = async (
   // Add the question to the assessment
   assessment.questions = assessment.questions || [];
   assessment.questions.push(question._id);
-  assessment.questionsTotalMarks = assessment.questionsTotalMarks ? assessment.questionsTotalMarks + addedMaxScore : addedMaxScore;
+  assessment.questionsTotalMarks = assessment.questionsTotalMarks
+    ? assessment.questionsTotalMarks + addedMaxScore
+    : addedMaxScore;
   await assessment.save();
 
   return question;
@@ -689,12 +702,17 @@ export const updateQuestionById = async (
         );
       break;
     case 'Multiple Choice':
-      currentScore = (existingQuestion as MultipleChoiceQuestion).options.reduce((acc, val) => {
+      currentScore = (
+        existingQuestion as MultipleChoiceQuestion
+      ).options.reduce((acc, val) => {
         return acc > val.points ? acc : val.points;
       }, 0);
-      updatedScore = (updateData as MultipleChoiceQuestion).options.reduce((acc, val) => {
-        return acc > val.points ? acc : val.points;
-      }, 0);
+      updatedScore = (updateData as MultipleChoiceQuestion).options.reduce(
+        (acc, val) => {
+          return acc > val.points ? acc : val.points;
+        },
+        0
+      );
       updatedQuestion = await MultipleChoiceQuestionModel.findByIdAndUpdate(
         questionId,
         updateData,
@@ -702,12 +720,17 @@ export const updateQuestionById = async (
       );
       break;
     case 'Multiple Response':
-      currentScore = (existingQuestion as MultipleResponseQuestion).options.reduce((acc, val) => {
+      currentScore = (
+        existingQuestion as MultipleResponseQuestion
+      ).options.reduce((acc, val) => {
         return val.points > 0 ? acc + val.points : acc;
       }, 0);
-      updatedScore = (updateData as MultipleResponseQuestion).options.reduce((acc, val) => {
-        return val.points > 0 ? acc + val.points : acc;
-      }, 0);
+      updatedScore = (updateData as MultipleResponseQuestion).options.reduce(
+        (acc, val) => {
+          return val.points > 0 ? acc + val.points : acc;
+        },
+        0
+      );
       updatedQuestion = await MultipleResponseQuestionModel.findByIdAndUpdate(
         questionId,
         updateData,
@@ -715,8 +738,12 @@ export const updateQuestionById = async (
       );
       break;
     case 'Scale':
-      currentScore = (existingQuestion as ScaleQuestion).labels[(existingQuestion as ScaleQuestion).labels.length - 1].points;
-      updatedScore = (updateData as ScaleQuestion).labels[(updateData as ScaleQuestion).labels.length - 1].points;
+      currentScore = (existingQuestion as ScaleQuestion).labels[
+        (existingQuestion as ScaleQuestion).labels.length - 1
+      ].points;
+      updatedScore = (updateData as ScaleQuestion).labels[
+        (updateData as ScaleQuestion).labels.length - 1
+      ].points;
       updatedQuestion = await ScaleQuestionModel.findByIdAndUpdate(
         questionId,
         updateData,
@@ -745,17 +772,33 @@ export const updateQuestionById = async (
       );
       break;
     case 'Number':
-      if ((existingQuestion as NumberQuestion).isScored && (existingQuestion as NumberQuestion).scoringMethod === 'direct') {
+      if (
+        (existingQuestion as NumberQuestion).isScored &&
+        (existingQuestion as NumberQuestion).scoringMethod === 'direct'
+      ) {
         currentScore = (existingQuestion as NumberQuestion).maxPoints!;
       }
-      if ((updateData as NumberQuestion).isScored && (updateData as NumberQuestion).scoringMethod === 'direct') {
+      if (
+        (updateData as NumberQuestion).isScored &&
+        (updateData as NumberQuestion).scoringMethod === 'direct'
+      ) {
         updatedScore = (updateData as NumberQuestion).maxPoints!;
       }
-      if ((existingQuestion as NumberQuestion).isScored && (existingQuestion as NumberQuestion).scoringMethod === 'range') {
-        currentScore = (existingQuestion as NumberQuestion).scoringRanges![(existingQuestion as NumberQuestion).scoringRanges!.length - 1].points;
+      if (
+        (existingQuestion as NumberQuestion).isScored &&
+        (existingQuestion as NumberQuestion).scoringMethod === 'range'
+      ) {
+        currentScore = (existingQuestion as NumberQuestion).scoringRanges![
+          (existingQuestion as NumberQuestion).scoringRanges!.length - 1
+        ].points;
       }
-      if ((updateData as NumberQuestion).isScored && (updateData as NumberQuestion).scoringMethod === 'range') {
-        updatedScore = (updateData as NumberQuestion).scoringRanges![(updateData as NumberQuestion).scoringRanges!.length - 1].points;
+      if (
+        (updateData as NumberQuestion).isScored &&
+        (updateData as NumberQuestion).scoringMethod === 'range'
+      ) {
+        updatedScore = (updateData as NumberQuestion).scoringRanges![
+          (updateData as NumberQuestion).scoringRanges!.length - 1
+        ].points;
       }
       updatedQuestion = await NumberQuestionModel.findByIdAndUpdate(
         questionId,

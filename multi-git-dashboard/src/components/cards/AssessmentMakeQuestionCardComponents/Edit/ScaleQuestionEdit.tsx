@@ -43,7 +43,9 @@ const ScaleQuestionEdit: React.FC<ScaleQuestionEditProps> = ({
     label: questionData.labels
       ? questionData.labels[questionData.labels.length - 1].label || ''
       : '',
-    points: questionData.labels ? questionData.labels[questionData.labels.length - 1].points || 0 : 0,
+    points: questionData.labels
+      ? questionData.labels[questionData.labels.length - 1].points || 0
+      : 0,
   });
   const [intermediateLabels, setIntermediateLabels] = useState<ScaleLabel[]>(
     questionData.labels ? questionData.labels.slice(1, -1) || [] : []

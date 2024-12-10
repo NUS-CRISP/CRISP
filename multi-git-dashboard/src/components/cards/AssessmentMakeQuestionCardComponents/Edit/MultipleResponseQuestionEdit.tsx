@@ -18,27 +18,35 @@ interface MultipleResponseQuestionEditProps {
   isValid: boolean;
 }
 
-const MultipleResponseQuestionEdit: React.FC<MultipleResponseQuestionEditProps> = ({
-  questionData,
-  onSave,
-  onDelete,
-  isValid,
-}) => {
+const MultipleResponseQuestionEdit: React.FC<
+  MultipleResponseQuestionEditProps
+> = ({ questionData, onSave, onDelete, isValid }) => {
   const [options, setOptions] = useState<string[]>([]);
-  const [isScored, setIsScored] = useState<boolean>(questionData.isScored || false);
+  const [isScored, setIsScored] = useState<boolean>(
+    questionData.isScored || false
+  );
   const [optionPoints, setOptionPoints] = useState<number[]>([]);
   const [isOptionWrong, setIsOptionWrong] = useState<boolean[]>([]);
 
   // States for scoring behavior
-  const [allowPartialMarks, setAllowPartialMarks] = useState<boolean>(questionData.allowPartialMarks || false);
-  const [areWrongAnswersPenalized, setAreWrongAnswersPenalized] = useState<boolean>(questionData.areWrongAnswersPenalized || false);
-  const [allowNegative, setAllowNegative] = useState<boolean>(questionData.allowNegative || false);
+  const [allowPartialMarks, setAllowPartialMarks] = useState<boolean>(
+    questionData.allowPartialMarks || false
+  );
+  const [areWrongAnswersPenalized, setAreWrongAnswersPenalized] =
+    useState<boolean>(questionData.areWrongAnswersPenalized || false);
+  const [allowNegative, setAllowNegative] = useState<boolean>(
+    questionData.allowNegative || false
+  );
 
   useEffect(() => {
     if (questionData.options) {
       setOptions(questionData.options.map(option => option.text));
-      setOptionPoints(questionData.options.map(option => Math.abs(option.points || 0)));
-      setIsOptionWrong(questionData.options.map(option => (option.points || 0) < 0));
+      setOptionPoints(
+        questionData.options.map(option => Math.abs(option.points || 0))
+      );
+      setIsOptionWrong(
+        questionData.options.map(option => (option.points || 0) < 0)
+      );
     }
   }, [questionData]);
 
@@ -168,7 +176,12 @@ const MultipleResponseQuestionEdit: React.FC<MultipleResponseQuestionEditProps> 
               placeholder="Points"
               type="number"
               value={optionPoints[index]}
-              onChange={e => handleOptionPointsChange(index, parseFloat(e.currentTarget.value))}
+              onChange={e =>
+                handleOptionPointsChange(
+                  index,
+                  parseFloat(e.currentTarget.value)
+                )
+              }
               style={{ width: '80px' }}
             />
           )}
@@ -176,7 +189,9 @@ const MultipleResponseQuestionEdit: React.FC<MultipleResponseQuestionEditProps> 
             <Checkbox
               label="Wrong Answer"
               checked={isOptionWrong[index]}
-              onChange={e => handleOptionWrongChange(index, e.currentTarget.checked)}
+              onChange={e =>
+                handleOptionWrongChange(index, e.currentTarget.checked)
+              }
             />
           )}
           <ActionIcon color="red" onClick={() => handleDeleteOption(index)}>

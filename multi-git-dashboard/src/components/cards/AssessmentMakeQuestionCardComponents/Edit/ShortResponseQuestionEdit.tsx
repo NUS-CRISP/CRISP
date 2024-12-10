@@ -42,7 +42,12 @@ const ShortResponseQuestionEdit: React.FC<ShortResponseQuestionEditProps> = ({
         onChange={e => setPlaceholder(e.currentTarget.value)}
         mb="sm"
       />
-      <TextInput style={{ marginBottom: '24px' }} label="Preview" placeholder={placeholder} disabled />
+      <TextInput
+        style={{ marginBottom: '24px' }}
+        label="Preview"
+        placeholder={placeholder}
+        disabled
+      />
       <Group>
         <Button onClick={saveQuestion} disabled={!isValid}>
           Save Question

@@ -482,7 +482,11 @@ export const createSubmission = async (
         return { ...answer, score: 0 };
       }
 
-      const answerScore = await calculateAnswerScore(question, answer, assessment);
+      const answerScore = await calculateAnswerScore(
+        question,
+        answer,
+        assessment
+      );
       totalScore += answerScore;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { type, ...scoredAnswer } = { ...answer, score: answerScore }; // type is unused but we need to extract it
@@ -679,7 +683,11 @@ export const updateSubmission = async (
         return;
       }
 
-      const answerScore = await calculateAnswerScore(question, answer, assessment);
+      const answerScore = await calculateAnswerScore(
+        question,
+        answer,
+        assessment
+      );
       totalScore += answerScore;
       totalScore += answerScore;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -839,34 +847,41 @@ export const adjustSubmissionScore = async (
 export const calculateAnswerScore = async (
   question: QuestionUnion,
   answer: AnswerUnion,
-  assessment: InternalAssessment,
+  assessment: InternalAssessment
 ): Promise<number> => {
-  const scalingFactor = assessment.maxMarks === 0
-    ? 1
-    : (!assessment.questionsTotalMarks || assessment.questionsTotalMarks === 0)
+  const scalingFactor =
+    assessment.maxMarks === 0
       ? 1
-      : assessment.maxMarks / assessment.questionsTotalMarks;
+      : !assessment.questionsTotalMarks || assessment.questionsTotalMarks === 0
+        ? 1
+        : assessment.maxMarks / assessment.questionsTotalMarks;
   switch (question.type) {
     case 'Multiple Choice':
-      return calculateMultipleChoiceScore(
-        question as MultipleChoiceQuestion,
-        answer as MultipleChoiceAnswer
-      ) * scalingFactor;
+      return (
+        calculateMultipleChoiceScore(
+          question as MultipleChoiceQuestion,
+          answer as MultipleChoiceAnswer
+        ) * scalingFactor
+      );
     case 'Multiple Response':
-      return calculateMultipleResponseScore(
-        question as MultipleResponseQuestion,
-        answer as MultipleResponseAnswer
-      ) * scalingFactor;
+      return (
+        calculateMultipleResponseScore(
+          question as MultipleResponseQuestion,
+          answer as MultipleResponseAnswer
+        ) * scalingFactor
+      );
     case 'Scale':
-      return calculateScaleScore(
-        question as ScaleQuestion,
-        answer as ScaleAnswer
-      ) * scalingFactor;
+      return (
+        calculateScaleScore(question as ScaleQuestion, answer as ScaleAnswer) *
+        scalingFactor
+      );
     case 'Number':
-      return calculateNumberScore(
-        question as NumberQuestion,
-        answer as NumberAnswer
-      ) * scalingFactor;
+      return (
+        calculateNumberScore(
+          question as NumberQuestion,
+          answer as NumberAnswer
+        ) * scalingFactor
+      );
     // Add cases for other question types if they have scoring
     default:
       // For question types that don't have scoring, return 0
@@ -905,7 +920,7 @@ const calculateMultipleResponseScore = (
   // Map chosen answers to their corresponding options
   const chosenOptions = answer.values
     .map(value => question.options.find(opt => opt.text === value))
-    .filter((opt): opt is typeof question.options[number] => Boolean(opt));
+    .filter((opt): opt is (typeof question.options)[number] => Boolean(opt));
 
   // Identify correct (positively scored) and incorrect (zero or negative scored) options
   const correctOptions = question.options.filter(o => o.points > 0);

@@ -109,7 +109,7 @@ const CreateInternalForm: React.FC<CreateInternalFormProps> = ({
         label="Maximum Marks (0 if ungraded)"
         {...form.getInputProps('maxMarks')}
         placeholder="Enter max marks"
-        type='number'
+        type="number"
       />
 
       <Select

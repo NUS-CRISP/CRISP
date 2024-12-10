@@ -7,21 +7,20 @@ import {
   Modal,
   Text,
   Title,
-  Box
+  Box,
 } from '@mantine/core';
 import { InternalAssessment } from '@shared/types/InternalAssessment';
 import { Submission } from '@shared/types/Submission';
 import { useRouter } from 'next/router';
-import {
-  IconEdit,
-  IconTrash,
-  IconUsers,
-} from '@tabler/icons-react';
+import { IconEdit, IconTrash, IconUsers } from '@tabler/icons-react';
 import UpdateAssessmentInternalForm from '../forms/UpdateAssessmentInternalForm';
 import SubmissionCard from '../cards/SubmissionCard';
 import { QuestionUnion } from '@shared/types/Question';
 import { User } from '@shared/types/User';
-import { AssignedTeam, AssignedUser } from '@shared/types/AssessmentAssignmentSet';
+import {
+  AssignedTeam,
+  AssignedUser,
+} from '@shared/types/AssessmentAssignmentSet';
 import TAAssignmentModal from '../cards/Modals/TAAssignmentModal';
 
 interface AssessmentInternalOverviewProps {
@@ -48,18 +47,26 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
   teachingStaff,
 }) => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [assignedTeams, setAssignedTeams] = useState<AssignedTeam[]>(initialAssignedTeams);
-  const [assignedUsers, setAssignedUsers] = useState<AssignedUser[]>(initialAssignedUsers);
+  const [assignedTeams, setAssignedTeams] =
+    useState<AssignedTeam[]>(initialAssignedTeams);
+  const [assignedUsers, setAssignedUsers] =
+    useState<AssignedUser[]>(initialAssignedUsers);
 
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
-  const [isTeamAssignmentModalOpen, setIsTeamAssignmentModalOpen] = useState<boolean>(false);
+  const [isTeamAssignmentModalOpen, setIsTeamAssignmentModalOpen] =
+    useState<boolean>(false);
 
   const [gradeOriginalTeams, setGradeOriginalTeams] = useState<boolean>(false);
   const [teamsPerTA, setTeamsPerTA] = useState<number>(1);
-  const [selectedTeachingStaff, setSelectedTeachingStaff] = useState<string[]>([]);
-  const [excludedTeachingStaff, setExcludedTeachingStaff] = useState<string[]>([]);
-  const [assignedEntitiesAvailable, setAssignedEntitiesAvailable] = useState<boolean>(true);
+  const [selectedTeachingStaff, setSelectedTeachingStaff] = useState<string[]>(
+    []
+  );
+  const [excludedTeachingStaff, setExcludedTeachingStaff] = useState<string[]>(
+    []
+  );
+  const [assignedEntitiesAvailable, setAssignedEntitiesAvailable] =
+    useState<boolean>(true);
 
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [warningMessage, setWarningMessage] = useState<string>('');
@@ -190,7 +197,10 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
     setIsTeamAssignmentModalOpen(o => !o);
   };
 
-  const handleTaAssignmentChange = (id: string, selectedTAIds: string[] | null) => {
+  const handleTaAssignmentChange = (
+    id: string,
+    selectedTAIds: string[] | null
+  ) => {
     if (assessment?.granularity === 'team') {
       const updatedTeams = assignedTeams.map(assignedTeam => {
         if (assignedTeam.team._id === id) {
@@ -224,13 +234,23 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
     if (assessment?.granularity === 'team') {
       const updatedTeams = assignedTeams.map(assignedTeam => ({
         ...assignedTeam,
-        tas: [...assignedTeam.tas, ...selectedTAs.filter(ta => !assignedTeam.tas.some(t => t._id === ta._id))]
+        tas: [
+          ...assignedTeam.tas,
+          ...selectedTAs.filter(
+            ta => !assignedTeam.tas.some(t => t._id === ta._id)
+          ),
+        ],
       }));
       setAssignedTeams(updatedTeams);
     } else if (assessment?.granularity === 'individual') {
       const updatedUsers = assignedUsers.map(assignedUser => ({
         ...assignedUser,
-        tas: [...assignedUser.tas, ...selectedTAs.filter(ta => !assignedUser.tas.some(t => t._id === ta._id))]
+        tas: [
+          ...assignedUser.tas,
+          ...selectedTAs.filter(
+            ta => !assignedUser.tas.some(t => t._id === ta._id)
+          ),
+        ],
       }));
       setAssignedUsers(updatedUsers);
     }
@@ -353,13 +373,17 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
         {assessment?.isReleased && (
           <Group justify="center" mt="md">
             {assignedEntitiesAvailable ? (
-              <Button onClick={() => router.push(`/courses/${courseId}/internal-assessments/${assessment?._id}/take`)}>
+              <Button
+                onClick={() =>
+                  router.push(
+                    `/courses/${courseId}/internal-assessments/${assessment?._id}/take`
+                  )
+                }
+              >
                 Submit Assessment
               </Button>
             ) : (
-              <Text c="dimmed">
-                All assigned teams/users have been graded
-              </Text>
+              <Text c="dimmed">All assigned teams/users have been graded</Text>
             )}
           </Group>
         )}
