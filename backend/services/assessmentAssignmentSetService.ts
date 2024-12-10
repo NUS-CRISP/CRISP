@@ -10,13 +10,33 @@ import AssessmentAssignmentSetModel, {
 import InternalAssessmentModel from '../models/InternalAssessment';
 import TeamSetModel from '../models/TeamSet';
 import TeamModel, { Team } from '../models/Team';
-import UserModel from '../models/User';
+import UserModel, { User } from '../models/User';
 import { NotFoundError, BadRequestError } from './errors';
 import { getSubmissionsByAssessmentAndUser } from './submissionService';
 import { TeamMemberSelectionAnswer } from '@models/Answer';
 
 /**
+ * Utility: Assign a random TA from a given pool to a team or user without TAs.
+ * @param entities - The array of AssignedTeam or AssignedUser entities.
+ * @param pool - An array of TAs (Users) available for assignment.
+ */
+function ensureAtLeastOneTA(
+  entities: (AssignedTeam | AssignedUser)[],
+  pool: mongoose.Types.ObjectId[]
+) {
+  for (const entity of entities) {
+    if (entity.tas.length === 0 && pool.length > 0) {
+      // Assign a random TA from the pool
+      const randomTaId = pool[Math.floor(Math.random() * pool.length)];
+      entity.tas = [randomTaId];
+    }
+  }
+}
+
+/**
  * Creates a new AssessmentAssignmentSet based on the provided assessment and original TeamSet.
+ * When created, if granularity is 'team', any team without a TA is assigned a random TA from other teams that have TAs.
+ * Similarly, if granularity is 'individual', any user without a TA is assigned a random TA from other users that have TAs.
  * @param assessmentId - The ID of the assessment.
  * @param originalTeamSetId - The ID of the original TeamSet.
  * @returns The created AssessmentAssignmentSet document.
@@ -25,13 +45,11 @@ export const createAssignmentSet = async (
   assessmentId: string,
   originalTeamSetId?: string
 ): Promise<AssessmentAssignmentSet> => {
-  // Validate assessment existence
   const assessment = await InternalAssessmentModel.findById(assessmentId);
   if (!assessment) {
     throw new NotFoundError('Assessment not found');
   }
 
-  // Prevent duplicate AssignmentSets for the same assessment
   const existingSet = await AssessmentAssignmentSetModel.findOne({
     assessment: assessmentId,
   });
@@ -51,7 +69,6 @@ export const createAssignmentSet = async (
 
   const originalTeams = teamSet.teams.map((team: any) => team._id);
 
-  // Initialize assignments based on granularity
   const assignedTeams: AssignedTeam[] | null =
     assessment.granularity === 'team'
       ? teamSet.teams.map((team: any) => ({
@@ -62,16 +79,41 @@ export const createAssignmentSet = async (
 
   const assignedUsers: AssignedUser[] | null =
     assessment.granularity === 'individual'
-      ? teamSet.teams.flatMap((team: any) => {
-          const userAssignments: AssignedUser[] = team.members.map(
-            (user: any) => ({
-              user: user._id,
-              tas: team.TA ? [team.TA] : [],
-            })
-          );
-          return userAssignments;
-        })
+      ? teamSet.teams.flatMap((team: any) =>
+          team.members.map((user: any) => ({
+            user: user._id,
+            tas: team.TA ? [team.TA] : [],
+          }))
+        )
       : null;
+
+  // After creation, if granularity is 'team', ensure every team has at least one TA
+  if (assessment.granularity === 'team' && assignedTeams) {
+    // Build a pool of TAs from teams that have assigned TAs
+    const allTAs = assignedTeams.flatMap(at => at.tas as User[]);
+    const uniqueTAIds = Array.from(new Set(allTAs.map(id => id.toString()))).map(
+      idStr => new mongoose.Types.ObjectId(idStr)
+    );
+
+    // Assign a random TA from the pool to teams with no TAs
+    ensureAtLeastOneTA(
+      assignedTeams,
+      uniqueTAIds
+    );
+  }
+
+  // If granularity is 'individual', ensure every user has at least one TA
+  if (assessment.granularity === 'individual' && assignedUsers) {
+    const allTAIds = assignedUsers.flatMap(au => au.tas as User[]);
+    const uniqueTAIds = Array.from(new Set(allTAIds.map(id => id.toString()))).map(
+      idStr => new mongoose.Types.ObjectId(idStr)
+    );
+
+    ensureAtLeastOneTA(
+      assignedUsers,
+      uniqueTAIds
+    );
+  }
 
   // Create the AssessmentAssignmentSet document
   const assignmentSet = new AssessmentAssignmentSetModel({
@@ -134,9 +176,11 @@ export const getAssignmentSetByAssessmentId = async (
 };
 
 /**
- * Updates the assignedTeams within an AssessmentAssignmentSet.
+ * Updates the assignedTeams or assignedUsers within an AssessmentAssignmentSet.
+ * On update, ensures that every team/user is assigned at least 1 grader by throwing an error if any entity has zero TAs.
  * @param assessmentId - The ID of the assessment.
  * @param assignedTeams - The new array of AssignedTeam objects.
+ * @param assignedUsers - The new array of AssignedUser objects.
  * @returns The updated AssessmentAssignmentSet document.
  */
 export const updateAssignmentSet = async (
@@ -158,13 +202,11 @@ export const updateAssignmentSet = async (
   }
 
   if (assignedTeams) {
-    // Validate each AssignedTeam
     for (const at of assignedTeams) {
       const team = await TeamModel.findById(at.team);
       if (!team) {
         throw new NotFoundError(`Team with ID ${at.team} not found`);
       }
-      // Validate each TA (Just user check for now, TODO: Add actual checking + faculty bypass)
       for (const taId of at.tas) {
         const ta = await UserModel.findById(taId);
         if (!ta) {
@@ -173,38 +215,48 @@ export const updateAssignmentSet = async (
       }
     }
 
-    // Update the assignedTeams field
+    // After validation, update assignedTeams field
     assignmentSet.assignedTeams = assignedTeams.map(at => ({
       team: at.team,
       tas: at.tas,
     }));
 
+    // Ensure every team has at least one TA
+    const anyTeamWithoutTA = assignmentSet.assignedTeams.some(at => at.tas.length === 0);
+    if (anyTeamWithoutTA) {
+      throw new BadRequestError('Each team must have at least one grader assigned.');
+    }
+
     await assignmentSet.save();
-  } else {
-    // Validate each AssignedUser
-    for (const at of assignedUsers!) {
-      const user = await UserModel.findById(at.user);
+  } else if (assignedUsers) {
+    for (const au of assignedUsers) {
+      const user = await UserModel.findById(au.user);
       if (!user) {
-        throw new NotFoundError(`User with ID ${at.user} not found`);
+        throw new NotFoundError(`User with ID ${au.user} not found`);
       }
-      // Validate each TA (Just user check for now, TODO: Add actual checking + faculty bypass)
-      for (const taId of at.tas) {
+      for (const taId of au.tas) {
         const ta = await UserModel.findById(taId);
         if (!ta) {
           throw new NotFoundError(`TA with ID ${taId} not found`);
         }
-        console.log('adding ta:', ta);
       }
     }
 
-    // Update the assignedUsers field
-    assignmentSet.assignedUsers = assignedUsers!.map(at => ({
-      user: at.user,
-      tas: at.tas,
+    // After validation, update assignedUsers field
+    assignmentSet.assignedUsers = assignedUsers.map(au => ({
+      user: au.user,
+      tas: au.tas,
     }));
+
+    // Ensure every user has at least one TA
+    const anyUserWithoutTA = assignmentSet.assignedUsers.some(au => au.tas.length === 0);
+    if (anyUserWithoutTA) {
+      throw new BadRequestError('Each user must have at least one grader assigned.');
+    }
 
     await assignmentSet.save();
   }
+
   return assignmentSet;
 };
 
@@ -308,20 +360,18 @@ export const getUnmarkedAssignmentsByTAId = async (
   );
 
   if (assignmentSet.assignedTeams) {
-    // Filter teams where the TA is assigned
+    // Filter teams where the TA is assigned but not marked
     const teamIds: mongoose.Types.ObjectId[] = assignmentSet.assignedTeams
       .filter(
         at =>
           at.tas.length > 0 &&
           submittedUserIds.every(
-            (
-              uid // Every submitted uid...
-            ) =>
+            uid =>
               !(at.team as Team).members!.find(
                 member => member._id.toString() === uid
               )
           )
-      ) // is not in one of the teams being returned
+      )
       .map(at => at.team as mongoose.Types.ObjectId);
 
     const teams = await Promise.all(
@@ -336,7 +386,7 @@ export const getUnmarkedAssignmentsByTAId = async (
         as =>
           as.tas.length > 0 &&
           submittedUserIds.every(uid => uid !== as.user._id.toString())
-      ) // Ensures the userIds have no submissions from this TA
+      )
       .map(at => at.user as mongoose.Types.ObjectId);
 
     const users = await Promise.all(
