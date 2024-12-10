@@ -27,7 +27,6 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
   handleDeleteQuestion,
   onAssessmentUpdated,
 }) => {
-  console.log(questions);
   const [isReleaseModalOpen, setIsReleaseModalOpen] = useState<boolean>(false); // Modal for releasing the form
   const [isRecallModalOpen, setIsRecallModalOpen] = useState<boolean>(false); // Modal for recalling the form
 

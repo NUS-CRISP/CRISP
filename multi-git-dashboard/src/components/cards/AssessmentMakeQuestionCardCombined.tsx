@@ -156,7 +156,6 @@ const AssessmentMakeQuestionCard: React.FC<AssessmentMakeQuestionCardProps> = ({
       case 'Multiple Choice':
       case 'Multiple Response':
         if ('options' in questionData && questionData.options) {
-          console.log(questionData.options);
           setOptions(questionData.options.map(option => option.text));
           setOptionPoints(
             questionData.options.map(option => Math.abs(option.points || 0))

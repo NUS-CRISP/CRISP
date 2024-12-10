@@ -44,7 +44,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
   canEdit = true,
   isFaculty = false,
 }) => {
-  console.log(existingSubmission);
   const router = useRouter();
   const { id, assessmentId } = router.query as {
     id: string;
@@ -124,7 +123,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
       }
       const data: InternalAssessment = await response.json();
       setAssessment(data);
-      console.log(data);
     } catch (error) {
       console.error('Error fetching assessment:', error);
     }
@@ -144,7 +142,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
       }
       const data: Question[] = await response.json();
       setQuestions(data);
-      console.log(data);
     } catch (error) {
       console.error('Error fetching questions:', error);
     }
@@ -216,7 +213,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
             label: member.name,
           })),
         }));
-        console.log(options);
         setTeamOptions(options);
       } else if (assessment.granularity === 'individual') {
         const users = data as User[];
@@ -224,7 +220,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
           value: user._id,
           label: user.name,
         }));
-        console.log(options);
         setTeamMembersOptions(options);
       }
     } catch (error) {
@@ -315,7 +310,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         },
         {} as { [questionId: string]: AnswerInput }
       );
-      console.log('INIT ANS', initialAnswers);
       setAnswers(initialAnswers);
 
       const initialTotalScore =

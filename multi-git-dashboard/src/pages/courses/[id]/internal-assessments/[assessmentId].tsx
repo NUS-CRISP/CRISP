@@ -105,7 +105,6 @@ const InternalAssessmentDetail: React.FC = () => {
             return;
           }
           const teams: Team[] = await fallbackResponse.json();
-          console.log(teams);
 
           assignedUsers = teams.flatMap(team =>
             team.members.map(member => {
@@ -206,7 +205,6 @@ const InternalAssessmentDetail: React.FC = () => {
         return;
       }
       const data: AssessmentResult[] = (await response.json()).data;
-      console.log(data);
       setAssessmentResults(data);
     } catch (error) {
       console.error('Error fetching assessment results:', error);

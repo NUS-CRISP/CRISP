@@ -26,7 +26,6 @@ const ViewSubmissionPage: React.FC = () => {
       fetch(`/api/submissions/${submissionId}`)
         .then(res => res.json())
         .then((data: Submission) => {
-          console.log(data);
           setSubmission(data);
         })
         .catch(error => {
