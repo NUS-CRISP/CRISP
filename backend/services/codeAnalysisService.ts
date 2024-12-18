@@ -52,7 +52,7 @@ export const getAuthorizedCodeAnalysisDataByCourse = async (
     const codeAnalysisDatas = await codeAnalysisDataModel.find({
       gitHubOrgName: course.gitHubOrgName,
     });
-    if (!codeAnalysisDatas) {
+    if (codeAnalysisDatas.length === 0) {
       throw new NotFoundError('No code analysis data found for course');
     }
     const sortedDatas = codeAnalysisDatas.sort((a, b) => {
@@ -63,7 +63,7 @@ export const getAuthorizedCodeAnalysisDataByCourse = async (
     return sortedDatas;
   } else if (role === Role.TA) {
     const teamSets = await TeamSetModel.find({ course: courseId });
-    if (!teamSets) {
+    if (!teamSets || teamSets.length === 0) {
       throw new NotFoundError('No team sets found for course');
     }
     const teams = await TeamModel.find({
@@ -74,7 +74,7 @@ export const getAuthorizedCodeAnalysisDataByCourse = async (
       options: { sort: { repoName: 1 } },
     });
 
-    if (!teams) {
+    if (!teams || teams.length === 0) {
       throw new NotFoundError('No teams found for course');
     }
 
@@ -86,7 +86,7 @@ export const getAuthorizedCodeAnalysisDataByCourse = async (
       teamId: { $in: teamIds },
     });
 
-    if (!codeAnalysisDatas) {
+    if (!codeAnalysisDatas || codeAnalysisDatas.length === 0) {
       throw new NotFoundError('No code analysis data found for course');
     }
     const sortedDatas = codeAnalysisDatas.sort((a, b) => {
