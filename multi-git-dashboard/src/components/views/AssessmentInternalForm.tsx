@@ -6,6 +6,7 @@ import {
   Text,
   Box,
   Alert,
+  Accordion,
 } from '@mantine/core';
 import {
   MultipleChoiceQuestion,
@@ -19,7 +20,6 @@ import { InternalAssessment } from '@shared/types/InternalAssessment';
 import { useEffect, useState } from 'react';
 import CSVUpload from '../csv/CSVUpload';
 
-/** 1) Define the columns we expect in a CSV, same as your transform function. */
 const questionHeaders = [
   'type',
   'text',
@@ -45,7 +45,6 @@ const questionHeaders = [
   'maxDate',
 ];
 
-/** 2) Basic instructions that will appear at the top of the CSV Template. */
 const csvInstructions = [
   '# INSTRUCTIONS:',
   '# Valid question types: Multiple Choice, Multiple Response, Scale,',
@@ -54,7 +53,7 @@ const csvInstructions = [
   '#   are excluded automatically upon upload.',
 ].join('\n');
 
-/** 3) Transform function to parse CSV => question objects. */
+/** Transform function to parse CSV => question objects. */
 function transformQuestions(data: any[]): any[] {
   // Filter out NUSNET/TeamMember
   const filteredRows = data.filter((row) => {
@@ -158,7 +157,7 @@ function transformQuestions(data: any[]): any[] {
   });
 }
 
-/** 4) Helper to create the CSV template + instructions. */
+/** Download CSV template with instructions. */
 function downloadCsvTemplateWithInstructions() {
   const csvContent =
     csvInstructions +
@@ -169,10 +168,9 @@ function downloadCsvTemplateWithInstructions() {
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
   const filename = 'questions_template_with_instructions.csv';
 
-  // Download
-  const navigator: any = window.navigator;
-  if (navigator.msSaveOrOpenBlob) {
-    navigator.msSaveOrOpenBlob(blob, filename);
+  const navObj: any = window.navigator;
+  if (navObj.msSaveOrOpenBlob) {
+    navObj.msSaveOrOpenBlob(blob, filename);
   } else {
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
@@ -183,9 +181,9 @@ function downloadCsvTemplateWithInstructions() {
   }
 }
 
-/** 5) Convert existing (already fetched) questions => CSV string. */
+/** Convert existing questions => CSV string. */
 function downloadExistingQuestionsCsv(questions: Question[]) {
-  // Filter out NUSNET ID, NUSNET Email, Team Member Selection
+  // Filter out NUSNET/TeamMember
   const filtered = questions.filter((q) => {
     return (
       q.type !== 'NUSNET ID' &&
@@ -194,15 +192,10 @@ function downloadExistingQuestionsCsv(questions: Question[]) {
     );
   });
 
-  // Build the CSV rows
   const rows: string[] = [];
-  // 1) header row
-  rows.push(questionHeaders.join(','));
+  rows.push(questionHeaders.join(',')); // header row
 
-  // 2) each question => row
   filtered.forEach((q) => {
-    // We'll map each header to a string.
-    // For arrays like "options", "labels", we reverse the logic in transformQuestions.
     const rowValues = questionHeaders.map((header) => {
       switch (header) {
         case 'type':
@@ -222,7 +215,6 @@ function downloadExistingQuestionsCsv(questions: Question[]) {
             (q.type === 'Multiple Choice' || q.type === 'Multiple Response') &&
             (q as any).options
           ) {
-            // "Option A|2;Option B|4"
             return (q as any).options
               .map((opt: any) => `${opt.text}|${opt.points}`)
               .join(';');
@@ -239,7 +231,6 @@ function downloadExistingQuestionsCsv(questions: Question[]) {
           return (q as any).scaleMax?.toString() || '';
         case 'labels': {
           if (q.type === 'Scale' && (q as any).labels) {
-            // "1|Min|0;5|Max|10"
             return (q as any).labels
               .map((lab: any) => `${lab.value}|${lab.label}|${lab.points}`)
               .join(';');
@@ -254,7 +245,6 @@ function downloadExistingQuestionsCsv(questions: Question[]) {
           return (q as any).maxPoints?.toString() || '';
         case 'scoringRanges': {
           if (q.type === 'Number' && (q as any).scoringRanges) {
-            // "0|10|3;11|20|5"
             return (q as any).scoringRanges
               .map((r: any) => `${r.minValue}|${r.maxValue}|${r.points}`)
               .join(';');
@@ -278,20 +268,17 @@ function downloadExistingQuestionsCsv(questions: Question[]) {
       }
     });
 
-    // Join columns with commas
-    // IMPORTANT: for production use, consider escaping fields with quotes if they have commas
+    // Remove linebreaks; join columns with commas
     rows.push(rowValues.map((val) => val.replace(/\r?\n|\r/g, ' ')).join(','));
   });
 
-  // Combine into a single CSV string
   const csvString = rows.join('\n');
 
-  // Download
   const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8' });
   const filename = 'existing_questions.csv';
-  const navigator: any = window.navigator;
-  if (navigator.msSaveOrOpenBlob) {
-    navigator.msSaveOrOpenBlob(blob, filename);
+  const navObj: any = window.navigator;
+  if (navObj.msSaveOrOpenBlob) {
+    navObj.msSaveOrOpenBlob(blob, filename);
   } else {
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
@@ -529,7 +516,7 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
         )}
       </Group>
 
-      {/* 4) CSV Upload Modal */}
+      {/* CSV Upload Modal */}
       <Modal
         opened={isCsvModalOpen}
         onClose={() => setIsCsvModalOpen(false)}
@@ -541,12 +528,7 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
           </Alert>
         )}
 
-        <Text mb="xs">
-          Please upload a CSV that includes valid question types and fields.
-          <br />
-          NUSNET ID, NUSNET Email, and Team Member Selection rows are skipped automatically.
-        </Text>
-
+        {/* Drop zone & upload */}
         <CSVUpload
           warningMessage="Questions uploaded via CSV will be appended to the existing list."
           headers={questionHeaders}
@@ -562,6 +544,95 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
           transformFunction={transformQuestions}
           hideTemplateDownloadButton
         />
+
+        {/* Accordion below the drop zone with formatting instructions */}
+        <Accordion mt="md" variant="separated" defaultValue={null}>
+          <Accordion.Item value="formatting">
+            <Accordion.Control>Question CSV Formatting Instructions</Accordion.Control>
+            <Accordion.Panel>
+              <Text size="sm" mb="xs">
+                Ensure cells with data are set to "Text" format. Each row
+                represents a single question with the following columns:
+              </Text>
+              <ul style={{ margin: 0, paddingLeft: '1.25rem' }}>
+                <li>
+                  <strong>type</strong>: one of &quot;Multiple Choice&quot;, &quot;Multiple
+                  Response&quot;, &quot;Scale&quot;, &quot;Short Response&quot;, &quot;Long
+                  Response&quot;, &quot;Date&quot;, &quot;Number&quot;, or &quot;Undecided&quot;.
+                </li>
+                <li>
+                  <strong>text</strong>: the question prompt (required).
+                </li>
+                <li>
+                  <strong>isRequired</strong>: &quot;true&quot; or &quot;false&quot;.
+                </li>
+                <li>
+                  <strong>isLocked</strong>: &quot;true&quot; or &quot;false&quot;.
+                </li>
+                <li>
+                  <strong>customInstruction</strong>: additional instructions (optional).
+                </li>
+                <li>
+                  <strong>isScored</strong>: &quot;true&quot; or &quot;false&quot;. If true,
+                  extra fields like &quot;options&quot; or &quot;labels&quot; may
+                  apply.
+                </li>
+                <li>
+                  <strong>options</strong>: e.g. &quot;Option1|2;Option2|5&quot; for multiple
+                  choice or response.
+                </li>
+                <li>
+                  <strong>allowNegative</strong>: &quot;true&quot; or &quot;false&quot; (Multiple
+                  Response).
+                </li>
+                <li>
+                  <strong>areWrongAnswersPenalized</strong>: &quot;true&quot; or &quot;false&quot;
+                  (Multiple Response).
+                </li>
+                <li>
+                  <strong>allowPartialMarks</strong>: &quot;true&quot; or &quot;false&quot; (Multiple
+                  Response).
+                </li>
+                <li>
+                  <strong>scaleMax</strong>: number if &quot;type&quot; is &quot;Scale&quot;.
+                </li>
+                <li>
+                  <strong>labels</strong>: e.g. &quot;1|Min|0;5|Max|5&quot; for &quot;Scale&quot;.
+                </li>
+                <li>
+                  <strong>maxNumber</strong>: numeric limit for &quot;Number&quot; question.
+                </li>
+                <li>
+                  <strong>scoringMethod</strong>: &quot;direct&quot;, &quot;range&quot;, or &quot;None&quot; (Number).
+                </li>
+                <li>
+                  <strong>maxPoints</strong>: numeric max points for &quot;Number&quot; if
+                  &quot;scoringMethod&quot; = &quot;direct&quot;.
+                </li>
+                <li>
+                  <strong>scoringRanges</strong>: e.g. &quot;0|10|3;11|20|5&quot; if
+                  &quot;scoringMethod&quot;= &quot;range&quot; (Number).
+                </li>
+                <li>
+                  <strong>shortResponsePlaceholder</strong>: for &quot;Short Response&quot;.
+                </li>
+                <li>
+                  <strong>longResponsePlaceholder</strong>: for &quot;Long Response&quot;.
+                </li>
+                <li>
+                  <strong>isRange</strong>: &quot;true&quot; or &quot;false&quot; (Date).
+                </li>
+                <li>
+                  <strong>datePickerPlaceholder</strong>: optional placeholder for &quot;Date&quot;.
+                </li>
+                <li>
+                  <strong>minDate</strong>, <strong>maxDate</strong>: optional date constraints
+                  for &quot;Date&quot; question.
+                </li>
+              </ul>
+            </Accordion.Panel>
+          </Accordion.Item>
+        </Accordion>
       </Modal>
 
       {/* Release Modal */}
@@ -581,6 +652,7 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
         </Group>
       </Modal>
 
+      {/* Recall Modal */}
       <Modal
         opened={isRecallModalOpen}
         onClose={() => setIsRecallModalOpen(false)}
