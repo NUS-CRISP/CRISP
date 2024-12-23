@@ -258,13 +258,112 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
     setSelectedTeachingStaff([]);
   };
 
-  // For randomization and saving, we just call them directly. The logic is now inside the modal.
-  const handleRandomizeTAs = () => {
-    // We'll just trust the modal's logic is now in the modal component.
+  const distributeTAsEvenly = (teamsToAssign: AssignedTeam[], tasAvailable: User[]) => {
+    // Reset warning message
+    setWarningMessage('');
+    // Steps:
+    // 1. For each team, if gradeOriginalTeams is checked and it has an original TA not excluded, assign that TA first.
+    // 2. Assign additional TAs until teamsPerTA reached, choosing TAs with the least number of assigned teams.
+    // 3. Check distribution difference.
+    // Map TA _id to count of assigned teams
+    const taCountMap = new Map<string, number>();
+    tasAvailable.forEach(ta => taCountMap.set(ta._id, 0));
+    for (const teamObj of teamsToAssign) {
+      const assignedTAs: User[] = [];
+      // If gradeOriginalTeams and teamObj.team.TA available and not excluded
+      if (
+        gradeOriginalTeams &&
+        teamObj.team.TA &&
+        !excludedTeachingStaff.includes(teamObj.team.TA._id)
+      ) {
+        assignedTAs.push(teamObj.team.TA);
+        taCountMap.set(teamObj.team.TA._id, (taCountMap.get(teamObj.team.TA._id) || 0) + 1);
+      }
+      // Assign more TAs until we reach teamsPerTA
+      while (assignedTAs.length < teamsPerTA && tasAvailable.length > 0) {
+        // Pick TA with least assigned teams
+        const sortedTAs = tasAvailable
+          .filter(ta => !assignedTAs.includes(ta))
+          .sort((a, b) => (taCountMap.get(a._id)! - taCountMap.get(b._id)!));
+        if (sortedTAs.length === 0) break;
+        const taToAssign = sortedTAs[0];
+        assignedTAs.push(taToAssign);
+        taCountMap.set(taToAssign._id, (taCountMap.get(taToAssign._id)! + 1));
+      }
+      teamObj.tas = assignedTAs;
+    }
+    // Check distribution difference
+    const counts = Array.from(taCountMap.values());
+    const maxCount = Math.max(...counts);
+    const minCount = Math.min(...counts);
+    if (maxCount - minCount > 1) {
+      setWarningMessage('Warning: TA assignment distribution is uneven (difference > 1).');
+    }
+    setAssignedTeams([...teamsToAssign]);
   };
 
-  const handleSaveAssignments = () => {
-    // Also trust modal's logic is now in the modal component.
+  const handleRandomizeTAs = () => {
+    if (!assessment || assessment.granularity !== 'team') return;
+    const numTeams = assignedTeams.length;
+    const numTAsNeeded = Math.ceil(numTeams / teamsPerTA);
+    // Filter out excluded TAs
+    const tasToUse = [...availableTAs].slice(0, numTAsNeeded);
+    if (tasToUse.length === 0) {
+      setWarningMessage('No available TAs to assign.');
+      return;
+    }
+    distributeTAsEvenly(assignedTeams, tasToUse);
+  };
+  // Save TA assignments
+  const handleSaveAssignments = async () => {
+    setErrorMessage('');
+    setWarningMessage('');
+    // Validate assignments before saving
+    const isValid = validateAssignments();
+    if (!isValid) {
+      setWarningMessage('Some teams/users have no assigned graders. Please assign at least one grader each.');
+      return;
+    }
+    try {
+      const response = await fetch(
+        `/api/internal-assessments/${assessment!._id}/assignment-sets`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            assignedTeams:
+              assessment?.granularity === 'team'
+                ? assignedTeams.map(team => ({
+                    team: team.team._id,
+                    tas: team.tas.map(ta => ta._id),
+                  }))
+                : undefined,
+            assignedUsers:
+              assessment?.granularity === 'individual'
+                ? assignedUsers.map(user => ({
+                    user: user.user._id,
+                    tas: user.tas.map(ta => ta._id),
+                  }))
+                : undefined,
+          }),
+        }
+      );
+      if (!response.ok) {
+        const errorData = await response.json();
+        setErrorMessage(
+          errorData.message || 'Failed to save TA assignments due to a server error.'
+        );
+        return;
+      }
+      const data = await response.json();
+      console.log('TA assignments saved successfully:', data);
+      toggleTeamAssignmentModal();
+    } catch (error) {
+      console.error('Error saving TA assignments:', error);
+      setErrorMessage('Failed to save TA assignments due to a network error.');
+    }
   };
 
   return (
