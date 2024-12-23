@@ -1,4 +1,4 @@
-import { Box, Button, Group, Text } from '@mantine/core';
+import { Box, Button, Group, Text, Alert } from '@mantine/core';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
 import { IconPhoto, IconUpload, IconX } from '@tabler/icons-react';
 import { saveAs } from 'file-saver';
@@ -14,6 +14,13 @@ interface CSVUploadProps {
   urlString: string;
   transformFunction?: (data: unknown[]) => unknown[];
   requestType?: 'POST' | 'PATCH';
+  /** Optional warning message to display above the Dropzone */
+  warningMessage?: string;
+  /**
+   * If true, hides the "Download CSV Template" button entirely.
+   * Defaults to false (button is visible).
+   */
+  hideTemplateDownloadButton?: boolean;
 }
 
 const CSVUpload: React.FC<CSVUploadProps> = ({
@@ -25,6 +32,8 @@ const CSVUpload: React.FC<CSVUploadProps> = ({
   urlString,
   transformFunction,
   requestType = 'POST',
+  warningMessage,
+  hideTemplateDownloadButton = false,
 }) => {
   const [items, setItems] = useState<unknown[]>([]);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
@@ -37,12 +46,18 @@ const CSVUpload: React.FC<CSVUploadProps> = ({
           Papa.parse(reader.result as string, {
             header: true,
             skipEmptyLines: true,
-            complete: results => {
-              let data = results.data;
-              if (transformFunction) {
-                data = transformFunction(data);
+            complete: (results) => {
+              try {
+                let data = results.data;
+                if (transformFunction) {
+                  data = transformFunction(data);
+                }
+                setItems(data);
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              } catch (error: any) {
+                console.error('Error transforming CSV data:', error?.message);
+                onError(`Error transforming CSV data: ${error?.message}`);
               }
-              setItems(data);
             },
             error: (error: Error) => {
               console.error('Error parsing CSV:', error.message);
@@ -54,7 +69,7 @@ const CSVUpload: React.FC<CSVUploadProps> = ({
         setUploadedFileName(file.name);
       }
     },
-    [setItems, onError, setUploadedFileName]
+    [setItems, onError, setUploadedFileName, transformFunction]
   );
 
   const downloadCsvTemplate = () => {
@@ -97,6 +112,11 @@ const CSVUpload: React.FC<CSVUploadProps> = ({
 
   return (
     <Box>
+      {warningMessage && (
+        <Alert color="yellow" mb="xs">
+          {warningMessage}
+        </Alert>
+      )}
       <Dropzone
         onDrop={(files: File[]) => {
           if (files.length > 0) {
@@ -144,7 +164,9 @@ const CSVUpload: React.FC<CSVUploadProps> = ({
       )}
       <Group style={{ marginTop: '16px' }}>
         <Button onClick={handleSubmitCSV}>{uploadButtonString}</Button>
-        <Button onClick={downloadCsvTemplate}>Download CSV Template</Button>
+        {!hideTemplateDownloadButton && (
+          <Button onClick={downloadCsvTemplate}>Download CSV Template</Button>
+        )}
       </Group>
     </Box>
   );

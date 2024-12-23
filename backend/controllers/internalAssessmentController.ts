@@ -100,6 +100,42 @@ export const addQuestionToAssessmentController = async (
   }
 };
 
+export const addQuestionsToAssessmentController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const accountId = await getAccountId(req);
+    const { assessmentId } = req.params;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const questionDatas: any[] = req.body.items;
+    console.log(questionDatas)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const questions: any[] = [];
+
+    questionDatas.forEach(async (questionData) => {
+        questions.push(await addQuestionToAssessment(
+        assessmentId,
+        questionData,
+        accountId
+      ));
+    });
+
+    res.status(201).json(questions);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else if (error instanceof BadRequestError) {
+      res.status(400).json({ error: error.message });
+    } else if (error instanceof MissingAuthorizationError) {
+      res.status(401).json({ error: 'Missing authorization' });
+    } else {
+      console.error('Error adding question:', error);
+      res.status(500).json({ error: 'Failed to add question' });
+    }
+  }
+};
+
 export const getQuestionsByAssessmentIdController = async (
   req: Request,
   res: Response

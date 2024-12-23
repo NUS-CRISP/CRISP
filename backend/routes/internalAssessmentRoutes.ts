@@ -9,6 +9,7 @@ import {
   deleteQuestionByIdController,
   recallInternalAssessment,
   releaseInternalAssessment,
+  addQuestionsToAssessmentController,
 } from '../controllers/internalAssessmentController';
 import {
   submitAssessment,
@@ -28,6 +29,7 @@ router.get('/:assessmentId', getInternalAssessment);
 router.patch('/:assessmentId', updateInternalAssessment);
 router.delete('/:assessmentId', deleteInternalAssessment);
 router.post('/:assessmentId/questions', addQuestionToAssessmentController);
+router.post('/:assessmentId/manyquestions', addQuestionsToAssessmentController);
 router.get('/:assessmentId/questions', getQuestionsByAssessmentIdController);
 router.patch(
   '/:assessmentId/questions/:questionId',
