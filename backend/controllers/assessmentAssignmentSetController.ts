@@ -1,5 +1,3 @@
-// controllers/assessmentAssignmentSetController.ts
-
 import { Request, Response } from 'express';
 import {
   createAssignmentSet,
@@ -13,7 +11,20 @@ import { getAccountId } from '../utils/auth';
 import { getUserIdByAccountId } from '../services/accountService';
 
 /**
- * Controller to create a new AssessmentAssignmentSet.
+ * Controller method to create a new AssessmentAssignmentSet. Not being used right now due to
+ * the creation of AssignmentSet being automatic upon creation of an Assessment,
+ * but may be useful in future if a manual process for AssignmentSet is desired.
+ *
+ * @param {Request} req - The Express request object.
+ *  - req.params.assessmentId: The ID of the assessment for which an assignment set is being created.
+ *  - req.body.originalTeamSetId: The ID of the original team set to be used in the creation process.
+ * @param {Response} res - The Express response object used to send back the response.
+ *
+ * @returns {Promise<void>}
+ *  - 201 Created: Returns the newly created assignment set in JSON format.
+ *  - 400 Bad Request: If input validation fails (e.g., missing/erroneous originalTeamSetId)
+ *    or if an AssignmentSet already exists for the assessment indicated by `assessmentId`.
+ *  - 500 Internal Server Error: If any other error occurs during the creation process.
  */
 export const createAssignmentSetController = async (
   req: Request,
@@ -22,7 +33,6 @@ export const createAssignmentSetController = async (
   const { assessmentId } = req.params;
   const { originalTeamSetId } = req.body;
 
-  // Validate input
   if (!originalTeamSetId) {
     return res.status(400).json({ error: 'originalTeamSetId is required' });
   }
@@ -38,15 +48,27 @@ export const createAssignmentSetController = async (
       res.status(400).json({ error: error.message });
     } else {
       console.error('Error creating AssessmentAssignmentSet:', error);
-      res
-        .status(500)
-        .json({ error: 'Failed to create AssessmentAssignmentSet' });
+      res.status(500).json({ error: 'Failed to create AssessmentAssignmentSet' });
     }
   }
 };
 
 /**
- * Controller to retrieve an AssessmentAssignmentSet by assessment ID.
+ * Controller method to retrieve an AssessmentAssignmentSet by assessment ID.
+ *
+ * @param {Request} req - The Express request object.
+ *  - req.params.assessmentId: The ID of the assessment whose assignment set is to be retrieved.
+ * @param {Response} res - The Express response object used to send back the response.
+ *
+ * @description
+ *  - Fetches the assignment set from the database using the provided assessmentId.
+ *  - Returns either the assignedTeams or assignedUsers, depending on which is present (dependant on
+ *    assessment's granularity).
+ *
+ * @returns {Promise<void>}
+ *  - 200 OK: Successfully fetched and returns the assignment set (assignedTeams or assignedUsers).
+ *  - 404 Not Found: If the assignment set does not exist or a NotFoundError is thrown.
+ *  - 500 Internal Server Error: If any other error occurs while fetching.
  */
 export const getAssignmentSetController = async (
   req: Request,
@@ -68,15 +90,31 @@ export const getAssignmentSetController = async (
       res.status(404).json({ error: error.message });
     } else {
       console.error('Error fetching AssessmentAssignmentSet:', error);
-      res
-        .status(500)
-        .json({ error: 'Failed to fetch AssessmentAssignmentSet' });
+      res.status(500).json({ error: 'Failed to fetch AssessmentAssignmentSet' });
     }
   }
 };
 
 /**
- * Controller to update the assignedTeams within an AssessmentAssignmentSet.
+ * Controller method to update the assignemnts between teaching staff and teams/students
+ * within an AssessmentAssignmentSet.
+ *
+ * @param {Request} req - The Express request object.
+ *  - req.params.assessmentId: The ID of the assessment whose assignment set is to be updated.
+ *  - req.body.assignedTeams: (optional) An array or object representing updated team assignments.
+ *  - req.body.assignedUsers: (optional) An array or object representing updated user assignments.
+ *  (Note: It is required that only one of either assignedTeams or assignedUsers is present.)
+ * @param {Response} res - The Express response object used to send back the response.
+ *
+ * @description
+ *  - Updates the assignment set record in the database with the new assignedTeams or assignedUsers.
+ *
+ * @returns {Promise<void>}
+ *  - 200 OK: Successfully updated and returns the updated assignment set.
+ *  - 400 Bad Request: If there's a validation error or if a BadRequestError/NotFoundError is thrown.
+ *  Also thrown if both or neither assignedTeams and assignedUsers are present.
+ *  Will also be thrown if the service method finds that a team/student was not assigned a grader.
+ *  - 500 Internal Server Error: If any other error occurs while updating.
  */
 export const updateAssignmentSetController = async (
   req: Request,
@@ -84,6 +122,12 @@ export const updateAssignmentSetController = async (
 ) => {
   const { assessmentId } = req.params;
   const { assignedTeams, assignedUsers } = req.body;
+  if (assignedTeams && assignedUsers) {
+    res.status(400).json({ error: 'No mixed assignment types are allowed.' });
+  }
+  if (!assignedTeams && !assignedUsers) {
+    res.status(400).json({ error: 'No assignments given, assignments are required.' });
+  }
 
   try {
     const updatedSet = await updateAssignmentSet(
@@ -97,17 +141,29 @@ export const updateAssignmentSetController = async (
       res.status(400).json({ error: error.message });
     } else {
       console.error('Error updating AssessmentAssignmentSet:', error);
-      res
-        .status(500)
-        .json({ error: 'Failed to update AssessmentAssignmentSet' });
+      res.status(500).json({ error: 'Failed to update AssessmentAssignmentSet' });
     }
   }
 };
 
 /**
- * Controller to retrieve all teams assigned to a specific TA within an assessment.
+ * Controller method to retrieve all teams assigned to a specific grader within an assessment. In general, graders
+ * are referring to TAs, but graders can also be faculty members.
+ *
+ * @param {Request} req - The Express request object.
+ *  - req.params.assessmentId: The ID of the assessment.
+ *  - req object used to derive the grader's userId (via accountId and getUserIdByAccountId).
+ * @param {Response} res - The Express response object used to send back the response.
+ *
+ * @description
+ *  - Determines the grader's userId from the request, then fetches assignments for that grader in the specified assessment.
+ *
+ * @returns {Promise<void>}
+ *  - 200 OK: Successfully fetched assignments.
+ *  - 404 Not Found: If no assignments are found or a NotFoundError is thrown.
+ *  - 500 Internal Server Error: If any other error occurs while fetching.
  */
-export const getAssignmentsByTAIdController = async (
+export const getAssignmentsByGraderIdController = async (
   req: Request,
   res: Response
 ) => {
@@ -122,16 +178,33 @@ export const getAssignmentsByTAIdController = async (
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
     } else {
-      console.error('Error fetching assignments by TA:', error);
-      res.status(500).json({ error: 'Failed to fetch assignments by TA' });
+      console.error('Error fetching assignments by grader:', error);
+      res.status(500).json({ error: 'Failed to fetch assignments by grader' });
     }
   }
 };
 
 /**
- * Controller to retrieve all unmarked teams assigned to a specific TA within an assessment.
+ * Controller grader to retrieve all unmarked teams assigned to a specific grader within an assessment.
+ * In general, graders are referring to TAs, but graders can also be faculty members.
+ *
+ * @param {Request} req - The Express request object.
+ *  - req.params.assessmentId: The ID of the assessment.
+ *  - req object used to derive the grader's userId (via accountId and getUserIdByAccountId).
+ * @param {Response} res - The Express response object used to send back the response.
+ *
+ * @description
+ *  - Determines the grader's userId from the request, then fetches only the unmarked assignments for that grader
+ *  in the specified assessment.
+ *
+ * @returns {Promise<void>}
+ *
+ * Exit points:
+ *  - 200 OK: Successfully fetched unmarked assignments.
+ *  - 404 Not Found: If no unmarked assignments are found or a NotFoundError is thrown.
+ *  - 500 Internal Server Error: If any other error occurs while fetching.
  */
-export const getUnmarkedAssignmentsByTAIdController = async (
+export const getUnmarkedAssignmentsByGraderIdController = async (
   req: Request,
   res: Response
 ) => {

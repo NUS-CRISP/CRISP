@@ -4,7 +4,7 @@ import {
   createAssignmentSetController,
   getAssignmentSetController,
   updateAssignmentSetController,
-  getAssignmentsByTAIdController,
+  getAssignmentsByGraderIdController,
 } from '../../controllers/assessmentAssignmentSetController';
 import * as assessmentAssignmentSetService from '../../services/assessmentAssignmentSetService';
 import * as accountService from '../../services/accountService';
@@ -260,7 +260,7 @@ describe('assessmentAssignmentSetController', () => {
         .spyOn(assessmentAssignmentSetService, 'getAssignmentsByTAId')
         .mockResolvedValue(assignments as any);
 
-      await getAssignmentsByTAIdController(req, res);
+      await getAssignmentsByGraderIdController(req, res);
 
       expect(authUtils.getAccountId).toHaveBeenCalledWith(req);
       expect(accountService.getUserIdByAccountId).toHaveBeenCalledWith(
@@ -289,7 +289,7 @@ describe('assessmentAssignmentSetController', () => {
         .spyOn(assessmentAssignmentSetService, 'getAssignmentsByTAId')
         .mockRejectedValue(new NotFoundError('Assignments not found'));
 
-      await getAssignmentsByTAIdController(req, res);
+      await getAssignmentsByGraderIdController(req, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ error: 'Assignments not found' });
@@ -311,7 +311,7 @@ describe('assessmentAssignmentSetController', () => {
         .spyOn(assessmentAssignmentSetService, 'getAssignmentsByTAId')
         .mockRejectedValue(new Error('Some error'));
 
-      await getAssignmentsByTAIdController(req, res);
+      await getAssignmentsByGraderIdController(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({

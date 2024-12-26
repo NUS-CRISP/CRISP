@@ -139,7 +139,7 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
     if (!assessment) return;
     try {
       const response = await fetch(
-        `/api/assignment-sets/${assessment._id}/assignment-sets/taunmarked`,
+        `/api/assignment-sets/${assessment._id}/assignment-sets/graderunmarked`,
         {
           method: 'GET',
           headers: {

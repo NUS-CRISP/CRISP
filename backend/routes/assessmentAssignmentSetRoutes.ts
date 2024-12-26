@@ -3,8 +3,8 @@ import {
   createAssignmentSetController,
   getAssignmentSetController,
   updateAssignmentSetController,
-  getAssignmentsByTAIdController,
-  getUnmarkedAssignmentsByTAIdController,
+  getAssignmentsByGraderIdController,
+  getUnmarkedAssignmentsByGraderIdController,
 } from '../controllers/assessmentAssignmentSetController';
 
 const router = express.Router();
@@ -15,10 +15,10 @@ router.get('/:assessmentId/assignment-sets', getAssignmentSetController);
 router.patch('/:assessmentId/assignment-sets', updateAssignmentSetController);
 
 // TA Assignment Routes
-router.get('/:assessmentId/assignment-sets/ta', getAssignmentsByTAIdController);
+router.get('/:assessmentId/assignment-sets/grader', getAssignmentsByGraderIdController);
 router.get(
-  '/:assessmentId/assignment-sets/taunmarked',
-  getUnmarkedAssignmentsByTAIdController
+  '/:assessmentId/assignment-sets/graderunmarked',
+  getUnmarkedAssignmentsByGraderIdController
 );
 
 export default router;

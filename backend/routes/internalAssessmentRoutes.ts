@@ -20,7 +20,7 @@ import {
   createAssignmentSetController,
   getAssignmentSetController,
   updateAssignmentSetController,
-  getAssignmentsByTAIdController,
+  getAssignmentsByGraderIdController,
 } from '../controllers/assessmentAssignmentSetController';
 
 const router = express.Router();
@@ -48,8 +48,8 @@ router.post('/:assessmentId/assignment-sets', createAssignmentSetController);
 router.get('/:assessmentId/assignment-sets', getAssignmentSetController);
 router.patch('/:assessmentId/assignment-sets', updateAssignmentSetController);
 router.get(
-  '/:assessmentId/assignment-sets/tas/:taId',
-  getAssignmentsByTAIdController
+  '/:assessmentId/assignment-sets/graders/:taId',
+  getAssignmentsByGraderIdController
 );
 
 export default router;
