@@ -11,8 +11,21 @@ import { getInternalAssessmentById } from '../services/internalAssessmentService
 import TeamModel from '@models/Team';
 
 /**
- * Controller to retrieve or create AssessmentResults for an assessment.
- * Route: GET /api/assessment-results/:assessmentId
+ * Controller to retrieve or create AssessmentResults for a given assessment.
+ *
+ * @param {Request} req - The Express request object
+ *  - req.params.assessmentId: The ID of the assessment for which results are fetched or created.
+ * @param {Response} res - The Express response object
+ *
+ * @returns {Promise<void>}
+ *  - 200 OK: Returns an object containing an array of updated or created AssessmentResults.
+ *  - 400 Bad Request: If the assessment granularity is mismatched or no students are found.
+ *  - 404 Not Found: If the assessment or assignment set is not found.
+ *  - 500 Internal Server Error: For any other errors during processing.
+ *
+ * @throws {NotFoundError} If the assessment or assignment set cannot be found.
+ * @throws {BadRequestError} If data validation fails (e.g., no students assigned).
+ * @throws {Error} For any unknown internal or server errors (500).
  */
 export const getOrCreateAssessmentResultsController = async (
   req: Request,
@@ -41,10 +54,12 @@ export const getOrCreateAssessmentResultsController = async (
 
     const assessmentResultMap = new Map<string, any>();
 
+    // Build a map of existing results keyed by studentId
     assessmentResults.forEach(result => {
       assessmentResultMap.set(result.student._id.toString(), result);
     });
 
+    // Depending on granularity, ensure that marks exist for each assigned user or team member
     if (assessment.granularity === 'individual') {
       if (!assignmentSet.assignedUsers) {
         throw new BadRequestError(
@@ -62,6 +77,8 @@ export const getOrCreateAssessmentResultsController = async (
             marks: [],
           };
         }
+
+        // Ensure each TA has an entry in marks
         for (const marker of assignedUser.tas) {
           const existingMarkEntry = assessmentResult.marks.find(
             (markEntry: any) =>
@@ -101,6 +118,8 @@ export const getOrCreateAssessmentResultsController = async (
               marks: [],
             };
           }
+
+          // Ensure each TA has an entry in marks
           for (const marker of assignedTeam.tas) {
             const existingMarkEntry = assessmentResult.marks.find(
               (markEntry: any) =>
@@ -121,7 +140,6 @@ export const getOrCreateAssessmentResultsController = async (
     }
 
     const updatedAssessmentResults = Array.from(assessmentResultMap.values());
-
     res.json({ data: updatedAssessmentResults });
   } catch (error) {
     if (error instanceof BadRequestError) {
@@ -139,7 +157,18 @@ export const getOrCreateAssessmentResultsController = async (
 
 /**
  * Controller to recalculate the average score of an AssessmentResult.
- * Route: POST /api/assessment-results/:resultId/recalculate
+ *
+ * @param {Request} req - The Express request object
+ *  - req.params.resultId: The ID of the AssessmentResult to recalculate.
+ * @param {Response} res - The Express response object
+ *
+ * @returns {Promise<void>}
+ *  - 200 OK: Indicates that the average score was recalculated successfully.
+ *  - 404 Not Found: If the specified result is not found.
+ *  - 500 Internal Server Error: For any unknown errors during recalculation.
+ *
+ * @throws {NotFoundError} If the AssessmentResult is not found.
+ * @throws {Error} For any other unhandled runtime or server errors (500).
  */
 export const recalculateResultController = async (
   req: Request,

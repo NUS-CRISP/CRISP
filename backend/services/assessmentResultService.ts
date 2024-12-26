@@ -1,6 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// services/assessmentResultService.ts
-
 import mongoose from 'mongoose';
 import AssessmentAssignmentSetModel from '../models/AssessmentAssignmentSet';
 import AssessmentResultModel, {
@@ -11,12 +9,16 @@ import { Team } from '@models/Team';
 import { User } from '@models/User';
 
 /**
- * Retrieves all AssessmentResults for a given assessment.
- * For students associated with the assessment who do not have an AssessmentResult,
- * creates a new AssessmentResult with no marks and an averageScore of 0.
+ * Retrieves all AssessmentResults for a given assessment. If certain students
+ * (from assigned teams or assigned users) do not have an AssessmentResult yet,
+ * a new one is created for each with no marks and an averageScore of 0.
  *
- * @param assessmentId - The ID of the assessment.
- * @returns A promise that resolves to an array of AssessmentResults.
+ * @param {string} assessmentId - The ID of the assessment.
+ * @returns {Promise<AssessmentResult[]>} - An array of populated AssessmentResult documents.
+ *
+ * @throws {BadRequestError} If the assessmentId is invalid or no students are assigned.
+ * @throws {NotFoundError} If the assignment set for the assessment is not found.
+ * @throws {Error} For any unknown runtime or server errors (500).
  */
 export const getOrCreateAssessmentResults = async (
   assessmentId: string
@@ -61,7 +63,7 @@ export const getOrCreateAssessmentResults = async (
     );
   }
 
-  // Extract all student IDs from the assigned teams
+  // Collect all student IDs from assigned teams or assigned users
   const studentIdSet = new Set<string>();
   if (assignmentSet.assignedTeams && assignmentSet.assignedTeams.length > 0) {
     for (const assignedTeam of assignmentSet.assignedTeams) {
@@ -80,21 +82,19 @@ export const getOrCreateAssessmentResults = async (
   }
 
   const allStudentIds = Array.from(studentIdSet);
-
   if (allStudentIds.length === 0) {
     throw new BadRequestError(
       'No students found in the AssessmentAssignmentSet.'
     );
   }
 
-  // Fetch existing AssessmentResults for the assessment
+  // Fetch existing AssessmentResults for those students in this assessment
   const existingResults = await AssessmentResultModel.find({
     assessment: assessmentId,
     student: { $in: allStudentIds },
   })
     .select('student')
     .populate('marks.submission');
-  console.log(existingResults[50]);
 
   const existingStudentIds = new Set<string>(
     existingResults.map(result => result.student.toString())
@@ -113,28 +113,39 @@ export const getOrCreateAssessmentResults = async (
     averageScore: 0,
   }));
 
-  // Bulk insert new AssessmentResults if there are any missing
+  // Insert new AssessmentResults in bulk if any are missing
   if (newAssessmentResults.length > 0) {
     await AssessmentResultModel.insertMany(newAssessmentResults);
   }
 
-  // Fetch and return all AssessmentResults for the assessment
+  // Refetch all results (including newly inserted ones)
   const allAssessmentResults = await AssessmentResultModel.find({
     assessment: assessmentId,
     student: { $in: allStudentIds },
   })
-    .populate('student', 'name email') // Populate student details as needed
+    .populate('student', 'name email')
     .populate('marks.submission')
-    .populate('marks.marker'); // Populate submission details if necessary
+    .populate('marks.marker');
 
   return allAssessmentResults;
 };
 
-export const recalculateResult = async (resultId: string) => {
+/**
+ * Recalculates the average score for a single AssessmentResult.
+ *
+ * @param {string} resultId - The ID of the AssessmentResult to recalculate.
+ * @returns {Promise<void>} - Resolves upon successful recalculation.
+ *
+ * @throws {NotFoundError} If the AssessmentResult specified by resultId is not found.
+ * @throws {BadRequestError} If the result has no marks to recalculate.
+ * @throws {Error} For any unknown runtime or server errors (500).
+ */
+export const recalculateResult = async (resultId: string): Promise<void> => {
   const result: any = await AssessmentResultModel.findById(resultId)
     .populate('marks.submission.adjustedScore')
     .populate('marks.submission.score')
-    .populate('averageScore');
+    .populate('averageScore'); // Possibly extraneous, but left for consistency.
+
   if (!result) {
     throw new NotFoundError('Result not found' + resultId);
   }
@@ -148,10 +159,10 @@ export const recalculateResult = async (resultId: string) => {
     });
   }
 
-  result.averageScore =
-    result.marks.reduce(
-      (accumulator: number, markEntry: any) => accumulator + markEntry.score,
-      0
-    ) / result.marks.length;
-  result.save();
+  const totalScore = result.marks.reduce(
+    (accumulator: number, markEntry: any) => accumulator + markEntry.score,
+    0
+  );
+  result.averageScore = totalScore / result.marks.length;
+  await result.save();
 };
