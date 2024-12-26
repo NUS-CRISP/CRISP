@@ -96,14 +96,16 @@ export const getAssignmentSetController = async (
 };
 
 /**
- * Controller method to update the assignemnts between teaching staff and teams/students
+ * Controller method to update the assignments between teaching staff and teams/students
  * within an AssessmentAssignmentSet.
  *
  * @param {Request} req - The Express request object.
  *  - req.params.assessmentId: The ID of the assessment whose assignment set is to be updated.
  *  - req.body.assignedTeams: (optional) An array or object representing updated team assignments.
  *  - req.body.assignedUsers: (optional) An array or object representing updated user assignments.
- *  (Note: It is required that only one of either assignedTeams or assignedUsers is present.)
+ *  (Note: It is required that only one of either assignedTeams or assignedUsers is present.
+ *  If a team/student isn't assigned a grader, they will be randomly assigned one via the
+ *  assessment's teamSet)
  * @param {Response} res - The Express response object used to send back the response.
  *
  * @description
@@ -112,8 +114,7 @@ export const getAssignmentSetController = async (
  * @returns {Promise<void>}
  *  - 200 OK: Successfully updated and returns the updated assignment set.
  *  - 400 Bad Request: If there's a validation error or if a BadRequestError/NotFoundError is thrown.
- *  Also thrown if both or neither assignedTeams and assignedUsers are present.
- *  Will also be thrown if the service method finds that a team/student was not assigned a grader.
+ *  Also thrown if both or neither assignedTeams and assignedUsers are provided.
  *  - 500 Internal Server Error: If any other error occurs while updating.
  */
 export const updateAssignmentSetController = async (
@@ -124,9 +125,11 @@ export const updateAssignmentSetController = async (
   const { assignedTeams, assignedUsers } = req.body;
   if (assignedTeams && assignedUsers) {
     res.status(400).json({ error: 'No mixed assignment types are allowed.' });
+    return;
   }
   if (!assignedTeams && !assignedUsers) {
     res.status(400).json({ error: 'No assignments given, assignments are required.' });
+    return;
   }
 
   try {
@@ -147,8 +150,8 @@ export const updateAssignmentSetController = async (
 };
 
 /**
- * Controller method to retrieve all teams assigned to a specific grader within an assessment. In general, graders
- * are referring to TAs, but graders can also be faculty members.
+ * Controller method to retrieve all teams assigned to a specific grader within an assessment.
+ * In general, graders refer to TAs but can also be faculty members.
  *
  * @param {Request} req - The Express request object.
  *  - req.params.assessmentId: The ID of the assessment.
@@ -156,7 +159,8 @@ export const updateAssignmentSetController = async (
  * @param {Response} res - The Express response object used to send back the response.
  *
  * @description
- *  - Determines the grader's userId from the request, then fetches assignments for that grader in the specified assessment.
+ *  - Determines the grader's userId from the request, then fetches assignments for that grader
+ *    in the specified assessment.
  *
  * @returns {Promise<void>}
  *  - 200 OK: Successfully fetched assignments.
@@ -185,8 +189,8 @@ export const getAssignmentsByGraderIdController = async (
 };
 
 /**
- * Controller grader to retrieve all unmarked teams assigned to a specific grader within an assessment.
- * In general, graders are referring to TAs, but graders can also be faculty members.
+ * Controller method to retrieve all unmarked teams assigned to a specific grader within an assessment.
+ * In general, graders refer to TAs but can also be faculty members.
  *
  * @param {Request} req - The Express request object.
  *  - req.params.assessmentId: The ID of the assessment.
@@ -194,12 +198,10 @@ export const getAssignmentsByGraderIdController = async (
  * @param {Response} res - The Express response object used to send back the response.
  *
  * @description
- *  - Determines the grader's userId from the request, then fetches only the unmarked assignments for that grader
- *  in the specified assessment.
+ *  - Determines the grader's userId from the request, then fetches only the unmarked assignments
+ *    for that grader in the specified assessment.
  *
  * @returns {Promise<void>}
- *
- * Exit points:
  *  - 200 OK: Successfully fetched unmarked assignments.
  *  - 404 Not Found: If no unmarked assignments are found or a NotFoundError is thrown.
  *  - 500 Internal Server Error: If any other error occurs while fetching.
