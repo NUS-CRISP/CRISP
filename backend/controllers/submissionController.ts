@@ -29,10 +29,14 @@ import { getUserIdByAccountId } from '../services/accountService';
  * @param {Response} res - Express response object
  *
  * @returns {Promise<void>}
+ *  - 200 OK: Submission saved successfully, returns the submission in JSON format.
+ *  - 400 Bad Request: If `answers` is invalid or there's a validation error.
+ *  - 401 Unauthorized: If the user is missing valid credentials or is otherwise unauthorized.
+ *  - 500 Internal Server Error: If any unknown error occurs during submission.
  *
  * @throws {NotFoundError} If the assessment or user is not found.
- * @throws {BadRequestError} If `answers` is invalid or there's a validation error.
- * @throws {MissingAuthorizationError} If user is unauthorized.
+ * @throws {BadRequestError} If the provided `answers` are invalid or there's a validation error.
+ * @throws {MissingAuthorizationError} If the user is not authorized.
  * @throws {Error} For other unknown runtime or server errors (500).
  */
 export const submitAssessment = async (req: Request, res: Response) => {
@@ -91,11 +95,15 @@ export const submitAssessment = async (req: Request, res: Response) => {
  * @param {Response} res - Express response object
  *
  * @returns {Promise<void>}
+ *  - 200 OK: Returns an array of Submission objects (scores masked if user is not admin/faculty).
+ *  - 404 Not Found: If the submission or account is not found.
+ *  - 401 Unauthorized: If the user is missing valid credentials or is otherwise unauthorized.
+ *  - 500 Internal Server Error: If any unknown error occurs.
  *
  * @description
  *  - If the user is not an admin or faculty, their submission scores are masked (set to -1).
  *
- * @throws {NotFoundError} If the submission or account is not found.
+ * @throws {NotFoundError} If no submission or account is found for the user.
  * @throws {MissingAuthorizationError} If the user is unauthorized.
  * @throws {Error} For other unknown runtime or server errors (500).
  */
@@ -141,9 +149,12 @@ export const getUserSubmissions = async (req: Request, res: Response) => {
  * @param {Response} res - Express response object
  *
  * @returns {Promise<void>}
+ *  - 200 OK: Returns an array of Submission objects (scores masked if user is not admin/faculty).
+ *  - 403 Forbidden: If the user is not admin/faculty.
+ *  - 500 Internal Server Error: For any unknown runtime or server errors.
  *
  * @description
- *  - If the user is not an admin or faculty, their submission scores are masked (set to -1).
+ *  - If the user is not an admin or faculty, submission scores are masked (set to -1).
  *
  * @throws {MissingAuthorizationError} If the user is not admin/faculty.
  * @throws {Error} For unknown runtime or server errors (500).
@@ -187,6 +198,10 @@ export const getAllSubmissions = async (req: Request, res: Response) => {
  * @param {Response} res - Express response object
  *
  * @returns {Promise<void>}
+ *  - 200 OK: Indicates successful deletion.
+ *  - 404 Not Found: If the submission is not found.
+ *  - 403 Forbidden: If the user lacks permission to delete (not the owner nor an admin).
+ *  - 500 Internal Server Error: For any unknown runtime or server errors.
  *
  * @description
  *  - If the requesting user does not own the submission and is not an admin, they cannot delete it.
@@ -238,10 +253,14 @@ export const deleteUserSubmission = async (req: Request, res: Response) => {
  * @param {Response} res - Express response object
  *
  * @returns {Promise<void>}
+ *  - 200 OK: Successfully returns the submission in JSON format.
+ *  - 404 Not Found: If the submission does not exist.
+ *  - 403 Forbidden: If the user is not the submission owner nor an admin/faculty.
+ *  - 500 Internal Server Error: For any unknown runtime or server errors.
  *
  * @description
  *  - Populates the submission's user and assessment fields.
- *  - If the requesting user is not the submission owner and is not an admin/faculty, throws an error.
+ *  - If the requesting user is not the submission owner and is not admin/faculty, an error is thrown.
  *
  * @throws {NotFoundError} If the submission is not found.
  * @throws {MissingAuthorizationError} If the user lacks permission to view it.
@@ -300,6 +319,10 @@ export const getSubmissionByIdController = async (
  * @param {Response} res - Express response object
  *
  * @returns {Promise<void>}
+ *  - 200 OK: Returns a success message and the updated submission.
+ *  - 400 Bad Request: If the adjusted score is invalid.
+ *  - 403 Forbidden: If the user lacks permission to adjust scores.
+ *  - 500 Internal Server Error: For unknown runtime or server errors (500).
  *
  * @throws {NotFoundError} If the submission is not found.
  * @throws {BadRequestError} If the adjusted score is invalid.
