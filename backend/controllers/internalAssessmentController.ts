@@ -108,7 +108,7 @@ export const deleteInternalAssessment = async (req: Request, res: Response) => {
   }
 };
 
-/*--------------------------Questions---------------------------------------------*/
+/*-------------------------- Questions ---------------------------------------------*/
 
 /**
  * Controller method to add a single question to an assessment.
@@ -158,7 +158,7 @@ export const addQuestionToAssessmentController = async (
 
 /**
  * Controller method to add multiple questions to an assessment in one request.
- * Used for csv uploading of questions.
+ * Used for CSV uploading of questions.
  *
  * @param {Request} req - The Express request object
  *  - req.params.assessmentId: The ID of the assessment.
@@ -166,8 +166,6 @@ export const addQuestionToAssessmentController = async (
  * @param {Response} res - The Express response object
  *
  * @returns {Promise<void>}
- *
- * Exit points:
  *  - 201 Created: If all questions are added successfully.
  *  - 404 Not Found: If the assessment or account is not found.
  *  - 400 Bad Request: If the questions' data are invalid or user is unauthorized.
@@ -328,7 +326,7 @@ export const deleteQuestionByIdController = async (
   }
 };
 
-/*----------------------------Release-Form--------------------------*/
+/*---------------------------- Release-Form --------------------------*/
 
 /**
  * Controller method to release an internal assessment for students to view/take.
@@ -339,8 +337,6 @@ export const deleteQuestionByIdController = async (
  * @param {Response} res - The Express response object
  *
  * @returns {Promise<void>}
- *
- * Exit points:
  *  - 200 OK: If the assessment is successfully released.
  *  - 404 Not Found: If the assessment or account is not found.
  *  - 400 Bad Request: If the user is unauthorized to release assessments.
@@ -378,8 +374,6 @@ export const releaseInternalAssessment = async (req: Request, res: Response) => 
  * @param {Response} res - The Express response object
  *
  * @returns {Promise<void>}
- *
- * Exit points:
  *  - 200 OK: If the assessment is successfully recalled.
  *  - 404 Not Found: If the assessment or account is not found.
  *  - 400 Bad Request: If the user is unauthorized to recall assessments.
