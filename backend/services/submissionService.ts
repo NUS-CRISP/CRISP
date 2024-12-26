@@ -1,5 +1,3 @@
-// services/submissionService.ts
-
 import SubmissionModel, { Submission } from '../models/Submission';
 import InternalAssessmentModel, {
   InternalAssessment,
@@ -52,94 +50,152 @@ import AssessmentResultModel, { MarkEntry } from '@models/AssessmentResult';
 import UserModel, { User } from '@models/User';
 import { recalculateResult } from './assessmentResultService';
 
-// Type guards for questions
+/**
+ * Checks if an AnswerUnion is a NUSNET ID Answer.
+ * @param {AnswerUnion} answer - The answer to check.
+ * @returns {boolean} - True if it is a NUSNET ID Answer, false otherwise.
+ */
 function isNUSNETIDAnswer(answer: AnswerUnion): answer is NUSNETIDAnswer {
   return answer.type === 'NUSNET ID Answer';
 }
 
+/**
+ * Checks if an AnswerUnion is a NUSNET Email Answer.
+ */
 function isNUSNETEmailAnswer(answer: AnswerUnion): answer is NUSNETEmailAnswer {
   return answer.type === 'NUSNET Email Answer';
 }
 
+/**
+ * Checks if an AnswerUnion is a Team Member Selection Answer.
+ */
 function isTeamMemberSelectionAnswer(
   answer: AnswerUnion
 ): answer is TeamMemberSelectionAnswer {
   return answer.type === 'Team Member Selection Answer';
 }
 
+/**
+ * Checks if a QuestionUnion is a Multiple Choice question.
+ */
 function isMultipleChoiceQuestion(
   question: QuestionUnion
 ): question is MultipleChoiceQuestion {
   return question.type === 'Multiple Choice';
 }
 
+/**
+ * Checks if a QuestionUnion is a Multiple Response question.
+ */
 function isMultipleResponseQuestion(
   question: QuestionUnion
 ): question is MultipleResponseQuestion {
   return question.type === 'Multiple Response';
 }
 
+/**
+ * Checks if a QuestionUnion is a Scale question.
+ */
 function isScaleQuestion(question: QuestionUnion): question is ScaleQuestion {
   return question.type === 'Scale';
 }
 
+/**
+ * Checks if a QuestionUnion is a Short Response question.
+ */
 function isShortResponseQuestion(
   question: QuestionUnion
 ): question is ShortResponseQuestion {
   return question.type === 'Short Response';
 }
 
+/**
+ * Checks if a QuestionUnion is a Long Response question.
+ */
 function isLongResponseQuestion(
   question: QuestionUnion
 ): question is LongResponseQuestion {
   return question.type === 'Long Response';
 }
 
+/**
+ * Checks if a QuestionUnion is a Date question.
+ */
 function isDateQuestion(question: QuestionUnion): question is DateQuestion {
   return question.type === 'Date';
 }
 
+/**
+ * Checks if a QuestionUnion is a Number question.
+ */
 function isNumberQuestion(question: QuestionUnion): question is NumberQuestion {
   return question.type === 'Number';
 }
 
-// Type guards for answers
+/**
+ * Checks if an AnswerUnion is a Multiple Choice Answer.
+ */
 function isMultipleChoiceAnswer(
   answer: AnswerUnion
 ): answer is MultipleChoiceAnswer {
   return answer.type === 'Multiple Choice Answer';
 }
 
+/**
+ * Checks if an AnswerUnion is a Multiple Response Answer.
+ */
 function isMultipleResponseAnswer(
   answer: AnswerUnion
 ): answer is MultipleResponseAnswer {
   return answer.type === 'Multiple Response Answer';
 }
 
+/**
+ * Checks if an AnswerUnion is a Scale Answer.
+ */
 function isScaleAnswer(answer: AnswerUnion): answer is ScaleAnswer {
   return answer.type === 'Scale Answer';
 }
 
+/**
+ * Checks if an AnswerUnion is a Short Response Answer.
+ */
 function isShortResponseAnswer(
   answer: AnswerUnion
 ): answer is ShortResponseAnswer {
   return answer.type === 'Short Response Answer';
 }
 
+/**
+ * Checks if an AnswerUnion is a Long Response Answer.
+ */
 function isLongResponseAnswer(
   answer: AnswerUnion
 ): answer is LongResponseAnswer {
   return answer.type === 'Long Response Answer';
 }
 
+/**
+ * Checks if an AnswerUnion is a Date Answer.
+ */
 function isDateAnswer(answer: AnswerUnion): answer is DateAnswer {
   return answer.type === 'Date Answer';
 }
 
+/**
+ * Checks if an AnswerUnion is a Number Answer.
+ */
 function isNumberAnswer(answer: AnswerUnion): answer is NumberAnswer {
   return answer.type === 'Number Answer';
 }
 
+/**
+ * Validates that a given set of answers matches the assessment's question types and constraints.
+ * @param {InternalAssessment & { questions: QuestionUnion[] }} assessment - The full assessment, including its questions.
+ * @param {AnswerUnion[]} answers - The array of answers to validate.
+ *
+ * @throws {BadRequestError} If any answer fails validation against the corresponding question type.
+ */
 async function validateAnswers(
   assessment: InternalAssessment & { questions: QuestionUnion[] },
   answers: AnswerUnion[]
@@ -173,7 +229,6 @@ async function validateAnswers(
               `Answer for question ${questionId} must be a string`
             );
           }
-          // Optionally, add validation for NUSNET ID format
         } else {
           throw new BadRequestError(
             `Invalid NUSNET ID answer for question ${questionId}`
@@ -188,7 +243,6 @@ async function validateAnswers(
               `Answer for question ${questionId} must be a string`
             );
           }
-          // Optionally, add validation for NUSNET Email format
         } else {
           throw new BadRequestError(
             `Invalid NUSNET Email answer for question ${questionId}`
@@ -203,7 +257,6 @@ async function validateAnswers(
               `Answers for question ${questionId} must be an array`
             );
           }
-          // Validate based on assessment granularity
           if (
             assessment.granularity === 'individual' &&
             answer.selectedUserIds.length > 1
@@ -359,6 +412,17 @@ async function validateAnswers(
   }
 }
 
+/**
+ * Checks if the selected user IDs in a submission have not been used before
+ * by the same user in the same assessment (to avoid multiple submissions between a grader and their
+ * assigned teams/students).
+ *
+ * @param {InternalAssessment} assessment - The target assessment.
+ * @param {User} user - The user creating the submission.
+ * @param {string[]} targetStudentIds - The selected user IDs for the submission.
+ *
+ * @returns {Promise<boolean>} - True if no duplicate found, false otherwise.
+ */
 export const checkSubmissionUniqueness = async (
   assessment: InternalAssessment,
   user: User,
@@ -386,6 +450,20 @@ export const checkSubmissionUniqueness = async (
   );
 };
 
+/**
+ * Creates a new submission for a given assessment, user, and set of answers.
+ *
+ * @param {string} assessmentId - The ID of the assessment.
+ * @param {string} userId - The ID of the user creating the submission.
+ * @param {AnswerUnion[]} answers - The user's answers.
+ * @param {boolean} isDraft - Whether the submission is a draft or final.
+ *
+ * @returns {Promise<Submission>} - The newly created Submission document.
+ *
+ * @throws {NotFoundError} If the user or assessment is not found.
+ * @throws {BadRequestError} If validation fails or there's a data mismatch.
+ * @throws {Error} For other unknown runtime or server errors (500).
+ */
 export const createSubmission = async (
   assessmentId: string,
   userId: string,
@@ -448,8 +526,7 @@ export const createSubmission = async (
           SaveAnswerModel = MultipleResponseAnswerModel;
           break;
         case 'Team Member Selection Answer':
-          question =
-            await TeamMemberSelectionQuestionModel.findById(questionId);
+          question = await TeamMemberSelectionQuestionModel.findById(questionId);
           SaveAnswerModel = TeamMemberSelectionAnswerModel;
           break;
         case 'Date Answer':
@@ -489,7 +566,7 @@ export const createSubmission = async (
       );
       totalScore += answerScore;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { type, ...scoredAnswer } = { ...answer, score: answerScore }; // type is unused but we need to extract it
+      const { type, ...scoredAnswer } = { ...answer, score: answerScore };
 
       const newAnswer = new SaveAnswerModel(scoredAnswer);
       await newAnswer.save();
@@ -545,6 +622,21 @@ export const createSubmission = async (
   return submission;
 };
 
+/**
+ * Updates an existing submission by its ID.
+ *
+ * @param {string} submissionId - The ID of the submission to update.
+ * @param {string} userId - The ID of the user making the update.
+ * @param {string} accountId - The account ID used for permissions check.
+ * @param {AnswerUnion[]} answers - The updated array of answers.
+ * @param {boolean} isDraft - Whether the updated submission is a draft or final.
+ *
+ * @returns {Promise<Submission>} - The updated Submission document.
+ *
+ * @throws {NotFoundError} If the submission, user, or related data is not found.
+ * @throws {BadRequestError} If there's a validation error or user lacks permission.
+ * @throws {Error} For other unknown runtime or server errors (500).
+ */
 export const updateSubmission = async (
   submissionId: string,
   userId: string,
@@ -641,8 +733,7 @@ export const updateSubmission = async (
           savedAnswer = MultipleResponseAnswerModel.findById(answer.id);
           break;
         case 'Team Member Selection Answer':
-          question =
-            await TeamMemberSelectionQuestionModel.findById(questionId);
+          question = await TeamMemberSelectionQuestionModel.findById(questionId);
           SaveAnswerModel = TeamMemberSelectionAnswerModel;
           savedAnswer = TeamMemberSelectionAnswerModel.findById(answer.id);
           break;
@@ -689,9 +780,8 @@ export const updateSubmission = async (
         assessment
       );
       totalScore += answerScore;
-      totalScore += answerScore;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { type, ...scoredAnswer } = { ...answer, score: answerScore }; // type is unused but we need to extract it
+      const { type, ...scoredAnswer } = { ...answer, score: answerScore };
 
       answer.score = answerScore;
       if (!savedAnswer) {
@@ -753,7 +843,16 @@ export const updateSubmission = async (
   return submission;
 };
 
-// Get submissions by assessment and user
+/**
+ * Retrieves all submissions by a single user for a specific assessment.
+ *
+ * @param {string} assessmentId - The ID of the assessment.
+ * @param {string} userId - The ID of the user whose submissions are requested.
+ *
+ * @returns {Promise<Submission[]>} - An array of the user's Submission documents.
+ *
+ * @throws {Error} For any unknown runtime or server errors (500).
+ */
 export const getSubmissionsByAssessmentAndUser = async (
   assessmentId: string,
   userId: string
@@ -768,6 +867,14 @@ export const getSubmissionsByAssessmentAndUser = async (
   return submissions;
 };
 
+/**
+ * Retrieves all submissions for a given assessment.
+ *
+ * @param {string} assessmentId - The ID of the assessment.
+ * @returns {Promise<Submission[]>} - Array of Submission documents.
+ *
+ * @throws {Error} For any unknown runtime or server errors (500).
+ */
 export const getSubmissionsByAssessment = async (
   assessmentId: string
 ): Promise<Submission[]> => {
@@ -777,6 +884,15 @@ export const getSubmissionsByAssessment = async (
   return submissions;
 };
 
+/**
+ * Deletes a submission by ID.
+ *
+ * @param {string} submissionId - The ID of the submission to delete.
+ * @returns {Promise<void>} - Resolves upon successful deletion.
+ *
+ * @throws {NotFoundError} If the submission is not found.
+ * @throws {Error} For other unknown runtime or server errors (500).
+ */
 export const deleteSubmission = async (submissionId: string): Promise<void> => {
   const submission = await SubmissionModel.findById(submissionId);
   if (!submission) {
@@ -785,7 +901,15 @@ export const deleteSubmission = async (submissionId: string): Promise<void> => {
   await SubmissionModel.findByIdAndDelete(submissionId);
 };
 
-async function getAssessmentWithQuestions(assessmentId: string) {
+/**
+ * Fetches an assessment (with its questions) by ID.
+ * @param {string} assessmentId - The ID of the assessment to fetch.
+ * @returns {Promise<InternalAssessment & { questions: QuestionUnion[] }>} The assessment with questions.
+ * @throws {NotFoundError} If the assessment is not found.
+ */
+async function getAssessmentWithQuestions(
+  assessmentId: string
+): Promise<InternalAssessment & { questions: QuestionUnion[] }> {
   const assessmentDoc =
     await InternalAssessmentModel.findById(assessmentId).populate('questions');
   if (!assessmentDoc) {
@@ -798,7 +922,14 @@ async function getAssessmentWithQuestions(assessmentId: string) {
   return assessment;
 }
 
-async function validateSubmissionPeriod(assessment: InternalAssessment) {
+/**
+ * Validates that the current time is within the assessment's submission period.
+ * @param {InternalAssessment} assessment - The assessment to check.
+ * @throws {BadRequestError} If submissions are not open at this time.
+ */
+async function validateSubmissionPeriod(
+  assessment: InternalAssessment
+): Promise<void> {
   const now = new Date();
   if (
     assessment.startDate > now ||
@@ -811,10 +942,17 @@ async function validateSubmissionPeriod(assessment: InternalAssessment) {
 }
 
 /**
- * Adjusts the score of a submission.
- * @param submissionId - The ID of the submission to adjust.
- * @param adjustedScore - The new adjusted score.
- * @returns The updated Submission object.
+ * Adjusts the score of a submission by ID by updating the adjustedScore field.
+ * Does not actually change the score field, which is meant to always be the
+ * total score of the submission.
+ *
+ * @param {string} submissionId - The ID of the submission to adjust.
+ * @param {number} adjustedScore - The new adjusted score.
+ * @returns {Promise<Submission>} - The updated Submission object.
+ *
+ * @throws {NotFoundError} If the submission does not exist.
+ * @throws {BadRequestError} If the adjusted score is invalid.
+ * @throws {Error} For any unknown runtime or server errors (500).
  */
 export const adjustSubmissionScore = async (
   submissionId: string,
@@ -825,7 +963,6 @@ export const adjustSubmissionScore = async (
     throw new NotFoundError('Submission not found.');
   }
 
-  // Optionally, add validation to ensure adjustedScore is within acceptable limits
   if (adjustedScore < 0) {
     throw new BadRequestError('Adjusted score cannot be negative.');
   }
@@ -839,10 +976,14 @@ export const adjustSubmissionScore = async (
 /* --------------------------------------SCORING---------------------------------------------- */
 
 /**
- * Calculates the score for a single answer based on the question configuration.
- * @param question The question associated with the answer.
- * @param answer The user's answer.
- * @returns The score for this answer.
+ * Calculates the score for a single answer based on the question configuration and assessment settings.
+ *
+ * @param {QuestionUnion} question - The question associated with the user's answer.
+ * @param {AnswerUnion} answer - The user's answer.
+ * @param {InternalAssessment} assessment - The full assessment object (used for scaling factor).
+ * @returns {Promise<number>} - The calculated score for this answer.
+ *
+ * @throws {Error} For any unforeseen runtime or scoring errors.
  */
 export const calculateAnswerScore = async (
   question: QuestionUnion,
@@ -882,7 +1023,6 @@ export const calculateAnswerScore = async (
           answer as NumberAnswer
         ) * scalingFactor
       );
-    // Add cases for other question types if they have scoring
     default:
       // For question types that don't have scoring, return 0
       return 0;
@@ -891,6 +1031,10 @@ export const calculateAnswerScore = async (
 
 /**
  * Calculates the score for a Multiple Choice answer.
+ *
+ * @param {MultipleChoiceQuestion} question - The Multiple Choice question.
+ * @param {MultipleChoiceAnswer} answer - The user's answer to that question.
+ * @returns {number} - The calculated score for the answer.
  */
 const calculateMultipleChoiceScore = (
   question: MultipleChoiceQuestion,
@@ -908,66 +1052,61 @@ const calculateMultipleChoiceScore = (
 };
 
 /**
- * Calculates the score for a Multiple Response answer considering partial marks,
- * penalties for wrong answers, and negative scoring allowances.
+ * Calculates the score for a Multiple Response answer considering partial/penalized/negative scoring.
+ *
+ * @param {MultipleResponseQuestion} question - The Multiple Response question.
+ * @param {{ values: string[] }} answer - Object containing an array of chosen values.
+ * @returns {number} - The calculated score (could be negative if allowNegative is true).
  */
 const calculateMultipleResponseScore = (
   question: MultipleResponseQuestion,
-  answer: { values: string[] } // MultipleResponseAnswer structure
+  answer: { values: string[] }
 ): number => {
   if (!question.isScored) return 0;
 
-  // Map chosen answers to their corresponding options
   const chosenOptions = answer.values
     .map(value => question.options.find(opt => opt.text === value))
     .filter((opt): opt is (typeof question.options)[number] => Boolean(opt));
 
-  // Identify correct (positively scored) and incorrect (zero or negative scored) options
   const correctOptions = question.options.filter(o => o.points > 0);
   const allCorrectChosen = correctOptions.every(co =>
     answer.values.includes(co.text)
   );
   const chosenHasIncorrect = chosenOptions.some(o => o.points <= 0);
 
-  // If partial marks are NOT allowed, must have a perfect answer:
-  // Perfect means all correct chosen and no incorrect chosen.
+  // No partial marks => must have perfect selection (all correct, no incorrect).
   if (!question.allowPartialMarks) {
     if (!allCorrectChosen || chosenHasIncorrect) {
-      // Not perfect, no points
       return 0;
     } else {
-      // Perfect answer: sum of chosen (all correct)
+      // Perfect answer
       const perfectScore = chosenOptions.reduce((acc, o) => acc + o.points, 0);
-      // Since no partial marks and presumably no negative scenario here,
-      // Just ensure no negative final:
       return Math.max(perfectScore, 0);
     }
   }
 
-  // If partial marks are allowed:
-  // Simply sum the chosen options' points.
+  // Partial marks allowed => sum all chosen options' points
   let score = chosenOptions.reduce((acc, o) => acc + o.points, 0);
 
-  // Now apply logic for penalties and negative scores:
   if (!question.areWrongAnswersPenalized) {
-    // No penalty means no negative from penalties, ensure non-negative final
+    // No penalty => clamp at 0 if negative
     score = Math.max(score, 0);
   } else {
-    // Wrong answers are penalized:
-    // If negative scores are not allowed, clamp final score to 0 minimum
+    // Wrong answers penalized => if negative scoring is not allowed, clamp to 0
     if (!question.allowNegative) {
       score = Math.max(score, 0);
     }
-    // If areWrongAnswersPenalized is true and allowNegative is true, negative final allowed
-    // no change needed here
   }
 
   return score;
 };
 
 /**
- * Calculates the score for a Scale answer.
- * Implements linear interpolation for values between defined scale breakpoints.
+ * Calculates the score for a Scale answer via interpolation between labeled breakpoints.
+ *
+ * @param {ScaleQuestion} question - The Scale question object.
+ * @param {ScaleAnswer} answer - The user's Scale answer.
+ * @returns {number} - The calculated score based on the user's scale selection.
  */
 const calculateScaleScore = (
   question: ScaleQuestion,
@@ -978,11 +1117,10 @@ const calculateScaleScore = (
   const { value: answerValue } = answer;
   const { labels } = question;
 
-  // Sort labels by scale value to ensure proper ordering
+  // Sort labels by their 'value' to ensure correct interpolation
   const sortedLabels = [...labels].sort((a, b) => a.value - b.value);
 
-  // Edge Cases: If answerValue is below the first breakpoint or above the last.
-  // Should not happen since the first and last breakpoints are fixed as min and max values.
+  // Check edge cases
   if (answerValue <= sortedLabels[0].value) {
     return sortedLabels[0].points;
   }
@@ -990,34 +1128,32 @@ const calculateScaleScore = (
     return sortedLabels[sortedLabels.length - 1].points;
   }
 
-  // Iterate through sortedLabels to find the two breakpoints for interpolation
   for (let i = 0; i < sortedLabels.length - 1; i++) {
     const current = sortedLabels[i];
     const next = sortedLabels[i + 1];
 
-    if (answerValue === current.value) {
-      return current.points;
-    }
-    if (answerValue === next.value) {
-      return next.points;
-    }
+    if (answerValue === current.value) return current.points;
+    if (answerValue === next.value) return next.points;
     if (answerValue > current.value && answerValue < next.value) {
-      // Perform linear interpolation
-      const slope =
-        (next.points - current.points) / (next.value - current.value);
+      // Linear interpolation
+      const slope = (next.points - current.points) / (next.value - current.value);
       const interpolatedPoints =
         current.points + slope * (answerValue - current.value);
       return interpolatedPoints;
     }
   }
 
-  // If no matching range is found, return 0 as a fallback
   return 0;
 };
 
 /**
  * Calculates the score for a Number answer.
- * Supports both direct and range-based scoring with interpolation.
+ * Direct method => proportional to maxNumber and maxPoints.
+ * Range method => assigns points based on predefined scoringRanges.
+ *
+ * @param {NumberQuestion} question - The Number question object.
+ * @param {NumberAnswer} answer - The user's numeric answer.
+ * @returns {number} - The calculated score.
  */
 const calculateNumberScore = (
   question: NumberQuestion,
@@ -1030,31 +1166,23 @@ const calculateNumberScore = (
 
   if (scoringMethod === 'direct') {
     if (maxNumber === 0) {
-      // Avoid division by zero
       return 0;
     }
-    // Direct scoring: (value / maxNumber) * maxPoints
-    const directScore = (answerValue / maxNumber) * (maxPoints || 0);
-    return directScore;
+    return (answerValue / maxNumber) * (maxPoints || 0);
   }
 
   if (scoringMethod === 'range' && scoringRanges && scoringRanges.length > 0) {
-    // Ensure scoringRanges are sorted by minValue
     const sortedRanges = [...scoringRanges].sort(
       (a, b) => a.minValue - b.minValue
     );
 
-    // Find the range that includes the answerValue
     const matchingRange = sortedRanges.find(
       range => answerValue >= range.minValue && answerValue <= range.maxValue
     );
-
     if (matchingRange) {
       return matchingRange.points;
     }
 
-    // If no matching range, perform interpolation
-    // Find the closest lower and higher ranges
     let lowerRange: NumberScoringRange | null = null;
     let higherRange: NumberScoringRange | null = null;
 
@@ -1070,25 +1198,17 @@ const calculateNumberScore = (
     if (lowerRange && higherRange) {
       const { maxValue: lowerMax, points: lowerPoints } = lowerRange;
       const { minValue: higherMin, points: higherPoints } = higherRange;
-
       const slope = (higherPoints - lowerPoints) / (higherMin - lowerMax);
-      const interpolatedPoints = lowerPoints + slope * (answerValue - lowerMax);
-      return interpolatedPoints;
+      return lowerPoints + slope * (answerValue - lowerMax);
     }
 
-    // If only lowerRange exists (answerValue > all ranges)
     if (lowerRange && !higherRange) {
-      // Assign the points of the last range
       return lowerRange.points;
     }
-
-    // If only higherRange exists (answerValue < all ranges)
     if (!lowerRange && higherRange) {
-      // Assign the points of the first range
       return higherRange.points;
     }
   }
 
-  // If scoringMethod is 'None' or unrecognized, return 0
   return 0;
 };

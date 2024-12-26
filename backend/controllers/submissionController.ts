@@ -1,5 +1,3 @@
-// controllers/submissionController.ts
-
 import { Request, Response } from 'express';
 import {
   createSubmission,
@@ -20,6 +18,23 @@ import SubmissionModel from '../models/Submission';
 import { AnswerUnion } from '../models/Answer';
 import { getUserIdByAccountId } from '../services/accountService';
 
+/**
+ * Controller to submit or update a submission for a particular assessment.
+ *
+ * @param {Request} req - Express request object
+ *  - req.params.assessmentId: The ID of the assessment being submitted to.
+ *  - req.body.answers: Array of AnswerUnion representing the user's answers.
+ *  - req.body.isDraft: Boolean indicating if this submission is a draft.
+ *  - req.body.submissionId: (Optional) ID of an existing submission to update.
+ * @param {Response} res - Express response object
+ *
+ * @returns {Promise<void>}
+ *
+ * @throws {NotFoundError} If the assessment or user is not found.
+ * @throws {BadRequestError} If `answers` is invalid or there's a validation error.
+ * @throws {MissingAuthorizationError} If user is unauthorized.
+ * @throws {Error} For other unknown runtime or server errors (500).
+ */
 export const submitAssessment = async (req: Request, res: Response) => {
   try {
     const accountId = await getAccountId(req);
@@ -68,6 +83,22 @@ export const submitAssessment = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * Controller to get all submissions for a particular user for a given assessment.
+ *
+ * @param {Request} req - Express request object
+ *  - req.params.assessmentId: The ID of the assessment.
+ * @param {Response} res - Express response object
+ *
+ * @returns {Promise<void>}
+ *
+ * @description
+ *  - If the user is not an admin or faculty, their submission scores are masked (set to -1).
+ *
+ * @throws {NotFoundError} If the submission or account is not found.
+ * @throws {MissingAuthorizationError} If the user is unauthorized.
+ * @throws {Error} For other unknown runtime or server errors (500).
+ */
 export const getUserSubmissions = async (req: Request, res: Response) => {
   try {
     const accountId = await getAccountId(req);
@@ -101,6 +132,22 @@ export const getUserSubmissions = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * Controller to retrieve all submissions for a specific assessment.
+ * Intended only for admins or faculty members.
+ *
+ * @param {Request} req - Express request object
+ *  - req.params.assessmentId: The ID of the assessment.
+ * @param {Response} res - Express response object
+ *
+ * @returns {Promise<void>}
+ *
+ * @description
+ *  - If the user is not an admin or faculty, their submission scores are masked (set to -1).
+ *
+ * @throws {MissingAuthorizationError} If the user is not admin/faculty.
+ * @throws {Error} For unknown runtime or server errors (500).
+ */
 export const getAllSubmissions = async (req: Request, res: Response) => {
   try {
     const accountId = await getAccountId(req);
@@ -132,6 +179,22 @@ export const getAllSubmissions = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * Controller to delete a user's submission.
+ *
+ * @param {Request} req - Express request object
+ *  - req.params.submissionId: The ID of the submission to delete.
+ * @param {Response} res - Express response object
+ *
+ * @returns {Promise<void>}
+ *
+ * @description
+ *  - If the requesting user does not own the submission and is not an admin, they cannot delete it.
+ *
+ * @throws {NotFoundError} If the submission is not found.
+ * @throws {MissingAuthorizationError} If the user is unauthorized to delete it.
+ * @throws {Error} For any unknown runtime or server errors (500).
+ */
 export const deleteUserSubmission = async (req: Request, res: Response) => {
   try {
     const accountId = await getAccountId(req);
@@ -167,7 +230,23 @@ export const deleteUserSubmission = async (req: Request, res: Response) => {
   }
 };
 
-// New controller to get a submission by ID
+/**
+ * Controller method to retrieve a submission by its ID.
+ *
+ * @param {Request} req - Express request object
+ *  - req.params.submissionId: The ID of the submission to retrieve.
+ * @param {Response} res - Express response object
+ *
+ * @returns {Promise<void>}
+ *
+ * @description
+ *  - Populates the submission's user and assessment fields.
+ *  - If the requesting user is not the submission owner and is not an admin/faculty, throws an error.
+ *
+ * @throws {NotFoundError} If the submission is not found.
+ * @throws {MissingAuthorizationError} If the user lacks permission to view it.
+ * @throws {Error} For any unknown runtime or server errors (500).
+ */
 export const getSubmissionByIdController = async (
   req: Request,
   res: Response
@@ -213,7 +292,19 @@ export const getSubmissionByIdController = async (
 
 /**
  * Controller to adjust the score of a submission.
- * Only accessible by faculty members and admins.
+ * Accessible only by faculty members and admins.
+ *
+ * @param {Request} req - Express request object
+ *  - req.params.submissionId: The ID of the submission to adjust.
+ *  - req.body.adjustedScore: The new adjusted score.
+ * @param {Response} res - Express response object
+ *
+ * @returns {Promise<void>}
+ *
+ * @throws {NotFoundError} If the submission is not found.
+ * @throws {BadRequestError} If the adjusted score is invalid.
+ * @throws {MissingAuthorizationError} If the user is unauthorized.
+ * @throws {Error} For unknown runtime or server errors (500).
  */
 export const adjustSubmissionScoreController = async (
   req: Request,
