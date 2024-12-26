@@ -1,10 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import InternalAssessmentModel from '../models/InternalAssessment';
 import AccountModel from '../models/Account';
-import ResultModel, { Result } from '../models/Result';
 import CourseModel from '../models/Course';
 import { NotFoundError, BadRequestError } from './errors';
-import { Team } from '@models/Team';
 import mongoose, { Types } from 'mongoose';
 import TeamSetModel from '@models/TeamSet';
 import QuestionModel from '@models/Question';
@@ -27,7 +25,22 @@ import {
   UndecidedQuestionModel,
 } from '@models/QuestionTypes';
 import { createAssignmentSet } from './assessmentAssignmentSetService';
+import AssessmentResultModel, { AssessmentResult } from '@models/AssessmentResult';
+import { User } from '@models/User';
 
+/**
+ * Retrieves an internal assessment by ID.
+ * Also fetches all results, but this may not be necessary as the frontend should fragment
+ * the fetching of data anyway. TODO: Remove the results from this function to abide by
+ * Separation of Concerns.
+ *
+ * @param {string} assessmentId - The ID of the assessment.
+ * @param {string} accountId - The ID of the account requesting the assessment.
+ *
+ * @returns {Promise<any>} - The found assessment document, fully populated.
+ *  - NotFoundError: If the assessment or account is not found.
+ *  - 500 error (uncaught): For any unknown errors from Mongoose or runtime exceptions.
+ */
 export const getInternalAssessmentById = async (
   assessmentId: string,
   accountId: string
@@ -37,71 +50,76 @@ export const getInternalAssessmentById = async (
     throw new NotFoundError('Account not found');
   }
 
-  const assessment = await InternalAssessmentModel.findById(assessmentId)
-    .populate<{
-      results: Result[];
-    }>({
-      path: 'results',
-      populate: [
-        {
-          path: 'team',
-          model: 'Team',
-          populate: {
-            path: 'members',
+  const assessment = account.role === 'Faculty member' || account.role === 'admin'
+  ? await InternalAssessmentModel.findById(assessmentId)
+      .populate<{
+        results: AssessmentResult[];
+      }>({
+        path: 'results',
+        populate: [
+          {
+            path: 'team',
+            model: 'Team',
+            populate: {
+              path: 'members',
+              model: 'User',
+            },
+          },
+          {
+            path: 'student',
             model: 'User',
           },
+        ],
+      })
+      .populate({
+        path: 'teamSet',
+        populate: {
+          path: 'teams',
+          model: 'Team',
         },
-        {
-          path: 'marker',
-          model: 'User',
-        },
-      ],
-    })
-    .populate({
-      path: 'teamSet',
-      populate: {
-        path: 'teams',
-        model: 'Team',
-      },
-    })
-    .populate({
-      path: 'questions',
-    });
+      })
+      .populate({
+        path: 'questions',
+      })
+  : await InternalAssessmentModel.findById(assessmentId)
+  .populate({
+    path: 'teamSet',
+    populate: {
+      path: 'teams',
+      model: 'Team',
+    },
+  })
+  .populate({
+    path: 'questions',
+  });
 
   if (!assessment) {
     throw new NotFoundError('Assessment not found');
   }
 
-  // Filtering results based on the role and assigned marker for teaching assistants
-  if (account.role === 'Teaching assistant') {
-    const userId = account.user;
-    assessment.results = assessment.results.filter(result =>
-      result.marker?.equals(userId)
+  // Sorts the results by name.
+  if (account.role === 'Faculty member' || account.role === 'admin') {
+    (assessment.results as AssessmentResult[]).sort((a, b) =>
+      (a.student as User).name.localeCompare((b.student as User).name)
     );
-  }
-
-  // Sorting logic for individual or team-based assessments
-  if (assessment.granularity === 'individual') {
-    assessment.results.sort((a, b) =>
-      a.marks[0].name.localeCompare(b.marks[0].name)
-    );
-  } else if (assessment.granularity === 'team') {
-    assessment.results.sort((a, b) => {
-      const teamA = a.team as unknown as Team;
-      const teamB = b.team as unknown as Team;
-      if (!teamA && !teamB) return 0;
-      if (!teamA) return -1;
-      if (!teamB) return 1;
-      return teamA.number - teamB.number;
-    });
-    assessment.results.forEach(result => {
-      result.marks.sort((a, b) => a.name.localeCompare(b.name));
-    });
   }
 
   return assessment;
 };
 
+/**
+ * Updates an internal assessment's fields (e.g., name, description, etc.),
+ * restricted to admin or faculty members.
+ *
+ * @param {string} assessmentId - The ID of the assessment to update.
+ * @param {string} accountId - The ID of the requesting account (must be admin or faculty).
+ * @param {Record<string, unknown>} updateData - The fields to be updated.
+ *
+ * @returns {Promise<any>} - The updated assessment document.
+ *  - NotFoundError: If the assessment or account does not exist.
+ *  - BadRequestError: If the user is not authorized.
+ *  - 500 error (uncaught): For any unknown errors from Mongoose or runtime exceptions.
+ */
 export const updateInternalAssessmentById = async (
   assessmentId: string,
   accountId: string,
@@ -112,7 +130,6 @@ export const updateInternalAssessmentById = async (
     throw new NotFoundError('Account not found');
   }
 
-  // Only admins or faculty members are allowed to update assessments.
   if (account.role !== 'admin' && account.role !== 'Faculty member') {
     throw new BadRequestError('Unauthorized');
   }
@@ -130,6 +147,16 @@ export const updateInternalAssessmentById = async (
   return updatedAssessment;
 };
 
+/**
+ * Deletes an internal assessment along with all associated results
+ * and detaches it from its parent course.
+ *
+ * @param {string} assessmentId - The ID of the assessment to delete.
+ *
+ * @returns {Promise<void>} - Resolves when deletion is complete.
+ *  - NotFoundError: If the assessment does not exist.
+ *  - 500 error (uncaught): For any unknown errors from Mongoose or runtime exceptions.
+ */
 export const deleteInternalAssessmentById = async (assessmentId: string) => {
   const assessment = await InternalAssessmentModel.findById(assessmentId);
   if (!assessment) {
@@ -137,9 +164,9 @@ export const deleteInternalAssessmentById = async (assessmentId: string) => {
   }
 
   // Delete associated results
-  await ResultModel.deleteMany({ assessment: assessmentId });
+  await AssessmentResultModel.deleteMany({ assessment: assessmentId });
 
-  // Remove the assessment from the associated course
+  // Remove from the course
   const course = await CourseModel.findById(assessment.course);
   if (course && course.internalAssessments) {
     const index = course.internalAssessments.findIndex(id =>
@@ -155,6 +182,26 @@ export const deleteInternalAssessmentById = async (assessmentId: string) => {
   await InternalAssessmentModel.findByIdAndDelete(assessmentId);
 };
 
+/**
+ * Bulk-creates multiple internal assessments for a course,
+ * generating initial Result documents and linking to a specified TeamSet if available.
+ * Used for CSV uploading. As of 26/12/2024, frontend is only expected to send 1 at a time,
+ * but this method can handle multiple at once.
+ *
+ * @param {string} courseId - The ID of the course to add assessments to.
+ * @param {InternalAssessmentData[]} assessmentsData - The data array for new assessments.
+ *
+ * @description
+ *  - If an assessment with the same name exists, it is skipped.
+ *  - Creates default "Team Member Selection" question for each assessment.
+ *  - Optionally creates results for each team or each individual based on `granularity`.
+ *  - Attempts to auto-generate an assignment set using `createAssignmentSet`.
+ *
+ * @returns {Promise<void>} - Resolves when all assessments are added or throws if none were added.
+ *  - BadRequestError: If `assessmentsData` is empty or if adding fails.
+ *  - NotFoundError: If the course does not exist.
+ *  - 500 error (uncaught): For any unknown errors from Mongoose or runtime exceptions.
+ */
 interface InternalAssessmentData {
   assessmentName: string;
   description: string;
@@ -165,7 +212,6 @@ interface InternalAssessmentData {
   teamSetName: string;
   areSubmissionsEditable: boolean;
 }
-
 export const addInternalAssessmentsToCourse = async (
   courseId: string,
   assessmentsData: InternalAssessmentData[]
@@ -198,8 +244,9 @@ export const addInternalAssessmentsToCourse = async (
       assessmentName,
     });
 
+    // Skip if an assessment with the same name exists
     if (existingAssessment) {
-      continue; // Skip if assessment already exists
+      continue;
     }
 
     const teamSet = await TeamSetModel.findOne({
@@ -227,7 +274,7 @@ export const addInternalAssessmentsToCourse = async (
       questions: [],
     });
 
-    // Locked questions
+    // Create locked questions (for example, Team Member Selection)
     const teamMemberSelectionQuestion = new TeamMemberSelectionQuestionModel({
       text: 'Student Selection',
       type: 'Team Member Selection',
@@ -235,94 +282,23 @@ export const addInternalAssessmentsToCourse = async (
       isLocked: true,
       isRequired: true,
     });
-
-    // const nusnetIdQuestion = new NUSNETIDQuestionModel({
-    //   text: 'Student NUSNET ID (EXXXXXXX)',
-    //   type: 'NUSNET ID',
-    //   shortResponsePlaceholder: 'E1234567',
-    //   customInstruction: 'Enter your NUSNET ID starting with E followed by 7 digits.',
-    //   isLocked: true,
-    //   isRequired: true,
-    // });
-
-    // const nusnetEmailQuestion = new NUSNETEmailQuestionModel({
-    //   text: 'Student NUSNET Email',
-    //   type: 'NUSNET Email',
-    //   shortResponsePlaceholder: 'e1234567@u.nus.edu',
-    //   customInstruction: 'Enter your NUSNET email address.',
-    //   isLocked: true,
-    //   isRequired: true,
-    // });
-
     await teamMemberSelectionQuestion.save();
-    // await nusnetIdQuestion.save();
-    // await nusnetEmailQuestion.save();
 
-    assessment.questions = [
-      teamMemberSelectionQuestion._id,
-      // nusnetIdQuestion._id,
-      // nusnetEmailQuestion._id,
-    ];
-
+    assessment.questions = [teamMemberSelectionQuestion._id];
     await assessment.save();
 
     const results: mongoose.Document[] = [];
 
-    if (granularity === 'team') {
-      if (!teamSet) {
-        continue;
-      }
-      assessment.teamSet = teamSet._id;
-
-      teamSet.teams.forEach((team: any) => {
-        const initialMarks = team.members.map((member: any) => ({
-          user: member.identifier,
-          name: member.name,
-          mark: 0,
-        }));
-        const result = new ResultModel({
-          assessment: assessment._id,
-          team: team._id,
-          marker: team.TA ? team.TA._id : null,
-          marks: initialMarks,
-        });
-        results.push(result);
+    assessment.teamSet = teamSet._id;
+    course.students.forEach((student: any) => {
+      const result = new AssessmentResultModel({
+        assessment: assessment._id,
+        student: student,
+        marks: [],
+        averageScore: 0,
       });
-    } else {
-      if (teamSet) {
-        assessment.teamSet = teamSet._id;
-        course.students.forEach((student: any) => {
-          const teams: Team[] = teamSet.teams as unknown as Team[];
-          const team = teams.find(t =>
-            t?.members?.some(member => member._id.equals(student._id))
-          );
-          const marker = team?.TA ? team.TA._id : null;
-          const result = new ResultModel({
-            assessment: assessment._id,
-            team: team ? team._id : null,
-            marker,
-            marks: [{ user: student.identifier, name: student.name, mark: 0 }],
-          });
-          results.push(result);
-        });
-      } else {
-        course.students.forEach((student: any) => {
-          const result = new ResultModel({
-            assessment: assessment._id,
-            team: null,
-            marker: null,
-            marks: [
-              {
-                user: student.identifier,
-                name: student.name,
-                mark: 0,
-              },
-            ],
-          });
-          results.push(result);
-        });
-      }
-    }
+      results.push(result);
+    });
 
     assessment.results = results.map(result => result._id);
     course.internalAssessments.push(assessment._id);
@@ -330,10 +306,11 @@ export const addInternalAssessmentsToCourse = async (
     await Promise.all(results.map(result => result.save()));
 
     try {
+      // Attempt to create an assignment set
       await createAssignmentSet(
         assessment._id.toString(),
         teamSet!._id.toString()
-      ); // Null checked at the start
+      );
     } catch (error) {
       console.error(
         `Failed to create AssessmentAssignmentSet for assessment ${assessment._id}:`,
@@ -351,7 +328,20 @@ export const addInternalAssessmentsToCourse = async (
 };
 
 /*--------------------------Questions---------------------------------------------*/
-// Add a question to an internal assessment
+
+/**
+ * Creates and saves a new question for an internal assessment,
+ * validating question types and updating the assessment's total marks if scored.
+ *
+ * @param {string} assessmentId - The ID of the assessment to which the question is added.
+ * @param {Partial<QuestionUnion>} questionData - The question content, including type, text, etc.
+ * @param {string} accountId - The ID of the account adding this question (must be admin or faculty).
+ *
+ * @returns {Promise<QuestionUnion>} - The created question document.
+ *  - NotFoundError: If account or assessment is not found.
+ *  - BadRequestError: If user is not authorized or question data is invalid.
+ *  - 500 error (uncaught): For any unknown errors from Mongoose or runtime exceptions.
+ */
 export const addQuestionToAssessment = async (
   assessmentId: string,
   questionData: Partial<QuestionUnion>,
@@ -363,7 +353,6 @@ export const addQuestionToAssessment = async (
     throw new NotFoundError('Account not found');
   }
 
-  // Only admins or faculty members are allowed to add questions
   if (account.role !== 'admin' && account.role !== 'Faculty member') {
     throw new BadRequestError('Unauthorized');
   }
@@ -373,11 +362,10 @@ export const addQuestionToAssessment = async (
     throw new NotFoundError('Assessment not found');
   }
 
-  // Remove the temporary _id before saving
+  // Remove _id if present
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { _id, ...validQuestionData } = questionData;
 
-  // Ensure the required fields are present
   if (!validQuestionData.type || !validQuestionData.text) {
     throw new BadRequestError('Both type and text fields are required');
   }
@@ -492,11 +480,10 @@ export const addQuestionToAssessment = async (
       break;
   }
 
-  // Determine which model to use based on the question type
   let question: QuestionUnion;
   let addedMaxScore = 0;
 
-  // Create a new question using the appropriate model
+  // Determine which model to use based on type
   switch (validQuestionData.type) {
     case 'NUSNET ID':
       question = new NUSNETIDQuestionModel({
@@ -551,8 +538,7 @@ export const addQuestionToAssessment = async (
       });
       if (validQuestionData.isScored) {
         addedMaxScore =
-          validQuestionData.labels![validQuestionData.labels!.length - 1]
-            .points; // Assumes last in the array is max points, labels must exist, validated in validation step.
+          validQuestionData.labels![validQuestionData.labels!.length - 1].points;
       }
       break;
     case 'Short Response':
@@ -595,7 +581,7 @@ export const addQuestionToAssessment = async (
         addedMaxScore =
           validQuestionData.scoringRanges![
             validQuestionData.scoringRanges!.length - 1
-          ].points; // Assumes last element of scoringRanges is max, ! operator is validated in validation step before this
+          ].points;
       }
       break;
     case 'Undecided':
@@ -608,10 +594,8 @@ export const addQuestionToAssessment = async (
       break;
   }
 
-  // Save the question
   await question.save();
 
-  // Add the question to the assessment
   assessment.questions = assessment.questions || [];
   assessment.questions.push(question._id);
   assessment.questionsTotalMarks = assessment.questionsTotalMarks
@@ -622,7 +606,17 @@ export const addQuestionToAssessment = async (
   return question;
 };
 
-// Get all questions for an internal assessment
+/**
+ * Retrieves all questions belonging to an assessment,
+ * ensuring the requesting account is valid.
+ *
+ * @param {string} assessmentId - The ID of the assessment whose questions we want.
+ * @param {string} accountId - The ID of the account (for authorization checks).
+ *
+ * @returns {Promise<QuestionUnion[]>} - An array of question documents.
+ *  - NotFoundError: If the account or assessment doesn’t exist.
+ *  - 500 error (uncaught): For any unknown errors from Mongoose or runtime exceptions.
+ */
 export const getQuestionsByAssessmentId = async (
   assessmentId: string,
   accountId: string
@@ -641,7 +635,21 @@ export const getQuestionsByAssessmentId = async (
   return assessment.questions;
 };
 
-// Update a question by its ID
+/**
+ * Updates a specific question, potentially changing text, options, or scoring,
+ * while preventing certain modifications like type changes or editing locked questions.
+ *
+ * @param {string} questionId - The ID of the question to update.
+ * @param {Partial<QuestionUnion>} updateData - The data to update on the question.
+ * @param {string} accountId - The ID of the requesting account.
+ *
+ * @returns {Promise<QuestionUnion>} - The updated question document.
+ *
+ * Exit points:
+ *  - NotFoundError: If the account or question is not found.
+ *  - BadRequestError: If locked or if user is unauthorized or tries changing the question type.
+ *  - 500 error (uncaught): For any unknown errors from Mongoose or runtime exceptions.
+ */
 export const updateQuestionById = async (
   questionId: string,
   updateData: Partial<QuestionUnion>,
@@ -652,7 +660,6 @@ export const updateQuestionById = async (
     throw new NotFoundError('Account not found');
   }
 
-  // Only admins or faculty members are allowed to update questions
   if (account.role !== 'admin' && account.role !== 'Faculty member') {
     throw new BadRequestError('Unauthorized');
   }
@@ -662,55 +669,28 @@ export const updateQuestionById = async (
     throw new NotFoundError('Question not found');
   }
 
-  // Prevent updates to locked questions
   if (existingQuestion.isLocked) {
     throw new BadRequestError('Cannot modify a locked question');
   }
 
-  // Prevent changing the question type
+  // Prevent changing question type
   if (updateData.type && updateData.type !== existingQuestion.type) {
     throw new BadRequestError('Cannot change the type of an existing question');
   }
 
-  // Determine which model to use based on the question type
   let updatedQuestion: QuestionUnion | null;
   let currentScore = 0;
   let updatedScore = 0;
 
-  // Update the question using the appropriate model
+  // Switch based on existing question type (similar logic to your original code)
   switch (existingQuestion.type) {
-    case 'NUSNET ID':
-      updatedQuestion = await NUSNETIDQuestionModel.findByIdAndUpdate(
-        questionId,
-        updateData,
-        { new: true }
-      );
-      break;
-    case 'NUSNET Email':
-      updatedQuestion = await NUSNETEmailQuestionModel.findByIdAndUpdate(
-        questionId,
-        updateData,
-        { new: true }
-      );
-      break;
-    case 'Team Member Selection':
-      updatedQuestion =
-        await TeamMemberSelectionQuestionModel.findByIdAndUpdate(
-          questionId,
-          updateData,
-          { new: true }
-        );
-      break;
     case 'Multiple Choice':
-      currentScore = (
-        existingQuestion as MultipleChoiceQuestion
-      ).options.reduce((acc, val) => {
-        return acc > val.points ? acc : val.points;
-      }, 0);
+      currentScore = (existingQuestion as MultipleChoiceQuestion).options.reduce(
+        (acc, val) => (acc > val.points ? acc : val.points),
+        0
+      );
       updatedScore = (updateData as MultipleChoiceQuestion).options.reduce(
-        (acc, val) => {
-          return acc > val.points ? acc : val.points;
-        },
+        (acc, val) => (acc > val.points ? acc : val.points),
         0
       );
       updatedQuestion = await MultipleChoiceQuestionModel.findByIdAndUpdate(
@@ -720,15 +700,12 @@ export const updateQuestionById = async (
       );
       break;
     case 'Multiple Response':
-      currentScore = (
-        existingQuestion as MultipleResponseQuestion
-      ).options.reduce((acc, val) => {
-        return val.points > 0 ? acc + val.points : acc;
-      }, 0);
+      currentScore = (existingQuestion as MultipleResponseQuestion).options.reduce(
+        (acc, val) => (val.points > 0 ? acc + val.points : acc),
+        0
+      );
       updatedScore = (updateData as MultipleResponseQuestion).options.reduce(
-        (acc, val) => {
-          return val.points > 0 ? acc + val.points : acc;
-        },
+        (acc, val) => (val.points > 0 ? acc + val.points : acc),
         0
       );
       updatedQuestion = await MultipleResponseQuestionModel.findByIdAndUpdate(
@@ -745,27 +722,6 @@ export const updateQuestionById = async (
         (updateData as ScaleQuestion).labels.length - 1
       ].points;
       updatedQuestion = await ScaleQuestionModel.findByIdAndUpdate(
-        questionId,
-        updateData,
-        { new: true }
-      );
-      break;
-    case 'Short Response':
-      updatedQuestion = await ShortResponseQuestionModel.findByIdAndUpdate(
-        questionId,
-        updateData,
-        { new: true }
-      );
-      break;
-    case 'Long Response':
-      updatedQuestion = await LongResponseQuestionModel.findByIdAndUpdate(
-        questionId,
-        updateData,
-        { new: true }
-      );
-      break;
-    case 'Date':
-      updatedQuestion = await DateQuestionModel.findByIdAndUpdate(
         questionId,
         updateData,
         { new: true }
@@ -806,6 +762,48 @@ export const updateQuestionById = async (
         { new: true }
       );
       break;
+    case 'Short Response':
+      updatedQuestion = await ShortResponseQuestionModel.findByIdAndUpdate(
+        questionId,
+        updateData,
+        { new: true }
+      );
+      break;
+    case 'Long Response':
+      updatedQuestion = await LongResponseQuestionModel.findByIdAndUpdate(
+        questionId,
+        updateData,
+        { new: true }
+      );
+      break;
+    case 'Date':
+      updatedQuestion = await DateQuestionModel.findByIdAndUpdate(
+        questionId,
+        updateData,
+        { new: true }
+      );
+      break;
+    case 'Team Member Selection':
+      updatedQuestion = await TeamMemberSelectionQuestionModel.findByIdAndUpdate(
+        questionId,
+        updateData,
+        { new: true }
+      );
+      break;
+    case 'NUSNET ID':
+      updatedQuestion = await NUSNETIDQuestionModel.findByIdAndUpdate(
+        questionId,
+        updateData,
+        { new: true }
+      );
+      break;
+    case 'NUSNET Email':
+      updatedQuestion = await NUSNETEmailQuestionModel.findByIdAndUpdate(
+        questionId,
+        updateData,
+        { new: true }
+      );
+      break;
     case 'Undecided':
       updatedQuestion = await UndecidedQuestionModel.findByIdAndUpdate(
         questionId,
@@ -827,7 +825,7 @@ export const updateQuestionById = async (
   }
 
   if (currentScore !== updatedScore) {
-    // Find the assessment that contains this question
+    // Update total marks in the related assessment
     const assessment = await InternalAssessmentModel.findOne({
       questions: questionId,
     });
@@ -843,7 +841,21 @@ export const updateQuestionById = async (
   return updatedQuestion;
 };
 
-// Delete a question from an internal assessment
+/**
+ * Removes a question from an assessment after ensuring it's not locked,
+ * then updates the assessment’s questions list accordingly.
+ *
+ * @param {string} assessmentId - The ID of the assessment containing the question.
+ * @param {string} questionId - The ID of the question to remove.
+ * @param {string} accountId - The ID of the requesting account (must be admin or faculty).
+ *
+ * @returns {Promise<void>} - Resolves upon successful removal.
+ *
+ * Exit points:
+ *  - NotFoundError: If the account, assessment, or question is not found.
+ *  - BadRequestError: If the question is locked or user is unauthorized.
+ *  - 500 error (uncaught): For any unknown errors from Mongoose or runtime exceptions.
+ */
 export const deleteQuestionById = async (
   assessmentId: string,
   questionId: string,
@@ -854,7 +866,6 @@ export const deleteQuestionById = async (
     throw new NotFoundError('Account not found');
   }
 
-  // Only admins or faculty members are allowed to delete questions
   if (account.role !== 'admin' && account.role !== 'Faculty member') {
     throw new BadRequestError('Unauthorized');
   }
@@ -887,6 +898,19 @@ export const deleteQuestionById = async (
 };
 
 /*------------------------------Release-Form-------------------------------*/
+
+/**
+ * Marks an assessment as released (isReleased = true)
+ * so that it becomes accessible to graders.
+ *
+ * @param {string} assessmentId - The ID of the assessment to release.
+ * @param {string} accountId - The ID of the user performing the release (must be admin or faculty).
+ *
+ * @returns {Promise<any>} - The updated assessment document.
+ *  - NotFoundError: If the account or assessment is not found.
+ *  - BadRequestError: If the user is unauthorized.
+ *  - 500 error (uncaught): For any unknown errors from Mongoose or runtime exceptions.
+ */
 export const releaseInternalAssessmentById = async (
   assessmentId: string,
   accountId: string
@@ -896,7 +920,6 @@ export const releaseInternalAssessmentById = async (
     throw new NotFoundError('Account not found');
   }
 
-  // Only admins or faculty members are allowed to release assessments
   if (account.role !== 'admin' && account.role !== 'Faculty member') {
     throw new BadRequestError('Unauthorized');
   }
@@ -914,6 +937,18 @@ export const releaseInternalAssessmentById = async (
   return updatedAssessment;
 };
 
+/**
+ * Reverts an assessment's release status (isReleased = false),
+ * making it invisible to graders.
+ *
+ * @param {string} assessmentId - The ID of the assessment to recall.
+ * @param {string} accountId - The ID of the user performing the recall (must be admin or faculty).
+ *
+ * @returns {Promise<any>} - The updated assessment document.
+ *  - NotFoundError: If the account or assessment is not found.
+ *  - BadRequestError: If the user is unauthorized.
+ *  - 500 error (uncaught): For any unknown errors from Mongoose or runtime exceptions.
+ */
 export const recallInternalAssessmentById = async (
   assessmentId: string,
   accountId: string
@@ -923,7 +958,6 @@ export const recallInternalAssessmentById = async (
     throw new NotFoundError('Account not found');
   }
 
-  // Only admins or faculty members are allowed to recall assessments
   if (account.role !== 'admin' && account.role !== 'Faculty member') {
     throw new BadRequestError('Unauthorized');
   }

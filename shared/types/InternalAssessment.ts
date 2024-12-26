@@ -1,8 +1,7 @@
+import { AssessmentResult } from '@models/AssessmentResult';
 import { Course } from './Course';
 import { QuestionUnion } from './Question';
-import { Result } from './Result';
 import { TeamSet } from './TeamSet';
-import { User } from './User';
 
 export interface InternalAssessment {
   _id: string;
@@ -16,7 +15,7 @@ export interface InternalAssessment {
   granularity: 'individual' | 'team';
   teamSet?: TeamSet;
   areSubmissionsEditable: boolean;
-  results: Result[];
+  results: AssessmentResult[];
   isReleased: boolean;
   questions: QuestionUnion[];
 }
