@@ -1,4 +1,4 @@
-import { AssessmentResult } from '@models/AssessmentResult';
+import { AssessmentResult } from './AssessmentResults';
 import { Course } from './Course';
 import { QuestionUnion } from './Question';
 import { TeamSet } from './TeamSet';
