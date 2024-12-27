@@ -315,7 +315,7 @@ describe('assessmentAssignmentSetController', () => {
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
-        error: 'Failed to fetch assignments by TA',
+        error: 'Failed to fetch assignments by grader',
       });
     });
   });
