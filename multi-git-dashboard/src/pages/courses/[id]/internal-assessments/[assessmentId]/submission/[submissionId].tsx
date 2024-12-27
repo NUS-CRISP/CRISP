@@ -55,8 +55,10 @@ const ViewSubmissionPage: React.FC = () => {
 
   // Determine if the user can edit (faculty or draft submission)
   const canEdit =
-    assessment.areSubmissionsEditable || submission.isDraft
-    || (assessment.releaseNumber !== submission.submissionReleaseNumber) || permission;
+    assessment.areSubmissionsEditable ||
+    submission.isDraft ||
+    assessment.releaseNumber !== submission.submissionReleaseNumber ||
+    permission;
 
   return (
     <>

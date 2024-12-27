@@ -51,7 +51,13 @@ const AssessmentResultCard: React.FC<AssessmentResultCardProps> = ({
   }
 
   const hasOutdatedSubmissions =
-    result && result.marks.filter(mark => mark.submission).some(mark => mark.submission!.submissionReleaseNumber !== assessmentReleaseNumber);
+    result &&
+    result.marks
+      .filter(mark => mark.submission)
+      .some(
+        mark =>
+          mark.submission!.submissionReleaseNumber !== assessmentReleaseNumber
+      );
 
   const allSubmissionsPresent =
     result && result.marks.length > 0 && !hasMissingSubmissions;
@@ -99,7 +105,7 @@ const AssessmentResultCard: React.FC<AssessmentResultCardProps> = ({
                 )}
               </ThemeIcon>
             </Tooltip>
-            {hasOutdatedSubmissions &&
+            {hasOutdatedSubmissions && (
               <Tooltip
                 label="Submissions may be outdated"
                 withArrow
@@ -115,7 +121,7 @@ const AssessmentResultCard: React.FC<AssessmentResultCardProps> = ({
                   <IconAlertCircle size={16} />
                 </ThemeIcon>
               </Tooltip>
-            }
+            )}
           </Group>
         )}
       </Flex>
@@ -216,7 +222,11 @@ const AssessmentResultCard: React.FC<AssessmentResultCardProps> = ({
                 <Grid>
                   {result!.marks
                     .filter(mark => mark.submission)
-                    .filter(mark => mark.submission!.submissionReleaseNumber !== assessmentReleaseNumber)
+                    .filter(
+                      mark =>
+                        mark.submission!.submissionReleaseNumber !==
+                        assessmentReleaseNumber
+                    )
                     .map((markEntry, index) => (
                       <Grid.Col span={6} key={index}>
                         <Card shadow="xs" p="xs" radius="md" withBorder>
@@ -230,7 +240,8 @@ const AssessmentResultCard: React.FC<AssessmentResultCardProps> = ({
                             </Badge>
                           </Group>
                           <Text size="xs" c="dimmed" mt="xs">
-                            Submission is for an earlier version of this assessment.
+                            Submission is for an earlier version of this
+                            assessment.
                           </Text>
                         </Card>
                       </Grid.Col>

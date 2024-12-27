@@ -1230,12 +1230,9 @@ const calculateNumberScore = (
  * @throws {BadRequestError} If a validation check fails during regrading.
  * @throws {Error} For any unknown runtime or server errors (500).
  */
-export const regradeSubmission = async (
-  submissionId: string
-) => {
-  const submission = await SubmissionModel.findById(submissionId).populate(
-    'answers'
-  );
+export const regradeSubmission = async (submissionId: string) => {
+  const submission =
+    await SubmissionModel.findById(submissionId).populate('answers');
   if (!submission) {
     throw new NotFoundError(`Submission with ID ${submissionId} not found`);
   }
@@ -1288,8 +1285,7 @@ export const regradeSubmission = async (
         savedAnswer = MultipleResponseAnswerModel.findById(answer.id);
         break;
       case 'Team Member Selection Answer':
-        question =
-          await TeamMemberSelectionQuestionModel.findById(questionId);
+        question = await TeamMemberSelectionQuestionModel.findById(questionId);
         SaveAnswerModel = TeamMemberSelectionAnswerModel;
         savedAnswer = TeamMemberSelectionAnswerModel.findById(answer.id);
         break;

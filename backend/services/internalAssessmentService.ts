@@ -31,7 +31,12 @@ import AssessmentResultModel, {
 import { User } from '@models/User';
 import SubmissionModel from '@models/Submission';
 import { regradeSubmission } from './submissionService';
-import { AnswerModel, AnswerUnion, MultipleChoiceAnswer, MultipleResponseAnswer } from '@models/Answer';
+import {
+  AnswerModel,
+  AnswerUnion,
+  MultipleChoiceAnswer,
+  MultipleResponseAnswer,
+} from '@models/Answer';
 
 /**
  * Retrieves an internal assessment by ID.
@@ -692,7 +697,8 @@ export const updateQuestionById = async (
     throw new BadRequestError('Unauthorized');
   }
 
-  const existingQuestion: QuestionUnion | null = await QuestionModel.findById(questionId);
+  const existingQuestion: QuestionUnion | null =
+    await QuestionModel.findById(questionId);
   if (!existingQuestion) {
     throw new NotFoundError('Question not found');
   }
@@ -712,14 +718,14 @@ export const updateQuestionById = async (
 
   switch (existingQuestion.type) {
     case 'Multiple Choice':
-      currentScore = (existingQuestion as MultipleChoiceQuestion).options.reduce(
-        (acc, val) => (acc > val.points ? acc : val.points),
-        0
-      );
-      updatedScore = (updateData as MultipleChoiceQuestion).options?.reduce(
-        (acc, val) => (acc > val.points ? acc : val.points),
-        0
-      ) ?? 0;
+      currentScore = (
+        existingQuestion as MultipleChoiceQuestion
+      ).options.reduce((acc, val) => (acc > val.points ? acc : val.points), 0);
+      updatedScore =
+        (updateData as MultipleChoiceQuestion).options?.reduce(
+          (acc, val) => (acc > val.points ? acc : val.points),
+          0
+        ) ?? 0;
       updatedQuestion = await MultipleChoiceQuestionModel.findByIdAndUpdate(
         questionId,
         updateData,
@@ -727,14 +733,17 @@ export const updateQuestionById = async (
       );
       break;
     case 'Multiple Response':
-      currentScore = (existingQuestion as MultipleResponseQuestion).options.reduce(
+      currentScore = (
+        existingQuestion as MultipleResponseQuestion
+      ).options.reduce(
         (acc, val) => (val.points > 0 ? acc + val.points : acc),
         0
       );
-      updatedScore = (updateData as MultipleResponseQuestion).options?.reduce(
-        (acc, val) => (val.points > 0 ? acc + val.points : acc),
-        0
-      ) ?? 0;
+      updatedScore =
+        (updateData as MultipleResponseQuestion).options?.reduce(
+          (acc, val) => (val.points > 0 ? acc + val.points : acc),
+          0
+        ) ?? 0;
 
       updatedQuestion = await MultipleResponseQuestionModel.findByIdAndUpdate(
         questionId,
@@ -816,11 +825,12 @@ export const updateQuestionById = async (
       );
       break;
     case 'Team Member Selection':
-      updatedQuestion = await TeamMemberSelectionQuestionModel.findByIdAndUpdate(
-        questionId,
-        updateData,
-        { new: true }
-      );
+      updatedQuestion =
+        await TeamMemberSelectionQuestionModel.findByIdAndUpdate(
+          questionId,
+          updateData,
+          { new: true }
+        );
       break;
     case 'NUSNET ID':
       updatedQuestion = await NUSNETIDQuestionModel.findByIdAndUpdate(
@@ -905,9 +915,9 @@ async function remapOrRemoveAnswers(
   newQuestion: QuestionUnion
 ): Promise<void> {
   const oldOptions =
-  oldQuestion.type === 'Multiple Choice'
-    ? (oldQuestion as MultipleChoiceQuestion).options
-    : (oldQuestion as MultipleResponseQuestion).options;
+    oldQuestion.type === 'Multiple Choice'
+      ? (oldQuestion as MultipleChoiceQuestion).options
+      : (oldQuestion as MultipleResponseQuestion).options;
   const newOptions =
     newQuestion.type === 'Multiple Choice'
       ? (newQuestion as MultipleChoiceQuestion).options
@@ -917,7 +927,9 @@ async function remapOrRemoveAnswers(
   const oldOptionTexts = oldOptions.map(opt => opt.text);
   if (oldOptionTexts.every(txt => newOptionTexts.includes(txt))) return;
 
-  const existingAnswers: AnswerUnion[] = await AnswerModel.find({ question: questionId });
+  const existingAnswers: AnswerUnion[] = await AnswerModel.find({
+    question: questionId,
+  });
 
   for (const ans of existingAnswers) {
     try {
@@ -925,11 +937,10 @@ async function remapOrRemoveAnswers(
         if (!newOptionTexts.includes((ans as MultipleChoiceAnswer).value)) {
           await AnswerModel.findByIdAndDelete(ans._id);
         }
-      }
-      else if (ans.type === 'Multiple Response Answer') {
-        (ans as MultipleResponseAnswer).values = (ans as MultipleResponseAnswer).values.filter((val: string) =>
-          newOptionTexts.includes(val)
-        );
+      } else if (ans.type === 'Multiple Response Answer') {
+        (ans as MultipleResponseAnswer).values = (
+          ans as MultipleResponseAnswer
+        ).values.filter((val: string) => newOptionTexts.includes(val));
         if ((ans as MultipleResponseAnswer).values.length === 0) {
           await AnswerModel.findByIdAndDelete(ans._id);
         }
@@ -943,7 +954,6 @@ async function remapOrRemoveAnswers(
     }
   }
 }
-
 
 /**
  * Removes a question from an assessment after ensuring it is not locked,
@@ -1110,10 +1120,10 @@ export const recaluculateSubmissionsForAssessment = async (
   }
 
   const submissions = await SubmissionModel.find({
-    assessment: assessmentId
+    assessment: assessmentId,
   });
 
-  submissions.forEach(async (sub) => {
+  submissions.forEach(async sub => {
     await regradeSubmission(sub._id);
   });
-}
+};

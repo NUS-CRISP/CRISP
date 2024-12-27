@@ -93,13 +93,15 @@ const CreateInternalForm: React.FC<CreateInternalFormProps> = ({
         type="date"
       />
 
-      <Text style={{ fontWeight: 'bold', marginTop: '16px', marginBottom: '8px' }}>
+      <Text
+        style={{ fontWeight: 'bold', marginTop: '16px', marginBottom: '8px' }}
+      >
         Assessment Type
       </Text>
       <div style={{ marginBottom: '16px' }}>
         <Radio.Group
           value={form.values.granularity}
-          onChange={(value) => form.setFieldValue('granularity', value)}
+          onChange={value => form.setFieldValue('granularity', value)}
         >
           <div style={{ display: 'flex', gap: '20px' }}>
             <Radio label="Team" value="team" />
@@ -117,11 +119,18 @@ const CreateInternalForm: React.FC<CreateInternalFormProps> = ({
       />
 
       {/* Scale to max marks with tooltip */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: 16 }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          marginTop: 16,
+        }}
+      >
         <Checkbox
           label="Scale final scores up to max marks"
           checked={form.values.scaleToMaxMarks}
-          onChange={(event) =>
+          onChange={event =>
             form.setFieldValue('scaleToMaxMarks', event.currentTarget.checked)
           }
         />
@@ -143,15 +152,18 @@ but max marks is 20, then scored submissions will double in score."
       <Select
         withAsterisk
         label="Which Team Assignment?"
-        data={teamSetNames.map((name) => ({ value: name, label: name }))}
+        data={teamSetNames.map(name => ({ value: name, label: name }))}
         {...form.getInputProps('teamSetName')}
       />
 
       <Checkbox
         label="Allow Submissions to be Editable"
         checked={form.values.areSubmissionsEditable}
-        onChange={(event) =>
-          form.setFieldValue('areSubmissionsEditable', event.currentTarget.checked)
+        onChange={event =>
+          form.setFieldValue(
+            'areSubmissionsEditable',
+            event.currentTarget.checked
+          )
         }
         style={{ marginTop: '16px' }}
       />

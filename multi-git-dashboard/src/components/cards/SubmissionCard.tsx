@@ -127,13 +127,15 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({
           </Button>
         </Group>
         {/* Warning if submission requires editing */}
-        {assessmentReleaseNumber && assessmentReleaseNumber !== submission.submissionReleaseNumber &&
-          <Box bg="yellow.2" my="md" style={{ padding: 8, borderRadius: 8 }}>
-            <Text>
-              Warning: This submission is for an earlier version of this assessment!
-            </Text>
-          </Box>
-        }
+        {assessmentReleaseNumber &&
+          assessmentReleaseNumber !== submission.submissionReleaseNumber && (
+            <Box bg="yellow.2" my="md" style={{ padding: 8, borderRadius: 8 }}>
+              <Text>
+                Warning: This submission is for an earlier version of this
+                assessment!
+              </Text>
+            </Box>
+          )}
       </Card>
 
       {/* Modal to display submission details */}

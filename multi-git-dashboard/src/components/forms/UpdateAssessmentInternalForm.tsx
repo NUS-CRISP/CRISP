@@ -19,10 +19,9 @@ interface UpdateAssessmentInternalFormProps {
   onAssessmentUpdated: () => void;
 }
 
-const UpdateAssessmentInternalForm: React.FC<UpdateAssessmentInternalFormProps> = ({
-  assessment,
-  onAssessmentUpdated,
-}) => {
+const UpdateAssessmentInternalForm: React.FC<
+  UpdateAssessmentInternalFormProps
+> = ({ assessment, onAssessmentUpdated }) => {
   const apiRoute = `/api/internal-assessments/${assessment?._id}`;
 
   const form = useForm({
@@ -129,11 +128,18 @@ const UpdateAssessmentInternalForm: React.FC<UpdateAssessmentInternalFormProps> 
         />
 
         {/* scaleToMaxMarks with tooltip */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 16 }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            marginBottom: 16,
+          }}
+        >
           <Checkbox
             label="Scale final scores up to max marks"
             checked={form.values.scaleToMaxMarks}
-            onChange={(event) =>
+            onChange={event =>
               form.setFieldValue('scaleToMaxMarks', event.currentTarget.checked)
             }
           />
@@ -155,8 +161,11 @@ but max marks is 20, then scored submissions will double in score."
         <Checkbox
           label="Allow Submissions to be Editable"
           checked={form.values.areSubmissionsEditable}
-          onChange={(event) =>
-            form.setFieldValue('areSubmissionsEditable', event.currentTarget.checked)
+          onChange={event =>
+            form.setFieldValue(
+              'areSubmissionsEditable',
+              event.currentTarget.checked
+            )
           }
           mb="sm"
         />
