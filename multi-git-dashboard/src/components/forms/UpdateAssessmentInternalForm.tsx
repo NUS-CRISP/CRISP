@@ -7,20 +7,23 @@ import {
   Notification,
   TextInput,
   Checkbox,
+  Tooltip,
 } from '@mantine/core';
+import { IconHelpCircle } from '@tabler/icons-react';
 import { useForm } from '@mantine/form';
-import { InternalAssessment } from '@shared/types/InternalAssessment'; // Import InternalAssessment type
+import { InternalAssessment } from '@shared/types/InternalAssessment';
 import { useState } from 'react';
 
 interface UpdateAssessmentInternalFormProps {
-  assessment: InternalAssessment | null; // Use InternalAssessment type
+  assessment: InternalAssessment | null;
   onAssessmentUpdated: () => void;
 }
 
-const UpdateAssessmentInternalForm: React.FC<
-  UpdateAssessmentInternalFormProps
-> = ({ assessment, onAssessmentUpdated }) => {
-  const apiRoute = `/api/internal-assessments/${assessment?._id}`; // Update the API route for internal assessments
+const UpdateAssessmentInternalForm: React.FC<UpdateAssessmentInternalFormProps> = ({
+  assessment,
+  onAssessmentUpdated,
+}) => {
+  const apiRoute = `/api/internal-assessments/${assessment?._id}`;
 
   const form = useForm({
     initialValues: {
@@ -28,12 +31,18 @@ const UpdateAssessmentInternalForm: React.FC<
       description: assessment?.description || '',
       startDate: assessment?.startDate
         ? new Date(assessment.startDate).toISOString().split('T')[0]
-        : '', // Convert date to string
+        : '',
       endDate: assessment?.endDate
         ? new Date(assessment.endDate).toISOString().split('T')[0]
-        : '', // Handle nullable endDate
+        : '',
       maxMarks: assessment?.maxMarks?.toString() || '',
-      areSubmissionsEditable: assessment?.areSubmissionsEditable || false, // New field added
+      areSubmissionsEditable: assessment?.areSubmissionsEditable || false,
+
+      // Add the new scaleToMaxMarks field to match the "Create" form
+      scaleToMaxMarks:
+        typeof assessment?.scaleToMaxMarks === 'boolean'
+          ? assessment.scaleToMaxMarks
+          : true,
     },
   });
 
@@ -46,7 +55,10 @@ const UpdateAssessmentInternalForm: React.FC<
       startDate: form.values.startDate || null,
       endDate: form.values.endDate || null,
       maxMarks: form.values.maxMarks ? form.values.maxMarks : null,
-      areSubmissionsEditable: form.values.areSubmissionsEditable, // Included in request body
+      areSubmissionsEditable: form.values.areSubmissionsEditable,
+
+      // Include scaleToMaxMarks in the request
+      scaleToMaxMarks: form.values.scaleToMaxMarks,
     };
 
     try {
@@ -100,13 +112,13 @@ const UpdateAssessmentInternalForm: React.FC<
         <TextInput
           withAsterisk
           label="Start Date"
-          type="date" // Ensure the input is treated as a date input
+          type="date"
           {...form.getInputProps('startDate')}
           mb="sm"
         />
         <TextInput
           label="End Date (Optional)"
-          type="date" // Ensure the input is treated as a date input
+          type="date"
           {...form.getInputProps('endDate')}
           mb="sm"
         />
@@ -116,15 +128,35 @@ const UpdateAssessmentInternalForm: React.FC<
           mb="sm"
         />
 
-        {/* New Checkbox for areSubmissionsEditable */}
+        {/* scaleToMaxMarks with tooltip */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 16 }}>
+          <Checkbox
+            label="Scale final scores up to max marks"
+            checked={form.values.scaleToMaxMarks}
+            onChange={(event) =>
+              form.setFieldValue('scaleToMaxMarks', event.currentTarget.checked)
+            }
+          />
+          <Tooltip
+            label="If checked, the final submission scores will be scaled so that a perfect score
+is equal to the indicated max marks. For example, if questions total 10 marks
+but max marks is 20, then scored submissions will double in score."
+            position="right"
+            withArrow
+            w={260}
+            multiline
+          >
+            <span style={{ cursor: 'pointer', display: 'inline-flex' }}>
+              <IconHelpCircle size={18} />
+            </span>
+          </Tooltip>
+        </div>
+
         <Checkbox
           label="Allow Submissions to be Editable"
           checked={form.values.areSubmissionsEditable}
-          onChange={event =>
-            form.setFieldValue(
-              'areSubmissionsEditable',
-              event.currentTarget.checked
-            )
+          onChange={(event) =>
+            form.setFieldValue('areSubmissionsEditable', event.currentTarget.checked)
           }
           mb="sm"
         />

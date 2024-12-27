@@ -221,6 +221,7 @@ interface InternalAssessmentData {
   startDate: Date;
   endDate?: Date;
   maxMarks?: number;
+  scaleToMaxMarks: boolean;
   granularity: string;
   teamSetName: string;
   areSubmissionsEditable: boolean;
@@ -247,6 +248,7 @@ export const addInternalAssessmentsToCourse = async (
       startDate,
       endDate,
       maxMarks,
+      scaleToMaxMarks,
       granularity,
       teamSetName,
       areSubmissionsEditable,
@@ -280,6 +282,7 @@ export const addInternalAssessmentsToCourse = async (
       startDate,
       endDate,
       maxMarks,
+      scaleToMaxMarks,
       granularity,
       teamSet: null,
       areSubmissionsEditable,

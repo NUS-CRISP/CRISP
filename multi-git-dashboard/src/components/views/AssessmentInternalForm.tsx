@@ -500,7 +500,7 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
       <Box mt={24} pb={16}>
         <Text>Total Possible Points from Questions: {totalPossiblePoints}</Text>
         <Text>Assessment Maximum Marks: {maxMarks}</Text>
-        {maxMarks && totalPossiblePoints > 0 && (
+        {maxMarks && totalPossiblePoints > 0 && assessment && assessment.scaleToMaxMarks && (
           <Text>
             Points in this quiz will be adjusted by this factor to match max
             marks: x{scalingFactor.toFixed(2)}

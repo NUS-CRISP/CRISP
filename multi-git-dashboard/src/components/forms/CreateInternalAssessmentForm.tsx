@@ -8,7 +8,10 @@ import {
   Text,
   Radio,
   Checkbox,
+  Tooltip,
+  // For an info icon or question icon:
 } from '@mantine/core';
+import { IconHelpCircle } from '@tabler/icons-react'; // Example icon (install @tabler/icons-react if needed)
 import { useForm } from '@mantine/form';
 
 interface CreateInternalFormProps {
@@ -30,6 +33,7 @@ const CreateInternalForm: React.FC<CreateInternalFormProps> = ({
       endDate: '',
       granularity: 'team',
       maxMarks: '0',
+      scaleToMaxMarks: true,
       teamSetName: '',
       areSubmissionsEditable: false, // New field added
     },
@@ -67,35 +71,35 @@ const CreateInternalForm: React.FC<CreateInternalFormProps> = ({
         label="Assessment Name"
         {...form.getInputProps('assessmentName')}
       />
+
       <Textarea
         withAsterisk
         label="Description"
         {...form.getInputProps('description')}
       />
+
       <TextInput
         withAsterisk
         label="Start Date"
         {...form.getInputProps('startDate')}
         placeholder="YYYY-MM-DD"
-        type="date" // Change input type to date
+        type="date"
       />
+
       <TextInput
         label="End Date (Optional)"
         {...form.getInputProps('endDate')}
         placeholder="YYYY-MM-DD"
-        type="date" // Change input type to date
+        type="date"
       />
 
-      {/* Bold title and padding for granularity section */}
-      <Text
-        style={{ fontWeight: 'bold', marginTop: '16px', marginBottom: '8px' }}
-      >
+      <Text style={{ fontWeight: 'bold', marginTop: '16px', marginBottom: '8px' }}>
         Assessment Type
       </Text>
       <div style={{ marginBottom: '16px' }}>
         <Radio.Group
           value={form.values.granularity}
-          onChange={value => form.setFieldValue('granularity', value)}
+          onChange={(value) => form.setFieldValue('granularity', value)}
         >
           <div style={{ display: 'flex', gap: '20px' }}>
             <Radio label="Team" value="team" />
@@ -112,22 +116,42 @@ const CreateInternalForm: React.FC<CreateInternalFormProps> = ({
         type="number"
       />
 
+      {/* Scale to max marks with tooltip */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: 16 }}>
+        <Checkbox
+          label="Scale final scores up to max marks"
+          checked={form.values.scaleToMaxMarks}
+          onChange={(event) =>
+            form.setFieldValue('scaleToMaxMarks', event.currentTarget.checked)
+          }
+        />
+        <Tooltip
+          label="If checked, the final submission scores will be scaled so that a perfect score
+is equal to the indicated max marks. For example, if questions total 10 marks
+but max marks is 20, then scored submissions will double in score."
+          position="right"
+          withArrow
+          multiline
+          w={260}
+        >
+          <span style={{ cursor: 'pointer', display: 'inline-flex' }}>
+            <IconHelpCircle size={18} />
+          </span>
+        </Tooltip>
+      </div>
+
       <Select
         withAsterisk
         label="Which Team Assignment?"
-        data={teamSetNames.map(name => ({ value: name, label: name }))}
+        data={teamSetNames.map((name) => ({ value: name, label: name }))}
         {...form.getInputProps('teamSetName')}
       />
 
-      {/* New Checkbox for areSubmissionsEditable */}
       <Checkbox
         label="Allow Submissions to be Editable"
         checked={form.values.areSubmissionsEditable}
-        onChange={event =>
-          form.setFieldValue(
-            'areSubmissionsEditable',
-            event.currentTarget.checked
-          )
+        onChange={(event) =>
+          form.setFieldValue('areSubmissionsEditable', event.currentTarget.checked)
         }
         style={{ marginTop: '16px' }}
       />

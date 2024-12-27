@@ -54,6 +54,7 @@ describe('AssessmentResult Model', () => {
       description: 'Midterm assessment',
       startDate: startDate,
       maxMarks: 100,
+      scaleToMaxMarks: true,
       granularity: 'team',
       teamSet: teamSet._id,
       areSubmissionsEditable: true,

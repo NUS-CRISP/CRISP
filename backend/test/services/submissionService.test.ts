@@ -129,6 +129,7 @@ const setupData = async () => {
     description: 'Midterm assessment',
     startDate: startDate,
     maxMarks: 10,
+    scaleToMaxMarks: true,
     granularity: 'individual',
     teamSet: teamSet._id,
     areSubmissionsEditable: true,

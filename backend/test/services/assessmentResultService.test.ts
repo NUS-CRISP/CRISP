@@ -138,6 +138,7 @@ describe('assessmentResultService', () => {
       description: 'Midterm assessment',
       startDate: startDate,
       maxMarks: 10,
+      scaleToMaxMarks: true,
       granularity: 'team',
       teamSet: teamSet._id,
       areSubmissionsEditable: true,

@@ -11,6 +11,7 @@ export interface InternalAssessment {
   startDate: Date;
   endDate?: Date;
   maxMarks: number;
+  scaleToMaxMarks: boolean;
   questionsTotalMarks?: number;
   granularity: 'individual' | 'team';
   teamSet?: TeamSet;

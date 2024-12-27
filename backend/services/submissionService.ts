@@ -996,7 +996,7 @@ export const calculateAnswerScore = async (
   assessment: InternalAssessment
 ): Promise<number> => {
   const scalingFactor =
-    assessment.maxMarks === 0
+    assessment.maxMarks === 0 || !assessment.scaleToMaxMarks
       ? 1
       : !assessment.questionsTotalMarks || assessment.questionsTotalMarks === 0
         ? 1
