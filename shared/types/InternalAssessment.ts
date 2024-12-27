@@ -17,5 +17,6 @@ export interface InternalAssessment {
   areSubmissionsEditable: boolean;
   results: AssessmentResult[];
   isReleased: boolean;
+  releaseNumber: number;
   questions: QuestionUnion[];
 }

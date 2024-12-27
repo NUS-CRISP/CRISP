@@ -23,6 +23,7 @@ import {
   DateAnswerModel,
   ShortResponseAnswerModel,
   LongResponseAnswerModel,
+  AnswerModel,
 } from '../models/Answer';
 import {
   QuestionUnion,
@@ -590,6 +591,7 @@ export const createSubmission = async (
     isDraft,
     submittedAt: new Date(),
     score: totalScore,
+    submissionReleaseNumber: assessment.releaseNumber,
   });
 
   await submission.save();
@@ -803,6 +805,7 @@ export const updateSubmission = async (
     submission.score = totalScore;
     submission.adjustedScore = undefined;
   }
+  submission.submissionReleaseNumber = assessment.releaseNumber;
 
   await submission.save();
 
@@ -1214,4 +1217,181 @@ const calculateNumberScore = (
   }
 
   return 0;
+};
+
+/**
+ * Regrades an existing submission by recalculating the score of each answer
+ * and updating any associated AssessmentResults accordingly.
+ *
+ * @param {string} submissionId - The ID of the submission to regrade.
+ * @returns {Promise<Submission>} - The updated Submission document with recalculated scores.
+ *
+ * @throws {NotFoundError} If the submission or associated user/assessment is not found.
+ * @throws {BadRequestError} If a validation check fails during regrading.
+ * @throws {Error} For any unknown runtime or server errors (500).
+ */
+export const regradeSubmission = async (
+  submissionId: string
+) => {
+  const submission = await SubmissionModel.findById(submissionId).populate(
+    'answers'
+  );
+  if (!submission) {
+    throw new NotFoundError(`Submission with ID ${submissionId} not found`);
+  }
+
+  const user = await UserModel.findById(submission.user);
+  if (!user) {
+    throw new NotFoundError('Submission creator not found');
+  }
+
+  const assessment = await getAssessmentWithQuestions(
+    submission.assessment.toString()
+  );
+
+  let totalScore = 0;
+  for (const answer of submission.answers) {
+    const questionId = assessment.questions.find(
+      q => q._id.toString() === answer.question.toString()
+    );
+    if (!questionId) {
+      console.warn(
+        `Question with ID ${answer.question} not found in assessment ${assessment._id}.`
+      );
+      await AnswerModel.findByIdAndDelete(answer._id);
+      continue;
+    }
+
+    let question = null;
+    let SaveAnswerModel = null;
+    let savedAnswer = null;
+
+    switch (answer.type) {
+      case 'Number Answer':
+        question = await NumberQuestionModel.findById(questionId);
+        SaveAnswerModel = NumberAnswerModel;
+        savedAnswer = NumberAnswerModel.findById(answer.id);
+        break;
+      case 'Scale Answer':
+        question = await ScaleQuestionModel.findById(questionId);
+        SaveAnswerModel = ScaleAnswerModel;
+        savedAnswer = ScaleAnswerModel.findById(answer.id);
+        break;
+      case 'Multiple Choice Answer':
+        question = await MultipleChoiceQuestionModel.findById(questionId);
+        SaveAnswerModel = MultipleChoiceAnswerModel;
+        savedAnswer = MultipleChoiceAnswerModel.findById(answer.id);
+        break;
+      case 'Multiple Response Answer':
+        question = await MultipleResponseQuestionModel.findById(questionId);
+        SaveAnswerModel = MultipleResponseAnswerModel;
+        savedAnswer = MultipleResponseAnswerModel.findById(answer.id);
+        break;
+      case 'Team Member Selection Answer':
+        question =
+          await TeamMemberSelectionQuestionModel.findById(questionId);
+        SaveAnswerModel = TeamMemberSelectionAnswerModel;
+        savedAnswer = TeamMemberSelectionAnswerModel.findById(answer.id);
+        break;
+      case 'Date Answer':
+        question = await DateQuestionModel.findById(questionId);
+        SaveAnswerModel = DateAnswerModel;
+        savedAnswer = DateAnswerModel.findById(answer.id);
+        break;
+      case 'Short Response Answer':
+        question = await ShortResponseQuestionModel.findById(questionId);
+        SaveAnswerModel = ShortResponseAnswerModel;
+        savedAnswer = ShortResponseAnswerModel.findById(answer.id);
+        break;
+      case 'Long Response Answer':
+        question = await LongResponseQuestionModel.findById(questionId);
+        SaveAnswerModel = LongResponseAnswerModel;
+        savedAnswer = LongResponseAnswerModel.findById(answer.id);
+        break;
+      case 'Undecided Answer':
+        question = await UndecidedQuestionModel.findById(questionId);
+        SaveAnswerModel = UndecidedAnswerModel;
+        savedAnswer = UndecidedAnswerModel.findById(answer.id);
+        break;
+      default:
+        answer.score = 0;
+    }
+
+    if (!SaveAnswerModel) {
+      console.warn(`Cannot parse answer type ${answer.type}`);
+      return;
+    }
+
+    if (!question) {
+      console.warn(
+        `Question with ID ${answer.question} not found in assessment ${assessment.id}.`
+      );
+      answer.score = 0;
+      return;
+    }
+    const answerScore = await calculateAnswerScore(
+      question,
+      answer,
+      assessment
+    );
+    totalScore += answerScore;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { type, ...scoredAnswer } = { ...answer, score: answerScore };
+
+    answer.score = answerScore;
+    if (!savedAnswer) {
+      console.warn('Answer does not exist!');
+      const newAnswer = new SaveAnswerModel(scoredAnswer);
+      await newAnswer.save();
+    } else {
+      savedAnswer.model.findByIdAndUpdate(answer._id, answer);
+    }
+  }
+
+  submission.score = totalScore;
+  submission.adjustedScore = undefined;
+  submission.submittedAt = new Date();
+
+  await submission.save();
+
+  const assignment = submission.answers.find(
+    answer => answer.type === 'Team Member Selection Answer'
+  ) as TeamMemberSelectionAnswer | undefined;
+
+  if (!assignment || !assignment.selectedUserIds) {
+    return submission;
+  }
+
+  for (const selectedUserId of assignment.selectedUserIds) {
+    const assessmentResult = await AssessmentResultModel.findOne({
+      assessment: assessment._id,
+      student: selectedUserId,
+    });
+
+    if (!assessmentResult) {
+      throw new NotFoundError(
+        `No assessment result found for student ${selectedUserId} in assessment ${assessment._id}`
+      );
+    }
+
+    const markEntryIndex = assessmentResult.marks.findIndex(
+      mark => mark.submission.toString() === submission._id.toString()
+    );
+
+    if (markEntryIndex !== -1) {
+      assessmentResult.marks[markEntryIndex].marker = user;
+      assessmentResult.marks[markEntryIndex].score = totalScore;
+    } else {
+      assessmentResult.marks.push({
+        marker: user,
+        submission: submission._id,
+        score: totalScore,
+      });
+    }
+
+    await assessmentResult.save();
+    await recalculateResult(assessmentResult.id);
+  }
+
+  return submission;
 };

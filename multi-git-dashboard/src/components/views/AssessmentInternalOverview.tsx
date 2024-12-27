@@ -513,6 +513,7 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
               hasFacultyPermission={hasFacultyPermission}
               courseId={courseId}
               assessmentId={assessment?._id}
+              assessmentReleaseNumber={assessment?.releaseNumber}
               questions={questions}
               userIdToNameMap={userIdToNameMap}
             />

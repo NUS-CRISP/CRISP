@@ -8,6 +8,7 @@ import {
   Modal,
   Button,
   ScrollArea,
+  Box,
 } from '@mantine/core';
 import { Submission } from '@shared/types/Submission';
 import { useRouter } from 'next/router';
@@ -19,6 +20,7 @@ interface SubmissionCardProps {
   hasFacultyPermission: boolean;
   courseId: string;
   assessmentId?: string;
+  assessmentReleaseNumber?: number;
   questions: QuestionUnion[];
   userIdToNameMap: { [key: string]: string };
 }
@@ -28,6 +30,7 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({
   hasFacultyPermission,
   courseId,
   assessmentId,
+  assessmentReleaseNumber,
   questions,
   userIdToNameMap,
 }) => {
@@ -123,6 +126,14 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({
             View Submission
           </Button>
         </Group>
+        {/* Warning if submission requires editing */}
+        {assessmentReleaseNumber && assessmentReleaseNumber !== submission.submissionReleaseNumber &&
+          <Box bg="yellow.2" my="md" style={{ padding: 8, borderRadius: 8 }}>
+            <Text>
+              Warning: This submission is for an earlier version of this assessment!
+            </Text>
+          </Box>
+        }
       </Card>
 
       {/* Modal to display submission details */}

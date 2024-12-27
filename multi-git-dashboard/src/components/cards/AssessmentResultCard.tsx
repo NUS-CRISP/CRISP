@@ -28,11 +28,13 @@ interface StudentResult {
 interface AssessmentResultCardProps {
   studentResult: StudentResult;
   maxScore?: number;
+  assessmentReleaseNumber: number;
 }
 
 const AssessmentResultCard: React.FC<AssessmentResultCardProps> = ({
   studentResult,
   maxScore,
+  assessmentReleaseNumber,
 }) => {
   const router = useRouter();
   const { id, assessmentId } = router.query as {
@@ -47,6 +49,9 @@ const AssessmentResultCard: React.FC<AssessmentResultCardProps> = ({
   if (result?.averageScore === 8.5) {
     console.log(result.marks.filter(mark => mark.submission).length > 0);
   }
+
+  const hasOutdatedSubmissions =
+    result && result.marks.filter(mark => mark.submission).some(mark => mark.submission!.submissionReleaseNumber !== assessmentReleaseNumber);
 
   const allSubmissionsPresent =
     result && result.marks.length > 0 && !hasMissingSubmissions;
@@ -94,6 +99,23 @@ const AssessmentResultCard: React.FC<AssessmentResultCardProps> = ({
                 )}
               </ThemeIcon>
             </Tooltip>
+            {hasOutdatedSubmissions &&
+              <Tooltip
+                label="Submissions may be outdated"
+                withArrow
+                position="top"
+              >
+                <ThemeIcon
+                  color={'yellow'}
+                  variant="light"
+                  radius="xl"
+                  size="lg"
+                  style={{ cursor: 'pointer' }}
+                >
+                  <IconAlertCircle size={16} />
+                </ThemeIcon>
+              </Tooltip>
+            }
           </Group>
         )}
       </Flex>
@@ -161,15 +183,54 @@ const AssessmentResultCard: React.FC<AssessmentResultCardProps> = ({
                         <Card shadow="xs" p="xs" radius="md" withBorder>
                           <Group justify="space-between" align="center">
                             <Text size="sm">{markEntry.marker.name}</Text>
-                            <Badge color="red" variant="filled">
+                            <Badge c="red" variant="filled">
                               <Group>
                                 <IconAlertCircle size={14} />
                                 <Text size="xs">Missing</Text>
                               </Group>
                             </Badge>
                           </Group>
-                          <Text size="xs" color="dimmed" mt="xs">
+                          <Text size="xs" c="dimmed" mt="xs">
                             Submission is missing from this grader.
+                          </Text>
+                        </Card>
+                      </Grid.Col>
+                    ))}
+                </Grid>
+              </div>
+            )}
+
+            {hasOutdatedSubmissions && (
+              <>
+                <Space h="md" />
+                <Divider />
+                <Space h="md" />
+              </>
+            )}
+
+            {hasOutdatedSubmissions && (
+              <div>
+                <Text size="sm" mb="xs" c="orange">
+                  Outdated Submissions:
+                </Text>
+                <Grid>
+                  {result!.marks
+                    .filter(mark => mark.submission)
+                    .filter(mark => mark.submission!.submissionReleaseNumber !== assessmentReleaseNumber)
+                    .map((markEntry, index) => (
+                      <Grid.Col span={6} key={index}>
+                        <Card shadow="xs" p="xs" radius="md" withBorder>
+                          <Group justify="space-between" align="center">
+                            <Text size="sm">{markEntry.marker.name}</Text>
+                            <Badge color="yellow" variant="filled">
+                              <Group>
+                                <IconAlertCircle size={14} />
+                                <Text size="xs">Outdated</Text>
+                              </Group>
+                            </Badge>
+                          </Group>
+                          <Text size="xs" c="dimmed" mt="xs">
+                            Submission is for an earlier version of this assessment.
                           </Text>
                         </Card>
                       </Grid.Col>

@@ -3,7 +3,6 @@
 import { InternalAssessment as SharedInternalAssessment } from '@shared/types/InternalAssessment';
 import mongoose, { Schema, Types } from 'mongoose';
 
-// Define the InternalAssessment interface
 export interface InternalAssessment
   extends Omit<
       SharedInternalAssessment,
@@ -40,6 +39,7 @@ const internalAssessmentSchema = new Schema<InternalAssessment>({
   teamSet: { type: Schema.Types.ObjectId, ref: 'TeamSet' },
   areSubmissionsEditable: { type: Boolean, required: true },
   results: [{ type: Schema.Types.ObjectId, ref: 'AssessmentResult' }],
+  releaseNumber: { type: Number, required: false, default: 0 },
   isReleased: { type: Boolean, required: true },
   questions: [{ type: Schema.Types.ObjectId, ref: 'Question' }],
   assessmentAssignmentSet: {

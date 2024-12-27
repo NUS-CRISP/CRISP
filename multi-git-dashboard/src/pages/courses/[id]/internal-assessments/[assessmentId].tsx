@@ -415,6 +415,7 @@ const InternalAssessmentDetail: React.FC = () => {
                 assignedTeams={assignedTeams}
                 assignedUsers={assignedUsers}
                 maxScore={assessment.maxMarks}
+                assessmentReleaseNumber={assessment.releaseNumber}
               />
             </Tabs.Panel>
           )}

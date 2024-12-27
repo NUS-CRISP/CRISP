@@ -29,6 +29,9 @@ import AssessmentResultModel, {
   AssessmentResult,
 } from '@models/AssessmentResult';
 import { User } from '@models/User';
+import SubmissionModel from '@models/Submission';
+import { regradeSubmission } from './submissionService';
+import { AnswerModel, AnswerUnion, MultipleChoiceAnswer, MultipleResponseAnswer } from '@models/Answer';
 
 /**
  * Retrieves an internal assessment by ID.
@@ -659,6 +662,8 @@ export const getQuestionsByAssessmentId = async (
 /**
  * Updates a specific question, potentially modifying its text, options, or scoring,
  * while preventing certain changes like altering the question type or editing locked questions.
+ * For Multiple Choice (MCQ) or Multiple Response (MRQ) questions, any existing answers referencing
+ * removed options will be adjusted or removed accordingly.
  *
  * @param {string} questionId - The ID of the question to update.
  * @param {Partial<QuestionUnion>} updateData - The fields to update.
@@ -684,7 +689,7 @@ export const updateQuestionById = async (
     throw new BadRequestError('Unauthorized');
   }
 
-  const existingQuestion = await QuestionModel.findById(questionId);
+  const existingQuestion: QuestionUnion | null = await QuestionModel.findById(questionId);
   if (!existingQuestion) {
     throw new NotFoundError('Question not found');
   }
@@ -702,16 +707,16 @@ export const updateQuestionById = async (
   let currentScore = 0;
   let updatedScore = 0;
 
-  // Adjust scoring logic based on question type
   switch (existingQuestion.type) {
     case 'Multiple Choice':
-      currentScore = (
-        existingQuestion as MultipleChoiceQuestion
-      ).options.reduce((acc, val) => (acc > val.points ? acc : val.points), 0);
-      updatedScore = (updateData as MultipleChoiceQuestion).options.reduce(
+      currentScore = (existingQuestion as MultipleChoiceQuestion).options.reduce(
         (acc, val) => (acc > val.points ? acc : val.points),
         0
       );
+      updatedScore = (updateData as MultipleChoiceQuestion).options?.reduce(
+        (acc, val) => (acc > val.points ? acc : val.points),
+        0
+      ) ?? 0;
       updatedQuestion = await MultipleChoiceQuestionModel.findByIdAndUpdate(
         questionId,
         updateData,
@@ -719,16 +724,15 @@ export const updateQuestionById = async (
       );
       break;
     case 'Multiple Response':
-      currentScore = (
-        existingQuestion as MultipleResponseQuestion
-      ).options.reduce(
+      currentScore = (existingQuestion as MultipleResponseQuestion).options.reduce(
         (acc, val) => (val.points > 0 ? acc + val.points : acc),
         0
       );
-      updatedScore = (updateData as MultipleResponseQuestion).options.reduce(
+      updatedScore = (updateData as MultipleResponseQuestion).options?.reduce(
         (acc, val) => (val.points > 0 ? acc + val.points : acc),
         0
-      );
+      ) ?? 0;
+
       updatedQuestion = await MultipleResponseQuestionModel.findByIdAndUpdate(
         questionId,
         updateData,
@@ -739,9 +743,11 @@ export const updateQuestionById = async (
       currentScore = (existingQuestion as ScaleQuestion).labels[
         (existingQuestion as ScaleQuestion).labels.length - 1
       ].points;
-      updatedScore = (updateData as ScaleQuestion).labels[
-        (updateData as ScaleQuestion).labels.length - 1
-      ].points;
+      updatedScore = (updateData as ScaleQuestion).labels
+        ? (updateData as ScaleQuestion).labels![
+            (updateData as ScaleQuestion).labels!.length - 1
+          ].points
+        : 0;
       updatedQuestion = await ScaleQuestionModel.findByIdAndUpdate(
         questionId,
         updateData,
@@ -753,29 +759,31 @@ export const updateQuestionById = async (
         (existingQuestion as NumberQuestion).isScored &&
         (existingQuestion as NumberQuestion).scoringMethod === 'direct'
       ) {
-        currentScore = (existingQuestion as NumberQuestion).maxPoints!;
+        currentScore = (existingQuestion as NumberQuestion).maxPoints ?? 0;
       }
       if (
         (updateData as NumberQuestion).isScored &&
         (updateData as NumberQuestion).scoringMethod === 'direct'
       ) {
-        updatedScore = (updateData as NumberQuestion).maxPoints!;
+        updatedScore = (updateData as NumberQuestion).maxPoints ?? 0;
       }
       if (
         (existingQuestion as NumberQuestion).isScored &&
         (existingQuestion as NumberQuestion).scoringMethod === 'range'
       ) {
-        currentScore = (existingQuestion as NumberQuestion).scoringRanges![
-          (existingQuestion as NumberQuestion).scoringRanges!.length - 1
-        ].points;
+        const ranges = (existingQuestion as NumberQuestion).scoringRanges ?? [];
+        if (ranges.length > 0) {
+          currentScore = ranges[ranges.length - 1].points;
+        }
       }
       if (
         (updateData as NumberQuestion).isScored &&
         (updateData as NumberQuestion).scoringMethod === 'range'
       ) {
-        updatedScore = (updateData as NumberQuestion).scoringRanges![
-          (updateData as NumberQuestion).scoringRanges!.length - 1
-        ].points;
+        const ranges = (updateData as NumberQuestion).scoringRanges ?? [];
+        if (ranges.length > 0) {
+          updatedScore = ranges[ranges.length - 1].points;
+        }
       }
       updatedQuestion = await NumberQuestionModel.findByIdAndUpdate(
         questionId,
@@ -805,12 +813,11 @@ export const updateQuestionById = async (
       );
       break;
     case 'Team Member Selection':
-      updatedQuestion =
-        await TeamMemberSelectionQuestionModel.findByIdAndUpdate(
-          questionId,
-          updateData,
-          { new: true }
-        );
+      updatedQuestion = await TeamMemberSelectionQuestionModel.findByIdAndUpdate(
+        questionId,
+        updateData,
+        { new: true }
+      );
       break;
     case 'NUSNET ID':
       updatedQuestion = await NUSNETIDQuestionModel.findByIdAndUpdate(
@@ -846,7 +853,17 @@ export const updateQuestionById = async (
     throw new NotFoundError('Question not found after update');
   }
 
-  // If scoring changed, update the total marks in the related assessment
+  // === Handle updating existing answers if MCQ or MRQ options have changed ===
+  if (
+    (existingQuestion.type === 'Multiple Choice' ||
+      existingQuestion.type === 'Multiple Response') &&
+    (updatedQuestion.type === 'Multiple Choice' ||
+      updatedQuestion.type === 'Multiple Response')
+  ) {
+    await remapOrRemoveAnswers(questionId, existingQuestion, updatedQuestion);
+  }
+
+  // === If scoring changed, update the total marks in the related assessment ===
   if (currentScore !== updatedScore) {
     const assessment = await InternalAssessmentModel.findOne({
       questions: questionId,
@@ -862,6 +879,68 @@ export const updateQuestionById = async (
 
   return updatedQuestion;
 };
+
+/**
+ * Helper function to remap or remove user answers that reference outdated options
+ * after a Multiple Choice or Multiple Response question's options have changed.
+ *
+ * @param {string} questionId - The ID of the question being updated.
+ * @param {QuestionUnion} oldQuestion - The question object before updates.
+ * @param {QuestionUnion} newQuestion - The question object after updates.
+ *
+ * @description
+ *  - For each answer referencing `questionId`, we compare the old vs. new set of options.
+ *  - If all the options in the old set exist in the new set, we do nothing.
+ *  - If an option no longer exists in the updated set, we remove or unselect it from the answer.
+ *  - If a MCQ answer's single selected option is invalid, the answer is deleted.
+ *  - If an MRQ answer's selected options are partially invalid, we remove the invalid ones from the array.
+ *  If this would cause the answer to have no options selected left, we will delete the answer.
+ */
+async function remapOrRemoveAnswers(
+  questionId: string,
+  oldQuestion: QuestionUnion,
+  newQuestion: QuestionUnion
+): Promise<void> {
+  const oldOptions =
+  oldQuestion.type === 'Multiple Choice'
+    ? (oldQuestion as MultipleChoiceQuestion).options
+    : (oldQuestion as MultipleResponseQuestion).options;
+  const newOptions =
+    newQuestion.type === 'Multiple Choice'
+      ? (newQuestion as MultipleChoiceQuestion).options
+      : (newQuestion as MultipleResponseQuestion).options;
+
+  const newOptionTexts = newOptions.map(opt => opt.text);
+  const oldOptionTexts = oldOptions.map(opt => opt.text);
+  if (oldOptionTexts.every(txt => newOptionTexts.includes(txt))) return;
+
+  const existingAnswers: AnswerUnion[] = await AnswerModel.find({ question: questionId });
+
+  for (const ans of existingAnswers) {
+    try {
+      if (ans.type === 'Multiple Choice Answer') {
+        if (!newOptionTexts.includes((ans as MultipleChoiceAnswer).value)) {
+          await AnswerModel.findByIdAndDelete(ans._id);
+        }
+      }
+      else if (ans.type === 'Multiple Response Answer') {
+        (ans as MultipleResponseAnswer).values = (ans as MultipleResponseAnswer).values.filter((val: string) =>
+          newOptionTexts.includes(val)
+        );
+        if ((ans as MultipleResponseAnswer).values.length === 0) {
+          await AnswerModel.findByIdAndDelete(ans._id);
+        }
+      }
+      await ans.save();
+    } catch (error) {
+      console.error(
+        `Error remapping old answers for answer ID ${ans._id}:`,
+        error
+      );
+    }
+  }
+}
+
 
 /**
  * Removes a question from an assessment after ensuring it is not locked,
@@ -956,6 +1035,9 @@ export const releaseInternalAssessmentById = async (
     throw new NotFoundError('Assessment not found');
   }
 
+  updatedAssessment.releaseNumber++;
+  updatedAssessment.save();
+
   return updatedAssessment;
 };
 
@@ -997,3 +1079,38 @@ export const recallInternalAssessmentById = async (
 
   return updatedAssessment;
 };
+
+/**
+ * Recalculates all submissions for an assessment and updates scores.
+ * To be used in conjunction with releasing of the assessment in the
+ * event of a re-release of an assessment.
+ *
+ * There is a possibility that the submission is done, then the assessment
+ * is recalled and a required scored question is added, then the assessment
+ * is released again. For this case, we will recalculate the submissions anyway
+ * and not delete them so that the graders can simply edit their submissions.
+ *
+ * If a question has been deleted since the last release, the answers for that
+ * question will also simply be deleted.
+ */
+export const recaluculateSubmissionsForAssessment = async (
+  assessmentId: string,
+  accountId: string
+) => {
+  const account = await AccountModel.findById(accountId);
+  if (!account) {
+    throw new NotFoundError('Account not found');
+  }
+
+  if (account.role !== 'admin' && account.role !== 'Faculty member') {
+    throw new BadRequestError('Unauthorized');
+  }
+
+  const submissions = await SubmissionModel.find({
+    assessment: assessmentId
+  });
+
+  submissions.forEach(async (sub) => {
+    await regradeSubmission(sub._id);
+  });
+}

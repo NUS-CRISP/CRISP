@@ -9,6 +9,7 @@ export interface Submission extends Document {
   submittedAt: Date;
   score: number;
   adjustedScore?: number;
+  submissionReleaseNumber: number;
   isDraft: boolean;
 }
 
@@ -24,6 +25,7 @@ const SubmissionSchema = new Schema<Submission>(
     submittedAt: { type: Date, default: Date.now },
     score: { type: Number, default: 0 },
     adjustedScore: { type: Number, required: false },
+    submissionReleaseNumber: { type: Number, required: false, default: 1 },
     isDraft: { type: Boolean, default: false },
   },
   { timestamps: true }

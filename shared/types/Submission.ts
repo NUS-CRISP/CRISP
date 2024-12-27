@@ -10,6 +10,7 @@ export interface Submission {
   isDraft: boolean;
   score: number;
   adjustedScore?: number;
+  submissionReleaseNumber: number;
   createdAt?: string;
   updatedAt?: string;
 }
