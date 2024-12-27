@@ -25,7 +25,9 @@ import {
   UndecidedQuestionModel,
 } from '@models/QuestionTypes';
 import { createAssignmentSet } from './assessmentAssignmentSetService';
-import AssessmentResultModel, { AssessmentResult } from '@models/AssessmentResult';
+import AssessmentResultModel, {
+  AssessmentResult,
+} from '@models/AssessmentResult';
 import { User } from '@models/User';
 
 /**
@@ -317,7 +319,10 @@ export const addInternalAssessmentsToCourse = async (
 
     // Attempt to create the assignment set
     try {
-      await createAssignmentSet(assessment._id.toString(), teamSet._id.toString());
+      await createAssignmentSet(
+        assessment._id.toString(),
+        teamSet._id.toString()
+      );
     } catch (error) {
       console.error(
         `Failed to create AssessmentAssignmentSet for assessment ${assessment._id}:`,
@@ -550,9 +555,8 @@ export const addQuestionToAssessment = async (
       if (validQuestionData.isScored) {
         // Assumes that the highest-value label is last in the array
         addedMaxScore =
-          validQuestionData.labels![
-            validQuestionData.labels!.length - 1
-          ].points;
+          validQuestionData.labels![validQuestionData.labels!.length - 1]
+            .points;
       }
       break;
     case 'Short Response':
@@ -643,9 +647,8 @@ export const getQuestionsByAssessmentId = async (
     throw new NotFoundError('Account not found');
   }
 
-  const assessment = await InternalAssessmentModel.findById(assessmentId).populate(
-    'questions'
-  );
+  const assessment =
+    await InternalAssessmentModel.findById(assessmentId).populate('questions');
   if (!assessment) {
     throw new NotFoundError('Assessment not found');
   }
@@ -702,10 +705,9 @@ export const updateQuestionById = async (
   // Adjust scoring logic based on question type
   switch (existingQuestion.type) {
     case 'Multiple Choice':
-      currentScore = (existingQuestion as MultipleChoiceQuestion).options.reduce(
-        (acc, val) => (acc > val.points ? acc : val.points),
-        0
-      );
+      currentScore = (
+        existingQuestion as MultipleChoiceQuestion
+      ).options.reduce((acc, val) => (acc > val.points ? acc : val.points), 0);
       updatedScore = (updateData as MultipleChoiceQuestion).options.reduce(
         (acc, val) => (acc > val.points ? acc : val.points),
         0
@@ -717,7 +719,9 @@ export const updateQuestionById = async (
       );
       break;
     case 'Multiple Response':
-      currentScore = (existingQuestion as MultipleResponseQuestion).options.reduce(
+      currentScore = (
+        existingQuestion as MultipleResponseQuestion
+      ).options.reduce(
         (acc, val) => (val.points > 0 ? acc + val.points : acc),
         0
       );
@@ -801,11 +805,12 @@ export const updateQuestionById = async (
       );
       break;
     case 'Team Member Selection':
-      updatedQuestion = await TeamMemberSelectionQuestionModel.findByIdAndUpdate(
-        questionId,
-        updateData,
-        { new: true }
-      );
+      updatedQuestion =
+        await TeamMemberSelectionQuestionModel.findByIdAndUpdate(
+          questionId,
+          updateData,
+          { new: true }
+        );
       break;
     case 'NUSNET ID':
       updatedQuestion = await NUSNETIDQuestionModel.findByIdAndUpdate(

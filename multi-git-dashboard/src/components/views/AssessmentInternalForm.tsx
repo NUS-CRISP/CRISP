@@ -56,7 +56,7 @@ const csvInstructions = [
 /** Transform function to parse CSV => question objects. */
 function transformQuestions(data: any[]): any[] {
   // Filter out NUSNET/TeamMember
-  const filteredRows = data.filter((row) => {
+  const filteredRows = data.filter(row => {
     return (
       row.type !== 'NUSNET ID' &&
       row.type !== 'NUSNET Email' &&
@@ -66,7 +66,9 @@ function transformQuestions(data: any[]): any[] {
 
   return filteredRows.map((row, idx) => {
     if (!row.type || !row.text) {
-      throw new Error(`Row ${idx + 1} is missing required 'type' or 'text' field`);
+      throw new Error(
+        `Row ${idx + 1} is missing required 'type' or 'text' field`
+      );
     }
 
     const validTypes = [
@@ -80,7 +82,9 @@ function transformQuestions(data: any[]): any[] {
       'Undecided',
     ];
     if (!validTypes.includes(row.type)) {
-      throw new Error(`Row ${idx + 1} has unrecognized question type: ${row.type}`);
+      throw new Error(
+        `Row ${idx + 1} has unrecognized question type: ${row.type}`
+      );
     }
 
     // For Multiple Choice / Response
@@ -117,17 +121,23 @@ function transformQuestions(data: any[]): any[] {
     // For Number
     let parsedScoringRanges;
     if (row.scoringRanges && row.type === 'Number') {
-      parsedScoringRanges = row.scoringRanges.split(';').map((rangeStr: string) => {
-        const [minValue, maxValue, points] = rangeStr.split('|');
-        if (minValue === undefined || maxValue === undefined || points === undefined) {
-          throw new Error(`Invalid scoringRanges format at Row ${idx + 1}`);
-        }
-        return {
-          minValue: Number(minValue.trim()),
-          maxValue: Number(maxValue.trim()),
-          points: Number(points.trim()),
-        };
-      });
+      parsedScoringRanges = row.scoringRanges
+        .split(';')
+        .map((rangeStr: string) => {
+          const [minValue, maxValue, points] = rangeStr.split('|');
+          if (
+            minValue === undefined ||
+            maxValue === undefined ||
+            points === undefined
+          ) {
+            throw new Error(`Invalid scoringRanges format at Row ${idx + 1}`);
+          }
+          return {
+            minValue: Number(minValue.trim()),
+            maxValue: Number(maxValue.trim()),
+            points: Number(points.trim()),
+          };
+        });
     }
 
     return {
@@ -160,10 +170,7 @@ function transformQuestions(data: any[]): any[] {
 /** Download CSV template with instructions. */
 function downloadCsvTemplateWithInstructions() {
   const csvContent =
-    csvInstructions +
-    '\n\n' +
-    questionHeaders.join(',') +
-    '\n';
+    csvInstructions + '\n\n' + questionHeaders.join(',') + '\n';
 
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
   const filename = 'questions_template_with_instructions.csv';
@@ -184,7 +191,7 @@ function downloadCsvTemplateWithInstructions() {
 /** Convert existing questions => CSV string. */
 function downloadExistingQuestionsCsv(questions: Question[]) {
   // Filter out NUSNET/TeamMember
-  const filtered = questions.filter((q) => {
+  const filtered = questions.filter(q => {
     return (
       q.type !== 'NUSNET ID' &&
       q.type !== 'NUSNET Email' &&
@@ -195,8 +202,8 @@ function downloadExistingQuestionsCsv(questions: Question[]) {
   const rows: string[] = [];
   rows.push(questionHeaders.join(',')); // header row
 
-  filtered.forEach((q) => {
-    const rowValues = questionHeaders.map((header) => {
+  filtered.forEach(q => {
+    const rowValues = questionHeaders.map(header => {
       switch (header) {
         case 'type':
           return q.type || '';
@@ -269,7 +276,7 @@ function downloadExistingQuestionsCsv(questions: Question[]) {
     });
 
     // Remove linebreaks; join columns with commas
-    rows.push(rowValues.map((val) => val.replace(/\r?\n|\r/g, ' ')).join(','));
+    rows.push(rowValues.map(val => val.replace(/\r?\n|\r/g, ' ')).join(','));
   });
 
   const csvString = rows.join('\n');
@@ -369,12 +376,14 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
 
   const calculateTotalPossiblePoints = (): number => {
     let totalPoints = 0;
-    questions.forEach((question) => {
+    questions.forEach(question => {
       switch (question.type) {
         case 'Multiple Choice': {
           const mc = question as MultipleChoiceQuestion;
           if (mc.isScored) {
-            const maxOptionPoints = Math.max(...mc.options.map((o) => o.points || 0));
+            const maxOptionPoints = Math.max(
+              ...mc.options.map(o => o.points || 0)
+            );
             totalPoints += maxOptionPoints;
           }
           break;
@@ -383,8 +392,8 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
           const mr = question as MultipleResponseQuestion;
           if (mr.isScored) {
             const positivePoints = mr.options
-              .map((o) => o.points || 0)
-              .filter((p) => p > 0);
+              .map(o => o.points || 0)
+              .filter(p => p > 0);
             totalPoints += positivePoints.reduce((sum, p) => sum + p, 0);
           }
           break;
@@ -392,7 +401,9 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
         case 'Scale': {
           const sc = question as ScaleQuestion;
           if (sc.isScored) {
-            const maxLabelPoints = Math.max(...sc.labels.map((l) => l.points || 0));
+            const maxLabelPoints = Math.max(
+              ...sc.labels.map(l => l.points || 0)
+            );
             totalPoints += maxLabelPoints;
           }
           break;
@@ -404,7 +415,7 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
               totalPoints += num.maxPoints || 0;
             } else if (num.scoringMethod === 'range') {
               const maxRangePoints = Math.max(
-                ...(num.scoringRanges || []).map((r) => r.points || 0)
+                ...(num.scoringRanges || []).map(r => r.points || 0)
               );
               totalPoints += maxRangePoints;
             }
@@ -423,9 +434,7 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
   );
   const maxMarks = assessment?.maxMarks || 0;
   const [scalingFactor, setScalingFactor] = useState(
-    maxMarks && totalPossiblePoints > 0
-      ? maxMarks / totalPossiblePoints
-      : 1
+    maxMarks && totalPossiblePoints > 0 ? maxMarks / totalPossiblePoints : 1
   );
 
   useEffect(() => {
@@ -456,7 +465,10 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
               Upload via CSV
             </Button>
 
-            <Button variant="outline" onClick={downloadCsvTemplateWithInstructions}>
+            <Button
+              variant="outline"
+              onClick={downloadCsvTemplateWithInstructions}
+            >
               Download CSV Template
             </Button>
 
@@ -476,7 +488,7 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
             key={question._id}
             index={index}
             questionData={question}
-            onSave={(updatedQuestion) =>
+            onSave={updatedQuestion =>
               handleSaveQuestion(question._id, updatedQuestion)
             }
             onDelete={() => handleDeleteQuestion(question._id)}
@@ -490,8 +502,8 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
         <Text>Assessment Maximum Marks: {maxMarks}</Text>
         {maxMarks && totalPossiblePoints > 0 && (
           <Text>
-            Points in this quiz will be adjusted by this factor to match max marks: x
-            {scalingFactor.toFixed(2)}
+            Points in this quiz will be adjusted by this factor to match max
+            marks: x{scalingFactor.toFixed(2)}
           </Text>
         )}
       </Box>
@@ -548,7 +560,9 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
         {/* Accordion below the drop zone with formatting instructions */}
         <Accordion mt="md" variant="separated" defaultValue={null}>
           <Accordion.Item value="formatting">
-            <Accordion.Control>Question CSV Formatting Instructions</Accordion.Control>
+            <Accordion.Control>
+              Question CSV Formatting Instructions
+            </Accordion.Control>
             <Accordion.Panel>
               <Text size="sm" mb="xs">
                 Ensure cells with data are set to "Text" format. Each row
@@ -556,78 +570,92 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
               </Text>
               <ul style={{ margin: 0, paddingLeft: '1.25rem' }}>
                 <li>
-                  <strong>type</strong>: one of &quot;Multiple Choice&quot;, &quot;Multiple
-                  Response&quot;, &quot;Scale&quot;, &quot;Short Response&quot;, &quot;Long
-                  Response&quot;, &quot;Date&quot;, &quot;Number&quot;, or &quot;Undecided&quot;.
+                  <strong>type</strong>: one of &quot;Multiple Choice&quot;,
+                  &quot;Multiple Response&quot;, &quot;Scale&quot;, &quot;Short
+                  Response&quot;, &quot;Long Response&quot;, &quot;Date&quot;,
+                  &quot;Number&quot;, or &quot;Undecided&quot;.
                 </li>
                 <li>
                   <strong>text</strong>: the question prompt (required).
                 </li>
                 <li>
-                  <strong>isRequired</strong>: &quot;true&quot; or &quot;false&quot;.
+                  <strong>isRequired</strong>: &quot;true&quot; or
+                  &quot;false&quot;.
                 </li>
                 <li>
-                  <strong>isLocked</strong>: &quot;true&quot; or &quot;false&quot;.
+                  <strong>isLocked</strong>: &quot;true&quot; or
+                  &quot;false&quot;.
                 </li>
                 <li>
-                  <strong>customInstruction</strong>: additional instructions (optional).
+                  <strong>customInstruction</strong>: additional instructions
+                  (optional).
                 </li>
                 <li>
-                  <strong>isScored</strong>: &quot;true&quot; or &quot;false&quot;. If true,
-                  extra fields like &quot;options&quot; or &quot;labels&quot; may
-                  apply.
+                  <strong>isScored</strong>: &quot;true&quot; or
+                  &quot;false&quot;. If true, extra fields like
+                  &quot;options&quot; or &quot;labels&quot; may apply.
                 </li>
                 <li>
-                  <strong>options</strong>: e.g. &quot;Option1|2;Option2|5&quot; for multiple
-                  choice or response.
+                  <strong>options</strong>: e.g. &quot;Option1|2;Option2|5&quot;
+                  for multiple choice or response.
                 </li>
                 <li>
-                  <strong>allowNegative</strong>: &quot;true&quot; or &quot;false&quot; (Multiple
-                  Response).
+                  <strong>allowNegative</strong>: &quot;true&quot; or
+                  &quot;false&quot; (Multiple Response).
                 </li>
                 <li>
-                  <strong>areWrongAnswersPenalized</strong>: &quot;true&quot; or &quot;false&quot;
-                  (Multiple Response).
+                  <strong>areWrongAnswersPenalized</strong>: &quot;true&quot; or
+                  &quot;false&quot; (Multiple Response).
                 </li>
                 <li>
-                  <strong>allowPartialMarks</strong>: &quot;true&quot; or &quot;false&quot; (Multiple
-                  Response).
+                  <strong>allowPartialMarks</strong>: &quot;true&quot; or
+                  &quot;false&quot; (Multiple Response).
                 </li>
                 <li>
-                  <strong>scaleMax</strong>: number if &quot;type&quot; is &quot;Scale&quot;.
+                  <strong>scaleMax</strong>: number if &quot;type&quot; is
+                  &quot;Scale&quot;.
                 </li>
                 <li>
-                  <strong>labels</strong>: e.g. &quot;1|Min|0;5|Max|5&quot; for &quot;Scale&quot;.
+                  <strong>labels</strong>: e.g. &quot;1|Min|0;5|Max|5&quot; for
+                  &quot;Scale&quot;.
                 </li>
                 <li>
-                  <strong>maxNumber</strong>: numeric limit for &quot;Number&quot; question.
+                  <strong>maxNumber</strong>: numeric limit for
+                  &quot;Number&quot; question.
                 </li>
                 <li>
-                  <strong>scoringMethod</strong>: &quot;direct&quot;, &quot;range&quot;, or &quot;None&quot; (Number).
+                  <strong>scoringMethod</strong>: &quot;direct&quot;,
+                  &quot;range&quot;, or &quot;None&quot; (Number).
                 </li>
                 <li>
-                  <strong>maxPoints</strong>: numeric max points for &quot;Number&quot; if
-                  &quot;scoringMethod&quot; = &quot;direct&quot;.
+                  <strong>maxPoints</strong>: numeric max points for
+                  &quot;Number&quot; if &quot;scoringMethod&quot; =
+                  &quot;direct&quot;.
                 </li>
                 <li>
-                  <strong>scoringRanges</strong>: e.g. &quot;0|10|3;11|20|5&quot; if
-                  &quot;scoringMethod&quot;= &quot;range&quot; (Number).
+                  <strong>scoringRanges</strong>: e.g.
+                  &quot;0|10|3;11|20|5&quot; if &quot;scoringMethod&quot;=
+                  &quot;range&quot; (Number).
                 </li>
                 <li>
-                  <strong>shortResponsePlaceholder</strong>: for &quot;Short Response&quot;.
+                  <strong>shortResponsePlaceholder</strong>: for &quot;Short
+                  Response&quot;.
                 </li>
                 <li>
-                  <strong>longResponsePlaceholder</strong>: for &quot;Long Response&quot;.
+                  <strong>longResponsePlaceholder</strong>: for &quot;Long
+                  Response&quot;.
                 </li>
                 <li>
-                  <strong>isRange</strong>: &quot;true&quot; or &quot;false&quot; (Date).
+                  <strong>isRange</strong>: &quot;true&quot; or
+                  &quot;false&quot; (Date).
                 </li>
                 <li>
-                  <strong>datePickerPlaceholder</strong>: optional placeholder for &quot;Date&quot;.
+                  <strong>datePickerPlaceholder</strong>: optional placeholder
+                  for &quot;Date&quot;.
                 </li>
                 <li>
-                  <strong>minDate</strong>, <strong>maxDate</strong>: optional date constraints
-                  for &quot;Date&quot; question.
+                  <strong>minDate</strong>, <strong>maxDate</strong>: optional
+                  date constraints for &quot;Date&quot; question.
                 </li>
               </ul>
             </Accordion.Panel>
@@ -642,8 +670,8 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
         title="Confirm and Release Form"
       >
         <Text>
-          Are you sure you want to release the form? It will be locked and you cannot
-          edit unless you recall it later.
+          Are you sure you want to release the form? It will be locked and you
+          cannot edit unless you recall it later.
         </Text>
         <Group mt="md">
           <Button color="green" onClick={releaseForm}>
@@ -659,8 +687,8 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
         title="Recall Form"
       >
         <Text>
-          Are you sure you want to recall the form? It will be unlocked and TAs will no
-          longer have access.
+          Are you sure you want to recall the form? It will be unlocked and TAs
+          will no longer have access.
         </Text>
         <Group mt="md">
           <Button color="red" onClick={recallForm}>

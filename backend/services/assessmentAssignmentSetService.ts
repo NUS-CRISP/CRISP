@@ -103,19 +103,19 @@ export const createAssignmentSet = async (
       : null;
 
   if (assessment.granularity === 'team' && assignedTeams) {
-    const allTAs = assignedTeams.flatMap((at) => at.tas as User[]);
+    const allTAs = assignedTeams.flatMap(at => at.tas as User[]);
     const uniqueTAIds = Array.from(
-      new Set(allTAs.map((id) => id.toString()))
-    ).map((idStr) => new mongoose.Types.ObjectId(idStr));
+      new Set(allTAs.map(id => id.toString()))
+    ).map(idStr => new mongoose.Types.ObjectId(idStr));
 
     ensureAtLeastOneTA(assignedTeams, uniqueTAIds);
   }
 
   if (assessment.granularity === 'individual' && assignedUsers) {
-    const allTAIds = assignedUsers.flatMap((au) => au.tas as User[]);
+    const allTAIds = assignedUsers.flatMap(au => au.tas as User[]);
     const uniqueTAIds = Array.from(
-      new Set(allTAIds.map((id) => id.toString()))
-    ).map((idStr) => new mongoose.Types.ObjectId(idStr));
+      new Set(allTAIds.map(id => id.toString()))
+    ).map(idStr => new mongoose.Types.ObjectId(idStr));
 
     ensureAtLeastOneTA(assignedUsers, uniqueTAIds);
   }
@@ -238,13 +238,13 @@ export const updateAssignmentSet = async (
       }
     }
 
-    assignmentSet.assignedTeams = assignedTeams.map((at) => ({
+    assignmentSet.assignedTeams = assignedTeams.map(at => ({
       team: at.team,
       tas: at.tas,
     }));
 
     const anyTeamWithoutTA = assignmentSet.assignedTeams.some(
-      (at) => at.tas.length === 0
+      at => at.tas.length === 0
     );
     if (anyTeamWithoutTA) {
       throw new BadRequestError(
@@ -267,13 +267,13 @@ export const updateAssignmentSet = async (
       }
     }
 
-    assignmentSet.assignedUsers = assignedUsers.map((au) => ({
+    assignmentSet.assignedUsers = assignedUsers.map(au => ({
       user: au.user,
       tas: au.tas,
     }));
 
     const anyUserWithoutTA = assignmentSet.assignedUsers.some(
-      (au) => au.tas.length === 0
+      au => au.tas.length === 0
     );
     if (anyUserWithoutTA) {
       throw new BadRequestError(
@@ -328,11 +328,11 @@ export const getAssignmentsByTAId = async (
   // If assignedTeams exist, the granularity is 'team'
   if (assignmentSet.assignedTeams) {
     const teamIds: mongoose.Types.ObjectId[] = assignmentSet.assignedTeams
-      .filter((at) => at.tas.length > 0)
-      .map((at) => at.team as mongoose.Types.ObjectId);
+      .filter(at => at.tas.length > 0)
+      .map(at => at.team as mongoose.Types.ObjectId);
 
     const teams = await Promise.all(
-      teamIds.map(async (teamId) => {
+      teamIds.map(async teamId => {
         // NOTE: This lacks `await` in the original code, could cause concurrency issues, but left unchanged
         return TeamModel.findById(teamId).populate('members');
       })
@@ -340,12 +340,12 @@ export const getAssignmentsByTAId = async (
     return teams.filter(Boolean) as Team[];
   } else {
     // Otherwise, assignedUsers
-    const userIds: mongoose.Types.ObjectId[] = assignmentSet.assignedUsers!
-      .filter((au) => au.tas.length > 0)
-      .map((au) => au.user as mongoose.Types.ObjectId);
+    const userIds: mongoose.Types.ObjectId[] = assignmentSet
+      .assignedUsers!.filter(au => au.tas.length > 0)
+      .map(au => au.user as mongoose.Types.ObjectId);
 
     const users = await Promise.all(
-      userIds.map(async (userId) => {
+      userIds.map(async userId => {
         return UserModel.findById(userId);
       })
     );
@@ -393,43 +393,50 @@ export const getUnmarkedAssignmentsByTAId = async (
     throw new NotFoundError('AssessmentAssignmentSet not found');
   }
 
-  const submissions = await getSubmissionsByAssessmentAndUser(assessmentId, taId);
+  const submissions = await getSubmissionsByAssessmentAndUser(
+    assessmentId,
+    taId
+  );
 
   // Extract user IDs from all submissions related to Team Member Selection Answer
-  const submittedUserIds = submissions.flatMap((sub) => {
-    const answer = sub.answers.find((ans) => ans.type === 'Team Member Selection Answer');
+  const submittedUserIds = submissions.flatMap(sub => {
+    const answer = sub.answers.find(
+      ans => ans.type === 'Team Member Selection Answer'
+    );
     return (answer?.toObject() as TeamMemberSelectionAnswer).selectedUserIds;
   });
 
   if (assignmentSet.assignedTeams) {
     const teamIds: mongoose.Types.ObjectId[] = assignmentSet.assignedTeams
       .filter(
-        (at) =>
+        at =>
           at.tas.length > 0 &&
           submittedUserIds.every(
-            (uid) =>
-              !(at.team as Team).members?.find((member) => member._id.toString() === uid)
+            uid =>
+              !(at.team as Team).members?.find(
+                member => member._id.toString() === uid
+              )
           )
       )
-      .map((at) => at.team as mongoose.Types.ObjectId);
+      .map(at => at.team as mongoose.Types.ObjectId);
 
     const teams = await Promise.all(
-      teamIds.map(async (teamId) => {
+      teamIds.map(async teamId => {
         return TeamModel.findById(teamId).populate('members');
       })
     );
     return teams.filter(Boolean) as Team[];
   } else {
-    const userIds: mongoose.Types.ObjectId[] = assignmentSet.assignedUsers!
-      .filter(
-        (au) =>
+    const userIds: mongoose.Types.ObjectId[] = assignmentSet
+      .assignedUsers!.filter(
+        au =>
           au.tas.length > 0 &&
-          submittedUserIds.every((uid) => uid !== au.user._id.toString())
+          submittedUserIds.every(uid => uid !== au.user._id.toString())
       )
-      .map((au) => au.user as mongoose.Types.ObjectId);
+      .map(au => au.user as mongoose.Types.ObjectId);
 
     const users = await Promise.all(
-      userIds.map(async (userId) => {
+      userIds.map(async userId => {
         return UserModel.findById(userId);
       })
     );

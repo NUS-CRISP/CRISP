@@ -46,14 +46,14 @@ const CSVUpload: React.FC<CSVUploadProps> = ({
           Papa.parse(reader.result as string, {
             header: true,
             skipEmptyLines: true,
-            complete: (results) => {
+            complete: results => {
               try {
                 let data = results.data;
                 if (transformFunction) {
                   data = transformFunction(data);
                 }
                 setItems(data);
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
               } catch (error: any) {
                 console.error('Error transforming CSV data:', error?.message);
                 onError(`Error transforming CSV data: ${error?.message}`);

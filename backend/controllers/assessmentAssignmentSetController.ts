@@ -52,7 +52,9 @@ export const createAssignmentSetController = async (
       res.status(400).json({ error: error.message });
     } else {
       console.error('Error creating AssessmentAssignmentSet:', error);
-      res.status(500).json({ error: 'Failed to create AssessmentAssignmentSet' });
+      res
+        .status(500)
+        .json({ error: 'Failed to create AssessmentAssignmentSet' });
     }
   }
 };
@@ -96,7 +98,9 @@ export const getAssignmentSetController = async (
       res.status(404).json({ error: error.message });
     } else {
       console.error('Error fetching AssessmentAssignmentSet:', error);
-      res.status(500).json({ error: 'Failed to fetch AssessmentAssignmentSet' });
+      res
+        .status(500)
+        .json({ error: 'Failed to fetch AssessmentAssignmentSet' });
     }
   }
 };
@@ -153,7 +157,9 @@ export const updateAssignmentSetController = async (
       res.status(400).json({ error: error.message });
     } else {
       console.error('Error updating AssessmentAssignmentSet:', error);
-      res.status(500).json({ error: 'Failed to update AssessmentAssignmentSet' });
+      res
+        .status(500)
+        .json({ error: 'Failed to update AssessmentAssignmentSet' });
     }
   }
 };
@@ -228,7 +234,10 @@ export const getUnmarkedAssignmentsByGraderIdController = async (
   const userId = await getUserIdByAccountId(accountId);
 
   try {
-    const assignments = await getUnmarkedAssignmentsByTAId(userId, assessmentId);
+    const assignments = await getUnmarkedAssignmentsByTAId(
+      userId,
+      assessmentId
+    );
     res.status(200).json(assignments);
   } catch (error) {
     if (error instanceof NotFoundError) {

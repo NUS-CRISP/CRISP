@@ -526,7 +526,8 @@ export const createSubmission = async (
           SaveAnswerModel = MultipleResponseAnswerModel;
           break;
         case 'Team Member Selection Answer':
-          question = await TeamMemberSelectionQuestionModel.findById(questionId);
+          question =
+            await TeamMemberSelectionQuestionModel.findById(questionId);
           SaveAnswerModel = TeamMemberSelectionAnswerModel;
           break;
         case 'Date Answer':
@@ -733,7 +734,8 @@ export const updateSubmission = async (
           savedAnswer = MultipleResponseAnswerModel.findById(answer.id);
           break;
         case 'Team Member Selection Answer':
-          question = await TeamMemberSelectionQuestionModel.findById(questionId);
+          question =
+            await TeamMemberSelectionQuestionModel.findById(questionId);
           SaveAnswerModel = TeamMemberSelectionAnswerModel;
           savedAnswer = TeamMemberSelectionAnswerModel.findById(answer.id);
           break;
@@ -1136,7 +1138,8 @@ const calculateScaleScore = (
     if (answerValue === next.value) return next.points;
     if (answerValue > current.value && answerValue < next.value) {
       // Linear interpolation
-      const slope = (next.points - current.points) / (next.value - current.value);
+      const slope =
+        (next.points - current.points) / (next.value - current.value);
       const interpolatedPoints =
         current.points + slope * (answerValue - current.value);
       return interpolatedPoints;

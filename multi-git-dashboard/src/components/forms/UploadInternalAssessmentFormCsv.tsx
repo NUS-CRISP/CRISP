@@ -6,10 +6,10 @@ const internalAssessmentHeaders = [
   'assessmentName',
   'description',
   'startDate', // "YYYY-MM-DD"
-  'endDate',   // "YYYY-MM-DD"
+  'endDate', // "YYYY-MM-DD"
   'maxMarks',
-  'granularity',    // "team" or "individual"
-  'teamSetName',    // Must match an existing TeamSet in the course
+  'granularity', // "team" or "individual"
+  'teamSetName', // Must match an existing TeamSet in the course
   'areSubmissionsEditable', // "true" or "false"
 ];
 
@@ -25,7 +25,9 @@ function transformInternalAssessments(data: any[]): any[] {
       throw new Error(`Row ${rowIndex} is missing "description"`);
     }
     if (!row.startDate) {
-      throw new Error(`Row ${rowIndex} is missing "startDate" (format: YYYY-MM-DD)`);
+      throw new Error(
+        `Row ${rowIndex} is missing "startDate" (format: YYYY-MM-DD)`
+      );
     }
     if (!row.granularity) {
       throw new Error(`Row ${rowIndex} is missing "granularity"`);
@@ -79,7 +81,8 @@ const UploadInternalCSV: React.FC<UploadInternalCSVProps> = ({
           <Accordion.Control>CSV Formatting Instructions</Accordion.Control>
           <Accordion.Panel>
             <Text size="sm" mb="xs">
-              Ensure all cells with data use "Text" number formatting, not General, Date or any other format.
+              Ensure all cells with data use "Text" number formatting, not
+              General, Date or any other format.
             </Text>
             <Text size="sm" mb="xs">
               Each row in the CSV represents a single internal assessment.
@@ -92,22 +95,27 @@ const UploadInternalCSV: React.FC<UploadInternalCSVProps> = ({
                 <strong>description</strong>: string (required)
               </li>
               <li>
-                <strong>startDate</strong>: format <code>YYYY-MM-DD</code> (required)
+                <strong>startDate</strong>: format <code>YYYY-MM-DD</code>{' '}
+                (required)
               </li>
               <li>
-                <strong>endDate</strong>: format <code>YYYY-MM-DD</code> (optional)
+                <strong>endDate</strong>: format <code>YYYY-MM-DD</code>{' '}
+                (optional)
               </li>
               <li>
                 <strong>maxMarks</strong>: number (defaults to 0 if empty)
               </li>
               <li>
-                <strong>granularity</strong>: <code>"team"</code> or <code>"individual"</code> (required)
+                <strong>granularity</strong>: <code>"team"</code> or{' '}
+                <code>"individual"</code> (required)
               </li>
               <li>
-                <strong>teamSetName</strong>: must match an existing TeamSet in this course (required)
+                <strong>teamSetName</strong>: must match an existing TeamSet in
+                this course (required)
               </li>
               <li>
-                <strong>areSubmissionsEditable</strong>: <code>"true"</code> or <code>"false"</code>
+                <strong>areSubmissionsEditable</strong>: <code>"true"</code> or{' '}
+                <code>"false"</code>
               </li>
             </ul>
           </Accordion.Panel>

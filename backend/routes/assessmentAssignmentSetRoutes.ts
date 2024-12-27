@@ -15,7 +15,10 @@ router.get('/:assessmentId/assignment-sets', getAssignmentSetController);
 router.patch('/:assessmentId/assignment-sets', updateAssignmentSetController);
 
 // TA Assignment Routes
-router.get('/:assessmentId/assignment-sets/grader', getAssignmentsByGraderIdController);
+router.get(
+  '/:assessmentId/assignment-sets/grader',
+  getAssignmentsByGraderIdController
+);
 router.get(
   '/:assessmentId/assignment-sets/graderunmarked',
   getUnmarkedAssignmentsByGraderIdController

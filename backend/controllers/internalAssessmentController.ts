@@ -184,7 +184,7 @@ export const addQuestionsToAssessmentController = async (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const questions: any[] = [];
 
-    questionDatas.forEach(async (questionData) => {
+    questionDatas.forEach(async questionData => {
       questions.push(
         await addQuestionToAssessment(assessmentId, questionData, accountId)
       );
@@ -343,7 +343,10 @@ export const deleteQuestionByIdController = async (
  *  - 401 Unauthorized: If authorization is missing.
  *  - 500 Internal Server Error: For any unknown errors.
  */
-export const releaseInternalAssessment = async (req: Request, res: Response) => {
+export const releaseInternalAssessment = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { assessmentId } = req.params;
     const accountId = await getAccountId(req);

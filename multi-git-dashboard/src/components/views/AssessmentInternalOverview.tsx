@@ -258,7 +258,10 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
     setSelectedTeachingStaff([]);
   };
 
-  const distributeTAsEvenly = (teamsToAssign: AssignedTeam[], tasAvailable: User[]) => {
+  const distributeTAsEvenly = (
+    teamsToAssign: AssignedTeam[],
+    tasAvailable: User[]
+  ) => {
     // Reset warning message
     setWarningMessage('');
     // Steps:
@@ -277,18 +280,21 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
         !excludedTeachingStaff.includes(teamObj.team.TA._id)
       ) {
         assignedTAs.push(teamObj.team.TA);
-        taCountMap.set(teamObj.team.TA._id, (taCountMap.get(teamObj.team.TA._id) || 0) + 1);
+        taCountMap.set(
+          teamObj.team.TA._id,
+          (taCountMap.get(teamObj.team.TA._id) || 0) + 1
+        );
       }
       // Assign more TAs until we reach teamsPerTA
       while (assignedTAs.length < teamsPerTA && tasAvailable.length > 0) {
         // Pick TA with least assigned teams
         const sortedTAs = tasAvailable
           .filter(ta => !assignedTAs.includes(ta))
-          .sort((a, b) => (taCountMap.get(a._id)! - taCountMap.get(b._id)!));
+          .sort((a, b) => taCountMap.get(a._id)! - taCountMap.get(b._id)!);
         if (sortedTAs.length === 0) break;
         const taToAssign = sortedTAs[0];
         assignedTAs.push(taToAssign);
-        taCountMap.set(taToAssign._id, (taCountMap.get(taToAssign._id)! + 1));
+        taCountMap.set(taToAssign._id, taCountMap.get(taToAssign._id)! + 1);
       }
       teamObj.tas = assignedTAs;
     }
@@ -297,7 +303,9 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
     const maxCount = Math.max(...counts);
     const minCount = Math.min(...counts);
     if (maxCount - minCount > 1) {
-      setWarningMessage('Warning: TA assignment distribution is uneven (difference > 1).');
+      setWarningMessage(
+        'Warning: TA assignment distribution is uneven (difference > 1).'
+      );
     }
     setAssignedTeams([...teamsToAssign]);
   };
@@ -321,7 +329,9 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
     // Validate assignments before saving
     const isValid = validateAssignments();
     if (!isValid) {
-      setWarningMessage('Some teams/users have no assigned graders. Please assign at least one grader each.');
+      setWarningMessage(
+        'Some teams/users have no assigned graders. Please assign at least one grader each.'
+      );
       return;
     }
     try {
@@ -353,7 +363,8 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
       if (!response.ok) {
         const errorData = await response.json();
         setErrorMessage(
-          errorData.message || 'Failed to save TA assignments due to a server error.'
+          errorData.message ||
+            'Failed to save TA assignments due to a server error.'
         );
         return;
       }

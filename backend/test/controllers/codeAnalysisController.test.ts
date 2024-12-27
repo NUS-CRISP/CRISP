@@ -4,7 +4,10 @@ import {
   getAllCodeAnalysisDataByCourse,
   getAllCodeAnalysisDataByOrg,
 } from '../../controllers/codeAnalysisController';
-import { MissingAuthorizationError, NotFoundError } from '../../services/errors';
+import {
+  MissingAuthorizationError,
+  NotFoundError,
+} from '../../services/errors';
 import * as codeAnalysisService from '../../services/codeAnalysisService';
 import * as auth from '../../utils/auth';
 

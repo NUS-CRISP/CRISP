@@ -20,14 +20,17 @@ import Papa from 'papaparse';
 import { IconSearch, IconUpload, IconX, IconPhoto } from '@tabler/icons-react';
 
 import { User } from '@shared/types/User';
-import { AssignedTeam, AssignedUser } from '@shared/types/AssessmentAssignmentSet';
+import {
+  AssignedTeam,
+  AssignedUser,
+} from '@shared/types/AssessmentAssignmentSet';
 
 interface TAAssignmentModalProps {
   opened: boolean;
   onClose: () => void;
-  teachingStaff: User[];          // Each User has ._id plus .identifier
-  assignedTeams: AssignedTeam[];  // .team.number, .tas is array of TAs
-  assignedUsers: AssignedUser[];  // .user.identifier, .tas is array of TAs
+  teachingStaff: User[]; // Each User has ._id plus .identifier
+  assignedTeams: AssignedTeam[]; // .team.number, .tas is array of TAs
+  assignedUsers: AssignedUser[]; // .user.identifier, .tas is array of TAs
   gradeOriginalTeams: boolean;
   teamsPerTA: number;
   excludedTeachingStaff: string[];
@@ -47,7 +50,10 @@ interface TAAssignmentModalProps {
   /**
    * handleTaAssignmentChange: call with the actual team/user _id, plus an array of TA _ids.
    */
-  handleTaAssignmentChange: (entityMongoId: string, selectedTAIds: string[] | null) => void;
+  handleTaAssignmentChange: (
+    entityMongoId: string,
+    selectedTAIds: string[] | null
+  ) => void;
 }
 
 const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
@@ -97,7 +103,7 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
-      complete: (results) => {
+      complete: results => {
         try {
           // results.data is the array of CSV rows
           const data = results.data as any[];
@@ -119,7 +125,7 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
           setParsedRows(null);
         }
       },
-      error: (err) => {
+      error: err => {
         console.error('Error parsing CSV:', err.message);
         setCsvErrorMessage(`Error parsing CSV: ${err.message}`);
         setParsedRows(null);
@@ -130,7 +136,9 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
   /** When user clicks "Upload Assignments", apply them in memory */
   const handleApplyAssignments = () => {
     if (!parsedRows) {
-      setCsvErrorMessage('No parsed rows found. Please select a valid CSV file first.');
+      setCsvErrorMessage(
+        'No parsed rows found. Please select a valid CSV file first.'
+      );
       return;
     }
 
@@ -165,7 +173,7 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
       if (assessmentGranularity === 'team') {
         // e.g. entityIdString = "3", match .team.number
         const match = assignedTeams.find(
-          (t) => String(t.team.number) === entityIdString
+          t => String(t.team.number) === entityIdString
         );
         if (!match) {
           throw new Error(
@@ -176,7 +184,7 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
       } else if (assessmentGranularity === 'individual') {
         // e.g. "E1234567", match .user.identifier
         const match = assignedUsers.find(
-          (u) => u.user.identifier === entityIdString
+          u => u.user.identifier === entityIdString
         );
         if (!match) {
           throw new Error(
@@ -197,7 +205,7 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
 
       const mappedTaMongoIds: string[] = [];
       taIdentifiers.forEach((taIdStr: string) => {
-        const staff = teachingStaff.find((s) => s.identifier === taIdStr);
+        const staff = teachingStaff.find(s => s.identifier === taIdStr);
         if (!staff) {
           throw new Error(
             `Row ${rowIndex}: No TA found with identifier "${taIdStr}".`
@@ -252,25 +260,25 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
 
     // Helper to map TA _id => TA identifier
     const findTaIdentifier = (taId: string) => {
-      const staff = teachingStaff.find((s) => s._id === taId);
+      const staff = teachingStaff.find(s => s._id === taId);
       return staff?.identifier || 'UNKNOWN';
     };
 
     if (assessmentGranularity === 'team') {
       // For each assignedTeam => entityId = team.number, taIds = semicolon separated
-      assignedTeams.forEach((assignedTeam) => {
+      assignedTeams.forEach(assignedTeam => {
         const entityId = String(assignedTeam.team.number);
         const taIdentifiers = assignedTeam.tas
-          .map((ta) => findTaIdentifier(ta._id))
+          .map(ta => findTaIdentifier(ta._id))
           .join(';');
         rows.push(`${entityId},"${taIdentifiers}"`);
       });
     } else if (assessmentGranularity === 'individual') {
       // For each assignedUser => entityId = user.identifier, taIds = semicolon separated
-      assignedUsers.forEach((assignedUser) => {
+      assignedUsers.forEach(assignedUser => {
         const entityId = assignedUser.user.identifier;
         const taIdentifiers = assignedUser.tas
-          .map((ta) => findTaIdentifier(ta._id))
+          .map(ta => findTaIdentifier(ta._id))
           .join(';');
         rows.push(`${entityId},"${taIdentifiers}"`);
       });
@@ -357,11 +365,15 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
                   {assignedTeam.tas.map(ta => (
                     <Badge
                       key={ta._id}
-                      color={ta._id === assignedTeam.team.TA?._id ? 'green' : 'blue'}
+                      color={
+                        ta._id === assignedTeam.team.TA?._id ? 'green' : 'blue'
+                      }
                       variant="light"
                     >
                       {ta.name}
-                      {ta._id === assignedTeam.team.TA?._id ? ' (Original)' : ''}
+                      {ta._id === assignedTeam.team.TA?._id
+                        ? ' (Original)'
+                        : ''}
                     </Badge>
                   ))}
                 </Group>
@@ -432,12 +444,16 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
             <Checkbox
               label="Grade original teams"
               checked={gradeOriginalTeams}
-              onChange={event => onSetGradeOriginalTeams(event.currentTarget.checked)}
+              onChange={event =>
+                onSetGradeOriginalTeams(event.currentTarget.checked)
+              }
             />
             <NumberInput
               label="Teams per TA"
               value={teamsPerTA}
-              onChange={value => onSetTeamsPerTA(parseInt(value.toString()) || 1)}
+              onChange={value =>
+                onSetTeamsPerTA(parseInt(value.toString()) || 1)
+              }
               min={1}
             />
           </Group>
@@ -455,7 +471,11 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
             mt="md"
           />
 
-          <Button mt="sm" onClick={onRandomizeTAs} disabled={availableTAs.length === 0}>
+          <Button
+            mt="sm"
+            onClick={onRandomizeTAs}
+            disabled={availableTAs.length === 0}
+          >
             Randomize
           </Button>
         </Box>
@@ -465,8 +485,8 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
 
       {!isAssignmentsValid && (
         <Text color="red" mb="sm">
-          Some teams/users have no assigned graders. Please assign at least one grader
-          each.
+          Some teams/users have no assigned graders. Please assign at least one
+          grader each.
         </Text>
       )}
 
@@ -509,14 +529,16 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
         <Text size="sm" mb="xs">
           The CSV should have 2 columns:
           <br />
-          <strong>entityId</strong> - If "team," the team.number (e.g. "3"). If "individual," the user.identifier (e.g. "E1234567").
+          <strong>entityId</strong> - If "team," the team.number (e.g. "3"). If
+          "individual," the user.identifier (e.g. "E1234567").
           <br />
-          <strong>taIds</strong> - Semicolon-separated TA identifiers (not Mongo _ids).
+          <strong>taIds</strong> - Semicolon-separated TA identifiers (not Mongo
+          _ids).
         </Text>
 
         {/* Dropzone for CSV with Accept/Reject/Idle */}
         <Dropzone
-          onDrop={(files) => {
+          onDrop={files => {
             if (files.length > 0) {
               handleFileSelected(files[0]);
             }
@@ -526,11 +548,7 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
           maxSize={5 * 1024 * 1024}
           style={{ marginTop: '16px' }}
         >
-          <Group
-            mih={220}
-            style={{ pointerEvents: 'none' }}
-            justify="center"
-          >
+          <Group mih={220} style={{ pointerEvents: 'none' }} justify="center">
             <Dropzone.Accept>
               <IconUpload
                 style={{ color: 'var(--mantine-color-blue-6)' }}

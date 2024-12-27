@@ -140,7 +140,7 @@ describe('codeAnalysisService', () => {
       issues: 0,
       milestones: [],
       pullRequests: 0,
-    })
+    });
     await teamData1.save();
 
     const teamData2 = new TeamDataModel({
@@ -155,7 +155,7 @@ describe('codeAnalysisService', () => {
       issues: 0,
       milestones: [],
       pullRequests: 0,
-    })
+    });
     await teamData2.save();
 
     team1.teamData = teamData1._id;
@@ -477,7 +477,7 @@ describe('codeAnalysisService', () => {
         issues: 0,
         milestones: [],
         pullRequests: 0,
-      })
+      });
       await teamDataA.save();
 
       const teamA = new TeamModel({
@@ -506,7 +506,9 @@ describe('codeAnalysisService', () => {
           mockTAAccountId,
           courseWithoutCodeAnalysisData._id.toString()
         )
-      ).rejects.toThrow(new NotFoundError('No code analysis data found for course'));
+      ).rejects.toThrow(
+        new NotFoundError('No code analysis data found for course')
+      );
     });
   });
 });
