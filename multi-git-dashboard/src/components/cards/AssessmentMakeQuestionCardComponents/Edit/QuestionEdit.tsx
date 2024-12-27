@@ -37,6 +37,11 @@ const QuestionEdit: React.FC<QuestionEditProps> = ({
   onDelete,
   onSave,
 }) => {
+  // Determine if this question is new (unsaved) by checking its _id
+  // If it's "temp-xxx" or undefined, we consider it new
+  const isNewQuestion =
+    !questionData._id || questionData._id.startsWith('temp-');
+
   const [questionType, setQuestionType] = useState<QuestionUnion['type']>(
     questionData.type
   );
@@ -257,6 +262,8 @@ const QuestionEdit: React.FC<QuestionEditProps> = ({
           ]}
           required
           style={{ flex: 1 }}
+          // Disable if not a new question
+          disabled={!isNewQuestion}
         />
       </Group>
 
@@ -303,16 +310,16 @@ const QuestionEdit: React.FC<QuestionEditProps> = ({
         />
       )}
 
-      {questionType === 'Short Response' ||
-      questionType === 'NUSNET ID' ||
-      questionType === 'NUSNET Email' ? (
+      {(questionType === 'Short Response' ||
+        questionType === 'NUSNET ID' ||
+        questionType === 'NUSNET Email') && (
         <ShortResponseQuestionEdit
           questionData={questionData as ShortResponseQuestion}
           onSave={data => handleSave(data)}
           onDelete={onDelete}
           isValid={isChildValid}
         />
-      ) : null}
+      )}
 
       {questionType === 'Long Response' && (
         <LongResponseQuestionEdit
