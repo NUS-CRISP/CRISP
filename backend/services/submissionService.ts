@@ -432,6 +432,7 @@ export const checkSubmissionUniqueness = async (
   const userSubmissions = await SubmissionModel.find({
     assessment: assessment,
     user: user,
+    deleted: { $ne: true },
   })
     .populate('answers.type')
     .populate({
@@ -653,6 +654,9 @@ export const updateSubmission = async (
     if (!submission) {
       throw new NotFoundError('Submission not found.');
     }
+    if (submission.deleted) {
+      throw new NotFoundError('Submission not found (Deleted).');
+    }
   } catch (e) {
     throw new NotFoundError('Submission not found');
   }
@@ -865,6 +869,7 @@ export const getSubmissionsByAssessmentAndUser = async (
   const submissions = await SubmissionModel.find({
     assessment: assessmentId,
     user: userId,
+    deleted: { $ne: true },
   })
     .populate('answers')
     .populate('user')
@@ -883,7 +888,10 @@ export const getSubmissionsByAssessmentAndUser = async (
 export const getSubmissionsByAssessment = async (
   assessmentId: string
 ): Promise<Submission[]> => {
-  const submissions = await SubmissionModel.find({ assessment: assessmentId })
+  const submissions = await SubmissionModel.find({
+    assessment: assessmentId,
+    deleted: { $ne: true },
+   })
     .populate('user')
     .populate('answers');
   return submissions;
@@ -898,12 +906,64 @@ export const getSubmissionsByAssessment = async (
  * @throws {NotFoundError} If the submission is not found.
  * @throws {Error} For other unknown runtime or server errors (500).
  */
-export const deleteSubmission = async (submissionId: string): Promise<void> => {
+export const deleteSubmission = async (userId: string, submissionId: string): Promise<void> => {
   const submission = await SubmissionModel.findById(submissionId);
   if (!submission) {
     throw new NotFoundError('Submission not found');
   }
-  await SubmissionModel.findByIdAndDelete(submissionId);
+
+  if (submission.deleted) {
+    throw new NotFoundError('Submission not found (Deleted)');
+  }
+
+  submission.deleted = true;
+  submission.deletedAt = new Date();
+
+  await submission.save();
+  console.log(`Submission ${submissionId} was soft-deleted by User ${userId} at ${submission.deletedAt}`);
+};
+
+
+/**
+ * Soft deletes all submissions associated with a specific assessment ID.
+ *
+ * @param {string} userId - The ID of the user performing the deletion (for audit logging).
+ * @param {string} assessmentId - The ID of the assessment whose submissions are to be deleted.
+ * @returns {Promise<number>} - The number of submissions soft deleted.
+ *
+ * @throws {NotFoundError} If the assessment does not exist.
+ * @throws {Error} For any unknown runtime or server errors (500).
+ */
+export const softDeleteSubmissionsByAssessmentId = async (
+  userId: string,
+  assessmentId: string
+): Promise<number> => {
+  // Validate that the assessment exists
+  const assessment = await InternalAssessmentModel.findById(assessmentId);
+  if (!assessment) {
+    throw new NotFoundError('Assessment not found');
+  }
+
+  // Perform soft deletion using updateMany for efficiency
+  const result = await SubmissionModel.updateMany(
+    {
+      assessment: assessmentId,
+      deleted: { $ne: true }, // Ensure only active submissions are targeted
+    },
+    {
+      $set: {
+        deleted: true,
+        deletedAt: new Date(),
+      },
+    }
+  );
+
+  // Log the bulk deletion action
+  console.log(
+    `User ${userId} soft-deleted ${result.modifiedCount} submission(s) for Assessment ${assessmentId} at ${new Date()}`
+  );
+
+  return result.modifiedCount;
 };
 
 /**
@@ -966,6 +1026,10 @@ export const adjustSubmissionScore = async (
   const submission = await SubmissionModel.findById(submissionId);
   if (!submission) {
     throw new NotFoundError('Submission not found.');
+  }
+
+  if (submission.deleted) {
+    throw new NotFoundError('Submission not found (Deleted).')
   }
 
   if (adjustedScore < 0) {
@@ -1235,6 +1299,10 @@ export const regradeSubmission = async (submissionId: string) => {
     await SubmissionModel.findById(submissionId).populate('answers');
   if (!submission) {
     throw new NotFoundError(`Submission with ID ${submissionId} not found`);
+  }
+
+  if (submission.deleted) {
+    throw new NotFoundError(`Submission with ID ${submissionId} not found (Deleted)`);
   }
 
   const user = await UserModel.findById(submission.user);

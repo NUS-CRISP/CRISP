@@ -7,6 +7,8 @@ import {
   Box,
   Alert,
   Accordion,
+  Radio,
+  TextInput,
 } from '@mantine/core';
 import {
   MultipleChoiceQuestion,
@@ -315,9 +317,17 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
 }) => {
   const [isReleaseModalOpen, setIsReleaseModalOpen] = useState(false);
   const [isRecallModalOpen, setIsRecallModalOpen] = useState(false);
-  const [isCsvModalOpen, setIsCsvModalOpen] = useState(false); // CSV Upload modal
-
+  const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [csvErrorMessage, setCsvErrorMessage] = useState('');
+  const [recallOption, setRecallOption] = useState<'recallOnly' | 'recallAndDelete'>(
+    assessment
+      ? assessment.areSubmissionsEditable
+        ? 'recallOnly'
+        : 'recallAndDelete'
+      : 'recallOnly'
+  );
+  const [confirmationText, setConfirmationText] = useState('');
+  const [isConfirmDisabled, setIsConfirmDisabled] = useState(true);
 
   const isLocked = assessment?.isReleased || false;
   const isReleased = assessment?.isReleased || false;
@@ -344,6 +354,7 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
       );
       if (!response.ok) {
         console.error('Error releasing form:', response.statusText);
+        // Optionally, handle error feedback to the user
         return;
       }
       setIsReleaseModalOpen(false);
@@ -353,20 +364,39 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
     }
   };
 
-  /** Recall Form logic */
-  const recallForm = async () => {
+  const recallForm = async (deleteSubmissions: boolean) => {
     try {
-      const response = await fetch(
-        `/api/internal-assessments/${assessment?._id}/recall`,
+      const recallResponse = await fetch(
+        `/api/submissions/recall/${assessment?._id}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
         }
       );
-      if (!response.ok) {
-        console.error('Error recalling form:', response.statusText);
+
+      if (!recallResponse.ok) {
+        console.error('Error recalling form:', recallResponse.statusText);
         return;
       }
+
+      if (deleteSubmissions) {
+        const deleteResponse = await fetch(
+          `/api/submissions/bulk-delete/${assessment?._id}`,
+          {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+
+        if (!deleteResponse.ok) {
+          console.error('Error soft deleting submissions:', deleteResponse.statusText);
+          return;
+        }
+
+        const deleteResult = await deleteResponse.json();
+        console.log(deleteResult.message);
+      }
+
       setIsRecallModalOpen(false);
       onAssessmentUpdated();
     } catch (error) {
@@ -449,6 +479,12 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
     const scaling = maxMarksLocal && total > 0 ? maxMarksLocal / total : 1;
     setScalingFactor(scaling);
   }, [questions, assessment?.maxMarks]);
+
+  useEffect(() => {
+    if (!assessment) return;
+    const isMatch = confirmationText.trim() === assessment.assessmentName;
+    setIsConfirmDisabled(!isMatch);
+  }, [confirmationText, assessment]);
 
   return (
     <div>
@@ -689,15 +725,63 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
         onClose={() => setIsRecallModalOpen(false)}
         title="Recall Form"
       >
-        <Text>
-          Are you sure you want to recall the form? It will be unlocked and TAs
-          will no longer have access.
-        </Text>
-        <Group mt="md">
-          <Button color="red" onClick={recallForm}>
-            Yes, Recall Form
-          </Button>
-        </Group>
+        {assessment && (
+          <>
+            <Text mb="sm">
+              {assessment.areSubmissionsEditable
+                ? 'The assessment allows editing of submissions. How would you like to proceed?'
+                : 'Editing of submissions will be automatically allowed for outdated submissions. How would you like to proceed?'}
+            </Text>
+
+            <Radio.Group
+              value={recallOption}
+              onChange={(value) => {
+                if (value === 'recallOnly' || value === 'recallAndDelete') setRecallOption(value)
+              }}
+              required
+              variant="vertical"
+              mb="sm"
+            >
+              <Radio
+                mb="sm"
+                value="recallAndDelete"
+                label="Recall form and delete all existing submissions"
+              />
+              <Radio
+                mb="sm"
+                value="recallOnly"
+                label="Recall form only (retain all existing submissions)"
+              />
+            </Radio.Group>
+
+            {!assessment.areSubmissionsEditable && (
+              <Alert color="yellow" mb="sm">
+                It is strongly recommended to delete all existing submissions since editing will be automatically allowed for outdated submissions.
+              </Alert>
+            )}
+
+            <Text mb="xs">
+              To confirm, please type the name of the assessment:
+              <strong> {assessment.assessmentName}</strong>
+            </Text>
+            <TextInput
+              placeholder="Type assessment name here"
+              value={confirmationText}
+              onChange={e => setConfirmationText(e.target.value)}
+              mb="sm"
+            />
+
+            <Group justify="flex-end" mt="md">
+              <Button
+                color="red"
+                onClick={() => recallForm(recallOption === 'recallAndDelete')}
+                disabled={isConfirmDisabled}
+              >
+                Confirm Recall
+              </Button>
+            </Group>
+          </>
+        )}
       </Modal>
     </div>
   );

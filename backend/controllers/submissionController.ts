@@ -6,6 +6,7 @@ import {
   getSubmissionsByAssessmentAndUser,
   getSubmissionsByAssessment,
   adjustSubmissionScore,
+  softDeleteSubmissionsByAssessmentId,
 } from '../services/submissionService';
 import { getAccountId } from '../utils/auth';
 import {
@@ -231,7 +232,7 @@ export const deleteUserSubmission = async (req: Request, res: Response) => {
       }
     }
 
-    await deleteSubmission(submissionId);
+    await deleteSubmission(userId, submissionId);
     res.status(200).json({ message: 'Submission deleted successfully' });
   } catch (error) {
     if (error instanceof NotFoundError) {
@@ -241,6 +242,65 @@ export const deleteUserSubmission = async (req: Request, res: Response) => {
     } else {
       console.error('Error deleting submission:', error);
       res.status(500).json({ error: 'Failed to delete submission' });
+    }
+  }
+};
+
+/**
+ * Controller to bulk soft delete all submissions for a specific assessment.
+ *
+ * @param {Request} req - Express request object
+ *  - req.params.assessmentId: The ID of the assessment whose submissions are to be deleted.
+ * @param {Response} res - Express response object
+ *
+ * @returns {Promise<void>}
+ *  - 200 OK: Returns a success message and the number of submissions deleted.
+ *  - 404 Not Found: If the assessment is not found.
+ *  - 403 Forbidden: If the user lacks the necessary permissions.
+ *  - 500 Internal Server Error: For any unknown runtime or server errors.
+ *
+ * @throws {NotFoundError} If the assessment is not found.
+ * @throws {MissingAuthorizationError} If the user is unauthorized.
+ * @throws {Error} For unknown runtime or server errors (500).
+ */
+export const bulkDeleteSubmissionsByAssessment = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const accountId = await getAccountId(req);
+    const account = await AccountModel.findById(accountId);
+
+    if (
+      !account ||
+      (account.role !== 'admin' && account.role !== 'Faculty member')
+    ) {
+      throw new MissingAuthorizationError(
+        'You do not have permission to perform this action.'
+      );
+    }
+
+    const { assessmentId } = req.params;
+
+    const userId = await getUserIdByAccountId(accountId);
+
+    const deletedCount = await softDeleteSubmissionsByAssessmentId(
+      userId,
+      assessmentId
+    );
+
+    res.status(200).json({
+      message: `Successfully soft-deleted ${deletedCount} submission(s) for Assessment ${assessmentId}.`,
+      deletedCount,
+    });
+  } catch (error) {
+    if (error instanceof NotFoundError || error instanceof BadRequestError) {
+      res.status(404).json({ error: error.message });
+    } else if (error instanceof MissingAuthorizationError) {
+      res.status(403).json({ error: error.message });
+    } else {
+      console.error('Error bulk deleting submissions:', error);
+      res.status(500).json({ error: 'Failed to bulk delete submissions.' });
     }
   }
 };
