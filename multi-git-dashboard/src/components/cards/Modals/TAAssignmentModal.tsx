@@ -10,7 +10,6 @@ import {
   Box,
   Checkbox,
   NumberInput,
-  ScrollArea,
   MultiSelect,
   Badge,
   Alert,
@@ -18,6 +17,7 @@ import {
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
 import Papa from 'papaparse';
 import { IconSearch, IconUpload, IconX, IconPhoto } from '@tabler/icons-react';
+import { Virtuoso } from 'react-virtuoso';
 
 import { User } from '@shared/types/User';
 import {
@@ -346,94 +346,100 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
 
       <Divider mt="xs" mb="xs" />
 
-      {/* --- Middle Section: Teams or Users Display --- */}
-      <ScrollArea type="auto" style={{ width: '100%', height: '40vh' }}>
-        <Group
-          align="flex-start"
-          gap="md"
-          style={{
-            flexWrap: 'nowrap',
-            minWidth: '100%',
-            overflowX: 'auto',
-          }}
-        >
-          {assessmentGranularity === 'team' &&
-            assignedTeams.map(assignedTeam => (
-              <Card key={assignedTeam.team._id} style={{ minWidth: 250 }}>
-                <Group justify="space-between" mb="xs">
-                  <Text>Team {assignedTeam.team.number}</Text>
-                  {assignedTeam.tas.map(ta => (
-                    <Badge
-                      key={ta._id}
-                      color={
-                        ta._id === assignedTeam.team.TA?._id ? 'green' : 'blue'
-                      }
-                      variant="light"
-                    >
-                      {ta.name}
-                      {ta._id === assignedTeam.team.TA?._id
-                        ? ' (Original)'
-                        : ''}
-                    </Badge>
-                  ))}
-                </Group>
+      {/* --- Middle Section: Teams or Users Display with Virtuoso --- */}
+      <Box style={{ display: 'flex', flexDirection: 'column', height: '40vh' }}>
+        <Virtuoso
+          style={{ flex: 0.95, overscrollBehavior: 'none' }} // Added overscrollBehavior here
+          totalCount={
+            assessmentGranularity === 'team'
+              ? assignedTeams.length
+              : assessmentGranularity === 'individual'
+              ? assignedUsers.length
+              : 0
+          }
+          itemContent={(index) => {
+            if (assessmentGranularity === 'team') {
+              const assignedTeam = assignedTeams[index];
+              return (
+                <Card key={assignedTeam.team._id} style={{ marginBottom: '16px' }}>
+                  <Group justify="space-between" mb="xs">
+                    <Text>Team {assignedTeam.team.number}</Text>
+                    {assignedTeam.tas.map(ta => (
+                      <Badge
+                        key={ta._id}
+                        color={
+                          ta._id === assignedTeam.team.TA?._id ? 'green' : 'blue'
+                        }
+                        variant="light"
+                      >
+                        {ta.name}
+                        {ta._id === assignedTeam.team.TA?._id
+                          ? ' (Original)'
+                          : ''}
+                      </Badge>
+                    ))}
+                  </Group>
 
-                <MultiSelect
-                  label="Assign Graders"
-                  data={teachingStaff.map(ta => ({
-                    value: ta._id,
-                    label: ta.name,
-                  }))}
-                  value={assignedTeam.tas.map(ta => ta._id) || []}
-                  onChange={value =>
-                    handleTaAssignmentChange(assignedTeam.team._id, value)
-                  }
-                  clearable
-                  searchable
-                />
+                  <MultiSelect
+                    label="Assign Graders"
+                    data={teachingStaff.map(ta => ({
+                      value: ta._id,
+                      label: ta.name,
+                    }))}
+                    value={assignedTeam.tas.map(ta => ta._id) || []}
+                    onChange={(value) =>
+                      handleTaAssignmentChange(assignedTeam.team._id, value)
+                    }
+                    clearable
+                    searchable
+                  />
 
-                <Divider my="sm" />
+                  <Divider my="sm" />
 
-                <Text color="dimmed" size="sm">
-                  Members:
-                </Text>
-                {assignedTeam.team.members.map(member => (
-                  <Text key={member._id} size="sm">
-                    {member.name}
+                  <Text color="dimmed" size="sm">
+                    Members:
                   </Text>
-                ))}
-              </Card>
-            ))}
-
-          {assessmentGranularity === 'individual' &&
-            assignedUsers.map(assignedUser => (
-              <Card key={assignedUser.user._id} style={{ minWidth: 250 }}>
-                <Group justify="space-between" mb="xs">
-                  <Text>{assignedUser.user.name}</Text>
-                  {assignedUser.tas.map(ta => (
-                    <Badge key={ta._id} color="blue" variant="light">
-                      {ta.name}
-                    </Badge>
+                  {assignedTeam.team.members.map(member => (
+                    <Text key={member._id} size="sm">
+                      {member.name}
+                    </Text>
                   ))}
-                </Group>
+                </Card>
+              );
+            } else if (assessmentGranularity === 'individual') {
+              const assignedUser = assignedUsers[index];
+              return (
+                <Card key={assignedUser.user._id} style={{ marginBottom: '16px' }}>
+                  <Group justify="space-between" mb="xs">
+                    <Text>{assignedUser.user.name}</Text>
+                    {assignedUser.tas.map(ta => (
+                      <Badge key={ta._id} color="blue" variant="light">
+                        {ta.name}
+                      </Badge>
+                    ))}
+                  </Group>
 
-                <MultiSelect
-                  label="Assign Graders"
-                  data={teachingStaff.map(ta => ({
-                    value: ta._id,
-                    label: ta.name,
-                  }))}
-                  value={assignedUser.tas.map(ta => ta._id) || []}
-                  onChange={value =>
-                    handleTaAssignmentChange(assignedUser.user._id, value)
-                  }
-                  clearable
-                  searchable
-                />
-              </Card>
-            ))}
-        </Group>
-      </ScrollArea>
+                  <MultiSelect
+                    label="Assign Graders"
+                    data={teachingStaff.map(ta => ({
+                      value: ta._id,
+                      label: ta.name,
+                    }))}
+                    value={assignedUser.tas.map(ta => ta._id) || []}
+                    onChange={(value) =>
+                      handleTaAssignmentChange(assignedUser.user._id, value)
+                    }
+                    clearable
+                    searchable
+                  />
+                </Card>
+              );
+            } else {
+              return null;
+            }
+          }}
+        />
+      </Box>
 
       <Divider mt="xs" mb="xs" />
 
@@ -444,14 +450,14 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
             <Checkbox
               label="Grade original teams"
               checked={gradeOriginalTeams}
-              onChange={event =>
+              onChange={(event) =>
                 onSetGradeOriginalTeams(event.currentTarget.checked)
               }
             />
             <NumberInput
               label="Teams per TA"
               value={teamsPerTA}
-              onChange={value =>
+              onChange={(value) =>
                 onSetTeamsPerTA(parseInt(value.toString()) || 1)
               }
               min={1}
@@ -538,7 +544,7 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
 
         {/* Dropzone for CSV with Accept/Reject/Idle */}
         <Dropzone
-          onDrop={files => {
+          onDrop={(files) => {
             if (files.length > 0) {
               handleFileSelected(files[0]);
             }
