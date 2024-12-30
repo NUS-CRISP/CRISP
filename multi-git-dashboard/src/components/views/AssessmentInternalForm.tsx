@@ -367,7 +367,7 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
   const recallForm = async (deleteSubmissions: boolean) => {
     try {
       const recallResponse = await fetch(
-        `/api/submissions/recall/${assessment?._id}`,
+        `/api/internal-assessments/${assessment?._id}/recall`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

@@ -15,6 +15,7 @@ import {
   updateQuestionById,
   releaseInternalAssessmentById,
   recallInternalAssessmentById,
+  recaluculateSubmissionsForAssessment,
 } from '../services/internalAssessmentService';
 
 /**
@@ -352,6 +353,7 @@ export const releaseInternalAssessment = async (
     const accountId = await getAccountId(req);
 
     await releaseInternalAssessmentById(assessmentId, accountId);
+    await recaluculateSubmissionsForAssessment(assessmentId, accountId);
 
     res.status(200).json({ message: 'Assessment released successfully' });
   } catch (error) {

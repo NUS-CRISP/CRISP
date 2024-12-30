@@ -783,8 +783,8 @@ export const updateSubmission = async (
       }
 
       const answerScore = await calculateAnswerScore(
-        question,
-        answer,
+        question.toObject(),
+        answer.toObject(),
         assessment
       );
       totalScore += answerScore;
@@ -1047,18 +1047,24 @@ export const adjustSubmissionScore = async (
 /**
  * Calculates the score for a single answer based on the question configuration and assessment settings.
  *
- * @param {QuestionUnion} question - The question associated with the user's answer.
- * @param {AnswerUnion} answer - The user's answer.
+ * @param {QuestionUnion} question - The question associated with the user's answer. Can be mongoose
+ * document or Javascript object. It will be normalized within this function.
+ * @param {AnswerUnion} answer - The user's answer. Can be mongoose
+ * document or Javascript object. It will be normalized within this function.
  * @param {InternalAssessment} assessment - The full assessment object (used for scaling factor).
  * @returns {Promise<number>} - The calculated score for this answer.
  *
  * @throws {Error} For any unforeseen runtime or scoring errors.
  */
 export const calculateAnswerScore = async (
-  question: QuestionUnion,
-  answer: AnswerUnion,
+  inputQuestion: QuestionUnion,
+  inputAnswer: AnswerUnion,
   assessment: InternalAssessment
 ): Promise<number> => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const question = (typeof (inputQuestion as any).toObject === 'function') ? inputQuestion.toObject() : inputQuestion;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const answer = (typeof (inputAnswer as any).toObject === 'function') ? inputAnswer.toObject() : inputAnswer;
   const scalingFactor =
     assessment.maxMarks === 0 || !assessment.scaleToMaxMarks
       ? 1
@@ -1082,8 +1088,10 @@ export const calculateAnswerScore = async (
       );
     case 'Scale':
       return (
-        calculateScaleScore(question as ScaleQuestion, answer as ScaleAnswer) *
-        scalingFactor
+        calculateScaleScore(
+          question as ScaleQuestion,
+          answer as ScaleAnswer
+        ) * scalingFactor
       );
     case 'Number':
       return (
@@ -1124,12 +1132,12 @@ const calculateMultipleChoiceScore = (
  * Calculates the score for a Multiple Response answer considering partial/penalized/negative scoring.
  *
  * @param {MultipleResponseQuestion} question - The Multiple Response question.
- * @param {{ values: string[] }} answer - Object containing an array of chosen values.
+ * @param {MultipleResponseAnswer} answer - The Multiple Response answer.
  * @returns {number} - The calculated score (could be negative if allowNegative is true).
  */
 const calculateMultipleResponseScore = (
   question: MultipleResponseQuestion,
-  answer: { values: string[] }
+  answer: MultipleResponseAnswer
 ): number => {
   if (!question.isScored) return 0;
 
@@ -1393,11 +1401,13 @@ export const regradeSubmission = async (submissionId: string) => {
       answer.score = 0;
       return;
     }
-    const answerScore = await calculateAnswerScore(
+    console.log(question, answer)
+    const answerScore: number = await calculateAnswerScore(
       question,
       answer,
       assessment
     );
+    console.log('current score:', totalScore, 'answer score:', answerScore)
     totalScore += answerScore;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { type, ...scoredAnswer } = { ...answer, score: answerScore };

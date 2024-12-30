@@ -74,14 +74,6 @@ export const getInternalAssessmentById = async (
             path: 'results',
             populate: [
               {
-                path: 'team',
-                model: 'Team',
-                populate: {
-                  path: 'members',
-                  model: 'User',
-                },
-              },
-              {
                 path: 'student',
                 model: 'User',
               },
