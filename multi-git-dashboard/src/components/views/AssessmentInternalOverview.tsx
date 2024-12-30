@@ -503,7 +503,7 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
         <Title order={3} mb="sm">
           Submissions
         </Title>
-        {submissions.length === 0 ? (
+        {!assessment || submissions.length === 0 ? (
           <Text>No submissions available.</Text>
         ) : (
           submissions.map(submission => (
@@ -511,9 +511,10 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
               key={submission._id}
               submission={submission}
               hasFacultyPermission={hasFacultyPermission}
+              isEditable={hasFacultyPermission || assessment.areSubmissionsEditable}
               courseId={courseId}
-              assessmentId={assessment?._id}
-              assessmentReleaseNumber={assessment?.releaseNumber}
+              assessmentId={assessment._id}
+              assessmentReleaseNumber={assessment.releaseNumber}
               questions={questions}
               userIdToNameMap={userIdToNameMap}
             />

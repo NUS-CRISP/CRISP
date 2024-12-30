@@ -13,11 +13,12 @@ import {
 import { Submission } from '@shared/types/Submission';
 import { useRouter } from 'next/router';
 import { QuestionUnion } from '@shared/types/Question';
-import { IconListDetails, IconEye } from '@tabler/icons-react';
+import { IconListDetails, IconEye, IconPencil } from '@tabler/icons-react';
 
 interface SubmissionCardProps {
   submission: Submission;
   hasFacultyPermission: boolean;
+  isEditable: boolean;
   courseId: string;
   assessmentId?: string;
   assessmentReleaseNumber?: number;
@@ -28,6 +29,7 @@ interface SubmissionCardProps {
 const SubmissionCard: React.FC<SubmissionCardProps> = ({
   submission,
   hasFacultyPermission,
+  isEditable,
   courseId,
   assessmentId,
   assessmentReleaseNumber,
@@ -119,11 +121,19 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({
           )}
           <Button
             onClick={handleViewSubmission}
-            leftSection={<IconEye size={16} />}
+            leftSection={isEditable
+              || (assessmentReleaseNumber
+                && assessmentReleaseNumber !== submission.submissionReleaseNumber)
+            ? <IconPencil size={16} />
+            : <IconEye size={16} />}
             variant="light"
             size="sm"
           >
-            View Submission
+            {isEditable
+            || (assessmentReleaseNumber
+              && assessmentReleaseNumber !== submission.submissionReleaseNumber)
+              ? 'View/Edit Submission'
+              : 'View Submission'}
           </Button>
         </Group>
         {/* Warning if submission requires editing */}
