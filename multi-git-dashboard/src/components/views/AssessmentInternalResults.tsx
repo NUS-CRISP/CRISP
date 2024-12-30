@@ -1,12 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-  Button,
-  Group,
-  Modal,
-  Select,
-  Text,
-  Loader,
-} from '@mantine/core';
+import { Button, Group, Modal, Select, Text, Loader } from '@mantine/core';
 import { Virtuoso } from 'react-virtuoso';
 
 import { AssessmentResult } from '@shared/types/AssessmentResults';
@@ -53,11 +46,11 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const toggleResultForm = () => {
-    setIsResultFormOpen((prev) => !prev);
+    setIsResultFormOpen(prev => !prev);
   };
 
   // Prepare TA filter options
-  const taOptions = teachingTeam.map((user) => ({
+  const taOptions = teachingTeam.map(user => ({
     value: user._id,
     label: user.name,
   }));
@@ -66,24 +59,22 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
     const buildStudentResults = () => {
       const srList: StudentResult[] = [];
       if (assignedUsers?.length) {
-        assignedUsers.forEach((assignedUser) => {
+        assignedUsers.forEach(assignedUser => {
           srList.push({
             student: assignedUser.user,
-            assignedTAIds: assignedUser.tas.map((ta) => ta._id),
+            assignedTAIds: assignedUser.tas.map(ta => ta._id),
             team: null,
-            result: results.find(
-              (r) => r.student?._id === assignedUser.user._id
-            ),
+            result: results.find(r => r.student?._id === assignedUser.user._id),
           });
         });
       } else if (assignedTeams?.length) {
-        assignedTeams.forEach((assignedTeam) => {
-          assignedTeam.team.members.forEach((member) => {
+        assignedTeams.forEach(assignedTeam => {
+          assignedTeam.team.members.forEach(member => {
             srList.push({
               student: member,
-              assignedTAIds: assignedTeam.tas.map((ta) => ta._id),
+              assignedTAIds: assignedTeam.tas.map(ta => ta._id),
               team: assignedTeam.team,
-              result: results.find((r) => r.student?._id === member._id),
+              result: results.find(r => r.student?._id === member._id),
             });
           });
         });
@@ -99,9 +90,9 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
 
     if (markerFilter !== 'All') {
       if (markerFilter === 'Unassigned') {
-        filtered = filtered.filter((sr) => sr.assignedTAIds.length === 0);
+        filtered = filtered.filter(sr => sr.assignedTAIds.length === 0);
       } else {
-        filtered = filtered.filter((sr) =>
+        filtered = filtered.filter(sr =>
           sr.assignedTAIds.includes(markerFilter)
         );
       }
@@ -109,25 +100,23 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
 
     if (markedFilter !== 'All') {
       if (markedFilter === 'Complete') {
-        filtered = filtered.filter((sr) => {
+        filtered = filtered.filter(sr => {
           if (sr.result && sr.result.marks.length > 0) {
-            return !sr.result.marks.some((mark) => !mark.submission);
+            return !sr.result.marks.some(mark => !mark.submission);
           }
           return false;
         });
       } else if (markedFilter === 'Incomplete') {
-        filtered = filtered.filter((sr) => {
+        filtered = filtered.filter(sr => {
           if (!sr.result || sr.result.marks.length === 0) return true;
-          return sr.result.marks.some((mark) => !mark.submission);
+          return sr.result.marks.some(mark => !mark.submission);
         });
       }
     }
 
     switch (sortCriterion) {
       case 'name':
-        filtered.sort((a, b) =>
-          a.student.name.localeCompare(b.student.name)
-        );
+        filtered.sort((a, b) => a.student.name.localeCompare(b.student.name));
         break;
       case 'studentID':
         filtered.sort((a, b) =>
@@ -157,11 +146,11 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
 
   const generateCSV = () => {
     const headers = ['StudentID', 'Marks'];
-    const rows = filteredAndSortedStudentResults.map((sr) => [
+    const rows = filteredAndSortedStudentResults.map(sr => [
       sr.student.identifier,
       sr.result ? sr.result.averageScore.toString() : 'N/A',
     ]);
-    return [headers, ...rows].map((line) => line.join(',')).join('\n');
+    return [headers, ...rows].map(line => line.join(',')).join('\n');
   };
 
   const downloadCSV = () => {
@@ -264,7 +253,7 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
           <Text size="sm">Marker</Text>
           <Select
             value={markerFilter}
-            onChange={(value) => setMarkerFilter(value || 'All')}
+            onChange={value => setMarkerFilter(value || 'All')}
             data={[
               { value: 'All', label: 'All' },
               { value: 'Unassigned', label: 'Unassigned' },
@@ -280,7 +269,7 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
           <Text size="sm">Marked Status</Text>
           <Select
             value={markedFilter}
-            onChange={(value) => setMarkedFilter(value || 'All')}
+            onChange={value => setMarkedFilter(value || 'All')}
             data={[
               { value: 'All', label: 'All' },
               { value: 'Complete', label: 'Marking completed' },
@@ -296,7 +285,7 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
           <Text size="sm">Sort by</Text>
           <Select
             value={sortCriterion}
-            onChange={(value) => setSortCriterion(value || 'name')}
+            onChange={value => setSortCriterion(value || 'name')}
             data={[
               { value: 'name', label: 'Name' },
               { value: 'studentID', label: 'Student ID' },
@@ -329,10 +318,15 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
       >
         <Group gap="md">
           <Text>
-            Click below to download the assessment results as a CSV file. It includes:
+            Click below to download the assessment results as a CSV file. It
+            includes:
             <ul>
-              <li><strong>StudentID</strong>: The identifier of the student.</li>
-              <li><strong>Marks</strong>: The average score of the student.</li>
+              <li>
+                <strong>StudentID</strong>: The identifier of the student.
+              </li>
+              <li>
+                <strong>Marks</strong>: The average score of the student.
+              </li>
             </ul>
           </Text>
           <Button onClick={downloadCSV} color="blue">

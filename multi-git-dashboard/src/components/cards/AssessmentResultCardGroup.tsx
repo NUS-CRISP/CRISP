@@ -31,26 +31,23 @@ const AssessmentResultCardGroup: React.FC<AssessmentResultCardGroupProps> = ({
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
   const toggleOpen = useCallback(() => {
-    setIsOpen((prev) => !prev);
+    setIsOpen(prev => !prev);
   }, []);
 
-  const {
-    hasOutdatedSubmissions,
-    allSubmissionsPresent,
-  } = useMemo(() => {
+  const { hasOutdatedSubmissions, allSubmissionsPresent } = useMemo(() => {
     let hasOutdated = false;
     let allPresent = true;
 
-    students.forEach((sr) => {
+    students.forEach(sr => {
       if (sr.result) {
-        if (sr.result.marks.some((mark) => !mark.submission)) {
+        if (sr.result.marks.some(mark => !mark.submission)) {
           allPresent = false;
         }
         if (
           sr.result.marks
-            .filter((mark) => mark.submission)
+            .filter(mark => mark.submission)
             .some(
-              (mark) =>
+              mark =>
                 mark.submission!.submissionReleaseNumber !==
                 assessmentReleaseNumber
             )
@@ -70,7 +67,12 @@ const AssessmentResultCardGroup: React.FC<AssessmentResultCardGroupProps> = ({
 
   return (
     <>
-      <Accordion variant="separated" radius="md" chevronPosition="right" multiple={false}>
+      <Accordion
+        variant="separated"
+        radius="md"
+        chevronPosition="right"
+        multiple={false}
+      >
         <Accordion.Item value={teamId}>
           <Accordion.Control onClick={toggleOpen}>
             <Group justify="space-between">
@@ -131,7 +133,7 @@ const AssessmentResultCardGroup: React.FC<AssessmentResultCardGroupProps> = ({
           </Accordion.Control>
           {isOpen && (
             <Accordion.Panel>
-              {students.map((sr) => (
+              {students.map(sr => (
                 <AssessmentResultCard
                   key={sr.student._id}
                   studentResult={sr}

@@ -693,8 +693,12 @@ export const updateSubmission = async (
   await validateSubmissionPeriod(assessment);
   await validateAnswers(assessment, answers);
 
-  if (!bypass && !assessment.areSubmissionsEditable && !submission.isDraft
-    && assessment.releaseNumber === submission.submissionReleaseNumber) {
+  if (
+    !bypass &&
+    !assessment.areSubmissionsEditable &&
+    !submission.isDraft &&
+    assessment.releaseNumber === submission.submissionReleaseNumber
+  ) {
     throw new BadRequestError(
       'Submissions are not editable for this assessment'
     );
@@ -892,7 +896,7 @@ export const getSubmissionsByAssessment = async (
   const submissions = await SubmissionModel.find({
     assessment: assessmentId,
     deleted: { $ne: true },
-   })
+  })
     .populate('user')
     .populate('answers');
   return submissions;
@@ -907,7 +911,10 @@ export const getSubmissionsByAssessment = async (
  * @throws {NotFoundError} If the submission is not found.
  * @throws {Error} For other unknown runtime or server errors (500).
  */
-export const deleteSubmission = async (userId: string, submissionId: string): Promise<void> => {
+export const deleteSubmission = async (
+  userId: string,
+  submissionId: string
+): Promise<void> => {
   const submission = await SubmissionModel.findById(submissionId);
   if (!submission) {
     throw new NotFoundError('Submission not found');
@@ -921,9 +928,10 @@ export const deleteSubmission = async (userId: string, submissionId: string): Pr
   submission.deletedAt = new Date();
 
   await submission.save();
-  console.log(`Submission ${submissionId} was soft-deleted by User ${userId} at ${submission.deletedAt}`);
+  console.log(
+    `Submission ${submissionId} was soft-deleted by User ${userId} at ${submission.deletedAt}`
+  );
 };
-
 
 /**
  * Soft deletes all submissions associated with a specific assessment ID.
@@ -1030,7 +1038,7 @@ export const adjustSubmissionScore = async (
   }
 
   if (submission.deleted) {
-    throw new NotFoundError('Submission not found (Deleted).')
+    throw new NotFoundError('Submission not found (Deleted).');
   }
 
   if (adjustedScore < 0) {
@@ -1063,9 +1071,15 @@ export const calculateAnswerScore = async (
   assessment: InternalAssessment
 ): Promise<number> => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const question = (typeof (inputQuestion as any).toObject === 'function') ? inputQuestion.toObject() : inputQuestion;
+  const question =
+    typeof (inputQuestion as any).toObject === 'function'
+      ? inputQuestion.toObject()
+      : inputQuestion;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const answer = (typeof (inputAnswer as any).toObject === 'function') ? inputAnswer.toObject() : inputAnswer;
+  const answer =
+    typeof (inputAnswer as any).toObject === 'function'
+      ? inputAnswer.toObject()
+      : inputAnswer;
   const scalingFactor =
     assessment.maxMarks === 0 || !assessment.scaleToMaxMarks
       ? 1
@@ -1089,10 +1103,8 @@ export const calculateAnswerScore = async (
       );
     case 'Scale':
       return (
-        calculateScaleScore(
-          question as ScaleQuestion,
-          answer as ScaleAnswer
-        ) * scalingFactor
+        calculateScaleScore(question as ScaleQuestion, answer as ScaleAnswer) *
+        scalingFactor
       );
     case 'Number':
       return (
@@ -1311,7 +1323,9 @@ export const regradeSubmission = async (submissionId: string) => {
   }
 
   if (submission.deleted) {
-    throw new NotFoundError(`Submission with ID ${submissionId} not found (Deleted)`);
+    throw new NotFoundError(
+      `Submission with ID ${submissionId} not found (Deleted)`
+    );
   }
 
   const user = await UserModel.findById(submission.user);

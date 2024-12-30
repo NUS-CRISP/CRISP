@@ -350,21 +350,26 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
             assessmentGranularity === 'team'
               ? assignedTeams.length
               : assessmentGranularity === 'individual'
-              ? assignedUsers.length
-              : 0
+                ? assignedUsers.length
+                : 0
           }
-          itemContent={(index) => {
+          itemContent={index => {
             if (assessmentGranularity === 'team') {
               const assignedTeam = assignedTeams[index];
               return (
-                <Card key={assignedTeam.team._id} style={{ marginBottom: '16px' }}>
+                <Card
+                  key={assignedTeam.team._id}
+                  style={{ marginBottom: '16px' }}
+                >
                   <Group justify="space-between" mb="xs">
                     <Text>Team {assignedTeam.team.number}</Text>
                     {assignedTeam.tas.map(ta => (
                       <Badge
                         key={ta._id}
                         color={
-                          ta._id === assignedTeam.team.TA?._id ? 'green' : 'blue'
+                          ta._id === assignedTeam.team.TA?._id
+                            ? 'green'
+                            : 'blue'
                         }
                         variant="light"
                       >
@@ -383,7 +388,7 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
                       label: ta.name,
                     }))}
                     value={assignedTeam.tas.map(ta => ta._id) || []}
-                    onChange={(value) =>
+                    onChange={value =>
                       handleTaAssignmentChange(assignedTeam.team._id, value)
                     }
                     clearable
@@ -405,7 +410,10 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
             } else if (assessmentGranularity === 'individual') {
               const assignedUser = assignedUsers[index];
               return (
-                <Card key={assignedUser.user._id} style={{ marginBottom: '16px' }}>
+                <Card
+                  key={assignedUser.user._id}
+                  style={{ marginBottom: '16px' }}
+                >
                   <Group justify="space-between" mb="xs">
                     <Text>{assignedUser.user.name}</Text>
                     {assignedUser.tas.map(ta => (
@@ -422,7 +430,7 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
                       label: ta.name,
                     }))}
                     value={assignedUser.tas.map(ta => ta._id) || []}
-                    onChange={(value) =>
+                    onChange={value =>
                       handleTaAssignmentChange(assignedUser.user._id, value)
                     }
                     clearable
@@ -446,14 +454,14 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
             <Checkbox
               label="Grade original teams"
               checked={gradeOriginalTeams}
-              onChange={(event) =>
+              onChange={event =>
                 onSetGradeOriginalTeams(event.currentTarget.checked)
               }
             />
             <NumberInput
               label="Teams per TA"
               value={teamsPerTA}
-              onChange={(value) =>
+              onChange={value =>
                 onSetTeamsPerTA(parseInt(value.toString()) || 1)
               }
               min={1}
@@ -540,7 +548,7 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
 
         {/* Dropzone for CSV with Accept/Reject/Idle */}
         <Dropzone
-          onDrop={(files) => {
+          onDrop={files => {
             if (files.length > 0) {
               handleFileSelected(files[0]);
             }

@@ -511,7 +511,9 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
               key={submission._id}
               submission={submission}
               hasFacultyPermission={hasFacultyPermission}
-              isEditable={hasFacultyPermission || assessment.areSubmissionsEditable}
+              isEditable={
+                hasFacultyPermission || assessment.areSubmissionsEditable
+              }
               courseId={courseId}
               assessmentId={assessment._id}
               assessmentReleaseNumber={assessment.releaseNumber}

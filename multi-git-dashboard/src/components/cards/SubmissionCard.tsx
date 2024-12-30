@@ -121,17 +121,22 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({
           )}
           <Button
             onClick={handleViewSubmission}
-            leftSection={isEditable
-              || (assessmentReleaseNumber
-                && assessmentReleaseNumber !== submission.submissionReleaseNumber)
-            ? <IconPencil size={16} />
-            : <IconEye size={16} />}
+            leftSection={
+              isEditable ||
+              (assessmentReleaseNumber &&
+                assessmentReleaseNumber !==
+                  submission.submissionReleaseNumber) ? (
+                <IconPencil size={16} />
+              ) : (
+                <IconEye size={16} />
+              )
+            }
             variant="light"
             size="sm"
           >
-            {isEditable
-            || (assessmentReleaseNumber
-              && assessmentReleaseNumber !== submission.submissionReleaseNumber)
+            {isEditable ||
+            (assessmentReleaseNumber &&
+              assessmentReleaseNumber !== submission.submissionReleaseNumber)
               ? 'View/Edit Submission'
               : 'View Submission'}
           </Button>

@@ -319,7 +319,9 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
   const [isRecallModalOpen, setIsRecallModalOpen] = useState(false);
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [csvErrorMessage, setCsvErrorMessage] = useState('');
-  const [recallOption, setRecallOption] = useState<'recallOnly' | 'recallAndDelete'>(
+  const [recallOption, setRecallOption] = useState<
+    'recallOnly' | 'recallAndDelete'
+  >(
     assessment
       ? assessment.areSubmissionsEditable
         ? 'recallOnly'
@@ -389,7 +391,10 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
         );
 
         if (!deleteResponse.ok) {
-          console.error('Error soft deleting submissions:', deleteResponse.statusText);
+          console.error(
+            'Error soft deleting submissions:',
+            deleteResponse.statusText
+          );
           return;
         }
 
@@ -735,8 +740,9 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
 
             <Radio.Group
               value={recallOption}
-              onChange={(value) => {
-                if (value === 'recallOnly' || value === 'recallAndDelete') setRecallOption(value)
+              onChange={value => {
+                if (value === 'recallOnly' || value === 'recallAndDelete')
+                  setRecallOption(value);
               }}
               required
               variant="vertical"
@@ -756,7 +762,9 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
 
             {!assessment.areSubmissionsEditable && (
               <Alert color="yellow" mb="sm">
-                It is strongly recommended to delete all existing submissions since editing will be automatically allowed for outdated submissions.
+                It is strongly recommended to delete all existing submissions
+                since editing will be automatically allowed for outdated
+                submissions.
               </Alert>
             )}
 
