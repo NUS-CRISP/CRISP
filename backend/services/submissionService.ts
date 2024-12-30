@@ -693,7 +693,8 @@ export const updateSubmission = async (
   await validateSubmissionPeriod(assessment);
   await validateAnswers(assessment, answers);
 
-  if (!bypass && !assessment.areSubmissionsEditable && !submission.isDraft) {
+  if (!bypass && !assessment.areSubmissionsEditable && !submission.isDraft
+    && assessment.releaseNumber === submission.submissionReleaseNumber) {
     throw new BadRequestError(
       'Submissions are not editable for this assessment'
     );
@@ -783,8 +784,8 @@ export const updateSubmission = async (
       }
 
       const answerScore = await calculateAnswerScore(
-        question.toObject(),
-        answer.toObject(),
+        question,
+        answer,
         assessment
       );
       totalScore += answerScore;
