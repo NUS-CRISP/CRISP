@@ -105,9 +105,7 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
       skipEmptyLines: true,
       complete: results => {
         try {
-          // results.data is the array of CSV rows
           const data = results.data as any[];
-          // Validate columns
           data.forEach((row, idx) => {
             const rowIndex = idx + 1;
             if (!row.entityId) {
@@ -144,7 +142,6 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
 
     try {
       applyAssignmentsFromCsv(parsedRows);
-      // If successful, close modal
       setIsCsvModalOpen(false);
       setCsvErrorMessage(null);
       setParsedRows(null);
@@ -308,7 +305,6 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
   // ---------------------------------------
   return (
     <Modal opened={opened} onClose={onClose} size="xl" title="Assign Graders">
-      {/* CSV Upload Button AND "Download Current Assignments" button */}
       <Box mb="md">
         <Group>
           <Button variant="outline" onClick={() => setIsCsvModalOpen(true)}>
@@ -349,7 +345,7 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
       {/* --- Middle Section: Teams or Users Display with Virtuoso --- */}
       <Box style={{ display: 'flex', flexDirection: 'column', height: '40vh' }}>
         <Virtuoso
-          style={{ flex: 0.95, overscrollBehavior: 'none' }} // Added overscrollBehavior here
+          style={{ flex: 0.95, overscrollBehavior: 'none' }}
           totalCount={
             assessmentGranularity === 'team'
               ? assignedTeams.length
@@ -588,7 +584,6 @@ const TAAssignmentModal: React.FC<TAAssignmentModalProps> = ({
           </Group>
         </Dropzone>
 
-        {/* Show the chosen file name if any */}
         {uploadedFileName && (
           <Text size="sm" color="dimmed" mt="md">
             Selected file: <strong>{uploadedFileName}</strong>
