@@ -1401,13 +1401,11 @@ export const regradeSubmission = async (submissionId: string) => {
       answer.score = 0;
       return;
     }
-    console.log(question, answer)
     const answerScore: number = await calculateAnswerScore(
       question,
       answer,
       assessment
     );
-    console.log('current score:', totalScore, 'answer score:', answerScore)
     totalScore += answerScore;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { type, ...scoredAnswer } = { ...answer, score: answerScore };
