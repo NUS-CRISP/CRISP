@@ -366,6 +366,7 @@ describe('submissionController', () => {
 
       expect(SubmissionModel.findById).toHaveBeenCalledWith('submission123');
       expect(submissionService.deleteSubmission).toHaveBeenCalledWith(
+        'user123',
         'submission123'
       );
       expect(res.status).toHaveBeenCalledWith(200);

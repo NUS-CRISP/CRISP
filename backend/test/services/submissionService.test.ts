@@ -286,14 +286,15 @@ describe('submissionService', () => {
         false
       );
 
-      await deleteSubmission(submission._id.toString());
+      await deleteSubmission(ta._id.toString(), submission._id.toString());
       const deletedSubmission = await SubmissionModel.findById(submission._id);
-      expect(deletedSubmission).toBeNull();
+      expect(deletedSubmission).toBeDefined();
+      expect(deletedSubmission!.deleted).toBe(true);
     });
 
     it('should throw NotFoundError for invalid submission ID', async () => {
       const invalidSubmissionId = new mongoose.Types.ObjectId().toString();
-      await expect(deleteSubmission(invalidSubmissionId)).rejects.toThrow();
+      await expect(deleteSubmission(ta._id, invalidSubmissionId)).rejects.toThrow();
     });
   });
 
