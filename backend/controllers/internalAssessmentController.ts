@@ -16,6 +16,7 @@ import {
   releaseInternalAssessmentById,
   recallInternalAssessmentById,
   recaluculateSubmissionsForAssessment,
+  reorderQuestions,
 } from '../services/internalAssessmentService';
 
 /**
@@ -403,6 +404,48 @@ export const recallInternalAssessment = async (req: Request, res: Response) => {
     } else {
       console.error('Error recalling assessment:', error);
       res.status(500).json({ error: 'Failed to recall assessment' });
+    }
+  }
+};
+
+/**
+ * Controller method to reorder questions in Internal Assessments
+ *
+ * @param {Request} req - The Express request object
+ *  - req.params.assessmentId: The ID of the assessment.
+ *  - req.body.items: The array of IDs of the questions.
+ * @param {Response} res - The Express response object
+ *
+ * @returns {Promise<void>}
+ *  - 200 OK: If the assessment is successfully reordered.
+ *  - 404 Not Found: If the assessment or account is not found.
+ *  - 400 Bad Request: If the user is unauthorized to reorder assessments.
+ *  - 401 Unauthorized: If authorization is missing.
+ *  - 500 Internal Server Error: For any unknown errors.
+ */
+export const reorderQuestionsInInternalAssessment = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { assessmentId } = req.params;
+    const questionIds: string[] = req.body.items;
+
+    const accountId = await getAccountId(req);
+
+    await reorderQuestions(assessmentId, questionIds, accountId);
+
+    res.status(200).json({ message: 'Questions reordered successfully' });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else if (error instanceof BadRequestError) {
+      res.status(400).json({ error: error.message });
+    } else if (error instanceof MissingAuthorizationError) {
+      res.status(401).json({ error: 'Missing authorization' });
+    } else {
+      console.error('Error reordering assessment questions:', error);
+      res.status(500).json({ error: 'Failed to reorder questions' });
     }
   }
 };

@@ -3,6 +3,7 @@ export interface BaseQuestion {
   _id: string;
   text: string;
   type: string; // Discriminator property
+  order: number;
   customInstruction?: string;
   isRequired: boolean;
   isLocked: boolean; // Indicates if the question is locked

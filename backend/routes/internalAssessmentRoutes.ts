@@ -10,6 +10,7 @@ import {
   recallInternalAssessment,
   releaseInternalAssessment,
   addQuestionsToAssessmentController,
+  reorderQuestionsInInternalAssessment,
 } from '../controllers/internalAssessmentController';
 import {
   submitAssessment,
@@ -51,5 +52,6 @@ router.get(
   '/:assessmentId/assignment-sets/graders/:taId',
   getAssignmentsByGraderIdController
 );
+router.post('/:assessmentId/reorder', reorderQuestionsInInternalAssessment);
 
 export default router;

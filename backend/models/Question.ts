@@ -5,6 +5,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface Question extends Document {
   text: string;
   type: string;
+  order: number;
   customInstruction?: string;
   isRequired: boolean;
   isLocked?: boolean; // Indicates if the question is locked
@@ -16,6 +17,7 @@ const QuestionSchema = new Schema<Question>(
   {
     text: { type: String, required: true },
     type: { type: String, required: true },
+    order: { type: Number, required: true },
     customInstruction: { type: String },
     isRequired: { type: Boolean, default: true },
     isLocked: { type: Boolean, default: false },

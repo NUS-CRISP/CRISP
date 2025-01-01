@@ -294,7 +294,9 @@ describe('submissionService', () => {
 
     it('should throw NotFoundError for invalid submission ID', async () => {
       const invalidSubmissionId = new mongoose.Types.ObjectId().toString();
-      await expect(deleteSubmission(ta._id, invalidSubmissionId)).rejects.toThrow();
+      await expect(
+        deleteSubmission(ta._id, invalidSubmissionId)
+      ).rejects.toThrow();
     });
   });
 

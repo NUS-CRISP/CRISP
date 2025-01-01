@@ -5,7 +5,7 @@ import CourseModel from '../models/Course';
 import { NotFoundError, BadRequestError } from './errors';
 import mongoose, { Types } from 'mongoose';
 import TeamSetModel from '@models/TeamSet';
-import QuestionModel from '@models/Question';
+import QuestionModel, { Question } from '@models/Question';
 import {
   DateQuestionModel,
   LongResponseQuestionModel,
@@ -1118,4 +1118,75 @@ export const recaluculateSubmissionsForAssessment = async (
   submissions.forEach(async sub => {
     await regradeSubmission(sub._id);
   });
+};
+
+/**
+ * Reorders question order within an assessment.
+ *
+ * @param {string} assessmentId - The ID of the assessment with questions to reorder.
+ * @param {string[]} questionIds - The new order of question IDs in an array.
+ * @param {string} accountId - The ID of the user performing the reorder (must be admin or faculty).
+ *
+ * @returns {Promise<any>} - The updated assessment document.
+ *
+ * @throws {NotFoundError} If the account or assessment is not found.
+ * @throws {BadRequestError} If the user is unauthorized or if a question is missing from questionIds.
+ * @throws {Error} For any unknown runtime or Mongoose errors (500).
+ */
+export const reorderQuestions = async (
+  assessmentId: string,
+  questionIds: string[],
+  accountId: string
+) => {
+  const account = await AccountModel.findById(accountId);
+  if (!account) {
+    throw new NotFoundError('Account not found');
+  }
+  if (account.role !== 'admin' && account.role !== 'Faculty member') {
+    throw new BadRequestError('Unauthorized');
+  }
+
+  const assessment =
+    await InternalAssessmentModel.findById(assessmentId).populate('questions');
+
+  if (!assessment) {
+    throw new NotFoundError('Assessment not found');
+  }
+
+  if (assessment.questions.length !== questionIds.length) {
+    throw new BadRequestError('Question array length mismatch');
+  }
+
+  const questionDocs = assessment.questions as unknown as (Question & {
+    _id: any;
+  })[];
+
+  const docIds = questionDocs.map(q => String(q._id));
+  const missingFromInput = docIds.filter(id => !questionIds.includes(id));
+  if (missingFromInput.length > 0) {
+    throw new BadRequestError(
+      `Some questions in the assessment are missing from input: ${missingFromInput.join(', ')}`
+    );
+  }
+
+  for (let i = 0; i < questionIds.length; i++) {
+    const qId = questionIds[i];
+    const questionDoc = questionDocs.find(q => String(q._id) === qId);
+    if (!questionDoc) {
+      throw new BadRequestError(`Question ${qId} not found in assessment`);
+    }
+    questionDoc.order = i + 1;
+    await questionDoc.save();
+  }
+
+  const reorderedRefs: any[] = [];
+  questionIds.forEach(qId => {
+    const ref = assessment.questions.find((q: any) => String(q._id) === qId);
+    if (ref) reorderedRefs.push(ref);
+  });
+  assessment.questions = reorderedRefs;
+
+  await assessment.save();
+
+  return assessment;
 };

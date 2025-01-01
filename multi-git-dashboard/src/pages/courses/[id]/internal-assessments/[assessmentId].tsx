@@ -252,11 +252,12 @@ const InternalAssessmentDetail: React.FC = () => {
     permission,
   ]);
 
-  const addQuestion = () => {
+  const addQuestion = (qNo: number) => {
     const newQuestion: Question = {
       _id: `temp-${Date.now()}`,
       text: '',
       type: 'Undecided',
+      order: qNo,
       isLocked: false,
       isRequired: true,
       customInstruction: '',
