@@ -96,7 +96,10 @@ export const tutorialContents = [
   'You can drag the slider to change the week range of the analytics and PR views.',
 ];
 
-export const metricExplanations = {
+interface MetricExplanations {
+  [key: string]: string;
+}
+export const metricExplanations: MetricExplanations = {
   complexity:
     'Calculated based on the number of paths through the code. Whenever the control flow of a function splits, the complexity counter gets incremented by one. Each function has a minimum complexity of 1. This calculation varies slightly by language because keywords and functionalities do.',
   cognitive_complexity: "How hard it is to understand the code's control flow.",

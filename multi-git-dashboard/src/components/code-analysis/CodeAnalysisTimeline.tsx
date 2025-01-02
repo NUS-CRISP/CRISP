@@ -134,24 +134,23 @@ const CodeAnalysisTimeline: React.FC<CodeAnalysisTimelineProps> = ({
               />
             ))}
         </LineChart>
-
-        {hoveredMetric && metricExplanations[hoveredMetric] && (
-          <div
-            style={{
-              position: 'absolute',
-              top: '20px',
-              left: '20px',
-              padding: '10px',
-              backgroundColor: 'rgba(0, 0, 0, 0.7)',
-              color: 'white',
-              borderRadius: '5px',
-            }}
-          >
-            <strong>{hoveredMetric}</strong>:{' '}
-            {metricExplanations[hoveredMetric]}
-          </div>
-        )}
       </ResponsiveContainer>
+
+      {hoveredMetric && metricExplanations[hoveredMetric] && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '20px',
+            left: '20px',
+            padding: '10px',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            color: 'white',
+            borderRadius: '5px',
+          }}
+        >
+          <strong>{hoveredMetric}</strong>: {metricExplanations[hoveredMetric]}
+        </div>
+      )}
     </div>
   );
 };
