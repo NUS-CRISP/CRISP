@@ -11,7 +11,6 @@ import {
   Title,
   Container,
   Center,
-  Tooltip,
 } from '@mantine/core';
 
 interface CodeAnalysisOverviewProps {
