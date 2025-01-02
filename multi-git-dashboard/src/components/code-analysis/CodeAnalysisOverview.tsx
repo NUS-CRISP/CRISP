@@ -1,6 +1,18 @@
-import { convertPercentage, convertRating } from '@/lib/utils';
-import React from 'react';
-import { Grid, Card, Text, Title, Container, Center } from '@mantine/core';
+import {
+  convertPercentage,
+  convertRating,
+  metricExplanations,
+} from '@/lib/utils';
+import React, { useState } from 'react';
+import {
+  Grid,
+  Card,
+  Text,
+  Title,
+  Container,
+  Center,
+  Tooltip,
+} from '@mantine/core';
 
 interface CodeAnalysisOverviewProps {
   latestData: {
@@ -70,6 +82,8 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
   latestData,
   executedDate,
 }) => {
+  const [hoveredMetric, setHoveredMetric] = useState<string | null>(null);
+
   const security_rating_index = latestData.metrics.indexOf('security_rating');
   const security_rating =
     security_rating_index === -1
@@ -114,12 +128,26 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
       ? '-'
       : latestData.values[quality_gate_status_index];
 
+  const handleMouseEnter = (metric: string) => {
+    setHoveredMetric(metric);
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredMetric(null);
+  };
+
   return (
     <Container>
       <Grid gutter="lg">
         <Grid.Col span={4}>
           <Card padding="lg" shadow="sm" radius="md">
-            <Title order={5}>Security</Title>
+            <Title
+              order={5}
+              onMouseEnter={() => handleMouseEnter('security_rating')}
+              onMouseLeave={handleMouseLeave}
+            >
+              Security
+            </Title>
             <Text size="xl" fw={700} c={getColorForRating(security_rating)}>
               {security_rating}
             </Text>
@@ -127,7 +155,13 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
         </Grid.Col>
         <Grid.Col span={4}>
           <Card padding="lg" shadow="sm" radius="md">
-            <Title order={5}>Reliability</Title>
+            <Title
+              order={5}
+              onMouseEnter={() => handleMouseEnter('reliability_rating')}
+              onMouseLeave={handleMouseLeave}
+            >
+              Reliability
+            </Title>
             <Text size="xl" fw={700} c={getColorForRating(reliability_rating)}>
               {reliability_rating}
             </Text>
@@ -135,7 +169,13 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
         </Grid.Col>
         <Grid.Col span={4}>
           <Card padding="lg" shadow="sm" radius="md">
-            <Title order={5}>Maintainability</Title>
+            <Title
+              order={5}
+              onMouseEnter={() => handleMouseEnter('sqale_rating')}
+              onMouseLeave={handleMouseLeave}
+            >
+              Maintainability
+            </Title>
             <Text
               size="xl"
               fw={700}
@@ -147,7 +187,13 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
         </Grid.Col>
         <Grid.Col span={4}>
           <Card padding="lg" shadow="sm" radius="md">
-            <Title order={5}>Coverage</Title>
+            <Title
+              order={5}
+              onMouseEnter={() => handleMouseEnter('coverage')}
+              onMouseLeave={handleMouseLeave}
+            >
+              Coverage
+            </Title>
             <Text size="xl" fw={700} c={getColorForCoverage(coverage)}>
               {coverage}
             </Text>
@@ -155,7 +201,13 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
         </Grid.Col>
         <Grid.Col span={4}>
           <Card padding="lg" shadow="sm" radius="md">
-            <Title order={5}>Duplications</Title>
+            <Title
+              order={5}
+              onMouseEnter={() => handleMouseEnter('duplicated_lines_density')}
+              onMouseLeave={handleMouseLeave}
+            >
+              Duplications
+            </Title>
             <Text size="xl" fw={700} c={getColorForDuplication(duplication)}>
               {duplication}
             </Text>
@@ -163,7 +215,13 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
         </Grid.Col>
         <Grid.Col span={4}>
           <Card padding="lg" shadow="sm" radius="md">
-            <Title order={5}>Complexity</Title>
+            <Title
+              order={5}
+              onMouseEnter={() => handleMouseEnter('complexity')}
+              onMouseLeave={handleMouseLeave}
+            >
+              Complexity
+            </Title>
             <Text
               size="xl"
               fw={700}
@@ -175,7 +233,13 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
         </Grid.Col>
         <Grid.Col span={12}>
           <Card padding="lg" shadow="sm" radius="md">
-            <Title order={5}>Quality Gate</Title>
+            <Title
+              order={5}
+              onMouseEnter={() => handleMouseEnter('alert_status')}
+              onMouseLeave={handleMouseLeave}
+            >
+              Quality Gate
+            </Title>
             <Text
               size="xl"
               fw={700}
@@ -196,6 +260,22 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
       <Center mt={5} style={{ fontSize: '12px' }}>
         As of {executedDate.toLocaleString()}
       </Center>
+
+      {hoveredMetric && metricExplanations[hoveredMetric] && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '20px',
+            left: '20px',
+            padding: '10px',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            color: 'white',
+            borderRadius: '5px',
+          }}
+        >
+          <strong>{hoveredMetric}</strong>: {metricExplanations[hoveredMetric]}
+        </div>
+      )}
     </Container>
   );
 };

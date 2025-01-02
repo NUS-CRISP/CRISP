@@ -1,3 +1,4 @@
+import { metricExplanations } from '@/lib/utils';
 import React, { useState } from 'react';
 import {
   LineChart,
@@ -40,6 +41,7 @@ const CodeAnalysisTimeline: React.FC<CodeAnalysisTimelineProps> = ({
   }
 
   const [domain, setDomain] = useState<string>('Complexity');
+  const [hoveredMetric, setHoveredMetric] = useState<string | null>(null);
 
   Object.keys(codeData).map(executionDate => {
     const dataPoint = codeData[executionDate];
@@ -84,6 +86,14 @@ const CodeAnalysisTimeline: React.FC<CodeAnalysisTimelineProps> = ({
     new Date(item.executionDate).toLocaleDateString()
   );
 
+  const handleMouseEnter = (metric: string) => {
+    setHoveredMetric(metric);
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredMetric(null);
+  };
+
   return (
     <div>
       <label htmlFor="domain-select">Select Domain:</label>
@@ -109,8 +119,11 @@ const CodeAnalysisTimeline: React.FC<CodeAnalysisTimelineProps> = ({
           />
           <YAxis />
           <Tooltip />
-          <Legend />
-          {Object.keys(domainData[0] || {})
+          <Legend
+            onMouseEnter={({ value }) => handleMouseEnter(value)}
+            onMouseLeave={handleMouseLeave}
+          />
+         {Object.keys(domainData[0] || {})
             .filter(key => key !== 'executionDate')
             .map(metric => (
               <Line
@@ -121,6 +134,22 @@ const CodeAnalysisTimeline: React.FC<CodeAnalysisTimelineProps> = ({
               />
             ))}
         </LineChart>
+
+        {hoveredMetric && metricExplanations[hoveredMetric] && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '20px',
+            left: '20px',
+            padding: '10px',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            color: 'white',
+            borderRadius: '5px',
+          }}
+        >
+          <strong>{hoveredMetric}</strong>: {metricExplanations[hoveredMetric]}
+        </div>
+      )}
       </ResponsiveContainer>
     </div>
   );
