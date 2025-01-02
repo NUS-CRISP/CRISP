@@ -4,14 +4,7 @@ import {
   metricExplanations,
 } from '@/lib/utils';
 import React, { useState } from 'react';
-import {
-  Grid,
-  Card,
-  Text,
-  Title,
-  Container,
-  Center,
-} from '@mantine/core';
+import { Grid, Card, Text, Title, Container, Center } from '@mantine/core';
 
 interface CodeAnalysisOverviewProps {
   latestData: {
