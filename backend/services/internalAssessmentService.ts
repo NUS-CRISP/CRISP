@@ -295,6 +295,7 @@ export const addInternalAssessmentsToCourse = async (
       customInstruction: 'Select students to evaluate.',
       isLocked: true,
       isRequired: true,
+      order: 1,
     });
     await teamMemberSelectionQuestion.save();
 

@@ -104,6 +104,7 @@ const setupData = async () => {
     type: 'Team Member Selection',
     isRequired: true,
     isLocked: true,
+    order: 1,
   });
   await teamMemberQuestion.save();
   const teamMemberAnswer = new TeamMemberSelectionAnswerModel({
@@ -129,6 +130,7 @@ const setupData = async () => {
         points: 5,
       },
     ] as MultipleChoiceOption[],
+    order: 2,
   });
   await mcQuestion.save();
   const mcAnswer = new MultipleChoiceAnswerModel({
@@ -288,9 +290,10 @@ describe('internalAssessmentService', () => {
       const questionData = {
         type: 'Multiple Choice',
         text: 'What is 2+2?',
+        order: 2,
         isScored: true,
         options: [{ text: '4', points: 1 }],
-      } as MultipleChoiceQuestion;
+      } as  MultipleChoiceQuestion;
       const question = await addQuestionToAssessment(
         assessment._id.toString(),
         questionData,

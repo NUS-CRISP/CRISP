@@ -78,6 +78,7 @@ describe('Submission Model', () => {
       text: 'Enter your NUSNET ID',
       type: 'NUSNET ID',
       isRequired: true,
+      order: 1,
     });
     await question.save();
 

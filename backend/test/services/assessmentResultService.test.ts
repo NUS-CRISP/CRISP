@@ -94,6 +94,7 @@ describe('assessmentResultService', () => {
       type: 'Team Member Selection',
       isRequired: true,
       isLocked: true,
+      order: 1,
     });
     await teamMemberQuestion.save();
     teamMemberQuestionId = teamMemberQuestion._id;
@@ -120,6 +121,7 @@ describe('assessmentResultService', () => {
           points: 5,
         },
       ] as MultipleChoiceOption[],
+      order: 2,
     });
     await mcQuestion.save();
     mcQuestionId = mcQuestion._id;

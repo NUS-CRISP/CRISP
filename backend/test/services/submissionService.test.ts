@@ -99,6 +99,7 @@ const setupData = async () => {
     type: 'Team Member Selection',
     isRequired: true,
     isLocked: true,
+    order: 1,
   });
   await teamMemberQuestion.save();
 
@@ -118,6 +119,7 @@ const setupData = async () => {
         points: 5,
       },
     ] as MultipleChoiceOption[],
+    order: 2,
   });
   await mcQuestion.save();
 

@@ -32,6 +32,7 @@ describe('Question Model', () => {
         'Enter your NUSNET ID starting with E followed by 7 digits.',
       isLocked: true,
       isRequired: true,
+      order: 2,
     });
 
     const savedQuestion = await question.save();
@@ -52,6 +53,7 @@ describe('Question Model', () => {
       isScored: true,
       isRequired: true,
       isLocked: false,
+      order: 2,
     });
 
     const savedQuestion = await question.save();
@@ -73,6 +75,7 @@ describe('Question Model', () => {
       isScored: true,
       isRequired: true,
       isLocked: false,
+      order: 2,
     });
 
     const savedQuestion = await question.save();
@@ -92,6 +95,7 @@ describe('Question Model', () => {
       maxPoints: 10,
       isRequired: true,
       isLocked: false,
+      order: 2,
     });
 
     const savedQuestion = await question.save();

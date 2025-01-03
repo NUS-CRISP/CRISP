@@ -4,6 +4,7 @@ import QuestionModel from './Question';
 export interface BaseQuestion extends Document {
   text: string;
   type: string;
+  order: number;
   customInstruction?: string;
   isRequired: boolean;
   isLocked: boolean;

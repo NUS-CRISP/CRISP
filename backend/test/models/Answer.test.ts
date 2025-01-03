@@ -40,6 +40,7 @@ describe('Answer Model', () => {
         'Enter your NUSNET ID starting with E followed by 7 digits.',
       isLocked: true,
       isRequired: true,
+      order: 2,
     });
 
     const answer = new NUSNETIDAnswerModel({
@@ -58,6 +59,7 @@ describe('Answer Model', () => {
       text: 'Choose your favorite color',
       isRequired: true,
       isScored: false,
+      order: 2,
     });
     await question.save();
 
