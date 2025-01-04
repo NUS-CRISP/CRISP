@@ -243,8 +243,8 @@ export const getUnmarkedAssignmentsByGraderIdController = async (
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
     } else {
-      console.error('Error fetching assignments by TA:', error);
-      res.status(500).json({ error: 'Failed to fetch assignments by TA' });
+      console.error('Error fetching assignments by grader:', error);
+      res.status(500).json({ error: 'Failed to fetch assignments by grader' });
     }
   }
 };

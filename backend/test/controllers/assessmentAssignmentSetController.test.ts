@@ -5,6 +5,7 @@ import {
   getAssignmentSetController,
   updateAssignmentSetController,
   getAssignmentsByGraderIdController,
+  getUnmarkedAssignmentsByGraderIdController,
 } from '../../controllers/assessmentAssignmentSetController';
 import * as assessmentAssignmentSetService from '../../services/assessmentAssignmentSetService';
 import * as accountService from '../../services/accountService';
@@ -106,7 +107,7 @@ describe('assessmentAssignmentSetController', () => {
   });
 
   describe('getAssignmentSetController', () => {
-    it('should retrieve an AssessmentAssignmentSet and return 200', async () => {
+    it('should retrieve an AssessmentAssignmentSet and return 200 (granularity: team)', async () => {
       const req = mockRequest();
       req.params = { assessmentId: 'assessment123' };
       const res = mockResponse();
@@ -127,6 +128,29 @@ describe('assessmentAssignmentSetController', () => {
       ).toHaveBeenCalledWith('assessment123');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(['team1', 'team2']);
+    });
+
+    it('should retrieve an AssessmentAssignmentSet and return 200 (granularity: individual)', async () => {
+      const req = mockRequest();
+      req.params = { assessmentId: 'assessment123' };
+      const res = mockResponse();
+
+      const mockAssignmentSet = {
+        assignedTeams: null,
+        assignedUsers: ['user1', 'user2'],
+      };
+
+      jest
+        .spyOn(assessmentAssignmentSetService, 'getAssignmentSetByAssessmentId')
+        .mockResolvedValue(mockAssignmentSet as any);
+
+      await getAssignmentSetController(req, res);
+
+      expect(
+        assessmentAssignmentSetService.getAssignmentSetByAssessmentId
+      ).toHaveBeenCalledWith('assessment123');
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(['user1', 'user2']);
     });
 
     it('should handle NotFoundError and return 404', async () => {
@@ -165,10 +189,13 @@ describe('assessmentAssignmentSetController', () => {
   });
 
   describe('updateAssignmentSetController', () => {
-    it('should update the assignedTeams and return 200', async () => {
+    it('should update the assignedTeams and return 200 (granularity: team)', async () => {
       const req = mockRequest();
       req.params = { assessmentId: 'assessment123' };
-      req.body = { assignedTeams: ['team1', 'team2'], assignedUsers: null };
+      req.body = {
+        assignedTeams: ['team1', 'team2'],
+        assignedUsers: null
+      };
       const res = mockResponse();
 
       const updatedSet = {
@@ -187,6 +214,57 @@ describe('assessmentAssignmentSetController', () => {
       ).toHaveBeenCalledWith('assessment123', ['team1', 'team2'], null);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(updatedSet);
+    });
+
+    it('should update the assignedTeams and return 200 (granularity: individual)', async () => {
+      const req = mockRequest();
+      req.params = { assessmentId: 'assessment123' };
+      req.body = {
+        assignedTeams: null,
+        assignedUsers: ['user1', 'user2']
+      };
+      const res = mockResponse();
+
+      const updatedSet = {
+        assignedTeams: null,
+        assignedUsers: ['user1', 'user2'],
+      };
+
+      jest
+        .spyOn(assessmentAssignmentSetService, 'updateAssignmentSet')
+        .mockResolvedValue(updatedSet as any);
+
+      await updateAssignmentSetController(req, res);
+
+      expect(
+        assessmentAssignmentSetService.updateAssignmentSet
+      ).toHaveBeenCalledWith('assessment123', null, ['user1', 'user2']);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(updatedSet);
+    });
+
+    it('should not allow mixed assignment types and return 400', async () => {
+      const req = mockRequest();
+      req.params = { assessmentId: 'assessment123' };
+      req.body = { assignedTeams: ['team1', 'team2'], assignedUsers: ['user1', 'user2'] };
+      const res = mockResponse();
+
+      await updateAssignmentSetController(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'No mixed assignment types are allowed.' });
+    });
+
+    it('should handle missing assignments and return 400', async () => {
+      const req = mockRequest();
+      req.params = { assessmentId: 'assessment123' };
+      req.body = { assignedTeams: null, assignedUsers: null };
+      const res = mockResponse();
+
+      await updateAssignmentSetController(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'No assignments given, assignments are required.' });
     });
 
     it('should handle BadRequestError and return 400', async () => {
@@ -242,7 +320,7 @@ describe('assessmentAssignmentSetController', () => {
     });
   });
 
-  describe('getAssignmentsByTAIdController', () => {
+  describe('getAssignmentsByGraderIdController', () => {
     it('should retrieve assignments for the TA and return 200', async () => {
       const req = mockRequest();
       req.params = { assessmentId: 'assessment123' };
@@ -312,6 +390,84 @@ describe('assessmentAssignmentSetController', () => {
         .mockRejectedValue(new Error('Some error'));
 
       await getAssignmentsByGraderIdController(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to fetch assignments by grader',
+      });
+    });
+  });
+
+  describe('getUnmarkedAssignmentsByGraderIdController', () => {
+    it('should retrieve unmarked assignments for the TA and return 200', async () => {
+      const req = mockRequest();
+      req.params = { assessmentId: 'assessment123' };
+      const res = mockResponse();
+
+      const accountId = 'account123';
+      const userId = 'user123';
+      const assignments = ['team1', 'team2'];
+
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
+      jest
+        .spyOn(accountService, 'getUserIdByAccountId')
+        .mockResolvedValue(userId);
+      jest
+        .spyOn(assessmentAssignmentSetService, 'getUnmarkedAssignmentsByTAId')
+        .mockResolvedValue(assignments as any);
+
+      await getUnmarkedAssignmentsByGraderIdController(req, res);
+
+      expect(authUtils.getAccountId).toHaveBeenCalledWith(req);
+      expect(accountService.getUserIdByAccountId).toHaveBeenCalledWith(
+        accountId
+      );
+      expect(
+        assessmentAssignmentSetService.getUnmarkedAssignmentsByTAId
+      ).toHaveBeenCalledWith(userId, 'assessment123');
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(assignments);
+    });
+
+    it('should handle NotFoundError and return 404', async () => {
+      const req = mockRequest();
+      req.params = { assessmentId: 'assessment123' };
+      const res = mockResponse();
+
+      const accountId = 'account123';
+      const userId = 'user123';
+
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
+      jest
+        .spyOn(accountService, 'getUserIdByAccountId')
+        .mockResolvedValue(userId);
+      jest
+        .spyOn(assessmentAssignmentSetService, 'getUnmarkedAssignmentsByTAId')
+        .mockRejectedValue(new NotFoundError('Assignments not found'));
+
+      await getUnmarkedAssignmentsByGraderIdController(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Assignments not found' });
+    });
+
+    it('should handle unexpected errors and return 500', async () => {
+      const req = mockRequest();
+      req.params = { assessmentId: 'assessment123' };
+      const res = mockResponse();
+
+      const accountId = 'account123';
+      const userId = 'user123';
+
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
+      jest
+        .spyOn(accountService, 'getUserIdByAccountId')
+        .mockResolvedValue(userId);
+      jest
+        .spyOn(assessmentAssignmentSetService, 'getUnmarkedAssignmentsByTAId')
+        .mockRejectedValue(new Error('Some error'));
+
+      await getUnmarkedAssignmentsByGraderIdController(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
