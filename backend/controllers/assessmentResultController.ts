@@ -48,7 +48,7 @@ export const getOrCreateAssessmentResultsController = async (
     const assessmentResults = await getOrCreateAssessmentResults(assessmentId);
     if (!assessmentResults) {
       throw new NotFoundError(
-        'Assessment Results not found for this assessment'
+        'Assessment results not found for this assessment'
       );
     }
 
@@ -114,7 +114,7 @@ export const getOrCreateAssessmentResultsController = async (
             assessmentResult = {
               _id: 'temp-team-' + studentId,
               assessment: assessmentId,
-              team: assignedTeam.team,
+              student: member,
               marks: [],
             };
           }
