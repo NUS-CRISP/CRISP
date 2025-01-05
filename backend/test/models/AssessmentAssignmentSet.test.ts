@@ -11,6 +11,12 @@ let mongoServer: MongoMemoryServer;
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
   await mongoose.connect(mongoServer.getUri());
+
+  await AssessmentAssignmentSetModel.init();
+  await InternalAssessmentModel.init();
+  await TeamModel.init();
+  await CourseModel.init();
+  await TeamSetModel.init();
 });
 
 beforeEach(async () => {
