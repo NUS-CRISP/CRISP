@@ -151,7 +151,7 @@ export const getUserSubmissions = async (req: Request, res: Response) => {
  *
  * @returns {Promise<void>}
  *  - 200 OK: Returns an array of Submission objects (scores masked if user is not admin/faculty).
- *  - 403 Forbidden: If the user is not admin/faculty.
+ *  - 403 Forbidden: If the user is not admin/faculty/teaching assistant.
  *  - 500 Internal Server Error: For any unknown runtime or server errors.
  *
  * @description
@@ -167,7 +167,7 @@ export const getAllSubmissions = async (req: Request, res: Response) => {
 
     if (
       !account ||
-      (account.role !== 'admin' && account.role !== 'Faculty member')
+      (account.role !== 'admin' && account.role !== 'Faculty member' && account.role !== 'Teaching assistant')
     ) {
       throw new MissingAuthorizationError('Access denied');
     }
