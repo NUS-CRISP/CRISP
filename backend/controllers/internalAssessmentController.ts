@@ -183,14 +183,13 @@ export const addQuestionsToAssessmentController = async (
     const { assessmentId } = req.params;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const questionDatas: any[] = req.body.items;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const questions: any[] = [];
 
-    questionDatas.forEach(async questionData => {
-      questions.push(
-        await addQuestionToAssessment(assessmentId, questionData, accountId)
-      );
+    const questionPromises = questionDatas.map(questionData => {
+      return addQuestionToAssessment(assessmentId, questionData, accountId);
     });
+
+    // Wait for all of them in parallel:
+    const questions = await Promise.all(questionPromises);
 
     res.status(201).json(questions);
   } catch (error) {
