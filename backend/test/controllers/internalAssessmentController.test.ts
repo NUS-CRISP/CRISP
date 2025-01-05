@@ -389,7 +389,6 @@ describe('internalAssessmentController', () => {
     });
   });
 
-  // NEW: Tests for addQuestionsToAssessmentController (bulk CSV-like)
   describe('addQuestionsToAssessmentController', () => {
     it('should add multiple questions to an assessment and return 201', async () => {
       const req = mockRequest();
@@ -409,14 +408,12 @@ describe('internalAssessmentController', () => {
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
       const addQuestionSpy = jest
         .spyOn(internalAssessmentService, 'addQuestionToAssessment')
-        // For each question, we mock a resolved question:
         .mockResolvedValueOnce(mockQuestion1 as any)
         .mockResolvedValueOnce(mockQuestion2 as any);
 
       await addQuestionsToAssessmentController(req, res);
 
       expect(authUtils.getAccountId).toHaveBeenCalledWith(req);
-      // We expect it to call addQuestionToAssessment for each question item
       expect(addQuestionSpy).toHaveBeenCalledTimes(2);
       expect(addQuestionSpy).toHaveBeenNthCalledWith(
         1,
@@ -432,7 +429,6 @@ describe('internalAssessmentController', () => {
       );
 
       expect(res.status).toHaveBeenCalledWith(201);
-      // The final JSON array should contain the two mock questions
       expect(res.json).toHaveBeenCalledWith([mockQuestion1, mockQuestion2]);
     });
 
