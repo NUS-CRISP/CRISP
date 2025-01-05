@@ -7,6 +7,7 @@ import {
   deleteUserSubmission,
   getSubmissionByIdController,
   adjustSubmissionScoreController,
+  bulkDeleteSubmissionsByAssessment,
 } from '../../controllers/submissionController';
 import * as submissionService from '../../services/submissionService';
 import * as authUtils from '../../utils/auth';
@@ -17,6 +18,7 @@ import {
   NotFoundError,
   MissingAuthorizationError,
 } from '../../services/errors';
+import Role from '@shared/types/auth/Role';
 
 jest.mock('../../services/submissionService');
 jest.mock('../../utils/auth');
@@ -246,6 +248,24 @@ describe('submissionController', () => {
       expect(res.json).toHaveBeenCalledWith({ error: 'User not found' });
     });
 
+    it('should handle MissingAuthorizationError from no matching account ID and return 401', async () => {
+      const req = mockRequest();
+      req.params = { assessmentId: 'assessment123' };
+      const res = mockResponse();
+
+      jest
+        .spyOn(authUtils, 'getAccountId')
+        .mockResolvedValue('accountId');
+      jest
+        .spyOn(AccountModel, 'findById')
+        .mockResolvedValue(null);
+
+      await getUserSubmissions(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Unauthorized' });
+    });
+
     it('should handle MissingAuthorizationError and return 401', async () => {
       const req = mockRequest();
       req.params = { assessmentId: 'assessment123' };
@@ -268,7 +288,7 @@ describe('submissionController', () => {
 
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account123');
       jest
-        .spyOn(accountService, 'getUserIdByAccountId')
+        .spyOn(AccountModel, 'findById')
         .mockRejectedValue(new Error('Unexpected error'));
 
       await getUserSubmissions(req, res);
@@ -287,7 +307,7 @@ describe('submissionController', () => {
       const res = mockResponse();
 
       const accountId = 'account123';
-      const account = { id: accountId, role: 'admin' };
+      const account = { id: accountId, role: Role.Admin };
       const mockSubmissions = [{ id: 'submission123' }];
 
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
@@ -304,6 +324,32 @@ describe('submissionController', () => {
       );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockSubmissions);
+    });
+
+    it('should retrieve all submissions for TAs and return 200 with scores hidden', async () => {
+      const req = mockRequest();
+      req.params = { assessmentId: 'assessment123' };
+      const res = mockResponse();
+
+      const accountId = 'account123';
+      const account = { id: accountId, role: Role.TA };
+      const mockSubmissions = [{ id: 'submission123', score: 69, adjustedScore: 420 }];
+      const mockResolvedSubmissions = [{ id: 'submission123', score: -1, adjustedScore: -1 }];
+
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
+      (AccountModel.findById as jest.Mock).mockResolvedValue(account);
+      jest
+        .spyOn(submissionService, 'getSubmissionsByAssessment')
+        .mockResolvedValue(mockSubmissions as any);
+
+      await getAllSubmissions(req, res);
+
+      expect(AccountModel.findById).toHaveBeenCalledWith(accountId);
+      expect(submissionService.getSubmissionsByAssessment).toHaveBeenCalledWith(
+        'assessment123'
+      );
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(mockResolvedSubmissions);
     });
 
     it('should handle MissingAuthorizationError and return 403', async () => {
@@ -459,6 +505,32 @@ describe('submissionController', () => {
       expect(submission.populate).toHaveBeenCalledWith('assessment');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(submission);
+    });
+
+    it('should handle missing submission from invalid submissionId and return 404', async () => {
+      const req = mockRequest();
+      req.params = { submissionId: 'submission123' };
+      const res = mockResponse();
+
+      const accountId = 'account123';
+      const userId = 'user123';
+
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
+      jest
+        .spyOn(accountService, 'getUserIdByAccountId')
+        .mockResolvedValue(userId);
+        (SubmissionModel.findById as jest.Mock).mockImplementation(() => ({
+          // The first .populate() call returns an object with another .populate()
+          populate: jest.fn().mockImplementation(() => ({
+            // The second .populate() call finally resolves to the "mockSubmission"
+            populate: jest.fn().mockResolvedValue(undefined),
+          })),
+        }));
+
+      await getSubmissionByIdController(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Submission not found' });
     });
 
     it('should handle NotFoundError and return 404', async () => {
@@ -645,6 +717,110 @@ describe('submissionController', () => {
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
         error: 'Failed to adjust submission score.',
+      });
+    });
+  });
+
+  describe('bulkDeleteSubmissionsByAssessment', () => {
+    it('should soft-delete all submissions for an assessment and return 200', async () => {
+      const req = mockRequest();
+      req.params = { assessmentId: 'assessmentABC' };
+      const res = mockResponse();
+
+      const accountId = 'account123';
+      const account = { id: accountId, role: 'Faculty member' }; // or 'admin'
+      const userId = 'user123';
+      const mockDeletedCount = 5;
+
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
+      (AccountModel.findById as jest.Mock).mockResolvedValue(account);
+      jest
+        .spyOn(accountService, 'getUserIdByAccountId')
+        .mockResolvedValue(userId);
+      (submissionService.softDeleteSubmissionsByAssessmentId as jest.Mock).mockResolvedValue(
+        mockDeletedCount
+      );
+
+      await bulkDeleteSubmissionsByAssessment(req, res);
+
+      expect(authUtils.getAccountId).toHaveBeenCalledWith(req);
+      expect(AccountModel.findById).toHaveBeenCalledWith(accountId);
+      expect(accountService.getUserIdByAccountId).toHaveBeenCalledWith(accountId);
+      expect(
+        submissionService.softDeleteSubmissionsByAssessmentId
+      ).toHaveBeenCalledWith(userId, 'assessmentABC');
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: `Successfully soft-deleted ${mockDeletedCount} submission(s) for Assessment assessmentABC.`,
+        deletedCount: mockDeletedCount,
+      });
+    });
+
+    it('should handle NotFoundError or BadRequestError and return 404', async () => {
+      const req = mockRequest();
+      req.params = { assessmentId: 'assessmentABC' };
+      const res = mockResponse();
+
+      const accountId = 'account123';
+      const account = { id: accountId, role: 'Faculty member' };
+
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
+      (AccountModel.findById as jest.Mock).mockResolvedValue(account);
+      jest
+        .spyOn(accountService, 'getUserIdByAccountId')
+        .mockResolvedValue('user123');
+      (submissionService.softDeleteSubmissionsByAssessmentId as jest.Mock).mockRejectedValue(
+        new NotFoundError('Assessment not found')
+      );
+
+      await bulkDeleteSubmissionsByAssessment(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Assessment not found' });
+    });
+
+    it('should handle MissingAuthorizationError if user is not admin/faculty and return 403', async () => {
+      const req = mockRequest();
+      req.params = { assessmentId: 'assessmentABC' };
+      const res = mockResponse();
+
+      const accountId = 'account123';
+      const account = { id: accountId, role: 'Student' }; // Not admin/faculty
+
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
+      (AccountModel.findById as jest.Mock).mockResolvedValue(account);
+
+      await bulkDeleteSubmissionsByAssessment(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'You do not have permission to perform this action.',
+      });
+    });
+
+    it('should handle unexpected errors and return 500', async () => {
+      const req = mockRequest();
+      req.params = { assessmentId: 'assessmentABC' };
+      const res = mockResponse();
+
+      const accountId = 'account123';
+      const account = { id: accountId, role: 'Faculty member' };
+
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
+      (AccountModel.findById as jest.Mock).mockResolvedValue(account);
+      jest
+        .spyOn(accountService, 'getUserIdByAccountId')
+        .mockResolvedValue('user123');
+      (submissionService.softDeleteSubmissionsByAssessmentId as jest.Mock).mockRejectedValue(
+        new Error('Unexpected error')
+      );
+
+      await bulkDeleteSubmissionsByAssessment(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to bulk delete submissions.',
       });
     });
   });
