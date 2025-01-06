@@ -196,6 +196,139 @@ describe('assessmentResultService', () => {
         NotFoundError
       );
     });
+
+    it('should throw BadRequestError if the assessmentId is not a valid ObjectId', async () => {
+      await expect(getOrCreateAssessmentResults('not-a-valid-id')).rejects.toThrow(
+        BadRequestError
+      );
+    });
+
+    it('should throw BadRequestError if the assignment set has no assignedTeams or assignedUsers', async () => {
+      const startDate = new Date();
+      startDate.setUTCFullYear(new Date().getUTCFullYear() - 1);
+      const assessment = await InternalAssessmentModel.create({
+        course: new mongoose.Types.ObjectId(),
+        assessmentName: 'No Assignments',
+        granularity: 'team',
+        isReleased: true,
+        areSubmissionsEditable: true,
+        startDate: startDate,
+        description: 'Hello',
+      });
+
+      await AssessmentAssignmentSetModel.create({
+        assessment: assessment._id,
+        assignedTeams: [],
+        assignedUsers: [],
+      });
+
+      await expect(
+        getOrCreateAssessmentResults(assessment._id.toString())
+      ).rejects.toThrowError(
+        'AssessmentAssignmentSet does not have assignments'
+      );
+    });
+
+    it('should throw BadRequestError if no students are found in the assigned teams', async () => {
+      const emptyTeam = await TeamModel.create({
+        number: 123,
+        members: [],
+      });
+
+      const startDate = new Date();
+      startDate.setUTCFullYear(new Date().getUTCFullYear() - 1);
+      const assessment = await InternalAssessmentModel.create({
+        course: new mongoose.Types.ObjectId(),
+        assessmentName: 'Empty Team Assessment',
+        granularity: 'team',
+        isReleased: true,
+        areSubmissionsEditable: true,
+        startDate: startDate,
+        description: 'Kawaii'
+      });
+      await assessment.save();
+
+      await AssessmentAssignmentSetModel.create({
+        assessment: assessment._id,
+        assignedTeams: [
+          {
+            team: emptyTeam._id,
+            tas: [],
+          },
+        ],
+      });
+
+      await expect(
+        getOrCreateAssessmentResults(assessment._id.toString())
+      ).rejects.toThrowError('No students found in the AssessmentAssignmentSet.');
+    });
+
+    it('should handle a case where assignedTeams.team is null after population', async () => {
+      const startDate = new Date();
+      startDate.setUTCFullYear(new Date().getUTCFullYear() - 1);
+      const assessment = await InternalAssessmentModel.create({
+        course: new mongoose.Types.ObjectId(),
+        assessmentName: 'Null Team Test',
+        granularity: 'team',
+        isReleased: true,
+        areSubmissionsEditable: true,
+        startDate: startDate,
+        description: 'mo'
+      });
+      await assessment.save();
+
+      const bogusTeamId = new mongoose.Types.ObjectId();
+      await AssessmentAssignmentSetModel.create({
+        assessment: assessment._id,
+        assignedTeams: [
+          {
+            team: bogusTeamId,
+            tas: [],
+          },
+        ],
+      });
+
+      await expect(getOrCreateAssessmentResults(assessment._id.toString()))
+        .rejects.toThrow();
+    });
+
+    it('should add student IDs from assignedTeams to the studentIdSet', async () => {
+      const startDate = new Date();
+      startDate.setUTCFullYear(new Date().getUTCFullYear() - 1);
+      const newAssessment = await InternalAssessmentModel.create({
+        course: new mongoose.Types.ObjectId(),
+        assessmentName: 'Team-based Assessment',
+        granularity: 'team',
+        isReleased: true,
+        areSubmissionsEditable: true,
+        startDate,
+        description: 'Kyou'
+      });
+
+      const student = await UserModel.create({
+        name: 'Team Student',
+        identifier: 'teamStudent123',
+      });
+
+      const team = await TeamModel.create({
+        number: 99,
+        members: [student._id],
+      });
+
+      await AssessmentAssignmentSetModel.create({
+        assessment: newAssessment._id,
+        assignedTeams: [
+          {
+            team: team._id,
+            tas: [],
+          },
+        ],
+      });
+
+      const results = await getOrCreateAssessmentResults(newAssessment._id.toString());
+      expect(results).toHaveLength(1);
+      expect(results[0].student._id.toString()).toBe(student._id.toString());
+    });
   });
   /**
    * Disambiguation: This method is for updating a submission after a new result object is created.
