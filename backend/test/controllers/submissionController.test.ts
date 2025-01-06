@@ -253,12 +253,8 @@ describe('submissionController', () => {
       req.params = { assessmentId: 'assessment123' };
       const res = mockResponse();
 
-      jest
-        .spyOn(authUtils, 'getAccountId')
-        .mockResolvedValue('accountId');
-      jest
-        .spyOn(AccountModel, 'findById')
-        .mockResolvedValue(null);
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('accountId');
+      jest.spyOn(AccountModel, 'findById').mockResolvedValue(null);
 
       await getUserSubmissions(req, res);
 
@@ -333,8 +329,12 @@ describe('submissionController', () => {
 
       const accountId = 'account123';
       const account = { id: accountId, role: Role.TA };
-      const mockSubmissions = [{ id: 'submission123', score: 69, adjustedScore: 420 }];
-      const mockResolvedSubmissions = [{ id: 'submission123', score: -1, adjustedScore: -1 }];
+      const mockSubmissions = [
+        { id: 'submission123', score: 69, adjustedScore: 420 },
+      ];
+      const mockResolvedSubmissions = [
+        { id: 'submission123', score: -1, adjustedScore: -1 },
+      ];
 
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
       (AccountModel.findById as jest.Mock).mockResolvedValue(account);
@@ -519,13 +519,13 @@ describe('submissionController', () => {
       jest
         .spyOn(accountService, 'getUserIdByAccountId')
         .mockResolvedValue(userId);
-        (SubmissionModel.findById as jest.Mock).mockImplementation(() => ({
-          // The first .populate() call returns an object with another .populate()
-          populate: jest.fn().mockImplementation(() => ({
-            // The second .populate() call finally resolves to the "mockSubmission"
-            populate: jest.fn().mockResolvedValue(undefined),
-          })),
-        }));
+      (SubmissionModel.findById as jest.Mock).mockImplementation(() => ({
+        // The first .populate() call returns an object with another .populate()
+        populate: jest.fn().mockImplementation(() => ({
+          // The second .populate() call finally resolves to the "mockSubmission"
+          populate: jest.fn().mockResolvedValue(undefined),
+        })),
+      }));
 
       await getSubmissionByIdController(req, res);
 
@@ -737,15 +737,17 @@ describe('submissionController', () => {
       jest
         .spyOn(accountService, 'getUserIdByAccountId')
         .mockResolvedValue(userId);
-      (submissionService.softDeleteSubmissionsByAssessmentId as jest.Mock).mockResolvedValue(
-        mockDeletedCount
-      );
+      (
+        submissionService.softDeleteSubmissionsByAssessmentId as jest.Mock
+      ).mockResolvedValue(mockDeletedCount);
 
       await bulkDeleteSubmissionsByAssessment(req, res);
 
       expect(authUtils.getAccountId).toHaveBeenCalledWith(req);
       expect(AccountModel.findById).toHaveBeenCalledWith(accountId);
-      expect(accountService.getUserIdByAccountId).toHaveBeenCalledWith(accountId);
+      expect(accountService.getUserIdByAccountId).toHaveBeenCalledWith(
+        accountId
+      );
       expect(
         submissionService.softDeleteSubmissionsByAssessmentId
       ).toHaveBeenCalledWith(userId, 'assessmentABC');
@@ -770,9 +772,9 @@ describe('submissionController', () => {
       jest
         .spyOn(accountService, 'getUserIdByAccountId')
         .mockResolvedValue('user123');
-      (submissionService.softDeleteSubmissionsByAssessmentId as jest.Mock).mockRejectedValue(
-        new NotFoundError('Assessment not found')
-      );
+      (
+        submissionService.softDeleteSubmissionsByAssessmentId as jest.Mock
+      ).mockRejectedValue(new NotFoundError('Assessment not found'));
 
       await bulkDeleteSubmissionsByAssessment(req, res);
 
@@ -812,9 +814,9 @@ describe('submissionController', () => {
       jest
         .spyOn(accountService, 'getUserIdByAccountId')
         .mockResolvedValue('user123');
-      (submissionService.softDeleteSubmissionsByAssessmentId as jest.Mock).mockRejectedValue(
-        new Error('Unexpected error')
-      );
+      (
+        submissionService.softDeleteSubmissionsByAssessmentId as jest.Mock
+      ).mockRejectedValue(new Error('Unexpected error'));
 
       await bulkDeleteSubmissionsByAssessment(req, res);
 

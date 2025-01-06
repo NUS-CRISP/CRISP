@@ -49,19 +49,40 @@ describe('assessmentResultController', () => {
       const mockAssessment = { id: 'assessment123', granularity: 'individual' };
       const mockAssignmentSet = {
         assignedUsers: [
-          { user: { _id: 'user1' }, tas: [{ _id: new ObjectId('aaaaaabbbbbbccccccdddddd') }] },
+          {
+            user: { _id: 'user1' },
+            tas: [{ _id: new ObjectId('aaaaaabbbbbbccccccdddddd') }],
+          },
           { user: { _id: 'user2' }, tas: [{ _id: 'ta2' }] },
           { user: { _id: 'user3' }, tas: [{ _id: 'ta2' }] },
-        ]
+        ],
       };
       const mockAssessmentResults = [
-        { student: { _id: 'user1' }, marks: [{ marker: { _id: new ObjectId('aaaaaabbbbbbccccccdddddd')}}] },
+        {
+          student: { _id: 'user1' },
+          marks: [
+            { marker: { _id: new ObjectId('aaaaaabbbbbbccccccdddddd') } },
+          ],
+        },
         { student: { _id: 'user2' }, marks: [] },
       ];
       const mockResolvedAssessmentResults = [
-        { student: { _id: 'user1' }, marks: [{ marker: { _id: new ObjectId('aaaaaabbbbbbccccccdddddd')}}] },
-        { student: { _id: 'user2' }, marks: [{ marker: { _id: 'ta2' }, score: null, submission: null}] },
-        { _id: 'temp-user3', student: { _id: 'user3' }, marks: [{ marker: { _id: 'ta2' }, score: null, submission: null }], assessment: 'assessment123'}
+        {
+          student: { _id: 'user1' },
+          marks: [
+            { marker: { _id: new ObjectId('aaaaaabbbbbbccccccdddddd') } },
+          ],
+        },
+        {
+          student: { _id: 'user2' },
+          marks: [{ marker: { _id: 'ta2' }, score: null, submission: null }],
+        },
+        {
+          _id: 'temp-user3',
+          student: { _id: 'user3' },
+          marks: [{ marker: { _id: 'ta2' }, score: null, submission: null }],
+          assessment: 'assessment123',
+        },
       ];
 
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
@@ -87,7 +108,9 @@ describe('assessmentResultController', () => {
       expect(
         assessmentResultService.getOrCreateAssessmentResults
       ).toHaveBeenCalledWith('assessment123');
-      expect(res.json).toHaveBeenCalledWith({ data: mockResolvedAssessmentResults });
+      expect(res.json).toHaveBeenCalledWith({
+        data: mockResolvedAssessmentResults,
+      });
     });
 
     it('should retrieve or create assessment results and return 200 (granularity: team)', async () => {
@@ -124,9 +147,7 @@ describe('assessmentResultController', () => {
 
       const mockTeam1 = {
         _id: teamId1,
-        members: [
-          { _id: 'dddddddddddddddddddddddd' },
-        ],
+        members: [{ _id: 'dddddddddddddddddddddddd' }],
       };
       const mockTeam2 = {
         _id: teamId2,
@@ -143,49 +164,37 @@ describe('assessmentResultController', () => {
       const mockAssessmentResults = [
         {
           student: { _id: teamId1 },
-          marks: [
-            { marker: { _id: marker1 }, score: 75 },
-          ],
+          marks: [{ marker: { _id: marker1 }, score: 75 }],
         }, // This exists just to test if anything existing in initial results is properly retrieved.
         {
           _id: 'dddddddddddddddddddddddd',
           assessment: 'assessment123',
           student: { _id: mockTeam1.members[0]._id },
-          marks: [
-            { marker: { _id: marker1 }, score: null, submission: null },
-          ],
+          marks: [{ marker: { _id: marker1 }, score: null, submission: null }],
         },
       ];
 
       const mockResolvedAssessmentResults = [
         {
           student: { _id: teamId1 },
-          marks: [
-            { marker: { _id: marker1 }, score: 75 },
-          ],
+          marks: [{ marker: { _id: marker1 }, score: 75 }],
         },
         {
           _id: 'dddddddddddddddddddddddd',
           assessment: 'assessment123',
           student: { _id: mockTeam1.members[0]._id },
-          marks: [
-            { marker: { _id: marker1 }, score: null, submission: null },
-          ],
+          marks: [{ marker: { _id: marker1 }, score: null, submission: null }],
         },
         {
           _id: 'temp-team-eeeeeeeeeeeeeeeeeeeeeeee',
           student: { _id: 'eeeeeeeeeeeeeeeeeeeeeeee' },
-          marks: [
-            { marker: { _id: marker2 }, score: null, submission: null },
-          ],
+          marks: [{ marker: { _id: marker2 }, score: null, submission: null }],
           assessment: 'assessment123',
         },
         {
           _id: 'temp-team-ffffffffffffffffffffffff',
           student: { _id: 'ffffffffffffffffffffffff' },
-          marks: [
-            { marker: { _id: marker2 }, score: null, submission: null },
-          ],
+          marks: [{ marker: { _id: marker2 }, score: null, submission: null }],
           assessment: 'assessment123',
         },
       ];
@@ -203,15 +212,24 @@ describe('assessmentResultController', () => {
 
       const mockFindById = jest.spyOn(TeamModel, 'findById');
       mockFindById
-        .mockImplementationOnce(() => ({
-          populate: jest.fn().mockResolvedValue(mockTeam1),
-        } as any))
-        .mockImplementationOnce(() => ({
-          populate: jest.fn().mockResolvedValue(mockTeam2),
-        } as any))
-        .mockImplementationOnce(() => ({
-          populate: jest.fn().mockResolvedValue(mockTeam3),
-        } as any));
+        .mockImplementationOnce(
+          () =>
+            ({
+              populate: jest.fn().mockResolvedValue(mockTeam1),
+            }) as any
+        )
+        .mockImplementationOnce(
+          () =>
+            ({
+              populate: jest.fn().mockResolvedValue(mockTeam2),
+            }) as any
+        )
+        .mockImplementationOnce(
+          () =>
+            ({
+              populate: jest.fn().mockResolvedValue(mockTeam3),
+            }) as any
+        );
 
       // Execute
       await getOrCreateAssessmentResultsController(req, res);
@@ -240,7 +258,6 @@ describe('assessmentResultController', () => {
         data: mockResolvedAssessmentResults,
       });
     });
-
 
     it('should handle NotFoundError when assessment not found and return 404', async () => {
       const req = mockRequest();
@@ -377,7 +394,8 @@ describe('assessmentResultController', () => {
       await getOrCreateAssessmentResultsController(req, res);
 
       expect(res.json).toHaveBeenCalledWith({
-        error: 'Assessment is individual granularity, but assignments are for teams',
+        error:
+          'Assessment is individual granularity, but assignments are for teams',
       });
     });
 

@@ -167,7 +167,9 @@ export const getAllSubmissions = async (req: Request, res: Response) => {
 
     if (
       !account ||
-      (account.role !== 'admin' && account.role !== 'Faculty member' && account.role !== 'Teaching assistant')
+      (account.role !== 'admin' &&
+        account.role !== 'Faculty member' &&
+        account.role !== 'Teaching assistant')
     ) {
       throw new MissingAuthorizationError('Access denied');
     }

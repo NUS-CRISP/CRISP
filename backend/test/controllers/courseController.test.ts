@@ -1906,10 +1906,11 @@ describe('courseController', () => {
 
       await addInternalAssessments(req, res);
 
-      expect(internalAssessmentService.addInternalAssessmentsToCourse).toHaveBeenCalledWith(
-        'courseId',
-        [{ title: 'Internal Assessment 1', weight: 20 }]
-      );
+      expect(
+        internalAssessmentService.addInternalAssessmentsToCourse
+      ).toHaveBeenCalledWith('courseId', [
+        { title: 'Internal Assessment 1', weight: 20 },
+      ]);
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Assessments added successfully',
@@ -1931,10 +1932,9 @@ describe('courseController', () => {
 
       await addInternalAssessments(req, res);
 
-      expect(internalAssessmentService.addInternalAssessmentsToCourse).toHaveBeenCalledWith(
-        'courseId',
-        'invalid data'
-      );
+      expect(
+        internalAssessmentService.addInternalAssessmentsToCourse
+      ).toHaveBeenCalledWith('courseId', 'invalid data');
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
         error: 'Invalid or empty internal assessments data',
@@ -1954,10 +1954,11 @@ describe('courseController', () => {
 
       await addInternalAssessments(req, res);
 
-      expect(internalAssessmentService.addInternalAssessmentsToCourse).toHaveBeenCalledWith(
-        'invalidCourseId',
-        [{ title: 'Internal Assessment 1', weight: 20 }]
-      );
+      expect(
+        internalAssessmentService.addInternalAssessmentsToCourse
+      ).toHaveBeenCalledWith('invalidCourseId', [
+        { title: 'Internal Assessment 1', weight: 20 },
+      ]);
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
     });
@@ -1975,10 +1976,11 @@ describe('courseController', () => {
 
       await addInternalAssessments(req, res);
 
-      expect(internalAssessmentService.addInternalAssessmentsToCourse).toHaveBeenCalledWith(
-        'courseId',
-        [{ title: 'Internal Assessment 1', weight: 20 }]
-      );
+      expect(
+        internalAssessmentService.addInternalAssessmentsToCourse
+      ).toHaveBeenCalledWith('courseId', [
+        { title: 'Internal Assessment 1', weight: 20 },
+      ]);
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
         error: 'Failed to add assessments',
@@ -2001,9 +2003,7 @@ describe('courseController', () => {
 
       await getInternalAssessments(req, res);
 
-      expect(getInternalAssessmentsFromCourse).toHaveBeenCalledWith(
-        'courseId'
-      );
+      expect(getInternalAssessmentsFromCourse).toHaveBeenCalledWith('courseId');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockInternalAssessments);
     });
@@ -2035,9 +2035,7 @@ describe('courseController', () => {
 
       await getInternalAssessments(req, res);
 
-      expect(getInternalAssessmentsFromCourse).toHaveBeenCalledWith(
-        'courseId'
-      );
+      expect(getInternalAssessmentsFromCourse).toHaveBeenCalledWith('courseId');
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
         error: 'Failed to get assessments',

@@ -7,7 +7,10 @@ import {
   getAllTeamDataByCourse,
   getAllTeamDataNamesByCourse,
 } from '../../controllers/githubController';
-import { NotFoundError, MissingAuthorizationError } from '../../services/errors';
+import {
+  NotFoundError,
+  MissingAuthorizationError,
+} from '../../services/errors';
 import * as githubService from '../../services/githubService';
 import * as auth from '../../utils/auth';
 
@@ -171,7 +174,9 @@ describe('gitHubController', () => {
       await getAllTeamDataByCourse(req, res);
 
       expect(auth.getAccountId).toHaveBeenCalledWith(req);
-      expect(githubService.getAuthorizedTeamDataByCourse).not.toHaveBeenCalled();
+      expect(
+        githubService.getAuthorizedTeamDataByCourse
+      ).not.toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ error: 'Missing authorization' });
     });
@@ -212,10 +217,9 @@ describe('gitHubController', () => {
       await getAllTeamDataNamesByCourse(req, res);
 
       expect(auth.getAccountId).toHaveBeenCalledWith(req);
-      expect(githubService.getAuthorizedTeamDataNamesByCourse).toHaveBeenCalledWith(
-        'accountId',
-        'courseId'
-      );
+      expect(
+        githubService.getAuthorizedTeamDataNamesByCourse
+      ).toHaveBeenCalledWith('accountId', 'courseId');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockTeamNames);
     });
@@ -233,10 +237,9 @@ describe('gitHubController', () => {
       await getAllTeamDataNamesByCourse(req, res);
 
       expect(auth.getAccountId).toHaveBeenCalledWith(req);
-      expect(githubService.getAuthorizedTeamDataNamesByCourse).toHaveBeenCalledWith(
-        'accountId',
-        'invalidCourseId'
-      );
+      expect(
+        githubService.getAuthorizedTeamDataNamesByCourse
+      ).toHaveBeenCalledWith('accountId', 'invalidCourseId');
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
     });
@@ -254,7 +257,9 @@ describe('gitHubController', () => {
       await getAllTeamDataNamesByCourse(req, res);
 
       expect(auth.getAccountId).toHaveBeenCalledWith(req);
-      expect(githubService.getAuthorizedTeamDataNamesByCourse).not.toHaveBeenCalled();
+      expect(
+        githubService.getAuthorizedTeamDataNamesByCourse
+      ).not.toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ error: 'Missing authorization' });
     });
@@ -272,10 +277,9 @@ describe('gitHubController', () => {
       await getAllTeamDataNamesByCourse(req, res);
 
       expect(auth.getAccountId).toHaveBeenCalledWith(req);
-      expect(githubService.getAuthorizedTeamDataNamesByCourse).toHaveBeenCalledWith(
-        'accountId',
-        'courseId'
-      );
+      expect(
+        githubService.getAuthorizedTeamDataNamesByCourse
+      ).toHaveBeenCalledWith('accountId', 'courseId');
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch teams' });
     });
@@ -293,7 +297,9 @@ describe('gitHubController', () => {
 
       await checkInstallation(req, res);
 
-      expect(githubService.checkGitHubInstallation).toHaveBeenCalledWith('org1');
+      expect(githubService.checkGitHubInstallation).toHaveBeenCalledWith(
+        'org1'
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         installationId: mockInstallationId,
@@ -311,7 +317,9 @@ describe('gitHubController', () => {
 
       await checkInstallation(req, res);
 
-      expect(githubService.checkGitHubInstallation).toHaveBeenCalledWith('nonexistent-org');
+      expect(githubService.checkGitHubInstallation).toHaveBeenCalledWith(
+        'nonexistent-org'
+      );
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ message: error.message });
     });
@@ -327,7 +335,9 @@ describe('gitHubController', () => {
 
       await checkInstallation(req, res);
 
-      expect(githubService.checkGitHubInstallation).toHaveBeenCalledWith('org1');
+      expect(githubService.checkGitHubInstallation).toHaveBeenCalledWith(
+        'org1'
+      );
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
         message: 'An error occurred while checking the installation status.',

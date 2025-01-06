@@ -480,7 +480,9 @@ describe('internalAssessmentController', () => {
 
       jest
         .spyOn(authUtils, 'getAccountId')
-        .mockRejectedValue(new MissingAuthorizationError('Missing Authorization'));
+        .mockRejectedValue(
+          new MissingAuthorizationError('Missing Authorization')
+        );
 
       await addQuestionsToAssessmentController(req, res);
 
@@ -626,10 +628,11 @@ describe('internalAssessmentController', () => {
       expect(authUtils.getAccountId).toHaveBeenCalledWith(req);
       expect(internalAssessmentService.updateQuestionById).toHaveBeenCalledWith(
         'question123',
-        { text: 'Updated Question',
+        {
+          text: 'Updated Question',
           shortResponsePlaceholder: 'Hello',
-          type: 'Short Response Question'
-         },
+          type: 'Short Response Question',
+        },
         accountId
       );
       expect(res.status).toHaveBeenCalledWith(200);
@@ -834,7 +837,10 @@ describe('internalAssessmentController', () => {
 
       // Also mock recaluculateSubmissionsForAssessment
       const recalcSpy = jest
-        .spyOn(internalAssessmentService, 'recaluculateSubmissionsForAssessment')
+        .spyOn(
+          internalAssessmentService,
+          'recaluculateSubmissionsForAssessment'
+        )
         .mockResolvedValue(undefined as any);
 
       await releaseInternalAssessment(req, res);
@@ -1029,10 +1035,7 @@ describe('internalAssessmentController', () => {
         .spyOn(internalAssessmentService, 'reorderQuestions')
         .mockResolvedValue(undefined as any);
 
-      await reorderQuestionsInInternalAssessment(
-        req,
-        res
-      );
+      await reorderQuestionsInInternalAssessment(req, res);
 
       expect(authUtils.getAccountId).toHaveBeenCalledWith(req);
       expect(reorderSpy).toHaveBeenCalledWith(
@@ -1057,10 +1060,7 @@ describe('internalAssessmentController', () => {
         .spyOn(internalAssessmentService, 'reorderQuestions')
         .mockRejectedValue(new NotFoundError('Assessment not found'));
 
-      await reorderQuestionsInInternalAssessment(
-        req,
-        res
-      );
+      await reorderQuestionsInInternalAssessment(req, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ error: 'Assessment not found' });
@@ -1077,10 +1077,7 @@ describe('internalAssessmentController', () => {
         .spyOn(internalAssessmentService, 'reorderQuestions')
         .mockRejectedValue(new BadRequestError('Invalid reorder data'));
 
-      await reorderQuestionsInInternalAssessment(
-        req,
-        res
-      );
+      await reorderQuestionsInInternalAssessment(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ error: 'Invalid reorder data' });
@@ -1094,12 +1091,11 @@ describe('internalAssessmentController', () => {
 
       jest
         .spyOn(authUtils, 'getAccountId')
-        .mockRejectedValue(new MissingAuthorizationError('Missing Authorization'));
+        .mockRejectedValue(
+          new MissingAuthorizationError('Missing Authorization')
+        );
 
-      await reorderQuestionsInInternalAssessment(
-        req,
-        res
-      );
+      await reorderQuestionsInInternalAssessment(req, res);
 
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.json).toHaveBeenCalledWith({ error: 'Missing authorization' });
@@ -1116,10 +1112,7 @@ describe('internalAssessmentController', () => {
         .spyOn(internalAssessmentService, 'reorderQuestions')
         .mockRejectedValue(new Error('Unexpected error'));
 
-      await reorderQuestionsInInternalAssessment(
-        req,
-        res
-      );
+      await reorderQuestionsInInternalAssessment(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({

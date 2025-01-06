@@ -47,14 +47,21 @@ describe('teamController', () => {
       (getAccountId as jest.Mock).mockResolvedValue(mockAccountId);
 
       // Mock getUserIdByAccountId and getTeamsByTAIdAndCourseId
-      jest.spyOn(accountService, 'getUserIdByAccountId').mockResolvedValue(mockUserId);
-      jest.spyOn(teamService, 'getTeamsByTAIdAndCourseId').mockResolvedValue(mockTeams as unknown as Team[]);
+      jest
+        .spyOn(accountService, 'getUserIdByAccountId')
+        .mockResolvedValue(mockUserId);
+      jest
+        .spyOn(teamService, 'getTeamsByTAIdAndCourseId')
+        .mockResolvedValue(mockTeams as unknown as Team[]);
 
       await getTeamsByTAAndCourse(req, res);
 
       expect(getAccountId).toHaveBeenCalledWith(req);
       expect(getUserIdByAccountId).toHaveBeenCalledWith(mockAccountId);
-      expect(getTeamsByTAIdAndCourseId).toHaveBeenCalledWith(mockUserId, 'course123');
+      expect(getTeamsByTAIdAndCourseId).toHaveBeenCalledWith(
+        mockUserId,
+        'course123'
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockTeams);
     });
@@ -70,16 +77,23 @@ describe('teamController', () => {
       (getAccountId as jest.Mock).mockResolvedValue(mockAccountId);
 
       // Mock getUserIdByAccountId to return mockUserId
-      jest.spyOn(accountService, 'getUserIdByAccountId').mockResolvedValue(mockUserId);
+      jest
+        .spyOn(accountService, 'getUserIdByAccountId')
+        .mockResolvedValue(mockUserId);
 
       // Mock getTeamsByTAIdAndCourseId to throw generic error
-      jest.spyOn(teamService, 'getTeamsByTAIdAndCourseId').mockRejectedValue(error);
+      jest
+        .spyOn(teamService, 'getTeamsByTAIdAndCourseId')
+        .mockRejectedValue(error);
 
       await getTeamsByTAAndCourse(req, res);
 
       expect(getAccountId).toHaveBeenCalledWith(req);
       expect(getUserIdByAccountId).toHaveBeenCalledWith(mockAccountId);
-      expect(getTeamsByTAIdAndCourseId).toHaveBeenCalledWith(mockUserId, 'course123');
+      expect(getTeamsByTAIdAndCourseId).toHaveBeenCalledWith(
+        mockUserId,
+        'course123'
+      );
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch teams' });
     });

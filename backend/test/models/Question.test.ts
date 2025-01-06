@@ -296,7 +296,9 @@ describe('Question Types Model Tests', () => {
 
       const savedQuestion = await question.save();
       expect(savedQuestion._id).toBeDefined();
-      expect(savedQuestion.longResponsePlaceholder).toBe('Type your answer here');
+      expect(savedQuestion.longResponsePlaceholder).toBe(
+        'Type your answer here'
+      );
     });
 
     it('should fail if longResponsePlaceholder is missing', async () => {
@@ -342,7 +344,9 @@ describe('Question Types Model Tests', () => {
         order: 9,
       });
 
-      await expect(question.save()).rejects.toThrow(/Path `isRange` is required/);
+      await expect(question.save()).rejects.toThrow(
+        /Path `isRange` is required/
+      );
     });
   });
 
@@ -380,7 +384,9 @@ describe('Question Types Model Tests', () => {
         order: 10,
       });
 
-      await expect(question.save()).rejects.toThrow(/Path `maxNumber` is required/);
+      await expect(question.save()).rejects.toThrow(
+        /Path `maxNumber` is required/
+      );
     });
   });
 

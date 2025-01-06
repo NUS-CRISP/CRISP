@@ -194,7 +194,7 @@ describe('assessmentAssignmentSetController', () => {
       req.params = { assessmentId: 'assessment123' };
       req.body = {
         assignedTeams: ['team1', 'team2'],
-        assignedUsers: null
+        assignedUsers: null,
       };
       const res = mockResponse();
 
@@ -221,7 +221,7 @@ describe('assessmentAssignmentSetController', () => {
       req.params = { assessmentId: 'assessment123' };
       req.body = {
         assignedTeams: null,
-        assignedUsers: ['user1', 'user2']
+        assignedUsers: ['user1', 'user2'],
       };
       const res = mockResponse();
 
@@ -246,13 +246,18 @@ describe('assessmentAssignmentSetController', () => {
     it('should not allow mixed assignment types and return 400', async () => {
       const req = mockRequest();
       req.params = { assessmentId: 'assessment123' };
-      req.body = { assignedTeams: ['team1', 'team2'], assignedUsers: ['user1', 'user2'] };
+      req.body = {
+        assignedTeams: ['team1', 'team2'],
+        assignedUsers: ['user1', 'user2'],
+      };
       const res = mockResponse();
 
       await updateAssignmentSetController(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'No mixed assignment types are allowed.' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'No mixed assignment types are allowed.',
+      });
     });
 
     it('should handle missing assignments and return 400', async () => {
@@ -264,7 +269,9 @@ describe('assessmentAssignmentSetController', () => {
       await updateAssignmentSetController(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'No assignments given, assignments are required.' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'No assignments given, assignments are required.',
+      });
     });
 
     it('should handle BadRequestError and return 400', async () => {

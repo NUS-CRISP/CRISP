@@ -293,7 +293,7 @@ describe('internalAssessmentService', () => {
         order: 2,
         isScored: true,
         options: [{ text: '4', points: 1 }],
-      } as  MultipleChoiceQuestion;
+      } as MultipleChoiceQuestion;
       const question = await addQuestionToAssessment(
         assessment._id.toString(),
         questionData,
