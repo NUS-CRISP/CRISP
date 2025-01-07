@@ -198,9 +198,9 @@ describe('assessmentResultService', () => {
     });
 
     it('should throw BadRequestError if the assessmentId is not a valid ObjectId', async () => {
-      await expect(getOrCreateAssessmentResults('not-a-valid-id')).rejects.toThrow(
-        BadRequestError
-      );
+      await expect(
+        getOrCreateAssessmentResults('not-a-valid-id')
+      ).rejects.toThrow(BadRequestError);
     });
 
     it('should throw BadRequestError if the assignment set has no assignedTeams or assignedUsers', async () => {
@@ -244,7 +244,7 @@ describe('assessmentResultService', () => {
         isReleased: true,
         areSubmissionsEditable: true,
         startDate: startDate,
-        description: 'Kawaii'
+        description: 'Kawaii',
       });
       await assessment.save();
 
@@ -260,7 +260,9 @@ describe('assessmentResultService', () => {
 
       await expect(
         getOrCreateAssessmentResults(assessment._id.toString())
-      ).rejects.toThrowError('No students found in the AssessmentAssignmentSet.');
+      ).rejects.toThrowError(
+        'No students found in the AssessmentAssignmentSet.'
+      );
     });
 
     it('should handle a case where assignedTeams.team is null after population', async () => {
@@ -273,7 +275,7 @@ describe('assessmentResultService', () => {
         isReleased: true,
         areSubmissionsEditable: true,
         startDate: startDate,
-        description: 'mo'
+        description: 'mo',
       });
       await assessment.save();
 
@@ -288,8 +290,9 @@ describe('assessmentResultService', () => {
         ],
       });
 
-      await expect(getOrCreateAssessmentResults(assessment._id.toString()))
-        .rejects.toThrow();
+      await expect(
+        getOrCreateAssessmentResults(assessment._id.toString())
+      ).rejects.toThrow();
     });
 
     it('should add student IDs from assignedTeams to the studentIdSet', async () => {
@@ -302,7 +305,7 @@ describe('assessmentResultService', () => {
         isReleased: true,
         areSubmissionsEditable: true,
         startDate,
-        description: 'Kyou'
+        description: 'Kyou',
       });
 
       const student = await UserModel.create({
@@ -325,7 +328,9 @@ describe('assessmentResultService', () => {
         ],
       });
 
-      const results = await getOrCreateAssessmentResults(newAssessment._id.toString());
+      const results = await getOrCreateAssessmentResults(
+        newAssessment._id.toString()
+      );
       expect(results).toHaveLength(1);
       expect(results[0].student._id.toString()).toBe(student._id.toString());
     });
