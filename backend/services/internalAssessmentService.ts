@@ -13,12 +13,10 @@ import {
   MultipleChoiceQuestionModel,
   MultipleResponseQuestion,
   MultipleResponseQuestionModel,
-  NumberQuestion,
   NumberQuestionModel,
   NUSNETEmailQuestionModel,
   NUSNETIDQuestionModel,
   QuestionUnion,
-  ScaleQuestion,
   ScaleQuestionModel,
   ShortResponseQuestionModel,
   TeamMemberSelectionQuestionModel,
@@ -321,7 +319,6 @@ export const addInternalAssessmentsToCourse = async (
     newAssessments.push(assessment);
     await Promise.all(results.map(result => result.save()));
 
-    // Attempt to create the assignment set
     try {
       await createAssignmentSet(
         assessment._id.toString(),
@@ -390,16 +387,8 @@ export const addQuestionToAssessment = async (
   // Validate certain question fields by type
   switch (validQuestionData.type) {
     case 'Multiple Choice':
-      if (
-        !Array.isArray(validQuestionData.options) ||
-        validQuestionData.options.length === 0
-      ) {
-        throw new BadRequestError(
-          'Options are required for Multiple Choice questions'
-        );
-      }
       if (validQuestionData.isScored) {
-        for (const option of validQuestionData.options) {
+        for (const option of validQuestionData.options!) {
           if (typeof option.points !== 'number') {
             throw new BadRequestError(
               'Each option must have a points value when scoring is enabled'
@@ -455,9 +444,6 @@ export const addQuestionToAssessment = async (
       }
       break;
     case 'Number':
-      if (typeof validQuestionData.maxNumber !== 'number') {
-        throw new BadRequestError('maxNumber is required for Number questions');
-      }
       if (validQuestionData.isScored) {
         if (!validQuestionData.scoringMethod) {
           throw new BadRequestError(
@@ -620,11 +606,8 @@ export const addQuestionToAssessment = async (
   await question.save();
 
   // Update the assessment's question list and total marks
-  assessment.questions = assessment.questions || [];
   assessment.questions.push(question._id);
-  assessment.questionsTotalMarks = assessment.questionsTotalMarks
-    ? assessment.questionsTotalMarks + addedMaxScore
-    : addedMaxScore;
+  assessment.questionsTotalMarks = assessment.questionsTotalMarks! + addedMaxScore;
   await assessment.save();
 
   return question;
@@ -705,20 +688,115 @@ export const updateQuestionById = async (
     throw new BadRequestError('Cannot change the type of an existing question');
   }
 
+  // Merge existing question data with updateData to form the updated question data
+  const updatedData = { ...existingQuestion.toObject(), ...updateData };
+
+  // Validation based on question type
+  switch (existingQuestion.type) {
+    case 'Multiple Choice':
+      if (updatedData.isScored) {
+        for (const option of updatedData.options) {
+          if (typeof option.points !== 'number') {
+            throw new BadRequestError(
+              'Each option must have a points value when scoring is enabled'
+            );
+          }
+        }
+      }
+      break;
+
+    case 'Multiple Response':
+      if (updatedData.isScored) {
+        for (const option of updatedData.options) {
+          if (typeof option.points !== 'number') {
+            throw new BadRequestError(
+              'Each option must have a points value when scoring is enabled'
+            );
+          }
+        }
+        if (typeof updatedData.allowNegative !== 'boolean') {
+          throw new BadRequestError(
+            'allowNegative must be specified when scoring is enabled for Multiple Response questions'
+          );
+        }
+      }
+      break;
+
+    case 'Scale':
+      if (typeof updatedData.scaleMax !== 'number') {
+        throw new BadRequestError('scaleMax is required for Scale questions');
+      }
+      if (
+        !Array.isArray(updatedData.labels) ||
+        updatedData.labels.length < 2
+      ) {
+        throw new BadRequestError(
+          'At least two labels are required for Scale questions'
+        );
+      }
+      if (updatedData.isScored) {
+        for (const label of updatedData.labels) {
+          if (typeof label.points !== 'number') {
+            throw new BadRequestError(
+              'Each label must have a points value when scoring is enabled'
+            );
+          }
+        }
+      }
+      break;
+
+    case 'Number':
+      if (typeof updatedData.maxNumber !== 'number') {
+        throw new BadRequestError('maxNumber is required for Number questions');
+      }
+      if (updatedData.isScored) {
+        if (!updatedData.scoringMethod) {
+          throw new BadRequestError(
+            'scoringMethod is required when scoring is enabled for Number questions'
+          );
+        }
+        if (updatedData.scoringMethod === 'direct') {
+          // No validations here, types checked by typescript
+        } else if (updatedData.scoringMethod === 'range') {
+          if (
+            !Array.isArray(updatedData.scoringRanges) ||
+            updatedData.scoringRanges.length === 0
+          ) {
+            throw new BadRequestError(
+              'scoringRanges are required for range scoring method'
+            );
+          }
+        }
+      }
+      break;
+
+    case 'Date':
+    case 'NUSNET ID':
+    case 'NUSNET Email':
+    case 'Team Member Selection':
+    case 'Short Response':
+    case 'Long Response':
+    case 'Undecided':
+    default:
+      break;
+  }
+
+  // Proceed with updating the question after validation
   let updatedQuestion: QuestionUnion | null;
   let currentScore = 0;
   let updatedScore = 0;
 
   switch (existingQuestion.type) {
     case 'Multiple Choice':
-      currentScore = (
-        existingQuestion as MultipleChoiceQuestion
-      ).options.reduce((acc, val) => (acc > val.points ? acc : val.points), 0);
+      currentScore = existingQuestion.options.reduce(
+        (acc: number, val: any) => (acc > val.points ? acc : val.points),
+        0
+      );
       updatedScore =
-        (updateData as MultipleChoiceQuestion).options?.reduce(
-          (acc, val) => (acc > val.points ? acc : val.points),
+        updatedData.options!.reduce(
+          (acc: number, val: any) => (acc > val.points ? acc : val.points),
           0
-        ) ?? 0;
+        );
       updatedQuestion = await MultipleChoiceQuestionModel.findByIdAndUpdate(
         questionId,
         updateData,
@@ -726,17 +804,15 @@ export const updateQuestionById = async (
       );
       break;
     case 'Multiple Response':
-      currentScore = (
-        existingQuestion as MultipleResponseQuestion
-      ).options.reduce(
-        (acc, val) => (val.points > 0 ? acc + val.points : acc),
+      currentScore = existingQuestion.options.reduce(
+        (acc: number, val: any) => (val.points > 0 ? acc + val.points : acc),
         0
       );
       updatedScore =
-        (updateData as MultipleResponseQuestion).options?.reduce(
-          (acc, val) => (val.points > 0 ? acc + val.points : acc),
+        updatedData.options!.reduce(
+          (acc: number, val: any) => (val.points > 0 ? acc + val.points : acc),
           0
-        ) ?? 0;
+        );
 
       updatedQuestion = await MultipleResponseQuestionModel.findByIdAndUpdate(
         questionId,
@@ -745,14 +821,10 @@ export const updateQuestionById = async (
       );
       break;
     case 'Scale':
-      currentScore = (existingQuestion as ScaleQuestion).labels[
-        (existingQuestion as ScaleQuestion).labels.length - 1
+      currentScore = existingQuestion.labels[
+        existingQuestion.labels.length - 1
       ].points;
-      updatedScore = (updateData as ScaleQuestion).labels
-        ? (updateData as ScaleQuestion).labels![
-            (updateData as ScaleQuestion).labels!.length - 1
-          ].points
-        : 0;
+      updatedScore = updatedData.labels[updatedData.labels.length - 1].points;
       updatedQuestion = await ScaleQuestionModel.findByIdAndUpdate(
         questionId,
         updateData,
@@ -761,31 +833,31 @@ export const updateQuestionById = async (
       break;
     case 'Number':
       if (
-        (existingQuestion as NumberQuestion).isScored &&
-        (existingQuestion as NumberQuestion).scoringMethod === 'direct'
+        existingQuestion.isScored &&
+        existingQuestion.scoringMethod === 'direct'
       ) {
-        currentScore = (existingQuestion as NumberQuestion).maxPoints ?? 0;
+        currentScore = existingQuestion.maxPoints!;
       }
       if (
-        (updateData as NumberQuestion).isScored &&
-        (updateData as NumberQuestion).scoringMethod === 'direct'
+        updatedData.isScored &&
+        updatedData.scoringMethod === 'direct'
       ) {
-        updatedScore = (updateData as NumberQuestion).maxPoints ?? 0;
+        updatedScore = updatedData.maxPoints!;
       }
       if (
-        (existingQuestion as NumberQuestion).isScored &&
-        (existingQuestion as NumberQuestion).scoringMethod === 'range'
+        existingQuestion.isScored &&
+        existingQuestion.scoringMethod === 'range'
       ) {
-        const ranges = (existingQuestion as NumberQuestion).scoringRanges ?? [];
+        const ranges = existingQuestion.scoringRanges!;
         if (ranges.length > 0) {
           currentScore = ranges[ranges.length - 1].points;
         }
       }
       if (
-        (updateData as NumberQuestion).isScored &&
-        (updateData as NumberQuestion).scoringMethod === 'range'
+        updatedData.isScored &&
+        updatedData.scoringMethod === 'range'
       ) {
-        const ranges = (updateData as NumberQuestion).scoringRanges ?? [];
+        const ranges = updatedData.scoringRanges!;
         if (ranges.length > 0) {
           updatedScore = ranges[ranges.length - 1].points;
         }
@@ -840,14 +912,8 @@ export const updateQuestionById = async (
       );
       break;
     case 'Undecided':
-      updatedQuestion = await UndecidedQuestionModel.findByIdAndUpdate(
-        questionId,
-        updateData,
-        { new: true }
-      );
-      break;
     default:
-      updatedQuestion = await QuestionModel.findByIdAndUpdate(
+      updatedQuestion = await UndecidedQuestionModel.findByIdAndUpdate(
         questionId,
         updateData,
         { new: true }
@@ -876,9 +942,7 @@ export const updateQuestionById = async (
     });
 
     if (assessment) {
-      assessment.questionsTotalMarks = assessment.questionsTotalMarks
-        ? assessment.questionsTotalMarks - currentScore + updatedScore
-        : updatedScore - currentScore;
+      assessment.questionsTotalMarks = assessment.questionsTotalMarks! - currentScore + updatedScore;
       await assessment.save();
     }
   }
@@ -1116,9 +1180,9 @@ export const recaluculateSubmissionsForAssessment = async (
     assessment: assessmentId,
   });
 
-  submissions.forEach(async sub => {
+  for (const sub of submissions) {
     await regradeSubmission(sub._id);
-  });
+  }
 };
 
 /**
@@ -1173,11 +1237,8 @@ export const reorderQuestions = async (
   for (let i = 0; i < questionIds.length; i++) {
     const qId = questionIds[i];
     const questionDoc = questionDocs.find(q => String(q._id) === qId);
-    if (!questionDoc) {
-      throw new BadRequestError(`Question ${qId} not found in assessment`);
-    }
-    questionDoc.order = i + 1;
-    await questionDoc.save();
+    questionDoc!.order = i + 1;
+    await questionDoc!.save();
   }
 
   const reorderedRefs: any[] = [];
