@@ -404,7 +404,8 @@ async function validateAnswers(
           );
         }
         break;
-
+      case 'Undecided':
+        break;
       default:
         throw new BadRequestError(
           `Unsupported question type for question ${questionId}`
@@ -1415,7 +1416,7 @@ export const regradeSubmission = async (submissionId: string) => {
         `Question with ID ${answer.question} not found in assessment ${assessment.id}.`
       );
       answer.score = 0;
-      return;
+      continue;
     }
     const answerScore: number = await calculateAnswerScore(
       question,
