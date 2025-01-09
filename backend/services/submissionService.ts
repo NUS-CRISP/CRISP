@@ -1338,6 +1338,7 @@ export const regradeSubmission = async (submissionId: string) => {
   );
 
   let totalScore = 0;
+  let assignment = null;
   for (const answer of submission.answers) {
     const questionId = assessment.questions.find(
       q => q._id.toString() === answer.question.toString()
@@ -1379,6 +1380,7 @@ export const regradeSubmission = async (submissionId: string) => {
         question = await TeamMemberSelectionQuestionModel.findById(questionId);
         SaveAnswerModel = TeamMemberSelectionAnswerModel;
         savedAnswer = TeamMemberSelectionAnswerModel.findById(answer.id);
+        assignment = (await TeamMemberSelectionAnswerModel.findById(answer.id)) as unknown as TeamMemberSelectionAnswer;
         break;
       case 'Date Answer':
         question = await DateQuestionModel.findById(questionId);
@@ -1396,12 +1398,11 @@ export const regradeSubmission = async (submissionId: string) => {
         savedAnswer = LongResponseAnswerModel.findById(answer.id);
         break;
       case 'Undecided Answer':
+      default:
         question = await UndecidedQuestionModel.findById(questionId);
         SaveAnswerModel = UndecidedAnswerModel;
         savedAnswer = UndecidedAnswerModel.findById(answer.id);
         break;
-      default:
-        answer.score = 0;
     }
 
     if (!SaveAnswerModel) {
@@ -1441,12 +1442,8 @@ export const regradeSubmission = async (submissionId: string) => {
 
   await submission.save();
 
-  const assignment = submission.answers.find(
-    answer => answer.type === 'Team Member Selection Answer'
-  ) as TeamMemberSelectionAnswer | undefined;
-
   if (!assignment || !assignment.selectedUserIds) {
-    return submission;
+    throw new BadRequestError('Missing Team Member Selection Answer');
   }
 
   for (const selectedUserId of assignment.selectedUserIds) {
