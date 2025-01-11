@@ -21,7 +21,8 @@ const LongResponseQuestionEdit: React.FC<LongResponseQuestionEditProps> = ({
 
   const saveQuestion = () => {
     onSave({
-      longResponsePlaceholder: placeholder === '' ? 'Enter your response here.' : placeholder,
+      longResponsePlaceholder:
+        placeholder === '' ? 'Enter your response here.' : placeholder,
     });
   };
 

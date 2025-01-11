@@ -260,9 +260,7 @@ function downloadExistingQuestionsCsv(questions: Question[]) {
         case 'labels': {
           if (q.type === 'Scale' && (q as any).labels) {
             return (q as any).labels
-              .map(
-                (lab: any) => `${lab.value}|${lab.label}|${lab.points}`
-              )
+              .map((lab: any) => `${lab.value}|${lab.label}|${lab.points}`)
               .join(';');
           }
           return '';
@@ -373,7 +371,9 @@ function ReorderItem({
             </Text>
           </Box>
         ) : (
-          <Box style={{ width: '100px', display: 'flex', alignItems: 'center' }}>
+          <Box
+            style={{ width: '100px', display: 'flex', alignItems: 'center' }}
+          >
             <NumberInput
               aria-label="Question Number"
               min={1}
@@ -425,7 +425,10 @@ function ReorderModal({
     setLocalQuestions(copy);
   }, [sortedQuestions]);
 
-  const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor)
+  );
 
   // Drag & drop among unlocked questions
   const handleDragEnd = (event: DragEndEvent) => {
@@ -524,7 +527,12 @@ function ReorderModal({
   };
 
   return (
-    <Modal opened={isOpen} onClose={onClose} title="Reorder Questions" size="lg">
+    <Modal
+      opened={isOpen}
+      onClose={onClose}
+      title="Reorder Questions"
+      size="lg"
+    >
       {localQuestions.length === 0 ? (
         <Alert color="yellow" mb="md">
           No questions found.
@@ -560,7 +568,9 @@ function ReorderModal({
                   <ReorderItem
                     key={q._id}
                     question={q}
-                    totalUnlocked={localQuestions.filter(x => !x.isLocked).length}
+                    totalUnlocked={
+                      localQuestions.filter(x => !x.isLocked).length
+                    }
                     onPositionChange={handlePositionChange}
                   />
                 ))}
@@ -651,7 +661,9 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
   const [isRecallModalOpen, setIsRecallModalOpen] = useState(false);
 
   // For recall confirm
-  const [recallOption, setRecallOption] = useState<'recallOnly' | 'recallAndDelete'>(
+  const [recallOption, setRecallOption] = useState<
+    'recallOnly' | 'recallAndDelete'
+  >(
     assessment
       ? assessment.areSubmissionsEditable
         ? 'recallOnly'
@@ -826,7 +838,10 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
               Upload via CSV
             </Button>
 
-            <Button variant="outline" onClick={downloadCsvTemplateWithInstructions}>
+            <Button
+              variant="outline"
+              onClick={downloadCsvTemplateWithInstructions}
+            >
               Download CSV Template
             </Button>
 
@@ -846,7 +861,9 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
             key={question._id}
             index={index}
             questionData={question}
-            onSave={updatedQuestion => handleSaveQuestion(question._id, updatedQuestion)}
+            onSave={updatedQuestion =>
+              handleSaveQuestion(question._id, updatedQuestion)
+            }
             onDelete={() => handleDeleteQuestion(question._id)}
             isLocked={isAssessmentLocked || question.isLocked}
           />
@@ -856,12 +873,15 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
       <Box mt={24} pb={16}>
         <Text>Total Possible Points from Questions: {totalPossiblePoints}</Text>
         <Text>Assessment Maximum Marks: {maxMarks}</Text>
-        {maxMarks > 0 && totalPossiblePoints > 0 && assessment && assessment.scaleToMaxMarks && (
-          <Text>
-            Points in this quiz will be adjusted by this factor to match max marks: x
-            {scalingFactor.toFixed(2)}
-          </Text>
-        )}
+        {maxMarks > 0 &&
+          totalPossiblePoints > 0 &&
+          assessment &&
+          assessment.scaleToMaxMarks && (
+            <Text>
+              Points in this quiz will be adjusted by this factor to match max
+              marks: x{scalingFactor.toFixed(2)}
+            </Text>
+          )}
       </Box>
 
       <Group mt="md" pb="sm">
@@ -922,7 +942,9 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
 
         <Accordion mt="md" variant="separated" defaultValue={null}>
           <Accordion.Item value="formatting">
-            <Accordion.Control>Question CSV Formatting Instructions</Accordion.Control>
+            <Accordion.Control>
+              Question CSV Formatting Instructions
+            </Accordion.Control>
             <Accordion.Panel>
               <Text size="sm" mb="xs">
                 Ensure cells with data are set to "Text" format. Each row
@@ -939,73 +961,83 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
                   <strong>text</strong>: the question prompt (required).
                 </li>
                 <li>
-                  <strong>isRequired</strong>: &quot;true&quot; or &quot;false&quot;.
+                  <strong>isRequired</strong>: &quot;true&quot; or
+                  &quot;false&quot;.
                 </li>
                 <li>
-                  <strong>isLocked</strong>: &quot;true&quot; or &quot;false&quot;.
+                  <strong>isLocked</strong>: &quot;true&quot; or
+                  &quot;false&quot;.
                 </li>
                 <li>
-                  <strong>customInstruction</strong>: additional instructions (optional).
+                  <strong>customInstruction</strong>: additional instructions
+                  (optional).
                 </li>
                 <li>
-                  <strong>isScored</strong>: &quot;true&quot; or &quot;false&quot;.
-                  If true, extra fields like &quot;options&quot; or
-                  &quot;labels&quot; may apply.
+                  <strong>isScored</strong>: &quot;true&quot; or
+                  &quot;false&quot;. If true, extra fields like
+                  &quot;options&quot; or &quot;labels&quot; may apply.
                 </li>
                 <li>
-                  <strong>options</strong>: e.g. &quot;Option1|2;Option2|5&quot; for
-                  multiple choice or response.
+                  <strong>options</strong>: e.g. &quot;Option1|2;Option2|5&quot;
+                  for multiple choice or response.
                 </li>
                 <li>
-                  <strong>allowNegative</strong>: &quot;true&quot; or &quot;false&quot;
-                  (Multiple Response).
+                  <strong>allowNegative</strong>: &quot;true&quot; or
+                  &quot;false&quot; (Multiple Response).
                 </li>
                 <li>
                   <strong>areWrongAnswersPenalized</strong>: &quot;true&quot; or
                   &quot;false&quot; (Multiple Response).
                 </li>
                 <li>
-                  <strong>allowPartialMarks</strong>: &quot;true&quot; or &quot;false&quot;
-                  (Multiple Response).
+                  <strong>allowPartialMarks</strong>: &quot;true&quot; or
+                  &quot;false&quot; (Multiple Response).
                 </li>
                 <li>
                   <strong>scaleMax</strong>: number if &quot;type&quot; is
                   &quot;Scale&quot;.
                 </li>
                 <li>
-                  <strong>labels</strong>: e.g. &quot;1|Min|0;5|Max|5&quot; for &quot;Scale&quot;.
+                  <strong>labels</strong>: e.g. &quot;1|Min|0;5|Max|5&quot; for
+                  &quot;Scale&quot;.
                 </li>
                 <li>
-                  <strong>maxNumber</strong>: numeric limit for &quot;Number&quot; question.
+                  <strong>maxNumber</strong>: numeric limit for
+                  &quot;Number&quot; question.
                 </li>
                 <li>
-                  <strong>scoringMethod</strong>: &quot;direct&quot;, &quot;range&quot;,
-                  or &quot;None&quot; (Number).
+                  <strong>scoringMethod</strong>: &quot;direct&quot;,
+                  &quot;range&quot;, or &quot;None&quot; (Number).
                 </li>
                 <li>
-                  <strong>maxPoints</strong>: numeric max points for &quot;Number&quot; if
-                  &quot;scoringMethod&quot; = &quot;direct&quot;.
+                  <strong>maxPoints</strong>: numeric max points for
+                  &quot;Number&quot; if &quot;scoringMethod&quot; =
+                  &quot;direct&quot;.
                 </li>
                 <li>
-                  <strong>scoringRanges</strong>: e.g. &quot;0|10|3;11|20|5&quot; if
-                  &quot;scoringMethod&quot; = &quot;range&quot; (Number).
+                  <strong>scoringRanges</strong>: e.g.
+                  &quot;0|10|3;11|20|5&quot; if &quot;scoringMethod&quot; =
+                  &quot;range&quot; (Number).
                 </li>
                 <li>
-                  <strong>shortResponsePlaceholder</strong>: for &quot;Short Response&quot;.
+                  <strong>shortResponsePlaceholder</strong>: for &quot;Short
+                  Response&quot;.
                 </li>
                 <li>
-                  <strong>longResponsePlaceholder</strong>: for &quot;Long Response&quot;.
+                  <strong>longResponsePlaceholder</strong>: for &quot;Long
+                  Response&quot;.
                 </li>
                 <li>
-                  <strong>isRange</strong>: &quot;true&quot; or &quot;false&quot; (Date).
+                  <strong>isRange</strong>: &quot;true&quot; or
+                  &quot;false&quot; (Date).
                 </li>
                 <li>
-                  <strong>datePickerPlaceholder</strong>: optional placeholder for
-                  &quot;Date&quot;.
+                  <strong>datePickerPlaceholder</strong>: optional placeholder
+                  for &quot;Date&quot;.
                 </li>
                 <li>
-                  <strong>minDate</strong>, <strong>maxDate</strong>: optional date
-                  constraints for &quot;Date&quot; question.
+                  <strong>minDate</strong>, <strong>maxDate</strong>: optional
+                  date constraints for &quot;Date&quot; question.
                 </li>
               </ul>
             </Accordion.Panel>

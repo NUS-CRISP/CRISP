@@ -29,7 +29,8 @@ const ShortResponseQuestionEdit: React.FC<ShortResponseQuestionEditProps> = ({
 
   const saveQuestion = () => {
     onSave({
-      shortResponsePlaceholder: placeholder === '' ? 'Enter your response here' : placeholder,
+      shortResponsePlaceholder:
+        placeholder === '' ? 'Enter your response here' : placeholder,
     });
   };
 
