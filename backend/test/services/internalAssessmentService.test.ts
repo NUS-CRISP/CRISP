@@ -55,7 +55,9 @@ import SubmissionModel from '@models/Submission';
 import TeamModel from '@models/Team';
 import TeamSetModel from '@models/TeamSet';
 import UserModel, { User } from '@models/User';
-import AssessmentResultModel, { AssessmentResult } from '@models/AssessmentResult';
+import AssessmentResultModel, {
+  AssessmentResult,
+} from '@models/AssessmentResult';
 import QuestionModel from '@models/Question';
 
 let mongo: MongoMemoryServer;
@@ -250,7 +252,8 @@ describe('internalAssessmentService', () => {
   });
 
   beforeEach(async () => {
-    ({ course, account, teamSet, mcQuestion, assessment, teamMemberQuestion } = await setupData());
+    ({ course, account, teamSet, mcQuestion, assessment, teamMemberQuestion } =
+      await setupData());
   });
 
   describe('getInternalAssessmentById', () => {
@@ -335,7 +338,9 @@ describe('internalAssessmentService', () => {
       const fetchedResults = fetched.results as AssessmentResult[];
 
       // Extract student names from the results
-      const studentNames = fetchedResults.map(res => (res.student as User).name);
+      const studentNames = fetchedResults.map(
+        res => (res.student as User).name
+      );
 
       // Check if the names are sorted in ascending order
       const sortedNames = [...studentNames].sort((a, b) => a.localeCompare(b));
@@ -511,13 +516,18 @@ describe('internalAssessmentService', () => {
     it('should log an error when createAssignmentSet fails', async () => {
       // Mock createAssignmentSet to throw an error
       const mockCreateAssignmentSet = jest
-        .spyOn(require('../../services/assessmentAssignmentSetService'), 'createAssignmentSet')
+        .spyOn(
+          require('../../services/assessmentAssignmentSetService'),
+          'createAssignmentSet'
+        )
         .mockImplementationOnce(() => {
           throw new Error('Mocked Assignment Set Creation Failure');
         });
 
       // Spy on console.error
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleErrorSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
 
       const startDate = new Date();
       startDate.setUTCFullYear(startDate.getUTCFullYear() - 1);
@@ -538,7 +548,9 @@ describe('internalAssessmentService', () => {
 
       // Expect console.error to have been called with the appropriate message
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to create AssessmentAssignmentSet for assessment'),
+        expect.stringContaining(
+          'Failed to create AssessmentAssignmentSet for assessment'
+        ),
         expect.any(Error)
       );
 
@@ -1401,7 +1413,9 @@ describe('internalAssessmentService', () => {
         expect((updated as any).options.length).toBe(3);
 
         // Verify assessment's questionsTotalMarks updated correctly
-        const updatedAssessment = await InternalAssessmentModel.findById(assessment._id);
+        const updatedAssessment = await InternalAssessmentModel.findById(
+          assessment._id
+        );
         // Original mcQuestion had max points 10, updated has max 10
         // Assuming initial questionsTotalMarks was correctly set to 10
         expect(updatedAssessment?.questionsTotalMarks).toBe(10); // No change in max points
@@ -1444,7 +1458,9 @@ describe('internalAssessmentService', () => {
         expect((updated as any).options.length).toBe(3);
 
         // Verify assessment's questionsTotalMarks updated correctly
-        const updatedAssessment = await InternalAssessmentModel.findById(assessment._id);
+        const updatedAssessment = await InternalAssessmentModel.findById(
+          assessment._id
+        );
         // Original MRQ had sum of positive points = 3
         // Updated MRQ has sum of positive points = 3 + 5 = 8
         // Assuming initial questionsTotalMarks was 10 (from mcQuestion)
@@ -1485,7 +1501,9 @@ describe('internalAssessmentService', () => {
         expect((updated as ScaleQuestion).labels[2].points).toBe(15);
 
         // Verify assessment's questionsTotalMarks updated correctly
-        const updatedAssessment = await InternalAssessmentModel.findById(assessment._id);
+        const updatedAssessment = await InternalAssessmentModel.findById(
+          assessment._id
+        );
         // Original Scale had 10 points, updated to 15
         expect(updatedAssessment?.questionsTotalMarks).toBe(10 + 15); // Total: 25
       });
@@ -1517,7 +1535,9 @@ describe('internalAssessmentService', () => {
         expect((updated as NumberQuestion).maxPoints).toBe(15);
 
         // Verify assessment's questionsTotalMarks updated correctly
-        const updatedAssessment = await InternalAssessmentModel.findById(assessment._id);
+        const updatedAssessment = await InternalAssessmentModel.findById(
+          assessment._id
+        );
         // Original Number had 10 points, updated to 15
         expect(updatedAssessment?.questionsTotalMarks).toBe(10 + 15); // Total: 25
       });
@@ -1556,7 +1576,9 @@ describe('internalAssessmentService', () => {
         expect((updated as NumberQuestion).scoringRanges![1].points).toBe(12);
 
         // Verify assessment's questionsTotalMarks updated correctly
-        const updatedAssessment = await InternalAssessmentModel.findById(assessment._id);
+        const updatedAssessment = await InternalAssessmentModel.findById(
+          assessment._id
+        );
         // Original Number had 10 points, updated to 12
         expect(updatedAssessment?.questionsTotalMarks).toBe(10 + 12); // Total: 22
       });
@@ -1582,8 +1604,12 @@ describe('internalAssessmentService', () => {
           },
           account._id.toString()
         );
-        expect((updated as ShortResponseQuestion).text).toBe('Updated Short Response text');
-        expect((updated as ShortResponseQuestion).shortResponsePlaceholder).toBe('Updated placeholder');
+        expect((updated as ShortResponseQuestion).text).toBe(
+          'Updated Short Response text'
+        );
+        expect(
+          (updated as ShortResponseQuestion).shortResponsePlaceholder
+        ).toBe('Updated placeholder');
       });
 
       it('should update a Long Response question by ID', async () => {
@@ -1607,8 +1633,12 @@ describe('internalAssessmentService', () => {
           },
           account._id.toString()
         );
-        expect((updated as LongResponseQuestion).text).toBe('Updated Long Response text');
-        expect((updated as LongResponseQuestion).longResponsePlaceholder).toBe('Updated placeholder');
+        expect((updated as LongResponseQuestion).text).toBe(
+          'Updated Long Response text'
+        );
+        expect((updated as LongResponseQuestion).longResponsePlaceholder).toBe(
+          'Updated placeholder'
+        );
       });
 
       it('should update a Date question by ID', async () => {
@@ -1653,7 +1683,9 @@ describe('internalAssessmentService', () => {
           },
           account._id.toString()
         );
-        expect((updated as TeamMemberSelectionQuestion).text).toBe('Updated Team Member Selection text');
+        expect((updated as TeamMemberSelectionQuestion).text).toBe(
+          'Updated Team Member Selection text'
+        );
       });
 
       it('should update a NUSNET ID question by ID', async () => {
@@ -1676,7 +1708,9 @@ describe('internalAssessmentService', () => {
           },
           account._id.toString()
         );
-        expect((updated as NUSNETIDQuestion).shortResponsePlaceholder).toBe('e.g., e0654321');
+        expect((updated as NUSNETIDQuestion).shortResponsePlaceholder).toBe(
+          'e.g., e0654321'
+        );
       });
 
       it('should update a NUSNET Email question by ID', async () => {
@@ -1699,7 +1733,9 @@ describe('internalAssessmentService', () => {
           },
           account._id.toString()
         );
-        expect((updated as NUSNETEmailQuestion).shortResponsePlaceholder).toBe('e.g., john.doe@u.nus.edu');
+        expect((updated as NUSNETEmailQuestion).shortResponsePlaceholder).toBe(
+          'e.g., john.doe@u.nus.edu'
+        );
       });
 
       it('should update an Undecided question by ID', async () => {
@@ -1721,7 +1757,9 @@ describe('internalAssessmentService', () => {
           },
           account._id.toString()
         );
-        expect((updated as UndecidedQuestion).text).toBe('Updated Undecided question text');
+        expect((updated as UndecidedQuestion).text).toBe(
+          'Updated Undecided question text'
+        );
       });
     });
 
@@ -1807,7 +1845,9 @@ describe('internalAssessmentService', () => {
               } as Partial<MultipleChoiceQuestion>,
               account._id.toString()
             )
-          ).rejects.toThrow('Each option must have a points value when scoring is enabled');
+          ).rejects.toThrow(
+            'Each option must have a points value when scoring is enabled'
+          );
         });
 
         it('should throw BadRequestError when updating MRQ without points in options', async () => {
@@ -1842,7 +1882,9 @@ describe('internalAssessmentService', () => {
               } as Partial<MultipleResponseQuestion>,
               account._id.toString()
             )
-          ).rejects.toThrow('Each option must have a points value when scoring is enabled');
+          ).rejects.toThrow(
+            'Each option must have a points value when scoring is enabled'
+          );
         });
 
         it('should throw BadRequestError when updating MRQ without allowNegative', async () => {
@@ -1874,7 +1916,9 @@ describe('internalAssessmentService', () => {
               },
               account._id.toString()
             )
-          ).rejects.toThrow('allowNegative must be specified when scoring is enabled for Multiple Response questions');
+          ).rejects.toThrow(
+            'allowNegative must be specified when scoring is enabled for Multiple Response questions'
+          );
         });
 
         it('should throw BadRequestError when updating Scale question without scaleMax', async () => {
@@ -1930,13 +1974,13 @@ describe('internalAssessmentService', () => {
             updateQuestionById(
               scaleQ._id.toString(),
               {
-                labels: [
-                  { value: 3, label: 'Average', points: 5 },
-                ], // Only one label
+                labels: [{ value: 3, label: 'Average', points: 5 }], // Only one label
               },
               account._id.toString()
             )
-          ).rejects.toThrow('At least two labels are required for Scale questions');
+          ).rejects.toThrow(
+            'At least two labels are required for Scale questions'
+          );
         });
 
         it('should throw BadRequestError when updating Scale question with label missing points', async () => {
@@ -1969,7 +2013,9 @@ describe('internalAssessmentService', () => {
               } as Partial<ScaleQuestion>,
               account._id.toString()
             )
-          ).rejects.toThrow('Each label must have a points value when scoring is enabled');
+          ).rejects.toThrow(
+            'Each label must have a points value when scoring is enabled'
+          );
         });
 
         it('should throw BadRequestError when updating Number question without maxNumber', async () => {
@@ -2025,7 +2071,9 @@ describe('internalAssessmentService', () => {
               },
               account._id.toString()
             )
-          ).rejects.toThrow('scoringMethod is required when scoring is enabled for Number questions');
+          ).rejects.toThrow(
+            'scoringMethod is required when scoring is enabled for Number questions'
+          );
         });
 
         it('should throw BadRequestError when updating Number question with scoringMethod=range but missing scoringRanges', async () => {
@@ -2056,7 +2104,9 @@ describe('internalAssessmentService', () => {
               },
               account._id.toString()
             )
-          ).rejects.toThrow('scoringRanges are required for range scoring method');
+          ).rejects.toThrow(
+            'scoringRanges are required for range scoring method'
+          );
         });
       });
 
@@ -2064,7 +2114,8 @@ describe('internalAssessmentService', () => {
         it('should correctly update questionsTotalMarks when MCQ max points increase', async () => {
           const qid = mcQuestion._id.toString();
           mcQuestion.options.reduce(
-            (acc: number, option: any) => (option.points > acc ? option.points : acc),
+            (acc: number, option: any) =>
+              option.points > acc ? option.points : acc,
             0
           ); // 10
 
@@ -2080,12 +2131,15 @@ describe('internalAssessmentService', () => {
           );
 
           (updated as MultipleChoiceQuestion).options.reduce(
-            (acc: number, option: any) => (option.points > acc ? option.points : acc),
+            (acc: number, option: any) =>
+              option.points > acc ? option.points : acc,
             0
           ); // 12
 
           // Verify assessment's questionsTotalMarks updated correctly
-          const updatedAssessment = await InternalAssessmentModel.findById(assessment._id);
+          const updatedAssessment = await InternalAssessmentModel.findById(
+            assessment._id
+          );
           expect(updatedAssessment?.questionsTotalMarks).toBe(12); // Original was 10, now 12
         });
 
@@ -2111,7 +2165,8 @@ describe('internalAssessmentService', () => {
           await assessment.save();
 
           mrq.options.reduce(
-            (acc: number, option: any) => (option.points > 0 ? acc + option.points : acc),
+            (acc: number, option: any) =>
+              option.points > 0 ? acc + option.points : acc,
             0
           ); // 8
 
@@ -2127,12 +2182,15 @@ describe('internalAssessmentService', () => {
           );
 
           (updated as MultipleResponseQuestion).options.reduce(
-            (acc: number, option: any) => (option.points > 0 ? acc + option.points : acc),
+            (acc: number, option: any) =>
+              option.points > 0 ? acc + option.points : acc,
             0
           ); // 7
 
           // Verify assessment's questionsTotalMarks updated correctly
-          const updatedAssessment = await InternalAssessmentModel.findById(assessment._id);
+          const updatedAssessment = await InternalAssessmentModel.findById(
+            assessment._id
+          );
           expect(updatedAssessment?.questionsTotalMarks).toBe(10 + 7); // Original mcQuestion:10 + updated MRQ:7
         });
 
@@ -2170,7 +2228,9 @@ describe('internalAssessmentService', () => {
           (updated as ScaleQuestion).labels.slice(-1)[0].points; // 15
 
           // Verify assessment's questionsTotalMarks updated correctly
-          const updatedAssessment = await InternalAssessmentModel.findById(assessment._id);
+          const updatedAssessment = await InternalAssessmentModel.findById(
+            assessment._id
+          );
           expect(updatedAssessment?.questionsTotalMarks).toBe(10 + 15); // Original mcQuestion:10 + updated Scale:15 =25
         });
 
@@ -2204,10 +2264,12 @@ describe('internalAssessmentService', () => {
           );
 
           // Updated scoringMethod is 'range', last range points =10
-          const updatedAssessment = await InternalAssessmentModel.findById(assessment._id);
+          const updatedAssessment = await InternalAssessmentModel.findById(
+            assessment._id
+          );
           expect(updatedAssessment?.questionsTotalMarks).toBe(20); // maxPoints removed, replaced with 10 (same as before)
         });
-      })
+      });
     });
 
     describe('Answer Remapping and Removal', () => {
@@ -2221,7 +2283,9 @@ describe('internalAssessmentService', () => {
         });
 
         // Verify the answer exists before update
-        const existingAnswer = await MultipleChoiceAnswerModel.findById(mcAnswer._id);
+        const existingAnswer = await MultipleChoiceAnswerModel.findById(
+          mcAnswer._id
+        );
         expect(existingAnswer).not.toBeNull();
 
         // Update the MCQ options, removing '今日も怖い'
@@ -2236,7 +2300,9 @@ describe('internalAssessmentService', () => {
         );
 
         // The old answer referencing '今日も怖い' should be removed
-        const removedAnswer = await MultipleChoiceAnswerModel.findById(mcAnswer._id);
+        const removedAnswer = await MultipleChoiceAnswerModel.findById(
+          mcAnswer._id
+        );
         expect(removedAnswer).toBeNull();
       });
 
@@ -2282,7 +2348,9 @@ describe('internalAssessmentService', () => {
         );
 
         // The answer should now only contain 'Option A'
-        const updatedAnswer = await MultipleResponseAnswerModel.findById(mrqAnswer._id);
+        const updatedAnswer = await MultipleResponseAnswerModel.findById(
+          mrqAnswer._id
+        );
         expect(updatedAnswer?.values).toEqual(['Option A']);
       });
 
@@ -2318,19 +2386,21 @@ describe('internalAssessmentService', () => {
         await updateQuestionById(
           mrq._id.toString(),
           {
-            options: [
-              { text: 'Option Z', points: 4 },
-            ],
+            options: [{ text: 'Option Z', points: 4 }],
           },
           account._id.toString()
         );
 
         // The answer should be deleted since no options remain
-        const deletedAnswer = await MultipleResponseAnswerModel.findById(mrqAnswer._id);
+        const deletedAnswer = await MultipleResponseAnswerModel.findById(
+          mrqAnswer._id
+        );
         expect(deletedAnswer).toBeNull();
 
         // Verify assessment's questionsTotalMarks updated correctly
-        const updatedAssessment = await InternalAssessmentModel.findById(assessment._id);
+        const updatedAssessment = await InternalAssessmentModel.findById(
+          assessment._id
+        );
         expect(updatedAssessment?.questionsTotalMarks).toBe(10 + 8 - 8 + 4); // Original:18 +4 -8=14
       });
     });
@@ -2384,8 +2454,10 @@ describe('internalAssessmentService', () => {
 
         // Link the existing mcQuestion to the new assessment
         await newAssessment.updateOne({ $push: { questions: mcQuestion._id } });
-        newAssessment.questionsTotalMarks = newAssessment.questionsTotalMarks ? newAssessment.questionsTotalMarks + 10 : 10;
-        await newAssessment.save()
+        newAssessment.questionsTotalMarks = newAssessment.questionsTotalMarks
+          ? newAssessment.questionsTotalMarks + 10
+          : 10;
+        await newAssessment.save();
 
         // Attempt to update mcQuestion, which is now linked to newAssessment
         // The original assessment should not have this question
@@ -2398,11 +2470,15 @@ describe('internalAssessmentService', () => {
         ).resolves.not.toThrow();
 
         // Verify that the original assessment's questionsTotalMarks remain unchanged
-        const originalAssessment = await InternalAssessmentModel.findById(assessment._id);
+        const originalAssessment = await InternalAssessmentModel.findById(
+          assessment._id
+        );
         expect(originalAssessment?.questionsTotalMarks).toBe(10); // Assuming initial total was 10
 
         // Verify that the new assessment's questionsTotalMarks updated correctly
-        const updatedNewAssessment = await InternalAssessmentModel.findById(newAssessment._id);
+        const updatedNewAssessment = await InternalAssessmentModel.findById(
+          newAssessment._id
+        );
         expect(updatedNewAssessment?.questionsTotalMarks).toBe(10); // Added mcQuestion's max points
       });
     });
@@ -2736,11 +2812,18 @@ describe('internalAssessmentService', () => {
       await unrelatedQuestion.save();
 
       // Fetch the current assessment's question IDs
-      const assess = await InternalAssessmentModel.findById(assessment._id).populate('questions');
-      const validQuestionIds = assess!.questions.map((q: any) => q._id.toString());
+      const assess = await InternalAssessmentModel.findById(
+        assessment._id
+      ).populate('questions');
+      const validQuestionIds = assess!.questions.map((q: any) =>
+        q._id.toString()
+      );
 
       // Append the unrelated question ID to the reorder array
-      const reorderedIds = [...validQuestionIds, unrelatedQuestion._id.toString()];
+      const reorderedIds = [
+        ...validQuestionIds,
+        unrelatedQuestion._id.toString(),
+      ];
 
       // Attempt to reorder with an invalid question ID
       await expect(

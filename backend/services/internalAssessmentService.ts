@@ -607,7 +607,8 @@ export const addQuestionToAssessment = async (
 
   // Update the assessment's question list and total marks
   assessment.questions.push(question._id);
-  assessment.questionsTotalMarks = assessment.questionsTotalMarks! + addedMaxScore;
+  assessment.questionsTotalMarks =
+    assessment.questionsTotalMarks! + addedMaxScore;
   await assessment.save();
 
   return question;
@@ -726,10 +727,7 @@ export const updateQuestionById = async (
       if (typeof updatedData.scaleMax !== 'number') {
         throw new BadRequestError('scaleMax is required for Scale questions');
       }
-      if (
-        !Array.isArray(updatedData.labels) ||
-        updatedData.labels.length < 2
-      ) {
+      if (!Array.isArray(updatedData.labels) || updatedData.labels.length < 2) {
         throw new BadRequestError(
           'At least two labels are required for Scale questions'
         );
@@ -792,11 +790,10 @@ export const updateQuestionById = async (
         (acc: number, val: any) => (acc > val.points ? acc : val.points),
         0
       );
-      updatedScore =
-        updatedData.options!.reduce(
-          (acc: number, val: any) => (acc > val.points ? acc : val.points),
-          0
-        );
+      updatedScore = updatedData.options!.reduce(
+        (acc: number, val: any) => (acc > val.points ? acc : val.points),
+        0
+      );
       updatedQuestion = await MultipleChoiceQuestionModel.findByIdAndUpdate(
         questionId,
         updateData,
@@ -808,11 +805,10 @@ export const updateQuestionById = async (
         (acc: number, val: any) => (val.points > 0 ? acc + val.points : acc),
         0
       );
-      updatedScore =
-        updatedData.options!.reduce(
-          (acc: number, val: any) => (val.points > 0 ? acc + val.points : acc),
-          0
-        );
+      updatedScore = updatedData.options!.reduce(
+        (acc: number, val: any) => (val.points > 0 ? acc + val.points : acc),
+        0
+      );
 
       updatedQuestion = await MultipleResponseQuestionModel.findByIdAndUpdate(
         questionId,
@@ -821,9 +817,8 @@ export const updateQuestionById = async (
       );
       break;
     case 'Scale':
-      currentScore = existingQuestion.labels[
-        existingQuestion.labels.length - 1
-      ].points;
+      currentScore =
+        existingQuestion.labels[existingQuestion.labels.length - 1].points;
       updatedScore = updatedData.labels[updatedData.labels.length - 1].points;
       updatedQuestion = await ScaleQuestionModel.findByIdAndUpdate(
         questionId,
@@ -838,10 +833,7 @@ export const updateQuestionById = async (
       ) {
         currentScore = existingQuestion.maxPoints!;
       }
-      if (
-        updatedData.isScored &&
-        updatedData.scoringMethod === 'direct'
-      ) {
+      if (updatedData.isScored && updatedData.scoringMethod === 'direct') {
         updatedScore = updatedData.maxPoints!;
       }
       if (
@@ -853,10 +845,7 @@ export const updateQuestionById = async (
           currentScore = ranges[ranges.length - 1].points;
         }
       }
-      if (
-        updatedData.isScored &&
-        updatedData.scoringMethod === 'range'
-      ) {
+      if (updatedData.isScored && updatedData.scoringMethod === 'range') {
         const ranges = updatedData.scoringRanges!;
         if (ranges.length > 0) {
           updatedScore = ranges[ranges.length - 1].points;
@@ -942,7 +931,8 @@ export const updateQuestionById = async (
     });
 
     if (assessment) {
-      assessment.questionsTotalMarks = assessment.questionsTotalMarks! - currentScore + updatedScore;
+      assessment.questionsTotalMarks =
+        assessment.questionsTotalMarks! - currentScore + updatedScore;
       await assessment.save();
     }
   }

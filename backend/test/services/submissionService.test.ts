@@ -74,7 +74,7 @@ let assessment: any;
 
 // We keep references to the first three questions (by index) for convenience
 let teamMemberQuestion: any; // index 0
-let mcQuestion: any;         // index 1
+let mcQuestion: any; // index 1
 // let shortQuestion: any;      // index 12
 
 /**
@@ -253,7 +253,7 @@ beforeAll(async () => {
   ta = data.ta;
   assessment = data.assessment;
   teamMemberQuestion = data.teamMemberQuestion; // index 0
-  mcQuestion = data.mcQuestion;                 // index 1
+  mcQuestion = data.mcQuestion; // index 1
   // shortQuestion = data.shortQuestion;           // index 12
 });
 
@@ -599,9 +599,27 @@ const setupData = async (overrideEndDate?: Date) => {
 
   // Collect them all
   const allQuestions = [
-    q0, q1, q2, q3, q4, q5, q6, q7, q8, q9,
-    q10, q11, q12, q13, q14, q15, q16, q17,
-    q18, q19, q20,
+    q0,
+    q1,
+    q2,
+    q3,
+    q4,
+    q5,
+    q6,
+    q7,
+    q8,
+    q9,
+    q10,
+    q11,
+    q12,
+    q13,
+    q14,
+    q15,
+    q16,
+    q17,
+    q18,
+    q19,
+    q20,
   ];
 
   // Create the assessment
@@ -691,12 +709,16 @@ describe('submissionService', () => {
           validAnswers,
           false
         )
-      ).rejects.toThrow(`Question ${orphanQuestion._id.toString()} not found in this assessment`);
+      ).rejects.toThrow(
+        `Question ${orphanQuestion._id.toString()} not found in this assessment`
+      );
     });
 
     it('should throw BadRequestError if an answer type does not match the question type', async () => {
       // Step 1: Select a valid question from the assessment
-      const question = assessment.questions.find((q: Question) => q.type === 'Multiple Choice');
+      const question = assessment.questions.find(
+        (q: Question) => q.type === 'Multiple Choice'
+      );
       expect(question).toBeDefined();
 
       // Step 2: Build a valid set of answers
@@ -764,11 +786,15 @@ describe('submissionService', () => {
       const validAnswers = buildAllAnswers(assessment, student._id.toString());
 
       // Step 2: Find a Multiple Choice Answer
-      const mcQuestion = assessment.questions.find((q: Question) => q.type === 'Multiple Choice');
+      const mcQuestion = assessment.questions.find(
+        (q: Question) => q.type === 'Multiple Choice'
+      );
       expect(mcQuestion).toBeDefined();
 
       const mcAnswer = validAnswers.find(
-        ans => ans.type === 'Multiple Choice Answer' && ans.question._id.toString() === mcQuestion!._id.toString()
+        ans =>
+          ans.type === 'Multiple Choice Answer' &&
+          ans.question._id.toString() === mcQuestion!._id.toString()
       ) as MultipleChoiceAnswer;
       expect(mcAnswer).toBeDefined();
 
@@ -793,11 +819,15 @@ describe('submissionService', () => {
       const validAnswers = buildAllAnswers(assessment, student._id.toString());
 
       // Step 2: Find a Multiple Response Answer
-      const mrQuestion = assessment.questions.find((q: Question) => q.type === 'Multiple Response');
+      const mrQuestion = assessment.questions.find(
+        (q: Question) => q.type === 'Multiple Response'
+      );
       expect(mrQuestion).toBeDefined();
 
       const mrAnswer = validAnswers.find(
-        ans => ans.type === 'Multiple Response Answer' && ans.question._id.toString() === mrQuestion!._id.toString()
+        ans =>
+          ans.type === 'Multiple Response Answer' &&
+          ans.question._id.toString() === mrQuestion!._id.toString()
       ) as MultipleResponseAnswer;
       expect(mrAnswer).toBeDefined();
 
@@ -822,11 +852,15 @@ describe('submissionService', () => {
       const validAnswers = buildAllAnswers(assessment, student._id.toString());
 
       // Step 2: Find a Scale Answer
-      const scaleQuestion = assessment.questions.find((q: Question) => q.type === 'Scale');
+      const scaleQuestion = assessment.questions.find(
+        (q: Question) => q.type === 'Scale'
+      );
       expect(scaleQuestion).toBeDefined();
 
       const scaleAnswer = validAnswers.find(
-        ans => ans.type === 'Scale Answer' && ans.question._id.toString() === scaleQuestion!._id.toString()
+        ans =>
+          ans.type === 'Scale Answer' &&
+          ans.question._id.toString() === scaleQuestion!._id.toString()
       ) as ScaleAnswer;
       expect(scaleAnswer).toBeDefined();
 
@@ -850,14 +884,18 @@ describe('submissionService', () => {
       const validAnswers = buildAllAnswers(assessment, student._id.toString());
 
       // Step 2: Find a Scale Answer
-      const scaleQuestion = assessment.questions.find((q: Question) => q.type === 'Scale');
+      const scaleQuestion = assessment.questions.find(
+        (q: Question) => q.type === 'Scale'
+      );
       expect(scaleQuestion).toBeDefined();
 
       const scaleMax = (scaleQuestion as ScaleQuestion).scaleMax;
       expect(scaleMax).toBeDefined();
 
       const scaleAnswer = validAnswers.find(
-        ans => ans.type === 'Scale Answer' && ans.question._id.toString() === scaleQuestion!._id.toString()
+        ans =>
+          ans.type === 'Scale Answer' &&
+          ans.question._id.toString() === scaleQuestion!._id.toString()
       ) as ScaleAnswer;
       expect(scaleAnswer).toBeDefined();
 
@@ -879,7 +917,9 @@ describe('submissionService', () => {
 
     it('should throw BadRequestError if Date Answer with isRange=true is missing endDate', async () => {
       // Step 1: Find a Date Question with isRange=true
-      const dateQuestion = assessment.questions.find((q: Question) => q.type === 'Date' && (q as DateQuestion).isRange);
+      const dateQuestion = assessment.questions.find(
+        (q: Question) => q.type === 'Date' && (q as DateQuestion).isRange
+      );
       expect(dateQuestion).toBeDefined();
 
       // Step 2: Build a valid set of answers
@@ -887,7 +927,9 @@ describe('submissionService', () => {
 
       // Step 3: Find the corresponding Date Answer and modify it
       const dateAnswer = validAnswers.find(
-        ans => ans.type === 'Date Answer' && ans.question._id.toString() === dateQuestion!._id.toString()
+        ans =>
+          ans.type === 'Date Answer' &&
+          ans.question._id.toString() === dateQuestion!._id.toString()
       ) as DateAnswer;
       expect(dateAnswer).toBeDefined();
 
@@ -909,7 +951,9 @@ describe('submissionService', () => {
 
     it('should throw BadRequestError if Date Answer with isRange=false is missing value', async () => {
       // Step 1: Find a Date Question with isRange=false
-      const dateQuestion = assessment.questions.find((q: Question) => q.type === 'Date' && !(q as DateQuestion).isRange);
+      const dateQuestion = assessment.questions.find(
+        (q: Question) => q.type === 'Date' && !(q as DateQuestion).isRange
+      );
       expect(dateQuestion).toBeDefined();
 
       // Step 2: Build a valid set of answers
@@ -917,7 +961,9 @@ describe('submissionService', () => {
 
       // Step 3: Find the corresponding Date Answer and modify it
       const dateAnswer = validAnswers.find(
-        ans => ans.type === 'Date Answer' && ans.question._id.toString() === dateQuestion!._id.toString()
+        ans =>
+          ans.type === 'Date Answer' &&
+          ans.question._id.toString() === dateQuestion!._id.toString()
       ) as DateAnswer;
       expect(dateAnswer).toBeDefined();
 
@@ -942,11 +988,15 @@ describe('submissionService', () => {
       const validAnswers = buildAllAnswers(assessment, student._id.toString());
 
       // Step 2: Find a Number Answer
-      const numberQuestion = assessment.questions.find((q: Question) => q.type === 'Number');
+      const numberQuestion = assessment.questions.find(
+        (q: Question) => q.type === 'Number'
+      );
       expect(numberQuestion).toBeDefined();
 
       const numberAnswer = validAnswers.find(
-        ans => ans.type === 'Number Answer' && ans.question._id.toString() === numberQuestion!._id.toString()
+        ans =>
+          ans.type === 'Number Answer' &&
+          ans.question._id.toString() === numberQuestion!._id.toString()
       ) as NumberAnswer;
       expect(numberAnswer).toBeDefined();
 
@@ -971,14 +1021,18 @@ describe('submissionService', () => {
       const validAnswers = buildAllAnswers(assessment, student._id.toString());
 
       // Step 2: Find a Number Answer
-      const numberQuestion = assessment.questions.find((q: Question) => q.type === 'Number');
+      const numberQuestion = assessment.questions.find(
+        (q: Question) => q.type === 'Number'
+      );
       expect(numberQuestion).toBeDefined();
 
       const maxNumber = (numberQuestion as NumberQuestion).maxNumber;
       expect(maxNumber).toBeDefined();
 
       const numberAnswer = validAnswers.find(
-        ans => ans.type === 'Number Answer' && ans.question._id.toString() === numberQuestion!._id.toString()
+        ans =>
+          ans.type === 'Number Answer' &&
+          ans.question._id.toString() === numberQuestion!._id.toString()
       ) as NumberAnswer;
       expect(numberAnswer).toBeDefined();
 
@@ -1003,7 +1057,9 @@ describe('submissionService', () => {
       const validAnswers = buildAllAnswers(assessment, student._id.toString());
 
       // Step 2: Append an Undecided Answer
-      const undecidedQuestion = assessment.questions.find((q: Question) => q.type === 'Undecided');
+      const undecidedQuestion = assessment.questions.find(
+        (q: Question) => q.type === 'Undecided'
+      );
       expect(undecidedQuestion).toBeDefined();
 
       const undecidedAnswer: UndecidedAnswer = {
@@ -1022,7 +1078,9 @@ describe('submissionService', () => {
       );
 
       // Step 4: Fetch the updated submission
-      const updatedSubmission = await SubmissionModel.findById(submission._id).populate('answers');
+      const updatedSubmission = await SubmissionModel.findById(
+        submission._id
+      ).populate('answers');
       expect(updatedSubmission).toBeDefined();
 
       // Step 5: Find the Undecided Answer and verify its score
@@ -1038,11 +1096,15 @@ describe('submissionService', () => {
       const validAnswers = buildAllAnswers(assessment, student._id.toString());
 
       // Step 2: Find a Multiple Response Answer
-      const mrQuestion = assessment.questions.find((q: Question) => q.type === 'Multiple Response');
+      const mrQuestion = assessment.questions.find(
+        (q: Question) => q.type === 'Multiple Response'
+      );
       expect(mrQuestion).toBeDefined();
 
       const mrAnswer = validAnswers.find(
-        ans => ans.type === 'Multiple Response Answer' && ans.question._id.toString() === mrQuestion!._id.toString()
+        ans =>
+          ans.type === 'Multiple Response Answer' &&
+          ans.question._id.toString() === mrQuestion!._id.toString()
       ) as MultipleResponseAnswer;
       expect(mrAnswer).toBeDefined();
 
@@ -1067,11 +1129,15 @@ describe('submissionService', () => {
       const validAnswers = buildAllAnswers(assessment, student._id.toString());
 
       // Step 2: Find a Multiple Response Answer
-      const mrQuestion = assessment.questions.find((q: Question) => q.type === 'Multiple Response');
+      const mrQuestion = assessment.questions.find(
+        (q: Question) => q.type === 'Multiple Response'
+      );
       expect(mrQuestion).toBeDefined();
 
       const mrAnswer = validAnswers.find(
-        ans => ans.type === 'Multiple Response Answer' && ans.question._id.toString() === mrQuestion!._id.toString()
+        ans =>
+          ans.type === 'Multiple Response Answer' &&
+          ans.question._id.toString() === mrQuestion!._id.toString()
       ) as MultipleResponseAnswer;
       expect(mrAnswer).toBeDefined();
       // Step 3: Modify the answer to include both valid and invalid options
@@ -1123,12 +1189,16 @@ describe('submissionService', () => {
           validAnswers,
           false
         )
-      ).rejects.toThrow(`Question ${orphanQuestion._id.toString()} not found in this assessment`);
+      ).rejects.toThrow(
+        `Question ${orphanQuestion._id.toString()} not found in this assessment`
+      );
     });
 
     it('should throw BadRequestError if an answer type does not match the question type', async () => {
       // Select a valid question from the assessment
-      const mcQuestion = assessment.questions.find((q: Question) => q.type === 'Multiple Choice');
+      const mcQuestion = assessment.questions.find(
+        (q: Question) => q.type === 'Multiple Choice'
+      );
       expect(mcQuestion).toBeDefined();
 
       // Build a valid set of answers
@@ -1157,7 +1227,9 @@ describe('submissionService', () => {
 
     it('should throw BadRequestError if Multiple Choice Answer selects an invalid option', async () => {
       // Find a Multiple Choice Answer
-      const mcQuestion = assessment.questions.find((q: Question) => q.type === 'Multiple Choice');
+      const mcQuestion = assessment.questions.find(
+        (q: Question) => q.type === 'Multiple Choice'
+      );
       if (!mcQuestion) {
         // If no such question exists, skip the test
         return;
@@ -1168,7 +1240,9 @@ describe('submissionService', () => {
 
       // Find the corresponding Multiple Choice Answer
       const mcAnswer = validAnswers.find(
-        (ans) => ans.type === 'Multiple Choice Answer' && ans.question.equals(mcQuestion._id)
+        ans =>
+          ans.type === 'Multiple Choice Answer' &&
+          ans.question.equals(mcQuestion._id)
       ) as MultipleChoiceAnswer;
       expect(mcAnswer).toBeDefined();
 
@@ -1190,7 +1264,9 @@ describe('submissionService', () => {
 
     it('should throw BadRequestError if Multiple Response Answer has non-array values', async () => {
       // Find a Multiple Response Answer
-      const mrQuestion = assessment.questions.find((q: Question) => q.type === 'Multiple Response');
+      const mrQuestion = assessment.questions.find(
+        (q: Question) => q.type === 'Multiple Response'
+      );
       if (!mrQuestion) {
         // If no such question exists, skip the test
         return;
@@ -1201,7 +1277,9 @@ describe('submissionService', () => {
 
       // Find the corresponding Multiple Response Answer
       const mrAnswer = validAnswers.find(
-        (ans) => ans.type === 'Multiple Response Answer' && ans.question.equals(mrQuestion._id)
+        ans =>
+          ans.type === 'Multiple Response Answer' &&
+          ans.question.equals(mrQuestion._id)
       ) as MultipleResponseAnswer;
       expect(mrAnswer).toBeDefined();
 
@@ -1223,7 +1301,9 @@ describe('submissionService', () => {
 
     it('should throw BadRequestError if Multiple Response Answer includes invalid option values', async () => {
       // Find a Multiple Response Answer
-      const mrQuestion = assessment.questions.find((q: Question) => q.type === 'Multiple Response');
+      const mrQuestion = assessment.questions.find(
+        (q: Question) => q.type === 'Multiple Response'
+      );
       if (!mrQuestion) {
         // If no such question exists, skip the test
         return;
@@ -1234,7 +1314,9 @@ describe('submissionService', () => {
 
       // Find the corresponding Multiple Response Answer
       const mrAnswer = validAnswers.find(
-        (ans) => ans.type === 'Multiple Response Answer' && ans.question.equals(mrQuestion._id)
+        ans =>
+          ans.type === 'Multiple Response Answer' &&
+          ans.question.equals(mrQuestion._id)
       ) as MultipleResponseAnswer;
       expect(mrAnswer).toBeDefined();
 
@@ -1256,7 +1338,9 @@ describe('submissionService', () => {
 
     it('should throw BadRequestError if Scale Answer has a value below 1', async () => {
       // Find a Scale Answer
-      const scaleQuestion = assessment.questions.find((q: Question) => q.type === 'Scale');
+      const scaleQuestion = assessment.questions.find(
+        (q: Question) => q.type === 'Scale'
+      );
       if (!scaleQuestion) {
         // If no such question exists, skip the test
         return;
@@ -1267,7 +1351,8 @@ describe('submissionService', () => {
 
       // Find the corresponding Scale Answer
       const scaleAnswer = validAnswers.find(
-        (ans) => ans.type === 'Scale Answer' && ans.question.equals(scaleQuestion._id)
+        ans =>
+          ans.type === 'Scale Answer' && ans.question.equals(scaleQuestion._id)
       ) as ScaleAnswer;
       expect(scaleAnswer).toBeDefined();
 
@@ -1289,7 +1374,9 @@ describe('submissionService', () => {
 
     it('should throw BadRequestError if Scale Answer has a value above scaleMax', async () => {
       // Find a Scale Answer
-      const scaleQuestion = assessment.questions.find((q: Question) => q.type === 'Scale');
+      const scaleQuestion = assessment.questions.find(
+        (q: Question) => q.type === 'Scale'
+      );
       if (!scaleQuestion) {
         // If no such question exists, skip the test
         return;
@@ -1304,7 +1391,8 @@ describe('submissionService', () => {
 
       // Find the corresponding Scale Answer
       const scaleAnswer = validAnswers.find(
-        (ans) => ans.type === 'Scale Answer' && ans.question.equals(scaleQuestion._id)
+        ans =>
+          ans.type === 'Scale Answer' && ans.question.equals(scaleQuestion._id)
       ) as ScaleAnswer;
       expect(scaleAnswer).toBeDefined();
 
@@ -1326,7 +1414,9 @@ describe('submissionService', () => {
 
     it('should throw BadRequestError if Date Answer with isRange=true is missing endDate', async () => {
       // Find a Date Answer with isRange=true
-      const dateQuestion = assessment.questions.find((q: Question) => q.type === 'Date' && (q as DateQuestion).isRange);
+      const dateQuestion = assessment.questions.find(
+        (q: Question) => q.type === 'Date' && (q as DateQuestion).isRange
+      );
       if (!dateQuestion) {
         // If no such question exists, skip the test
         return;
@@ -1337,7 +1427,8 @@ describe('submissionService', () => {
 
       // Find the corresponding Date Answer
       const dateAnswerIndex = validAnswers.findIndex(
-        (ans) => ans.type === 'Date Answer' && ans.question.equals(dateQuestion._id)
+        ans =>
+          ans.type === 'Date Answer' && ans.question.equals(dateQuestion._id)
       );
       expect(dateAnswerIndex).toBeGreaterThanOrEqual(0);
 
@@ -1359,7 +1450,9 @@ describe('submissionService', () => {
 
     it('should throw BadRequestError if Date Answer with isRange=true is missing startDate', async () => {
       // Find a Date Answer with isRange=true
-      const dateQuestion = assessment.questions.find((q: Question) => q.type === 'Date' && (q as DateQuestion).isRange);
+      const dateQuestion = assessment.questions.find(
+        (q: Question) => q.type === 'Date' && (q as DateQuestion).isRange
+      );
       if (!dateQuestion) {
         // If no such question exists, skip the test
         return;
@@ -1370,7 +1463,8 @@ describe('submissionService', () => {
 
       // Find the corresponding Date Answer
       const dateAnswerIndex = validAnswers.findIndex(
-        (ans) => ans.type === 'Date Answer' && ans.question.equals(dateQuestion._id)
+        ans =>
+          ans.type === 'Date Answer' && ans.question.equals(dateQuestion._id)
       );
       expect(dateAnswerIndex).toBeGreaterThanOrEqual(0);
 
@@ -1392,7 +1486,9 @@ describe('submissionService', () => {
 
     it('should throw BadRequestError if Number Answer has a non-number value', async () => {
       // Find a Number Answer
-      const numberQuestion = assessment.questions.find((q: Question) => q.type === 'Number');
+      const numberQuestion = assessment.questions.find(
+        (q: Question) => q.type === 'Number'
+      );
       if (!numberQuestion) {
         // If no such question exists, skip the test
         return;
@@ -1403,12 +1499,15 @@ describe('submissionService', () => {
 
       // Find the corresponding Number Answer
       const numberAnswerIndex = validAnswers.findIndex(
-        (ans) => ans.type === 'Number Answer' && ans.question.equals(numberQuestion._id)
+        ans =>
+          ans.type === 'Number Answer' &&
+          ans.question.equals(numberQuestion._id)
       );
       expect(numberAnswerIndex).toBeGreaterThanOrEqual(0);
 
       // Modify the answer to have a non-number value
-      (validAnswers[numberAnswerIndex] as NumberAnswer).value = 'Not a number' as any;
+      (validAnswers[numberAnswerIndex] as NumberAnswer).value =
+        'Not a number' as any;
 
       // Attempt to create the submission and expect a BadRequestError
       await expect(
@@ -1425,7 +1524,9 @@ describe('submissionService', () => {
 
     it('should throw BadRequestError if Number Answer has a value below 0', async () => {
       // Find a Number Answer
-      const numberQuestion = assessment.questions.find((q: Question) => q.type === 'Number');
+      const numberQuestion = assessment.questions.find(
+        (q: Question) => q.type === 'Number'
+      );
       if (!numberQuestion) {
         // If no such question exists, skip the test
         return;
@@ -1436,7 +1537,9 @@ describe('submissionService', () => {
 
       // Find the corresponding Number Answer
       const numberAnswerIndex = validAnswers.findIndex(
-        (ans) => ans.type === 'Number Answer' && ans.question.equals(numberQuestion._id)
+        ans =>
+          ans.type === 'Number Answer' &&
+          ans.question.equals(numberQuestion._id)
       );
       expect(numberAnswerIndex).toBeGreaterThanOrEqual(0);
 
@@ -1458,7 +1561,9 @@ describe('submissionService', () => {
 
     it('should throw BadRequestError if Number Answer has a value above maxNumber', async () => {
       // Find a Number Answer
-      const numberQuestion = assessment.questions.find((q: Question) => q.type === 'Number');
+      const numberQuestion = assessment.questions.find(
+        (q: Question) => q.type === 'Number'
+      );
       if (!numberQuestion) {
         // If no such question exists, skip the test
         return;
@@ -1473,12 +1578,15 @@ describe('submissionService', () => {
 
       // Find the corresponding Number Answer
       const numberAnswerIndex = validAnswers.findIndex(
-        (ans) => ans.type === 'Number Answer' && ans.question.equals(numberQuestion._id)
+        ans =>
+          ans.type === 'Number Answer' &&
+          ans.question.equals(numberQuestion._id)
       );
       expect(numberAnswerIndex).toBeGreaterThanOrEqual(0);
 
       // Modify the answer to have a value above maxNumber
-      (validAnswers[numberAnswerIndex] as NumberAnswer).value = (maxNumber as number) + 1;
+      (validAnswers[numberAnswerIndex] as NumberAnswer).value =
+        (maxNumber as number) + 1;
 
       // Attempt to create the submission and expect a BadRequestError
       await expect(
@@ -1495,7 +1603,9 @@ describe('submissionService', () => {
 
     it('should accept Undecided Answer without errors and set score to 0', async () => {
       // Find an Undecided Answer
-      const undecidedQuestion = assessment.questions.find((q: Question) => q.type === 'Undecided');
+      const undecidedQuestion = assessment.questions.find(
+        (q: Question) => q.type === 'Undecided'
+      );
       if (!undecidedQuestion) {
         // If no such question exists, skip the test
         return;
@@ -1521,7 +1631,9 @@ describe('submissionService', () => {
       );
 
       // Fetch the updated submission
-      const updatedSubmission = await SubmissionModel.findById(submission._id).populate('answers');
+      const updatedSubmission = await SubmissionModel.findById(
+        submission._id
+      ).populate('answers');
       expect(updatedSubmission).toBeDefined();
 
       // Find the Undecided Answer and verify its score
@@ -1534,7 +1646,9 @@ describe('submissionService', () => {
 
     it('should throw BadRequestError if Multiple Response Answer includes all invalid option values', async () => {
       // Find a Multiple Response Answer
-      const mrQuestion = assessment.questions.find((q: Question) => q.type === 'Multiple Response');
+      const mrQuestion = assessment.questions.find(
+        (q: Question) => q.type === 'Multiple Response'
+      );
       if (!mrQuestion) {
         // If no such question exists, skip the test
         return;
@@ -1545,7 +1659,9 @@ describe('submissionService', () => {
 
       // Find the corresponding Multiple Response Answer
       const mrAnswer = validAnswers.find(
-        (ans) => ans.type === 'Multiple Response Answer' && ans.question.equals(mrQuestion._id)
+        ans =>
+          ans.type === 'Multiple Response Answer' &&
+          ans.question.equals(mrQuestion._id)
       ) as MultipleResponseAnswer;
       expect(mrAnswer).toBeDefined();
 
@@ -1567,7 +1683,9 @@ describe('submissionService', () => {
 
     it('should throw BadRequestError if Multiple Response Answer includes both valid and invalid option values', async () => {
       // Find a Multiple Response Answer
-      const mrQuestion = assessment.questions.find((q: Question) => q.type === 'Multiple Response');
+      const mrQuestion = assessment.questions.find(
+        (q: Question) => q.type === 'Multiple Response'
+      );
       if (!mrQuestion) {
         // If no such question exists, skip the test
         return;
@@ -1578,7 +1696,9 @@ describe('submissionService', () => {
 
       // Find the corresponding Multiple Response Answer
       const mrAnswer = validAnswers.find(
-        (ans) => ans.type === 'Multiple Response Answer' && ans.question.equals(mrQuestion._id)
+        ans =>
+          ans.type === 'Multiple Response Answer' &&
+          ans.question.equals(mrQuestion._id)
       ) as MultipleResponseAnswer;
       expect(mrAnswer).toBeDefined();
 
@@ -1597,13 +1717,15 @@ describe('submissionService', () => {
         `Invalid option selected for question ${mrAnswer.question}`
       );
     });
-  })
+  });
 
   describe('createSubmission', () => {
     it('should create a new submission', async () => {
       const fullAnswers = buildAllAnswers(assessment, student._id.toString());
       // Optionally change the TMS to reference the student
-      (fullAnswers[0] as TeamMemberSelectionAnswer).selectedUserIds = [student._id.toString()];
+      (fullAnswers[0] as TeamMemberSelectionAnswer).selectedUserIds = [
+        student._id.toString(),
+      ];
 
       const submission = await createSubmission(
         assessment._id.toString(),
@@ -1742,7 +1864,11 @@ describe('submissionService', () => {
 
     it('should throw an error if outside submission period (end date in the past)', async () => {
       const now = new Date();
-      const pastEnd = new Date(now.getFullYear() - 2, now.getMonth(), now.getDate());
+      const pastEnd = new Date(
+        now.getFullYear() - 2,
+        now.getMonth(),
+        now.getDate()
+      );
 
       const pastAssessment = await InternalAssessmentModel.create({
         course: assessment.course,
@@ -1853,7 +1979,9 @@ describe('submissionService', () => {
           fullAnswers,
           false
         )
-      ).rejects.toThrow('You do not have permission to update this submission.');
+      ).rejects.toThrow(
+        'You do not have permission to update this submission.'
+      );
     });
 
     it('should throw an error if assessment is not editable', async () => {
@@ -2009,7 +2137,9 @@ describe('submissionService', () => {
 
       // Verify that the submission's answer now references the new answer
       const updatedAnswer = updatedSubmission.answers.find(
-        (ans: any) => ans.question.toString() === answerToRemove.question.toString() && ans.value === answerToRemove.value
+        (ans: any) =>
+          ans.question.toString() === answerToRemove.question.toString() &&
+          ans.value === answerToRemove.value
       );
 
       expect(updatedAnswer).toBeDefined();
@@ -2436,12 +2566,16 @@ describe('submissionService', () => {
       });
 
       // Regrade
-      const regradedSubmission = await regradeSubmission(submission._id.toString());
+      const regradedSubmission = await regradeSubmission(
+        submission._id.toString()
+      );
       expect(regradedSubmission).toBeDefined();
       expect(regradedSubmission!.score).toBeGreaterThan(0);
 
       // The AssessmentResult should be updated
-      const updatedResult = await AssessmentResultModel.findById(newAssessmentResult._id);
+      const updatedResult = await AssessmentResultModel.findById(
+        newAssessmentResult._id
+      );
       expect(updatedResult).toBeDefined();
       const markEntry = updatedResult!.marks.find(
         m => m.submission.toString() === submission._id.toString()
@@ -2521,7 +2655,9 @@ describe('submissionService', () => {
       const regraded = await regradeSubmission(newSubmission._id.toString());
       expect(regraded).toBeDefined();
       expect(regraded!.answers.length).toBe(2); // The TMS answer + the "wrapper" doc
-      const orphanCheck = await ShortResponseAnswerModel.findById(orphanAns._id);
+      const orphanCheck = await ShortResponseAnswerModel.findById(
+        orphanAns._id
+      );
       expect(orphanCheck).toBeNull();
     });
 
@@ -2604,7 +2740,7 @@ describe('submissionService', () => {
       const updated = await regradeSubmission(sub._id.toString());
       expect(updated).toBeDefined();
       expect(updated!.score).toBe(0);
-      expect(updated!.answers[1].score = 0);
+      expect((updated!.answers[1].score = 0));
     });
 
     it('should create a new answer doc if the old savedAnswer is not found', async () => {
@@ -2683,7 +2819,9 @@ describe('submissionService', () => {
       // We'll create a submission referencing the TA in TMS
       const fullAnswers = buildAllAnswers(assessment, ta._id.toString());
       // The TMS is index 0 => set it to TA
-      (fullAnswers[0] as TeamMemberSelectionAnswer).selectedUserIds = [ta._id.toString()];
+      (fullAnswers[0] as TeamMemberSelectionAnswer).selectedUserIds = [
+        ta._id.toString(),
+      ];
 
       const sub = await createSubmission(
         assessment._id.toString(),
@@ -2706,7 +2844,9 @@ describe('submissionService', () => {
       const finalResult = await AssessmentResultModel.findById(resultDoc!._id);
       expect(finalResult).toBeDefined();
       expect(finalResult!.marks.length).toBe(1);
-      expect(finalResult!.marks[0].submission.toString()).toEqual(sub._id.toString());
+      expect(finalResult!.marks[0].submission.toString()).toEqual(
+        sub._id.toString()
+      );
     });
 
     it('should force "Multiple Choice" to throw error if no matching option', async () => {
@@ -2715,12 +2855,14 @@ describe('submissionService', () => {
       // Index 1 is our "Multiple Choice (scored)" => replace with invalid value
       (answers[1] as MultipleChoiceAnswer).value = 'NotAnOption';
 
-      await expect(createSubmission(
-        assessment._id.toString(),
-        ta._id.toString(),
-        answers,
-        false
-      )).rejects.toThrow();
+      await expect(
+        createSubmission(
+          assessment._id.toString(),
+          ta._id.toString(),
+          answers,
+          false
+        )
+      ).rejects.toThrow();
     });
 
     it('should produce partial negative (Multiple Response) with negative points included', async () => {
@@ -2796,12 +2938,14 @@ describe('submissionService', () => {
       const fullAnswers = buildAllAnswers(assessment, student._id.toString());
       fullAnswers.push(ans);
 
-      await expect(createSubmission(
-        assessment._id.toString(),
-        ta._id.toString(),
-        fullAnswers,
-        false
-      )).rejects.toThrow();
+      await expect(
+        createSubmission(
+          assessment._id.toString(),
+          ta._id.toString(),
+          fullAnswers,
+          false
+        )
+      ).rejects.toThrow();
     });
 
     it('should handle "Number" with value that triggers top-range, mid-range interpolation, and below-range', async () => {
@@ -2959,9 +3103,9 @@ describe('submissionService', () => {
         ],
       });
 
-      await expect(regradeSubmission(submission._id.toString())).rejects.toThrow(
-        'Missing Team Member Selection Answer'
-      );
+      await expect(
+        regradeSubmission(submission._id.toString())
+      ).rejects.toThrow('Missing Team Member Selection Answer');
     });
 
     it('should test 7 number questions (direct & range) to cover all lines in calculateNumberScore', async () => {
@@ -3239,10 +3383,7 @@ describe('submissionService', () => {
         granularity: 'individual',
         areSubmissionsEditable: true,
         isReleased: true,
-        questions: [
-          tmsQuestion._id,
-          ...scaleQuestions.map(q => q._id),
-        ],
+        questions: [tmsQuestion._id, ...scaleQuestions.map(q => q._id)],
       });
 
       // 4. Assign the assessment to the student and TA
@@ -3518,22 +3659,23 @@ describe('submissionService', () => {
         order: 2,
       });
 
-      const mrqNoPartialNoPenaltyWrongAnswer = await MultipleResponseQuestionModel.create({
-        text: 'MRQ1: No Partial Marks, No Penalty, Wrong Answer',
-        type: 'Multiple Response',
-        isRequired: true,
-        isLocked: false,
-        isScored: true,
-        allowPartialMarks: false,
-        areWrongAnswersPenalized: false,
-        allowNegative: false,
-        options: [
-          { text: 'Option A', points: 5 },
-          { text: 'Option B', points: 0 },
-          { text: 'Option C', points: 0 },
-        ],
-        order: 2,
-      });
+      const mrqNoPartialNoPenaltyWrongAnswer =
+        await MultipleResponseQuestionModel.create({
+          text: 'MRQ1: No Partial Marks, No Penalty, Wrong Answer',
+          type: 'Multiple Response',
+          isRequired: true,
+          isLocked: false,
+          isScored: true,
+          allowPartialMarks: false,
+          areWrongAnswersPenalized: false,
+          allowNegative: false,
+          options: [
+            { text: 'Option A', points: 5 },
+            { text: 'Option B', points: 0 },
+            { text: 'Option C', points: 0 },
+          ],
+          order: 2,
+        });
 
       // MRQ2: allowPartialMarks = true, areWrongAnswersPenalized = false, allowNegative = false
       const mrqPartialNoPenalty = await MultipleResponseQuestionModel.create({
@@ -3555,65 +3697,69 @@ describe('submissionService', () => {
       });
 
       // MRQ3: allowPartialMarks = true, areWrongAnswersPenalized = true, allowNegative = false
-      const mrqPartialPenaltyNoNegative = await MultipleResponseQuestionModel.create({
-        text: 'MRQ3: Partial Marks, Penalty, No Negative',
-        type: 'Multiple Response',
-        isRequired: true,
-        isLocked: false,
-        isScored: true,
-        allowPartialMarks: true,
-        areWrongAnswersPenalized: true,
-        allowNegative: false,
-        options: [
-          { text: 'Option H', points: 5 },
-          { text: 'Option I', points: -5 },
-          { text: 'Option J', points: 0 },
-        ],
-        order: 4,
-      });
+      const mrqPartialPenaltyNoNegative =
+        await MultipleResponseQuestionModel.create({
+          text: 'MRQ3: Partial Marks, Penalty, No Negative',
+          type: 'Multiple Response',
+          isRequired: true,
+          isLocked: false,
+          isScored: true,
+          allowPartialMarks: true,
+          areWrongAnswersPenalized: true,
+          allowNegative: false,
+          options: [
+            { text: 'Option H', points: 5 },
+            { text: 'Option I', points: -5 },
+            { text: 'Option J', points: 0 },
+          ],
+          order: 4,
+        });
 
       // MRQ4: allowPartialMarks = true, areWrongAnswersPenalized = true, allowNegative = true
-      const mrqPartialPenaltyNegative = await MultipleResponseQuestionModel.create({
-        text: 'MRQ4: Partial Marks, Penalty, Negative',
-        type: 'Multiple Response',
-        isRequired: true,
-        isLocked: false,
-        isScored: true,
-        allowPartialMarks: true,
-        areWrongAnswersPenalized: true,
-        allowNegative: true,
-        options: [
-          { text: 'Option K', points: 5 },
-          { text: 'Option L', points: -5 },
-          { text: 'Option M', points: 0 },
-        ],
-        order: 5,
-      });
+      const mrqPartialPenaltyNegative =
+        await MultipleResponseQuestionModel.create({
+          text: 'MRQ4: Partial Marks, Penalty, Negative',
+          type: 'Multiple Response',
+          isRequired: true,
+          isLocked: false,
+          isScored: true,
+          allowPartialMarks: true,
+          areWrongAnswersPenalized: true,
+          allowNegative: true,
+          options: [
+            { text: 'Option K', points: 5 },
+            { text: 'Option L', points: -5 },
+            { text: 'Option M', points: 0 },
+          ],
+          order: 5,
+        });
 
       // MRQ5: Additional MRQ to cover remaining paths
       // Example: allowPartialMarks = false, areWrongAnswersPenalized = true, allowNegative = false
-      const mrqNoPartialPenaltyNoNegative = await MultipleResponseQuestionModel.create({
-        text: 'MRQ5: No Partial Marks, Penalty, No Negative',
-        type: 'Multiple Response',
-        isRequired: true,
-        isLocked: false,
-        isScored: true,
-        allowPartialMarks: false,
-        areWrongAnswersPenalized: true,
-        allowNegative: false,
-        options: [
-          { text: 'Option N', points: 5 },
-          { text: 'Option O', points: -5 },
-          { text: 'Option P', points: 0 },
-        ],
-        order: 6,
-      });
+      const mrqNoPartialPenaltyNoNegative =
+        await MultipleResponseQuestionModel.create({
+          text: 'MRQ5: No Partial Marks, Penalty, No Negative',
+          type: 'Multiple Response',
+          isRequired: true,
+          isLocked: false,
+          isScored: true,
+          allowPartialMarks: false,
+          areWrongAnswersPenalized: true,
+          allowNegative: false,
+          options: [
+            { text: 'Option N', points: 5 },
+            { text: 'Option O', points: -5 },
+            { text: 'Option P', points: 0 },
+          ],
+          order: 6,
+        });
 
       // 3. Create the new assessment
       const newAssessment = await InternalAssessmentModel.create({
         course: assessment.course,
         assessmentName: 'Multiple Response Scoring Assessment',
-        description: 'Assessment to test calculateMultipleResponseScore function',
+        description:
+          'Assessment to test calculateMultipleResponseScore function',
         startDate: new Date('2000-01-01'),
         maxMarks: 40,
         scaleToMaxMarks: false,

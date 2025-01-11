@@ -491,9 +491,7 @@ export const createSubmission = async (
       }
 
       if (!question) {
-        console.warn(
-          `Question with ID ${answer.question} not found.`
-        );
+        console.warn(`Question with ID ${answer.question} not found.`);
         return { ...answer, score: 0 };
       }
 
@@ -972,7 +970,7 @@ export const calculateAnswerScore = async (
       ? inputQuestion.toObject()
       : inputQuestion;
   const answer =
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     typeof (inputAnswer as any).toObject === 'function'
       ? inputAnswer.toObject()
       : inputAnswer;
@@ -1154,8 +1152,9 @@ const calculateNumberScore = (
     if (maxNumber === 0) {
       return 0;
     }
-    return (answerValue / maxNumber) * (maxPoints!);
-  } else { // if (scoringMethod === 'range' && scoringRanges && scoringRanges.length > 0) {
+    return (answerValue / maxNumber) * maxPoints!;
+  } else {
+    // if (scoringMethod === 'range' && scoringRanges && scoringRanges.length > 0) {
     const sortedRanges = [...scoringRanges!].sort(
       (a, b) => a.minValue - b.minValue
     );
@@ -1171,16 +1170,24 @@ const calculateNumberScore = (
     let higherRange: NumberScoringRange | null = null;
 
     for (const range of sortedRanges) {
-      if (range.maxValue < answerValue && (!lowerRange || range.minValue > lowerRange.maxValue)) {
+      if (
+        range.maxValue < answerValue &&
+        (!lowerRange || range.minValue > lowerRange.maxValue)
+      ) {
         lowerRange = range;
-      } else if (range.minValue > answerValue && (!higherRange || range.maxValue < higherRange.minValue)) {
+      } else if (
+        range.minValue > answerValue &&
+        (!higherRange || range.maxValue < higherRange.minValue)
+      ) {
         higherRange = range;
       }
     }
-    if (lowerRange && !higherRange) { // Above highest given range, full marks
+    if (lowerRange && !higherRange) {
+      // Above highest given range, full marks
       return lowerRange.points;
     }
-    if (!lowerRange && higherRange) { // Lower than lowest given range, interpolate with 0.
+    if (!lowerRange && higherRange) {
+      // Lower than lowest given range, interpolate with 0.
       const lowerMax = 0;
       const lowerPoints = 0;
       const { minValue: higherMin, points: higherPoints } = higherRange;
@@ -1266,7 +1273,9 @@ export const regradeSubmission = async (submissionId: string) => {
       case 'Team Member Selection Answer':
         question = await TeamMemberSelectionQuestionModel.findById(questionId);
         savedAnswer = TeamMemberSelectionAnswerModel.findById(answer.id);
-        assignment = (await TeamMemberSelectionAnswerModel.findById(answer.id)) as unknown as TeamMemberSelectionAnswer;
+        assignment = (await TeamMemberSelectionAnswerModel.findById(
+          answer.id
+        )) as unknown as TeamMemberSelectionAnswer;
         break;
       case 'Date Answer':
         question = await DateQuestionModel.findById(questionId);

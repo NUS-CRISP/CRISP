@@ -1314,7 +1314,7 @@ describe('courseService', () => {
         areSubmissionsEditable: true,
         granularity: 'team',
         startDate: new Date('2000-01-01'),
-        assessmentName: 'Internal Assessment 1'
+        assessmentName: 'Internal Assessment 1',
       };
 
       const internalAssessmentData2 = {
@@ -1324,7 +1324,7 @@ describe('courseService', () => {
         areSubmissionsEditable: true,
         granularity: 'team',
         startDate: new Date('2000-01-01'),
-        assessmentName: 'Internal Assessment 2'
+        assessmentName: 'Internal Assessment 2',
       };
 
       await createInternalAssessment(courseId, internalAssessmentData1);
@@ -1363,7 +1363,9 @@ describe('courseService', () => {
 
     it('should throw NotFoundError for an invalid course ID', async () => {
       const invalidCourseId = new mongoose.Types.ObjectId().toString();
-      await expect(getInternalAssessmentsFromCourse(invalidCourseId)).rejects.toThrow(NotFoundError);
+      await expect(
+        getInternalAssessmentsFromCourse(invalidCourseId)
+      ).rejects.toThrow(NotFoundError);
     });
   });
 
