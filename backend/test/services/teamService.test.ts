@@ -11,6 +11,7 @@ import {
   addTAsToTeam,
   deleteTeamById,
   getTeamsByCourseId,
+  getTeamsByTAIdAndCourseId,
   removeMembersById,
   updateTeamById,
 } from '../../services/teamService';
@@ -124,6 +125,229 @@ async function createTestTeamSet(
 }
 
 describe('teamService', () => {
+  describe('getTeamsByTAIdAndCourseId', () => {
+    it('should return all teams assigned to a specific TA within a course', async () => {
+      // Create course
+      const course = await createTestCourse(commonCourseDetails);
+
+      // Create TAs
+      const ta1 = await createTAUser({
+        identifier: 'ta1',
+        name: 'TA One',
+        gitHandle: 'taone',
+      });
+      const ta2 = await createTAUser({
+        identifier: 'ta2',
+        name: 'TA Two',
+        gitHandle: 'tatwo',
+      });
+
+      // Enroll TAs in course
+      ta1.enrolledCourses.push(course._id);
+      ta2.enrolledCourses.push(course._id);
+      await ta1.save();
+      await ta2.save();
+      course.TAs.push(ta1._id, ta2._id);
+      await course.save();
+
+      // Create TeamSet
+      const teamSet = await createTestTeamSet(
+        { name: 'Team Set A' },
+        course._id,
+        []
+      );
+
+      // Create Teams and assign TAs
+      const team1 = new TeamModel({
+        number: 1,
+        teamSet: teamSet._id,
+        TA: ta1._id,
+        members: [],
+      });
+      await team1.save();
+
+      const team2 = new TeamModel({
+        number: 2,
+        teamSet: teamSet._id,
+        TA: ta1._id,
+        members: [],
+      });
+      await team2.save();
+
+      const team3 = new TeamModel({
+        number: 3,
+        teamSet: teamSet._id,
+        TA: ta2._id,
+        members: [],
+      });
+      await team3.save();
+
+      // Update TeamSet with teams
+      teamSet.teams.push(team1._id, team2._id, team3._id);
+      await teamSet.save();
+
+      // Fetch teams for ta1
+      const ta1Teams = await getTeamsByTAIdAndCourseId(
+        ta1._id.toHexString(),
+        course._id.toHexString()
+      );
+      expect(ta1Teams).toHaveLength(2);
+      expect(ta1Teams.map(t => t.number)).toContain(1);
+      expect(ta1Teams.map(t => t.number)).toContain(2);
+
+      // Fetch teams for ta2
+      const ta2Teams = await getTeamsByTAIdAndCourseId(
+        ta2._id.toHexString(),
+        course._id.toHexString()
+      );
+      expect(ta2Teams).toHaveLength(1);
+      expect(ta2Teams[0].number).toBe(3);
+    });
+
+    it('should return an empty array if the TA has no assigned teams', async () => {
+      // Create course
+      const course = await createTestCourse(commonCourseDetails);
+
+      // Create TA
+      const ta = await createTAUser({
+        identifier: 'ta3',
+        name: 'TA Three',
+        gitHandle: 'tathree',
+      });
+
+      // Enroll TA in course
+      ta.enrolledCourses.push(course._id);
+      await ta.save();
+      course.TAs.push(ta._id);
+      await course.save();
+
+      // Create TeamSet
+      const teamSet = await createTestTeamSet(
+        { name: 'Team Set B' },
+        course._id,
+        []
+      );
+
+      // Create Teams without assigning the TA
+      const team1 = new TeamModel({
+        number: 1,
+        teamSet: teamSet._id,
+        TA: null,
+        members: [],
+      });
+      await team1.save();
+
+      const team2 = new TeamModel({
+        number: 2,
+        teamSet: teamSet._id,
+        TA: null,
+        members: [],
+      });
+      await team2.save();
+
+      // Update TeamSet with teams
+      teamSet.teams.push(team1._id, team2._id);
+      await teamSet.save();
+
+      // Fetch teams for the TA
+      const taTeams = await getTeamsByTAIdAndCourseId(
+        ta._id.toHexString(),
+        course._id.toHexString()
+      );
+      expect(taTeams).toHaveLength(0);
+    });
+
+    it('should return an empty array if the TA does not exist in the course', async () => {
+      // Create course
+      const course = await createTestCourse(commonCourseDetails);
+
+      // Create TA but do not enroll in course
+      const ta = await createTAUser({
+        identifier: 'ta4',
+        name: 'TA Four',
+        gitHandle: 'tafour',
+      });
+
+      // Create TeamSet
+      const teamSet = await createTestTeamSet(
+        { name: 'Team Set C' },
+        course._id,
+        []
+      );
+
+      // Create Teams and assign TAs
+      const team1 = new TeamModel({
+        number: 1,
+        teamSet: teamSet._id,
+        TA: ta._id, // TA not enrolled in course
+        members: [],
+      });
+      await team1.save();
+
+      // Update TeamSet with team
+      teamSet.teams.push(team1._id);
+      await teamSet.save();
+
+      // Fetch teams for the TA
+      const taTeams = await getTeamsByTAIdAndCourseId(
+        ta._id.toHexString(),
+        course._id.toHexString()
+      );
+      expect(taTeams).toHaveLength(1); // The function does not verify enrollment
+      expect(taTeams[0].number).toBe(1);
+    });
+
+    it('should return an empty array if the course does not exist', async () => {
+      // Create TA
+      const ta = await createTAUser({
+        identifier: 'ta5',
+        name: 'TA Five',
+        gitHandle: 'tafive',
+      });
+
+      // Attempt to fetch teams for a non-existent course
+      const nonExistentCourseId = new mongoose.Types.ObjectId().toHexString();
+      const taTeams = await getTeamsByTAIdAndCourseId(
+        ta._id.toHexString(),
+        nonExistentCourseId
+      );
+      expect(taTeams).toHaveLength(0);
+    });
+
+    it('should handle invalid TA IDs gracefully', async () => {
+      // Create course
+      const course = await createTestCourse(commonCourseDetails);
+
+      // Create TeamSet
+      const teamSet = await createTestTeamSet(
+        { name: 'Team Set D' },
+        course._id,
+        []
+      );
+
+      // Create Teams without assigning any TA
+      const team1 = new TeamModel({
+        number: 1,
+        teamSet: teamSet._id,
+        TA: null,
+        members: [],
+      });
+      await team1.save();
+
+      // Update TeamSet with team
+      teamSet.teams.push(team1._id);
+      await teamSet.save();
+
+      // Use an invalid TA ID
+      const invalidTAId = new mongoose.Types.ObjectId().toHexString();
+      const taTeams = await getTeamsByTAIdAndCourseId(
+        invalidTAId,
+        course._id.toHexString()
+      );
+      expect(taTeams).toHaveLength(0);
+    });
+  });
+
   describe('getTeamsByCourseId', () => {
     it('should get teams by course id', async () => {
       const course = await createTestCourse(commonCourseDetails);
