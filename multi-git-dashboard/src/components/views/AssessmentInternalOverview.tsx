@@ -465,6 +465,7 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
                 color="green"
                 onClick={toggleTeamAssignmentModal}
                 leftSection={<IconUsers size={16} />}
+                disabled={!!assessment?.isReleased}
               >
                 Assign Graders
               </Button>

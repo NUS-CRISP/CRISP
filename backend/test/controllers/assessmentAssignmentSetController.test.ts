@@ -8,9 +8,11 @@ import {
   getUnmarkedAssignmentsByGraderIdController,
 } from '../../controllers/assessmentAssignmentSetController';
 import * as assessmentAssignmentSetService from '../../services/assessmentAssignmentSetService';
+import * as internalAssessmentService from '../../services/internalAssessmentService';
 import * as accountService from '../../services/accountService';
 import * as authUtils from '../../utils/auth';
 import { BadRequestError, NotFoundError } from '../../services/errors';
+import { InternalAssessment } from '@models/InternalAssessment';
 
 jest.mock('../../services/assessmentAssignmentSetService');
 jest.mock('../../services/accountService');
@@ -206,12 +208,23 @@ describe('assessmentAssignmentSetController', () => {
       jest
         .spyOn(assessmentAssignmentSetService, 'updateAssignmentSet')
         .mockResolvedValue(updatedSet as any);
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account123');
+      jest
+        .spyOn(internalAssessmentService, 'getInternalAssessmentById')
+        .mockResolvedValue({
+          isReleased: false,
+        } as unknown as InternalAssessment);
 
       await updateAssignmentSetController(req, res);
 
       expect(
         assessmentAssignmentSetService.updateAssignmentSet
-      ).toHaveBeenCalledWith('assessment123', ['team1', 'team2'], null);
+      ).toHaveBeenCalledWith(
+        'account123',
+        'assessment123',
+        ['team1', 'team2'],
+        null
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(updatedSet);
     });
@@ -233,12 +246,21 @@ describe('assessmentAssignmentSetController', () => {
       jest
         .spyOn(assessmentAssignmentSetService, 'updateAssignmentSet')
         .mockResolvedValue(updatedSet as any);
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account123');
+      jest
+        .spyOn(internalAssessmentService, 'getInternalAssessmentById')
+        .mockResolvedValue({
+          isReleased: false,
+        } as unknown as InternalAssessment);
 
       await updateAssignmentSetController(req, res);
 
       expect(
         assessmentAssignmentSetService.updateAssignmentSet
-      ).toHaveBeenCalledWith('assessment123', null, ['user1', 'user2']);
+      ).toHaveBeenCalledWith('account123', 'assessment123', null, [
+        'user1',
+        'user2',
+      ]);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(updatedSet);
     });
@@ -251,6 +273,7 @@ describe('assessmentAssignmentSetController', () => {
         assignedUsers: ['user1', 'user2'],
       };
       const res = mockResponse();
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account123');
 
       await updateAssignmentSetController(req, res);
 
@@ -265,6 +288,7 @@ describe('assessmentAssignmentSetController', () => {
       req.params = { assessmentId: 'assessment123' };
       req.body = { assignedTeams: null, assignedUsers: null };
       const res = mockResponse();
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account123');
 
       await updateAssignmentSetController(req, res);
 
@@ -279,6 +303,7 @@ describe('assessmentAssignmentSetController', () => {
       req.params = { assessmentId: 'assessment123' };
       req.body = { assignedTeams: ['team1', 'team2'], assignedUsers: null };
       const res = mockResponse();
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account123');
 
       jest
         .spyOn(assessmentAssignmentSetService, 'updateAssignmentSet')
@@ -296,6 +321,7 @@ describe('assessmentAssignmentSetController', () => {
       req.body = { assignedTeams: ['team1', 'team2'], assignedUsers: null };
       const res = mockResponse();
 
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account123');
       jest
         .spyOn(assessmentAssignmentSetService, 'updateAssignmentSet')
         .mockRejectedValue(new NotFoundError('AssignmentSet not found'));
@@ -314,6 +340,7 @@ describe('assessmentAssignmentSetController', () => {
       req.body = { assignedTeams: ['team1', 'team2'], assignedUsers: null };
       const res = mockResponse();
 
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account123');
       jest
         .spyOn(assessmentAssignmentSetService, 'updateAssignmentSet')
         .mockRejectedValue(new Error('Some error'));

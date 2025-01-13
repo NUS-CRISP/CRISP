@@ -2,7 +2,9 @@
 
 import mongoose, { Types } from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import InternalAssessmentModel from '../../models/InternalAssessment';
+import InternalAssessmentModel, {
+  InternalAssessment,
+} from '../../models/InternalAssessment';
 import TeamSetModel from '../../models/TeamSet';
 import TeamModel from '../../models/Team';
 import UserModel from '../../models/User';
@@ -19,6 +21,7 @@ import {
 import { NotFoundError, BadRequestError } from '../../services/errors';
 import * as submissionService from '../../services/submissionService';
 import * as assessmentAssignmentSetService from '../../services/assessmentAssignmentSetService';
+import AccountModel from '@models/Account';
 
 let mongo: MongoMemoryServer;
 
@@ -44,12 +47,24 @@ afterAll(async () => {
 describe('assessmentAssignmentSetService (team granularity)', () => {
   let assessmentId: Types.ObjectId;
   let userAssessmentId: Types.ObjectId;
+  let assessment: InternalAssessment;
   let teamSetId: Types.ObjectId;
   let teamId: Types.ObjectId;
   let studentId: Types.ObjectId;
   let taId: Types.ObjectId;
+  let accountId: string;
 
   beforeEach(async () => {
+    const account = new AccountModel({
+      email: 'faculty@example.com',
+      password: 'password',
+      role: 'Faculty member',
+      user: new mongoose.Types.ObjectId(),
+      isApproved: true,
+    });
+    await account.save();
+    accountId = account._id;
+
     const course = await CourseModel.create({
       name: 'Introduction to Computer Science',
       code: 'CS101',
@@ -66,20 +81,21 @@ describe('assessmentAssignmentSetService (team granularity)', () => {
       granularity: 'team',
       maxMarks: 0,
       scaleToMaxMarks: true,
-      isReleased: true,
+      isReleased: false,
       areSubmissionsEditable: true,
       startDate: new Date().setUTCFullYear(new Date().getUTCFullYear() - 1),
     });
     assessmentId = internalAssessment._id;
+    assessment = internalAssessment;
     await internalAssessment.save();
     const userInternalAssessment = await InternalAssessmentModel.create({
       course: course._id,
-      assessmentName: 'Team Assessment',
-      description: 'A test assessment for unit tests (team).',
+      assessmentName: 'Individual Assessment',
+      description: 'A test assessment for unit tests (individual).',
       granularity: 'individual',
       maxMarks: 0,
       scaleToMaxMarks: true,
-      isReleased: true,
+      isReleased: false,
       areSubmissionsEditable: true,
       startDate: new Date().setUTCFullYear(new Date().getUTCFullYear() - 1),
     });
@@ -224,6 +240,7 @@ describe('assessmentAssignmentSetService (team granularity)', () => {
       const assignedTeams = [{ team: teamId, tas: [taId] }];
 
       const updatedSet = await updateAssignmentSet(
+        accountId,
         assessmentId.toString(),
         assignedTeams
       );
@@ -245,7 +262,7 @@ describe('assessmentAssignmentSetService (team granularity)', () => {
       ];
 
       await expect(
-        updateAssignmentSet(assessmentId.toString(), assignedTeams)
+        updateAssignmentSet(accountId, assessmentId.toString(), assignedTeams)
       ).rejects.toThrow(NotFoundError);
     });
 
@@ -255,12 +272,13 @@ describe('assessmentAssignmentSetService (team granularity)', () => {
       const assignedTeams = [{ team: teamId, tas: [] }]; // empty TAs
 
       await expect(
-        updateAssignmentSet(assessmentId.toString(), assignedTeams)
+        updateAssignmentSet(accountId, assessmentId.toString(), assignedTeams)
       ).rejects.toThrow(BadRequestError);
     });
 
     it('should create a new assignment set if none exists when calling updateAssignmentSet', async () => {
       const updated = await updateAssignmentSet(
+        accountId,
         assessmentId.toString(),
         [{ team: teamId, tas: [taId] }],
         undefined
@@ -276,7 +294,7 @@ describe('assessmentAssignmentSetService (team granularity)', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .mockResolvedValueOnce(null as any);
       await expect(
-        updateAssignmentSet(assessmentId.toString(), [], [])
+        updateAssignmentSet(accountId, assessmentId.toString(), [], [])
       ).rejects.toThrow();
 
       jest.restoreAllMocks();
@@ -287,7 +305,7 @@ describe('assessmentAssignmentSetService (team granularity)', () => {
       const nonExistentTAId = new mongoose.Types.ObjectId();
       const assignedTeams = [{ team: teamId, tas: [nonExistentTAId] }];
       await expect(
-        updateAssignmentSet(assessmentId.toString(), assignedTeams)
+        updateAssignmentSet(accountId, assessmentId.toString(), assignedTeams)
       ).rejects.toThrow(`TA with ID ${nonExistentTAId} not found`);
     });
 
@@ -299,8 +317,27 @@ describe('assessmentAssignmentSetService (team granularity)', () => {
       const nonExistentTAId = new mongoose.Types.ObjectId();
       const assignedUsers = [{ user: studentId, tas: [nonExistentTAId] }];
       await expect(
-        updateAssignmentSet(assessmentId.toString(), undefined, assignedUsers)
+        updateAssignmentSet(
+          accountId,
+          assessmentId.toString(),
+          undefined,
+          assignedUsers
+        )
       ).rejects.toThrow(`TA with ID ${nonExistentTAId} not found`);
+    });
+
+    it('should throw BadRequestError if assesmsent is already released', async () => {
+      await createAssignmentSet(assessmentId.toString(), teamSetId.toString());
+      assessment.isReleased = true;
+      await assessment.save();
+
+      const assignedTeams = [{ team: teamId, tas: [taId] }];
+
+      await expect(
+        updateAssignmentSet(accountId, assessmentId.toString(), assignedTeams)
+      ).rejects.toThrow(BadRequestError);
+      assessment.isReleased = false;
+      await assessment.save();
     });
   });
 
@@ -414,8 +451,19 @@ describe('assessmentAssignmentSetService (individual granularity)', () => {
   let user1Id: Types.ObjectId;
   let user2Id: Types.ObjectId;
   let taId: Types.ObjectId;
+  let accountId: string;
 
   beforeEach(async () => {
+    const account = new AccountModel({
+      email: 'faculty@example.com',
+      password: 'password',
+      role: 'Faculty member',
+      user: new mongoose.Types.ObjectId(),
+      isApproved: true,
+    });
+    await account.save();
+    accountId = account._id;
+
     // 1) Create mock course
     const course = await CourseModel.create({
       name: 'Advanced Computer Science',
@@ -434,7 +482,7 @@ describe('assessmentAssignmentSetService (individual granularity)', () => {
       granularity: 'individual',
       maxMarks: 100,
       scaleToMaxMarks: true,
-      isReleased: true,
+      isReleased: false,
       areSubmissionsEditable: true,
       startDate: new Date().setUTCFullYear(new Date().getUTCFullYear() - 1),
     });
@@ -539,6 +587,7 @@ describe('assessmentAssignmentSetService (individual granularity)', () => {
       ];
 
       const updatedSet = await updateAssignmentSet(
+        accountId,
         individualAssessmentId.toString(),
         undefined, // assignedTeams
         assignedUsers
@@ -566,11 +615,28 @@ describe('assessmentAssignmentSetService (individual granularity)', () => {
 
       await expect(
         updateAssignmentSet(
+          accountId,
           individualAssessmentId.toString(),
           undefined,
           assignedUsers
         )
       ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should throw BadRequestError if a accountId is invalid', async () => {
+      const assignedUsers = [
+        { user: user1Id, tas: [taId] },
+        { user: user2Id, tas: [taId] },
+      ];
+
+      await expect(
+        updateAssignmentSet(
+          'invalidAccId',
+          individualAssessmentId.toString(),
+          undefined,
+          assignedUsers
+        )
+      ).rejects.toThrow();
     });
 
     it('should throw BadRequestError if a user is left without a TA', async () => {
@@ -580,6 +646,7 @@ describe('assessmentAssignmentSetService (individual granularity)', () => {
 
       await expect(
         updateAssignmentSet(
+          accountId,
           individualAssessmentId.toString(),
           undefined,
           assignedUsers

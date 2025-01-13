@@ -144,9 +144,11 @@ export const updateAssignmentSetController = async (
       .json({ error: 'No assignments given, assignments are required.' });
     return;
   }
+  const accountId = await getAccountId(req);
 
   try {
     const updatedSet = await updateAssignmentSet(
+      accountId,
       assessmentId,
       assignedTeams,
       assignedUsers

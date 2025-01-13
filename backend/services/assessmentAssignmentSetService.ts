@@ -12,6 +12,7 @@ import UserModel, { User } from '../models/User';
 import { NotFoundError, BadRequestError } from './errors';
 import { getSubmissionsByAssessmentAndUser } from './submissionService';
 import { TeamMemberSelectionAnswer } from '@models/Answer';
+import { getInternalAssessmentById } from './internalAssessmentService';
 
 /**
  * Utility function: Assign a random TA from a given pool to a team or user without TAs.
@@ -206,6 +207,7 @@ export const getAssignmentSetByAssessmentId = async (
  * @throws {Error} For any unknown runtime or Mongoose errors (500).
  */
 export const updateAssignmentSet = async (
+  accountId: string,
   assessmentId: string,
   assignedTeams?: AssignedTeam[],
   assignedUsers?: AssignedUser[]
@@ -222,6 +224,13 @@ export const updateAssignmentSet = async (
     if (!assignmentSet) {
       throw new NotFoundError('Invalid assignment id');
     }
+  }
+
+  const assessment = await getInternalAssessmentById(assessmentId, accountId);
+  if (!assessment || assessment.isReleased) {
+    throw new BadRequestError(
+      'Cannot edit assignments of a released assessment!'
+    );
   }
 
   if (assignedTeams) {
