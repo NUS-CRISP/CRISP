@@ -8,8 +8,9 @@ import {
   Group,
   ActionIcon,
   Text,
+  Tooltip,
 } from '@mantine/core';
-import { IconTrash, IconPlus } from '@tabler/icons-react';
+import { IconTrash, IconPlus, IconHelpCircle } from '@tabler/icons-react';
 import { NumberQuestion, NumberScoringRange } from '@shared/types/Question';
 
 interface NumberQuestionEditProps {
@@ -81,12 +82,34 @@ const NumberQuestionEdit: React.FC<NumberQuestionEditProps> = ({
         onChange={e => setMaxNumber(parseInt(e.currentTarget.value, 10))}
         mb="sm"
       />
-      <Checkbox
-        label="Enable Scoring"
-        checked={isScored}
-        onChange={e => setIsScored(e.currentTarget.checked)}
-        mb="sm"
-      />
+
+      {/* Enable Scoring with Tooltip */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          marginBottom: 16,
+        }}
+      >
+        <Checkbox
+          label="Enable Scoring"
+          checked={isScored}
+          onChange={e => setIsScored(e.currentTarget.checked)}
+        />
+        <Tooltip
+          label="Enables auto-grading (linear or multirange-based)."
+          position="right"
+          withArrow
+          w={260}
+          multiline
+        >
+          <span style={{ cursor: 'pointer', display: 'inline-flex' }}>
+            <IconHelpCircle size={18} />
+          </span>
+        </Tooltip>
+      </div>
+
       {isScored && (
         <>
           <Select
@@ -101,6 +124,7 @@ const NumberQuestionEdit: React.FC<NumberQuestionEditProps> = ({
             ]}
             mb="sm"
           />
+
           {scoringMethod === 'direct' && (
             <TextInput
               label="Max Points"
@@ -110,6 +134,7 @@ const NumberQuestionEdit: React.FC<NumberQuestionEditProps> = ({
               mb="sm"
             />
           )}
+
           {scoringMethod === 'range' && (
             <Box>
               <Text>Scoring Ranges:</Text>
@@ -175,6 +200,7 @@ const NumberQuestionEdit: React.FC<NumberQuestionEditProps> = ({
           )}
         </>
       )}
+
       <Group mt="md">
         <Button onClick={saveQuestion} disabled={!isValid}>
           Save Question

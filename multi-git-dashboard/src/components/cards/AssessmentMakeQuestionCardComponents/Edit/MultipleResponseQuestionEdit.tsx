@@ -7,8 +7,9 @@ import {
   Group,
   ActionIcon,
   Text,
+  Tooltip,
 } from '@mantine/core';
-import { IconTrash, IconPlus } from '@tabler/icons-react';
+import { IconTrash, IconPlus, IconHelpCircle } from '@tabler/icons-react';
 import { MultipleResponseQuestion } from '@shared/types/Question';
 
 interface MultipleResponseQuestionEditProps {
@@ -108,10 +109,9 @@ const MultipleResponseQuestionEdit: React.FC<
           if (allowNegative) {
             points = -basePoints; // Negative marking allowed
           } else {
-            points = 0; // Penalized but not negative
+            points = 0;
           }
         } else {
-          // Correct answer or no penalty scenario
           points = basePoints;
         }
       }
@@ -129,34 +129,120 @@ const MultipleResponseQuestionEdit: React.FC<
 
   return (
     <Box mb="md">
-      <Checkbox
-        label="Enable Scoring"
-        checked={isScored}
-        onChange={e => setIsScored(e.currentTarget.checked)}
-        mb="sm"
-      />
+      {/* Enable Scoring */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          marginBottom: 16,
+        }}
+      >
+        <Checkbox
+          label="Enable Scoring"
+          checked={isScored}
+          onChange={e => setIsScored(e.currentTarget.checked)}
+        />
+        <Tooltip
+          label="Enabling this allows for auto-grading of this question."
+          position="right"
+          withArrow
+          w={260}
+          multiline
+        >
+          <span style={{ cursor: 'pointer', display: 'inline-flex' }}>
+            <IconHelpCircle size={18} />
+          </span>
+        </Tooltip>
+      </div>
+
+      {/* Show these only if scoring is enabled */}
       {isScored && (
         <>
-          <Checkbox
-            label="Allow Partial Marking"
-            checked={allowPartialMarks}
-            onChange={e => setAllowPartialMarks(e.currentTarget.checked)}
-            mb="sm"
-          />
-          <Checkbox
-            label="Penalize Wrong Answers (Add penalty in the score box)"
-            checked={areWrongAnswersPenalized}
-            onChange={e => setAreWrongAnswersPenalized(e.currentTarget.checked)}
-            mb="sm"
-            disabled={!allowPartialMarks}
-          />
-          <Checkbox
-            label="Allow Negative Scores"
-            checked={allowNegative}
-            onChange={e => setAllowNegative(e.currentTarget.checked)}
-            mb="sm"
-            disabled={!areWrongAnswersPenalized} // Requires penalty first
-          />
+          {/* Allow Partial Marking */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              marginBottom: 16,
+            }}
+          >
+            <Checkbox
+              label="Allow Partial Marking"
+              checked={allowPartialMarks}
+              onChange={e => setAllowPartialMarks(e.currentTarget.checked)}
+            />
+            <Tooltip
+              label="If checked, partially correct answers can earn points. Otherwise, all point-scoring options must be selected to receive credit for this question."
+              position="right"
+              withArrow
+              w={260}
+              multiline
+            >
+              <span style={{ cursor: 'pointer', display: 'inline-flex' }}>
+                <IconHelpCircle size={18} />
+              </span>
+            </Tooltip>
+          </div>
+
+          {/* Penalize Wrong Answers */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              marginBottom: 16,
+            }}
+          >
+            <Checkbox
+              label="Penalize Wrong Answers (Add penalty in the score box)"
+              checked={areWrongAnswersPenalized}
+              onChange={e =>
+                setAreWrongAnswersPenalized(e.currentTarget.checked)
+              }
+              disabled={!allowPartialMarks}
+            />
+            <Tooltip
+              label="Allows penalites for wrong answers. Options indicated to be incorrect will penalize by the number of points indicated instead of adding them."
+              position="right"
+              withArrow
+              w={260}
+              multiline
+            >
+              <span style={{ cursor: 'pointer', display: 'inline-flex' }}>
+                <IconHelpCircle size={18} />
+              </span>
+            </Tooltip>
+          </div>
+
+          {/* Allow Negative Scores */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              marginBottom: 16,
+            }}
+          >
+            <Checkbox
+              label="Allow Negative Scores"
+              checked={allowNegative}
+              onChange={e => setAllowNegative(e.currentTarget.checked)}
+              disabled={!areWrongAnswersPenalized}
+            />
+            <Tooltip
+              label="If checked, the question can decrease the total score of the student. Otherwise, score is clamped to 0 at minimum."
+              position="right"
+              withArrow
+              w={260}
+              multiline
+            >
+              <span style={{ cursor: 'pointer', display: 'inline-flex' }}>
+                <IconHelpCircle size={18} />
+              </span>
+            </Tooltip>
+          </div>
         </>
       )}
 

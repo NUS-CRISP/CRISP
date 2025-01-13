@@ -8,8 +8,9 @@ import {
   ActionIcon,
   Text,
   Slider,
+  Tooltip,
 } from '@mantine/core';
-import { IconTrash, IconPlus } from '@tabler/icons-react';
+import { IconTrash, IconPlus, IconHelpCircle } from '@tabler/icons-react';
 import { ScaleQuestion, ScaleLabel } from '@shared/types/Question';
 
 interface ScaleQuestionEditProps {
@@ -72,14 +73,7 @@ const ScaleQuestionEdit: React.FC<ScaleQuestionEditProps> = ({
         maxLabelValid &&
         intermediatesValid
     );
-  }, [
-    scaleMin,
-    scaleMax,
-    minLabel,
-    maxLabel,
-    intermediateLabels,
-    setIsScaleValid,
-  ]);
+  }, [scaleMin, scaleMax, minLabel, maxLabel, intermediateLabels, isValid]);
 
   // Adjust minLabel and maxLabel values when scaleMin and scaleMax change
   useEffect(() => {
@@ -130,12 +124,32 @@ const ScaleQuestionEdit: React.FC<ScaleQuestionEditProps> = ({
 
   return (
     <Box mb="md">
-      <Checkbox
-        label="Enable Scoring"
-        checked={isScored}
-        onChange={e => setIsScored(e.currentTarget.checked)}
-        mb="sm"
-      />
+      {/* Enable Scoring with Tooltip */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          marginBottom: 16,
+        }}
+      >
+        <Checkbox
+          label="Enable Scoring"
+          checked={isScored}
+          onChange={e => setIsScored(e.currentTarget.checked)}
+        />
+        <Tooltip
+          label="Enables auto-grading using assigned point values."
+          position="right"
+          withArrow
+          w={260}
+          multiline
+        >
+          <span style={{ cursor: 'pointer', display: 'inline-flex' }}>
+            <IconHelpCircle size={18} />
+          </span>
+        </Tooltip>
+      </div>
 
       {/* Min Scale Value and Label */}
       <Group mb="sm">
@@ -185,7 +199,7 @@ const ScaleQuestionEdit: React.FC<ScaleQuestionEditProps> = ({
       {intermediateLabels.map((label, index) => (
         <Group key={index} mb="sm">
           <TextInput
-            label={'Value'}
+            label="Value"
             type="number"
             value={label.value}
             onChange={e => {

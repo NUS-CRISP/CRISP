@@ -7,8 +7,9 @@ import {
   Button,
   Group,
   ActionIcon,
+  Tooltip,
 } from '@mantine/core';
-import { IconTrash, IconPlus } from '@tabler/icons-react';
+import { IconTrash, IconPlus, IconHelpCircle } from '@tabler/icons-react';
 import { MultipleChoiceQuestion } from '@shared/types/Question';
 
 interface MultipleChoiceQuestionEditProps {
@@ -72,12 +73,33 @@ const MultipleChoiceQuestionEdit: React.FC<MultipleChoiceQuestionEditProps> = ({
 
   return (
     <Box mb="md">
-      <Checkbox
-        label="Enable Scoring"
-        checked={isScored}
-        onChange={e => setIsScored(e.currentTarget.checked)}
-        mb="sm"
-      />
+      {/* Enable Scoring with Tooltip */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          marginBottom: 16,
+        }}
+      >
+        <Checkbox
+          label="Enable Scoring"
+          checked={isScored}
+          onChange={e => setIsScored(e.currentTarget.checked)}
+        />
+        <Tooltip
+          label="Enables auto-grading of the selected option."
+          position="right"
+          withArrow
+          w={260}
+          multiline
+        >
+          <span style={{ cursor: 'pointer', display: 'inline-flex' }}>
+            <IconHelpCircle size={18} />
+          </span>
+        </Tooltip>
+      </div>
+
       <Text fw={500} mb="sm">
         Options:
       </Text>
