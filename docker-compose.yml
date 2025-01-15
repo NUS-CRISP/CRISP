@@ -11,6 +11,8 @@ services:
     build:
       context: .
       dockerfile: ./backend/Dockerfile
+    volumes:
+      - /home/sadm/Repositories/:/app/repositories
     networks:
       - app-network
 
