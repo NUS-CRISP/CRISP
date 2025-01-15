@@ -43,9 +43,9 @@ COPY ./shared/ ./shared/
 
 # Copy SonarScanner and configure it
 COPY ./backend/sonar-scanner /app/sonar-scanner
-RUN sed -i 's/use_embedded_jre=true/use_embedded_jre=false/' /app/sonar-scanner/sonar-scanner-6.2.1.4610-macosx-aarch64/bin/sonar-scanner
-ENV SONAR_PATH=/app/sonar-scanner/sonar-scanner-6.2.1.4610-macosx-aarch64/bin/sonar-scanner
-ENV PATH="/app/sonar-scanner/sonar-scanner-6.2.1.4610-macosx-aarch64/bin:$PATH"
+RUN sed -i 's/use_embedded_jre=true/use_embedded_jre=false/' /app/sonar-scanner/sonar-scanner-6.2.1.4610-linux-x64/bin/sonar-scanner
+ENV SONAR_PATH=/app/sonar-scanner/sonar-scanner-6.2.1.4610-linux-x64/bin/sonar-scanner
+ENV PATH="/app/sonar-scanner/sonar-scanner-6.2.1.4610-linux-x64/bin:$PATH"
 
 WORKDIR /app/backend
 
