@@ -26,7 +26,6 @@ interface CodeAnalysisTimelineProps {
 const CodeAnalysisTimeline: React.FC<CodeAnalysisTimelineProps> = ({
   codeData,
 }) => {
-
   const domains = [
     'Complexity',
     'Duplications',

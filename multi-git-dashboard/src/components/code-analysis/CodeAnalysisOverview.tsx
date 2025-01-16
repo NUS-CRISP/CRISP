@@ -333,7 +333,8 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
             borderRadius: '5px',
           }}
         >
-          <strong>Median</strong>: {metricStatsMap.get(hoveredMetricValue).median}
+          <strong>Median</strong>:{' '}
+          {metricStatsMap.get(hoveredMetricValue).median}
           <br />
           <strong>Mean</strong>: {metricStatsMap.get(hoveredMetricValue).mean}
         </div>
