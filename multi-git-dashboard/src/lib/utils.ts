@@ -131,7 +131,7 @@ export const metricExplanations: MetricExplanations = {
   sqale_debt_ratio:
     'Ratio between the cost to develop the software and the cost to fix it. The Technical Debt Ratio formula is: Remediation cost / Development cost.',
   sqale_rating:
-    'Rating given to your project related to the value of your Technical Debt Ratio.',
+    'Rating given to your project related to the value of your Technical Debt Ratio. A=1, F=6',
 
   alert_status:
     'State of the Quality Gate associated to your Project. Possible values are: ERROR, OK. Your new code will be clean if: New code has 0 issues, All new security hotspots are reviewed, Coverage is greater than or equal to 80.0%, Duplicated Lines (%) is less than or equal to 3.0%',
@@ -139,12 +139,12 @@ export const metricExplanations: MetricExplanations = {
     'For all the conditions of your Quality Gate, you know which condition is failing and which is not.',
   bugs: 'Number of bug issues.',
   reliability_rating:
-    'A= 0 Bugs, B= at least 1 Minor Bug, C= at least 1 Major Bug, D= at least 1 Critical Bug, E= at least 1 Blocker Bug',
+    'A= 0 Bugs, B= at least 1 Minor Bug, C= at least 1 Major Bug, D= at least 1 Critical Bug, E= at least 1 Blocker Bug. A=1, F=6',
   reliability_remediation_effort:
     'Effort to fix all bug issues. The measure is stored in minutes in the DB. An 8-hour day is assumed when values are shown in days.',
   vulnerabilities: 'Number of vulnerability issues.',
   security_rating:
-    'A= 0 Vulnerabilities, B= at least 1 Minor Vulnerability, C= at least 1 Major Vulnerability, D= at least 1 Critical Vulnerability, E= at least 1 Blocker Vulnerability',
+    'A= 0 Vulnerabilities, B= at least 1 Minor Vulnerability, C= at least 1 Major Vulnerability, D= at least 1 Critical Vulnerability, E= at least 1 Blocker Vulnerability.  A=1, F=6.',
   security_remediation_effort:
     'Effort to fix all vulnerability issues. The measure is stored in minutes in the DB. An 8-hour day is assumed when values are shown in days.',
   security_hotspots: 'Number of Security Hotspots.',

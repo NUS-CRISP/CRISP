@@ -18,6 +18,7 @@ interface CodeAnalysisTimelineProps {
       values: string[];
       types: string[];
       domains: string[];
+      metricStats: Map<string, { median: number; mean: number }>;
     };
   };
 }
@@ -25,6 +26,7 @@ interface CodeAnalysisTimelineProps {
 const CodeAnalysisTimeline: React.FC<CodeAnalysisTimelineProps> = ({
   codeData,
 }) => {
+
   const domains = [
     'Complexity',
     'Duplications',
@@ -86,11 +88,11 @@ const CodeAnalysisTimeline: React.FC<CodeAnalysisTimelineProps> = ({
     new Date(item.executionDate).toLocaleDateString()
   );
 
-  const handleMouseEnter = (metric: string) => {
+  const handleMouseEnterMetric = (metric: string) => {
     setHoveredMetric(metric);
   };
 
-  const handleMouseLeave = () => {
+  const handleMouseLeaveMetric = () => {
     setHoveredMetric(null);
   };
 
@@ -120,8 +122,8 @@ const CodeAnalysisTimeline: React.FC<CodeAnalysisTimelineProps> = ({
           <YAxis />
           <Tooltip />
           <Legend
-            onMouseEnter={({ value }) => handleMouseEnter(value)}
-            onMouseLeave={handleMouseLeave}
+            onMouseEnter={({ value }) => handleMouseEnterMetric(value)}
+            onMouseLeave={handleMouseLeaveMetric}
           />
           {Object.keys(domainData[0] || {})
             .filter(key => key !== 'executionDate')

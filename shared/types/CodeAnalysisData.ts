@@ -8,4 +8,5 @@ export interface CodeAnalysisData {
   values: string[];
   types: string[];
   domains: string[];
+  metricStats?: Map<string, { median: number; mean: number }>;
 }
