@@ -38,6 +38,7 @@ import {
   NumberQuestion,
   ScaleQuestion,
 } from '@shared/types/Question';
+
 import AssessmentMakeQuestionCard from '@/components/cards/AssessmentMakeQuestionCard';
 import CSVUpload from '@/components/csv/CSVUpload';
 
@@ -110,7 +111,6 @@ function transformQuestions(data: any[]): any[] {
       );
     }
 
-    // For Multiple Choice / Response
     let parsedOptions;
     if (
       row.options &&
@@ -125,7 +125,6 @@ function transformQuestions(data: any[]): any[] {
       });
     }
 
-    // For Scale
     let parsedLabels;
     if (row.labels && row.type === 'Scale') {
       parsedLabels = row.labels.split(';').map((labStr: string) => {
@@ -141,7 +140,6 @@ function transformQuestions(data: any[]): any[] {
       });
     }
 
-    // For Number
     let parsedScoringRanges;
     if (row.scoringRanges && row.type === 'Number') {
       parsedScoringRanges = row.scoringRanges
@@ -191,7 +189,6 @@ function transformQuestions(data: any[]): any[] {
   });
 }
 
-/** Download CSV template with instructions. */
 function downloadCsvTemplateWithInstructions() {
   const csvContent =
     csvInstructions + '\n\n' + questionHeaders.join(',') + '\n';
@@ -212,7 +209,6 @@ function downloadCsvTemplateWithInstructions() {
   }
 }
 
-/** Convert existing questions => CSV string and download. */
 function downloadExistingQuestionsCsv(questions: Question[]) {
   const filtered = questions.filter(q => {
     return (
@@ -223,7 +219,7 @@ function downloadExistingQuestionsCsv(questions: Question[]) {
   });
 
   const rows: string[] = [];
-  rows.push(questionHeaders.join(',')); // header row
+  rows.push(questionHeaders.join(','));
 
   filtered.forEach(q => {
     const rowValues = questionHeaders.map(header => {
@@ -321,21 +317,34 @@ function downloadExistingQuestionsCsv(questions: Question[]) {
   }
 }
 
-/* ------------------------------------------------------------------
-   ReorderItem component for drag-and-drop (DnD Kit)
-   ------------------------------------------------------------------ */
-function ReorderItem({
+function reassignUnlockedOrder(allQuestions: Question[]): Question[] {
+  const lockedOrders = new Set<number>(
+    allQuestions.filter(q => q.isLocked && q.order).map(q => q.order as number)
+  );
+
+  let currentUnlockedOrder = 1;
+  return allQuestions.map(q => {
+    if (q.isLocked) {
+      return q;
+    }
+    while (lockedOrders.has(currentUnlockedOrder)) {
+      currentUnlockedOrder++;
+    }
+    return { ...q, order: currentUnlockedOrder++ };
+  });
+}
+
+function SortableQuestionCard({
   question,
-  totalUnlocked,
-  onPositionChange,
+  totalUnlockedCount,
+  onChangeOrder,
+  children,
 }: {
   question: Question;
-  totalUnlocked: number;
-  onPositionChange: (qId: string, newPos: number) => void;
+  totalUnlockedCount: number;
+  onChangeOrder: (questionId: string, newPos: number) => void;
+  children: React.ReactNode;
 }) {
-  const isLocked = question.isLocked;
-
-  // Make the item "sortable" only if unlocked
   const {
     attributes,
     listeners,
@@ -345,257 +354,65 @@ function ReorderItem({
     isDragging,
   } = useSortable({
     id: question._id,
-    disabled: isLocked,
+    disabled: false,
     animateLayoutChanges: defaultAnimateLayoutChanges,
   });
 
   const style: React.CSSProperties = {
-    transform: isLocked ? undefined : CSS.Transform.toString(transform),
-    transition: isLocked ? undefined : transition,
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.7 : 1,
     border: '1px solid #ccc',
     borderRadius: '4px',
-    padding: '0.5rem',
-    marginBottom: '0.5rem',
-    background: isLocked ? '#f3f3f3' : '#fff',
-    opacity: isDragging ? 0.6 : 1,
+    marginBottom: '1rem',
+    background: '#fff',
   };
 
   return (
-    <Box
-      ref={setNodeRef}
-      style={style}
-      {...(isLocked ? {} : listeners)}
-      {...attributes}
-    >
-      <Group gap="xs" align="center">
-        {isLocked ? (
-          <Box style={{ width: '100px', textAlign: 'center' }}>
-            <Text c="dimmed" size="sm">
-              Locked
-            </Text>
-          </Box>
-        ) : (
-          <Box
-            style={{ width: '100px', display: 'flex', alignItems: 'center' }}
-          >
-            <NumberInput
-              aria-label="Question Number"
-              min={1}
-              max={totalUnlocked}
-              value={question.order ?? 1}
-              onChange={val => {
-                if (val === undefined) return;
-                const newPos = typeof val === 'string' ? parseInt(val) : val;
-                onPositionChange(question._id, newPos);
-              }}
-            />
-          </Box>
-        )}
-
-        <Box style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
-          <Text>
-            {question.text.length > 50
-              ? question.text.slice(0, 50) + '...'
-              : question.text}
-          </Text>
+    <Box ref={setNodeRef} style={style} {...attributes}>
+      <Group justify="space-between" mb="xs" px="md" py="sm">
+        <Box
+          {...listeners}
+          style={{ cursor: 'grab', display: 'flex', alignItems: 'center' }}
+        >
+          <svg width="18" height="18" fill="gray">
+            <circle cx="3" cy="3" r="1.5" />
+            <circle cx="3" cy="9" r="1.5" />
+            <circle cx="3" cy="15" r="1.5" />
+            <circle cx="9" cy="3" r="1.5" />
+            <circle cx="9" cy="9" r="1.5" />
+            <circle cx="9" cy="15" r="1.5" />
+          </svg>
         </Box>
+
+        <NumberInput
+          aria-label="Question Order"
+          min={1}
+          max={totalUnlockedCount}
+          value={question.order ?? 1}
+          onChange={val => {
+            if (val !== undefined) {
+              const newPos = typeof val === 'string' ? parseInt(val) : val;
+              onChangeOrder(question._id, newPos);
+            }
+          }}
+          styles={{ input: { width: 70 } }}
+        />
       </Group>
+
+      <Box style={{ paddingLeft: '1rem', paddingRight: '1rem' }}>
+        {children}
+      </Box>
     </Box>
   );
 }
 
 /* ------------------------------------------------------------------
-   ReorderModal for controlling question order
-   ------------------------------------------------------------------ */
-function ReorderModal({
-  assessmentId,
-  sortedQuestions,
-  isOpen,
-  onClose,
-  onSuccess,
-}: {
-  assessmentId?: string;
-  sortedQuestions: Question[];
-  isOpen: boolean;
-  onClose: () => void;
-  onSuccess: () => void;
-}) {
-  const [localQuestions, setLocalQuestions] = useState<Question[]>([]);
-  const lockedQuestions = sortedQuestions.filter(q => q.isLocked);
-
-  // Copy sorted questions into local array
-  useEffect(() => {
-    const copy = sortedQuestions.map(q => ({ ...q }));
-    setLocalQuestions(copy);
-  }, [sortedQuestions]);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor)
-  );
-
-  // Drag & drop among unlocked questions
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-
-    setLocalQuestions(prev => {
-      const oldIndex = prev.findIndex(q => q._id === active.id);
-      const newIndex = prev.findIndex(q => q._id === over.id);
-
-      // If dragged or drop target is locked, skip
-      const draggedItem = prev[oldIndex];
-      const dropTargetItem = prev[newIndex];
-      if (draggedItem.isLocked || dropTargetItem.isLocked) {
-        return prev;
-      }
-
-      const newArray = arrayMove(prev, oldIndex, newIndex);
-      return reassignUnlockedOrder(newArray);
-    });
-  };
-
-  // Manual numbering among unlocked
-  const handlePositionChange = (qId: string, newPos: number) => {
-    setLocalQuestions(prev => {
-      // Extract just unlocked
-      const unlockedItems = prev.filter(q => !q.isLocked);
-      const targetIndex = unlockedItems.findIndex(q => q._id === qId);
-      if (targetIndex < 0) return prev;
-
-      const [moved] = unlockedItems.splice(targetIndex, 1);
-      const insertionIndex = Math.max(
-        0,
-        Math.min(newPos - 1, unlockedItems.length)
-      );
-      unlockedItems.splice(insertionIndex, 0, moved);
-
-      // Rebuild entire array, putting locked items in same positions
-      const newArray: Question[] = [];
-      let unlockedPointer = 0;
-      for (let i = 0; i < prev.length; i++) {
-        if (prev[i].isLocked) {
-          newArray.push(prev[i]);
-        } else {
-          newArray.push(unlockedItems[unlockedPointer]);
-          unlockedPointer++;
-        }
-      }
-      return reassignUnlockedOrder(newArray);
-    });
-  };
-
-  function reassignUnlockedOrder(all: Question[]) {
-    let counter = 1;
-    return all.map(q => {
-      // skip positions that might be taken by locked questions
-      while (
-        lockedQuestions.find(k => k.order === counter) &&
-        counter < all.length + lockedQuestions.length + 2
-      ) {
-        counter++;
-      }
-      if (!q.isLocked) {
-        const updated = { ...q, order: counter };
-        counter++;
-        return updated;
-      } else {
-        return q;
-      }
-    });
-  }
-
-  const saveReorder = async () => {
-    if (!assessmentId) return;
-
-    try {
-      // Final order (locked + unlocked).
-      const finalIds = localQuestions.map(q => q._id);
-
-      const response = await fetch(
-        `/api/internal-assessments/${assessmentId}/reorder`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items: finalIds }),
-        }
-      );
-      if (!response.ok) {
-        throw new Error('Failed to reorder questions');
-      }
-      onSuccess();
-    } catch (error) {
-      console.error('Error saving reorder:', error);
-      alert('Error saving new question order');
-    }
-  };
-
-  return (
-    <Modal
-      opened={isOpen}
-      onClose={onClose}
-      title="Reorder Questions"
-      size="lg"
-    >
-      {localQuestions.length === 0 ? (
-        <Alert color="yellow" mb="md">
-          No questions found.
-        </Alert>
-      ) : (
-        <>
-          <Group gap="xs" justify="space-evenly" mb="xs" ml="md">
-            <Text fw={500} style={{ width: '100px' }}>
-              Question Number
-            </Text>
-            <Text fw={500} style={{ flex: 1 }}>
-              Question Text
-            </Text>
-          </Group>
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={localQuestions.map(q => q._id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <Box
-                style={{
-                  minHeight: 200,
-                  border: '1px dashed #ccc',
-                  padding: 8,
-                  marginTop: '1rem',
-                }}
-              >
-                {localQuestions.map(q => (
-                  <ReorderItem
-                    key={q._id}
-                    question={q}
-                    totalUnlocked={
-                      localQuestions.filter(x => !x.isLocked).length
-                    }
-                    onPositionChange={handlePositionChange}
-                  />
-                ))}
-              </Box>
-            </SortableContext>
-          </DndContext>
-        </>
-      )}
-
-      <Group justify="flex-end" mt="lg">
-        <Button onClick={saveReorder} disabled={localQuestions.length === 0}>
-          Save Reorder
-        </Button>
-      </Group>
-    </Modal>
-  );
-}
-
-/* ------------------------------------------------------------------
-   Main component: merges old features + new reorder logic
-   ------------------------------------------------------------------ */
+   Main component
+   - Renders locked items as static
+   - Renders unlocked items in a SortableContext
+   - Calls server to reorder after each local reorder
+------------------------------------------------------------------ */
 interface AssessmentInternalFormProps {
   assessment: InternalAssessment | null;
   questions: Question[];
@@ -613,40 +430,9 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
   handleDeleteQuestion,
   onAssessmentUpdated,
 }) => {
-  // Detect if the entire assessment is locked (released)
   const isAssessmentLocked = assessment?.isReleased || false;
   const isAssessmentReleased = assessment?.isReleased || false;
 
-  /* -----------------------------
-     Reorder logic
-  ----------------------------- */
-  // Sort the incoming questions by their order
-  const [sortedQuestions, setSortedQuestions] = useState<Question[]>([]);
-  useEffect(() => {
-    const sorted = [...questions].sort((a, b) => {
-      const orderA = a.order ?? 9999;
-      const orderB = b.order ?? 9999;
-      return orderA - orderB;
-    });
-    setSortedQuestions(sorted);
-  }, [questions]);
-
-  // Keep track of the next question number for new questions
-  const [latestQuestionNumber, setLatestQuestionNumber] = useState(
-    questions.length + 1
-  );
-
-  // Reorder modal
-  const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
-
-  const handleAddQuestionClick = () => {
-    addQuestion(latestQuestionNumber);
-    setLatestQuestionNumber(prev => prev + 1);
-  };
-
-  /* -----------------------------
-     CSV logic
-  ----------------------------- */
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [csvErrorMessage, setCsvErrorMessage] = useState('');
 
@@ -658,9 +444,6 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
     onAssessmentUpdated();
   };
 
-  /* -----------------------------
-     Release / Recall logic
-  ----------------------------- */
   const [isReleaseModalOpen, setIsReleaseModalOpen] = useState(false);
   const [isRecallModalOpen, setIsRecallModalOpen] = useState(false);
 
@@ -747,9 +530,126 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
     }
   };
 
-  /* -----------------------------
-     Utility: Calculate total possible points
-  ----------------------------- */
+  /* --------------------------------
+     Reorder logic
+  -------------------------------- */
+  const [sortedQuestions, setSortedQuestions] = useState<Question[]>([]);
+
+  useEffect(() => {
+    // Sort questions on mount/updates
+    const sorted = [...questions].sort((a, b) => {
+      const orderA = a.order ?? 9999;
+      const orderB = b.order ?? 9999;
+      return orderA - orderB;
+    });
+    setSortedQuestions(sorted);
+  }, [questions]);
+
+  const [latestQuestionNumber, setLatestQuestionNumber] = useState(
+    questions.length + 1
+  );
+
+  const handleAddQuestionClick = () => {
+    addQuestion(latestQuestionNumber);
+    setLatestQuestionNumber(prev => prev + 1);
+  };
+
+  // Separate locked from unlocked
+  const unlockedQuestions = sortedQuestions.filter(q => !q.isLocked);
+
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor)
+  );
+
+  // ---- MAKE API CALL TO /reorder
+  const updateServerOrder = async (newQuestions: Question[]) => {
+    if (!assessment?._id) return; // no assessment ID => skip
+
+    try {
+      // Extract IDs in final order:
+      const questionIds = newQuestions.map(q => q._id);
+      const response = await fetch(
+        `/api/internal-assessments/${assessment._id}/reorder`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: questionIds }),
+        }
+      );
+
+      if (!response.ok) {
+        console.error('Error updating question order:', response.statusText);
+      } else {
+        console.log('Questions reordered on server.');
+      }
+    } catch (error) {
+      console.error('Failed to update server order:', error);
+    }
+  };
+
+  // On drag end, reorder the unlocked subset
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    setSortedQuestions(prev => {
+      const oldIndex = prev.findIndex(q => q._id === active.id);
+      const newIndex = prev.findIndex(q => q._id === over.id);
+
+      // If we somehow dragged onto a locked item, skip
+      if (prev[oldIndex].isLocked || prev[newIndex].isLocked) {
+        return prev;
+      }
+
+      const newArray = arrayMove(prev, oldIndex, newIndex);
+      const reassigned = reassignUnlockedOrder(newArray);
+
+      // Immediately sync with server
+      updateServerOrder(reassigned);
+
+      return reassigned;
+    });
+  };
+
+  // On manual change of the order NumberInput
+  const handlePositionChange = (qId: string, newPos: number) => {
+    setSortedQuestions(prev => {
+      // Extract unlocked
+      const unlocked = prev.filter(q => !q.isLocked);
+      const targetIndex = unlocked.findIndex(q => q._id === qId);
+      if (targetIndex < 0) return prev;
+
+      const [moved] = unlocked.splice(targetIndex, 1);
+      const insertionIndex = Math.max(0, Math.min(newPos - 1, unlocked.length));
+      unlocked.splice(insertionIndex, 0, moved);
+
+      // Rebuild in the same order as prev, but for unlocked items
+      // we insert them in the new order
+      const combined: Question[] = [];
+      let uPtr = 0;
+
+      for (const q of prev) {
+        if (q.isLocked) {
+          combined.push(q);
+        } else {
+          combined.push(unlocked[uPtr]);
+          uPtr++;
+        }
+      }
+
+      const reassigned = reassignUnlockedOrder(combined);
+      // Immediately sync with server
+      updateServerOrder(reassigned);
+
+      return reassigned;
+    });
+  };
+
+  /* --------------------------------
+     Calculate total possible points
+  -------------------------------- */
   const calculateTotalPossiblePoints = (): number => {
     let totalPoints = 0;
     questions.forEach(q => {
@@ -767,7 +667,7 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
         case 'Multiple Response': {
           const mr = q as MultipleResponseQuestion;
           if (mr.isScored && mr.options?.length) {
-            // Summation of positive points is the typical logic
+            // sum of positive options
             const positivePoints = mr.options
               .map(o => o.points || 0)
               .filter(p => p > 0);
@@ -809,15 +709,16 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
   const [totalPossiblePoints, setTotalPossiblePoints] = useState(
     calculateTotalPossiblePoints()
   );
+
   useEffect(() => {
     setTotalPossiblePoints(calculateTotalPossiblePoints());
   }, [questions]);
 
-  // If scaling is used, display the factor
   const maxMarks = assessment?.maxMarks || 0;
   const [scalingFactor, setScalingFactor] = useState(
     maxMarks && totalPossiblePoints > 0 ? maxMarks / totalPossiblePoints : 1
   );
+
   useEffect(() => {
     const total = calculateTotalPossiblePoints();
     setTotalPossiblePoints(total);
@@ -828,7 +729,7 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
 
   return (
     <div>
-      {/* CSV Buttons: only show if not locked */}
+      {/* CSV Buttons (only if not locked) */}
       {!isAssessmentLocked && (
         <Box mt="md">
           <Group>
@@ -859,20 +760,72 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
         </Box>
       )}
 
-      <Box pt={16}>
-        {sortedQuestions.map((question, index) => (
-          <AssessmentMakeQuestionCard
-            key={question._id}
-            index={index}
-            questionData={question}
-            onSave={updatedQuestion =>
-              handleSaveQuestion(question._id, updatedQuestion)
-            }
-            onDelete={() => handleDeleteQuestion(question._id)}
-            isLocked={isAssessmentLocked || question.isLocked}
-          />
-        ))}
-      </Box>
+      {/* DnD Context for *unlocked* questions only */}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={unlockedQuestions.map(q => q._id)} // only unlocked items
+          strategy={verticalListSortingStrategy}
+        >
+          <Box pt={16}>
+            {sortedQuestions.map((question, index) => {
+              // If locked => render a "static" card that never moves
+              if (question.isLocked) {
+                return (
+                  <Box
+                    key={question._id}
+                    mb="1rem"
+                    style={{
+                      border: '1px solid #ccc',
+                      borderRadius: '4px',
+                      background: '#f5f5f5',
+                      padding: '1rem',
+                    }}
+                  >
+                    <Text size="sm" color="dimmed" mb="xs">
+                      Locked (Order: {question.order})
+                    </Text>
+                    <AssessmentMakeQuestionCard
+                      index={index}
+                      questionData={question}
+                      onSave={updatedQuestion =>
+                        handleSaveQuestion(question._id, updatedQuestion)
+                      }
+                      onDelete={() => handleDeleteQuestion(question._id)}
+                      isLocked={isAssessmentLocked || question.isLocked}
+                    />
+                  </Box>
+                );
+              }
+
+              // Otherwise => Sortable (unlocked)
+              const unlockedCount = unlockedQuestions.length;
+
+              return (
+                <SortableQuestionCard
+                  key={question._id}
+                  question={question}
+                  totalUnlockedCount={unlockedCount}
+                  onChangeOrder={handlePositionChange}
+                >
+                  <AssessmentMakeQuestionCard
+                    index={index}
+                    questionData={question}
+                    onSave={updatedQuestion =>
+                      handleSaveQuestion(question._id, updatedQuestion)
+                    }
+                    onDelete={() => handleDeleteQuestion(question._id)}
+                    isLocked={isAssessmentLocked || question.isLocked}
+                  />
+                </SortableQuestionCard>
+              );
+            })}
+          </Box>
+        </SortableContext>
+      </DndContext>
 
       <Box mt={24} pb={16}>
         <Text>Total Possible Points from Questions: {totalPossiblePoints}</Text>
@@ -888,6 +841,7 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
           )}
       </Box>
 
+      {/* Add Question + Release/Recall Buttons */}
       <Group mt="md" pb="sm">
         {!isAssessmentLocked && (
           <Button onClick={handleAddQuestionClick} color="blue">
@@ -895,14 +849,6 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
           </Button>
         )}
 
-        {/* Reorder button: only show if not locked */}
-        {!isAssessmentLocked && (
-          <Button variant="outline" onClick={() => setIsReorderModalOpen(true)}>
-            Reorder Questions
-          </Button>
-        )}
-
-        {/* Release / Recall */}
         {!isAssessmentReleased && sortedQuestions.length > 0 && (
           <Button color="green" onClick={() => setIsReleaseModalOpen(true)}>
             Confirm and Release Form
@@ -956,92 +902,82 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
               </Text>
               <ul style={{ margin: 0, paddingLeft: '1.25rem' }}>
                 <li>
-                  <strong>type</strong>: one of &quot;Multiple Choice&quot;,
-                  &quot;Multiple Response&quot;, &quot;Scale&quot;, &quot;Short
-                  Response&quot;, &quot;Long Response&quot;, &quot;Date&quot;,
-                  &quot;Number&quot;, or &quot;Undecided&quot;.
+                  <strong>type</strong>: one of “Multiple Choice”, “Multiple
+                  Response”, “Scale”, “Short Response”, “Long Response”, “Date”,
+                  “Number”, or “Undecided”.
                 </li>
                 <li>
                   <strong>text</strong>: the question prompt (required).
                 </li>
                 <li>
-                  <strong>isRequired</strong>: &quot;true&quot; or
-                  &quot;false&quot;.
+                  <strong>isRequired</strong>: "true" or "false".
                 </li>
                 <li>
-                  <strong>isLocked</strong>: &quot;true&quot; or
-                  &quot;false&quot;.
+                  <strong>isLocked</strong>: "true" or "false".
                 </li>
                 <li>
                   <strong>customInstruction</strong>: additional instructions
                   (optional).
                 </li>
                 <li>
-                  <strong>isScored</strong>: &quot;true&quot; or
-                  &quot;false&quot;. If true, extra fields like
-                  &quot;options&quot; or &quot;labels&quot; may apply.
+                  <strong>isScored</strong>: "true" or "false". If true, extra
+                  fields like "options" or "labels" may apply.
                 </li>
                 <li>
-                  <strong>options</strong>: e.g. &quot;Option1|2;Option2|5&quot;
-                  for multiple choice or response.
+                  <strong>options</strong>: e.g. "Option1|2;Option2|5" for
+                  multiple choice or response.
                 </li>
                 <li>
-                  <strong>allowNegative</strong>: &quot;true&quot; or
-                  &quot;false&quot; (Multiple Response).
+                  <strong>allowNegative</strong>: "true" or "false" (Multiple
+                  Response).
                 </li>
                 <li>
-                  <strong>areWrongAnswersPenalized</strong>: &quot;true&quot; or
-                  &quot;false&quot; (Multiple Response).
+                  <strong>areWrongAnswersPenalized</strong>: "true" or "false"
+                  (Multiple Response).
                 </li>
                 <li>
-                  <strong>allowPartialMarks</strong>: &quot;true&quot; or
-                  &quot;false&quot; (Multiple Response).
+                  <strong>allowPartialMarks</strong>: "true" or "false"
+                  (Multiple Response).
                 </li>
                 <li>
-                  <strong>scaleMax</strong>: number if &quot;type&quot; is
-                  &quot;Scale&quot;.
+                  <strong>scaleMax</strong>: number if "type" is "Scale".
                 </li>
                 <li>
-                  <strong>labels</strong>: e.g. &quot;1|Min|0;5|Max|5&quot; for
-                  &quot;Scale&quot;.
+                  <strong>labels</strong>: e.g. "1|Min|0;5|Max|5" for "Scale".
                 </li>
                 <li>
-                  <strong>maxNumber</strong>: numeric limit for
-                  &quot;Number&quot; question.
+                  <strong>maxNumber</strong>: numeric limit for "Number"
+                  question.
                 </li>
                 <li>
-                  <strong>scoringMethod</strong>: &quot;direct&quot;,
-                  &quot;range&quot;, or &quot;None&quot; (Number).
+                  <strong>scoringMethod</strong>: "direct", "range", or "None"
+                  (Number).
                 </li>
                 <li>
-                  <strong>maxPoints</strong>: numeric max points for
-                  &quot;Number&quot; if &quot;scoringMethod&quot; =
-                  &quot;direct&quot;.
+                  <strong>maxPoints</strong>: numeric max points for "Number" if
+                  "scoringMethod" = "direct".
                 </li>
                 <li>
-                  <strong>scoringRanges</strong>: e.g.
-                  &quot;0|10|3;11|20|5&quot; if &quot;scoringMethod&quot; =
-                  &quot;range&quot; (Number).
+                  <strong>scoringRanges</strong>: e.g. "0|10|3;11|20|5" if
+                  "scoringMethod" = "range" (Number).
                 </li>
                 <li>
-                  <strong>shortResponsePlaceholder</strong>: for &quot;Short
-                  Response&quot;.
+                  <strong>shortResponsePlaceholder</strong>: for "Short
+                  Response".
                 </li>
                 <li>
-                  <strong>longResponsePlaceholder</strong>: for &quot;Long
-                  Response&quot;.
+                  <strong>longResponsePlaceholder</strong>: for "Long Response".
                 </li>
                 <li>
-                  <strong>isRange</strong>: &quot;true&quot; or
-                  &quot;false&quot; (Date).
+                  <strong>isRange</strong>: "true" or "false" (Date).
                 </li>
                 <li>
                   <strong>datePickerPlaceholder</strong>: optional placeholder
-                  for &quot;Date&quot;.
+                  for "Date".
                 </li>
                 <li>
                   <strong>minDate</strong>, <strong>maxDate</strong>: optional
-                  date constraints for &quot;Date&quot; question.
+                  date constraints for "Date" question.
                 </li>
               </ul>
             </Accordion.Panel>
@@ -1083,8 +1019,9 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
             <Radio.Group
               value={recallOption}
               onChange={value => {
-                if (value === 'recallOnly' || value === 'recallAndDelete')
+                if (value === 'recallOnly' || value === 'recallAndDelete') {
                   setRecallOption(value);
+                }
               }}
               required
               variant="vertical"
@@ -1133,18 +1070,6 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
           </>
         )}
       </Modal>
-
-      {/* Reorder Modal */}
-      <ReorderModal
-        assessmentId={assessment?._id}
-        sortedQuestions={sortedQuestions}
-        isOpen={isReorderModalOpen}
-        onClose={() => setIsReorderModalOpen(false)}
-        onSuccess={() => {
-          onAssessmentUpdated();
-          setIsReorderModalOpen(false);
-        }}
-      />
     </div>
   );
 };
