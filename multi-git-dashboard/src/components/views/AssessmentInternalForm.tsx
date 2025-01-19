@@ -47,6 +47,7 @@ import CSVUpload from '@/components/csv/CSVUpload';
 const questionHeaders = [
   'type',
   'text',
+  'order',
   'isRequired',
   'isLocked',
   'customInstruction',
@@ -165,6 +166,7 @@ function transformQuestions(data: any[]): any[] {
     return {
       type: row.type.trim(),
       text: row.text.trim(),
+      order: Number(row.order),
       isRequired: row.isRequired === 'true',
       isLocked: row.isLocked === 'true',
       customInstruction: row.customInstruction || '',
@@ -291,6 +293,8 @@ function downloadExistingQuestionsCsv(questions: Question[]) {
           return (q as any).minDate || '';
         case 'maxDate':
           return (q as any).maxDate || '';
+        case 'order':
+          return (q as any).order || '';
         default:
           return '';
       }
