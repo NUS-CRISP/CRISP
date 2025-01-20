@@ -17,9 +17,9 @@ import teamSetRoutes from './routes/teamSetRoutes';
 import userRoutes from './routes/userRoutes';
 import codeAnalysisRoutes from './routes/codeAnalysisRoutes';
 import { connectToDatabase } from './utils/database';
-import submissionRoutes from 'routes/submissionRoutes';
-import assessmentAssignmentSetRoutes from 'routes/assessmentAssignmentSetRoutes';
-import assessmentResultRoutes from 'routes/assessmentResultRoutes';
+import submissionRoutes from './routes/submissionRoutes';
+import assessmentAssignmentSetRoutes from './routes/assessmentAssignmentSetRoutes';
+import assessmentResultRoutes from './routes/assessmentResultRoutes';
 
 const env = process.env.NODE_ENV ?? 'development';
 config({ path: `.env.${env}` });
