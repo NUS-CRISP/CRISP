@@ -16,6 +16,9 @@
     "prettier-check": "prettier --config .prettierrc.json src/**/*.{ts,tsx} --check"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@emotion/react": "^11.11.4",
     "@emotion/server": "^11.11.0",
     "@mantine/carousel": "^7.7.1",
@@ -50,6 +53,8 @@
     "react-dom": "^18.2.0",
     "react-intersection-observer": "^9.8.1",
     "react-markdown": "^9.0.1",
+    "react-virtualized-auto-sizer": "^1.0.25",
+    "react-virtuoso": "^4.12.3",
     "recharts": "^2.12.3",
     "sharp": "^0.33.5",
     "swr": "^2.2.5",
@@ -60,6 +65,7 @@
     "@types/bcrypt": "^5.0.2",
     "@types/file-saver": "^2.0.7",
     "@types/jest": "^29.5.12",
+    "@types/react-window": "^1.8.8",
     "eslint": "8.46.0",
     "eslint-config-next": "^14.1.4",
     "eslint-config-prettier": "^9.1.0",

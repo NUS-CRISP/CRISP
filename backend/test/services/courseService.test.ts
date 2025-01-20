@@ -29,6 +29,7 @@ import {
   getCourseTeachingTeam,
   getCourseTimeline,
   getCoursesForUser,
+  getInternalAssessmentsFromCourse,
   getPeopleFromCourse,
   getProjectManagementBoardFromCourse,
   getRepositoriesFromCourse,
@@ -44,12 +45,13 @@ import {
   updateTAsInCourse,
 } from '../../services/courseService';
 import { NotFoundError } from '../../services/errors';
+import InternalAssessmentModel from '@models/InternalAssessment';
 
 let mongo: MongoMemoryServer;
 
 beforeAll(async () => {
   mongo = await MongoMemoryServer.create();
-  const mongoUri = mongo.getUri();
+  const mongoUri = await mongo.getUri();
   await mongoose.connect(mongoUri);
 });
 
@@ -162,6 +164,21 @@ async function createFacultyUser(userData: any) {
   await account.save();
 
   return { user, account };
+}
+
+async function createInternalAssessment(courseId: string, assessmentData: any) {
+  const assessment = new InternalAssessmentModel({
+    ...assessmentData,
+    course: courseId,
+  });
+  await assessment.save();
+  // Add the assessment to the course's internalAssessments array
+  const course = await CourseModel.findById(courseId);
+  if (course) {
+    course.internalAssessments.push(assessment._id);
+    await course.save();
+  }
+  return assessment;
 }
 
 describe('courseService', () => {
@@ -1285,6 +1302,70 @@ describe('courseService', () => {
       expect(getAssessmentsFromCourse(invalidCourseId)).rejects.toThrow(
         NotFoundError
       );
+    });
+  });
+  describe('getInternalAssessmentsFromCourse', () => {
+    it('should retrieve internal assessments for a valid course', async () => {
+      // Create internal assessments
+      const internalAssessmentData1 = {
+        description: 'Description for Internal Assessment 1',
+        maximumMarks: 100,
+        isReleased: true,
+        areSubmissionsEditable: true,
+        granularity: 'team',
+        startDate: new Date('2000-01-01'),
+        assessmentName: 'Internal Assessment 1',
+      };
+
+      const internalAssessmentData2 = {
+        description: 'Description for Internal Assessment 2',
+        maximumMarks: 100,
+        isReleased: true,
+        areSubmissionsEditable: true,
+        granularity: 'team',
+        startDate: new Date('2000-01-01'),
+        assessmentName: 'Internal Assessment 2',
+      };
+
+      await createInternalAssessment(courseId, internalAssessmentData1);
+      await createInternalAssessment(courseId, internalAssessmentData2);
+
+      // Invoke the service function
+      const assessments = await getInternalAssessmentsFromCourse(courseId);
+
+      // Assertions
+      expect(assessments).toBeDefined();
+      expect(assessments.length).toBe(2);
+      const titles = assessments.map((a: any) => a.assessmentName);
+      expect(titles).toContain(internalAssessmentData1.assessmentName);
+      expect(titles).toContain(internalAssessmentData2.assessmentName);
+    });
+
+    it('should return an empty array if the course has no internal assessments', async () => {
+      // Create a new course without internal assessments
+      const newCourseData = {
+        name: 'Data Structures',
+        code: 'CS201',
+        semester: 'Spring 2025',
+        startDate: new Date('2025-01-10'),
+        courseType: 'Normal',
+      };
+      const newCourse = await createTestCourse(newCourseData);
+      const newCourseId = newCourse._id.toString();
+
+      // Invoke the service function
+      const assessments = await getInternalAssessmentsFromCourse(newCourseId);
+
+      // Assertions
+      expect(assessments).toBeDefined();
+      expect(assessments.length).toBe(0);
+    });
+
+    it('should throw NotFoundError for an invalid course ID', async () => {
+      const invalidCourseId = new mongoose.Types.ObjectId().toString();
+      await expect(
+        getInternalAssessmentsFromCourse(invalidCourseId)
+      ).rejects.toThrow(NotFoundError);
     });
   });
 

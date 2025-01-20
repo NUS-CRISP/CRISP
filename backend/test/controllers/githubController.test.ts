@@ -1,13 +1,21 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Request, Response } from 'express';
 import {
   checkInstallation,
   getAllTeamData,
   getAllTeamDataByOrg,
+  getAllTeamDataByCourse,
+  getAllTeamDataNamesByCourse,
 } from '../../controllers/githubController';
-import { NotFoundError } from '../../services/errors';
+import {
+  NotFoundError,
+  MissingAuthorizationError,
+} from '../../services/errors';
 import * as githubService from '../../services/githubService';
+import * as auth from '../../utils/auth';
 
 jest.mock('../../services/githubService');
+jest.mock('../../utils/auth');
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -110,6 +118,173 @@ describe('gitHubController', () => {
     });
   });
 
+  describe('getAllTeamDataByCourse', () => {
+    it('should retrieve all authorized team data for a course and send a 200 status', async () => {
+      const req = mockRequest({}, { id: 'courseId' });
+      const res = mockResponse();
+      const mockTeams = [{ teamId: 'team1', data: 'data1' }];
+
+      jest.spyOn(auth, 'getAccountId').mockResolvedValue('accountId');
+      jest
+        .spyOn(githubService, 'getAuthorizedTeamDataByCourse')
+        .mockResolvedValue(mockTeams as any);
+
+      await getAllTeamDataByCourse(req, res);
+
+      expect(auth.getAccountId).toHaveBeenCalledWith(req);
+      expect(githubService.getAuthorizedTeamDataByCourse).toHaveBeenCalledWith(
+        'accountId',
+        'courseId'
+      );
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(mockTeams);
+    });
+
+    it('should handle NotFoundError when course is not found', async () => {
+      const req = mockRequest({}, { id: 'invalidCourseId' });
+      const res = mockResponse();
+      const error = new NotFoundError('Course not found');
+
+      jest.spyOn(auth, 'getAccountId').mockResolvedValue('accountId');
+      jest
+        .spyOn(githubService, 'getAuthorizedTeamDataByCourse')
+        .mockRejectedValue(error);
+
+      await getAllTeamDataByCourse(req, res);
+
+      expect(auth.getAccountId).toHaveBeenCalledWith(req);
+      expect(githubService.getAuthorizedTeamDataByCourse).toHaveBeenCalledWith(
+        'accountId',
+        'invalidCourseId'
+      );
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
+    });
+
+    it('should handle MissingAuthorizationError when authorization is missing', async () => {
+      const req = mockRequest({}, { id: 'courseId' });
+      const res = mockResponse();
+      const error = new MissingAuthorizationError('Missing authorization');
+
+      jest.spyOn(auth, 'getAccountId').mockRejectedValue(error);
+      jest
+        .spyOn(githubService, 'getAuthorizedTeamDataByCourse')
+        .mockResolvedValue([] as any);
+
+      await getAllTeamDataByCourse(req, res);
+
+      expect(auth.getAccountId).toHaveBeenCalledWith(req);
+      expect(
+        githubService.getAuthorizedTeamDataByCourse
+      ).not.toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Missing authorization' });
+    });
+
+    it('should handle unexpected errors and return 500', async () => {
+      const req = mockRequest({}, { id: 'courseId' });
+      const res = mockResponse();
+      const error = new Error('Unexpected server error');
+
+      jest.spyOn(auth, 'getAccountId').mockResolvedValue('accountId');
+      jest
+        .spyOn(githubService, 'getAuthorizedTeamDataByCourse')
+        .mockRejectedValue(error);
+
+      await getAllTeamDataByCourse(req, res);
+
+      expect(auth.getAccountId).toHaveBeenCalledWith(req);
+      expect(githubService.getAuthorizedTeamDataByCourse).toHaveBeenCalledWith(
+        'accountId',
+        'courseId'
+      );
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch teams' });
+    });
+  });
+
+  describe('getAllTeamDataNamesByCourse', () => {
+    it('should retrieve all authorized team data names for a course and send a 200 status', async () => {
+      const req = mockRequest({}, { id: 'courseId' });
+      const res = mockResponse();
+      const mockTeamNames = ['Team 1', 'Team 2'];
+
+      jest.spyOn(auth, 'getAccountId').mockResolvedValue('accountId');
+      jest
+        .spyOn(githubService, 'getAuthorizedTeamDataNamesByCourse')
+        .mockResolvedValue(mockTeamNames as any);
+
+      await getAllTeamDataNamesByCourse(req, res);
+
+      expect(auth.getAccountId).toHaveBeenCalledWith(req);
+      expect(
+        githubService.getAuthorizedTeamDataNamesByCourse
+      ).toHaveBeenCalledWith('accountId', 'courseId');
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(mockTeamNames);
+    });
+
+    it('should handle NotFoundError when course is not found', async () => {
+      const req = mockRequest({}, { id: 'invalidCourseId' });
+      const res = mockResponse();
+      const error = new NotFoundError('Course not found');
+
+      jest.spyOn(auth, 'getAccountId').mockResolvedValue('accountId');
+      jest
+        .spyOn(githubService, 'getAuthorizedTeamDataNamesByCourse')
+        .mockRejectedValue(error);
+
+      await getAllTeamDataNamesByCourse(req, res);
+
+      expect(auth.getAccountId).toHaveBeenCalledWith(req);
+      expect(
+        githubService.getAuthorizedTeamDataNamesByCourse
+      ).toHaveBeenCalledWith('accountId', 'invalidCourseId');
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
+    });
+
+    it('should handle MissingAuthorizationError when authorization is missing', async () => {
+      const req = mockRequest({}, { id: 'courseId' });
+      const res = mockResponse();
+      const error = new MissingAuthorizationError('Missing authorization');
+
+      jest.spyOn(auth, 'getAccountId').mockRejectedValue(error);
+      jest
+        .spyOn(githubService, 'getAuthorizedTeamDataNamesByCourse')
+        .mockResolvedValue([] as any);
+
+      await getAllTeamDataNamesByCourse(req, res);
+
+      expect(auth.getAccountId).toHaveBeenCalledWith(req);
+      expect(
+        githubService.getAuthorizedTeamDataNamesByCourse
+      ).not.toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Missing authorization' });
+    });
+
+    it('should handle unexpected errors and return 500', async () => {
+      const req = mockRequest({}, { id: 'courseId' });
+      const res = mockResponse();
+      const error = new Error('Unexpected server error');
+
+      jest.spyOn(auth, 'getAccountId').mockResolvedValue('accountId');
+      jest
+        .spyOn(githubService, 'getAuthorizedTeamDataNamesByCourse')
+        .mockRejectedValue(error);
+
+      await getAllTeamDataNamesByCourse(req, res);
+
+      expect(auth.getAccountId).toHaveBeenCalledWith(req);
+      expect(
+        githubService.getAuthorizedTeamDataNamesByCourse
+      ).toHaveBeenCalledWith('accountId', 'courseId');
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch teams' });
+    });
+  });
+
   describe('checkInstallation', () => {
     it('should check GitHub installation and send a 200 status', async () => {
       const req = mockRequest({ orgName: 'org1' });
@@ -122,6 +297,9 @@ describe('gitHubController', () => {
 
       await checkInstallation(req, res);
 
+      expect(githubService.checkGitHubInstallation).toHaveBeenCalledWith(
+        'org1'
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         installationId: mockInstallationId,
@@ -139,6 +317,9 @@ describe('gitHubController', () => {
 
       await checkInstallation(req, res);
 
+      expect(githubService.checkGitHubInstallation).toHaveBeenCalledWith(
+        'nonexistent-org'
+      );
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ message: error.message });
     });
@@ -154,6 +335,9 @@ describe('gitHubController', () => {
 
       await checkInstallation(req, res);
 
+      expect(githubService.checkGitHubInstallation).toHaveBeenCalledWith(
+        'org1'
+      );
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
         message: 'An error occurred while checking the installation status.',

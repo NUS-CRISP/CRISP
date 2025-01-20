@@ -4,7 +4,13 @@ import mongoose, { Schema, Types } from 'mongoose';
 export interface Course
   extends Omit<
       SharedCourse,
-      '_id' | 'faculty' | 'TAs' | 'students' | 'teamSets' | 'assessments'
+      | '_id'
+      | 'faculty'
+      | 'TAs'
+      | 'students'
+      | 'teamSets'
+      | 'assessments'
+      | 'internalAssessments'
     >,
     Document {
   _id: Types.ObjectId;
@@ -13,6 +19,7 @@ export interface Course
   students: Types.ObjectId[];
   teamSets: Types.ObjectId[];
   assessments: Types.ObjectId[];
+  internalAssessments: Types.ObjectId[];
 }
 
 export const courseSchema = new Schema<Course>({
@@ -26,6 +33,9 @@ export const courseSchema = new Schema<Course>({
   students: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   teamSets: [{ type: Schema.Types.ObjectId, ref: 'TeamSet' }],
   assessments: [{ type: Schema.Types.ObjectId, ref: 'Assessment' }],
+  internalAssessments: [
+    { type: Schema.Types.ObjectId, ref: 'InternalAssessment' },
+  ],
   sprints: [
     {
       number: { type: Number, required: true },

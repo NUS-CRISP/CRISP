@@ -7,6 +7,7 @@ import {
   getAccountStatusesByUserIds,
   getAllPendingAccounts,
   rejectAccountByIds,
+  getUserIdByAccountId,
 } from '../../services/accountService';
 import { BadRequestError, NotFoundError } from '../../services/errors';
 import UserModel from '@models/User';
@@ -236,6 +237,31 @@ describe('accountService', () => {
       await expect(getAccountStatusesByUserIds([])).rejects.toThrow(
         NotFoundError
       );
+    });
+  });
+
+  describe('getUserIdByAccountId', () => {
+    it('should return the user ID for a valid account ID', async () => {
+      const account = await createTestAccount({
+        email: 'user@example.com',
+        identifier: 'user123',
+      });
+      expect(account).toBeTruthy();
+      if (!account) throw new Error('Test account not created');
+      const userId = await getUserIdByAccountId(account._id.toString());
+      expect(userId).toBe(account.user.toHexString());
+    });
+
+    it('should throw NotFoundError if the account ID does not exist', async () => {
+      const nonExistentAccountId = new mongoose.Types.ObjectId().toHexString();
+      await expect(getUserIdByAccountId(nonExistentAccountId)).rejects.toThrow(
+        NotFoundError
+      );
+    });
+
+    it('should throw a CastError for an invalid account ID format', async () => {
+      const invalidAccountId = '12345';
+      await expect(getUserIdByAccountId(invalidAccountId)).rejects.toThrow();
     });
   });
 });

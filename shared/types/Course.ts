@@ -1,4 +1,5 @@
 import { Assessment } from './Assessment';
+import { InternalAssessment } from './InternalAssessment';
 import { TeamSet } from './TeamSet';
 import { User } from './User';
 
@@ -35,6 +36,7 @@ export interface Course {
   students: User[];
   teamSets: TeamSet[];
   assessments: Assessment[];
+  internalAssessments: InternalAssessment[];
   sprints: Sprint[];
   milestones: Milestone[];
   courseType: CourseType;

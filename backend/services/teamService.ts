@@ -21,6 +21,14 @@ export const getTeamsByCourseId = async (courseId: string) => {
   return Array.from(teams);
 };
 
+export const getTeamsByTAIdAndCourseId = async (
+  taId: string,
+  courseId: string
+) => {
+  const teams = await getTeamsByCourseId(courseId);
+  return teams.filter(team => team.TA?._id.equals(taId));
+};
+
 export const deleteTeamById = async (teamId: string) => {
   const team = await TeamModel.findById(teamId);
   if (!team) {

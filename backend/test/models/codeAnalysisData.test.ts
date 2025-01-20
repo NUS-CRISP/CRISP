@@ -14,7 +14,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-    await codeAnalysisDataModel.deleteMany({});
+  await codeAnalysisDataModel.deleteMany({});
 });
 
 afterAll(async () => {
