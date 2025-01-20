@@ -207,6 +207,7 @@ const Navbar: React.FC = () => {
     {
       link: `/courses/${courseId}/repositories`,
       label: 'Repositories',
+      pngSrc: '/repositories.png',
     },
     {
       link: `/courses/${courseId}/teams`,
@@ -235,6 +236,8 @@ const Navbar: React.FC = () => {
     {
       link: `/courses/${courseId}/code-analysis`,
       label: 'Code Analysis',
+      disabled: !peopleAdded,
+      pngSrc: '/code-analysis.png',
     },
   ];
 

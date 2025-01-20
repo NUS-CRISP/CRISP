@@ -84,6 +84,7 @@ const CodeAnalysis: React.FC<CodeAnalysisProps> = ({ courseId }) => {
             values: string[];
             types: string[];
             domains: string[];
+            metricStats: Map<string, { median: number; mean: number }>;
           };
         };
       },
@@ -100,8 +101,12 @@ const CodeAnalysis: React.FC<CodeAnalysisProps> = ({ courseId }) => {
           values: codeData.values,
           types: codeData.types,
           domains: codeData.domains,
+          metricStats:
+            codeData.metricStats ||
+            new Map<string, { median: number; mean: number }>(),
         };
       }
+
       return acc;
     },
     {}
