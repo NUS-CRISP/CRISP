@@ -816,7 +816,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
                 Delete Draft
               </Button>
             )}
-            {(!submission || submission.isDraft) && (
+            {(!submission || submission.isDraft) && false && (
               <Button variant="default" onClick={handleSaveDraft}>
                 Save Draft
               </Button>
