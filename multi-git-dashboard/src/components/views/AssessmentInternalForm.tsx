@@ -219,7 +219,7 @@ function downloadExistingQuestionsCsv(questions: Question[]) {
   });
 
   const rows: string[] = [];
-  rows.push(questionHeaders.join(','));
+  rows.push(questionHeaders.join(',')); // header row
 
   filtered.forEach(q => {
     const rowValues = questionHeaders.map(header => {
@@ -409,12 +409,6 @@ function SortableQuestionCard({
   );
 }
 
-/* ------------------------------------------------------------------
-   Main component
-   - Renders locked items as static
-   - Renders unlocked items in a SortableContext
-   - Calls server to reorder after each local reorder
------------------------------------------------------------------- */
 interface AssessmentInternalFormProps {
   assessment: InternalAssessment | null;
   questions: Question[];
@@ -432,8 +426,8 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
   handleDeleteQuestion,
   onAssessmentUpdated,
 }) => {
-  const isAssessmentLocked = assessment?.isReleased || false;
-  const isAssessmentReleased = assessment?.isReleased || false;
+  const isAssessmentLocked = !!assessment?.isReleased;
+  const isAssessmentReleased = !!assessment?.isReleased;
 
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [csvErrorMessage, setCsvErrorMessage] = useState('');
@@ -533,12 +527,11 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
   };
 
   /* --------------------------------
-     Reorder logic
+     Maintain a sorted list of questions
   -------------------------------- */
   const [sortedQuestions, setSortedQuestions] = useState<Question[]>([]);
 
   useEffect(() => {
-    // Sort questions on mount/updates
     const sorted = [...questions].sort((a, b) => {
       const orderA = a.order ?? 9999;
       const orderB = b.order ?? 9999;
@@ -556,21 +549,12 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
     setLatestQuestionNumber(prev => prev + 1);
   };
 
-  // Separate locked from unlocked
-  const unlockedQuestions = sortedQuestions.filter(q => !q.isLocked);
-
-  // DnD sensors
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor)
-  );
-
-  // ---- MAKE API CALL TO /reorder
+  /* --------------------------------
+     Update server order
+  -------------------------------- */
   const updateServerOrder = async (newQuestions: Question[]) => {
-    if (!assessment?._id) return; // no assessment ID => skip
-
+    if (!assessment?._id) return;
     try {
-      // Extract IDs in final order:
       const questionIds = newQuestions.map(q => q._id);
       const response = await fetch(
         `/api/internal-assessments/${assessment._id}/reorder`,
@@ -580,7 +564,6 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
           body: JSON.stringify({ items: questionIds }),
         }
       );
-
       if (!response.ok) {
         console.error('Error updating question order:', response.statusText);
       } else {
@@ -591,8 +574,19 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
     }
   };
 
-  // On drag end, reorder the unlocked subset
+  /* --------------------------------
+     If the entire assessment is locked,
+     render all questions as locked + skip DnD.
+  -------------------------------- */
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor)
+  );
+
+  // Drag end
   const handleDragEnd = (event: DragEndEvent) => {
+    if (isAssessmentLocked) return; // no reordering if locked
+
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
@@ -600,25 +594,21 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
       const oldIndex = prev.findIndex(q => q._id === active.id);
       const newIndex = prev.findIndex(q => q._id === over.id);
 
-      // If we somehow dragged onto a locked item, skip
       if (prev[oldIndex].isLocked || prev[newIndex].isLocked) {
         return prev;
       }
 
       const newArray = arrayMove(prev, oldIndex, newIndex);
       const reassigned = reassignUnlockedOrder(newArray);
-
-      // Immediately sync with server
       updateServerOrder(reassigned);
-
       return reassigned;
     });
   };
 
-  // On manual change of the order NumberInput
   const handlePositionChange = (qId: string, newPos: number) => {
+    if (isAssessmentLocked) return;
+
     setSortedQuestions(prev => {
-      // Extract unlocked
       const unlocked = prev.filter(q => !q.isLocked);
       const targetIndex = unlocked.findIndex(q => q._id === qId);
       if (targetIndex < 0) return prev;
@@ -627,11 +617,8 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
       const insertionIndex = Math.max(0, Math.min(newPos - 1, unlocked.length));
       unlocked.splice(insertionIndex, 0, moved);
 
-      // Rebuild in the same order as prev, but for unlocked items
-      // we insert them in the new order
       const combined: Question[] = [];
       let uPtr = 0;
-
       for (const q of prev) {
         if (q.isLocked) {
           combined.push(q);
@@ -640,11 +627,8 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
           uPtr++;
         }
       }
-
       const reassigned = reassignUnlockedOrder(combined);
-      // Immediately sync with server
       updateServerOrder(reassigned);
-
       return reassigned;
     });
   };
@@ -669,7 +653,7 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
         case 'Multiple Response': {
           const mr = q as MultipleResponseQuestion;
           if (mr.isScored && mr.options?.length) {
-            // sum of positive options
+            // sum of positive points
             const positivePoints = mr.options
               .map(o => o.points || 0)
               .filter(p => p > 0);
@@ -762,34 +746,89 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
         </Box>
       )}
 
-      {/* DnD Context for *unlocked* questions only */}
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext
-          items={unlockedQuestions.map(q => q._id)} // only unlocked items
-          strategy={verticalListSortingStrategy}
+      {/* If locked => skip DnD; just render all as locked */}
+      {isAssessmentLocked ? (
+        <Box pt={16}>
+          {sortedQuestions.map((question, index) => (
+            <Box
+              key={question._id}
+              mb="1rem"
+              style={{
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                background: '#f5f5f5',
+                padding: '1rem',
+              }}
+            >
+              <Text size="sm" color="dimmed" mb="xs">
+                Locked (Order: {question.order})
+              </Text>
+              <AssessmentMakeQuestionCard
+                index={index}
+                questionData={question}
+                onSave={updatedQuestion =>
+                  handleSaveQuestion(question._id, updatedQuestion)
+                }
+                onDelete={() => handleDeleteQuestion(question._id)}
+                isLocked={true}
+              />
+            </Box>
+          ))}
+        </Box>
+      ) : (
+        // Otherwise => DnD context for unlocked items
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
         >
-          <Box pt={16}>
-            {sortedQuestions.map((question, index) => {
-              // If locked => render a "static" card that never moves
-              if (question.isLocked) {
+          <SortableContext
+            items={sortedQuestions.filter(q => !q.isLocked).map(q => q._id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <Box pt={16}>
+              {sortedQuestions.map((question, index) => {
+                if (question.isLocked) {
+                  // locked question => static box
+                  return (
+                    <Box
+                      key={question._id}
+                      mb="1rem"
+                      style={{
+                        border: '1px solid #ccc',
+                        borderRadius: '4px',
+                        background: '#f5f5f5',
+                        padding: '1rem',
+                      }}
+                    >
+                      <Text size="sm" color="dimmed" mb="xs">
+                        Locked (Order: {question.order})
+                      </Text>
+                      <AssessmentMakeQuestionCard
+                        index={index}
+                        questionData={question}
+                        onSave={updatedQuestion =>
+                          handleSaveQuestion(question._id, updatedQuestion)
+                        }
+                        onDelete={() => handleDeleteQuestion(question._id)}
+                        isLocked={true}
+                      />
+                    </Box>
+                  );
+                }
+
+                // unlocked => Sortable
+                const unlockedCount = sortedQuestions.filter(
+                  q => !q.isLocked
+                ).length;
+
                 return (
-                  <Box
+                  <SortableQuestionCard
                     key={question._id}
-                    mb="1rem"
-                    style={{
-                      border: '1px solid #ccc',
-                      borderRadius: '4px',
-                      background: '#f5f5f5',
-                      padding: '1rem',
-                    }}
+                    question={question}
+                    totalUnlockedCount={unlockedCount}
+                    onChangeOrder={handlePositionChange}
                   >
-                    <Text size="sm" color="dimmed" mb="xs">
-                      Locked (Order: {question.order})
-                    </Text>
                     <AssessmentMakeQuestionCard
                       index={index}
                       questionData={question}
@@ -797,37 +836,15 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
                         handleSaveQuestion(question._id, updatedQuestion)
                       }
                       onDelete={() => handleDeleteQuestion(question._id)}
-                      isLocked={isAssessmentLocked || question.isLocked}
+                      isLocked={false}
                     />
-                  </Box>
+                  </SortableQuestionCard>
                 );
-              }
-
-              // Otherwise => Sortable (unlocked)
-              const unlockedCount = unlockedQuestions.length;
-
-              return (
-                <SortableQuestionCard
-                  key={question._id}
-                  question={question}
-                  totalUnlockedCount={unlockedCount}
-                  onChangeOrder={handlePositionChange}
-                >
-                  <AssessmentMakeQuestionCard
-                    index={index}
-                    questionData={question}
-                    onSave={updatedQuestion =>
-                      handleSaveQuestion(question._id, updatedQuestion)
-                    }
-                    onDelete={() => handleDeleteQuestion(question._id)}
-                    isLocked={isAssessmentLocked || question.isLocked}
-                  />
-                </SortableQuestionCard>
-              );
-            })}
-          </Box>
-        </SortableContext>
-      </DndContext>
+              })}
+            </Box>
+          </SortableContext>
+        </DndContext>
+      )}
 
       <Box mt={24} pb={16}>
         <Text>Total Possible Points from Questions: {totalPossiblePoints}</Text>
