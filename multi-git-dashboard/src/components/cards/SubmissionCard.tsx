@@ -94,12 +94,12 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({
               <Text size="sm">
                 {submission.adjustedScore ? (
                   <>
-                    <strong>Adjusted Score:</strong> {totalScore} <br />
-                    <strong>Original Score:</strong> {originalScore}
+                    <strong>Adjusted Score:</strong> {totalScore.toPrecision(2)} <br />
+                    <strong>Original Score:</strong> {originalScore.toPrecision(2)}
                   </>
                 ) : (
                   <>
-                    <strong>Score:</strong> {originalScore}
+                    <strong>Score:</strong> {originalScore.toPrecision(2)}
                   </>
                 )}
               </Text>
