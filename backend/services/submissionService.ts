@@ -1222,9 +1222,7 @@ export const regradeSubmission = async (submissionId: string) => {
   }
 
   if (submission.deleted) {
-    throw new NotFoundError(
-      `Submission with ID ${submissionId} not found (Deleted)`
-    );
+    return submission;
   }
 
   const user = await UserModel.findById(submission.user);

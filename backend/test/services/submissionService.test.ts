@@ -2591,7 +2591,7 @@ describe('submissionService', () => {
       );
     });
 
-    it('should throw NotFoundError if submission is soft-deleted', async () => {
+    it('should skip regrading if submission is soft-deleted', async () => {
       const s = await SubmissionModel.create({
         assessment: assessment._id,
         user: ta._id,
@@ -2599,9 +2599,8 @@ describe('submissionService', () => {
         isDraft: false,
         deleted: true,
       });
-      await expect(regradeSubmission(s._id.toString())).rejects.toThrow(
-        `Submission with ID ${s._id.toString()} not found (Deleted)`
-      );
+      const submission = await regradeSubmission(s._id.toString());
+      expect(submission).toBeDefined();
     });
 
     it('should throw NotFoundError if submission creator is missing', async () => {
