@@ -1014,6 +1014,11 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
           Are you sure you want to release the form? It will be locked and you
           cannot edit unless you recall it later.
         </Text>
+        <Text>
+          Also, make sure that your grader assignments are finalized in the
+          Overview Page. If a team does not have a grader assigned, they will
+          not be gradeable!
+        </Text>
         <Group mt="md">
           <Button color="green" onClick={releaseForm}>
             Yes, Release Form
