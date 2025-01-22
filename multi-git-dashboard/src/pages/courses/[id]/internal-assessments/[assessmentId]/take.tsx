@@ -554,7 +554,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
           }
           return {
             question: questionId,
-            type: question.type,
+            type: question.type + ' Answer',
             ...formatAnswerForSubmission(question, answer),
           };
         })
