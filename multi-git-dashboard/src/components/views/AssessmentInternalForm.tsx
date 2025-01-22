@@ -297,7 +297,9 @@ function downloadExistingQuestionsCsv(questions: Question[]) {
     });
 
     // Remove linebreaks; join columns with commas
-    rows.push(rowValues.map(val => val.replace(/\r?\n|\r/g, ' ')).join(','));
+    rows.push(
+      rowValues.map(val => String(val).replace(/\r?\n|\r/g, ' ')).join(',')
+    );
   });
 
   const csvString = rows.join('\n');
