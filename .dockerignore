@@ -9,6 +9,7 @@ backend/node_modules/
 backend/dist/
 backend/.env.development
 backend/test/
+backend/nus-cs3203
 
 # frontend specific
 multi-git-dashboard/node_modules/

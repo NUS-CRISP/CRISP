@@ -1,13 +1,20 @@
 import {
+  Anchor,
+  Box,
   Burger,
   Button,
+  Center,
   Container,
   Group,
+  HoverCard,
   useMantineTheme,
+  Text,
+  Divider,
+  SimpleGrid,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import classes from '@styles/Home.module.css';
-import { IconGitBranch } from '@tabler/icons-react';
+import { IconChevronDown, IconGitBranch } from '@tabler/icons-react';
 import { useRouter } from 'next/router';
 
 const Header: React.FC = () => {
@@ -16,6 +23,7 @@ const Header: React.FC = () => {
   const theme = useMantineTheme();
 
   const links: { link: string; label: string }[] = [];
+  
   const items = links.map(link => (
     <Button
       key={link.link}
@@ -27,6 +35,8 @@ const Header: React.FC = () => {
     </Button>
   ));
 
+  
+
   return (
     <header className={classes.header}>
       <Container size="lg" className={classes.headerInner}>
@@ -34,8 +44,70 @@ const Header: React.FC = () => {
           <IconGitBranch size={28} className={classes.headerIcon} />
           CRISP
         </Group>
+
+        <Group h="100%" gap={0} visibleFrom="sm">
+            <a href="http://localhost:3002/" className={classes.link}>
+              Home
+            </a>
+            {/* <HoverCard width={600} position="bottom" radius="md" shadow="md" withinPortal>
+              <HoverCard.Target>
+                <a href="#" className={classes.link}>
+                  <Center inline>
+                    <Box component="span" mr={5}>
+                      Features
+                    </Box>
+                    <IconChevronDown size={16} color={theme.colors.blue[6]} />
+                  </Center>
+                </a>
+              </HoverCard.Target>
+
+              <HoverCard.Dropdown style={{ overflow: 'hidden' }}>
+                <Group justify="space-between" px="md">
+                  <Text fw={500}>Features</Text>
+                  <Anchor href="#" fz="xs">
+                    View all
+                  </Anchor>
+                </Group>
+
+                <Divider my="sm" />
+
+                <SimpleGrid cols={2} spacing={0}>
+                  hhhh
+                </SimpleGrid>
+
+                <div className={classes.dropdownFooter}>
+                  <Group justify="space-between">
+                    <div>
+                      <Text fw={500} fz="sm">
+                        Get started
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        Their food sources have decreased, and their numbers
+                      </Text>
+                    </div>
+                    <Button variant="default">Get started</Button>
+                  </Group>
+                </div>
+              </HoverCard.Dropdown>
+            </HoverCard> */}
+            <a href="#" className={classes.link}>
+              Learn
+            </a>
+            <a href="#" className={classes.link}>
+              Academy
+            </a>
+
+            </Group>
+
+
+
         <Group visibleFrom="xs">
           {items}
+
+
+
+
+
           <Button
             key="signin"
             onClick={() => router.push('/auth/signin')}
