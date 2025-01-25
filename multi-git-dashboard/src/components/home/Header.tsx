@@ -23,7 +23,7 @@ const Header: React.FC = () => {
   const theme = useMantineTheme();
 
   const links: { link: string; label: string }[] = [];
-  
+
   const items = links.map(link => (
     <Button
       key={link.link}
@@ -35,7 +35,7 @@ const Header: React.FC = () => {
     </Button>
   ));
 
-  
+
 
   return (
     <header className={classes.header}>
@@ -46,10 +46,10 @@ const Header: React.FC = () => {
         </Group>
 
         <Group h="100%" gap={0} visibleFrom="sm">
-            <a href="http://localhost:3002/" className={classes.link}>
-              Home
-            </a>
-            {/* <HoverCard width={600} position="bottom" radius="md" shadow="md" withinPortal>
+          <a href="http://localhost:3002/" className={classes.link}>
+            Home
+          </a>
+          {/* <HoverCard width={600} position="bottom" radius="md" shadow="md" withinPortal>
               <HoverCard.Target>
                 <a href="#" className={classes.link}>
                   <Center inline>
@@ -90,14 +90,14 @@ const Header: React.FC = () => {
                 </div>
               </HoverCard.Dropdown>
             </HoverCard> */}
-            <a href="#" className={classes.link}>
-              Learn
-            </a>
-            <a href="#" className={classes.link}>
-              Academy
-            </a>
+          <a href="#" className={classes.link}>
+            Learn
+          </a>
+          <a href="#" className={classes.link}>
+            Academy
+          </a>
 
-            </Group>
+        </Group>
 
 
 

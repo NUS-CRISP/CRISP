@@ -2,6 +2,7 @@ import { Carousel } from '@mantine/carousel';
 import {
   Button,
   Grid,
+  SimpleGrid,
   Stack,
   Text,
   ThemeIcon,
@@ -24,25 +25,25 @@ const features = [
     icon: IconBrandGithub,
     title: 'Free and Open Source',
     description:
-      'CRISP is entirely free and open source. Visit our GitHub repository to explore, contribute, or customize it to your needs. We welcome all kinds of contributions and feedback!',
+      'CRISP is entirely free and open source. Visit our GitHub repository to explore, contribute, or customize it.',
   },
   {
     icon: IconFileText,
     title: 'Comprehensive Documentation',
     description:
-      'Get up and running with CRISP quickly, thanks to our detailed documentation. From setup to advanced customization, find all the guidance you need to make the most out of CRISP.',
+      'Get up and running with CRISP quickly, thanks to our detailed documentation.',
   },
   {
     icon: IconLayout,
     title: 'User-Friendly Interface',
     description:
-      "CRISP features a clean, intuitive interface designed for efficiency and ease of use. Whether you're a novice or a seasoned expert, navigating through the software is a breeze.",
+      "CRISP features a clean, intuitive interface designed for efficiency and ease of use. ",
   },
   {
     icon: IconTools,
     title: 'High Customizability',
     description:
-      'CRISP is built to be flexible. Tailor it to your specific needs through comprehensive settings, customizable UI components, and powerful API integrations, ensuring a perfect fit for your workflow.',
+      'CRISP is built to be flexible. Tailor it to your specific needs through personal settings.',
   },
 ];
 
@@ -51,7 +52,7 @@ const Features: React.FC = () => {
   const autoplay = useRef(Autoplay({ delay: 5000 }));
 
   const items = features.map(feature => (
-    <Carousel.Slide key={feature.title}>
+    <div key={feature.title}>
       <Stack align="center">
         <ThemeIcon
           size={44}
@@ -76,7 +77,7 @@ const Features: React.FC = () => {
           {feature.description}
         </Text>
       </Stack>
-    </Carousel.Slide>
+    </div>
   ));
 
   return (
@@ -87,9 +88,9 @@ const Features: React.FC = () => {
             Features
           </Title>
           <Text className={classes.description} mt={30}>
-            {<strong>CRISP</strong>} is a multi-git classroom management
-            solution that allows educators to monitor student progress, create
-            assignments, and grade submissions all in one place.
+            {<strong>CRISP</strong>} is a web-base <strong>dashboard</strong> designed to 
+            streamline the <strong>management</strong> and <strong>assessment</strong> of 
+            large-scale software engineering modules involving multiple teams working across multiple GitHub repositories.
           </Text>
 
           <Button
@@ -103,17 +104,16 @@ const Features: React.FC = () => {
             Get started
           </Button>
         </Grid.Col>
+
         <Grid.Col span={{ base: 12, md: 7 }}>
-          <Carousel
-            plugins={[autoplay.current]}
-            onMouseEnter={autoplay.current.stop}
-            onMouseLeave={autoplay.current.reset}
-            loop
-            withControls={false}
-          >
+         
+          <SimpleGrid cols={{ base: 1, md: 2 }} spacing={30}>
             {items}
-          </Carousel>
+          </SimpleGrid> 
+          
+         
         </Grid.Col>
+
       </Grid>
     </div>
   );
