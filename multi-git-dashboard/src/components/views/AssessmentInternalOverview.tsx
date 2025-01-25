@@ -114,6 +114,7 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
 
       if (!response.ok) {
         console.error('Error fetching submissions:', response.statusText);
+        alert('Error fetching submissions');
         return;
       }
 
@@ -127,6 +128,7 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
       setSubmissions(data);
     } catch (error) {
       console.error('Error fetching submissions:', error);
+      alert('Error fetching submissions');
     }
   }, [assessment, hasFacultyPermission]);
 
@@ -149,6 +151,7 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
       );
       if (!response.ok) {
         console.error('Error fetching assigned entities:', response.statusText);
+        alert('Error grading assignments');
         return;
       }
       const data = await response.json();
@@ -161,6 +164,7 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
       }
     } catch (error) {
       console.error('Error fetching assigned entities:', error);
+      alert('Error fetching grading assignments');
     }
   }, [assessment]);
 

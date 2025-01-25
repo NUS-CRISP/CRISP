@@ -5,13 +5,30 @@ import {
   Button,
   Group,
   Checkbox,
-  ActionIcon,
+  Tooltip,
   Text,
   Slider,
-  Tooltip,
+  ActionIcon,
 } from '@mantine/core';
 import { IconTrash, IconPlus, IconHelpCircle } from '@tabler/icons-react';
 import { ScaleQuestion, ScaleLabel } from '@shared/types/Question';
+
+// Styles for your custom label row
+const scaleQuestionStyles = {
+  labelContainer: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    marginTop: 16, // space above the label row
+  },
+  labelItem: {
+    width: 60,
+    textAlign: 'center',
+    whiteSpace: 'normal',
+    wordWrap: 'break-word',
+    fontSize: 14,
+    lineHeight: 1.2,
+  },
+};
 
 interface ScaleQuestionEditProps {
   questionData: ScaleQuestion;
@@ -121,6 +138,18 @@ const ScaleQuestionEdit: React.FC<ScaleQuestionEditProps> = ({
       isScored,
     });
   };
+
+  // Gather all labels for the preview
+  const allLabels = [
+    { value: minLabel.value, label: minLabel.label },
+    ...intermediateLabels
+      .sort((a, b) => a.value - b.value)
+      .map(label => ({
+        value: label.value,
+        label: label.label,
+      })),
+    { value: maxLabel.value, label: maxLabel.label },
+  ];
 
   return (
     <Box mb="md">
@@ -307,24 +336,35 @@ const ScaleQuestionEdit: React.FC<ScaleQuestionEditProps> = ({
         <Text style={{ fontWeight: 'bold', marginBottom: '8px' }}>
           Preview:
         </Text>
+
+        {/* Slider with empty labels (to show only marks) */}
         <Slider
           value={scaleValue}
           min={scaleMin}
           max={scaleMax}
-          marks={[
-            { value: minLabel.value, label: minLabel.label },
-            ...intermediateLabels
-              .sort((a, b) => a.value - b.value)
-              .map(label => ({
-                value: label.value,
-                label: label.label,
-              })),
-            { value: maxLabel.value, label: maxLabel.label },
-          ]}
+          marks={
+            // We show marks, but label them as empty
+            allLabels.map(item => ({
+              value: item.value,
+              label: '',
+            }))
+          }
           step={1}
           onChange={setScaleValue}
           style={{ padding: '0 20px', marginBottom: '20px' }}
         />
+
+        {/* Our custom label row */}
+        <div style={scaleQuestionStyles.labelContainer as React.CSSProperties}>
+          {allLabels.map(item => (
+            <div
+              key={item.value}
+              style={scaleQuestionStyles.labelItem as React.CSSProperties}
+            >
+              {item.label}
+            </div>
+          ))}
+        </div>
       </Box>
 
       <Group mt="md">

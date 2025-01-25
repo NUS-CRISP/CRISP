@@ -474,12 +474,14 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
       );
       if (!response.ok) {
         console.error('Error releasing form:', response.statusText);
+        alert('Error releasing form');
         return;
       }
       await response.json();
       setIsReleaseModalOpen(false);
     } catch (error) {
       console.error('Error releasing form:', error);
+      alert('Error releasing form');
     } finally {
       onAssessmentUpdated();
     }
@@ -498,6 +500,7 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
       );
       if (!recallResponse.ok) {
         console.error('Error recalling form:', recallResponse.statusText);
+        alert('Error recalling form');
         return;
       }
       await recallResponse.json();
@@ -513,9 +516,10 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
         );
         if (!deleteResponse.ok) {
           console.error(
-            'Error soft deleting submissions:',
+            'Error deleting submissions:',
             deleteResponse.statusText
           );
+          alert('Error deleting submissions');
           return;
         }
         const deleteResult = await deleteResponse.json();
@@ -525,6 +529,7 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
       setIsRecallModalOpen(false);
     } catch (error) {
       console.error('Error recalling form:', error);
+      alert('Error recalling form');
     } finally {
       onAssessmentUpdated();
     }
