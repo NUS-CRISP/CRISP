@@ -1096,7 +1096,7 @@ export const releaseInternalAssessmentById = async (
   }
 
   updatedAssessment.releaseNumber++;
-  updatedAssessment.save();
+  await updatedAssessment.save();
 
   return updatedAssessment;
 };
