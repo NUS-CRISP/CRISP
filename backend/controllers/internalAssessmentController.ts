@@ -34,6 +34,8 @@ import {
  */
 export const getInternalAssessment = async (req: Request, res: Response) => {
   try {
+    // Disable caching
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     const accountId = await getAccountId(req);
     const { assessmentId } = req.params;
     const assessment = await getInternalAssessmentById(assessmentId, accountId);
