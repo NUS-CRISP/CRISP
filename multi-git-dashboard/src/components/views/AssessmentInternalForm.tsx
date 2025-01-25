@@ -477,9 +477,10 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
         return;
       }
       setIsReleaseModalOpen(false);
-      onAssessmentUpdated();
     } catch (error) {
       console.error('Error releasing form:', error);
+    } finally {
+      onAssessmentUpdated();
     }
   };
 
@@ -520,9 +521,10 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
       }
 
       setIsRecallModalOpen(false);
-      onAssessmentUpdated();
     } catch (error) {
       console.error('Error recalling form:', error);
+    } finally {
+      onAssessmentUpdated();
     }
   };
 
