@@ -468,7 +468,7 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
       const response = await fetch(
         `/api/internal-assessments/${assessment._id}/release`,
         {
-          method: 'POST',
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
         }
       );
@@ -476,6 +476,7 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
         console.error('Error releasing form:', response.statusText);
         return;
       }
+      await response.json();
       setIsReleaseModalOpen(false);
     } catch (error) {
       console.error('Error releasing form:', error);
@@ -491,7 +492,7 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
       const recallResponse = await fetch(
         `/api/internal-assessments/${assessment._id}/recall`,
         {
-          method: 'POST',
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
         }
       );
@@ -499,6 +500,7 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
         console.error('Error recalling form:', recallResponse.statusText);
         return;
       }
+      await recallResponse.json();
 
       // 2) Optionally delete existing submissions
       if (deleteSubmissions) {
