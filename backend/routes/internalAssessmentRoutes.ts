@@ -40,8 +40,8 @@ router.delete(
   '/:assessmentId/questions/:questionId',
   deleteQuestionByIdController
 );
-router.post('/:assessmentId/release', releaseInternalAssessment);
-router.post('/:assessmentId/recall', recallInternalAssessment);
+router.patch('/:assessmentId/release', releaseInternalAssessment);
+router.patch('/:assessmentId/recall', recallInternalAssessment);
 router.post('/:assessmentId/submit', submitAssessment);
 router.get('/:assessmentId/submissions', getUserSubmissions);
 router.get('/:assessmentId/all-submissions', getAllSubmissions);
