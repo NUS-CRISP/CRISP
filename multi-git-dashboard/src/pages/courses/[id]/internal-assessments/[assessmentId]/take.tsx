@@ -119,12 +119,14 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
       });
       if (!response.ok) {
         console.error('Error fetching assessment:', response.statusText);
+        alert('Error fetching assessment: ' + response.statusText);
         return;
       }
       const data: InternalAssessment = await response.json();
       setAssessment(data);
     } catch (error) {
       console.error('Error fetching assessment:', error);
+      alert('Error fetching assessment: ' + error);
     }
   }, [assessmentApiRoute, assessment]);
 
@@ -138,12 +140,14 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
       });
       if (!response.ok) {
         console.error('Error fetching questions:', response.statusText);
+        alert('Error fetching questions: ' + response.statusText);
         return;
       }
       const data: Question[] = await response.json();
       setQuestions(data);
     } catch (error) {
       console.error('Error fetching questions:', error);
+      alert('Error fetching questions: ' + error);
     }
   }, [questionsApiRoute]);
 
@@ -179,6 +183,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
       }
     } catch (error) {
       console.error('Error fetching team members:', error);
+      alert('Error fetching team members: ' + error);
     }
   }, [id, isFaculty]);
 
@@ -199,6 +204,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
       );
       if (!response.ok) {
         console.error('Error fetching assigned entities:', response.statusText);
+        alert('Error fetching assigned entities: ' + response.statusText);
         return;
       }
       const data = await response.json();
@@ -224,6 +230,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
       }
     } catch (error) {
       console.error('Error fetching assigned entities:', error);
+      alert('Error fetching assigned entities: ' + error);
     }
   }, [assessment, assessmentId]);
 
@@ -265,7 +272,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         }),
       });
     } catch (error: any) {
-      // Handle errors appropriately
       if (error.response && error.response.data && error.response.data.error) {
         throw new Error(error.response.data.error);
       }
@@ -292,14 +298,10 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
   }, [assessment, fetchQuestions, fetchAssignedEntities, fetchTeamMembers]);
 
   useEffect(() => {
-    if (
-      submission &&
-      submission.answers // Removed checks as a temporary fix
-    ) {
+    if (submission && submission.answers) {
       // Initialize answers from existing submission
       const initialAnswers = submission.answers.reduce(
         (acc, answer) => {
-          // Extract the question ID correctly
           const questionId =
             typeof answer.question === 'string'
               ? answer.question
@@ -324,7 +326,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
     switch (answer.type) {
       case 'Team Member Selection Answer':
         if (assessment?.granularity === 'team') {
-          // Find team IDs that contain the selectedUserIds
           const userIds = answer.selectedUserIds;
           const teamIds = teamOptions
             .filter(team =>
@@ -333,7 +334,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
             .map(team => team.value);
           return teamIds;
         } else {
-          // Individual granularity
           return answer.selectedUserIds;
         }
       case 'Multiple Response Answer':
@@ -370,29 +370,23 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
     if (answer === undefined || answer === null) {
       return true;
     }
-
     if (typeof answer === 'string') {
       return answer.trim() === '';
     }
-
     if (typeof answer === 'number') {
       return false;
     }
-
     if (answer instanceof Date) {
       return isNaN(answer.getTime());
     }
-
     if (Array.isArray(answer)) {
-      const arrayAnswer = answer as any[]; // npm run build needs this to be any to compile
+      const arrayAnswer = answer as any[];
       if (arrayAnswer.length === 0) {
         return true;
       }
-
       if (arrayAnswer.every(item => typeof item === 'string')) {
         return arrayAnswer.every(item => item.trim() === '');
       }
-
       if (arrayAnswer.every(item => item instanceof Date)) {
         return arrayAnswer.every(
           item =>
@@ -401,10 +395,8 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
             isNaN(new Date(item).getTime())
         );
       }
-
       return false;
     }
-
     return false;
   };
 
@@ -441,7 +433,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
     switch (question.type) {
       case 'Team Member Selection':
         if (assessment?.granularity === 'team') {
-          // Map team IDs to member IDs
           const selectedTeamIds = answer as string[];
           const memberIds = selectedTeamIds.flatMap(teamId => {
             const team = teamOptions.find(t => t.value === teamId);
@@ -480,7 +471,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      // Prepare the answers in the format expected by the backend
       const formattedAnswers = Object.entries(answers)
         .map(([questionId, answer]) => {
           const question = questions.find(q => q._id === questionId);
@@ -514,6 +504,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
 
       if (!response.ok) {
         console.error('Error submitting assessment:', response.statusText);
+        alert('Error submitting assessment: ' + response.statusText);
         setIsSubmitting(false);
         return;
       }
@@ -530,6 +521,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
       router.back();
     } catch (error) {
       console.error('Error submitting assessment:', error);
+      alert('Error submitting assessment: ' + error);
       setIsSubmitting(false);
     }
   };
@@ -545,7 +537,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
 
   const handleSaveDraft = async () => {
     try {
-      // Prepare the answers in the format expected by the backend
       const formattedAnswers = Object.entries(answers)
         .map(([questionId, answer]) => {
           const question = questions.find(q => q._id === questionId);
@@ -578,6 +569,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
 
       if (!response.ok) {
         console.error('Error saving draft:', response.statusText);
+        alert('Error saving draft: ' + response.statusText);
         return;
       }
 
@@ -591,11 +583,11 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
       });
     } catch (error) {
       console.error('Error saving draft:', error);
+      alert('Error saving draft: ' + error);
     }
   };
 
   const handleDeleteDraft = () => {
-    // Open the confirmation modal
     setShowDeleteDraftModal(true);
   };
 
@@ -622,7 +614,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         return;
       }
 
-      // Update state
       setSubmission(undefined);
       setAnswers({});
       setShowDeleteDraftModal(false);
@@ -676,7 +667,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
       case 'Team Member Selection':
         if (Array.isArray(answer)) {
           if (assessment?.granularity === 'team') {
-            // answer contains team IDs
             const selectedTeams = answer as string[];
             const selectedTeamDetails = selectedTeams.map(teamId => {
               const team = teamOptions.find(option => option.value === teamId);
@@ -691,7 +681,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
             });
             return selectedTeamDetails.join('; ');
           } else if (assessment?.granularity === 'individual') {
-            // answer contains user IDs
             const selectedMembers = answer as string[];
             const selectedNames = selectedMembers
               .map(
@@ -837,7 +826,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         </Group>
       )}
 
-      {/* Faculty Panel with Total Score and Adjust Score Button */}
       {isFaculty && submission && (
         <Paper shadow="sm" p="md" mt="xl" withBorder>
           <Group justify="flex-end" align="center" mb="md">
@@ -848,7 +836,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
           </Group>
           <Divider mb="md" />
           <Group justify="flex-end" mb="md">
-            {/* Display adjusted score if it exists */}
             {submission.adjustedScore !== undefined ? (
               <>
                 <Text>Adjusted Score:</Text>
@@ -857,7 +844,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
                 <Text>{submission.score}</Text>
               </>
             ) : (
-              // Display only original score if no adjusted score exists
               <>
                 <Text>Total Score:</Text>
                 <Text>{submission.score}</Text>
@@ -874,7 +860,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         </Paper>
       )}
 
-      {/* Adjust Score Modal */}
       <Modal
         opened={showAdjustScoreModal}
         onClose={() => setShowAdjustScoreModal(false)}
@@ -886,7 +871,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
           value={newAdjustedScore}
           onChange={value => setNewAdjustedScore(value as number | undefined)}
           min={0}
-          max={submission ? submission.score + 100 : undefined} // Example: allow up to original score + 100
+          max={submission ? submission.score + 100 : undefined}
           required
         />
         <Group justify="flex-end" mt="md">
@@ -902,7 +887,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         </Group>
       </Modal>
 
-      {/* Summary Modal */}
       <Modal
         opened={showSummaryModal}
         onClose={() => setShowSummaryModal(false)}
@@ -934,7 +918,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         </Group>
       </Modal>
 
-      {/* Confirmation Modal */}
       <Modal
         opened={showConfirmationModal}
         onClose={() => setShowConfirmationModal(false)}
@@ -942,7 +925,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         size="lg"
       >
         <ScrollArea style={{ height: '60vh' }}>
-          {/* Display a summary of the user's responses */}
           {questions.map((question, index) => (
             <div key={question._id} style={{ marginBottom: '1rem' }}>
               <Text>
@@ -973,7 +955,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         </Group>
       </Modal>
 
-      {/* Error Modal */}
       <Modal
         opened={showErrorModal}
         onClose={() => setShowErrorModal(false)}
@@ -992,7 +973,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         </Button>
       </Modal>
 
-      {/* Back Confirmation Modal */}
       <Modal
         opened={showBackModal}
         onClose={() => setShowBackModal(false)}
@@ -1012,7 +992,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         </Group>
       </Modal>
 
-      {/* Delete Draft Confirmation Modal */}
       <Modal
         opened={showDeleteDraftModal}
         onClose={() => setShowDeleteDraftModal(false)}

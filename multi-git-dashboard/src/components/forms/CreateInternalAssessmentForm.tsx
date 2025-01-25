@@ -57,10 +57,10 @@ const CreateInternalForm: React.FC<CreateInternalFormProps> = ({
       if (response.ok) {
         onAssessmentCreated();
       } else {
-        console.error('Error creating internal assessment');
+        alert('Error creating internal assessment');
       }
     } catch (error) {
-      console.error('Error creating internal assessment', error);
+      alert('Something went wrong when creating internal assessment');
     }
   };
 

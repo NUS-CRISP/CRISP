@@ -61,6 +61,7 @@ const InternalAssessmentDetail: React.FC = () => {
               'Error fetching teams from fallback:',
               fallbackResponse.statusText
             );
+            alert('Failed to load team data. Please try again.');
             return;
           }
           const teams: Team[] = await fallbackResponse.json();
@@ -102,6 +103,7 @@ const InternalAssessmentDetail: React.FC = () => {
               'Error fetching teams from fallback:',
               fallbackResponse.statusText
             );
+            alert('Failed to load individual assignments. Please try again.');
             return;
           }
           const teams: Team[] = await fallbackResponse.json();
@@ -129,6 +131,7 @@ const InternalAssessmentDetail: React.FC = () => {
       }
     } catch (error) {
       console.error('Error fetching teams or users:', error);
+      alert('An error occurred while fetching team or user data.');
     }
   }, [assessment, assessmentId, id]);
 
@@ -142,12 +145,14 @@ const InternalAssessmentDetail: React.FC = () => {
       });
       if (!response.ok) {
         console.error('Error fetching assessment:', response.statusText);
+        alert('Failed to load assessment data. Please try again.');
         return;
       }
       const data: InternalAssessment = await response.json();
       setAssessment(data);
     } catch (error) {
       console.error('Error fetching assessment:', error);
+      alert('An error occurred while fetching the assessment.');
     }
   }, [assessmentsApiRoute]);
 
@@ -161,12 +166,14 @@ const InternalAssessmentDetail: React.FC = () => {
       });
       if (!response.ok) {
         console.error('Error fetching questions:', response.statusText);
+        alert('Failed to load questions. Please try again.');
         return;
       }
       const data: Question[] = await response.json();
       setQuestions(data);
     } catch (error) {
       console.error('Error fetching questions:', error);
+      alert('An error occurred while fetching questions.');
     }
   }, [questionsApiRoute]);
 
@@ -180,12 +187,14 @@ const InternalAssessmentDetail: React.FC = () => {
       });
       if (!response.ok) {
         console.error('Error fetching Teaching Team:', response.statusText);
+        alert('Failed to load teaching team data. Please try again.');
         return;
       }
       const data: User[] = await response.json();
       setTeachingTeam(data);
     } catch (error) {
       console.error('Error fetching Teaching Team:', error);
+      alert('An error occurred while fetching teaching team data.');
     }
   }, [teachingTeamApiRoute]);
 
@@ -202,12 +211,14 @@ const InternalAssessmentDetail: React.FC = () => {
           'Error fetching assessment results:',
           response.statusText
         );
+        alert('Failed to load assessment results. Please try again.');
         return;
       }
       const data: AssessmentResult[] = (await response.json()).data;
       setAssessmentResults(data);
     } catch (error) {
       console.error('Error fetching assessment results:', error);
+      alert('An error occurred while fetching assessment results.');
     }
   }, [assessmentId]);
 
