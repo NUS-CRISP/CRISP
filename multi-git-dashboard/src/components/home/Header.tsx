@@ -41,8 +41,10 @@ const Header: React.FC = () => {
     <header className={classes.header}>
       <Container size="lg" className={classes.headerInner}>
         <Group>
-          <IconGitBranch size={28} className={classes.headerIcon} />
-          CRISP
+          <IconGitBranch size={40} className={classes.headerIcon} />
+          <a href="#" className={classes.link}>
+            CRISP
+          </a>
         </Group>
 
         <Group h="100%" gap={0} visibleFrom="sm">
@@ -91,10 +93,10 @@ const Header: React.FC = () => {
               </HoverCard.Dropdown>
             </HoverCard> */}
           <a href="#" className={classes.link}>
-            Learn
+            Code
           </a>
           <a href="#" className={classes.link}>
-            Academy
+            Contributor
           </a>
 
         </Group>
@@ -112,7 +114,7 @@ const Header: React.FC = () => {
             key="signin"
             onClick={() => router.push('/auth/signin')}
             color={theme.colors.blue[9]}
-            autoContrast
+           size={'sm'}
           >
             Sign in
           </Button>
