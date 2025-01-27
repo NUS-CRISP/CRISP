@@ -229,6 +229,11 @@ export const getQuestionsByAssessmentIdController = async (
   res: Response
 ) => {
   try {
+    // Disable caching
+    res.setHeader(
+      'Cache-Control',
+      'no-store, no-cache, must-revalidate, proxy-revalidate'
+    );
     const accountId = await getAccountId(req);
     const { assessmentId } = req.params;
 
