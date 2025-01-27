@@ -15,11 +15,13 @@ import UserModel from '../../models/User';
 import {
   addFacultyToCourse,
   addMilestoneToCourse,
+  addRepositoriesToCourse,
   addSprintToCourse,
   addStudentsToCourse,
   addTAsToCourse,
   createNewCourse,
   deleteCourseById,
+  editRepository,
   getAssessmentsFromCourse,
   getCourseById,
   getCourseCodeById,
@@ -27,11 +29,14 @@ import {
   getCourseTeachingTeam,
   getCourseTimeline,
   getCoursesForUser,
+  getInternalAssessmentsFromCourse,
   getPeopleFromCourse,
   getProjectManagementBoardFromCourse,
+  getRepositoriesFromCourse,
   getTeamSetNamesFromCourse,
   getTeamSetsFromCourse,
   removeFacultyFromCourse,
+  removeRepositoryFromCourse,
   removeStudentsFromCourse,
   removeTAsFromCourse,
   updateCourseById,
@@ -40,12 +45,13 @@ import {
   updateTAsInCourse,
 } from '../../services/courseService';
 import { NotFoundError } from '../../services/errors';
+import InternalAssessmentModel from '@models/InternalAssessment';
 
 let mongo: MongoMemoryServer;
 
 beforeAll(async () => {
   mongo = await MongoMemoryServer.create();
-  const mongoUri = mongo.getUri();
+  const mongoUri = await mongo.getUri();
   await mongoose.connect(mongoUri);
 });
 
@@ -158,6 +164,21 @@ async function createFacultyUser(userData: any) {
   await account.save();
 
   return { user, account };
+}
+
+async function createInternalAssessment(courseId: string, assessmentData: any) {
+  const assessment = new InternalAssessmentModel({
+    ...assessmentData,
+    course: courseId,
+  });
+  await assessment.save();
+  // Add the assessment to the course's internalAssessments array
+  const course = await CourseModel.findById(courseId);
+  if (course) {
+    course.internalAssessments.push(assessment._id);
+    await course.save();
+  }
+  return assessment;
 }
 
 describe('courseService', () => {
@@ -922,6 +943,177 @@ describe('courseService', () => {
     });
   });
 
+  describe('getRepositoriesFromCourse', () => {
+    it('should get repositories from a course', async () => {
+      const course = await CourseModel.findOne({ _id: courseId });
+      if (!course) {
+        throw new Error('Course not found');
+      }
+
+      const repo1 = 'https://github.com/org/repo1';
+      const repo2 = 'https://github.com/org/repo2';
+
+      // Add repository links to the course
+      course.gitHubRepoLinks.push(repo1);
+      course.gitHubRepoLinks.push(repo2);
+      await course.save();
+
+      const repositories = await getRepositoriesFromCourse(courseId);
+
+      // Ensure repositories are returned correctly
+      expect(repositories).toBeDefined();
+      expect(repositories.repositories.length).toBe(2);
+      expect(repositories.repositories).toContain(repo1);
+      expect(repositories.repositories).toContain(repo2);
+    });
+
+    it('should throw NotFoundError for invalid courseId', async () => {
+      const invalidCourseId = new mongoose.Types.ObjectId().toString();
+
+      // Ensure the function throws NotFoundError if course is not found
+      await expect(getRepositoriesFromCourse(invalidCourseId)).rejects.toThrow(
+        NotFoundError
+      );
+    });
+  });
+
+  describe('addRepositoriesToCourse', () => {
+    const repo1 = 'https://github.com/org/repo1';
+    const repo2 = 'https://github.com/org/repo2';
+
+    it('should add repositories to a course', async () => {
+      const repositories = [
+        { gitHubRepoLink: repo1 },
+        { gitHubRepoLink: repo2 },
+      ];
+
+      await addRepositoriesToCourse(courseId, repositories);
+
+      const updatedCourse = await CourseModel.findById(courseId);
+      expect(updatedCourse?.gitHubRepoLinks).toContain(repo1);
+      expect(updatedCourse?.gitHubRepoLinks).toContain(repo2);
+    });
+
+    it('should throw NotFoundError for invalid courseId', async () => {
+      const invalidCourseId = new mongoose.Types.ObjectId().toString();
+      const repositories = [{ gitHubRepoLink: repo1 }];
+
+      await expect(
+        addRepositoriesToCourse(invalidCourseId, repositories)
+      ).rejects.toThrow(NotFoundError);
+    });
+  });
+
+  describe('editRepository', () => {
+    const initialRepoLink = 'https://github.com/org/repo1';
+    const updatedRepoLink = 'https://github.com/org/repo1-updated';
+    const invalidRepoLink = 123; // To test invalid repo format
+
+    beforeEach(async () => {
+      // Find the course by ID
+      const course = await CourseModel.findById(courseId);
+
+      if (!course) {
+        throw new NotFoundError('Course not found');
+      }
+
+      // Add a repository directly to the course
+      course.gitHubRepoLinks.push(initialRepoLink);
+
+      // Save the updated course
+      await course.save();
+    });
+
+    it('should update a repository in a course', async () => {
+      const repositoryIndex = 0; // Assuming the repo added above is at index 0
+      const updateData = { repoLink: updatedRepoLink };
+
+      await editRepository(courseId, repositoryIndex, updateData);
+
+      const updatedCourse = await CourseModel.findById(courseId);
+      expect(updatedCourse?.gitHubRepoLinks[repositoryIndex]).toBe(
+        updatedRepoLink
+      );
+    });
+
+    it('should throw NotFoundError for invalid courseId', async () => {
+      const invalidCourseId = new mongoose.Types.ObjectId().toString();
+      const repositoryIndex = 0;
+      const updateData = { repoLink: updatedRepoLink };
+
+      await expect(
+        editRepository(invalidCourseId, repositoryIndex, updateData)
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should throw NotFoundError for invalid repositoryIndex', async () => {
+      const invalidRepositoryIndex = 999; // Out of bounds
+      const updateData = { repoLink: updatedRepoLink };
+
+      await expect(
+        editRepository(courseId, invalidRepositoryIndex, updateData)
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should throw an error for invalid repository link format', async () => {
+      const repositoryIndex = 0; // Valid repository index
+      const updateData = { repoLink: invalidRepoLink }; // Invalid repoLink format
+
+      await expect(
+        editRepository(courseId, repositoryIndex, updateData)
+      ).rejects.toThrow('Invalid repository link format');
+
+      // Ensure the repository was not updated
+      const course = await CourseModel.findById(courseId);
+      expect(course?.gitHubRepoLinks[repositoryIndex]).toBe(initialRepoLink);
+    });
+  });
+
+  describe('removeRepositoryFromCourse', () => {
+    const initialRepoLink = 'https://github.com/org/repo1';
+
+    beforeEach(async () => {
+      // Find the course by ID
+      const course = await CourseModel.findById(courseId);
+
+      if (!course) {
+        throw new NotFoundError('Course not found');
+      }
+
+      // Add a repository directly to the course
+      course.gitHubRepoLinks.push(initialRepoLink);
+
+      // Save the updated course
+      await course.save();
+    });
+
+    it('should remove a repository from a course', async () => {
+      const repositoryIndex = 0; // Assuming the repo added above is at index 0
+
+      await removeRepositoryFromCourse(courseId, repositoryIndex);
+
+      const updatedCourse = await CourseModel.findById(courseId);
+      expect(updatedCourse?.gitHubRepoLinks.length).toBe(0);
+    });
+
+    it('should throw NotFoundError for invalid courseId', async () => {
+      const invalidCourseId = new mongoose.Types.ObjectId().toString();
+      const repositoryIndex = 0; // Valid index
+
+      await expect(
+        removeRepositoryFromCourse(invalidCourseId, repositoryIndex)
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should throw NotFoundError for invalid repositoryIndex', async () => {
+      const invalidRepositoryIndex = 999; // Out of bounds
+
+      await expect(
+        removeRepositoryFromCourse(courseId, invalidRepositoryIndex)
+      ).rejects.toThrow(NotFoundError);
+    });
+  });
+
   describe('getTeamSetsFromCourse', () => {
     it('should get team sets from a course', async () => {
       const course = await CourseModel.findOne({ _id: courseId });
@@ -1110,6 +1302,70 @@ describe('courseService', () => {
       expect(getAssessmentsFromCourse(invalidCourseId)).rejects.toThrow(
         NotFoundError
       );
+    });
+  });
+  describe('getInternalAssessmentsFromCourse', () => {
+    it('should retrieve internal assessments for a valid course', async () => {
+      // Create internal assessments
+      const internalAssessmentData1 = {
+        description: 'Description for Internal Assessment 1',
+        maximumMarks: 100,
+        isReleased: true,
+        areSubmissionsEditable: true,
+        granularity: 'team',
+        startDate: new Date('2000-01-01'),
+        assessmentName: 'Internal Assessment 1',
+      };
+
+      const internalAssessmentData2 = {
+        description: 'Description for Internal Assessment 2',
+        maximumMarks: 100,
+        isReleased: true,
+        areSubmissionsEditable: true,
+        granularity: 'team',
+        startDate: new Date('2000-01-01'),
+        assessmentName: 'Internal Assessment 2',
+      };
+
+      await createInternalAssessment(courseId, internalAssessmentData1);
+      await createInternalAssessment(courseId, internalAssessmentData2);
+
+      // Invoke the service function
+      const assessments = await getInternalAssessmentsFromCourse(courseId);
+
+      // Assertions
+      expect(assessments).toBeDefined();
+      expect(assessments.length).toBe(2);
+      const titles = assessments.map((a: any) => a.assessmentName);
+      expect(titles).toContain(internalAssessmentData1.assessmentName);
+      expect(titles).toContain(internalAssessmentData2.assessmentName);
+    });
+
+    it('should return an empty array if the course has no internal assessments', async () => {
+      // Create a new course without internal assessments
+      const newCourseData = {
+        name: 'Data Structures',
+        code: 'CS201',
+        semester: 'Spring 2025',
+        startDate: new Date('2025-01-10'),
+        courseType: 'Normal',
+      };
+      const newCourse = await createTestCourse(newCourseData);
+      const newCourseId = newCourse._id.toString();
+
+      // Invoke the service function
+      const assessments = await getInternalAssessmentsFromCourse(newCourseId);
+
+      // Assertions
+      expect(assessments).toBeDefined();
+      expect(assessments.length).toBe(0);
+    });
+
+    it('should throw NotFoundError for an invalid course ID', async () => {
+      const invalidCourseId = new mongoose.Types.ObjectId().toString();
+      await expect(
+        getInternalAssessmentsFromCourse(invalidCourseId)
+      ).rejects.toThrow(NotFoundError);
     });
   });
 

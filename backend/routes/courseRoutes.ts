@@ -29,7 +29,14 @@ import {
   updateTAs,
   getProjectManagementBoard,
   getCourseJiraRegistrationStatus,
+  addInternalAssessments,
+  getInternalAssessments,
+  getRepositories,
+  addRepositories,
+  removeRepository,
+  updateRepository,
 } from '../controllers/courseController';
+
 import { noCache } from '../middleware/noCache';
 
 const router = express.Router();
@@ -51,6 +58,10 @@ router.post('/:id/tas', addTAs);
 router.patch('/:id/tas', updateTAs);
 router.delete('/:id/tas/:userId', removeTAs);
 router.get('/:id/people', getPeople);
+router.get('/:id/repositories', getRepositories);
+router.post('/:id/repositories', addRepositories);
+router.patch('/:id/repositories/:repositoryIndex', updateRepository);
+router.delete('/:id/repositories/:repositoryIndex', removeRepository);
 router.get('/:id/teamsets', getTeamSets);
 router.post('/:id/teamsets', addTeamSet);
 router.get('/:id/teamsets/names', getTeamSetsNames);
@@ -63,5 +74,7 @@ router.post('/:id/sprints', addSprint);
 router.post('/:id/assessments', addAssessments);
 router.get('/:id/project-management', getProjectManagementBoard);
 router.get('/:id/jira-registration-status', getCourseJiraRegistrationStatus);
+router.get('/:id/internal-assessments', getInternalAssessments);
+router.post('/:id/internal-assessments', addInternalAssessments);
 
 export default router;

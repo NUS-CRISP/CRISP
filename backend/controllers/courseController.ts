@@ -3,11 +3,13 @@ import { addAssessmentsToCourse } from '../services/assessmentService';
 import {
   addFacultyToCourse,
   addMilestoneToCourse,
+  addRepositoriesToCourse,
   addSprintToCourse,
   addStudentsToCourse,
   addTAsToCourse,
   createNewCourse,
   deleteCourseById,
+  editRepository,
   getAssessmentsFromCourse,
   getCourseById,
   getCourseCodeById,
@@ -15,11 +17,14 @@ import {
   getCourseTeachingTeam,
   getCourseTimeline,
   getCoursesForUser,
+  getInternalAssessmentsFromCourse,
   getPeopleFromCourse,
   getProjectManagementBoardFromCourse,
+  getRepositoriesFromCourse,
   getTeamSetNamesFromCourse,
   getTeamSetsFromCourse,
   removeFacultyFromCourse,
+  removeRepositoryFromCourse,
   removeStudentsFromCourse,
   removeTAsFromCourse,
   updateCourseById,
@@ -35,6 +40,7 @@ import {
 import { addStudentsToTeam, addTAsToTeam } from '../services/teamService';
 import { createTeamSet } from '../services/teamSetService';
 import { getAccountId } from '../utils/auth';
+import { addInternalAssessmentsToCourse } from '../services/internalAssessmentService';
 
 /*----------------------------------------Course----------------------------------------*/
 export const createCourse = async (req: Request, res: Response) => {
@@ -323,6 +329,74 @@ export const getPeople = async (req: Request, res: Response) => {
   }
 };
 
+/*-------------------------------------Repositories-------------------------------------*/
+export const getRepositories = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  try {
+    const repositories = await getRepositoriesFromCourse(courseId);
+    res.status(200).json(repositories);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error fetching repositories:', error);
+      res.status(500).json({ error: 'Failed to retrieve repositories' });
+    }
+  }
+};
+
+export const addRepositories = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  const repositories = req.body.items;
+  try {
+    await addRepositoriesToCourse(courseId, repositories);
+    res
+      .status(200)
+      .json({ message: 'Repositories added to the course successfully' });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error adding repositories:', error);
+      res.status(500).json({ error: 'Failed to add repositories' });
+    }
+  }
+};
+
+export const updateRepository = async (req: Request, res: Response) => {
+  const { id, repositoryIndex } = req.params;
+  const updateData = req.body;
+
+  try {
+    await editRepository(id, Number(repositoryIndex), updateData);
+    res.status(200).json({ message: 'Repository updated successfully' });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error editing repository:', error);
+      res.status(500).json({ error: 'Failed to update repository' });
+    }
+  }
+};
+
+export const removeRepository = async (req: Request, res: Response) => {
+  const { id, repositoryIndex } = req.params;
+  try {
+    await removeRepositoryFromCourse(id, Number(repositoryIndex));
+    res
+      .status(200)
+      .json({ message: 'Repository removed from the course successfully' });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error removing repository:', error);
+      res.status(500).json({ error: 'Failed to remove repository' });
+    }
+  }
+};
+
 /*----------------------------------------TeamSet----------------------------------------*/
 export const addTeamSet = async (req: Request, res: Response) => {
   const courseId = req.params.id;
@@ -485,6 +559,40 @@ export const getAssessments = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   try {
     const assessments = await getAssessmentsFromCourse(courseId);
+    res.status(200).json(assessments);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error getting assessments:', error);
+      res.status(500).json({ error: 'Failed to get assessments' });
+    }
+  }
+};
+
+/*----------------------------------------Internal-Assessment----------------------------------------*/
+export const addInternalAssessments = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  const assessments = req.body.items;
+  try {
+    await addInternalAssessmentsToCourse(courseId, assessments);
+    res.status(201).json({ message: 'Assessments added successfully' });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else if (error instanceof BadRequestError) {
+      res.status(400).json({ error: error.message });
+    } else {
+      console.error('Error adding assessments:', error);
+      res.status(500).json({ error: 'Failed to add assessments' });
+    }
+  }
+};
+
+export const getInternalAssessments = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  try {
+    const assessments = await getInternalAssessmentsFromCourse(courseId);
     res.status(200).json(assessments);
   } catch (error) {
     if (error instanceof NotFoundError) {

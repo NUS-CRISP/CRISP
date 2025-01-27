@@ -4,7 +4,13 @@ import mongoose, { Schema, Types } from 'mongoose';
 export interface Course
   extends Omit<
       SharedCourse,
-      '_id' | 'faculty' | 'TAs' | 'students' | 'teamSets' | 'assessments'
+      | '_id'
+      | 'faculty'
+      | 'TAs'
+      | 'students'
+      | 'teamSets'
+      | 'assessments'
+      | 'internalAssessments'
     >,
     Document {
   _id: Types.ObjectId;
@@ -13,6 +19,7 @@ export interface Course
   students: Types.ObjectId[];
   teamSets: Types.ObjectId[];
   assessments: Types.ObjectId[];
+  internalAssessments: Types.ObjectId[];
 }
 
 export const courseSchema = new Schema<Course>({
@@ -20,11 +27,15 @@ export const courseSchema = new Schema<Course>({
   code: { type: String, required: true },
   semester: { type: String, required: true },
   startDate: { type: Date, required: true },
+  durationWeeks: { type: Number, required: false },
   faculty: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   TAs: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   students: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   teamSets: [{ type: Schema.Types.ObjectId, ref: 'TeamSet' }],
   assessments: [{ type: Schema.Types.ObjectId, ref: 'Assessment' }],
+  internalAssessments: [
+    { type: Schema.Types.ObjectId, ref: 'InternalAssessment' },
+  ],
   sprints: [
     {
       number: { type: Number, required: true },
@@ -45,7 +56,10 @@ export const courseSchema = new Schema<Course>({
     enum: ['GitHubOrg', 'Normal'],
     required: true,
   },
+  gitHubRepoLinks: [{ type: String }],
   gitHubOrgName: String,
+  repoNameFilter: String,
+  installationId: Number,
   jira: {
     isRegistered: { type: Boolean, required: true, default: false },
     cloudIds: [{ type: String }],
@@ -57,8 +71,6 @@ export const courseSchema = new Schema<Course>({
     apiKey: { type: String },
     courseId: { type: Number },
   },
-  repoNameFilter: String,
-  installationId: Number,
 });
 
 const CourseModel = mongoose.model<Course>('Course', courseSchema);

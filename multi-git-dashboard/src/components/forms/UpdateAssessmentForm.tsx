@@ -3,12 +3,12 @@ import { useForm } from '@mantine/form';
 import { Assessment } from '@shared/types/Assessment';
 import { useState } from 'react';
 
-interface UpdateUserFormProps {
+interface UpdateAssessmentFormProps {
   assessment: Assessment | null;
   onAssessmentUpdated: () => void;
 }
 
-const UpdateUserForm: React.FC<UpdateUserFormProps> = ({
+const UpdateAssessmentForm: React.FC<UpdateAssessmentFormProps> = ({
   assessment,
   onAssessmentUpdated,
 }) => {
@@ -24,11 +24,11 @@ const UpdateUserForm: React.FC<UpdateUserFormProps> = ({
       sheetTab: assessment?.sheetTab || '',
     },
   });
+
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmitForm = async () => {
     const requestBody: Record<string, string> = {};
-
     if (form.values.assessmentType) {
       requestBody.assessmentType = form.values.assessmentType;
     }
@@ -47,17 +47,27 @@ const UpdateUserForm: React.FC<UpdateUserFormProps> = ({
     if (form.values.sheetTab) {
       requestBody.sheetTab = form.values.sheetTab;
     }
-
-    const response = await fetch(apiRoute, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-    });
-
-    await response.json();
-    onAssessmentUpdated();
+    try {
+      const response = await fetch(apiRoute, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+      await response.json();
+      onAssessmentUpdated();
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError(String(error));
+      }
+    }
   };
 
   return (
@@ -69,56 +79,36 @@ const UpdateUserForm: React.FC<UpdateUserFormProps> = ({
       )}
       <form onSubmit={form.onSubmit(handleSubmitForm)}>
         <TextInput
+          withAsterisk
           label="Assessment Type"
           {...form.getInputProps('assessmentType')}
-          value={form.values.assessmentType}
-          onChange={event => {
-            form.setFieldValue('assessmentType', event.currentTarget.value);
-          }}
         />
         <TextInput
+          withAsterisk
           label="Mark Type"
           {...form.getInputProps('markType')}
-          value={form.values.markType}
-          onChange={event => {
-            form.setFieldValue('markType', event.currentTarget.value);
-          }}
         />
         <TextInput
+          withAsterisk
           label="Frequency"
           {...form.getInputProps('frequency')}
-          value={form.values.frequency}
-          onChange={event => {
-            form.setFieldValue('frequency', event.currentTarget.value);
-          }}
         />
-        <TextInput
-          label="Form Link"
-          {...form.getInputProps('formLink')}
-          value={form.values.formLink}
-          onChange={event => {
-            form.setFieldValue('formLink', event.currentTarget.value);
-          }}
-        />
-        <TextInput
-          label="Sheet ID"
-          {...form.getInputProps('sheetID')}
-          value={form.values.sheetID}
-          onChange={event => {
-            form.setFieldValue('sheetID', event.currentTarget.value);
-          }}
-        />
-        <TextInput
-          label="Sheet Tab"
-          {...form.getInputProps('sheetTab')}
-          value={form.values.sheetTab}
-          onChange={event => {
-            form.setFieldValue('sheetTab', event.currentTarget.value);
-          }}
-        />
+
+        {form.values.formLink && (
+          <>
+            <TextInput
+              withAsterisk
+              label="Form Link"
+              {...form.getInputProps('formLink')}
+            />
+            <TextInput label="Sheet ID" {...form.getInputProps('sheetID')} />
+            <TextInput label="Sheet Tab" {...form.getInputProps('sheetTab')} />
+          </>
+        )}
+
         <Group my={16}>
           <Button type="submit" style={{ marginTop: '16px' }}>
-            Update User
+            Update Assessment
           </Button>
         </Group>
       </form>
@@ -126,4 +116,4 @@ const UpdateUserForm: React.FC<UpdateUserFormProps> = ({
   );
 };
 
-export default UpdateUserForm;
+export default UpdateAssessmentForm;

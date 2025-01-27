@@ -5,6 +5,7 @@ import { getGitHubApp } from '../utils/github';
 import * as fs from 'fs';
 import * as path from 'path';
 import codeAnalysisDataModel from '../models/CodeAnalysisData';
+import { mean, median } from 'mathjs';
 
 const { exec } = require('child_process');
 
@@ -26,6 +27,7 @@ const fetchAndSaveCodeAnalysisData = async () => {
           course.installationId
         );
         await getCourseCodeData(installationOctokit, course);
+        await getMedianAndMeanCodeData(course);
       }
     })
   );
@@ -57,7 +59,7 @@ const getCourseCodeData = async (octokit: Octokit, course: any) => {
 
     await createProjectIfNotExists(gitHubOrgName + '_' + repo.name);
 
-    await getLatestCommit(gitHubOrgName, repo.name);
+    await getLatestCommit(octokit, gitHubOrgName, repo, course);
 
     await scanRepo(gitHubOrgName, repo.name, buildTool);
 
@@ -175,26 +177,42 @@ const createProjectIfNotExists = async (repo: string) => {
   }
 };
 
-const getLatestCommit = async (gitHubOrgName: string, repoName: string) => {
+const getLatestCommit = async (
+  octokit: Octokit,
+  gitHubOrgName: string,
+  repo: any,
+  course: any
+) => {
   try {
     const repoPath = path.join(
       process.env.REPO_PATH || '',
       gitHubOrgName,
-      repoName
+      repo.name
     );
 
+    const installationTokenResponse =
+      await octokit.rest.apps.createInstallationAccessToken({
+        installation_id: course.installationId,
+      });
+    const installationToken = installationTokenResponse.data.token;
+
+    const cloneUrl = `https://oauth2:${installationToken}@github.com/${gitHubOrgName}/${repo.name}.git`;
+
     if (!fs.existsSync(repoPath)) {
-      console.log(`Cloning repository ${repoName}...`);
-      await execShellCommand(
-        `git clone https://github.com/${gitHubOrgName}/${repoName}.git ${repoPath}`
-      );
+      fs.mkdirSync(repoPath, { recursive: true });
+    }
+
+    if (!fs.existsSync(path.join(repoPath, '.git'))) {
+      console.log(`Cloning repository ${repo.name}...`);
+      fs.rmSync(repoPath, { recursive: true, force: true });
+      fs.mkdirSync(repoPath, { recursive: true });
+      await execShellCommand(`git clone ${cloneUrl} ${repoPath}`);
     } else {
-      await execShellCommand(`git -C ${repoPath} pull`);
+      console.log(`Pulling repository ${repo.name}`);
+      await execShellCommand(`git -C ${repoPath} pull ${cloneUrl}`);
     }
   } catch (error) {
-    console.error(
-      `Error updating repository ${repoName}: ${(error as Error).message}`
-    );
+    console.error(`Error updating repository ${repo.name}: ${error}`);
   }
 };
 
@@ -342,6 +360,68 @@ const getAndSaveCodeData = async (gitHubOrgName: string, repo: any) => {
   } catch (error) {
     console.error(`Error fetching or saving data for: ${repo.name}`, error);
   }
+};
+
+const getMedianAndMeanCodeData = async (course: any) => {
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+
+  // 2. Get the end of today:
+  const endOfDay = new Date();
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const codeAnalysisData = await codeAnalysisDataModel.find({
+    gitHubOrgName: course.gitHubOrgName,
+    executionTime: {
+      $gte: startOfDay,
+      $lte: endOfDay,
+    },
+  });
+
+  console.log(
+    `Getting mean and median code analysis values for ${course.gitHubOrgName} - ${codeAnalysisData.length} records`
+  );
+
+  if (codeAnalysisData.length === 0) return;
+
+  const metricValues: { [key: string]: number[] } = {};
+
+  codeAnalysisData.forEach(data => {
+    data.metrics.forEach((metric, index) => {
+      if (metric === 'quality_gate_details' || metric === 'alert_status')
+        return;
+
+      if (!metricValues[metric]) {
+        metricValues[metric] = [];
+      }
+
+      const value = parseFloat(data.values[index]);
+      if (!isNaN(value)) {
+        metricValues[metric].push(value);
+      }
+    });
+  });
+
+  const metricStats: Map<string, { median: number; mean: number }> = new Map();
+
+  Object.keys(metricValues).forEach(metric => {
+    if (metricValues[metric].length === 0) {
+      metricStats.set(metric, { median: 0, mean: 0 });
+    } else {
+      const values = metricValues[metric].sort((a, b) => a - b);
+      const medianVal = median(values);
+      const meanVal = mean(values);
+
+      metricStats.set(metric, { median: medianVal, mean: meanVal });
+    }
+  });
+
+  await Promise.all(
+    codeAnalysisData.map(async data => {
+      data.metricStats = metricStats;
+      await data.save();
+    })
+  );
 };
 
 export const setupCodeAnalysisJob = () => {

@@ -1,4 +1,5 @@
 import { Assessment } from './Assessment';
+import { InternalAssessment } from './InternalAssessment';
 import { TeamSet } from './TeamSet';
 import { User } from './User';
 
@@ -29,14 +30,18 @@ export interface Course {
   code: string;
   semester: string;
   startDate: Date;
+  durationWeeks: number;
   faculty: User[];
   TAs: User[];
   students: User[];
   teamSets: TeamSet[];
   assessments: Assessment[];
+  internalAssessments: InternalAssessment[];
   sprints: Sprint[];
   milestones: Milestone[];
   courseType: CourseType;
+  // GitHub Repo for non GitHub Org
+  gitHubRepoLinks: String[]
   // start 'GitHubOrg' fields
   gitHubOrgName?: string;
   repoNameFilter?: string;

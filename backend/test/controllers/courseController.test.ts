@@ -4,7 +4,9 @@ import { Request, Response } from 'express';
 import {
   addAssessments,
   addFaculty,
+  addInternalAssessments,
   addMilestone,
+  addRepositories,
   addSprint,
   addStudents,
   addStudentsToTeams,
@@ -18,17 +20,21 @@ import {
   getCourseCode,
   getCourseJiraRegistrationStatus,
   getCourses,
+  getInternalAssessments,
   getPeople,
   getProjectManagementBoard,
+  getRepositories,
   getTeachingTeam,
   getTeamSets,
   getTeamSetsNames,
   getTimeline,
   removeFaculty,
+  removeRepository,
   removeStudents,
   removeTAs,
   updateCourse,
   updateFaculty,
+  updateRepository,
   updateStudents,
   updateTAs,
 } from '../../controllers/courseController';
@@ -42,12 +48,15 @@ import {
 import * as teamService from '../../services/teamService';
 import * as teamSetService from '../../services/teamSetService';
 import * as auth from '../../utils/auth';
+import * as internalAssessmentService from '../../services/internalAssessmentService';
+import { getInternalAssessmentsFromCourse } from '../../services/courseService';
 
 jest.mock('../../services/courseService');
 jest.mock('../../services/assessmentService');
 jest.mock('../../services/teamSetService');
 jest.mock('../../services/teamService');
 jest.mock('../../utils/auth');
+jest.mock('../../services/internalAssessmentService');
 
 const mockRequest = (body = {}, params = {}, headers = {}) => {
   const req = {} as Request;
@@ -1009,6 +1018,215 @@ describe('courseController', () => {
     });
   });
 
+  describe('getRepositories', () => {
+    it('should get repositories in a course', async () => {
+      const req = mockRequest({}, { id: 'courseId' });
+      const res = mockResponse();
+      const mockRepositories = {
+        repositories: ['repo1', 'repo2'],
+      };
+
+      jest
+        .spyOn(courseService, 'getRepositoriesFromCourse')
+        .mockResolvedValue(mockRepositories as any);
+
+      await getRepositories(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(mockRepositories);
+    });
+
+    it('should handle NotFoundError and send a 404 status', async () => {
+      const req = mockRequest({}, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'getRepositoriesFromCourse')
+        .mockRejectedValue(new NotFoundError('Course not found'));
+
+      await getRepositories(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
+    });
+
+    it('should handle errors when getting repositories', async () => {
+      const req = mockRequest({}, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'getRepositoriesFromCourse')
+        .mockRejectedValue(new Error('Failed to retrieve repositories'));
+
+      await getRepositories(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to retrieve repositories',
+      });
+    });
+  });
+
+  describe('addRepositories', () => {
+    it('should add repositories to a course', async () => {
+      const req = mockRequest(
+        { gitHubRepoLink: ['repo1', 'repo2'] },
+        { id: 'courseId' }
+      );
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'addRepositoriesToCourse')
+        .mockResolvedValue(undefined);
+
+      await addRepositories(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Repositories added to the course successfully',
+      });
+    });
+
+    it('should handle NotFoundError and send a 404 status', async () => {
+      const req = mockRequest(
+        { gitHubRepoLink: ['repo1', 'repo2'] },
+        { id: 'courseId' }
+      );
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'addRepositoriesToCourse')
+        .mockRejectedValue(new NotFoundError('Course not found'));
+
+      await addRepositories(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
+    });
+
+    it('should handle errors when adding repositories', async () => {
+      const req = mockRequest(
+        { gitHubRepoLink: ['repo1', 'repo2'] },
+        { id: 'courseId' }
+      );
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'addRepositoriesToCourse')
+        .mockRejectedValue(new Error('Error adding repositories'));
+
+      await addRepositories(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to add repositories',
+      });
+    });
+  });
+
+  describe('updateRepository', () => {
+    it('should update repository in a course', async () => {
+      const req = mockRequest(
+        { repoLink: 'repo3' },
+        { id: 'courseId', repositoryIndex: 1 }
+      );
+      const res = mockResponse();
+
+      jest.spyOn(courseService, 'editRepository').mockResolvedValue(undefined);
+
+      await updateRepository(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Repository updated successfully',
+      });
+    });
+
+    it('should handle NotFoundError and send a 404 status', async () => {
+      const req = mockRequest(
+        { repoLink: 'repo3' },
+        { id: 'courseId', repositoryIndex: 1 }
+      );
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'editRepository')
+        .mockRejectedValue(new NotFoundError('Course not found'));
+
+      await updateRepository(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
+    });
+
+    it('should handle errors when updating repository', async () => {
+      const req = mockRequest(
+        { repoLink: 'repo3' },
+        { id: 'courseId', repositoryIndex: 1 }
+      );
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'editRepository')
+        .mockRejectedValue(new Error('Error updating repository'));
+
+      await updateRepository(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to update repository',
+      });
+    });
+  });
+
+  describe('removeRepository', () => {
+    it('should remove repository from a course', async () => {
+      const req = mockRequest({ id: 'courseId', repositoryIndex: 1 });
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'removeRepositoryFromCourse')
+        .mockResolvedValue(undefined);
+
+      await removeRepository(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Repository removed from the course successfully',
+      });
+    });
+
+    it('should handle NotFoundError and send a 404 status', async () => {
+      const req = mockRequest({ id: 'courseId', repositoryIndex: 1 });
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'removeRepositoryFromCourse')
+        .mockRejectedValue(new NotFoundError('Course not found'));
+
+      await removeRepository(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
+    });
+
+    it('should handle errors when removing repository', async () => {
+      const req = mockRequest({ id: 'courseId', repositoryIndex: 1 });
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'removeRepositoryFromCourse')
+        .mockRejectedValue(new Error('Failed to remove repository'));
+
+      await removeRepository(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to remove repository',
+      });
+    });
+  });
+
   describe('addTeamSet', () => {
     it('should create a team set', async () => {
       const req = mockRequest({ name: 'TeamSet 1' }, { id: 'courseId' });
@@ -1668,6 +1886,156 @@ describe('courseController', () => {
 
       await getAssessments(req, res);
 
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to get assessments',
+      });
+    });
+  });
+  describe('addInternalAssessments', () => {
+    it('should successfully add internal assessments to a course', async () => {
+      const req = mockRequest(
+        { items: [{ title: 'Internal Assessment 1', weight: 20 }] },
+        { id: 'courseId' }
+      );
+      const res = mockResponse();
+
+      jest
+        .spyOn(internalAssessmentService, 'addInternalAssessmentsToCourse')
+        .mockResolvedValue(undefined);
+
+      await addInternalAssessments(req, res);
+
+      expect(
+        internalAssessmentService.addInternalAssessmentsToCourse
+      ).toHaveBeenCalledWith('courseId', [
+        { title: 'Internal Assessment 1', weight: 20 },
+      ]);
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Assessments added successfully',
+      });
+    });
+
+    it('should handle BadRequestError when assessments data is invalid', async () => {
+      const req = mockRequest(
+        { items: 'invalid data' }, // Invalid format
+        { id: 'courseId' }
+      );
+      const res = mockResponse();
+
+      jest
+        .spyOn(internalAssessmentService, 'addInternalAssessmentsToCourse')
+        .mockRejectedValue(
+          new BadRequestError('Invalid or empty internal assessments data')
+        );
+
+      await addInternalAssessments(req, res);
+
+      expect(
+        internalAssessmentService.addInternalAssessmentsToCourse
+      ).toHaveBeenCalledWith('courseId', 'invalid data');
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Invalid or empty internal assessments data',
+      });
+    });
+
+    it('should handle NotFoundError when course is not found', async () => {
+      const req = mockRequest(
+        { items: [{ title: 'Internal Assessment 1', weight: 20 }] },
+        { id: 'invalidCourseId' }
+      );
+      const res = mockResponse();
+
+      jest
+        .spyOn(internalAssessmentService, 'addInternalAssessmentsToCourse')
+        .mockRejectedValue(new NotFoundError('Course not found'));
+
+      await addInternalAssessments(req, res);
+
+      expect(
+        internalAssessmentService.addInternalAssessmentsToCourse
+      ).toHaveBeenCalledWith('invalidCourseId', [
+        { title: 'Internal Assessment 1', weight: 20 },
+      ]);
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
+    });
+
+    it('should handle unexpected errors and return 500', async () => {
+      const req = mockRequest(
+        { items: [{ title: 'Internal Assessment 1', weight: 20 }] },
+        { id: 'courseId' }
+      );
+      const res = mockResponse();
+
+      jest
+        .spyOn(internalAssessmentService, 'addInternalAssessmentsToCourse')
+        .mockRejectedValue(new Error('Unexpected error'));
+
+      await addInternalAssessments(req, res);
+
+      expect(
+        internalAssessmentService.addInternalAssessmentsToCourse
+      ).toHaveBeenCalledWith('courseId', [
+        { title: 'Internal Assessment 1', weight: 20 },
+      ]);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to add assessments',
+      });
+    });
+  });
+
+  describe('getInternalAssessments', () => {
+    it('should successfully retrieve internal assessments for a course', async () => {
+      const req = mockRequest({}, { id: 'courseId' });
+      const res = mockResponse();
+      const mockInternalAssessments = [
+        { _id: 'ia1', title: 'Internal Assessment 1', weight: 20 },
+        { _id: 'ia2', title: 'Internal Assessment 2', weight: 30 },
+      ];
+
+      jest
+        .spyOn(courseService, 'getInternalAssessmentsFromCourse')
+        .mockResolvedValue(mockInternalAssessments as any);
+
+      await getInternalAssessments(req, res);
+
+      expect(getInternalAssessmentsFromCourse).toHaveBeenCalledWith('courseId');
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(mockInternalAssessments);
+    });
+
+    it('should handle NotFoundError when course is not found', async () => {
+      const req = mockRequest({}, { id: 'invalidCourseId' });
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'getInternalAssessmentsFromCourse')
+        .mockRejectedValue(new NotFoundError('Course not found'));
+
+      await getInternalAssessments(req, res);
+
+      expect(getInternalAssessmentsFromCourse).toHaveBeenCalledWith(
+        'invalidCourseId'
+      );
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Course not found' });
+    });
+
+    it('should handle unexpected errors and return 500', async () => {
+      const req = mockRequest({}, { id: 'courseId' });
+      const res = mockResponse();
+
+      jest
+        .spyOn(courseService, 'getInternalAssessmentsFromCourse')
+        .mockRejectedValue(new Error('Unexpected error'));
+
+      await getInternalAssessments(req, res);
+
+      expect(getInternalAssessmentsFromCourse).toHaveBeenCalledWith('courseId');
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
         error: 'Failed to get assessments',

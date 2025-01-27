@@ -73,9 +73,21 @@ export const getAuthorizedTeamDataByCourse = async (
     if (!(await CourseModel.exists({ _id: courseId, faculty: user._id }))) {
       throw new NotFoundError('User is not authorized to view course');
     }
-    const teamDatas = await TeamDataModel.find({
-      gitHubOrgName: course.gitHubOrgName,
+
+    // Extract the owner names from the course's GitHub repo links
+    const ownersFromRepoLinks = (course.gitHubRepoLinks || []).map(repoUrl => {
+      const urlParts = (repoUrl as string).split('/');
+      return urlParts[3].toLowerCase(); // Get the 'owner' part of the URL in lowercase
     });
+
+    // Query for team data based on gitHubOrgName or gitHubRepoLinks
+    const teamDatas = await TeamDataModel.find({
+      $or: [
+        { gitHubOrgName: course.gitHubOrgName },
+        { gitHubOrgName: { $in: ownersFromRepoLinks } },
+      ],
+    });
+
     if (!teamDatas) {
       throw new NotFoundError('No team data found for course');
     }

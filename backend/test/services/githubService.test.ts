@@ -14,7 +14,7 @@ let mongo: MongoMemoryServer;
 
 beforeAll(async () => {
   mongo = await MongoMemoryServer.create();
-  const mongoUri = mongo.getUri();
+  const mongoUri = await mongo.getUri();
   await mongoose.connect(mongoUri);
 });
 
@@ -96,8 +96,8 @@ describe('gitHubService', () => {
       commits: 0,
       teamId: 1,
     });
-    teamData1.save();
-    teamData2.save();
+    await teamData1.save();
+    await teamData2.save();
   });
 
   describe('fetchAllTeamData', () => {
