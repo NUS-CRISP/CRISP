@@ -5,6 +5,7 @@ export interface CodeAnalysisData
   extends Omit<SharedCodeAnalysisData, '_id'>,
     Document {
   _id: Types.ObjectId;
+  metricStats: Map<string, { median: number; mean: number }>;
 }
 
 const codeAnalysisDataSchema: Schema = new Schema<CodeAnalysisData>({
@@ -16,6 +17,13 @@ const codeAnalysisDataSchema: Schema = new Schema<CodeAnalysisData>({
   values: { type: [String], required: true },
   types: { type: [String], required: true },
   domains: { type: [String], required: true },
+  metricStats: {
+    type: Map,
+    of: {
+      median: Number,
+      mean: Number,
+    },
+  },
 });
 
 const codeAnalysisDataModel = mongoose.model<CodeAnalysisData>(

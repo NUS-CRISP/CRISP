@@ -1,5 +1,9 @@
-import { convertPercentage, convertRating } from '@/lib/utils';
-import React from 'react';
+import {
+  convertPercentage,
+  convertRating,
+  metricExplanations,
+} from '@/lib/utils';
+import React, { useState } from 'react';
 import { Grid, Card, Text, Title, Container, Center } from '@mantine/core';
 
 interface CodeAnalysisOverviewProps {
@@ -8,6 +12,7 @@ interface CodeAnalysisOverviewProps {
     values: string[];
     types: string[];
     domains: string[];
+    metricStats: Map<string, { median: number; mean: number }>;
   };
   executedDate: Date;
 }
@@ -70,6 +75,13 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
   latestData,
   executedDate,
 }) => {
+  const metricStatsMap = new Map(Object.entries(latestData.metricStats));
+
+  const [hoveredMetric, setHoveredMetric] = useState<string | null>(null);
+  const [hoveredMetricValue, setHoveredMetricValue] = useState<string | null>(
+    null
+  );
+
   const security_rating_index = latestData.metrics.indexOf('security_rating');
   const security_rating =
     security_rating_index === -1
@@ -114,32 +126,84 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
       ? '-'
       : latestData.values[quality_gate_status_index];
 
+  const handleMouseEnterMetric = (metric: string) => {
+    setHoveredMetric(metric);
+  };
+
+  const handleMouseLeaveMetric = () => {
+    setHoveredMetric(null);
+  };
+
+  const handleMouseEnterMetricValue = (metric: string) => {
+    setHoveredMetricValue(metric);
+  };
+
+  const handleMouseLeaveMetricValue = () => {
+    setHoveredMetricValue(null);
+  };
+
   return (
     <Container>
       <Grid gutter="lg">
         <Grid.Col span={4}>
           <Card padding="lg" shadow="sm" radius="md">
-            <Title order={5}>Security</Title>
-            <Text size="xl" fw={700} c={getColorForRating(security_rating)}>
+            <Title
+              order={5}
+              onMouseEnter={() => handleMouseEnterMetric('security_rating')}
+              onMouseLeave={handleMouseLeaveMetric}
+            >
+              Security
+            </Title>
+            <Text
+              size="xl"
+              fw={700}
+              c={getColorForRating(security_rating)}
+              onMouseEnter={() =>
+                handleMouseEnterMetricValue('security_rating')
+              }
+              onMouseLeave={handleMouseLeaveMetricValue}
+            >
               {security_rating}
             </Text>
           </Card>
         </Grid.Col>
         <Grid.Col span={4}>
           <Card padding="lg" shadow="sm" radius="md">
-            <Title order={5}>Reliability</Title>
-            <Text size="xl" fw={700} c={getColorForRating(reliability_rating)}>
+            <Title
+              order={5}
+              onMouseEnter={() => handleMouseEnterMetric('reliability_rating')}
+              onMouseLeave={handleMouseLeaveMetric}
+            >
+              Reliability
+            </Title>
+            <Text
+              size="xl"
+              fw={700}
+              c={getColorForRating(reliability_rating)}
+              onMouseEnter={() =>
+                handleMouseEnterMetricValue('reliability_rating')
+              }
+              onMouseLeave={handleMouseLeaveMetricValue}
+            >
               {reliability_rating}
             </Text>
           </Card>
         </Grid.Col>
         <Grid.Col span={4}>
           <Card padding="lg" shadow="sm" radius="md">
-            <Title order={5}>Maintainability</Title>
+            <Title
+              order={5}
+              onMouseEnter={() => handleMouseEnterMetric('sqale_rating')}
+              onMouseLeave={handleMouseLeaveMetric}
+            >
+              Maintainability
+            </Title>
             <Text
               size="xl"
               fw={700}
               c={getColorForRating(maintainability_rating)}
+              onMouseEnter={() => handleMouseEnterMetricValue('sqale_rating')}
+              onMouseLeave={handleMouseLeaveMetricValue}
             >
               {maintainability_rating}
             </Text>
@@ -147,27 +211,63 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
         </Grid.Col>
         <Grid.Col span={4}>
           <Card padding="lg" shadow="sm" radius="md">
-            <Title order={5}>Coverage</Title>
-            <Text size="xl" fw={700} c={getColorForCoverage(coverage)}>
+            <Title
+              order={5}
+              onMouseEnter={() => handleMouseEnterMetric('coverage')}
+              onMouseLeave={handleMouseLeaveMetric}
+            >
+              Coverage
+            </Title>
+            <Text
+              size="xl"
+              fw={700}
+              c={getColorForCoverage(coverage)}
+              onMouseEnter={() => handleMouseEnterMetricValue('coverage')}
+              onMouseLeave={handleMouseLeaveMetricValue}
+            >
               {coverage}
             </Text>
           </Card>
         </Grid.Col>
         <Grid.Col span={4}>
           <Card padding="lg" shadow="sm" radius="md">
-            <Title order={5}>Duplications</Title>
-            <Text size="xl" fw={700} c={getColorForDuplication(duplication)}>
+            <Title
+              order={5}
+              onMouseEnter={() =>
+                handleMouseEnterMetric('duplicated_lines_density')
+              }
+              onMouseLeave={handleMouseLeaveMetric}
+            >
+              Duplications
+            </Title>
+            <Text
+              size="xl"
+              fw={700}
+              c={getColorForDuplication(duplication)}
+              onMouseEnter={() =>
+                handleMouseEnterMetricValue('duplicated_lines_density')
+              }
+              onMouseLeave={handleMouseLeaveMetricValue}
+            >
               {duplication}
             </Text>
           </Card>
         </Grid.Col>
         <Grid.Col span={4}>
           <Card padding="lg" shadow="sm" radius="md">
-            <Title order={5}>Complexity</Title>
+            <Title
+              order={5}
+              onMouseEnter={() => handleMouseEnterMetric('complexity')}
+              onMouseLeave={handleMouseLeaveMetric}
+            >
+              Complexity
+            </Title>
             <Text
               size="xl"
               fw={700}
               c={complexity === '-' ? '#666' : 'lightgray'}
+              onMouseEnter={() => handleMouseEnterMetricValue('complexity')}
+              onMouseLeave={handleMouseLeaveMetricValue}
             >
               {complexity}
             </Text>
@@ -175,11 +275,19 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
         </Grid.Col>
         <Grid.Col span={12}>
           <Card padding="lg" shadow="sm" radius="md">
-            <Title order={5}>Quality Gate</Title>
+            <Title
+              order={5}
+              onMouseEnter={() => handleMouseEnterMetric('alert_status')}
+              onMouseLeave={handleMouseLeaveMetric}
+            >
+              Quality Gate
+            </Title>
             <Text
               size="xl"
               fw={700}
               c={getColorForQualityGate(quality_gate_status)}
+              onMouseEnter={() => handleMouseEnterMetricValue('alert_status')}
+              onMouseLeave={handleMouseLeaveMetricValue}
             >
               {quality_gate_status}
             </Text>
@@ -196,6 +304,41 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
       <Center mt={5} style={{ fontSize: '12px' }}>
         As of {executedDate.toLocaleString()}
       </Center>
+
+      {hoveredMetric && metricExplanations[hoveredMetric] && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '20px',
+            left: '20px',
+            padding: '10px',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            color: 'white',
+            borderRadius: '5px',
+          }}
+        >
+          <strong>{hoveredMetric}</strong>: {metricExplanations[hoveredMetric]}
+        </div>
+      )}
+
+      {hoveredMetricValue && metricStatsMap.has(hoveredMetricValue) && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '20px',
+            left: '40%',
+            padding: '10px',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            color: 'white',
+            borderRadius: '5px',
+          }}
+        >
+          <strong>Median</strong>:{' '}
+          {metricStatsMap.get(hoveredMetricValue).median}
+          <br />
+          <strong>Mean</strong>: {metricStatsMap.get(hoveredMetricValue).mean}
+        </div>
+      )}
     </Container>
   );
 };

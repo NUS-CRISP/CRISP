@@ -6,6 +6,9 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
 import * as codeAnalysisService from '../../services/codeAnalysisService';
 import { NotFoundError } from '../../services/errors';
+import TeamModel from '@models/Team';
+import TeamSetModel from '@models/TeamSet';
+import TeamDataModel from '@models/TeamData';
 
 let mongo: MongoMemoryServer;
 
@@ -32,6 +35,9 @@ afterAll(async () => {
 describe('codeAnalysisService', () => {
   let mockFacultyCourseId: string;
   let mockFacultyAccountId: string;
+  let mockFacultyUserId: string;
+  let mockTAAccountId: string;
+  let mockTAUserId: string;
 
   beforeEach(async () => {
     await UserModel.deleteMany({});
@@ -54,13 +60,30 @@ describe('codeAnalysisService', () => {
       isApproved: true,
     });
     await mockFacultyAccount.save();
+
+    const mockTAUser = new UserModel({
+      identifier: 'testTA',
+      name: 'Test TA',
+      enrolledCourses: [],
+      gitHandle: 'testTA',
+    });
+    await mockTAUser.save();
+    const mockTAAccount = new AccountModel({
+      email: 'mockTA@example.com',
+      password: 'hashedpassword',
+      role: 'Teaching assistant',
+      user: mockTAUser._id,
+      isApproved: true,
+    });
+    await mockTAAccount.save();
+
     const mockCourse = new CourseModel({
       name: 'testCourse',
       code: 'testCourse',
       semester: 'testCourse',
       startDate: new Date(),
       faculty: [mockFacultyUser._id],
-      TAs: [],
+      TAs: [mockTAUser._id],
       students: [],
       teamSets: [],
       courseType: 'GitHubOrg',
@@ -71,7 +94,74 @@ describe('codeAnalysisService', () => {
     await mockCourse.save();
 
     mockFacultyAccountId = mockFacultyAccount._id.toString();
+    mockFacultyUserId = mockFacultyUser._id.toString();
     mockFacultyCourseId = mockCourse._id.toString();
+    mockTAAccountId = mockTAAccount._id.toString();
+    mockTAUserId = mockTAUser._id.toString();
+
+    const team1 = new TeamModel({
+      members: [],
+      number: 1,
+      TA: mockTAUser._id,
+    });
+    await team1.save();
+
+    const team2 = new TeamModel({
+      members: [],
+      number: 2,
+    });
+    await team2.save();
+
+    const mockTeamSet = new TeamSetModel({
+      course: mockFacultyCourseId,
+      name: 'test',
+      teams: [team1._id, team2._id],
+    });
+    await mockTeamSet.save();
+
+    mockCourse.teamSets = [mockTeamSet._id];
+    await mockCourse.save();
+
+    team1.teamSet = mockTeamSet._id;
+    await team1.save();
+
+    team2.teamSet = mockTeamSet._id;
+    await team2.save();
+
+    const teamData1 = new TeamDataModel({
+      teamId: 1,
+      gitHubOrgName: 'org',
+      repoName: 'team1',
+      teamContributions: {},
+      teamPRs: [],
+      updatedIssues: [],
+      weeklyCommits: [],
+      commits: 0,
+      issues: 0,
+      milestones: [],
+      pullRequests: 0,
+    });
+    await teamData1.save();
+
+    const teamData2 = new TeamDataModel({
+      teamId: 2,
+      gitHubOrgName: 'org',
+      repoName: 'team2',
+      teamContributions: {},
+      teamPRs: [],
+      updatedIssues: [],
+      weeklyCommits: [],
+      commits: 0,
+      issues: 0,
+      milestones: [],
+      pullRequests: 0,
+    });
+    await teamData2.save();
+
+    team1.teamData = teamData1._id;
+    await team1.save();
+    team2.teamData = teamData2._id;
+    await team2.save();
 
     const codeAnalysisData1 = new codeAnalysisDataModel({
       executionTime: new Date(),
@@ -126,7 +216,7 @@ describe('codeAnalysisService', () => {
       expect(result).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ repoName: 'team1' }),
-          expect.objectContaining({ repoName: 'team2' })
+          expect.objectContaining({ repoName: 'team2' }),
         ])
       );
     });
@@ -149,6 +239,76 @@ describe('codeAnalysisService', () => {
           new mongoose.Types.ObjectId().toString()
         )
       ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should throw NotFoundError if course GitHub organization not found for faculty member', async () => {
+      const courseWithoutOrg = new CourseModel({
+        name: 'testCourse',
+        code: 'testCourse',
+        semester: 'testCourse',
+        startDate: new Date(),
+        faculty: [mockFacultyUserId],
+        TAs: [],
+        students: [],
+        teamSets: [],
+        courseType: 'GitHubOrg',
+        gitHubOrgName: '',
+        repoNameFilter: '',
+        installationId: 12345,
+      });
+      await courseWithoutOrg.save();
+
+      await expect(
+        codeAnalysisService.getAuthorizedCodeAnalysisDataByCourse(
+          mockFacultyAccountId,
+          courseWithoutOrg._id.toString()
+        )
+      ).rejects.toThrow(NotFoundError);
+
+      await courseWithoutOrg.deleteOne();
+    });
+
+    it('should throw NotFoundError if course GitHub organization not found for admin member', async () => {
+      const adminUser = new UserModel({
+        identifier: 'testAdmin',
+        name: 'Test Admin',
+        enrolledCourses: [],
+        gitHandle: 'testAdmin',
+      });
+      const adminAccount = new AccountModel({
+        email: 'test1@example.com',
+        password: 'hashedpassword',
+        role: 'admin',
+        user: adminUser._id,
+        isApproved: true,
+      });
+      await adminUser.save();
+      await adminAccount.save();
+
+      const courseWithoutOrg = new CourseModel({
+        name: 'testCourse',
+        code: 'testCourse',
+        semester: 'testCourse',
+        startDate: new Date(),
+        faculty: [adminUser._id],
+        TAs: [],
+        students: [],
+        teamSets: [],
+        courseType: 'GitHubOrg',
+        gitHubOrgName: '',
+        repoNameFilter: '',
+        installationId: 12345,
+      });
+      await courseWithoutOrg.save();
+
+      await expect(
+        codeAnalysisService.getAuthorizedCodeAnalysisDataByCourse(
+          adminAccount._id,
+          courseWithoutOrg._id.toString()
+        )
+      ).rejects.toThrow(NotFoundError);
+
+      await courseWithoutOrg.deleteOne();
     });
 
     it('should throw NotFoundError if faculty member is not authorized to view code analysis data', async () => {
@@ -177,6 +337,178 @@ describe('codeAnalysisService', () => {
 
       await unauthorizedFacultyUser.deleteOne();
       await unauthorizedFacultyAccount.deleteOne();
+    });
+
+    it('should return sorted code analysis data for faculty member', async () => {
+      const result =
+        await codeAnalysisService.getAuthorizedCodeAnalysisDataByCourse(
+          mockFacultyAccountId,
+          mockFacultyCourseId
+        );
+
+      expect(result).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ repoName: 'team1' }),
+          expect.objectContaining({ repoName: 'team2' }),
+        ])
+      );
+    });
+
+    it('should throw NotFoundError if no code analysis data found', async () => {
+      const courseWithoutData = new CourseModel({
+        name: 'testCourse',
+        code: 'testCourse',
+        semester: 'testCourse',
+        startDate: new Date(),
+        faculty: [mockFacultyUserId],
+        TAs: [],
+        students: [],
+        teamSets: [],
+        courseType: 'GitHubOrg',
+        gitHubOrgName: 'NoDataOrg',
+        repoNameFilter: '',
+        installationId: 12345,
+      });
+      await courseWithoutData.save();
+
+      await expect(
+        codeAnalysisService.getAuthorizedCodeAnalysisDataByCourse(
+          mockFacultyAccountId,
+          courseWithoutData._id.toString()
+        )
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should return code analysis data for TA', async () => {
+      const result =
+        await codeAnalysisService.getAuthorizedCodeAnalysisDataByCourse(
+          mockTAAccountId,
+          mockFacultyCourseId
+        );
+
+      expect(result).toEqual(
+        expect.arrayContaining([expect.objectContaining({ repoName: 'team1' })])
+      );
+    });
+
+    it('should throw NotFoundError if no team sets found for course', async () => {
+      const courseWithoutTeamSets = new CourseModel({
+        name: 'testCourse',
+        code: 'testCourse',
+        semester: 'testCourse',
+        startDate: new Date(),
+        faculty: [mockFacultyUserId],
+        TAs: [mockTAUserId],
+        students: [],
+        courseType: 'GitHubOrg',
+        gitHubOrgName: 'NoTeamSetsOrg',
+        repoNameFilter: '',
+        installationId: 12345,
+      });
+      await courseWithoutTeamSets.save();
+
+      await expect(
+        codeAnalysisService.getAuthorizedCodeAnalysisDataByCourse(
+          mockTAAccountId,
+          courseWithoutTeamSets._id.toString()
+        )
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should throw NotFoundError if no teams found for course', async () => {
+      const courseWithoutTeams = new CourseModel({
+        name: 'testCourse',
+        code: 'testCourse',
+        semester: 'testCourse',
+        startDate: new Date(),
+        faculty: [mockFacultyUserId],
+        TAs: [mockTAUserId],
+        students: [],
+        courseType: 'GitHubOrg',
+        gitHubOrgName: 'NoTeamsOrg',
+        repoNameFilter: '',
+        installationId: 12345,
+      });
+      await courseWithoutTeams.save();
+
+      const teamSet = new TeamSetModel({
+        course: courseWithoutTeams._id,
+        name: 'test',
+        teams: [],
+      });
+      await teamSet.save();
+
+      courseWithoutTeams.teamSets = [teamSet._id];
+      await courseWithoutTeams.save();
+
+      await expect(
+        codeAnalysisService.getAuthorizedCodeAnalysisDataByCourse(
+          mockTAAccountId,
+          courseWithoutTeams._id.toString()
+        )
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should throw NotFoundError if no code analysis data found for course', async () => {
+      const courseWithoutCodeAnalysisData = new CourseModel({
+        name: 'testCourse',
+        code: 'testCourse',
+        semester: 'testCourse',
+        startDate: new Date(),
+        faculty: [mockFacultyUserId],
+        TAs: [mockTAUserId],
+        students: [],
+        courseType: 'GitHubOrg',
+        gitHubOrgName: 'NoCodeAnalysisDataOrg',
+        repoNameFilter: '',
+        installationId: 345,
+      });
+      await courseWithoutCodeAnalysisData.save();
+
+      const teamDataA = new TeamDataModel({
+        teamId: 123,
+        gitHubOrgName: 'NoCodeAnalysisDataOrg',
+        repoName: 'teamA',
+        teamContributions: {},
+        teamPRs: [],
+        updatedIssues: [],
+        weeklyCommits: [],
+        commits: 0,
+        issues: 0,
+        milestones: [],
+        pullRequests: 0,
+      });
+      await teamDataA.save();
+
+      const teamA = new TeamModel({
+        members: [],
+        number: 1,
+        TA: mockTAUserId,
+        teamData: teamDataA._id,
+      });
+      await teamA.save();
+
+      const teamSetNoData = new TeamSetModel({
+        course: courseWithoutCodeAnalysisData._id,
+        name: 'test',
+        teams: [teamA._id],
+      });
+      await teamSetNoData.save();
+
+      teamA.teamSet = teamSetNoData._id;
+      await teamA.save();
+
+      courseWithoutCodeAnalysisData.teamSets = [teamSetNoData._id];
+      await courseWithoutCodeAnalysisData.save();
+
+      await expect(
+        codeAnalysisService.getAuthorizedCodeAnalysisDataByCourse(
+          mockTAAccountId,
+          courseWithoutCodeAnalysisData._id.toString()
+        )
+      ).rejects.toThrow(
+        new NotFoundError('No code analysis data found for course')
+      );
     });
   });
 });

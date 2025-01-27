@@ -139,7 +139,10 @@ const Navbar: React.FC = () => {
       return 'Teams';
     } else if (path.startsWith('/courses/[id]/timeline')) {
       return 'Timeline';
-    } else if (path.startsWith('/courses/[id]/assessments')) {
+    } else if (
+      path.startsWith('/courses/[id]/assessments') ||
+      path.startsWith('/courses/[id]/internal-assessments')
+    ) {
       return 'Assessments';
     } else if (path.startsWith('/courses/[id]/project-management')) {
       return 'Project Management';
@@ -207,6 +210,7 @@ const Navbar: React.FC = () => {
     {
       link: `/courses/${courseId}/repositories`,
       label: 'Repositories',
+      pngSrc: '/repositories.png',
     },
     {
       link: `/courses/${courseId}/teams`,
@@ -235,6 +239,8 @@ const Navbar: React.FC = () => {
     {
       link: `/courses/${courseId}/code-analysis`,
       label: 'Code Analysis',
+      disabled: !peopleAdded,
+      pngSrc: '/code-analysis.png',
     },
   ];
 

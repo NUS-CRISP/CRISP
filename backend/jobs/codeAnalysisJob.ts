@@ -5,6 +5,7 @@ import { getGitHubApp } from '../utils/github';
 import * as fs from 'fs';
 import * as path from 'path';
 import codeAnalysisDataModel from '../models/CodeAnalysisData';
+import { mean, median } from 'mathjs';
 
 const { exec } = require('child_process');
 
@@ -26,6 +27,7 @@ const fetchAndSaveCodeAnalysisData = async () => {
           course.installationId
         );
         await getCourseCodeData(installationOctokit, course);
+        await getMedianAndMeanCodeData(course);
       }
     })
   );
@@ -358,6 +360,68 @@ const getAndSaveCodeData = async (gitHubOrgName: string, repo: any) => {
   } catch (error) {
     console.error(`Error fetching or saving data for: ${repo.name}`, error);
   }
+};
+
+const getMedianAndMeanCodeData = async (course: any) => {
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+
+  // 2. Get the end of today:
+  const endOfDay = new Date();
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const codeAnalysisData = await codeAnalysisDataModel.find({
+    gitHubOrgName: course.gitHubOrgName,
+    executionTime: {
+      $gte: startOfDay,
+      $lte: endOfDay,
+    },
+  });
+
+  console.log(
+    `Getting mean and median code analysis values for ${course.gitHubOrgName} - ${codeAnalysisData.length} records`
+  );
+
+  if (codeAnalysisData.length === 0) return;
+
+  const metricValues: { [key: string]: number[] } = {};
+
+  codeAnalysisData.forEach(data => {
+    data.metrics.forEach((metric, index) => {
+      if (metric === 'quality_gate_details' || metric === 'alert_status')
+        return;
+
+      if (!metricValues[metric]) {
+        metricValues[metric] = [];
+      }
+
+      const value = parseFloat(data.values[index]);
+      if (!isNaN(value)) {
+        metricValues[metric].push(value);
+      }
+    });
+  });
+
+  const metricStats: Map<string, { median: number; mean: number }> = new Map();
+
+  Object.keys(metricValues).forEach(metric => {
+    if (metricValues[metric].length === 0) {
+      metricStats.set(metric, { median: 0, mean: 0 });
+    } else {
+      const values = metricValues[metric].sort((a, b) => a - b);
+      const medianVal = median(values);
+      const meanVal = mean(values);
+
+      metricStats.set(metric, { median: medianVal, mean: meanVal });
+    }
+  });
+
+  await Promise.all(
+    codeAnalysisData.map(async data => {
+      data.metricStats = metricStats;
+      await data.save();
+    })
+  );
 };
 
 export const setupCodeAnalysisJob = () => {

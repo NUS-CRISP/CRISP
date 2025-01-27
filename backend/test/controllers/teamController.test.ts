@@ -1,15 +1,21 @@
 import { Request, Response } from 'express';
 import * as teamService from '../../services/teamService';
+import * as accountService from '../../services/accountService';
 import {
   deleteTeam,
   getTeamsByCourse,
+  getTeamsByTAAndCourse,
   removeMembersFromTeam,
   updateTeam,
 } from '../../controllers/teamController';
 import { NotFoundError } from '../../services/errors';
 import { Team } from '@models/Team';
+import { getAccountId } from '../../utils/auth';
+import { getTeamsByTAIdAndCourseId } from '../../services/teamService';
+import { getUserIdByAccountId } from '../../services/accountService';
 
 jest.mock('../../services/teamService');
+jest.mock('../../utils/auth');
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -29,6 +35,70 @@ const mockResponse = () => {
   return res;
 };
 describe('teamController', () => {
+  describe('getTeamsByTAAndCourse', () => {
+    it('should retrieve teams for a TA and course and send a 200 status', async () => {
+      const req = mockRequest({ courseId: 'course123' });
+      const res = mockResponse();
+      const mockAccountId = 'account123';
+      const mockUserId = 'user123';
+      const mockTeams = [{ teamId: 'team1' }, { teamId: 'team2' }];
+
+      // Mock getAccountId to return mockAccountId
+      (getAccountId as jest.Mock).mockResolvedValue(mockAccountId);
+
+      // Mock getUserIdByAccountId and getTeamsByTAIdAndCourseId
+      jest
+        .spyOn(accountService, 'getUserIdByAccountId')
+        .mockResolvedValue(mockUserId);
+      jest
+        .spyOn(teamService, 'getTeamsByTAIdAndCourseId')
+        .mockResolvedValue(mockTeams as unknown as Team[]);
+
+      await getTeamsByTAAndCourse(req, res);
+
+      expect(getAccountId).toHaveBeenCalledWith(req);
+      expect(getUserIdByAccountId).toHaveBeenCalledWith(mockAccountId);
+      expect(getTeamsByTAIdAndCourseId).toHaveBeenCalledWith(
+        mockUserId,
+        'course123'
+      );
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(mockTeams);
+    });
+
+    it('should handle unexpected errors and send a 500 status', async () => {
+      const req = mockRequest({ courseId: 'course123' });
+      const res = mockResponse();
+      const mockAccountId = 'account123';
+      const mockUserId = 'user123';
+      const error = new Error('Unexpected server error');
+
+      // Mock getAccountId to return mockAccountId
+      (getAccountId as jest.Mock).mockResolvedValue(mockAccountId);
+
+      // Mock getUserIdByAccountId to return mockUserId
+      jest
+        .spyOn(accountService, 'getUserIdByAccountId')
+        .mockResolvedValue(mockUserId);
+
+      // Mock getTeamsByTAIdAndCourseId to throw generic error
+      jest
+        .spyOn(teamService, 'getTeamsByTAIdAndCourseId')
+        .mockRejectedValue(error);
+
+      await getTeamsByTAAndCourse(req, res);
+
+      expect(getAccountId).toHaveBeenCalledWith(req);
+      expect(getUserIdByAccountId).toHaveBeenCalledWith(mockAccountId);
+      expect(getTeamsByTAIdAndCourseId).toHaveBeenCalledWith(
+        mockUserId,
+        'course123'
+      );
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch teams' });
+    });
+  });
+
   describe('getTeamsByCourse', () => {
     it('should return a list of teams for a course', async () => {
       const req = mockRequest({ courseId: 'courseId' });

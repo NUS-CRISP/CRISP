@@ -1,13 +1,12 @@
-import ResultForm from '@/components/forms/ResultForm';
-import { hasFacultyPermission } from '@/lib/auth/utils';
-import { Button, Container, Modal, Tabs, Text } from '@mantine/core';
-import { Assessment } from '@shared/types/Assessment';
-import { User } from '@shared/types/User';
+import { Container, Tabs } from '@mantine/core';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
-import ResultCard from '../../../../components/cards/ResultCard';
-import AssessmentOverview from '@/components/views/AssessmentOverview';
+import AssessmentGoogleOverview from '@/components/views/AssessmentGoogleOverview';
+import AssessmentGoogleResults from '@/components/views/AssessmentGoogleResults';
+import { Assessment } from '@shared/types/Assessment';
+import { User } from '@shared/types/User';
 import { SheetData } from '@shared/types/SheetData';
+import { hasFacultyPermission } from '@/lib/auth/utils';
 
 const AssessmentDetail: React.FC = () => {
   const router = useRouter();
@@ -22,26 +21,18 @@ const AssessmentDetail: React.FC = () => {
 
   const [assessment, setAssessment] = useState<Assessment | null>(null);
   const [teachingTeam, setTeachingTeam] = useState<User[]>([]);
-  const [isResultFormOpen, setIsResultFormOpen] = useState<boolean>(false);
   const [sheetData, setSheetData] = useState<SheetData | null>(null);
-
   const [activeTab, setActiveTab] = useState<string>('Overview');
-
   const permission = hasFacultyPermission();
 
   const fetchAssessment = useCallback(async () => {
     try {
-      const response = await fetch(assessmentsApiRoute, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(assessmentsApiRoute);
       if (!response.ok) {
         console.error('Error fetching assessment:', response.statusText);
         return;
       }
-      const data = await response.json();
+      const data: Assessment = await response.json();
       setAssessment(data);
     } catch (error) {
       console.error('Error fetching assessment:', error);
@@ -55,7 +46,7 @@ const AssessmentDetail: React.FC = () => {
         console.error('Error fetching Teaching Team:', response.statusText);
         return;
       }
-      const data = await response.json();
+      const data: User[] = await response.json();
       setTeachingTeam(data);
     } catch (error) {
       console.error('Error fetching Teaching Team:', error);
@@ -68,28 +59,11 @@ const AssessmentDetail: React.FC = () => {
       if (!response.ok) {
         throw new Error('Failed to fetch sheets data');
       }
-      const data = await response.json();
+      const data: SheetData = await response.json();
       setSheetData(data);
     } catch (error) {
       console.error('Error:', error);
     }
-  };
-
-  const toggleResultForm = () => {
-    setIsResultFormOpen(o => !o);
-  };
-
-  const onResultsUploaded = () => {
-    fetchAssessment();
-    setIsResultFormOpen(o => !o);
-  };
-
-  const onUpdateAssessment = () => {
-    fetchAssessment();
-  };
-
-  const onUpdateSheet = () => {
-    getSheetData();
   };
 
   const setActiveTabAndSave = (tabName: string) => {
@@ -101,32 +75,21 @@ const AssessmentDetail: React.FC = () => {
     const savedTab = localStorage.getItem(
       `activeAssessmentTab_${assessmentId}`
     );
-    if (permission) {
-      if (
-        savedTab &&
-        ['Overview', 'Form', 'Results'].some(label => label === savedTab)
-      ) {
-        setActiveTab(savedTab);
-      }
-    } else {
-      if (savedTab && ['Overview', 'Form'].some(label => label === savedTab)) {
-        setActiveTab(savedTab);
-      }
+    if (
+      savedTab &&
+      ['Overview', 'Preview Form', 'Results'].includes(savedTab)
+    ) {
+      setActiveTab(savedTab);
     }
-  });
+  }, [assessmentId]);
 
   useEffect(() => {
     if (router.isReady) {
       fetchAssessment();
       fetchTeachingTeam();
-    }
-  }, [router.isReady]);
-
-  useEffect(() => {
-    if (router.isReady) {
       getSheetData();
     }
-  }, [router.isReady]);
+  }, [router.isReady, fetchAssessment, fetchTeachingTeam]);
 
   return (
     <Container>
@@ -138,64 +101,55 @@ const AssessmentDetail: React.FC = () => {
           >
             Overview
           </Tabs.Tab>
-          <Tabs.Tab value="Form" onClick={() => setActiveTabAndSave('Form')}>
-            Evaluate
-          </Tabs.Tab>
-          {hasFacultyPermission() && (
+
+          {assessment?.formLink && (
+            <Tabs.Tab
+              value="Preview Form"
+              onClick={() => setActiveTabAndSave('Preview Form')}
+            >
+              Preview Form
+            </Tabs.Tab>
+          )}
+
+          {assessment?.formLink && permission && (
             <Tabs.Tab
               value="Results"
               onClick={() => setActiveTabAndSave('Results')}
             >
-              Results
+              Google Form Results
             </Tabs.Tab>
           )}
         </Tabs.List>
 
         <Tabs.Panel value="Overview">
-          {id && (
-            <AssessmentOverview
+          {id && assessment?.formLink && (
+            <AssessmentGoogleOverview
               courseId={id}
               assessment={assessment}
               sheetData={sheetData}
               hasFacultyPermission={permission}
-              onUpdateSheetData={onUpdateSheet}
-              onUpdateAssessment={onUpdateAssessment}
+              onUpdateSheetData={getSheetData}
+              onUpdateAssessment={fetchAssessment}
             />
           )}
         </Tabs.Panel>
 
-        <Tabs.Panel value="Form">
-          {assessment?.formLink ? (
+        {assessment?.formLink && (
+          <Tabs.Panel value="Preview Form">
             <iframe src={assessment.formLink} width="100%" height="1200">
               Loading…
             </iframe>
-          ) : (
-            <Text>No form link provided</Text>
-          )}
-        </Tabs.Panel>
-        {hasFacultyPermission() && (
+          </Tabs.Panel>
+        )}
+
+        {assessment?.formLink && permission && (
           <Tabs.Panel value="Results">
-            <Button onClick={toggleResultForm} my={16}>
-              Upload Results
-            </Button>
-            <Modal
-              opened={isResultFormOpen}
-              onClose={toggleResultForm}
-              title="Upload Results"
-            >
-              <ResultForm
-                assessmentId={assessmentId}
-                onResultsUploaded={onResultsUploaded}
-              />
-            </Modal>
-            {assessment?.results.map(result => (
-              <ResultCard
-                key={result._id}
-                result={result}
-                teachingTeam={teachingTeam}
-                assessmentId={assessmentId}
-              />
-            ))}
+            <AssessmentGoogleResults
+              assessmentId={assessmentId}
+              teachingTeam={teachingTeam}
+              results={assessment?.results || []}
+              onResultsUploaded={fetchAssessment}
+            />
           </Tabs.Panel>
         )}
       </Tabs>
