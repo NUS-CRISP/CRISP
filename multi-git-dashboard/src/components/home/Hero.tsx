@@ -41,14 +41,14 @@ const Hero: React.FC = () => {
         </Button> */}
 
           <Button
+            size="xl"
+            className={classes.control}
             variant="gradient"
-            gradient={{ deg: 133, from: 'blue', to: 'cyan' }}
-            size="lg"
-            radius="md"
-            mt="xl"
+            gradient={{ from: 'blue', to: 'cyan' }}
             onClick={() => router.push('/auth/register')}
+            rightSection={<IconArrowRight size={20} className={classes.arrow} />}
           >
-            Get started
+            Start Here
           </Button>
 
           <Button
