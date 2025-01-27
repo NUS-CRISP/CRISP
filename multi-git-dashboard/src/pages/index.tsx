@@ -18,7 +18,7 @@ const Home: React.FC = () => (
       </div>
       <FeatureMono />
       {/* <Features /> */}
-      <div style={{marginBottom:"180px"}}>
+      <div style={{marginBottom:"150px"}}>
       <FeatureCard />
       </div>
    

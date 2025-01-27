@@ -7,8 +7,8 @@
   background-size: 100% auto, 100% auto;
   background-position: top center;
   background-position-y: -200px;
-  padding-bottom: calc(var(--mantine-spacing-xl) * 3);
-  height: auto;
+
+
   min-height: 300px;
 
 
