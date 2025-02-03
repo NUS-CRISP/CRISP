@@ -263,6 +263,7 @@ const CodeAnalysisTimeline: React.FC<CodeAnalysisTimelineProps> = ({
                 dataKey={`${metric}.value`}
                 name={metric}
                 stroke={`#${Math.floor(Math.random() * 16777215).toString(16)}`}
+                strokeWidth={1.5}
               />
             ))}
         </LineChart>

@@ -5,7 +5,7 @@ import {
 } from '@/lib/utils';
 import React, { useState } from 'react';
 import { Grid, Card, Text, Title, Container, Center } from '@mantine/core';
-import { IconHelpCircle } from '@tabler/icons-react';
+import { IconHelpCircle, IconChartDots } from '@tabler/icons-react';
 
 interface CodeAnalysisOverviewProps {
   latestData: {
@@ -190,14 +190,14 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
             style={{ cursor: 'pointer', color: 'gray', marginLeft: '4px' }}
           />
         </Title>
-        <Text
-          size="xl"
-          fw={700}
-          c={color}
-          onMouseEnter={() => handleMouseEnterMetricValue(metricKey)}
-          onMouseLeave={handleMouseLeaveMetricValue}
-        >
+        <Text size="xl" fw={700} c={color}>
           {value}
+          <IconChartDots
+            size={18}
+            onMouseEnter={() => handleMouseEnterMetricValue(metricKey)}
+            onMouseLeave={handleMouseLeaveMetricValue}
+            style={{ cursor: 'pointer', color: 'gray', marginLeft: '6px' }}
+          />
         </Text>
       </Card>
     );
