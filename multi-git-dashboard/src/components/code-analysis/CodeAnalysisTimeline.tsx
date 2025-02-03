@@ -10,8 +10,10 @@ import {
   Legend,
   ResponsiveContainer,
   TooltipProps,
+  LegendProps,
 } from 'recharts';
 import styles from '../../styles/CodeAnalysisTimeline.module.css';
+import { IconHelpCircle } from '@tabler/icons-react';
 
 interface CodeAnalysisTimelineProps {
   codeData: {
@@ -80,6 +82,7 @@ const CodeAnalysisTimeline: React.FC<CodeAnalysisTimelineProps> = ({
     'Security',
     'Size',
     'Coverage',
+    'Composite',
   ];
   // Map of domain -> date -> metric -> value
   const data = new Map<
@@ -171,6 +174,60 @@ const CodeAnalysisTimeline: React.FC<CodeAnalysisTimelineProps> = ({
     setHoveredMetric(null);
   };
 
+  const CustomLegend = (props: LegendProps) => {
+    const { payload } = props;
+    if (!payload) return null;
+
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '12px',
+          alignItems: 'center',
+          justifySelf: 'center',
+        }}
+      >
+        {payload.map((entry, index) => (
+          <div
+            key={`item-${index}`}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              marginBottom: '4px',
+            }}
+          >
+            {/* Legend Color Box */}
+            <div
+              style={{
+                width: '12px',
+                height: '12px',
+                backgroundColor: entry.color,
+                marginRight: '6px',
+                borderRadius: '50%',
+              }}
+            />
+            {/* Legend Text */}
+            <span style={{ fontSize: '16px', color: entry.color }}>
+              {entry.value}
+            </span>
+            {/* Help Icon */}
+            <IconHelpCircle
+              size={16}
+              style={{
+                marginLeft: '6px',
+                cursor: 'pointer',
+                color: entry.color,
+              }}
+              onMouseEnter={() => handleMouseEnterMetric(entry.value)}
+              onMouseLeave={handleMouseLeaveMetric}
+            />
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div>
       <label htmlFor="domain-select">Select Domain:</label>
@@ -196,10 +253,7 @@ const CodeAnalysisTimeline: React.FC<CodeAnalysisTimelineProps> = ({
           />
           <YAxis />
           <Tooltip content={<CustomToolTip />} />
-          <Legend
-            onMouseEnter={({ value }) => handleMouseEnterMetric(value)}
-            onMouseLeave={handleMouseLeaveMetric}
-          />
+          <Legend content={<CustomLegend />} />
           {Object.keys(domainData[0] || {})
             .filter(key => key !== 'executionDate')
             .map(metric => (

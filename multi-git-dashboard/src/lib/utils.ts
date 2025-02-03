@@ -161,4 +161,11 @@ export const metricExplanations: MetricExplanations = {
   functions:
     'Number of functions. Depending on the language, a function is either a function or a method or a paragraph.',
   statements: 'Number of statements.',
+  bugs_per_commit: 'Number of bug issues per commit.',
+  code_smells_per_commit: 'Number of code smells issues per commit.',
+  lines_per_commit: 'Number of lines of code per commit.',
+  bugs_per_pr: 'Number of bug issues per PR.',
+  code_smells_per_pr: 'Number of code smells issues per PR.',
+  lines_per_pr: 'Number of lines of code per PR.',
+  lines_per_story_point: 'Number of lines of code per story point.',
 };
