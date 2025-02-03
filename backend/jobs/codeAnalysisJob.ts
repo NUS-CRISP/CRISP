@@ -6,6 +6,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import codeAnalysisDataModel from '../models/CodeAnalysisData';
 import { mean, median } from 'mathjs';
+import TeamDataModel from '@models/TeamData';
+import TeamModel from '@models/Team';
+import { Types } from 'mongoose';
 
 const { exec } = require('child_process');
 
@@ -345,6 +348,7 @@ const getAndSaveCodeData = async (gitHubOrgName: string, repo: any) => {
         const domainsArray: string[] = [];
 
         const metricMap = new Map<string, { type: string; domain: string }>();
+        const compositeDataMap = new Map<string, number>();
 
         metrics.forEach((metric: any) => {
           metricMap.set(metric.key, {
@@ -362,6 +366,14 @@ const getAndSaveCodeData = async (gitHubOrgName: string, repo: any) => {
             valuesArray.push(measure.value || '');
             typesArray.push(metricInfo.type || '');
             domainsArray.push(metricInfo.domain || '');
+
+            if (
+              metricKey === 'bugs' ||
+              metricKey === 'code_smells' ||
+              metricKey === 'ncloc'
+            ) {
+              compositeDataMap.set(metricKey, measure.value);
+            }
           }
         });
 
@@ -376,10 +388,11 @@ const getAndSaveCodeData = async (gitHubOrgName: string, repo: any) => {
           domains: domainsArray,
         });
 
-        await codeAnalysisData.save();
+        const savedDoc = await codeAnalysisData.save();
         console.log(
           `Successfully fetched and saved data for repo: ${repo.name}`
         );
+        await getCompositeMetrics(compositeDataMap, repo, savedDoc._id);
         return;
       } catch (fetchError) {
         attempts++;
@@ -404,6 +417,89 @@ const getAndSaveCodeData = async (gitHubOrgName: string, repo: any) => {
       error
     );
   }
+};
+
+const getCompositeMetrics = async (
+  compositeDataMap: Map<string, number>,
+  repo: any,
+  codeAnalysisId: Types.ObjectId
+) => {
+  const compositeMetrics = new Map<string, string>();
+  const teamData = await TeamDataModel.findOne({ teamId: repo.id });
+
+  if (!teamData) return;
+
+  // Commit Data
+  if (teamData.commits && teamData.commits > 0) {
+    for (const [key, value] of compositeDataMap.entries()) {
+      if (key === 'bugs' || key === 'code_smells') {
+        compositeMetrics.set(
+          `${key}_per_commit`,
+          (value / teamData.commits).toFixed(3)
+        );
+      } else if (key === 'ncloc') {
+        compositeMetrics.set(
+          'lines_per_commit',
+          (value / teamData.commits).toFixed(3)
+        );
+      }
+    }
+  }
+
+  // PR Data
+  if (teamData.pullRequests && teamData.pullRequests > 0) {
+    for (const [key, value] of compositeDataMap.entries()) {
+      if (key === 'bugs' || key === 'code_smells') {
+        compositeMetrics.set(
+          `${key}_per_pr`,
+          (value / teamData.pullRequests).toFixed(3)
+        );
+      } else if (key === 'ncloc') {
+        compositeMetrics.set(
+          'lines_per_pr',
+          (value / teamData.pullRequests).toFixed(3)
+        );
+      }
+    }
+  }
+
+  // Story Points Data
+  const team = await TeamModel.findOne({ teamData: teamData._id }).populate({
+    path: 'board',
+    populate: {
+      path: 'jiraIssues',
+    },
+  });
+
+  if (team?.board?.jiraIssues && team.board.jiraIssues.length > 0) {
+    const totalStoryPoints = team.board.jiraIssues.reduce((sum, issue) => {
+      return sum + (issue.storyPoints || 0);
+    }, 0);
+
+    if (totalStoryPoints > 0 && compositeDataMap.has('ncloc')) {
+      compositeMetrics.set(
+        'lines_per_story_point',
+        ((compositeDataMap.get('ncloc') ?? 0) / totalStoryPoints).toFixed(3)
+      );
+    }
+  }
+
+  // Append composite metrics to code analysis data
+  const codeAnalysis = await codeAnalysisDataModel.findById(codeAnalysisId);
+  if (!codeAnalysis) {
+    console.error(`CodeAnalysis with ID ${codeAnalysisId} not found.`);
+    return;
+  }
+
+  for (const [key, value] of compositeMetrics.entries()) {
+    codeAnalysis.metrics.push(key);
+    codeAnalysis.values.push(value.toString());
+    codeAnalysis.types.push('FLOAT');
+    codeAnalysis.domains.push('Composite');
+  }
+
+  await codeAnalysis.save();
+  console.log(`Saved composite metrics for repo: ${repo.name}`);
 };
 
 const getMedianAndMeanCodeData = async (course: any) => {
