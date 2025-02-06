@@ -150,6 +150,8 @@ const Navbar: React.FC = () => {
       return 'Class Review';
     } else if (path.startsWith('/courses/[id]/code-analysis')) {
       return 'Code Analysis';
+    } else if (path.startsWith('/courses/[id]/pr-review')) {
+      return 'PR Review';
     } else if (path.startsWith('/courses/[id]')) {
       return 'Team Overview';
     } else {
@@ -203,6 +205,12 @@ const Navbar: React.FC = () => {
       pngSrc: '/team-view.png',
     },
     {
+      link: `/courses/${courseId}/pr-review`,
+      label: 'PR Review',
+      disabled: !peopleAdded,
+      pngSrc: '/timeline.png',
+    },
+    {
       link: `/courses/${courseId}/people`,
       label: 'People',
       pngSrc: '/people.png',
@@ -241,7 +249,7 @@ const Navbar: React.FC = () => {
       label: 'Code Analysis',
       disabled: !peopleAdded,
       pngSrc: '/code-analysis.png',
-    },
+    }
   ];
 
   const courseLinks = courseLinksData.map(item => (
