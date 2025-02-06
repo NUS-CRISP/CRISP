@@ -13,6 +13,10 @@ const accountSchema = new Schema<Account>({
     lowercase: true,
     required: true,
   },
+  telegram: {
+    type: String,
+    required: false,
+  },
   password: { type: String },
   role: {
     type: String,
@@ -20,6 +24,14 @@ const accountSchema = new Schema<Account>({
     default: Role.TA,
   },
   isApproved: {
+    type: Boolean,
+    default: false,
+  },
+  wantsEmailNotifications: {
+    type: Boolean,
+    default: false,
+  },
+  wantsTelegramNotifications: {
     type: Boolean,
     default: false,
   },
