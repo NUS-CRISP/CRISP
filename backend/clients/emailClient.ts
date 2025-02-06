@@ -9,8 +9,8 @@ config({ path: `.env.${env}` });
 //   port: 587,
 //   host: 'smtp.office365.com',
 //   auth: {
-//     user: 'e0727236@u.nus.edu',
-//     pass: '@cBaD32143948'
+//     user: '',
+//     pass: ''
 //   },
 //   tls: {
 //     ciphers: 'SSLv3',
