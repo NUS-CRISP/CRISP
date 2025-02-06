@@ -34,7 +34,7 @@ function ContactIcon({
 const data = [
   {
     title: 'Where to reach us',
-    description: 'crisp.nus.2024@gmail.com',
+    description: 'crisp@comp.nus.edu.sg',
     icon: IconAt,
   },
   {

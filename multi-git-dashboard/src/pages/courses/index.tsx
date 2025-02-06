@@ -3,7 +3,7 @@ import { useTutorialContext } from '@/components/tutorial/TutorialContext';
 import TutorialPopover from '@/components/tutorial/TutorialPopover';
 import WelcomeMessage from '@/components/views/WelcomeMessage';
 import { hasFacultyPermission } from '@/lib/auth/utils';
-import { Box, Button, Modal, ScrollArea } from '@mantine/core';
+import { Alert, Box, Button, Modal, ScrollArea } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Course } from '@shared/types/Course';
 import { signOut } from 'next-auth/react';
@@ -23,6 +23,27 @@ const CourseListPage: React.FC = () => {
   const isTrial = query.trial === 'true';
 
   const [courses, setCourses] = useState<Course[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const handleSendTestEmail = async () => {
+    setError(null);
+    setSuccess(null);
+
+    try {
+      // Make a POST request to your testEmail endpoint
+      const response = await fetch('/api/notifications/testEmail', {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send test email.');
+      }
+      setSuccess('Test email sent successfully!');
+    } catch (err) {
+      setError((err as Error).message || 'An unexpected error occurred.');
+    }
+  };
 
   useEffect(() => {
     fetchCourses();
@@ -116,6 +137,24 @@ const CourseListPage: React.FC = () => {
         {curTutorialStage === 0 && (
           <WelcomeMessage opened={curTutorialStage === 0} />
         )}
+        {/*
+          Optional: Display success/error alerts for user feedback
+        */}
+        {error && (
+          <Alert title="Error" color="red" mb="sm">
+            {error}
+          </Alert>
+        )}
+        {success && (
+          <Alert title="Success" color="green" mb="sm">
+            {success}
+          </Alert>
+        )}
+
+        {/* Button to trigger sending a test email */}
+        <Button onClick={handleSendTestEmail} mt="md">
+          Send Test Email
+        </Button>
       </Box>
     </ScrollArea>
   );
