@@ -2,7 +2,6 @@ FROM node:alpine
 
 WORKDIR /app
 
-# Install dependencies for Gradle, Maven, and your app
 RUN apk add --no-cache \
     git \
     openjdk17 \
@@ -27,17 +26,17 @@ RUN curl -fsSL https://services.gradle.org/distributions/gradle-${GRADLE_VERSION
     && ln -s /opt/gradle/bin/gradle /usr/bin/gradle \
     && rm gradle.zip
 
-RUN npm install --global pnpm pm2
+RUN npm install --global pm2
 
 COPY ./backend/package*.json ./backend/
 
 WORKDIR /app/backend
 
-RUN pnpm install
+RUN npm install
 
 WORKDIR /app
 
-# Copy backend and shared folder
+# Copy backend and shared folders
 COPY ./backend/ ./backend/
 COPY ./shared/ ./shared/
 
@@ -49,8 +48,8 @@ ENV PATH="/app/sonar-scanner/sonar-scanner-6.2.1.4610-linux-x64/bin:$PATH"
 
 WORKDIR /app/backend
 
-RUN pnpm run build
+RUN npm run build
 
 EXPOSE 3001
 
-CMD [ "pm2-runtime", "pnpm", "--", "start" ]
+CMD [ "pm2-runtime", "npm", "--", "start" ]

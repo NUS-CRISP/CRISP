@@ -1,6 +1,6 @@
 import clientPromise from '@/lib/mongodb';
 import Role from '@shared/types/auth/Role';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import {
   GetServerSidePropsContext,
   NextApiRequest,

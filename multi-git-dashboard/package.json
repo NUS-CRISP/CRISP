@@ -39,6 +39,7 @@
     "@typescript-eslint/parser": "^6.21.0",
     "autoprefixer": "10.4.14",
     "bcrypt": "^5.1.1",
+    "bcryptjs": "^2.4.3",
     "clsx": "^2.1.0",
     "dayjs": "^1.11.10",
     "embla-carousel-autoplay": "^7.1.0",
@@ -63,6 +64,7 @@
   "devDependencies": {
     "@next/eslint-plugin-next": "^14.1.4",
     "@types/bcrypt": "^5.0.2",
+    "@types/bcryptjs": "^2.4.6",
     "@types/file-saver": "^2.0.7",
     "@types/jest": "^29.5.12",
     "@types/react-window": "^1.8.8",

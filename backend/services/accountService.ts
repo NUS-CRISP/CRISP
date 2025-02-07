@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import AccountModel, { Account } from '../models/Account';
 import UserModel from '../models/User';
 import { BadRequestError, NotFoundError } from './errors';
