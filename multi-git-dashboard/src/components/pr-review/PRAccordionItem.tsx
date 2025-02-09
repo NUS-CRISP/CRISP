@@ -14,7 +14,7 @@ interface OverviewAccordionItemProps {
   getStudentNameByGitHandle: ProfileGetter;
 }
 
-const OverviewAccordionItem = forwardRef<
+const PRAccordionItem = forwardRef<
   HTMLDivElement,
   OverviewAccordionItemProps
 >(
@@ -46,4 +46,4 @@ const OverviewAccordionItem = forwardRef<
   }
 );
 
-export default OverviewAccordionItem;
+export default PRAccordionItem;
