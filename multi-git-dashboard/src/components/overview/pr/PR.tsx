@@ -6,6 +6,7 @@ import { forwardRef, useEffect, useState } from 'react';
 import PRDetails from './PRDetails';
 import PRList from './PRList';
 import PRGraph from './PRGraph';
+import PRManGraph from './PRMantineGraph';
 
 export interface Spacing {
   maxHeight: number;
@@ -27,7 +28,8 @@ interface PRNode {
 interface PREdge {
   source: string;
   target: string;
-  weight: number; // Represents number of interactions
+  weight: number;
+  status: string;
 }
 
 interface PRGraphData {
@@ -58,32 +60,42 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
       });
     };
 
-    /** Process PR interactions into nodes and edges for visualization */
     const processPRInteractions = (teamPRs: PRProps['teamData']['teamPRs']): PRGraphData => {
       const nodesSet = new Set<string>();
       const edgesMap: Map<string, PREdge> = new Map();
-
+    
       teamPRs.forEach((pr) => {
+        const prAuthor = pr.user; // PR author
+        if (!prAuthor) return;
+    
+        nodesSet.add(prAuthor);
+    
         pr.reviews.forEach((review) => {
-          if (review.user && pr.user) {
-            nodesSet.add(review.user);
-            nodesSet.add(pr.user);
-
-            const edgeKey = `${review.user}->${pr.user}`;
-            if (edgesMap.has(edgeKey)) {
-              edgesMap.get(edgeKey)!.weight += 1;
-            } else {
-              edgesMap.set(edgeKey, { source: review.user, target: pr.user, weight: 1 });
-            }
+          const reviewer = review.user;
+          if (!reviewer || reviewer === prAuthor) return; // Ignore self-reviews
+    
+          nodesSet.add(reviewer);
+    
+          const edgeKey = `${reviewer}->${prAuthor}`;
+          if (edgesMap.has(edgeKey)) {
+            edgesMap.get(edgeKey)!.weight += 1; // Increase weight if reviewed multiple times
+          } else {
+            edgesMap.set(edgeKey, {
+              source: reviewer,
+              target: prAuthor,
+              weight: 1,
+              status: review.state.toLowerCase(), // Capture "approved", "changes_requested", etc.
+            });
           }
         });
       });
-
+    
       return {
         nodes: Array.from(nodesSet).map((id) => ({ id })),
         edges: Array.from(edgesMap.values()),
       };
     };
+    
 
     // State to store graph data
     const [graphData, setGraphData] = useState<PRGraphData>({ nodes: [], edges: [] });
@@ -93,7 +105,7 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
     }, [teamData.teamPRs]);
 
     return (
-      <Card mah={SPACING.maxHeight} ref={ref} bg={getTutorialHighlightColor(9)}>
+      <Card ref={ref} bg={getTutorialHighlightColor(9)}>
         <Group grow align="start">
           <Box style={{ maxWidth: 200, marginRight: 15 }}>
             <PRList
@@ -121,6 +133,7 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
             PR Review Interaction Graph
           </Text>
           <PRGraph graphData={graphData} />
+          <PRManGraph graphData={graphData} />
         </Box>
       </Card>
     );
