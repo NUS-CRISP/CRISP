@@ -1,8 +1,28 @@
 import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 
-const PRGraph = ({ graphData }) => {
-  const svgRef = useRef(null);
+interface GraphNode {
+  id: string; // Unique identifier for each node
+  x?: number; // D3 adds x and y coordinates dynamically
+  y?: number;
+}
+
+interface GraphEdge {
+  source: string | GraphNode;
+  target: string | GraphNode;
+}
+
+interface GraphData {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+}
+
+interface PRGraphProps {
+  graphData: GraphData;
+}
+
+const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
+  const svgRef = useRef<SVGSVGElement | null>(null);
 
   useEffect(() => {
     if (!graphData.nodes.length) return;
@@ -13,8 +33,8 @@ const PRGraph = ({ graphData }) => {
     const width = 600;
     const height = 400;
 
-    const simulation = d3.forceSimulation(graphData.nodes)
-      .force('link', d3.forceLink(graphData.edges).id((d) => d))
+    const simulation = d3.forceSimulation<GraphNode>(graphData.nodes)
+      .force('link', d3.forceLink<GraphNode, GraphEdge>(graphData.edges).id(d => (d as GraphNode).id))
       .force('charge', d3.forceManyBody().strength(-100))
       .force('center', d3.forceCenter(width / 2, height / 2));
 
@@ -33,14 +53,14 @@ const PRGraph = ({ graphData }) => {
 
     simulation.on('tick', () => {
       link
-        .attr('x1', (d) => d.source.x)
-        .attr('y1', (d) => d.source.y)
-        .attr('x2', (d) => d.target.x)
-        .attr('y2', (d) => d.target.y);
+        .attr('x1', (d) => (d.source as GraphNode).x || 0)
+        .attr('y1', (d) => (d.source as GraphNode).y || 0)
+        .attr('x2', (d) => (d.target as GraphNode).x || 0)
+        .attr('y2', (d) => (d.target as GraphNode).y || 0);
 
       node
-        .attr('cx', (d) => d.x)
-        .attr('cy', (d) => d.y);
+        .attr('cx', (d) => d.x || 0)
+        .attr('cy', (d) => d.y || 0);
     });
   }, [graphData]);
 

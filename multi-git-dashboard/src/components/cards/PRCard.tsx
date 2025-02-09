@@ -81,7 +81,7 @@ export const PRCard: React.FC<OverviewProps> = ({
                 marks={marks}
                 mx={20}
                 mb={30}
-                onDoubleClick={handleSliderDoubleClick} // Use function to handle double-click
+                onDoubleClick={handleSliderDoubleClick}
             />
 
             <TutorialPopover stage={9} position="top" disabled={index !== 0}>
