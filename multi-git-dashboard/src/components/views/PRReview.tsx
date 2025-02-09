@@ -12,7 +12,7 @@ import { Team as SharedTeam } from '@shared/types/Team';
 import { TeamData } from '@shared/types/TeamData';
 import { Status } from '@shared/types/util/Status';
 import { useEffect, useState } from 'react';
-import OverviewAccordionItem from '../pr-review/OverviewAccordionItem';
+import PRAccordionItem from '../pr-review/PRAccordionItem';
 import { useTutorialContext } from '../tutorial/TutorialContext';
 import TutorialPopover from '../tutorial/TutorialPopover';
 import { TeamSet } from '@shared/types/TeamSet';
@@ -158,7 +158,7 @@ const PRReview: React.FC<OverviewProps> = ({
             position="left"
             disabled={idx !== 0 || curTutorialStage !== 7}
           >
-            <OverviewAccordionItem
+            <PRAccordionItem
               index={idx}
               key={teamData._id}
               team={team}

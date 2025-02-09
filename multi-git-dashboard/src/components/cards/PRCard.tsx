@@ -83,21 +83,7 @@ export const PRCard: React.FC<OverviewProps> = ({
         />
       </TutorialPopover>
 
-      {/* Modal for alias input */}
-      <Modal
-        opened={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title={`Set alias name for ${editingWeek !== null ? `Week ${editingWeek + 1}` : ''}`}
-      >
-        <TextInput
-          value={aliasInput}
-          onChange={e => setAliasInput(e.currentTarget.value)}
-          placeholder="Enter week alias"
-        />
-        <Button onClick={saveAlias} mt="md">
-          Save
-        </Button>
-      </Modal>
+   
     </Stack>
   );
 };
