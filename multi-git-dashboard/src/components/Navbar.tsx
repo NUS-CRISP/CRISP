@@ -193,7 +193,7 @@ const Navbar: React.FC = () => {
 
   const courseLinksData = [
     {
-      link: `/courses/${courseId}/class-review`,
+      link: `/courses/${courseId}/class-overview`,
       label: 'Class Overview',
       disabled: !peopleAdded,
       pngSrc: '/class-overview.png',
@@ -277,12 +277,7 @@ const Navbar: React.FC = () => {
         style={item.disabled ? { cursor: 'not-allowed', opacity: 0.5 } : {}}
       >
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Image
-            src={item.pngSrc ?? ''}
-            alt={`${item.label} icon`}
-            width={25}
-            height={25}
-          />
+       
           <span style={{ marginLeft: '5px' }}>{item.label}</span>
         </div>
       </a>

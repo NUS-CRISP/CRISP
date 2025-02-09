@@ -1,4 +1,4 @@
-import Overview from '@/components/views/TeamReview';
+import TeamReview from '@/components/views/TeamReview';
 import {
   DateUtils,
   getCurrentWeekGenerator,
@@ -105,7 +105,7 @@ const CourseViewPage: React.FC = () => {
       }}
     >
       {course && dateUtils ? (
-        <Overview
+        <TeamReview
           courseId={courseId}
           dateUtils={dateUtils}
           teamSets={teamSets}
