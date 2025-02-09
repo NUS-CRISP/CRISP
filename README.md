@@ -6,6 +6,9 @@ CRISP is a web-based dashboard designed to streamline the management and evaluat
 
 Click [here](https://crisp.comp.nus.edu.sg/) to go to the CRISP product website.
 
+## Beta version
+Here is the beta version with latest update [dev](https://crisp-dev.comp.nus.edu.sg/).
+
 ## Contribute
 
 Check out our developer guide [here](https://github.com/NUS-CRISP/CRISP/wiki).
