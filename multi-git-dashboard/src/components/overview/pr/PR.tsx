@@ -5,6 +5,7 @@ import dayjs from 'dayjs';
 import { forwardRef, useState } from 'react';
 import PRDetails from './PRDetails';
 import PRList from './PRList';
+import PRGraph from './PRGraph';
 
 export interface Spacing {
   maxHeight: number;
@@ -42,6 +43,35 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
       });
     };
 
+    // const processPRInteractions = (teamPRs) => {
+    //   const nodes = new Set();
+    //   const edges = [];
+
+    //   teamPRs.forEach((pr) => {
+    //     pr.reviews.forEach((review) => {
+    //       if (review.user && pr.user) {
+    //         nodes.add(review.user);
+    //         nodes.add(pr.user);
+
+    //         edges.push({
+    //           source: review.user,
+    //           target: pr.user,
+    //           weight: 1, // Start with weight 1, increase if multiple reviews exist
+    //         });
+    //       }
+    //     });
+    //   });
+
+    //   return { nodes: Array.from(nodes), edges };
+    // };
+
+    // State to store graph data
+    const [graphData, setGraphData] = useState({ nodes: [], edges: [] });
+
+    // useEffect(() => {
+    //   setGraphData(processPRInteractions(teamData.teamPRs));
+    // }, [teamData.teamPRs])
+
     return (
       <Card mah={SPACING.maxHeight} ref={ref} bg={getTutorialHighlightColor(9)}>
         <Group grow align="start">
@@ -69,6 +99,12 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
             </Box>
           )}
         </Group>
+
+        {/* <Box mt={20}>
+          <Text fw={500} size="lg">PR Review Interaction Graph</Text>
+          <PRGraph graphData={graphData} />
+        </Box> */}
+
       </Card>
     );
   }

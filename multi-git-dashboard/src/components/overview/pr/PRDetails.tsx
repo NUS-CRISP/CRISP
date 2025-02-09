@@ -22,6 +22,25 @@ interface PRDetailsProps {
   profileGetter: ProfileGetter;
 }
 
+const getReviewStats = (pr: TeamData['teamPRs'][number]) => {
+  if (!pr || !pr.reviews) {
+    return {
+      totalReviews: 0,
+      reviewDepth: 0,
+      avgCommentsPerReview: 0,
+    };
+  }
+
+  const totalReviews = pr.reviews.length;
+  const reviewDepth = pr.reviews.reduce((sum: number, r: typeof pr.reviews[number]) => sum + (r.comments?.length || 0), 0);
+
+  return {
+    totalReviews,
+    reviewDepth,
+    avgCommentsPerReview: reviewDepth / (totalReviews || 1),
+  };
+};
+
 const PRDetails: React.FC<PRDetailsProps> = ({
   pr,
   spacing,
@@ -34,6 +53,9 @@ const PRDetails: React.FC<PRDetailsProps> = ({
   const theme = useMantineTheme();
 
   const [userColors, setUserColors] = useState<Map<string, string>>(new Map());
+
+
+  const stats = getReviewStats(pr);
 
   useEffect(() => {
     const newUserColors = new Map<string, string>();
@@ -70,7 +92,15 @@ const PRDetails: React.FC<PRDetailsProps> = ({
           Created At: {new Date(pr.createdAt).toLocaleDateString()}
         </Text>
       </Box>
+
       <Divider my="sm" />
+
+      <Text size="sm">Total Reviews: {stats.totalReviews}</Text>
+      <Text size="sm">Total Review Depth: {stats.reviewDepth}</Text>
+      <Text size="sm">Avg Comments per Review: {stats.avgCommentsPerReview.toFixed(2)}</Text>
+
+      <Divider my="sm" />
+
       {pr.reviews.length === 0 ? (
         <Container>No reviews found.</Container>
       ) : (
