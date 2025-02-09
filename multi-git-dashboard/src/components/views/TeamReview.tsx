@@ -30,7 +30,7 @@ export interface Team extends Omit<SharedTeam, 'teamData'> {
 
 export type ProfileGetter = (gitHandle: string) => Promise<Profile>;
 
-const Overview: React.FC<OverviewProps> = ({
+const TeamReview: React.FC<OverviewProps> = ({
   courseId,
   dateUtils,
   teamSets,
@@ -195,4 +195,4 @@ const Overview: React.FC<OverviewProps> = ({
   );
 };
 
-export default Overview;
+export default TeamReview;

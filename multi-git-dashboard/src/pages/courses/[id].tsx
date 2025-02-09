@@ -1,4 +1,4 @@
-import Overview from '@/components/views/Overview';
+import Overview from '@/components/views/TeamReview';
 import {
   DateUtils,
   getCurrentWeekGenerator,

@@ -1,4 +1,4 @@
-import { ProfileGetter } from '@/components/views/Overview';
+import { ProfileGetter } from '@/components/views/TeamReview';
 import {
   Accordion,
   Box,

@@ -1,4 +1,4 @@
-import { Team } from '@/components/views/Overview';
+import { Team } from '@/components/views/TeamReview';
 import { DateUtils, getTutorialHighlightColor } from '@/lib/utils';
 import { Carousel, Embla } from '@mantine/carousel';
 import { Card, Center, Stack, Title } from '@mantine/core';

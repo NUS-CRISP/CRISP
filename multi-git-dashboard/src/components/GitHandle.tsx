@@ -1,6 +1,6 @@
 import { HoverCard } from '@mantine/core';
 import { ProfileCard } from './cards/ProfileCard';
-import { ProfileGetter } from './views/Overview';
+import { ProfileGetter } from './views/TeamReview';
 
 export interface GitHandleProps {
   gitHandle: string;
