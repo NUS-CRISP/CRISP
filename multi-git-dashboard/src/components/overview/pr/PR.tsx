@@ -7,6 +7,7 @@ import PRDetails from './PRDetails';
 import PRList from './PRList';
 import PRGraph from './PRGraph';
 import PRManGraph from './PRMantineGraph';
+import PRStatusChart from './PRStatusChart'; 
 
 export interface Spacing {
   maxHeight: number;
@@ -65,7 +66,7 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
       const edgesMap: Map<string, PREdge> = new Map();
     
       teamPRs.forEach((pr) => {
-        const prAuthor = pr.user; // PR author
+        const prAuthor = pr.user;
         if (!prAuthor) return;
     
         nodesSet.add(prAuthor);
@@ -84,7 +85,7 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
               source: reviewer,
               target: prAuthor,
               weight: 1,
-              status: review.state.toLowerCase(), // Capture "approved", "changes_requested", etc.
+              status: review.state.toLowerCase(), // Captures "approved", "changes_requested", "dismissed", "commented"
             });
           }
         });
@@ -97,7 +98,7 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
     };
     
 
-    // State to store graph data
+    // graph data 
     const [graphData, setGraphData] = useState<PRGraphData>({ nodes: [], edges: [] });
 
     useEffect(() => {
@@ -133,7 +134,8 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
             PR Review Interaction Graph
           </Text>
           <PRGraph graphData={graphData} />
-          <PRManGraph graphData={graphData} />
+          {/* <PRManGraph graphData={graphData} /> */}
+          <PRStatusChart graphData={graphData} />
         </Box>
       </Card>
     );
