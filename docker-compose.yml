@@ -14,7 +14,8 @@ services:
     volumes:
       - /home/sadm/Repositories/:/app/repositories
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
     networks:
       - app-network
 
@@ -36,6 +37,11 @@ services:
       - app-network
     volumes:
       - './data:/data/db'
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.runCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
 networks:
   app-network:
