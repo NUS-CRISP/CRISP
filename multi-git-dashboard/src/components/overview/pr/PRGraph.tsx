@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import * as d3 from 'd3';
+import { useEffect, useRef } from "react";
+import * as d3 from "d3";
 
 interface PRNode {
   id: string;
@@ -25,7 +25,7 @@ interface PRGraphProps {
 
 const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
   const svgRef = useRef<SVGSVGElement>(null);
-  const tooltipRef = useRef<HTMLDivElement>(null); 
+  const tooltipRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!graphData.nodes.length || !graphData.edges.length) return;
@@ -34,48 +34,51 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
     const height = 500;
 
     const svg = d3.select(svgRef.current);
-    svg.selectAll('*').remove();
+    svg.selectAll("*").remove(); 
 
-    const tooltip = d3.select(tooltipRef.current);
+    const tooltip = d3.select(tooltipRef.current); 
 
     const simulation = d3
       .forceSimulation(graphData.nodes)
-      .force('link', d3.forceLink(graphData.edges).id((d: any) => d.id).distance(250))
-      .force('charge', d3.forceManyBody().strength(-300))
-      .force('center', d3.forceCenter(width / 2 - 150, height / 2 - 200))
-      .force('collision', d3.forceCollide().radius(40));
+      .force("link", d3.forceLink(graphData.edges).id((d: any) => d.id).distance(250))
+      .force("charge", d3.forceManyBody().strength(-300))
+      .force("center", d3.forceCenter(width / 2 - 200, height / 2 - 270))
+      .force("collision", d3.forceCollide().radius(40));
 
     const colorMap = {
-      approved: 'green',
-      changes_requested: 'red',
-      dismissed: 'gray',
+      approved: "green",
+      changes_requested: "red",
+      dismissed: "gray",
     };
 
     const defs = svg.append("defs");
 
-    defs.selectAll("marker")
+    defs
+      .selectAll("marker")
       .data(["approved", "changes_requested", "dismissed"])
       .enter()
       .append("marker")
       .attr("id", (d) => `arrow-${d}`)
       .attr("viewBox", "0 -5 10 10")
-      .attr("refX", 20)
+      .attr("refX", 15)
       .attr("refY", 0)
-      .attr("markerWidth", 6)
+      .attr("markerWidth", 3)
       .attr("markerHeight", 6)
       .attr("orient", "auto")
       .append("path")
       .attr("d", "M0,-5L10,0L0,5")
       .attr("fill", (d) => colorMap[d as keyof typeof colorMap]);
 
+  
     const link = svg
       .append("g")
-      .selectAll("line")
+      .selectAll("path")
       .data(graphData.edges)
       .enter()
-      .append("line")
+      .append("path")
       .attr("stroke", (d) => colorMap[d.status as keyof typeof colorMap] || "black")
       .attr("stroke-width", (d) => Math.max(2, Math.min(d.weight * 2, 6)))
+      .attr("fill", "none")
       .attr("marker-end", (d) => `url(#arrow-${d.status})`)
       .on("mouseover", function (event, d) {
         tooltip
@@ -87,9 +90,7 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
           .style("top", `${event.offsetY + 10}px`);
       })
       .on("mousemove", function (event) {
-        tooltip
-          .style("left", `${event.offsetX + 10}px`)
-          .style("top", `${event.offsetY + 10}px`);
+        tooltip.style("left", `${event.offsetX + 10}px`).style("top", `${event.offsetY + 10}px`);
       })
       .on("mouseout", () => {
         tooltip.style("opacity", 0);
@@ -135,11 +136,21 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
       .text((d) => d.id);
 
     simulation.on("tick", () => {
-      link
-        .attr("x1", (d: any) => (d.source as PRNode).x!)
-        .attr("y1", (d: any) => (d.source as PRNode).y!)
-        .attr("x2", (d: any) => (d.target as PRNode).x!)
-        .attr("y2", (d: any) => (d.target as PRNode).y!);
+      link.attr("d", (d: any) => {
+        const x1 = (d.source as PRNode).x!;
+        const y1 = (d.source as PRNode).y!;
+        const x2 = (d.target as PRNode).x!;
+        const y2 = (d.target as PRNode).y!;
+
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const curveOffset = d.status === "approved" ? 20 : -20; 
+
+        const mx = x1 + dx / 2 + curveOffset;
+        const my = y1 + dy / 2 + curveOffset; 
+
+        return `M${x1},${y1} Q${mx},${my} ${x2},${y2}`;
+      });
 
       node.attr("cx", (d) => d.x!).attr("cy", (d) => d.y!);
       labels.attr("x", (d) => d.x!).attr("y", (d) => d.y!);
