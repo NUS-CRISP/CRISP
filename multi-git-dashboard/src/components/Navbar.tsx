@@ -26,6 +26,7 @@ import TutorialPopover from './tutorial/TutorialPopover';
 import { Course } from '@shared/types/Course';
 import { IconInfoCircle } from '@tabler/icons-react';
 import Image from 'next/image';
+import { LinksGroup } from './NavbarLinksGroup/NavbarLinksGroup';
 
 interface NavbarLinkProps {
   icon: typeof IconHome2;
@@ -191,6 +192,31 @@ const Navbar: React.FC = () => {
     />
   ));
 
+  const mockdata = [
+    {
+      label: 'Dashboard',
+      links: [
+        { label: 'Class Overview', link: `/courses/${courseId}/class-overview` },
+        { label: 'Team Review', link: `/courses/${courseId}` },
+        { label: 'PR Review', link: `/courses/${courseId}/pr-review` },
+        { label: 'Code Analysis', link: `/courses/${courseId}/code-analysis` },
+      ],
+      icon: '/class-overview.png'
+    },
+    {
+      label: 'Config',
+      links: [
+        { label: 'People', link: `/courses/${courseId}/people` },
+        { label: 'Repositories', link: `/courses/${courseId}/repositories` },
+        { label: 'Teams', link: `/courses/${courseId}/teams` },
+        { label: 'Timeline', link: `/courses/${courseId}/timeline` },
+        { label: 'Project Management', link: `/courses/${courseId}/project-management` },
+      ],
+      icon: '/class-overview.png'
+    },
+    { label: 'Assessments', link: `/courses/${courseId}/assessments` },
+  ];
+
   const courseLinksData = [
     {
       link: `/courses/${courseId}/class-overview`,
@@ -251,38 +277,43 @@ const Navbar: React.FC = () => {
       pngSrc: '/code-analysis.png',
     }
   ];
-
-  const courseLinks = courseLinksData.map(item => (
-    <TutorialPopover
-      stage={6}
-      position="right"
+  const courseLinks = mockdata.map((item) => (
+    <LinksGroup
       key={item.label}
-      disabled={item.label !== 'Overview' || curTutorialStage !== 6}
-    >
-      <a
-        className={classes.courseLink}
-        data-active={item.label === activeCourseTab || undefined}
-        href={item.link}
-        onClick={event => {
-          event.preventDefault();
-          if (!item.disabled) {
-            logSessionTime(item.label, false);
-            setActiveCourseTab(item.label);
-            router.push(item.link);
-          } else {
-            setAlertOpened(true); // Show alert if people are not added
-          }
-        }}
-        key={item.label}
-        style={item.disabled ? { cursor: 'not-allowed', opacity: 0.5 } : {}}
-      >
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-       
-          <span style={{ marginLeft: '5px' }}>{item.label}</span>
-        </div>
-      </a>
-    </TutorialPopover>
+      {...item}
+      renderLink={(link) => (
+        <TutorialPopover
+          stage={6}
+          position="right"
+          key={link.label}
+          disabled={link.label !== 'Overview' || curTutorialStage !== 6}
+        >
+          <a
+            className={classes.courseLink}
+            data-active={link.label === activeCourseTab || undefined}
+            href={link.link}
+            onClick={(event) => {
+              event.preventDefault();
+              if (!link.disabled) {
+                logSessionTime(link.label, false);
+                setActiveCourseTab(link.label);
+                router.push(link.link);
+              } else {
+                setAlertOpened(true); // Show alert if people are not added
+              }
+            }}
+            style={link.disabled ? { cursor: 'not-allowed', opacity: 0.5 } : {}}
+          >
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <span style={{ marginLeft: '5px' }}>{link.label}</span>
+            </div>
+          </a>
+        </TutorialPopover>
+      )}
+    />
   ));
+  
+
 
   useEffect(() => {
     const path = router.pathname;
