@@ -13,6 +13,8 @@ services:
       dockerfile: ./backend/Dockerfile
     volumes:
       - /home/sadm/Repositories/:/app/repositories
+    depends_on:
+      - mongo
     networks:
       - app-network
 
