@@ -12,6 +12,11 @@ import { getUserIdByAccountId } from '../services/accountService';
 
 export const getTeamsByCourse = async (req: Request, res: Response) => {
   const { courseId } = req.params;
+  // Disable caching
+  res.setHeader(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate'
+  );
   try {
     const teams = await getTeamsByCourseId(courseId);
     res.status(200).json(teams);
@@ -24,6 +29,11 @@ export const getTeamsByCourse = async (req: Request, res: Response) => {
 // Note: Assumes that the one using this method is the TA themselves.
 export const getTeamsByTAAndCourse = async (req: Request, res: Response) => {
   const { courseId } = req.params;
+  // Disable caching
+  res.setHeader(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate'
+  );
   try {
     const accountId = await getAccountId(req);
     const userId = await getUserIdByAccountId(accountId);
