@@ -26,6 +26,7 @@ import TutorialPopover from './tutorial/TutorialPopover';
 import { Course } from '@shared/types/Course';
 import { IconInfoCircle } from '@tabler/icons-react';
 import Image from 'next/image';
+import { usePeopleContext } from './contexts/PeopleContext';
 
 interface NavbarLinkProps {
   icon: typeof IconHome2;
@@ -85,6 +86,8 @@ const Navbar: React.FC = () => {
   const [mainLinkPopoverOpened, setMainLinkPopoverOpened] = useState(false);
   const [questionPopoverOpened, setQuestionPopoverOpened] = useState(false);
 
+  const { reload, setReload } = usePeopleContext();
+
   useEffect(() => {
     const fetchCourseData = async () => {
       try {
@@ -98,13 +101,15 @@ const Navbar: React.FC = () => {
         }
       } catch (error) {
         console.error('Failed to fetch course data:', error);
+      } finally {
+        setReload(false);
       }
     };
 
-    if (courseId) {
+    if (courseId || reload) {
       fetchCourseData();
     }
-  }, [courseId]);
+  }, [courseId, reload]);
 
   const logSessionTime = async (newTab: string, isTabClosing: boolean) => {
     if (newTab === activeCourseTab && !isTabClosing) return;

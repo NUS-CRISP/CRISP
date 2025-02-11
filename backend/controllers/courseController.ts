@@ -63,6 +63,11 @@ export const createCourse = async (req: Request, res: Response) => {
 };
 
 export const getCourses = async (req: Request, res: Response) => {
+  // Disable caching
+  res.setHeader(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate'
+  );
   try {
     const accountId = await getAccountId(req);
     const courses = await getCoursesForUser(accountId);
@@ -228,6 +233,11 @@ export const updateTAs = async (req: Request, res: Response) => {
 };
 
 export const getTeachingTeam = async (req: Request, res: Response) => {
+  // Disable caching
+  res.setHeader(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate'
+  );
   const courseId = req.params.id;
   try {
     const teachingTeam = await getCourseTeachingTeam(courseId);
@@ -316,6 +326,11 @@ export const removeFaculty = async (req: Request, res: Response) => {
 /*----------------------------------------People----------------------------------------*/
 export const getPeople = async (req: Request, res: Response) => {
   const courseId = req.params.id;
+  // Disable caching
+  res.setHeader(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate'
+  );
   try {
     const people = await getPeopleFromCourse(courseId);
     res.status(200).json(people);
@@ -401,6 +416,11 @@ export const removeRepository = async (req: Request, res: Response) => {
 export const addTeamSet = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   const { name } = req.body;
+  // Disable caching
+  res.setHeader(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate'
+  );
   try {
     await createTeamSet(courseId, name);
     res.status(201).json({ message: 'Team set created successfully' });
@@ -418,6 +438,11 @@ export const addTeamSet = async (req: Request, res: Response) => {
 
 export const getTeamSets = async (req: Request, res: Response) => {
   const courseId = req.params.id;
+  // Disable caching
+  res.setHeader(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate'
+  );
   try {
     const accountId = await getAccountId(req);
     const teamSets = await getTeamSetsFromCourse(accountId, courseId);
