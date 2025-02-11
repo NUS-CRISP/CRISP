@@ -44,6 +44,11 @@ import { addInternalAssessmentsToCourse } from '../services/internalAssessmentSe
 
 /*----------------------------------------Course----------------------------------------*/
 export const createCourse = async (req: Request, res: Response) => {
+  // Disable caching
+  res.setHeader(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate'
+  );
   try {
     const accountId = await getAccountId(req);
     const course = await createNewCourse(req.body, accountId);
@@ -154,6 +159,11 @@ export const getCourseCode = async (req: Request, res: Response) => {
 /*----------------------------------------Student----------------------------------------*/
 export const addStudents = async (req: Request, res: Response) => {
   const courseId = req.params.id;
+  // Disable caching
+  res.setHeader(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate'
+  );
   const students = req.body.items;
   try {
     await addStudentsToCourse(courseId, students);
@@ -171,6 +181,11 @@ export const addStudents = async (req: Request, res: Response) => {
 };
 
 export const updateStudents = async (req: Request, res: Response) => {
+  // Disable caching
+  res.setHeader(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate'
+  );
   const courseId = req.params.id;
   const students = req.body.items;
   try {
@@ -205,6 +220,11 @@ export const removeStudents = async (req: Request, res: Response) => {
 
 /*----------------------------------------TA----------------------------------------*/
 export const addTAs = async (req: Request, res: Response) => {
+  // Disable caching
+  res.setHeader(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate'
+  );
   const courseId = req.params.id;
   const TAs = req.body.items;
   try {
@@ -221,6 +241,11 @@ export const addTAs = async (req: Request, res: Response) => {
 };
 
 export const updateTAs = async (req: Request, res: Response) => {
+  // Disable caching
+  res.setHeader(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate'
+  );
   const courseId = req.params.id;
   const TAs = req.body.items;
   try {
@@ -277,6 +302,11 @@ export const removeTAs = async (req: Request, res: Response) => {
 
 /*----------------------------------------Faculty----------------------------------------*/
 export const addFaculty = async (req: Request, res: Response) => {
+  // Disable caching
+  res.setHeader(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate'
+  );
   const courseId = req.params.id;
   const faculty = req.body.items;
   try {
@@ -295,6 +325,11 @@ export const addFaculty = async (req: Request, res: Response) => {
 };
 
 export const updateFaculty = async (req: Request, res: Response) => {
+  // Disable caching
+  res.setHeader(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate'
+  );
   const courseId = req.params.id;
   const faculty = req.body.items;
   try {
@@ -350,6 +385,11 @@ export const getPeople = async (req: Request, res: Response) => {
 
 /*-------------------------------------Repositories-------------------------------------*/
 export const getRepositories = async (req: Request, res: Response) => {
+  // Disable caching
+  res.setHeader(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate'
+  );
   const courseId = req.params.id;
   try {
     const repositories = await getRepositoriesFromCourse(courseId);
@@ -480,6 +520,11 @@ export const getTeamSetsNames = async (req: Request, res: Response) => {
 
 /*----------------------------------------Team----------------------------------------*/
 export const addStudentsToTeams = async (req: Request, res: Response) => {
+  // Disable caching
+  res.setHeader(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate'
+  );
   const courseId = req.params.id;
   const students = req.body.items;
   try {
@@ -498,6 +543,11 @@ export const addStudentsToTeams = async (req: Request, res: Response) => {
 };
 
 export const addTAsToTeams = async (req: Request, res: Response) => {
+  // Disable caching
+  res.setHeader(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate'
+  );
   const courseId = req.params.id;
   const tas = req.body.items;
   try {
