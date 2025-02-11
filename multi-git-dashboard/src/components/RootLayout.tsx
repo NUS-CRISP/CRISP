@@ -18,13 +18,13 @@ export default function RootLayout({
 
   return (
     <TutorialContextProvider init={initTutorialStage}>
-        <div className={styles.rootLayout}>
-          <Head>
-            <link rel="shortcut icon" href="/favicon.png" />
-          </Head>
-          {showSidebar && <Navbar />}
-          <div className={styles.content}>{children}</div>
-        </div>
+      <div className={styles.rootLayout}>
+        <Head>
+          <link rel="shortcut icon" href="/favicon.png" />
+        </Head>
+        {showSidebar && <Navbar />}
+        <div className={styles.content}>{children}</div>
+      </div>
     </TutorialContextProvider>
   );
 }
