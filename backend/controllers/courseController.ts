@@ -142,6 +142,11 @@ export const deleteCourse = async (req: Request, res: Response) => {
 };
 
 export const getCourseCode = async (req: Request, res: Response) => {
+  // Disable caching
+  res.setHeader(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate'
+  );
   const courseId = req.params.id;
   try {
     const courseCode = await getCourseCodeById(courseId);
