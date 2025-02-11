@@ -4,7 +4,6 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Navbar from './Navbar';
 import { TutorialContextProvider } from './tutorial/TutorialContext';
-import { PeopleProvider } from './contexts/PeopleContext';
 
 export default function RootLayout({
   children,
@@ -19,7 +18,6 @@ export default function RootLayout({
 
   return (
     <TutorialContextProvider init={initTutorialStage}>
-      <PeopleProvider>
         <div className={styles.rootLayout}>
           <Head>
             <link rel="shortcut icon" href="/favicon.png" />
@@ -27,7 +25,6 @@ export default function RootLayout({
           {showSidebar && <Navbar />}
           <div className={styles.content}>{children}</div>
         </div>
-      </PeopleProvider>
     </TutorialContextProvider>
   );
 }

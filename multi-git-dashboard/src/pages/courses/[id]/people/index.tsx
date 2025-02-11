@@ -1,4 +1,3 @@
-import { usePeopleContext } from '@/components/contexts/PeopleContext';
 import PeopleInfo from '@/components/views/PeopleInfo';
 import { hasFacultyPermission } from '@/lib/auth/utils';
 import { Container } from '@mantine/core';
@@ -21,14 +20,12 @@ const PeopleListPage: React.FC = () => {
   const [accountStatusRecord, setAccountStatusRecord] = useState<
     Record<string, boolean>
   >({});
-  const { setReload } = usePeopleContext();
 
   const permission = hasFacultyPermission();
 
   const onUpdate = () => {
     fetchPeople();
     getAccountStatuses();
-    setReload(true); // trigger navbar reload
   };
 
   useEffect(() => {
