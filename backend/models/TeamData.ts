@@ -78,6 +78,7 @@ const milestoneSchema = new Schema<Milestone>(
 
 const teamDataSchema = new Schema<TeamData>({
   teamId: { type: Number, required: true },
+  course: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
   gitHubOrgName: { type: String, required: true },
   repoName: { type: String, required: true },
   commits: { type: Number, required: true },

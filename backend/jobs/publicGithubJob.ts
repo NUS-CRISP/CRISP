@@ -224,6 +224,7 @@ const getPublicCourseData = async (course: any) => {
 
       const teamData = {
         gitHubOrgName: owner.toLowerCase(),
+        course: course._id,
         teamId: repoData.data.id,
         repoName: repo,
         commits: commits.length,
