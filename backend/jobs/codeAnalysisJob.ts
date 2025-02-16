@@ -6,6 +6,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import codeAnalysisDataModel from '../models/CodeAnalysisData';
 import { mean, median } from 'mathjs';
+import TeamDataModel from '@models/TeamData';
+import TeamModel from '@models/Team';
+import { Types } from 'mongoose';
 
 const { exec } = require('child_process');
 
@@ -144,7 +147,7 @@ const createProjectIfNotExists = async (repo: string) => {
 
     const searchResult = await searchResponse.json();
 
-    if (searchResult.components.length > 0) {
+    if (searchResult.components && searchResult.components.length > 0) {
       return;
     }
 
@@ -287,79 +290,216 @@ const scanRepo = async (
 };
 
 const getAndSaveCodeData = async (gitHubOrgName: string, repo: any) => {
+  const MAX_ATTEMPTS = 3;
+  const DELAY = 90000;
   try {
     const sonarUri = process.env.SONAR_URI;
     const sonarToken = process.env.SONAR_TOKEN;
-    const projectKey = gitHubOrgName + '_' + repo.name;
+    const projectKey = `${gitHubOrgName}_${repo.name}`;
     const metricKeys =
       'complexity, cognitive_complexity, branch_coverage, coverage, line_coverage, tests, uncovered_conditions, uncovered_lines, test_execution_time, test_errors,  test_failures, test_success_density, skipped_tests, duplicated_blocks, duplicated_files, duplicated_lines, duplicated_lines_density, code_smells, sqale_index, sqale_debt_ratio, sqale_rating, alert_status, quality_gate_details, bugs, reliability_rating, reliability_remediation_effort, vulnerabilities, security_rating, security_remediation_effort, security_hotspots, classes, comment_lines, comment_lines_density, files, lines, ncloc, functions, statements';
 
-    const codeAnalysisResponse = await fetch(
-      `${sonarUri}/api/measures/component?component=${projectKey}&metricKeys=${metricKeys}&additionalFields=metrics`,
-      {
-        method: 'GET',
-        headers: {
-          Authorization: `Basic ${Buffer.from(`${sonarToken}:`).toString('base64')}`,
-        },
-      }
-    );
+    let attempts = 0;
 
-    if (!codeAnalysisResponse.ok) {
-      throw new Error(
-        `Failed to fetch data from Sonar API: ${codeAnalysisResponse.statusText}`
+    while (attempts < MAX_ATTEMPTS) {
+      try {
+        const codeAnalysisResponse = await fetch(
+          `${sonarUri}/api/measures/component?component=${projectKey}&metricKeys=${metricKeys}&additionalFields=metrics`,
+          {
+            method: 'GET',
+            headers: {
+              Authorization: `Basic ${Buffer.from(`${sonarToken}:`).toString('base64')}`,
+            },
+          }
+        );
+
+        if (!codeAnalysisResponse.ok) {
+          throw new Error(
+            `Failed to fetch data from Sonar API: ${codeAnalysisResponse.statusText}`
+          );
+        }
+
+        const responseData = await codeAnalysisResponse.json();
+
+        const { component, metrics } = responseData;
+
+        if (
+          !component ||
+          !component.measures ||
+          component.measures.length === 0
+        ) {
+          if (attempts < MAX_ATTEMPTS - 1) {
+            attempts++;
+            console.warn(
+              `Attempt ${attempts} failed for repo: ${repo.name}. Retrying in ${DELAY / 1000} seconds...`
+            );
+            await new Promise(resolve => setTimeout(resolve, DELAY));
+            continue;
+          } else {
+            throw new Error(
+              `Invalid response structure or empty measures for repo: ${repo.name} after maximum retries`
+            );
+          }
+        }
+
+        const metricsArray: string[] = [];
+        const valuesArray: string[] = [];
+        const typesArray: string[] = [];
+        const domainsArray: string[] = [];
+
+        const metricMap = new Map<string, { type: string; domain: string }>();
+        const compositeDataMap = new Map<string, number>();
+
+        metrics.forEach((metric: any) => {
+          metricMap.set(metric.key, {
+            type: metric.type,
+            domain: metric.domain,
+          });
+        });
+
+        component.measures.forEach((measure: any) => {
+          const metricKey = measure.metric;
+          const metricInfo = metricMap.get(metricKey);
+
+          if (metricInfo) {
+            metricsArray.push(metricKey);
+            valuesArray.push(measure.value || '');
+            typesArray.push(metricInfo.type || '');
+            domainsArray.push(metricInfo.domain || '');
+
+            if (
+              metricKey === 'bugs' ||
+              metricKey === 'code_smells' ||
+              metricKey === 'ncloc'
+            ) {
+              compositeDataMap.set(metricKey, measure.value);
+            }
+          }
+        });
+
+        const codeAnalysisData = new codeAnalysisDataModel({
+          executionTime: new Date(),
+          gitHubOrgName,
+          teamId: repo.id,
+          repoName: repo.name,
+          metrics: metricsArray,
+          values: valuesArray,
+          types: typesArray,
+          domains: domainsArray,
+        });
+
+        const savedDoc = await codeAnalysisData.save();
+        console.log(
+          `Successfully fetched and saved data for repo: ${repo.name}`
+        );
+        await getCompositeMetrics(compositeDataMap, repo, savedDoc._id);
+        return;
+      } catch (fetchError) {
+        attempts++;
+        if (attempts >= MAX_ATTEMPTS) {
+          console.error(
+            `Failed to fetch or save data for repo: ${repo.name} after ${attempts} attempts.`,
+            fetchError
+          );
+          throw fetchError;
+        }
+        console.warn(
+          `Retry attempt ${attempts} for repo: ${repo.name} failed. Retrying in ${
+            DELAY / 1000
+          } seconds...`
+        );
+        await new Promise(resolve => setTimeout(resolve, DELAY));
+      }
+    }
+  } catch (error) {
+    console.error(
+      `Error fetching or saving data for repo: ${repo.name}`,
+      error
+    );
+  }
+};
+
+const getCompositeMetrics = async (
+  compositeDataMap: Map<string, number>,
+  repo: any,
+  codeAnalysisId: Types.ObjectId
+) => {
+  const compositeMetrics = new Map<string, string>();
+  const teamData = await TeamDataModel.findOne({ teamId: repo.id });
+
+  if (!teamData) return;
+
+  // Commit Data
+  if (teamData.commits && teamData.commits > 0) {
+    for (const [key, value] of compositeDataMap.entries()) {
+      if (key === 'bugs' || key === 'code_smells') {
+        compositeMetrics.set(
+          `${key}_per_commit`,
+          (value / teamData.commits).toFixed(3)
+        );
+      } else if (key === 'ncloc') {
+        compositeMetrics.set(
+          'lines_per_commit',
+          (value / teamData.commits).toFixed(3)
+        );
+      }
+    }
+  }
+
+  // PR Data
+  if (teamData.pullRequests && teamData.pullRequests > 0) {
+    for (const [key, value] of compositeDataMap.entries()) {
+      if (key === 'bugs' || key === 'code_smells') {
+        compositeMetrics.set(
+          `${key}_per_pr`,
+          (value / teamData.pullRequests).toFixed(3)
+        );
+      } else if (key === 'ncloc') {
+        compositeMetrics.set(
+          'lines_per_pr',
+          (value / teamData.pullRequests).toFixed(3)
+        );
+      }
+    }
+  }
+
+  // Story Points Data
+  const team = await TeamModel.findOne({ teamData: teamData._id }).populate({
+    path: 'board',
+    populate: {
+      path: 'jiraIssues',
+    },
+  });
+
+  if (team?.board?.jiraIssues && team.board.jiraIssues.length > 0) {
+    const totalStoryPoints = team.board.jiraIssues.reduce((sum, issue) => {
+      return sum + (issue.storyPoints || 0);
+    }, 0);
+
+    if (totalStoryPoints > 0 && compositeDataMap.has('ncloc')) {
+      compositeMetrics.set(
+        'lines_per_story_point',
+        ((compositeDataMap.get('ncloc') ?? 0) / totalStoryPoints).toFixed(3)
       );
     }
-
-    const responseData = await codeAnalysisResponse.json();
-    const { component, metrics } = responseData;
-
-    if (!component || !component.measures) {
-      throw new Error('Invalid response structure from Sonar API');
-    }
-
-    const metricsArray: string[] = [];
-    const valuesArray: string[] = [];
-    const typesArray: string[] = [];
-    const domainsArray: string[] = [];
-
-    const metricMap = new Map<string, { type: string; domain: string }>();
-
-    metrics.forEach((metric: any) => {
-      metricMap.set(metric.key, {
-        type: metric.type,
-        domain: metric.domain,
-      });
-    });
-
-    component.measures.forEach((measure: any) => {
-      const metricKey = measure.metric;
-      const metricInfo = metricMap.get(metricKey);
-
-      if (metricInfo) {
-        metricsArray.push(metricKey);
-        valuesArray.push(measure.value || '');
-        typesArray.push(metricInfo.type || '');
-        domainsArray.push(metricInfo.domain || '');
-      }
-    });
-
-    const codeAnalysisData = new codeAnalysisDataModel({
-      executionTime: new Date(),
-      gitHubOrgName,
-      teamId: repo.id,
-      repoName: repo.name,
-      metrics: metricsArray,
-      values: valuesArray,
-      types: typesArray,
-      domains: domainsArray,
-    });
-
-    // console.log('Saving code analysis data:', codeAnalysisData);
-
-    await codeAnalysisData.save();
-  } catch (error) {
-    console.error(`Error fetching or saving data for: ${repo.name}`, error);
   }
+
+  // Append composite metrics to code analysis data
+  const codeAnalysis = await codeAnalysisDataModel.findById(codeAnalysisId);
+  if (!codeAnalysis) {
+    console.error(`CodeAnalysis with ID ${codeAnalysisId} not found.`);
+    return;
+  }
+
+  for (const [key, value] of compositeMetrics.entries()) {
+    codeAnalysis.metrics.push(key);
+    codeAnalysis.values.push(value.toString());
+    codeAnalysis.types.push('FLOAT');
+    codeAnalysis.domains.push('Composite');
+  }
+
+  await codeAnalysis.save();
+  console.log(`Saved composite metrics for repo: ${repo.name}`);
 };
 
 const getMedianAndMeanCodeData = async (course: any) => {
