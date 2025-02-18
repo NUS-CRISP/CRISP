@@ -2,7 +2,7 @@ import { DateUtils, getTutorialHighlightColor } from '@/lib/utils';
 import { Accordion, Center } from '@mantine/core';
 import { TeamData } from '@shared/types/TeamData';
 import { forwardRef } from 'react';
-import OverviewCard from '../cards/OverviewCard';
+import PRCard from '../cards/PRCard';
 import { ProfileGetter, Team } from '../views/TeamReview';
 
 interface OverviewAccordionItemProps {
@@ -14,7 +14,7 @@ interface OverviewAccordionItemProps {
   getStudentNameByGitHandle: ProfileGetter;
 }
 
-const OverviewAccordionItem = forwardRef<
+const PRAccordionItem = forwardRef<
   HTMLDivElement,
   OverviewAccordionItemProps
 >(
@@ -29,7 +29,7 @@ const OverviewAccordionItem = forwardRef<
         </Accordion.Control>
         <Accordion.Panel bg={getTutorialHighlightColor(7)}>
           {team ? (
-            <OverviewCard
+            <PRCard
               index={index}
               team={team}
               teamData={teamData}
@@ -46,4 +46,4 @@ const OverviewAccordionItem = forwardRef<
   }
 );
 
-export default OverviewAccordionItem;
+export default PRAccordionItem;
