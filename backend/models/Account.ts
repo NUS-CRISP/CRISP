@@ -13,8 +13,32 @@ const accountSchema = new Schema<Account>({
     lowercase: true,
     required: true,
   },
-  telegram: {
+  emailNotificationType: {
     type: String,
+    required: false,
+  },
+  emailNotificationHour: {
+    type: Number,
+    required: false,
+  },
+  emailNotificationWeekday: {
+    type: Number,
+    required: false,
+  },
+  telegramChatId: {
+    type: Number,
+    required: false,
+  },
+  telegramNotificationType: {
+    type: String,
+    required: false,
+  },
+  telegramNotificationHour: {
+    type: Number,
+    required: false,
+  },
+  telegramNotificationWeekday: {
+    type: Number,
     required: false,
   },
   password: { type: String },

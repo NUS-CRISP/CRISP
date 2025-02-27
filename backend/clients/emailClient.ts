@@ -22,14 +22,12 @@ const googleTransporter = nodemailer.createTransport({
   port: 587,
   secure: false,
   auth: {
-    // user: 'crisp@comp.nus.edu.sg',
-    // pass: 'nuscrisp2024',
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
 });
 
-const transporter = googleTransporter; // Set to/toggle your desired transporter
+const transporter = googleTransporter; // Set to toggle your desired transporter
 
 const mailOptions = {
   from: process.env.SMTP_USER,
@@ -51,7 +49,11 @@ export const sendTestNotificationEmail = async () => {
     if (error) {
       console.log(error);
     } else {
-      console.log('Email sent!' + info.response);
+      console.log('Email sent!' + info.response +
+        ' Sender: ' + mailOptions.from +
+        ' Recipient: ' + mailOptions.to +
+        ' Subject: ' + mailOptions.subject +
+        ' Body: ' + mailOptions.text);
     }
   })
 }
@@ -68,7 +70,11 @@ export const sendNotificationEmail = async (to: string, subject: string, text: s
     if (error) {
       console.log(error);
     } else {
-      console.log('Email sent!' + info.response);
+      console.log('Email sent!' + info.response +
+        ' Sender: ' + mailOptions.from +
+        ' Recipient: ' + mailOptions.to +
+        ' Subject: ' + mailOptions.subject +
+        ' Body: ' + mailOptions.text);
     }
   })
 }
