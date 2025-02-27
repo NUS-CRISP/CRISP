@@ -3,6 +3,7 @@ import AccountModel, { Account } from '../models/Account';
 import UserModel from '../models/User';
 import { BadRequestError, NotFoundError } from './errors';
 import mongoose from 'mongoose';
+import { NotificationPeriod } from '@shared/types/Account';
 
 export const createNewAccount = async (
   identifier: string,
@@ -92,4 +93,60 @@ export const getUserIdByAccountId = async (
     throw new NotFoundError('No user found');
   }
   return account.user._id.toString();
+};
+
+export const updateEmailNotificationSettings = async (
+  accountId: string,
+  wantsEmailNotifications: boolean,
+  emailNotificationType?: NotificationPeriod,
+  emailNotificationHour?: number,
+  emailNotificationWeekday?: number
+) => {
+  const account = await AccountModel.findById(accountId);
+  if (!account) {
+    throw new NotFoundError(`Account with id ${accountId} not found`);
+  }
+
+  account.wantsEmailNotifications = wantsEmailNotifications ?? account.wantsEmailNotifications;
+
+  if (emailNotificationType !== undefined) {
+    account.emailNotificationType = emailNotificationType;
+  }
+  if (emailNotificationHour !== undefined) {
+    account.emailNotificationHour = emailNotificationHour;
+  }
+  if (emailNotificationWeekday !== undefined) {
+    account.emailNotificationWeekday = emailNotificationWeekday;
+  }
+
+  await account.save();
+  return account;
+};
+
+export const updateTelegramNotificationSettings = async (
+  accountId: string,
+  wantsTelegramNotifications: boolean,
+  telegramNotificationType?: NotificationPeriod,
+  telegramNotificationHour?: number,
+  telegramNotificationWeekday?: number
+) => {
+  const account = await AccountModel.findById(accountId);
+  if (!account) {
+    throw new NotFoundError(`Account with id ${accountId} not found`);
+  }
+
+  account.wantsTelegramNotifications = wantsTelegramNotifications ?? account.wantsTelegramNotifications;
+
+  if (telegramNotificationType !== undefined) {
+    account.telegramNotificationType = telegramNotificationType;
+  }
+  if (telegramNotificationHour !== undefined) {
+    account.telegramNotificationHour = telegramNotificationHour;
+  }
+  if (telegramNotificationWeekday !== undefined) {
+    account.telegramNotificationWeekday = telegramNotificationWeekday;
+  }
+
+  await account.save();
+  return account;
 };
