@@ -9,6 +9,7 @@ import {
   updateTelegramNotificationSettings,
 } from '../services/accountService';
 import { NotFoundError, BadRequestError } from '../services/errors';
+import { getAccountId } from 'utils/auth';
 
 export const createAccount = async (req: Request, res: Response) => {
   const { identifier, name, email, password, role } = req.body;
@@ -81,7 +82,7 @@ export const getAccountStatuses = async (req: Request, res: Response) => {
 };
 
 export const changeEmailNotificationSettings = async (req: Request, res: Response) => {
-  const accountId = req.params.id;
+  const accountId = await getAccountId(req);
   const {
     wantsEmailNotifications,
     emailNotificationType,
@@ -97,7 +98,9 @@ export const changeEmailNotificationSettings = async (req: Request, res: Respons
     && emailNotificationType !== 'hourly'
     && emailNotificationType !== 'daily'
     && emailNotificationType !== 'weekly'
-  )
+  ) {
+    return res.status(400).json({ error: 'Email notification type field formatting is incorrect' });
+  }
 
   try {
     const updatedAccount = await updateEmailNotificationSettings(
@@ -120,18 +123,8 @@ export const changeEmailNotificationSettings = async (req: Request, res: Respons
   }
 };
 
-/**
- * PATCH /accounts/:id/notifications/telegram
- * Body can contain the following fields (all optional except wantsTelegramNotifications):
- * {
- *   wantsTelegramNotifications: boolean,
- *   telegramNotificationType?: 'hourly' | 'daily' | 'weekly',
- *   telegramNotificationHour?: number,       // 0-23
- *   telegramNotificationWeekday?: number     // 1 (Mon) ... 7 (Sun)
- * }
- */
 export const changeTelegramNotificationSettings = async (req: Request, res: Response) => {
-  const accountId = req.params.id;
+  const accountId = await getAccountId(req);
   const {
     wantsTelegramNotifications,
     telegramNotificationType,
@@ -147,7 +140,9 @@ export const changeTelegramNotificationSettings = async (req: Request, res: Resp
     && telegramNotificationType !== 'hourly'
     && telegramNotificationType !== 'daily'
     && telegramNotificationType !== 'weekly'
-  )
+  ) {
+    return res.status(400).json({ error: 'Telegram notification type field formatting is incorrect' });
+  }
 
   try {
     const updatedAccount = await updateTelegramNotificationSettings(
