@@ -8,6 +8,8 @@ import {
   getAllPendingAccounts,
   rejectAccountByIds,
   getUserIdByAccountId,
+  updateEmailNotificationSettings,
+  updateTelegramNotificationSettings,
 } from '../../services/accountService';
 import { BadRequestError, NotFoundError } from '../../services/errors';
 import UserModel from '@models/User';
@@ -262,6 +264,147 @@ describe('accountService', () => {
     it('should throw a CastError for an invalid account ID format', async () => {
       const invalidAccountId = '12345';
       await expect(getUserIdByAccountId(invalidAccountId)).rejects.toThrow();
+    });
+  });
+
+  describe('updateEmailNotificationSettings', () => {
+    it('should throw NotFoundError if the account does not exist', async () => {
+      const nonExistentId = new mongoose.Types.ObjectId().toHexString();
+      await expect(
+        updateEmailNotificationSettings(
+          nonExistentId,
+          true, // wantsEmailNotifications
+          'daily',
+          8,
+          3
+        )
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should update the email notification fields if provided', async () => {
+      // 1) Create test account
+      const account = await createTestAccount();
+      expect(account).toBeTruthy();
+      if (!account) throw new Error('Account not created');
+
+      // 2) Call service to update fields
+      const updated = await updateEmailNotificationSettings(
+        account._id.toString(),
+        true,
+        'weekly',
+        10,
+        5
+      );
+
+      // 3) Ensure the returned account has updated values
+      expect(updated.wantsEmailNotifications).toBe(true);
+      expect(updated.emailNotificationType).toBe('weekly');
+      expect(updated.emailNotificationHour).toBe(10);
+      expect(updated.emailNotificationWeekday).toBe(5);
+
+      // 4) Fetch fresh from DB to confirm
+      const fromDb = await AccountModel.findById(account._id);
+      expect(fromDb?.wantsEmailNotifications).toBe(true);
+      expect(fromDb?.emailNotificationType).toBe('weekly');
+      expect(fromDb?.emailNotificationHour).toBe(10);
+      expect(fromDb?.emailNotificationWeekday).toBe(5);
+    });
+
+    it('should not overwrite existing fields if they are undefined', async () => {
+      // 1) Create test account with some initial settings
+      const account = await createTestAccount();
+      if (!account) throw new Error('Account not created');
+
+      account.wantsEmailNotifications = false;
+      account.emailNotificationType = 'daily';
+      account.emailNotificationHour = 8;
+      account.emailNotificationWeekday = 2;
+      await account.save();
+
+      // 2) Update only "wantsEmailNotifications" => pass others as undefined
+      const updated = await updateEmailNotificationSettings(
+        account._id.toString(),
+        true // pass only wantsEmailNotifications
+        // Do not pass other fields => they remain undefined
+      );
+
+      // 3) Check that hour, weekday, and type remain the same
+      expect(updated.wantsEmailNotifications).toBe(true); // changed
+      expect(updated.emailNotificationType).toBe('daily'); // unchanged
+      expect(updated.emailNotificationHour).toBe(8); // unchanged
+      expect(updated.emailNotificationWeekday).toBe(2); // unchanged
+    });
+  });
+
+  // -----------------------------------------
+  // NEW TESTS FOR updateTelegramNotificationSettings
+  // -----------------------------------------
+  describe('updateTelegramNotificationSettings', () => {
+    it('should throw NotFoundError if the account does not exist', async () => {
+      const nonExistentId = new mongoose.Types.ObjectId().toHexString();
+      await expect(
+        updateTelegramNotificationSettings(
+          nonExistentId,
+          true, // wantsTelegramNotifications
+          'daily',
+          12,
+          4
+        )
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should update the telegram notification fields if provided', async () => {
+      // 1) Create test account
+      const account = await createTestAccount();
+      expect(account).toBeTruthy();
+      if (!account) throw new Error('Account not created');
+
+      // 2) Call service to update fields
+      const updated = await updateTelegramNotificationSettings(
+        account._id.toString(),
+        true,
+        'hourly',
+        14,
+        1
+      );
+
+      // 3) Ensure the returned account has updated values
+      expect(updated.wantsTelegramNotifications).toBe(true);
+      expect(updated.telegramNotificationType).toBe('hourly');
+      expect(updated.telegramNotificationHour).toBe(14);
+      expect(updated.telegramNotificationWeekday).toBe(1);
+
+      // 4) Fetch fresh from DB
+      const fromDb = await AccountModel.findById(account._id);
+      expect(fromDb?.wantsTelegramNotifications).toBe(true);
+      expect(fromDb?.telegramNotificationType).toBe('hourly');
+      expect(fromDb?.telegramNotificationHour).toBe(14);
+      expect(fromDb?.telegramNotificationWeekday).toBe(1);
+    });
+
+    it('should not overwrite existing fields if they are undefined', async () => {
+      // 1) Create test account with some initial Telegram settings
+      const account = await createTestAccount();
+      if (!account) throw new Error('Account not created');
+
+      account.wantsTelegramNotifications = false;
+      account.telegramNotificationType = 'weekly';
+      account.telegramNotificationHour = 20;
+      account.telegramNotificationWeekday = 7;
+      await account.save();
+
+      // 2) Update only "wantsTelegramNotifications"
+      const updated = await updateTelegramNotificationSettings(
+        account._id.toString(),
+        true // only set wantsTelegramNotifications = true
+        // other fields not passed
+      );
+
+      // 3) Confirm the other fields remain unchanged
+      expect(updated.wantsTelegramNotifications).toBe(true);
+      expect(updated.telegramNotificationType).toBe('weekly'); // unchanged
+      expect(updated.telegramNotificationHour).toBe(20); // unchanged
+      expect(updated.telegramNotificationWeekday).toBe(7); // unchanged
     });
   });
 });

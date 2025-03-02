@@ -107,7 +107,7 @@ export const updateEmailNotificationSettings = async (
     throw new NotFoundError(`Account with id ${accountId} not found`);
   }
 
-  account.wantsEmailNotifications = wantsEmailNotifications ?? account.wantsEmailNotifications;
+  account.wantsEmailNotifications = wantsEmailNotifications;
 
   if (emailNotificationType !== undefined) {
     account.emailNotificationType = emailNotificationType;
@@ -135,7 +135,7 @@ export const updateTelegramNotificationSettings = async (
     throw new NotFoundError(`Account with id ${accountId} not found`);
   }
 
-  account.wantsTelegramNotifications = wantsTelegramNotifications ?? account.wantsTelegramNotifications;
+  account.wantsTelegramNotifications = wantsTelegramNotifications;
 
   if (telegramNotificationType !== undefined) {
     account.telegramNotificationType = telegramNotificationType;
