@@ -1,8 +1,8 @@
-// notificationController.ts
 import { Request, Response } from 'express';
 import { sendTelegramMessage, sendTestTelegramNotificationToAdmins } from './../clients/telegramClient';
 import { sendTestNotificationEmail } from './../clients/emailClient';
 
+// File not tested because these are just test notification methods.
 export const sendTestEmailController = async (req: Request, res: Response) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });

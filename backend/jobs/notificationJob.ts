@@ -232,6 +232,11 @@ export const setupNotificationJob = () => {
       }).populate('user');
 
       for (const account of allAccounts) {
+        if (!account.wantsEmailNotifications) account.wantsEmailNotifications = false;
+        if (!account.emailNotificationType) account.emailNotificationType = 'daily';
+        if (!account.emailNotificationHour) account.emailNotificationHour = 12;
+        if (!account.emailNotificationWeekday) account.emailNotificationWeekday = 7;
+
         // 1. Check if they want email notifications
         if (account.wantsEmailNotifications) {
           const shouldSendEmail = isNotificationTime(

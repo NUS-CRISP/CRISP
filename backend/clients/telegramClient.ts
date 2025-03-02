@@ -48,6 +48,10 @@ bot.command('register', async (ctx) => {
   account.telegramChatId = ctx.chat.id;
   await account.save();
   await ctx.reply('Email ' + userEmail + ' successfully linked to Telegram notifications! Do not delete this chat, the notifications will come through this chat.');
+  account.wantsTelegramNotifications = true;
+  account.telegramNotificationType = 'daily';
+  account.telegramNotificationHour = 12;
+  account.telegramNotificationWeekday = 7;
   return ;
 });
 
