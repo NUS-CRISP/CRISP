@@ -34,7 +34,7 @@ const mailOptions = {
   to: process.env.TEST_TO_EMAIL,
   subject: 'test',
   text: 'test description',
-}
+};
 
 // transporter.sendMail(mailOptions, (error, info) => {
 //   if (error) {
@@ -49,32 +49,50 @@ export const sendTestNotificationEmail = async () => {
     if (error) {
       console.log(error);
     } else {
-      console.log('Email sent!' + info.response +
-        ' Sender: ' + mailOptions.from +
-        ' Recipient: ' + mailOptions.to +
-        ' Subject: ' + mailOptions.subject +
-        ' Body: ' + mailOptions.text);
+      console.log(
+        'Email sent!' +
+          info.response +
+          ' Sender: ' +
+          mailOptions.from +
+          ' Recipient: ' +
+          mailOptions.to +
+          ' Subject: ' +
+          mailOptions.subject +
+          ' Body: ' +
+          mailOptions.text
+      );
     }
-  })
-}
+  });
+};
 
-export const sendNotificationEmail = async (to: string, subject: string, text: string) => {
+export const sendNotificationEmail = async (
+  to: string,
+  subject: string,
+  text: string
+) => {
   const notificationMailOptions = {
     from: process.env.SMTP_USER,
     to: to,
     subject: subject,
     text: text,
-  }
+  };
 
   transporter.sendMail(notificationMailOptions, (error, info) => {
     if (error) {
       console.log(error);
     } else {
-      console.log('Email sent!' + info.response +
-        ' Sender: ' + mailOptions.from +
-        ' Recipient: ' + mailOptions.to +
-        ' Subject: ' + mailOptions.subject +
-        ' Body: ' + mailOptions.text);
+      console.log(
+        'Email sent!' +
+          info.response +
+          ' Sender: ' +
+          mailOptions.from +
+          ' Recipient: ' +
+          mailOptions.to +
+          ' Subject: ' +
+          mailOptions.subject +
+          ' Body: ' +
+          mailOptions.text
+      );
     }
-  })
-}
+  });
+};

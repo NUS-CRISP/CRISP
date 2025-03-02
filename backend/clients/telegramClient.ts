@@ -10,28 +10,32 @@ config({ path: `.env.${env}` });
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 if (!TELEGRAM_BOT_TOKEN) {
-  throw new Error('TELEGRAM_BOT_TOKEN is not defined in your environment variables');
+  throw new Error(
+    'TELEGRAM_BOT_TOKEN is not defined in your environment variables'
+  );
 }
 
 // Initialize Telegraf (Optional: bot.launch() if you need inbound updates)
 export const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
 
 // Registration method: Connecting via Telegram queries
-bot.start(async (ctx) => {
+bot.start(async ctx => {
   // When user hits /start, we get ctx.chat.id
   // We can do a flow here or ask for an email, etc.
-  await ctx.reply('Welcome to CRISP! Please type /register <your email> to link your account.');
+  await ctx.reply(
+    'Welcome to CRISP! Please type /register <your email> to link your account.'
+  );
 });
 
-bot.command('register', async (ctx) => {
+bot.command('register', async ctx => {
   // e.g. /register me@example.com
-  const message = ctx.message.text;  // e.g. "register me@example.com"
+  const message = ctx.message.text; // e.g. "register me@example.com"
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [cmd, userEmail] = message.split(' ');
 
   if (!userEmail) {
     await ctx.reply('Usage: /register <yourEmail>');
-    return ;
+    return;
   }
 
   // 1. Find the account by userEmail
@@ -42,20 +46,24 @@ bot.command('register', async (ctx) => {
   });
   if (!account) {
     await ctx.reply('Given email is not registered with CRISP');
-    return ;
+    return;
   }
 
   account.telegramChatId = ctx.chat.id;
   await account.save();
-  await ctx.reply('Email ' + userEmail + ' successfully linked to Telegram notifications! Do not delete this chat, the notifications will come through this chat.');
+  await ctx.reply(
+    'Email ' +
+      userEmail +
+      ' successfully linked to Telegram notifications! Do not delete this chat, the notifications will come through this chat.'
+  );
   account.wantsTelegramNotifications = true;
   account.telegramNotificationType = 'daily';
   account.telegramNotificationHour = 12;
   account.telegramNotificationWeekday = 7;
-  return ;
+  return;
 });
 
-bot.command('unlink', async (ctx) => {
+bot.command('unlink', async ctx => {
   // 1. Find the account by chat id
   // 2. If found, set account.telegramChatId = -1;
   // 3. Save the account, respond with success/fail
@@ -64,17 +72,21 @@ bot.command('unlink', async (ctx) => {
   });
   if (!account) {
     await ctx.reply('This telegram chat is not registered with CRISP');
-    return ;
+    return;
   }
 
   account.telegramChatId = -1;
   await account.save();
-  await ctx.reply('This chat has been unlinked from your account. Notifications will no longer come through this chat.');
-  return ;
+  await ctx.reply(
+    'This chat has been unlinked from your account. Notifications will no longer come through this chat.'
+  );
+  return;
 });
 
-bot.help(async (ctx) => {
-  await ctx.reply('register: /register <email> - Registers the email associated to the CRISP account for telegram push notifications via this bot. \nunlink: /unlink: Unlinks this chat from CRISP, removing the id of this chat from CRISP databases.');
+bot.help(async ctx => {
+  await ctx.reply(
+    'register: /register <email> - Registers the email associated to the CRISP account for telegram push notifications via this bot. \nunlink: /unlink: Unlinks this chat from CRISP, removing the id of this chat from CRISP databases.'
+  );
   return;
 });
 

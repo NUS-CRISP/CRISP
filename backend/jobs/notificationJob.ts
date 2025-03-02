@@ -1,10 +1,15 @@
 import AccountModel from '@models/Account';
 import Role from '@shared/types/auth/Role';
-import { sendNotificationEmail, sendTestNotificationEmail } from '../clients/emailClient';
+import {
+  sendNotificationEmail,
+  sendTestNotificationEmail,
+} from '../clients/emailClient';
 import cron from 'node-cron';
 import { Team } from '../models/Team';
 import { User } from '../models/User';
-import InternalAssessmentModel, { InternalAssessment } from '@models/InternalAssessment';
+import InternalAssessmentModel, {
+  InternalAssessment,
+} from '@models/InternalAssessment';
 import { getUnmarkedAssignmentsByTAId } from 'services/assessmentAssignmentSetService';
 import { sendTelegramMessage } from '../clients/telegramClient';
 
@@ -43,10 +48,15 @@ export const isNotificationTime = (
 
     case 'weekly':
       // For weekly, we check hour & weekday
-      if (hour === null || hour === undefined ||  hour < 0 || hour > 23) {
+      if (hour === null || hour === undefined || hour < 0 || hour > 23) {
         hour = 0;
       }
-      if (weekday === null || weekday === undefined ||  weekday < 1 || weekday > 7) {
+      if (
+        weekday === null ||
+        weekday === undefined ||
+        weekday < 1 ||
+        weekday > 7
+      ) {
         // Default to Sunday if invalid
         weekday = 7;
       }
@@ -57,7 +67,6 @@ export const isNotificationTime = (
   return false;
 };
 
-
 // Reuse your existing converters
 const convertAssignedTeamsToString = (
   assignedTeams: Team[],
@@ -65,7 +74,7 @@ const convertAssignedTeamsToString = (
 ): string => {
   if (assignedTeams.length === 0) return '';
   let result = `Assessment: ${assessment.assessmentName}\n`;
-  assignedTeams.forEach((team) => {
+  assignedTeams.forEach(team => {
     result += `Team #${team.number}\n`;
   });
   return result.trim();
@@ -77,7 +86,7 @@ const convertAssignedUsersToString = (
 ): string => {
   if (assignedUsers.length === 0) return '';
   let result = `Assessment: ${assessment.assessmentName}\n`;
-  assignedUsers.forEach((user) => {
+  assignedUsers.forEach(user => {
     result += `${user.name}\n`;
   });
   return result.trim();
@@ -87,7 +96,9 @@ const convertAssignedUsersToString = (
  * Send an email notification to a single account.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const notifySingleAccountViaEmail = async (account: any /* or your Account type */) => {
+export const notifySingleAccountViaEmail = async (
+  account: any /* or your Account type */
+) => {
   const allInternalAssessments = await InternalAssessmentModel.find();
   const summaries: string[] = [];
 
@@ -141,7 +152,9 @@ CRISP
  * Send a Telegram notification to a single account.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const notifySingleAccountViaTelegram = async (account: any /* or your Account type */) => {
+export const notifySingleAccountViaTelegram = async (
+  account: any /* or your Account type */
+) => {
   if (account.telegramChatId === null || account.telegramChatId === -1) return;
   const allInternalAssessments = await InternalAssessmentModel.find();
   const summaries: string[] = [];
@@ -195,7 +208,7 @@ CRISP
 const notifyOnStartup = async () => {
   const allAccounts = await AccountModel.find({
     role: { $in: [Role.Admin] },
-    isApproved: true
+    isApproved: true,
   }).populate('user');
 
   for (const account of allAccounts) {
@@ -209,7 +222,7 @@ const notifyOnStartup = async () => {
       await notifySingleAccountViaTelegram(account);
     }
   }
-}
+};
 
 /**
  * The main cron job: runs every hour on the hour (minute 0).
@@ -219,7 +232,7 @@ export const setupNotificationJob = () => {
     console.log('Running hourly notification check:', new Date().toString());
     try {
       const now = new Date();
-      const currentHour = now.getHours();     // 0-23
+      const currentHour = now.getHours(); // 0-23
       // JS getDay() => Sunday=0, Monday=1, ... Saturday=6
       // If you need Monday=1..Sunday=7, transform accordingly:
       const rawDay = now.getDay() === 0 ? 7 : now.getDay();
@@ -228,14 +241,17 @@ export const setupNotificationJob = () => {
       // Find all relevant accounts (TAs, Faculty, Admins, etc.)
       const allAccounts = await AccountModel.find({
         role: { $in: [Role.TA, Role.Faculty, Role.Admin] },
-        isApproved: true
+        isApproved: true,
       }).populate('user');
 
       for (const account of allAccounts) {
-        if (!account.wantsEmailNotifications) account.wantsEmailNotifications = false;
-        if (!account.emailNotificationType) account.emailNotificationType = 'daily';
+        if (!account.wantsEmailNotifications)
+          account.wantsEmailNotifications = false;
+        if (!account.emailNotificationType)
+          account.emailNotificationType = 'daily';
         if (!account.emailNotificationHour) account.emailNotificationHour = 12;
-        if (!account.emailNotificationWeekday) account.emailNotificationWeekday = 7;
+        if (!account.emailNotificationWeekday)
+          account.emailNotificationWeekday = 7;
 
         // 1. Check if they want email notifications
         if (account.wantsEmailNotifications) {
@@ -252,7 +268,11 @@ export const setupNotificationJob = () => {
         }
 
         // 2. Check if they want Telegram notifications
-        if (account.wantsTelegramNotifications && account.telegramChatId && account.telegramChatId !== -1) {
+        if (
+          account.wantsTelegramNotifications &&
+          account.telegramChatId &&
+          account.telegramChatId !== -1
+        ) {
           const shouldSendTelegram = isNotificationTime(
             account.telegramNotificationType,
             account.telegramNotificationHour,
@@ -271,7 +291,10 @@ export const setupNotificationJob = () => {
   });
 
   // For testing: run the job immediately if needed
-  if (process.env.RUN_NOTIFICATION_JOB === 'true' || process.env.RUN_JOB_NOW === 'true') {
+  if (
+    process.env.RUN_NOTIFICATION_JOB === 'true' ||
+    process.env.RUN_JOB_NOW === 'true'
+  ) {
     console.log('Running notifyOnStartup job now...');
     notifyOnStartup();
   }

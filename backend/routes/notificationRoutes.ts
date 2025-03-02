@@ -11,6 +11,9 @@ const router = express.Router();
 router.post('/testEmail', sendTestEmailController);
 
 router.post('/testTelegram', sendTestTelegramMessageController);
-router.post('/testTelegramToAdmins', sendTestTelegramNotificationToAdminsController);
+router.post(
+  '/testTelegramToAdmins',
+  sendTestTelegramNotificationToAdminsController
+);
 
 export default router;

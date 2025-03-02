@@ -1,5 +1,9 @@
 import express from 'express';
-import { getUserByHandle, getUserNotificationSettings, updateUser } from '../controllers/userController';
+import {
+  getUserByHandle,
+  getUserNotificationSettings,
+  updateUser,
+} from '../controllers/userController';
 
 const router = express.Router();
 

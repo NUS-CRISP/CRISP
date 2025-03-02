@@ -310,9 +310,9 @@ describe('accountController', () => {
       };
 
       // Mock the service to throw a NotFoundError
-      (accountService.updateEmailNotificationSettings as jest.Mock).mockRejectedValue(
-        new NotFoundError('Account not found')
-      );
+      (
+        accountService.updateEmailNotificationSettings as jest.Mock
+      ).mockRejectedValue(new NotFoundError('Account not found'));
 
       await changeEmailNotificationSettings(req, res);
 
@@ -331,9 +331,9 @@ describe('accountController', () => {
         emailNotificationType: 'daily',
       };
 
-      (accountService.updateEmailNotificationSettings as jest.Mock).mockRejectedValue(
-        new Error('Some server error')
-      );
+      (
+        accountService.updateEmailNotificationSettings as jest.Mock
+      ).mockRejectedValue(new Error('Some server error'));
 
       await changeEmailNotificationSettings(req, res);
 
@@ -362,9 +362,9 @@ describe('accountController', () => {
         emailNotificationHour: 9,
         emailNotificationWeekday: 3,
       };
-      (accountService.updateEmailNotificationSettings as jest.Mock).mockResolvedValue(
-        mockUpdatedAccount
-      );
+      (
+        accountService.updateEmailNotificationSettings as jest.Mock
+      ).mockResolvedValue(mockUpdatedAccount);
 
       await changeEmailNotificationSettings(req, res);
 
@@ -420,9 +420,9 @@ describe('accountController', () => {
         telegramNotificationType: 'hourly',
       };
 
-      (accountService.updateTelegramNotificationSettings as jest.Mock).mockRejectedValue(
-        new NotFoundError('Account not found')
-      );
+      (
+        accountService.updateTelegramNotificationSettings as jest.Mock
+      ).mockRejectedValue(new NotFoundError('Account not found'));
 
       await changeTelegramNotificationSettings(req, res);
 
@@ -441,9 +441,9 @@ describe('accountController', () => {
         telegramNotificationType: 'hourly',
       };
 
-      (accountService.updateTelegramNotificationSettings as jest.Mock).mockRejectedValue(
-        new Error('Some server error')
-      );
+      (
+        accountService.updateTelegramNotificationSettings as jest.Mock
+      ).mockRejectedValue(new Error('Some server error'));
 
       await changeTelegramNotificationSettings(req, res);
 
@@ -472,9 +472,9 @@ describe('accountController', () => {
         telegramNotificationWeekday: 5,
       };
 
-      (accountService.updateTelegramNotificationSettings as jest.Mock).mockResolvedValue(
-        mockUpdatedAccount
-      );
+      (
+        accountService.updateTelegramNotificationSettings as jest.Mock
+      ).mockResolvedValue(mockUpdatedAccount);
 
       await changeTelegramNotificationSettings(req, res);
 

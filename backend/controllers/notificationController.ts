@@ -1,5 +1,8 @@
 import { Request, Response } from 'express';
-import { sendTelegramMessage, sendTestTelegramNotificationToAdmins } from './../clients/telegramClient';
+import {
+  sendTelegramMessage,
+  sendTestTelegramNotificationToAdmins,
+} from './../clients/telegramClient';
 import { sendTestNotificationEmail } from './../clients/emailClient';
 
 // File not tested because these are just test notification methods.
@@ -17,7 +20,10 @@ export const sendTestEmailController = async (req: Request, res: Response) => {
   }
 };
 
-export const sendTestTelegramMessageController = async (req: Request, res: Response) => {
+export const sendTestTelegramMessageController = async (
+  req: Request,
+  res: Response
+) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -40,7 +46,10 @@ export const sendTestTelegramMessageController = async (req: Request, res: Respo
  * Controller that triggers a test Telegram notification
  * to all admin accounts.
  */
-export const sendTestTelegramNotificationToAdminsController = async (req: Request, res: Response) => {
+export const sendTestTelegramNotificationToAdminsController = async (
+  req: Request,
+  res: Response
+) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -50,6 +59,8 @@ export const sendTestTelegramNotificationToAdminsController = async (req: Reques
     return res.status(200).json({ success: true, ...result });
   } catch (error) {
     console.error('Error sending telegram message to admins:', error);
-    return res.status(500).json({ error: 'Failed to send telegram message to admins' });
+    return res
+      .status(500)
+      .json({ error: 'Failed to send telegram message to admins' });
   }
 };
