@@ -94,11 +94,9 @@ export const changeEmailNotificationSettings = async (
   } = req.body;
 
   if (typeof wantsEmailNotifications !== 'boolean') {
-    return res
-      .status(400)
-      .json({
-        error: 'wantsEmailNotifications is required and must be boolean',
-      });
+    return res.status(400).json({
+      error: 'wantsEmailNotifications is required and must be boolean',
+    });
   }
 
   if (
@@ -148,11 +146,9 @@ export const changeTelegramNotificationSettings = async (
   } = req.body;
 
   if (typeof wantsTelegramNotifications !== 'boolean') {
-    return res
-      .status(400)
-      .json({
-        error: 'wantsTelegramNotifications is required and must be boolean',
-      });
+    return res.status(400).json({
+      error: 'wantsTelegramNotifications is required and must be boolean',
+    });
   }
 
   if (
@@ -161,11 +157,9 @@ export const changeTelegramNotificationSettings = async (
       telegramNotificationType !== 'daily' &&
       telegramNotificationType !== 'weekly')
   ) {
-    return res
-      .status(400)
-      .json({
-        error: 'Telegram notification type field formatting is incorrect',
-      });
+    return res.status(400).json({
+      error: 'Telegram notification type field formatting is incorrect',
+    });
   }
 
   try {
