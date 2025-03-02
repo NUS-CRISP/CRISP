@@ -24,7 +24,7 @@ interface AccountData {
   emailNotificationWeekday?: number;
   wantsEmailNotifications: boolean;
 
-  telegramChatId?: number;
+  telegramChatId?: number; // If this is missing or -1, user is not connected
   telegramNotificationType?: string;
   telegramNotificationHour?: number;
   telegramNotificationWeekday?: number;
@@ -46,7 +46,9 @@ const NotificationSettingsForm: React.FC<NotificationSettingsFormProps> = ({
   const [telegramNotificationType, setTelegramNotificationType] = useState('daily');
   const [telegramNotificationHour, setTelegramNotificationHour] = useState<number>(0);
   const [telegramNotificationWeekday, setTelegramNotificationWeekday] = useState<number>(1);
+
   const [helpModalOpened, setHelpModalOpened] = useState(false);
+
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -64,7 +66,6 @@ const NotificationSettingsForm: React.FC<NotificationSettingsFormProps> = ({
         const data: AccountData = await res.json();
         setAccountData(data);
 
-        // Initialize email states
         setWantsEmailNotifications(data.wantsEmailNotifications);
         if (data.emailNotificationType) {
           setEmailNotificationType(data.emailNotificationType);
@@ -99,10 +100,13 @@ const NotificationSettingsForm: React.FC<NotificationSettingsFormProps> = ({
       const timer = setTimeout(() => {
         setSuccessMessage(null);
       }, 5000);
-
       return () => clearTimeout(timer);
     }
   }, [successMessage]);
+
+  const handleTabChange = () => {
+    setSuccessMessage(null);
+  };
 
   const handleSaveEmail = async () => {
     setSuccessMessage(null);
@@ -150,28 +154,21 @@ const NotificationSettingsForm: React.FC<NotificationSettingsFormProps> = ({
     }
   };
 
-  const handleTabChange = () => {
-    setSuccessMessage(null);
-  };
-
-  const hasTelegram = accountData?.telegramChatId !== undefined && accountData.telegramChatId !== null;
+  const hasTelegram =
+    accountData?.telegramChatId !== undefined &&
+    accountData.telegramChatId !== null &&
+    accountData.telegramChatId !== -1;
 
   return (
     <>
-      <Modal
-        opened={opened}
-        onClose={onClose}
-        title="Notification Settings"
-        size="lg"
-      >
+      <Modal opened={opened} onClose={onClose} title="Notification Settings" size="lg">
         <Tabs defaultValue="email" onChange={handleTabChange}>
           <Tabs.List>
             <Tabs.Tab value="email">Email</Tabs.Tab>
-            <Tabs.Tab value="telegram" disabled={!hasTelegram}>
-              Telegram
-            </Tabs.Tab>
+            <Tabs.Tab value="telegram">Telegram</Tabs.Tab>
           </Tabs.List>
 
+          {/* ---------------- EMAIL TAB ---------------- */}
           <Tabs.Panel value="email" pt="md">
             {accountData && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -183,21 +180,21 @@ const NotificationSettingsForm: React.FC<NotificationSettingsFormProps> = ({
                 <Switch
                   label="Enable Email Notifications"
                   checked={wantsEmailNotifications}
-                  onChange={e => setWantsEmailNotifications(e.currentTarget.checked)}
+                  onChange={(e) => setWantsEmailNotifications(e.currentTarget.checked)}
                 />
 
                 <Select
                   label="Notification Type"
                   data={['hourly', 'daily', 'weekly']}
                   value={emailNotificationType}
-                  onChange={val => setEmailNotificationType(val!)}
+                  onChange={(val) => setEmailNotificationType(val!)}
                   disabled={!wantsEmailNotifications}
                 />
 
                 <NumberInput
                   label="Notification Hour (0 - 23 / 24H format)"
                   value={emailNotificationHour}
-                  onChange={val => setEmailNotificationHour(val! as number)}
+                  onChange={(val) => setEmailNotificationHour(val! as number)}
                   min={0}
                   max={23}
                   disabled={!wantsEmailNotifications}
@@ -206,29 +203,28 @@ const NotificationSettingsForm: React.FC<NotificationSettingsFormProps> = ({
                 <NumberInput
                   label="Notification Weekday (1 = Mon, ... 7 = Sun)"
                   value={emailNotificationWeekday}
-                  onChange={val => setEmailNotificationWeekday(val! as number)}
+                  onChange={(val) => setEmailNotificationWeekday(val! as number)}
                   min={1}
                   max={7}
                   disabled={!wantsEmailNotifications}
                 />
 
                 {successMessage && (
-                  <Alert color="green" variant="filled" mt='xs' p='xs'>
+                  <Alert color="green" variant="filled" mt="xs" p="xs">
                     {successMessage}
                   </Alert>
                 )}
 
                 <Group justify='flex-end'>
-                  <Button onClick={handleSaveEmail} disabled={!wantsEmailNotifications}>
-                    Save Email Settings
-                  </Button>
+                  <Button onClick={handleSaveEmail}>Save Email Settings</Button>
                 </Group>
               </div>
             )}
           </Tabs.Panel>
 
+          {/* ---------------- TELEGRAM TAB ---------------- */}
           <Tabs.Panel value="telegram" pt="md">
-            {accountData && hasTelegram ? (
+            {accountData && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <Group justify='flex-start'>
                   <Button
@@ -236,66 +232,71 @@ const NotificationSettingsForm: React.FC<NotificationSettingsFormProps> = ({
                     leftSection={<IconHelp size={16} />}
                     onClick={() => setHelpModalOpened(true)}
                   >
-                    Help
+                    Help: How to connect account to Telegram
                   </Button>
                 </Group>
 
-                <Switch
-                  label="Enable Telegram Notifications"
-                  checked={wantsTelegramNotifications}
-                  onChange={e => setWantsTelegramNotifications(e.currentTarget.checked)}
-                />
+                {!hasTelegram ? (
+                  // If not connected, just show info text
+                  <Text c="dimmed" size="sm">
+                    You are not connected to Telegram. Use the Help button above to learn how
+                    to connect Telegram to your account.
+                  </Text>
+                ) : (
+                  // If connected, show the full Telegram notification settings
+                  <>
+                    <Switch
+                      label="Enable Telegram Notifications"
+                      checked={wantsTelegramNotifications}
+                      onChange={(e) =>
+                        setWantsTelegramNotifications(e.currentTarget.checked)
+                      }
+                    />
 
-                <Select
-                  label="Notification Type"
-                  data={['hourly', 'daily', 'weekly']}
-                  value={telegramNotificationType}
-                  onChange={val => setTelegramNotificationType(val!)}
-                  disabled={!wantsTelegramNotifications}
-                />
+                    <Select
+                      label="Notification Type"
+                      data={['hourly', 'daily', 'weekly']}
+                      value={telegramNotificationType}
+                      onChange={(val) => setTelegramNotificationType(val!)}
+                      disabled={!wantsTelegramNotifications}
+                    />
 
-                <NumberInput
-                  label="Notification Hour (0-23)"
-                  value={telegramNotificationHour}
-                  onChange={val => setTelegramNotificationHour(val! as number)}
-                  min={0}
-                  max={23}
-                  disabled={!wantsTelegramNotifications}
-                />
+                    <NumberInput
+                      label="Notification Hour (0-23)"
+                      value={telegramNotificationHour}
+                      onChange={(val) => setTelegramNotificationHour(val! as number)}
+                      min={0}
+                      max={23}
+                      disabled={!wantsTelegramNotifications}
+                    />
 
-                <NumberInput
-                  label="Notification Weekday (1=Mon ... 7=Sun)"
-                  value={telegramNotificationWeekday}
-                  onChange={val => setTelegramNotificationWeekday(val! as number)}
-                  min={1}
-                  max={7}
-                  disabled={!wantsTelegramNotifications}
-                />
+                    <NumberInput
+                      label="Notification Weekday (1=Mon ... 7=Sun)"
+                      value={telegramNotificationWeekday}
+                      onChange={(val) => setTelegramNotificationWeekday(val! as number)}
+                      min={1}
+                      max={7}
+                      disabled={!wantsTelegramNotifications}
+                    />
 
-                {successMessage && (
-                  <Alert color="green" variant="filled" mt='xs' p='xs'>
-                    {successMessage}
-                  </Alert>
+                    {successMessage && (
+                      <Alert color="green" variant="filled" mt="xs" p="xs">
+                        {successMessage}
+                      </Alert>
+                    )}
+
+                    <Group justify='flex-end'>
+                      <Button onClick={handleSaveTelegram}>Save Telegram Settings</Button>
+                    </Group>
+                  </>
                 )}
-
-                <Group justify='flex-end'>
-                  <Button
-                    onClick={handleSaveTelegram}
-                    disabled={!wantsTelegramNotifications}
-                  >
-                    Save Telegram Settings
-                  </Button>
-                </Group>
               </div>
-            ) : (
-              <Text c="dimmed" size="sm">
-                Your account is not connected to Telegram. Please configure Telegram first.
-              </Text>
             )}
           </Tabs.Panel>
         </Tabs>
       </Modal>
 
+      {/* Nested "Help" Modal for Telegram Instructions */}
       <Modal
         opened={helpModalOpened}
         onClose={() => setHelpModalOpened(false)}
@@ -303,11 +304,14 @@ const NotificationSettingsForm: React.FC<NotificationSettingsFormProps> = ({
         size="md"
       >
         <Text>
-          Step 1: Open Telegram ...
+          {/* Fill in your instructions on connecting Telegram below */}
+          Step 1: Open Telegram. Sign up if you have not done so. Link: https://web.telegram.org/
           <br />
-          Step 2: Talk to Crisp Bot ...
+          Step 2: Talk to Crisp Bot by searching in the search bar for @crisp_notif_bot, and click on the NUSCRISPNotifications bot.
           <br />
-          Step 3: ...
+          Step 3: Use the command /register 'your CRISP account email'.
+          <br />
+          Step 4: Refresh this page after the bot confirms your registration.
         </Text>
       </Modal>
     </>

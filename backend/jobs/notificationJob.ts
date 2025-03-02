@@ -142,6 +142,7 @@ CRISP
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const notifySingleAccountViaTelegram = async (account: any /* or your Account type */) => {
+  if (account.telegramChatId === null || account.telegramChatId === -1) return;
   const allInternalAssessments = await InternalAssessmentModel.find();
   const summaries: string[] = [];
 
@@ -246,7 +247,7 @@ export const setupNotificationJob = () => {
         }
 
         // 2. Check if they want Telegram notifications
-        if (account.wantsTelegramNotifications && account.telegramChatId) {
+        if (account.wantsTelegramNotifications && account.telegramChatId && account.telegramChatId !== -1) {
           const shouldSendTelegram = isNotificationTime(
             account.telegramNotificationType,
             account.telegramNotificationHour,

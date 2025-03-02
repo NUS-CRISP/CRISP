@@ -51,8 +51,26 @@ bot.command('register', async (ctx) => {
   return ;
 });
 
+bot.command('unlink', async (ctx) => {
+  // 1. Find the account by chat id
+  // 2. If found, set account.telegramChatId = -1;
+  // 3. Save the account, respond with success/fail
+  const account = await AccountModel.findOne({
+    telegramChatId: ctx.chat.id,
+  });
+  if (!account) {
+    await ctx.reply('This telegram chat is not registered with CRISP');
+    return ;
+  }
+
+  account.telegramChatId = -1;
+  await account.save();
+  await ctx.reply('This chat has been unlinked from your account. Notifications will no longer come through this chat.');
+  return ;
+});
+
 bot.help(async (ctx) => {
-  await ctx.reply('register: /register <email> - Registers the email associated to the CRISP account for telegram push notifications via this bot.');
+  await ctx.reply('register: /register <email> - Registers the email associated to the CRISP account for telegram push notifications via this bot. \nunlink: /unlink: Unlinks this chat from CRISP, removing the id of this chat from CRISP databases.');
   return;
 });
 
@@ -79,7 +97,7 @@ export const sendTestTelegramNotificationToAdmins = async () => {
     role: Role.Admin,
     // Make sure they want Telegram notifications and have a chatId
     wantsTelegramNotifications: true,
-    telegramChatId: { $exists: true, $ne: null },
+    telegramChatId: { $exists: true, $ne: [null, -1] },
   });
 
   // 2. Build the test message (whatever message you want to send)
@@ -98,6 +116,9 @@ CRISP
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const chatId = (admin as any).telegramChatId;
+      if (chatId === null || chatId === -1) {
+        throw new Error();
+      }
       await sendTelegramMessage(chatId, testMessage);
       console.log(`Test Telegram message sent to admin with chatId: ${chatId}`);
     } catch (err) {
