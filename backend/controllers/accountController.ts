@@ -9,7 +9,7 @@ import {
   updateTelegramNotificationSettings,
 } from '../services/accountService';
 import { NotFoundError, BadRequestError } from '../services/errors';
-import { getAccountId } from 'utils/auth';
+import { getAccountId } from './../utils/auth';
 
 export const createAccount = async (req: Request, res: Response) => {
   const { identifier, name, email, password, role } = req.body;
@@ -95,9 +95,9 @@ export const changeEmailNotificationSettings = async (req: Request, res: Respons
   }
 
   if (typeof emailNotificationType !== 'string'
-    && emailNotificationType !== 'hourly'
+    || (emailNotificationType !== 'hourly'
     && emailNotificationType !== 'daily'
-    && emailNotificationType !== 'weekly'
+    && emailNotificationType !== 'weekly')
   ) {
     return res.status(400).json({ error: 'Email notification type field formatting is incorrect' });
   }
@@ -137,9 +137,9 @@ export const changeTelegramNotificationSettings = async (req: Request, res: Resp
   }
 
   if (typeof telegramNotificationType !== 'string'
-    && telegramNotificationType !== 'hourly'
+    || (telegramNotificationType !== 'hourly'
     && telegramNotificationType !== 'daily'
-    && telegramNotificationType !== 'weekly'
+    && telegramNotificationType !== 'weekly')
   ) {
     return res.status(400).json({ error: 'Telegram notification type field formatting is incorrect' });
   }
