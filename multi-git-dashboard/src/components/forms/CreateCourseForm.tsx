@@ -66,23 +66,25 @@ const CreateCourse: React.FC = () => {
       installationId: '',
     },
     validate: {
-      name: value =>
+      name: (value: string) =>
         value.trim().length > 0 ? null : 'Course name is required',
-      code: value =>
+      code: (value: string) =>
         value.trim().length > 0 ? null : 'Course code is required',
-      semester: value =>
+      semester: (value: string) =>
         value.trim().length > 0 ? null : 'Semester is required',
-      startDate: value => (value ? null : 'Start date is required'),
-      duration: value => (value ? null : 'Duration is required'),
-      courseType: value => (value ? null : 'Course type is required'),
+      startDate: (value: Date | null) =>
+        value ? null : 'Start date is required',
+      duration: (value: number) => (value ? null : 'Duration is required'),
+      courseType: (value: CourseType) =>
+        value ? null : 'Course type is required',
       // field should be valid only if courseType is Normal, or if courseType is GitHubOrg and installation check is successful
-      gitHubOrgName: (value, values) =>
+      gitHubOrgName: (value: string, values: CreateCourseFormValues) =>
         values.courseType === CourseType.Normal ||
         (values.courseType === CourseType.GitHubOrg &&
           appInstallationStatus === InstallationStatus.SUCCESS)
           ? null
           : 'GitHub Org name is required',
-      repoNameFilter: (value, values) =>
+      repoNameFilter: (value: string, values: CreateCourseFormValues) =>
         values.courseType === CourseType.Normal ||
         (values.courseType === CourseType.GitHubOrg &&
           appInstallationStatus === InstallationStatus.SUCCESS)
