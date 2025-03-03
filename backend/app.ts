@@ -21,7 +21,7 @@ import submissionRoutes from './routes/submissionRoutes';
 import assessmentAssignmentSetRoutes from './routes/assessmentAssignmentSetRoutes';
 import assessmentResultRoutes from './routes/assessmentResultRoutes';
 import notificationRoutes from './routes/notificationRoutes';
-import setupNotificationJob from 'jobs/notificationJob';
+import setupNotificationJob from './jobs/notificationJob';
 
 const env = process.env.NODE_ENV ?? 'development';
 config({ path: `.env.${env}` });
