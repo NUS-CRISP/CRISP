@@ -3,7 +3,7 @@ import {
   sendTelegramMessage,
   sendTestTelegramNotificationToAdmins,
 } from './../clients/telegramClient';
-import { sendNotificationEmail } from 'clients/emailClient';
+import { sendNotificationEmail } from './../clients/emailClient';
 
 // File not tested because these are just test notification methods.
 export const sendTestEmailController = async (req: Request, res: Response) => {
