@@ -67,7 +67,15 @@ const mockRequest = (body = {}, params = {}, headers = {}) => {
 };
 
 const mockResponse = () => {
-  const res = {} as Response;
+  const res = {
+    setHeader: jest.fn(), // Mock setHeader function
+    status: jest.fn().mockReturnThis(),
+    json: jest.fn(),
+    sendStatus: jest.fn(),
+    links: jest.fn(),
+    send: jest.fn(),
+    jsonp: jest.fn(),
+  } as unknown as Response;
   res.status = jest.fn().mockReturnValue(res);
   res.json = jest.fn().mockReturnValue(res);
   return res;

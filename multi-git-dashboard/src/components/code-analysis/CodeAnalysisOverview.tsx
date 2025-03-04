@@ -5,6 +5,7 @@ import {
 } from '@/lib/utils';
 import React, { useState } from 'react';
 import { Grid, Card, Text, Title, Container, Center } from '@mantine/core';
+import { IconHelpCircle, IconChartDots } from '@tabler/icons-react';
 
 interface CodeAnalysisOverviewProps {
   latestData: {
@@ -120,6 +121,34 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
   const complexity =
     complexity_index === -1 ? '-' : latestData.values[complexity_index];
 
+  const bugs_per_commit_index = latestData.metrics.indexOf('bugs_per_commit');
+  const bugs_per_commit =
+    bugs_per_commit_index === -1
+      ? '-'
+      : latestData.values[bugs_per_commit_index];
+
+  const code_smells_per_commit_index = latestData.metrics.indexOf(
+    'code_smells_per_commit'
+  );
+  const code_smells_per_commit =
+    code_smells_per_commit_index === -1
+      ? '-'
+      : latestData.values[code_smells_per_commit_index];
+
+  const lines_per_commit_index = latestData.metrics.indexOf('lines_per_commit');
+  const lines_per_commit =
+    lines_per_commit_index === -1
+      ? '-'
+      : latestData.values[lines_per_commit_index];
+
+  const lines_per_story_point_index = latestData.metrics.indexOf(
+    'lines_per_story_point'
+  );
+  const lines_per_story_point =
+    lines_per_story_point_index === -1
+      ? '-'
+      : latestData.values[lines_per_story_point_index];
+
   const quality_gate_status_index = latestData.metrics.indexOf('alert_status');
   const quality_gate_status =
     quality_gate_status_index === -1
@@ -142,145 +171,109 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
     setHoveredMetricValue(null);
   };
 
+  const metricCard = (
+    title: string,
+    value: string,
+    metricKey: string,
+    colorFn?: (s: string) => string
+  ) => {
+    const color =
+      value === '-' ? '#666' : colorFn ? colorFn(value) : 'lightgray';
+    return (
+      <Card padding="lg" shadow="sm" radius="md" style={{ height: '100%' }}>
+        <Title order={5}>
+          {title}
+          <IconHelpCircle
+            size={16}
+            onMouseEnter={() => handleMouseEnterMetric(metricKey)}
+            onMouseLeave={handleMouseLeaveMetric}
+            style={{ cursor: 'pointer', color: 'gray', marginLeft: '4px' }}
+          />
+        </Title>
+        <Text size="xl" fw={700} c={color}>
+          {value}
+          <IconChartDots
+            size={18}
+            onMouseEnter={() => handleMouseEnterMetricValue(metricKey)}
+            onMouseLeave={handleMouseLeaveMetricValue}
+            style={{ cursor: 'pointer', color: 'gray', marginLeft: '6px' }}
+          />
+        </Text>
+      </Card>
+    );
+  };
+
   return (
     <Container>
       <Grid gutter="lg">
         <Grid.Col span={4}>
-          <Card padding="lg" shadow="sm" radius="md">
-            <Title
-              order={5}
-              onMouseEnter={() => handleMouseEnterMetric('security_rating')}
-              onMouseLeave={handleMouseLeaveMetric}
-            >
-              Security
-            </Title>
-            <Text
-              size="xl"
-              fw={700}
-              c={getColorForRating(security_rating)}
-              onMouseEnter={() =>
-                handleMouseEnterMetricValue('security_rating')
-              }
-              onMouseLeave={handleMouseLeaveMetricValue}
-            >
-              {security_rating}
-            </Text>
-          </Card>
+          {metricCard(
+            'Security',
+            security_rating,
+            'security_rating',
+            getColorForRating
+          )}
         </Grid.Col>
         <Grid.Col span={4}>
-          <Card padding="lg" shadow="sm" radius="md">
-            <Title
-              order={5}
-              onMouseEnter={() => handleMouseEnterMetric('reliability_rating')}
-              onMouseLeave={handleMouseLeaveMetric}
-            >
-              Reliability
-            </Title>
-            <Text
-              size="xl"
-              fw={700}
-              c={getColorForRating(reliability_rating)}
-              onMouseEnter={() =>
-                handleMouseEnterMetricValue('reliability_rating')
-              }
-              onMouseLeave={handleMouseLeaveMetricValue}
-            >
-              {reliability_rating}
-            </Text>
-          </Card>
+          {metricCard(
+            'Reliability',
+            reliability_rating,
+            'reliability_rating',
+            getColorForRating
+          )}
         </Grid.Col>
         <Grid.Col span={4}>
-          <Card padding="lg" shadow="sm" radius="md">
-            <Title
-              order={5}
-              onMouseEnter={() => handleMouseEnterMetric('sqale_rating')}
-              onMouseLeave={handleMouseLeaveMetric}
-            >
-              Maintainability
-            </Title>
-            <Text
-              size="xl"
-              fw={700}
-              c={getColorForRating(maintainability_rating)}
-              onMouseEnter={() => handleMouseEnterMetricValue('sqale_rating')}
-              onMouseLeave={handleMouseLeaveMetricValue}
-            >
-              {maintainability_rating}
-            </Text>
-          </Card>
+          {metricCard(
+            'Maintainability',
+            maintainability_rating,
+            'sqale_rating',
+            getColorForRating
+          )}
         </Grid.Col>
         <Grid.Col span={4}>
-          <Card padding="lg" shadow="sm" radius="md">
-            <Title
-              order={5}
-              onMouseEnter={() => handleMouseEnterMetric('coverage')}
-              onMouseLeave={handleMouseLeaveMetric}
-            >
-              Coverage
-            </Title>
-            <Text
-              size="xl"
-              fw={700}
-              c={getColorForCoverage(coverage)}
-              onMouseEnter={() => handleMouseEnterMetricValue('coverage')}
-              onMouseLeave={handleMouseLeaveMetricValue}
-            >
-              {coverage}
-            </Text>
-          </Card>
+          {metricCard('Coverage', coverage, 'coverage', getColorForCoverage)}
         </Grid.Col>
         <Grid.Col span={4}>
-          <Card padding="lg" shadow="sm" radius="md">
-            <Title
-              order={5}
-              onMouseEnter={() =>
-                handleMouseEnterMetric('duplicated_lines_density')
-              }
-              onMouseLeave={handleMouseLeaveMetric}
-            >
-              Duplications
-            </Title>
-            <Text
-              size="xl"
-              fw={700}
-              c={getColorForDuplication(duplication)}
-              onMouseEnter={() =>
-                handleMouseEnterMetricValue('duplicated_lines_density')
-              }
-              onMouseLeave={handleMouseLeaveMetricValue}
-            >
-              {duplication}
-            </Text>
-          </Card>
+          {metricCard(
+            'Duplication',
+            duplication,
+            'duplicated_lines_density',
+            getColorForDuplication
+          )}
         </Grid.Col>
         <Grid.Col span={4}>
-          <Card padding="lg" shadow="sm" radius="md">
-            <Title
-              order={5}
-              onMouseEnter={() => handleMouseEnterMetric('complexity')}
-              onMouseLeave={handleMouseLeaveMetric}
-            >
-              Complexity
-            </Title>
-            <Text
-              size="xl"
-              fw={700}
-              c={complexity === '-' ? '#666' : 'lightgray'}
-              onMouseEnter={() => handleMouseEnterMetricValue('complexity')}
-              onMouseLeave={handleMouseLeaveMetricValue}
-            >
-              {complexity}
-            </Text>
-          </Card>
+          {metricCard('Complexity', complexity, 'complexity')}
+        </Grid.Col>
+        <Grid.Col span={3}>
+          {metricCard('Bugs / Commit', bugs_per_commit, 'bugs_per_commit')}
+        </Grid.Col>
+        <Grid.Col span={3}>
+          {metricCard(
+            'Code Smells / Commit',
+            code_smells_per_commit,
+            'code_smells_per_commit'
+          )}
+        </Grid.Col>
+        <Grid.Col span={3}>
+          {metricCard('Lines / Commit', lines_per_commit, 'lines_per_commit')}
+        </Grid.Col>
+        <Grid.Col span={3}>
+          {metricCard(
+            'Lines / Story Point',
+            lines_per_story_point,
+            'lines_per_story_point'
+          )}
         </Grid.Col>
         <Grid.Col span={12}>
           <Card padding="lg" shadow="sm" radius="md">
-            <Title
-              order={5}
-              onMouseEnter={() => handleMouseEnterMetric('alert_status')}
-              onMouseLeave={handleMouseLeaveMetric}
-            >
+            <Title order={5}>
               Quality Gate
+              <IconHelpCircle
+                size={16}
+                onMouseEnter={() => handleMouseEnterMetric('alert_status')}
+                onMouseLeave={handleMouseLeaveMetric}
+                style={{ cursor: 'pointer', marginLeft: '4px', color: 'gray' }}
+              />
             </Title>
             <Text
               size="xl"
