@@ -415,7 +415,7 @@ describe('getAllTrialAccounts', () => {
     await createTestAccount({
       email: 'pending@example.com',
       identifier: 'testIdentifier1',
-      role: 'Trial User'
+      role: 'Trial User',
     });
 
     const pendingAccounts = await getAllTrialAccounts();

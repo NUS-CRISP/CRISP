@@ -248,7 +248,7 @@ const AdminPage: React.FC = () => {
   }, []);
 
   // Table rows for trial accounts
-  const trialRows = trialAccounts.map((account) => (
+  const trialRows = trialAccounts.map(account => (
     <Table.Tr key={account._id}>
       <Table.Td>{account.email}</Table.Td>
       <Table.Td>{account.role}</Table.Td>

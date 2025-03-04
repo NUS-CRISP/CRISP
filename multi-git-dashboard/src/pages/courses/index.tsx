@@ -153,11 +153,11 @@ const CourseListPage: React.FC = () => {
         )}
 
         {/* Button to trigger sending a test email */}
-        {permission &&
+        {permission && (
           <Button onClick={handleSendTestEmail} mt="md">
             Send Test Email
           </Button>
-        }
+        )}
       </Box>
     </ScrollArea>
   );

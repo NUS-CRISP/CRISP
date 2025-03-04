@@ -188,10 +188,7 @@ export const changeTelegramNotificationSettings = async (
 
 // Does not start with 'get' because this method is temporary, to retrieve the id of the trial user.
 // Because the trial user's ID in prod and dev was lost.
-export const retrieveTrialAccounts = async (
-  req: Request,
-  res: Response
-) => {
+export const retrieveTrialAccounts = async (req: Request, res: Response) => {
   try {
     const accounts = await getAllTrialAccounts();
     res.status(200).send(accounts);
