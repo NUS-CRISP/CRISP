@@ -32,7 +32,7 @@ services:
       - SonarQube_extensions:/opt/SonarQube/extensions
       - SonarQube_logs:/opt/SonarQube/logs
     ports:
-      - "9000:9000"
+      - "8000:9000"
 
   sonarqube-scanner:
     image: sonarsource/sonar-scanner-cli
