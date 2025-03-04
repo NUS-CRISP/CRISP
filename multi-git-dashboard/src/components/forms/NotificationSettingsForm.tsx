@@ -31,6 +31,12 @@ interface AccountData {
   wantsTelegramNotifications: boolean;
 }
 
+const TELEGRAM_BOT_HANDLE =
+  process.env.NEXT_PUBLIC_TELEGRAM_BOT_HANDLE || '@crisp_notif_bot';
+const TELEGRAM_BOT_NAME =
+  process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME || 'NUSCRISPNotifications';
+
+
 const NotificationSettingsForm: React.FC<NotificationSettingsFormProps> = ({
   opened,
   onClose,
@@ -349,8 +355,8 @@ const NotificationSettingsForm: React.FC<NotificationSettingsFormProps> = ({
           Step 1: Open Telegram. Sign up if you have not done so. Link:
           https://web.telegram.org/
           <br />
-          Step 2: Talk to Crisp Bot by searching in the search bar for
-          @crisp_notif_bot, and click on the NUSCRISPNotifications bot.
+          Step 2: Talk to {TELEGRAM_BOT_HANDLE} by searching in the search bar
+          for {TELEGRAM_BOT_HANDLE}, and click on the {TELEGRAM_BOT_NAME} bot.
           <br />
           Step 3: Use the command /register 'your CRISP account email'.
           <br />
