@@ -509,14 +509,14 @@ describe('retrieveTrialAccounts', () => {
     const res = mockResponse();
 
     jest
-      .spyOn(accountService, 'getAllPendingAccounts')
-      .mockRejectedValue(new Error('Error getting pending accounts'));
+      .spyOn(accountService, 'getAllTrialAccounts')
+      .mockRejectedValue(new Error('Error getting trial accounts'));
 
-    await getPendingAccounts(req, res);
+    await retrieveTrialAccounts(req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.send).toHaveBeenCalledWith({
-      error: 'Error getting pending accounts',
+      error: 'Error getting trial accounts',
     });
   });
 });
