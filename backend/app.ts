@@ -22,6 +22,7 @@ import assessmentAssignmentSetRoutes from './routes/assessmentAssignmentSetRoute
 import assessmentResultRoutes from './routes/assessmentResultRoutes';
 import notificationRoutes from './routes/notificationRoutes';
 import setupNotificationJob from 'jobs/notificationJob';
+import setupTutorialDataJob from 'jobs/tutorialDataJob';
 
 const env = process.env.NODE_ENV ?? 'development';
 config({ path: `.env.${env}` });
@@ -33,6 +34,7 @@ const setupApp = async () => {
   setupTrofosJob();
   setupCodeAnalysisJob();
   setupNotificationJob();
+  setupTutorialDataJob();
 };
 setupApp();
 
