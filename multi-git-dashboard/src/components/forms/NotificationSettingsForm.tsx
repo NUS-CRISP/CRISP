@@ -36,7 +36,6 @@ const TELEGRAM_BOT_HANDLE =
 const TELEGRAM_BOT_NAME =
   process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME || 'NUSCRISPNotifications';
 
-
 const NotificationSettingsForm: React.FC<NotificationSettingsFormProps> = ({
   opened,
   onClose,
