@@ -4,6 +4,7 @@ import {
   createNewAccount,
   getAccountStatusesByUserIds,
   getAllPendingAccounts,
+  getAllTrialAccounts,
   rejectAccountByIds,
   updateEmailNotificationSettings,
   updateTelegramNotificationSettings,
@@ -182,5 +183,17 @@ export const changeTelegramNotificationSettings = async (
     return res
       .status(500)
       .json({ error: 'Failed to update telegram notification settings' });
+  }
+};
+
+// Does not start with 'get' because this method is temporary, to retrieve the id of the trial user.
+// Because the trial user's ID in prod and dev was lost.
+export const retrieveTrialAccounts = async (req: Request, res: Response) => {
+  try {
+    const accounts = await getAllTrialAccounts();
+    res.status(200).send(accounts);
+  } catch (error) {
+    console.error('Error getting trial accounts:', error);
+    res.status(500).send({ error: 'Error getting trial accounts' });
   }
 };
