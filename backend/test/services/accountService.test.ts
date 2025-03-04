@@ -10,6 +10,7 @@ import {
   getUserIdByAccountId,
   updateEmailNotificationSettings,
   updateTelegramNotificationSettings,
+  getAllTrialAccounts,
 } from '../../services/accountService';
 import { BadRequestError, NotFoundError } from '../../services/errors';
 import UserModel from '@models/User';
@@ -406,5 +407,26 @@ describe('accountService', () => {
       expect(updated.telegramNotificationHour).toBe(20); // unchanged
       expect(updated.telegramNotificationWeekday).toBe(7); // unchanged
     });
+  });
+});
+
+describe('getAllTrialAccounts', () => {
+  it('should return only trial accounts', async () => {
+    await createTestAccount({
+      email: 'pending@example.com',
+      identifier: 'testIdentifier1',
+      role: 'Trial User'
+    });
+
+    const pendingAccounts = await getAllTrialAccounts();
+
+    expect(pendingAccounts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          email: 'pending@example.com',
+        }),
+      ])
+    );
+    expect(pendingAccounts.length).toBe(1);
   });
 });

@@ -8,6 +8,7 @@ import {
   getAccountStatuses,
   getPendingAccounts,
   rejectAccounts,
+  retrieveTrialAccounts,
 } from '../../controllers/accountController';
 import * as accountService from '../../services/accountService';
 import { BadRequestError, NotFoundError } from '../../services/errors';
@@ -483,6 +484,39 @@ describe('accountController', () => {
         message: 'Telegram notification settings updated',
         account: mockUpdatedAccount,
       });
+    });
+  });
+});
+
+describe('retrieveTrialAccounts', () => {
+  it('should retrieve trial accounts and send a 200 status', async () => {
+    const req = mockRequest();
+    const res = mockResponse();
+    const mockAccounts = [{ email: 'trial@example.com', role: 'Trial User' }];
+
+    jest
+      .spyOn(accountService, 'getAllTrialAccounts')
+      .mockResolvedValue(mockAccounts as any);
+
+    await retrieveTrialAccounts(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.send).toHaveBeenCalledWith(mockAccounts);
+  });
+
+  it('should handle error and send a 500 status', async () => {
+    const req = mockRequest();
+    const res = mockResponse();
+
+    jest
+      .spyOn(accountService, 'getAllPendingAccounts')
+      .mockRejectedValue(new Error('Error getting pending accounts'));
+
+    await getPendingAccounts(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.send).toHaveBeenCalledWith({
+      error: 'Error getting pending accounts',
     });
   });
 });

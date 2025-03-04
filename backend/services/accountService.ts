@@ -4,6 +4,7 @@ import UserModel from '../models/User';
 import { BadRequestError, NotFoundError } from './errors';
 import mongoose from 'mongoose';
 import { NotificationPeriod } from '@shared/types/Account';
+import Role from '@shared/types/auth/Role';
 
 export const createNewAccount = async (
   identifier: string,
@@ -149,4 +150,8 @@ export const updateTelegramNotificationSettings = async (
 
   await account.save();
   return account;
+};
+
+export const getAllTrialAccounts = async () => {
+  return await AccountModel.find({ role: Role.TrialUser });
 };
