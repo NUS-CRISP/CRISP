@@ -252,7 +252,7 @@ const Navbar: React.FC = () => {
       stage={6}
       position="right"
       key={item.label}
-      disabled={item.label !== 'Overview' || curTutorialStage !== 6}
+      disabled={item.label !== 'Class Overview' || curTutorialStage !== 6}
     >
       <a
         className={classes.courseLink}
@@ -323,9 +323,13 @@ const Navbar: React.FC = () => {
     };
   }, [activeCourseTab]);
 
+  useEffect(() => {
+    console.log('Navbar Tutorial Stage: ' + curTutorialStage);
+  }, [curTutorialStage]);
+
   return (
     <div className={classes.navbarsContainer}>
-      <TutorialPopover stage={1}>
+      <TutorialPopover stage={1} position={'right'}>
         <nav
           className={classes.navbar}
           style={{
