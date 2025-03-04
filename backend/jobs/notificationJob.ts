@@ -10,7 +10,7 @@ import { User } from '../models/User';
 import InternalAssessmentModel, {
   InternalAssessment,
 } from '@models/InternalAssessment';
-import { getUnmarkedAssignmentsByTAId } from 'services/assessmentAssignmentSetService';
+import { getUnmarkedAssignmentsByTAId } from '../services/assessmentAssignmentSetService';
 import { sendTelegramMessage } from '../clients/telegramClient';
 
 /**
