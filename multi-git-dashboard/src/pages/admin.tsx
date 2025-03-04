@@ -254,6 +254,7 @@ const AdminPage: React.FC = () => {
       <Table.Td>{account.role}</Table.Td>
       {/* Display the account's id field here */}
       <Table.Td>{account._id}</Table.Td>
+      <Table.Td>{account.user._id}</Table.Td>
     </Table.Tr>
   ));
   // TEMP END
@@ -329,7 +330,8 @@ const AdminPage: React.FC = () => {
           <Table.Tr>
             <Table.Th>Email</Table.Th>
             <Table.Th>Role</Table.Th>
-            <Table.Th>ID</Table.Th>
+            <Table.Th>Acc ID</Table.Th>
+            <Table.Th>User ID</Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>

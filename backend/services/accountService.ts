@@ -153,5 +153,5 @@ export const updateTelegramNotificationSettings = async (
 };
 
 export const getAllTrialAccounts = async () => {
-  return await AccountModel.find({ role: Role.TrialUser });
+  return await AccountModel.find({ role: Role.TrialUser }).populate('user');
 };
