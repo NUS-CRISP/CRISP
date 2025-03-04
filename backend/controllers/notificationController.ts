@@ -3,7 +3,7 @@ import {
   sendTelegramMessage,
   sendTestTelegramNotificationToAdmins,
 } from './../clients/telegramClient';
-import { sendTestNotificationEmail } from './../clients/emailClient';
+import { sendNotificationEmail } from './../clients/emailClient';
 
 // File not tested because these are just test notification methods.
 export const sendTestEmailController = async (req: Request, res: Response) => {
@@ -12,7 +12,8 @@ export const sendTestEmailController = async (req: Request, res: Response) => {
   }
 
   try {
-    await sendTestNotificationEmail();
+    const { to, subject, text } = req.body;
+    await sendNotificationEmail(to, subject, text);
     return res.status(200).json({ success: true });
   } catch (error) {
     console.error('Error sending email:', error);

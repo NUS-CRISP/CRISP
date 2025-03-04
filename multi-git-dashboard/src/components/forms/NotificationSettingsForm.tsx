@@ -42,12 +42,14 @@ const NotificationSettingsForm: React.FC<NotificationSettingsFormProps> = ({
 }) => {
   const [accountData, setAccountData] = useState<AccountData | null>(null);
 
+  // EMAIL STATES
   const [wantsEmailNotifications, setWantsEmailNotifications] = useState(false);
   const [emailNotificationType, setEmailNotificationType] = useState('daily');
   const [emailNotificationHour, setEmailNotificationHour] = useState<number>(0);
   const [emailNotificationWeekday, setEmailNotificationWeekday] =
     useState<number>(1);
 
+  // TELEGRAM STATES
   const [wantsTelegramNotifications, setWantsTelegramNotifications] =
     useState(false);
   const [telegramNotificationType, setTelegramNotificationType] =
@@ -57,16 +59,30 @@ const NotificationSettingsForm: React.FC<NotificationSettingsFormProps> = ({
   const [telegramNotificationWeekday, setTelegramNotificationWeekday] =
     useState<number>(1);
 
+  // Nested help modal
   const [helpModalOpened, setHelpModalOpened] = useState(false);
 
+  // Success messages for saving settings
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  // Test message feedback
+  const [testEmailFeedback, setTestEmailFeedback] = useState<string | null>(
+    null
+  );
+  const [testTelegramFeedback, setTestTelegramFeedback] = useState<
+    string | null
+  >(null);
+
   useEffect(() => {
+    // Clear feedback when the modal is opened
     if (opened) {
       setSuccessMessage(null);
+      setTestEmailFeedback(null);
+      setTestTelegramFeedback(null);
     }
   }, [opened]);
 
+  // Fetch account data on open
   useEffect(() => {
     if (!opened) return;
 
@@ -76,6 +92,7 @@ const NotificationSettingsForm: React.FC<NotificationSettingsFormProps> = ({
         const data: AccountData = await res.json();
         setAccountData(data);
 
+        // Email fields
         setWantsEmailNotifications(data.wantsEmailNotifications);
         if (data.emailNotificationType) {
           setEmailNotificationType(data.emailNotificationType);
@@ -87,6 +104,7 @@ const NotificationSettingsForm: React.FC<NotificationSettingsFormProps> = ({
           setEmailNotificationWeekday(data.emailNotificationWeekday);
         }
 
+        // Telegram fields
         setWantsTelegramNotifications(data.wantsTelegramNotifications);
         if (data.telegramNotificationType) {
           setTelegramNotificationType(data.telegramNotificationType);
@@ -105,6 +123,7 @@ const NotificationSettingsForm: React.FC<NotificationSettingsFormProps> = ({
     fetchAccount();
   }, [opened]);
 
+  // Auto-clear success messages after 5s
   useEffect(() => {
     if (successMessage) {
       const timer = setTimeout(() => {
@@ -114,10 +133,33 @@ const NotificationSettingsForm: React.FC<NotificationSettingsFormProps> = ({
     }
   }, [successMessage]);
 
+  // Also auto-clear test feedback after 5s
+  useEffect(() => {
+    if (testEmailFeedback) {
+      const timer = setTimeout(() => {
+        setTestEmailFeedback(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [testEmailFeedback]);
+
+  useEffect(() => {
+    if (testTelegramFeedback) {
+      const timer = setTimeout(() => {
+        setTestTelegramFeedback(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [testTelegramFeedback]);
+
+  // Clear success message on tab change
   const handleTabChange = () => {
     setSuccessMessage(null);
+    setTestEmailFeedback(null);
+    setTestTelegramFeedback(null);
   };
 
+  // Save Email
   const handleSaveEmail = async () => {
     setSuccessMessage(null);
     try {
@@ -141,6 +183,7 @@ const NotificationSettingsForm: React.FC<NotificationSettingsFormProps> = ({
     }
   };
 
+  // Save Telegram
   const handleSaveTelegram = async () => {
     setSuccessMessage(null);
     try {
@@ -164,11 +207,66 @@ const NotificationSettingsForm: React.FC<NotificationSettingsFormProps> = ({
     }
   };
 
+  // Test Email
+  const handleSendTestEmail = async () => {
+    if (!accountData) return;
+    setTestEmailFeedback(null);
+    try {
+      const toEmail = accountData.email;
+      const res = await fetch('/api/notifications/testEmail', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: toEmail,
+          subject: 'CRISP Test Email Notification',
+          text: 'This is a test email from CRISP to verify your connection.',
+        }),
+      });
+
+      if (!res.ok) {
+        setTestEmailFeedback('Failed to send test email.');
+      } else {
+        setTestEmailFeedback('Test email sent successfully!');
+      }
+    } catch (error) {
+      console.error('Error sending test email:', error);
+      setTestEmailFeedback('Error sending test email.');
+    }
+  };
+
+  // Test Telegram
+  const handleSendTestTelegram = async () => {
+    if (!accountData) return;
+    setTestTelegramFeedback(null);
+    try {
+      const chatId = accountData.telegramChatId;
+      const res = await fetch('/api/notifications/testTelegram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chatId,
+          text: 'This is a test Telegram message from CRISP to verify your connection.',
+        }),
+      });
+
+      if (!res.ok) {
+        setTestTelegramFeedback('Failed to send test Telegram message.');
+      } else {
+        setTestTelegramFeedback('Test Telegram message sent successfully!');
+      }
+    } catch (error) {
+      console.error('Error sending test telegram:', error);
+      setTestTelegramFeedback('Error sending test Telegram message.');
+    }
+  };
+
+  // Whether user has Telegram
   const hasTelegram =
     accountData?.telegramChatId !== undefined &&
     accountData.telegramChatId !== null &&
     accountData.telegramChatId !== -1;
 
+  // Logic for showing hour/weekday
   const shouldShowHour = (type: string) =>
     type === 'daily' || type === 'weekly';
   const shouldShowWeekday = (type: string) => type === 'weekly';
@@ -243,14 +341,35 @@ const NotificationSettingsForm: React.FC<NotificationSettingsFormProps> = ({
                     />
                   )}
 
+                {/* Show success message for saving settings */}
                 {successMessage && (
                   <Alert color="green" variant="filled" mt="xs" p="xs">
                     {successMessage}
                   </Alert>
                 )}
 
+                {/* Show feedback for test email */}
+                {testEmailFeedback && (
+                  <Alert
+                    color={
+                      testEmailFeedback.includes('successfully')
+                        ? 'green'
+                        : 'red'
+                    }
+                    variant="filled"
+                    mt="xs"
+                    p="xs"
+                  >
+                    {testEmailFeedback}
+                  </Alert>
+                )}
+
                 <Group justify="flex-end">
                   <Button onClick={handleSaveEmail}>Save Email Settings</Button>
+                  {/* Button to send a test email */}
+                  <Button variant="light" onClick={handleSendTestEmail}>
+                    Send Test Email
+                  </Button>
                 </Group>
               </div>
             )}
@@ -325,15 +444,37 @@ const NotificationSettingsForm: React.FC<NotificationSettingsFormProps> = ({
                         />
                       )}
 
+                    {/* Show success message for saving Telegram settings */}
                     {successMessage && (
                       <Alert color="green" variant="filled" mt="xs" p="xs">
                         {successMessage}
                       </Alert>
                     )}
 
+                    {/* Show feedback for test telegram */}
+                    {testTelegramFeedback && (
+                      <Alert
+                        color={
+                          testTelegramFeedback.includes('successfully')
+                            ? 'green'
+                            : 'red'
+                        }
+                        variant="filled"
+                        mt="xs"
+                        p="xs"
+                      >
+                        {testTelegramFeedback}
+                      </Alert>
+                    )}
+
                     <Group justify="flex-end">
                       <Button onClick={handleSaveTelegram}>
                         Save Telegram Settings
+                      </Button>
+
+                      {/* Only show "Send Test Telegram" if user has chatId */}
+                      <Button variant="light" onClick={handleSendTestTelegram}>
+                        Send Test Telegram
                       </Button>
                     </Group>
                   </>
@@ -344,6 +485,7 @@ const NotificationSettingsForm: React.FC<NotificationSettingsFormProps> = ({
         </Tabs>
       </Modal>
 
+      {/* Help Modal for Telegram instructions */}
       <Modal
         opened={helpModalOpened}
         onClose={() => setHelpModalOpened(false)}
