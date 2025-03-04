@@ -1,128 +1,50 @@
-import {
-  Anchor,
-  Box,
-  Burger,
-  Button,
-  Center,
-  Container,
-  Group,
-  HoverCard,
-  useMantineTheme,
-  Text,
-  Divider,
-  SimpleGrid,
-} from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
-import classes from '@styles/Home.module.css';
-import { IconChevronDown, IconGitBranch } from '@tabler/icons-react';
+import { AppBar, Toolbar, Typography, Button, Container, Box } from '@mui/material';
 import { useRouter } from 'next/router';
+import Image from 'next/image';
+import { IconChevronDown, IconGitBranch } from '@tabler/icons-react';
 
 const Header: React.FC = () => {
-  const [opened, { toggle }] = useDisclosure(false);
   const router = useRouter();
-  const theme = useMantineTheme();
-
-  const links: { link: string; label: string }[] = [];
-
-  const items = links.map(link => (
-    <Button
-      key={link.link}
-      onClick={() => router.push(link.link)}
-      color={theme.colors.blue[4]}
-      variant="subtle"
-    >
-      {link.label}
-    </Button>
-  ));
-
-
 
   return (
-    <header className={classes.header}>
-      <Container size="lg" className={classes.headerInner}>
-        <Group>
+    <AppBar position="fixed" sx={{ backgroundColor: 'black', padding: '10px 0' }}>
+      <Container maxWidth="lg">
+        <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          {/* Logo and Title */}
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <IconGitBranch size={40} className={classes.headerIcon} />
-          <a href="#" className={classes.link}>
-            CRISP
-          </a>
-        </Group>
+            <Typography variant="h6" component="a" href="#" sx={{ color: 'white', fontWeight: 'bold', ml: 2, textDecoration: 'none' }}>
+              CRISP
+            </Typography>
+          </Box>
 
-        <Group h="100%" gap={0} visibleFrom="sm">
-          <a href="http://localhost:3002/" className={classes.link}>
-            Home
-          </a>
-          {/* <HoverCard width={600} position="bottom" radius="md" shadow="md" withinPortal>
-              <HoverCard.Target>
-                <a href="#" className={classes.link}>
-                  <Center inline>
-                    <Box component="span" mr={5}>
-                      Features
-                    </Box>
-                    <IconChevronDown size={16} color={theme.colors.blue[6]} />
-                  </Center>
-                </a>
-              </HoverCard.Target>
+          {/* Navigation Links */}
+          <Box sx={{ display: 'flex', gap: 4 }}>
+            <Button color="inherit" sx={{ fontWeight: 'bold' }} href="#">
+              About
+            </Button>
+            <Button color="inherit" sx={{ fontWeight: 'bold' }} href="#">
+              Features
+            </Button>
+          </Box>
 
-              <HoverCard.Dropdown style={{ overflow: 'hidden' }}>
-                <Group justify="space-between" px="md">
-                  <Text fw={500}>Features</Text>
-                  <Anchor href="#" fz="xs">
-                    View all
-                  </Anchor>
-                </Group>
-
-                <Divider my="sm" />
-
-                <SimpleGrid cols={2} spacing={0}>
-                  hhhh
-                </SimpleGrid>
-
-                <div className={classes.dropdownFooter}>
-                  <Group justify="space-between">
-                    <div>
-                      <Text fw={500} fz="sm">
-                        Get started
-                      </Text>
-                      <Text size="xs" c="dimmed">
-                        Their food sources have decreased, and their numbers
-                      </Text>
-                    </div>
-                    <Button variant="default">Get started</Button>
-                  </Group>
-                </div>
-              </HoverCard.Dropdown>
-            </HoverCard> */}
-          <a href="#" className={classes.link}>
-            Code
-          </a>
-          <a href="#" className={classes.link}>
-            Contributor
-          </a>
-
-        </Group>
-
-
-
-        <Group visibleFrom="xs">
-          {items}
-
-
-
-
-
+          {/* Login Button */}
           <Button
-            key="signin"
+            variant="contained"
+            sx={{
+              backgroundColor: '#4B7048',
+              color: 'white',
+              borderRadius: '8px',
+              padding: '8px 16px',
+              '&:hover': { backgroundColor: '#3a5c38' },
+            }}
             onClick={() => router.push('/auth/signin')}
-            color={theme.colors.blue[9]}
-           size={'sm'}
           >
-            Sign in
+            Login
           </Button>
-        </Group>
-
-        <Burger opened={opened} onClick={toggle} hiddenFrom="xs" size="sm" />
+        </Toolbar>
       </Container>
-    </header>
+    </AppBar>
   );
 };
 
