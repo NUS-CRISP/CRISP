@@ -122,7 +122,8 @@ export const addStudentsToCourse = async (
         continue;
       }
       if (
-        studentAccount.role !== Role.Student ||
+        (studentAccount.role !== Role.Student &&
+          studentAccount.role !== Role.TrialUser) ||
         studentData.name !== student.name ||
         studentData.email !== studentAccount.email
       ) {
