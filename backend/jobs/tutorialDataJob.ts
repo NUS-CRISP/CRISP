@@ -7,15 +7,6 @@ import UserModel from '@models/User';
 import Role from '@shared/types/auth/Role';
 
 export const setupTutorialDataJob = async () => {
-  /*
-   * 1) Ensure the "Trial User" (and its account) exists.
-   * 2) Delete existing trial course data (identified by code: "TRIAL"),
-   *    removing old TeamSets, Teams, TeamDatas, and any bogus students from that course.
-   * 3) Re-create the trial course, add the trial user and admin user to it,
-   *    create bogus students, then a new TeamSet, Team, and fill out TeamData
-   *    with multi-entry arrays for demonstration.
-   */
-
   // -----------------------------------------------------------------------------
   // 1) Ensure the "Trial User" (and its account) exists
   // -----------------------------------------------------------------------------
@@ -27,7 +18,6 @@ export const setupTutorialDataJob = async () => {
       })
     : null;
 
-  // If the trial user doesn't exist, create it
   if (!trialUser) {
     const trialUserDoc = new UserModel({
       identifier: 'trial',
@@ -38,11 +28,10 @@ export const setupTutorialDataJob = async () => {
     trialUser = await trialUserDoc.save();
   }
 
-  // If the trial account doesn't exist, create it
   if (!trialAccount) {
     const trialAccountDoc = new AccountModel({
       email: 'trial@example.com',
-      password: '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6', // Provided hashed password
+      password: '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
       role: 'Trial User',
       isApproved: true,
       wantsEmailNotifications: false,
@@ -52,10 +41,13 @@ export const setupTutorialDataJob = async () => {
     trialAccount = await trialAccountDoc.save();
   }
 
-  // Ensure we have an Admin user
-  const adminAccount = await AccountModel.findOne({ role: Role.Admin }).populate('user');
+  const adminAccount = await AccountModel.findOne({
+    role: Role.Admin,
+  }).populate('user');
   if (!adminAccount || !adminAccount.user) {
-    throw new Error('Admin user does not exist, but is required by this script.');
+    throw new Error(
+      'Admin user does not exist, but is required by this script.'
+    );
   }
   const adminUser = adminAccount.user;
 
@@ -66,47 +58,40 @@ export const setupTutorialDataJob = async () => {
   if (existingTrialCourse) {
     const trialCourseId = existingTrialCourse._id;
 
-    // 2a) Remove TeamSet(s) for this course
     const teamSets = await TeamSetModel.find({ course: trialCourseId });
-    const teamSetIds = teamSets.map((ts) => ts._id);
+    const teamSetIds = teamSets.map(ts => ts._id);
 
-    // 2b) Remove Teams referencing these team sets
     await TeamModel.deleteMany({ teamSet: { $in: teamSetIds } });
 
-    // 2c) Remove the team sets
     await TeamSetModel.deleteMany({ _id: { $in: teamSetIds } });
 
-    // 2d) Remove TeamData referencing this course
     await TeamDataModel.deleteMany({ course: trialCourseId });
 
-    // 2e) Remove any “bogus” student users (and their accounts) who are part of this course,
-    //     except if they are the trial user or the admin user.
-    const existingCourseRefreshed = await CourseModel.findById(trialCourseId).lean();
+    const existingCourseRefreshed =
+      await CourseModel.findById(trialCourseId).lean();
     if (existingCourseRefreshed?.students) {
-      // IDs of the trial user & admin user we want to keep
-      const keepUserIds = new Set([trialUser._id.toString(), adminUser._id.toString()]);
+      const keepUserIds = new Set([
+        trialUser._id.toString(),
+        adminUser._id.toString(),
+      ]);
 
-      // Identify which are "bogus" for removal
       const bogusStudentIds = existingCourseRefreshed.students.filter(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (stuId: any) => !keepUserIds.has(stuId.toString())
       );
 
       if (bogusStudentIds.length > 0) {
-        // Remove accounts referencing those user IDs
         await AccountModel.deleteMany({ user: { $in: bogusStudentIds } });
-        // Remove the user docs themselves
         await UserModel.deleteMany({ _id: { $in: bogusStudentIds } });
       }
     }
 
-    // 2f) Finally, remove the course itself
     await CourseModel.deleteOne({ _id: trialCourseId });
   }
 
   // -----------------------------------------------------------------------------
   // 3) Now we can create the brand-new trial course and data
   // -----------------------------------------------------------------------------
-  // Re-create the trial course
   const trialCourse = await CourseModel.create({
     name: 'Trial',
     code: 'TRIAL',
@@ -117,15 +102,13 @@ export const setupTutorialDataJob = async () => {
     sprints: [],
     milestones: [],
   });
-  trialCourse.gitHubOrgName = 'trialrepo';
+  trialCourse.gitHubOrgName = 'trialrepo'; // Has to be saved separately. I don't know why, but assigning it directly in the .create method above doesn't correctly save it.
   await trialCourse.save();
 
-  // Attach trial user and admin user as faculty
   trialCourse.faculty.push(trialUser._id);
   trialCourse.faculty.push(adminUser._id);
   await trialCourse.save();
 
-  // Ensure the trial user is enrolled in the new course
   if (!trialUser.enrolledCourses.includes(trialCourse._id)) {
     trialUser.enrolledCourses.push(trialCourse._id);
     await trialUser.save();
@@ -136,23 +119,25 @@ export const setupTutorialDataJob = async () => {
   // -----------------------------------------------------------------------------
   const studentArray: string[] = [];
 
-  const createAndEnrollStudent = async (
-    { identifier, name }: { identifier: string; name: string }
-  ) => {
-    // Check if this user already exists
+  const createAndEnrollStudent = async ({
+    identifier,
+    name,
+  }: {
+    identifier: string;
+    name: string;
+  }) => {
     let studentUser = await UserModel.findOne({ identifier });
     if (!studentUser) {
-      // Create new
       studentUser = await UserModel.create({
         identifier,
         name,
         enrolledCourses: [trialCourse._id],
         gitHandle: '',
       });
-      // Also create the associated account
       await AccountModel.create({
         email: `${identifier}@example.com`,
-        password: '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
+        password:
+          '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
         role: Role.Student,
         isApproved: true,
         wantsEmailNotifications: false,
@@ -160,13 +145,11 @@ export const setupTutorialDataJob = async () => {
         user: studentUser._id,
       });
     } else {
-      // If already exists, ensure they're enrolled
       if (!studentUser.enrolledCourses.includes(trialCourse._id)) {
         studentUser.enrolledCourses.push(trialCourse._id);
         await studentUser.save();
       }
     }
-    // Also ensure they're in the course's students array
     if (!trialCourse.students.includes(studentUser._id)) {
       trialCourse.students.push(studentUser._id);
       await trialCourse.save();
@@ -174,10 +157,15 @@ export const setupTutorialDataJob = async () => {
     studentArray.push(studentUser._id.toString());
   };
 
-  // Our "bogus" students
   await createAndEnrollStudent({ identifier: 'john-doe', name: 'John Doe' });
-  await createAndEnrollStudent({ identifier: 'johnny-smith', name: 'Johnny Smith' });
-  await createAndEnrollStudent({ identifier: 'hoshimachi-suisei', name: 'Hoshimachi Suisei' });
+  await createAndEnrollStudent({
+    identifier: 'johnny-smith',
+    name: 'Johnny Smith',
+  });
+  await createAndEnrollStudent({
+    identifier: 'hoshimachi-suisei',
+    name: 'Hoshimachi Suisei',
+  });
 
   // -----------------------------------------------------------------------------
   // 5) Create a TeamSet, Team, and TeamData with multiple example subdocuments
@@ -185,7 +173,7 @@ export const setupTutorialDataJob = async () => {
   const teamSet = await TeamSetModel.create({
     course: trialCourse._id,
     name: 'Project Groups',
-    teams: [], // will be filled below
+    teams: [],
   });
   trialCourse.teamSets.push(teamSet._id);
   await trialCourse.save();
@@ -194,7 +182,7 @@ export const setupTutorialDataJob = async () => {
     teamSet: teamSet._id,
     number: 100,
     members: studentArray,
-    TA: trialUser._id, // We'll set the trial user as the TA for this team
+    TA: trialUser._id,
   });
   teamSet.teams.push(team._id);
   await teamSet.save();
@@ -218,10 +206,12 @@ export const setupTutorialDataJob = async () => {
       [3, 1, 3],
     ],
 
-    // Updated issues array
-    updatedIssues: ['#12 Fix login bug', '#15 Update README', '#20 Minor UI improvements'],
+    updatedIssues: [
+      '#12 Fix login bug',
+      '#15 Update README',
+      '#20 Minor UI improvements',
+    ],
 
-    // Provide a map of each user’s contributions
     teamContributions: {
       'John Doe': {
         commits: 10,
@@ -252,7 +242,6 @@ export const setupTutorialDataJob = async () => {
       },
     },
 
-    // Team PRs with subdocument reviews & comments
     teamPRs: [
       {
         id: 2171165196,
@@ -311,7 +300,6 @@ export const setupTutorialDataJob = async () => {
       },
     ],
 
-    // Example Milestones
     milestones: [
       {
         title: 'M1: Project Setup',
@@ -337,11 +325,12 @@ export const setupTutorialDataJob = async () => {
     ],
   });
 
-  // Link the created TeamData to the Team
   team.teamData = teamData._id;
   await team.save();
 
-  console.log('Trial data setup complete! All old trial data replaced with fresh data.');
+  console.log(
+    'Trial data setup complete! All old trial data replaced with fresh data.'
+  );
 };
 
 export default setupTutorialDataJob;
