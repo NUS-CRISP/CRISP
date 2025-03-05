@@ -1,18 +1,23 @@
 import AccountModel from '@models/Account';
-// import CourseModel from '@models/Course';
+import CourseModel from '@models/Course';
+import TeamModel from '@models/Team';
+import TeamDataModel from '@models/TeamData';
+import TeamSetModel from '@models/TeamSet';
 import UserModel from '@models/User';
-// import Role from '@shared/types/auth/Role';
+import Role from '@shared/types/auth/Role';
 
 export const setupTutorialDataJob = async () => {
   /*
-   * 1) Ensure the trial user + account exist.
-   * 2) Ensure the three 'trial' courses exist (only create them if absent).
-   * 3) Make sure the trial user is properly attached to those courses (as faculty or TA).
-   * 4) Create bogus student accounts only if they don't already exist and enroll them in the courses.
+   * 1) Ensure the "Trial User" (and its account) exists.
+   * 2) Delete existing trial course data (identified by code: "TRIAL"),
+   *    removing old TeamSets, Teams, TeamDatas, and any bogus students from that course.
+   * 3) Re-create the trial course, add the trial user and admin user to it,
+   *    create bogus students, then a new TeamSet, Team, and fill out TeamData
+   *    with multi-entry arrays for demonstration.
    */
 
   // -----------------------------------------------------------------------------
-  // 1) Ensure the trial user + account exist
+  // 1) Ensure the "Trial User" (and its account) exists
   // -----------------------------------------------------------------------------
   let trialUser = await UserModel.findOne({ identifier: 'trial' });
   let trialAccount = trialUser
@@ -22,6 +27,7 @@ export const setupTutorialDataJob = async () => {
       })
     : null;
 
+  // If the trial user doesn't exist, create it
   if (!trialUser) {
     const trialUserDoc = new UserModel({
       identifier: 'trial',
@@ -32,10 +38,11 @@ export const setupTutorialDataJob = async () => {
     trialUser = await trialUserDoc.save();
   }
 
+  // If the trial account doesn't exist, create it
   if (!trialAccount) {
     const trialAccountDoc = new AccountModel({
       email: 'trial@example.com',
-      password: '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
+      password: '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6', // Provided hashed password
       role: 'Trial User',
       isApproved: true,
       wantsEmailNotifications: false,
@@ -44,11 +51,8 @@ export const setupTutorialDataJob = async () => {
     });
     trialAccount = await trialAccountDoc.save();
   }
-  /*
-  // The code below will add bogus courses, but we won't use this, this is just for local testing.
-  // -----------------------------------------------------------------------------
-  // 2) Ensure we have an admin user (assumed to exist at all times)
-  // -----------------------------------------------------------------------------
+
+  // Ensure we have an Admin user
   const adminAccount = await AccountModel.findOne({ role: Role.Admin }).populate('user');
   if (!adminAccount || !adminAccount.user) {
     throw new Error('Admin user does not exist, but is required by this script.');
@@ -56,151 +60,288 @@ export const setupTutorialDataJob = async () => {
   const adminUser = adminAccount.user;
 
   // -----------------------------------------------------------------------------
-  // 3) Ensure the three 'trial' courses exist (only create if absent)
+  // 2) Delete existing trial course data so we can regenerate from scratch
   // -----------------------------------------------------------------------------
-  // Course #1: 'Trial as Faculty Member'
-  let course1 = await CourseModel.findOne({ code: 'TRIAL-F' });
-  if (!course1) {
-    course1 = new CourseModel({
-      name: 'Trial as Faculty Member',
-      code: 'TRIAL-F',
-      semester: 'AY2323 S2',
-      startDate: new Date(),
-      durationWeeks: 13,
-      courseType: 'Normal',
-      sprints: [],
-      milestones: [],
-    });
-    await course1.save();
-  }
+  const existingTrialCourse = await CourseModel.findOne({ code: 'TRIAL' });
+  if (existingTrialCourse) {
+    const trialCourseId = existingTrialCourse._id;
 
-  // Course #2: 'Trial as Teaching Assistant'
-  let course2 = await CourseModel.findOne({ code: 'TRIAL-TA' });
-  if (!course2) {
-    course2 = new CourseModel({
-      name: 'Trial as Teaching Assistant',
-      code: 'TRIAL-TA',
-      semester: 'AY2323 S2',
-      startDate: new Date(),
-      durationWeeks: 13,
-      courseType: 'Normal',
-      sprints: [],
-      milestones: [],
-    });
-    await course2.save();
-  }
+    // 2a) Remove TeamSet(s) for this course
+    const teamSets = await TeamSetModel.find({ course: trialCourseId });
+    const teamSetIds = teamSets.map((ts) => ts._id);
 
-  // Course #3: 'Trial Extra Course'
-  let course3 = await CourseModel.findOne({ code: 'TRIAL-EXTRA' });
-  if (!course3) {
-    course3 = new CourseModel({
-      name: 'Trial Extra Course',
-      code: 'TRIAL-EXTRA',
-      semester: 'AY2323 S2',
-      startDate: new Date(),
-      durationWeeks: 13,
-      courseType: 'Normal',
-      sprints: [],
-      milestones: [],
-    });
-    await course3.save();
+    // 2b) Remove Teams referencing these team sets
+    await TeamModel.deleteMany({ teamSet: { $in: teamSetIds } });
+
+    // 2c) Remove the team sets
+    await TeamSetModel.deleteMany({ _id: { $in: teamSetIds } });
+
+    // 2d) Remove TeamData referencing this course
+    await TeamDataModel.deleteMany({ course: trialCourseId });
+
+    // 2e) Remove any “bogus” student users (and their accounts) who are part of this course,
+    //     except if they are the trial user or the admin user.
+    const existingCourseRefreshed = await CourseModel.findById(trialCourseId).lean();
+    if (existingCourseRefreshed?.students) {
+      // IDs of the trial user & admin user we want to keep
+      const keepUserIds = new Set([trialUser._id.toString(), adminUser._id.toString()]);
+
+      // Identify which are "bogus" for removal
+      const bogusStudentIds = existingCourseRefreshed.students.filter(
+        (stuId: any) => !keepUserIds.has(stuId.toString())
+      );
+
+      if (bogusStudentIds.length > 0) {
+        // Remove accounts referencing those user IDs
+        await AccountModel.deleteMany({ user: { $in: bogusStudentIds } });
+        // Remove the user docs themselves
+        await UserModel.deleteMany({ _id: { $in: bogusStudentIds } });
+      }
+    }
+
+    // 2f) Finally, remove the course itself
+    await CourseModel.deleteOne({ _id: trialCourseId });
   }
 
   // -----------------------------------------------------------------------------
-  // 4) Attach trial user + admin user to the new courses as needed
+  // 3) Now we can create the brand-new trial course and data
   // -----------------------------------------------------------------------------
-  // Course #1: trial user as faculty, also ensure admin is faculty
-  if (!course1.faculty.includes(trialUser._id)) {
-    course1.faculty.push(trialUser._id);
-  }
-  if (!course1.faculty.includes(adminUser._id)) {
-    course1.faculty.push(adminUser._id);
-  }
-  await course1.save();
+  // Re-create the trial course
+  const trialCourse = await CourseModel.create({
+    name: 'Trial',
+    code: 'TRIAL',
+    semester: 'AY2323 S2',
+    startDate: new Date(),
+    durationWeeks: 13,
+    courseType: 'Normal',
+    sprints: [],
+    milestones: [],
+  });
+  trialCourse.gitHubOrgName = 'trialrepo';
+  await trialCourse.save();
 
-  // Course #2: admin user as faculty, trial user as TA
-  if (!course2.faculty.includes(adminUser._id)) {
-    course2.faculty.push(adminUser._id);
-  }
-  if (!course2.TAs.includes(trialUser._id)) {
-    course2.TAs.push(trialUser._id);
-  }
-  await course2.save();
+  // Attach trial user and admin user as faculty
+  trialCourse.faculty.push(trialUser._id);
+  trialCourse.faculty.push(adminUser._id);
+  await trialCourse.save();
 
-  // For good measure, course #3 can remain empty or purely used for other testing as needed.
-
-  // -----------------------------------------------------------------------------
-  // 5) Enroll the trial user in course1 and course2 (only if not enrolled yet)
-  // -----------------------------------------------------------------------------
-  const courseIdsToEnroll = [course1._id, course2._id];
-  trialUser.enrolledCourses = [
-    ...new Set([...trialUser.enrolledCourses, ...courseIdsToEnroll]),
-  ];
-  await trialUser.save();
+  // Ensure the trial user is enrolled in the new course
+  if (!trialUser.enrolledCourses.includes(trialCourse._id)) {
+    trialUser.enrolledCourses.push(trialCourse._id);
+    await trialUser.save();
+  }
 
   // -----------------------------------------------------------------------------
-  // 6) Create bogus student accounts only if absent, and enroll them in the courses
+  // 4) Create or reuse any bogus students + enroll them
   // -----------------------------------------------------------------------------
-  // Helper function
+  const studentArray: string[] = [];
+
   const createAndEnrollStudent = async (
-    { identifier, name }: { identifier: string; name: string },
-    course: typeof course1
+    { identifier, name }: { identifier: string; name: string }
   ) => {
-    // Check if student user already exists
+    // Check if this user already exists
     let studentUser = await UserModel.findOne({ identifier });
     if (!studentUser) {
-      // Create user doc
-      studentUser = new UserModel({
+      // Create new
+      studentUser = await UserModel.create({
         identifier,
         name,
-        enrolledCourses: [course._id],
+        enrolledCourses: [trialCourse._id],
         gitHandle: '',
       });
-      await studentUser.save();
-
-      // Create account doc
-      const studentAccount = new AccountModel({
-        email: `${identifier}@example.com`, // Fake email
-        password: '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6', // same hashed password
+      // Also create the associated account
+      await AccountModel.create({
+        email: `${identifier}@example.com`,
+        password: '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
         role: Role.Student,
         isApproved: true,
         wantsEmailNotifications: false,
         wantsTelegramNotifications: false,
         user: studentUser._id,
       });
-      await studentAccount.save();
     } else {
-      // If user exists, ensure they're enrolled in this course
-      if (!studentUser.enrolledCourses.includes(course._id)) {
-        studentUser.enrolledCourses.push(course._id);
+      // If already exists, ensure they're enrolled
+      if (!studentUser.enrolledCourses.includes(trialCourse._id)) {
+        studentUser.enrolledCourses.push(trialCourse._id);
         await studentUser.save();
       }
     }
-
-    // Also ensure this user is in the course's `students` array
-    if (!course.students.includes(studentUser._id)) {
-      course.students.push(studentUser._id);
-      await course.save();
+    // Also ensure they're in the course's students array
+    if (!trialCourse.students.includes(studentUser._id)) {
+      trialCourse.students.push(studentUser._id);
+      await trialCourse.save();
     }
+    studentArray.push(studentUser._id.toString());
   };
 
-  // Bogus students for course1
-  await createAndEnrollStudent({ identifier: 'john-doe', name: 'John Doe' }, course1);
-  await createAndEnrollStudent({ identifier: 'johnny-smith', name: 'Johnny Smith' }, course1);
-  await createAndEnrollStudent(
-    { identifier: 'hoshimachi-suisei', name: 'Hoshimachi Suisei' },
-    course1
-  );
+  // Our "bogus" students
+  await createAndEnrollStudent({ identifier: 'john-doe', name: 'John Doe' });
+  await createAndEnrollStudent({ identifier: 'johnny-smith', name: 'Johnny Smith' });
+  await createAndEnrollStudent({ identifier: 'hoshimachi-suisei', name: 'Hoshimachi Suisei' });
 
-  // Bogus students for course2
-  await createAndEnrollStudent({ identifier: 'tanaka-tanaka', name: 'Tanaka Tanaka' }, course2);
-  await createAndEnrollStudent({ identifier: 'tan-xiao-ming', name: 'Tan Xiao Ming' }, course2);
-  await createAndEnrollStudent(
-    { identifier: 'sakura-miko', name: 'Sakura Miko' },
-    course2
-  );
-  */
-  console.log('Trial data setup complete!');
+  // -----------------------------------------------------------------------------
+  // 5) Create a TeamSet, Team, and TeamData with multiple example subdocuments
+  // -----------------------------------------------------------------------------
+  const teamSet = await TeamSetModel.create({
+    course: trialCourse._id,
+    name: 'Project Groups',
+    teams: [], // will be filled below
+  });
+  trialCourse.teamSets.push(teamSet._id);
+  await trialCourse.save();
+
+  const team = await TeamModel.create({
+    teamSet: teamSet._id,
+    number: 100,
+    members: studentArray,
+    TA: trialUser._id, // We'll set the trial user as the TA for this team
+  });
+  teamSet.teams.push(team._id);
+  await teamSet.save();
+
+  // Now let's create TeamData with arrays filled in:
+  const teamData = await TeamDataModel.create({
+    teamId: team.number,
+    course: trialCourse._id,
+    gitHubOrgName: 'org',
+    repoName: 'team',
+
+    // Example summary stats
+    commits: 42,
+    issues: 5,
+    pullRequests: 3,
+
+    // Weekly commits: suppose we have 3 weeks, each with 3 days of commits
+    weeklyCommits: [
+      [1, 4, 2],
+      [0, 2, 5],
+      [3, 1, 3],
+    ],
+
+    // Updated issues array
+    updatedIssues: ['#12 Fix login bug', '#15 Update README', '#20 Minor UI improvements'],
+
+    // Provide a map of each user’s contributions
+    teamContributions: {
+      'John Doe': {
+        commits: 10,
+        createdIssues: 2,
+        openIssues: 1,
+        closedIssues: 1,
+        pullRequests: 2,
+        codeReviews: 3,
+        comments: 5,
+      },
+      'Johnny Smith': {
+        commits: 15,
+        createdIssues: 1,
+        openIssues: 2,
+        closedIssues: 0,
+        pullRequests: 1,
+        codeReviews: 5,
+        comments: 2,
+      },
+      'Hoshimachi Suisei': {
+        commits: 17,
+        createdIssues: 0,
+        openIssues: 1,
+        closedIssues: 1,
+        pullRequests: 0,
+        codeReviews: 1,
+        comments: 8,
+      },
+    },
+
+    // Team PRs with subdocument reviews & comments
+    teamPRs: [
+      {
+        id: 2171165196,
+        title: 'feat: update test plan to use 600 threads',
+        user: 'Aloynz',
+        url: 'https://github.com/cs4218/cs4218-project-2024-team01/pull/29',
+        state: 'closed',
+        createdAt: new Date('2024-11-09T20:13:24Z'),
+        updatedAt: new Date('2024-11-09T20:13:33Z'),
+        reviews: [
+          {
+            id: 9991,
+            user: 'WeeMingQing',
+            body: 'Looks good to me!',
+            state: 'APPROVED',
+            submittedAt: new Date('2024-11-09T21:10:00Z'),
+            comments: [
+              {
+                id: 501,
+                user: 'WeeMingQing',
+                body: 'One more detail: rename variable X to Y?',
+                createdAt: new Date('2024-11-09T21:12:00Z'),
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: 2170847039,
+        title: 'feat: add volume testing for create-product',
+        user: 'Aloynz',
+        url: 'https://github.com/cs4218/cs4218-project-2024-team01/pull/28',
+        state: 'closed',
+        createdAt: new Date('2024-11-09T09:06:15Z'),
+        updatedAt: new Date('2024-11-09T09:07:04Z'),
+        reviews: [],
+      },
+      {
+        id: 2170212614,
+        title: 'Add endurance test for search product',
+        user: 'WeeMingQing',
+        url: 'https://github.com/cs4218/cs4218-project-2024-team01/pull/27',
+        state: 'closed',
+        createdAt: new Date('2024-11-08T18:04:56Z'),
+        updatedAt: new Date('2024-11-08T18:05:21Z'),
+        reviews: [
+          {
+            id: 10001,
+            user: 'Aloynz',
+            body: 'LGTM, thanks!',
+            state: 'APPROVED',
+            submittedAt: new Date('2024-11-08T19:00:00Z'),
+            comments: [],
+          },
+        ],
+      },
+    ],
+
+    // Example Milestones
+    milestones: [
+      {
+        title: 'M1: Project Setup',
+        description: 'Repository set up, initial environment configured.',
+        open_issues: 2,
+        closed_issues: 3,
+        state: 'closed',
+        created_at: new Date('2024-11-01T00:00:00Z'),
+        updated_at: new Date('2024-11-02T00:00:00Z'),
+        due_on: new Date('2024-11-15T00:00:00Z'),
+        closed_at: new Date('2024-11-10T00:00:00Z'),
+      },
+      {
+        title: 'M2: Basic Features',
+        description: 'Implement core functionalities and unit tests.',
+        open_issues: 1,
+        closed_issues: 4,
+        state: 'open',
+        created_at: new Date('2024-11-10T00:00:00Z'),
+        updated_at: new Date('2024-11-11T00:00:00Z'),
+        due_on: new Date('2024-12-01T00:00:00Z'),
+      },
+    ],
+  });
+
+  // Link the created TeamData to the Team
+  team.teamData = teamData._id;
+  await team.save();
+
+  console.log('Trial data setup complete! All old trial data replaced with fresh data.');
 };
 
 export default setupTutorialDataJob;
