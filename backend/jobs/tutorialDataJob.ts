@@ -1303,7 +1303,7 @@ export const setupTutorialDataJob = async () => {
         '0.160',
         '318.000',
         '8.900',
-        '302.47'
+        '302.47',
       ],
       metricStats: {
         complexity: {
@@ -1503,7 +1503,7 @@ export const setupTutorialDataJob = async () => {
         '0.150',
         '319.000',
         '8.500',
-        '294.59'
+        '294.59',
       ],
       metricStats: {
         complexity: {
