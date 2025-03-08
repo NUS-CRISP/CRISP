@@ -131,6 +131,7 @@ describe('codeAnalysisService', () => {
     const teamData1 = new TeamDataModel({
       teamId: 1,
       gitHubOrgName: 'org',
+      course: mockCourse._id,
       repoName: 'team1',
       teamContributions: {},
       teamPRs: [],
@@ -146,6 +147,7 @@ describe('codeAnalysisService', () => {
     const teamData2 = new TeamDataModel({
       teamId: 2,
       gitHubOrgName: 'org',
+      course: mockCourse._id,
       repoName: 'team2',
       teamContributions: {},
       teamPRs: [],
@@ -468,6 +470,7 @@ describe('codeAnalysisService', () => {
       const teamDataA = new TeamDataModel({
         teamId: 123,
         gitHubOrgName: 'NoCodeAnalysisDataOrg',
+        course: courseWithoutCodeAnalysisData._id,
         repoName: 'teamA',
         teamContributions: {},
         teamPRs: [],

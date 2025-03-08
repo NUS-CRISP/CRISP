@@ -231,6 +231,34 @@ const AdminPage: React.FC = () => {
     </Table.Tr>
   ));
 
+  // TEMP
+  const [trialAccounts, setTrialAccounts] = useState<Account[]>([]);
+
+  useEffect(() => {
+    const fetchTrialAccounts = async () => {
+      const apiRoute = '/api/accounts/trial';
+      const response = await fetch(apiRoute);
+      if (response.ok) {
+        const data: Account[] = await response.json();
+        setTrialAccounts(data);
+      }
+    };
+
+    fetchTrialAccounts();
+  }, []);
+
+  // Table rows for trial accounts
+  const trialRows = trialAccounts.map(account => (
+    <Table.Tr key={account._id}>
+      <Table.Td>{account.email}</Table.Td>
+      <Table.Td>{account.role}</Table.Td>
+      {/* Display the account's id field here */}
+      <Table.Td>{account._id}</Table.Td>
+      <Table.Td>{account.user._id}</Table.Td>
+    </Table.Tr>
+  ));
+  // TEMP END
+
   return (
     <ScrollArea style={{ height: '100vh' }}>
       <TextInput
@@ -292,6 +320,35 @@ const AdminPage: React.FC = () => {
           Reject selected
         </Button>
       </Group>
+
+      {/* TEMP: Trial Accounts Panel */}
+      <Text fw={700} mb="md" style={{ margin: '20px' }}>
+        Trial Accounts
+      </Text>
+      <Table horizontalSpacing="md" verticalSpacing="xs" miw={700}>
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th>Email</Table.Th>
+            <Table.Th>Role</Table.Th>
+            <Table.Th>Acc ID</Table.Th>
+            <Table.Th>User ID</Table.Th>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          {trialRows.length > 0 ? (
+            trialRows
+          ) : (
+            <Table.Tr>
+              <Table.Td colSpan={3}>
+                <Text fw={500} ta="center">
+                  No trial accounts
+                </Text>
+              </Table.Td>
+            </Table.Tr>
+          )}
+        </Table.Tbody>
+      </Table>
+      {/* TEMP END */}
     </ScrollArea>
   );
 };

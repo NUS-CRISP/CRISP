@@ -13,6 +13,7 @@ import CreateCourseForm from '../../components/forms/CreateCourseForm';
 
 const CourseListPage: React.FC = () => {
   const apiRoute = '/api/courses';
+  const permission = hasFacultyPermission();
 
   const [opened, { open, close }] = useDisclosure(false);
 
@@ -106,7 +107,7 @@ const CourseListPage: React.FC = () => {
             ))}
           </div>
         )}
-        {hasFacultyPermission() && (
+        {permission && (
           <div>
             <Button onClick={open} mt={16} mb={20}>
               Create Course

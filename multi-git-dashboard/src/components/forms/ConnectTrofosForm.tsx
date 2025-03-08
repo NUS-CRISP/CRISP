@@ -29,8 +29,9 @@ const ConnectTrofosForm = ({
 
     // Optional: Add validation for the fields
     validate: {
-      apiKey: value => (value.length === 0 ? 'API key is required' : null),
-      trofosCourseId: value =>
+      apiKey: (value: string) =>
+        value.length === 0 ? 'API key is required' : null,
+      trofosCourseId: (value: number) =>
         value < 0 ? 'This is not a valid Course ID' : null,
     },
   });

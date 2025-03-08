@@ -39,20 +39,21 @@ const RegisterPage: React.FC = () => {
       role: Roles.TA,
     },
     validate: {
-      identifier: value =>
+      identifier: (value: string) =>
         value.trim().length < 3
           ? 'NUSNet ID must be at least 3 characters long'
           : null,
-      name: value =>
+      name: (value: string) =>
         value.trim().length < 3
           ? 'Name must be at least 3 characters long'
           : null,
-      email: value => (!/^\S+@\S+$/.test(value) ? 'Invalid email' : null),
-      password: value =>
+      email: (value: string) =>
+        !/^\S+@\S+$/.test(value) ? 'Invalid email' : null,
+      password: (value: string) =>
         value.length < 6 ? 'Password must be at least 6 characters long' : null,
-      confirmPassword: (value, values) =>
+      confirmPassword: (value: string, values: FormValues) =>
         value !== values.password ? 'Passwords do not match' : null,
-      role: value =>
+      role: (value: Role) =>
         !Object.values(Roles).includes(value) ? 'Invalid role' : null,
     },
   });

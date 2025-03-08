@@ -9,6 +9,7 @@ import {
   rem,
 } from '@mantine/core';
 import {
+  IconBell,
   IconGitBranch,
   IconHelp,
   IconHome2,
@@ -26,6 +27,7 @@ import TutorialPopover from './tutorial/TutorialPopover';
 import { Course } from '@shared/types/Course';
 import { IconInfoCircle } from '@tabler/icons-react';
 import Image from 'next/image';
+import NotificationSettingsForm from './forms/NotificationSettingsForm';
 
 interface NavbarLinkProps {
   icon: typeof IconHome2;
@@ -84,6 +86,7 @@ const Navbar: React.FC = () => {
 
   const [mainLinkPopoverOpened, setMainLinkPopoverOpened] = useState(false);
   const [questionPopoverOpened, setQuestionPopoverOpened] = useState(false);
+  const [notificationModalOpened, setNotificationModalOpened] = useState(false);
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -249,7 +252,7 @@ const Navbar: React.FC = () => {
       stage={6}
       position="right"
       key={item.label}
-      disabled={item.label !== 'Overview' || curTutorialStage !== 6}
+      disabled={item.label !== 'Class Overview' || curTutorialStage !== 6}
     >
       <a
         className={classes.courseLink}
@@ -320,9 +323,13 @@ const Navbar: React.FC = () => {
     };
   }, [activeCourseTab]);
 
+  useEffect(() => {
+    console.log('Navbar Tutorial Stage: ' + curTutorialStage);
+  }, [curTutorialStage]);
+
   return (
     <div className={classes.navbarsContainer}>
-      <TutorialPopover stage={1}>
+      <TutorialPopover stage={1} position={'right'}>
         <nav
           className={classes.navbar}
           style={{
@@ -390,6 +397,13 @@ const Navbar: React.FC = () => {
               </TutorialPopover>
 
               <NavbarLink
+                onClick={() => setNotificationModalOpened(true)}
+                icon={IconBell}
+                label="Configure Notifications"
+                popoverOpened={questionPopoverOpened}
+              />
+
+              <NavbarLink
                 onClick={handleSignOut}
                 icon={IconLogout}
                 label="Sign out"
@@ -453,6 +467,10 @@ const Navbar: React.FC = () => {
       >
         <p>You need to add people for this course first.</p>
       </Alert>
+      <NotificationSettingsForm
+        opened={notificationModalOpened}
+        onClose={() => setNotificationModalOpened(false)}
+      />
     </div>
   );
 };

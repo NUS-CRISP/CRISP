@@ -1,10 +1,14 @@
 import { Request, Response } from 'express';
+import * as auth from '../../utils/auth';
 import {
   approveAccounts,
+  changeEmailNotificationSettings,
+  changeTelegramNotificationSettings,
   createAccount,
   getAccountStatuses,
   getPendingAccounts,
   rejectAccounts,
+  retrieveTrialAccounts,
 } from '../../controllers/accountController';
 import * as accountService from '../../services/accountService';
 import { BadRequestError, NotFoundError } from '../../services/errors';
@@ -12,6 +16,7 @@ import { BadRequestError, NotFoundError } from '../../services/errors';
 jest.mock('../../services/accountService');
 
 beforeEach(() => {
+  jest.spyOn(auth, 'getAccountId').mockResolvedValue('mockAccountId');
   jest.clearAllMocks();
 });
 
@@ -26,6 +31,7 @@ const mockResponse = () => {
   const res = {} as Response;
   res.status = jest.fn().mockReturnValue(res);
   res.send = jest.fn().mockReturnValue(res);
+  res.json = jest.fn().mockReturnValue(res);
   return res;
 };
 
@@ -257,6 +263,260 @@ describe('accountController', () => {
       expect(res.send).toHaveBeenCalledWith({
         error: 'Error getting account statuses',
       });
+    });
+  });
+
+  describe('changeEmailNotificationSettings', () => {
+    it('should return 400 if wantsEmailNotifications is not boolean', async () => {
+      const req = mockRequest();
+      const res = mockResponse();
+
+      req.body = {
+        wantsEmailNotifications: 'notBoolean', // invalid
+        emailNotificationType: 'daily',
+      };
+
+      await changeEmailNotificationSettings(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'wantsEmailNotifications is required and must be boolean',
+      });
+    });
+
+    it('should return 400 if emailNotificationType is invalid', async () => {
+      const req = mockRequest();
+      const res = mockResponse();
+
+      req.body = {
+        wantsEmailNotifications: true,
+        emailNotificationType: 'invalid', // not 'hourly', 'daily', or 'weekly'
+      };
+
+      await changeEmailNotificationSettings(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Email notification type field formatting is incorrect',
+      });
+    });
+
+    it('should return 404 if account is not found', async () => {
+      const req = mockRequest();
+      const res = mockResponse();
+
+      req.body = {
+        wantsEmailNotifications: true,
+        emailNotificationType: 'daily',
+      };
+
+      // Mock the service to throw a NotFoundError
+      (
+        accountService.updateEmailNotificationSettings as jest.Mock
+      ).mockRejectedValue(new NotFoundError('Account not found'));
+
+      await changeEmailNotificationSettings(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Account not found',
+      });
+    });
+
+    it('should return 500 for other errors', async () => {
+      const req = mockRequest();
+      const res = mockResponse();
+
+      req.body = {
+        wantsEmailNotifications: true,
+        emailNotificationType: 'daily',
+      };
+
+      (
+        accountService.updateEmailNotificationSettings as jest.Mock
+      ).mockRejectedValue(new Error('Some server error'));
+
+      await changeEmailNotificationSettings(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to update email notification settings',
+      });
+    });
+
+    it('should update the email notification settings successfully', async () => {
+      const req = mockRequest();
+      const res = mockResponse();
+
+      req.body = {
+        wantsEmailNotifications: true,
+        emailNotificationType: 'weekly',
+        emailNotificationHour: 9,
+        emailNotificationWeekday: 3,
+      };
+
+      // Mock successful return of updated account
+      const mockUpdatedAccount = {
+        _id: 'accountABC',
+        wantsEmailNotifications: true,
+        emailNotificationType: 'weekly',
+        emailNotificationHour: 9,
+        emailNotificationWeekday: 3,
+      };
+      (
+        accountService.updateEmailNotificationSettings as jest.Mock
+      ).mockResolvedValue(mockUpdatedAccount);
+
+      await changeEmailNotificationSettings(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Email notification settings updated',
+        account: mockUpdatedAccount,
+      });
+    });
+  });
+
+  describe('changeTelegramNotificationSettings', () => {
+    it('should return 400 if wantsTelegramNotifications is not boolean', async () => {
+      const req = mockRequest();
+      const res = mockResponse();
+
+      req.body = {
+        wantsTelegramNotifications: 'invalidBoolean', // invalid
+        telegramNotificationType: 'daily',
+      };
+
+      await changeTelegramNotificationSettings(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'wantsTelegramNotifications is required and must be boolean',
+      });
+    });
+
+    it('should return 400 if telegramNotificationType is invalid', async () => {
+      const req = mockRequest();
+      const res = mockResponse();
+
+      req.body = {
+        wantsTelegramNotifications: true,
+        telegramNotificationType: 'invalid', // not allowed
+      };
+
+      await changeTelegramNotificationSettings(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Telegram notification type field formatting is incorrect',
+      });
+    });
+
+    it('should return 404 if account is not found', async () => {
+      const req = mockRequest();
+      const res = mockResponse();
+
+      req.body = {
+        wantsTelegramNotifications: true,
+        telegramNotificationType: 'hourly',
+      };
+
+      (
+        accountService.updateTelegramNotificationSettings as jest.Mock
+      ).mockRejectedValue(new NotFoundError('Account not found'));
+
+      await changeTelegramNotificationSettings(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Account not found',
+      });
+    });
+
+    it('should return 500 for other errors', async () => {
+      const req = mockRequest();
+      const res = mockResponse();
+
+      req.body = {
+        wantsTelegramNotifications: true,
+        telegramNotificationType: 'hourly',
+      };
+
+      (
+        accountService.updateTelegramNotificationSettings as jest.Mock
+      ).mockRejectedValue(new Error('Some server error'));
+
+      await changeTelegramNotificationSettings(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to update telegram notification settings',
+      });
+    });
+
+    it('should update the telegram notification settings successfully', async () => {
+      const req = mockRequest();
+      const res = mockResponse();
+
+      req.body = {
+        wantsTelegramNotifications: true,
+        telegramNotificationType: 'daily',
+        telegramNotificationHour: 14,
+        telegramNotificationWeekday: 5,
+      };
+
+      const mockUpdatedAccount = {
+        _id: 'accountABC',
+        wantsTelegramNotifications: true,
+        telegramNotificationType: 'daily',
+        telegramNotificationHour: 14,
+        telegramNotificationWeekday: 5,
+      };
+
+      (
+        accountService.updateTelegramNotificationSettings as jest.Mock
+      ).mockResolvedValue(mockUpdatedAccount);
+
+      await changeTelegramNotificationSettings(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Telegram notification settings updated',
+        account: mockUpdatedAccount,
+      });
+    });
+  });
+});
+
+describe('retrieveTrialAccounts', () => {
+  it('should retrieve trial accounts and send a 200 status', async () => {
+    const req = mockRequest();
+    const res = mockResponse();
+    const mockAccounts = [{ email: 'trial@example.com', role: 'Trial User' }];
+
+    jest
+      .spyOn(accountService, 'getAllTrialAccounts')
+      .mockResolvedValue(mockAccounts as any);
+
+    await retrieveTrialAccounts(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.send).toHaveBeenCalledWith(mockAccounts);
+  });
+
+  it('should handle error and send a 500 status', async () => {
+    const req = mockRequest();
+    const res = mockResponse();
+
+    jest
+      .spyOn(accountService, 'getAllTrialAccounts')
+      .mockRejectedValue(new Error('Error getting trial accounts'));
+
+    await retrieveTrialAccounts(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.send).toHaveBeenCalledWith({
+      error: 'Error getting trial accounts',
     });
   });
 });
