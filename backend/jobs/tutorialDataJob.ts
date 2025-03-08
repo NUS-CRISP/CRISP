@@ -85,6 +85,10 @@ export const setupTutorialDataJob = async () => {
     }
     await JiraBoardModel.deleteMany({ course: trialCourseId });
 
+    await codeAnalysisDataModel.deleteMany({
+      gitHubOrgName: existingTrialCourse.gitHubOrgName,
+    });
+
     const existingCourseRefreshed =
       await CourseModel.findById(trialCourseId).lean();
     if (existingCourseRefreshed?.students) {
