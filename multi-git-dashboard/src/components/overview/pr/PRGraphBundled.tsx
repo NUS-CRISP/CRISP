@@ -34,34 +34,28 @@ const PRGraphBundled: React.FC<PRGraphBundledProps> = ({ graphData }) => {
     const margin = 50;
     const radius = 200;
 
-    // Clear any previous content
     const svgElement = d3.select(svgRef.current);
     svgElement.selectAll("*").remove();
 
-    // 1) Create the main SVG container
     const container = svgElement
       .attr("width", width)
       .attr("height", height);
 
-    // 2) Add a title at the top (inside the border)
     container
       .append("text")
       .attr("x", width / 2)
-      .attr("y", 30) // Adjust this as needed
+      .attr("y", 30)
       .attr("text-anchor", "middle")
       .attr("font-size", 16)
       .attr("font-weight", "bold")
       .text("Hierarchical Bundling Diagram");
 
-    // 3) Append the main group, centered
     const svg = container
       .append("g")
       .attr("transform", `translate(${width / 2}, ${height / 2})`);
 
-    // Tooltip
     const tooltip = d3.select(tooltipRef.current).style("opacity", 0);
 
-    // Group the nodes by their 'group' property
     const groupMap = d3.group(graphData.nodes, (d) => d.group);
     const rootData = {
       name: "root",
@@ -75,20 +69,17 @@ const PRGraphBundled: React.FC<PRGraphBundledProps> = ({ graphData }) => {
     const cluster = d3.cluster<d3.HierarchyNode<any>>().size([2 * Math.PI, radius]);
     cluster(root);
 
-    // Bundled line generator
     const line = d3
       .lineRadial()
       .curve(d3.curveBundle.beta(0.85))
       .radius((d: any) => d.y)
       .angle((d: any) => d.x);
 
-    // Build a lookup for hierarchy leaves by node id
     const nodeById = new Map();
     root.leaves().forEach((d) => {
       nodeById.set(d.data.id, d);
     });
 
-    // Build adjacency (optional for highlighting)
     const adjacency = new Map<string, string[]>();
     graphData.edges.forEach((edge) => {
       if (!adjacency.has(edge.source)) adjacency.set(edge.source, []);
@@ -98,7 +89,6 @@ const PRGraphBundled: React.FC<PRGraphBundledProps> = ({ graphData }) => {
       adjacency.get(edge.target)!.push(edge.source);
     });
 
-    // Color scales
     const groupNames = Array.from(groupMap.keys());
     const groupColor = d3
       .scaleOrdinal<string>()
@@ -109,10 +99,10 @@ const PRGraphBundled: React.FC<PRGraphBundledProps> = ({ graphData }) => {
       approved: "green",
       changes_requested: "red",
       dismissed: "gray",
-      commented: "#999", // fallback
+      commented: "#999",
     };
 
-    // Draw edges
+    // edges
     const edgesSelection = svg
       .append("g")
       .attr("class", "edges")
@@ -164,7 +154,7 @@ const PRGraphBundled: React.FC<PRGraphBundledProps> = ({ graphData }) => {
         tooltip.style("opacity", 0);
       });
 
-    // Draw leaf nodes
+    // leaf nodes
     const leaves = root.leaves();
     svg
       .append("g")
@@ -180,7 +170,6 @@ const PRGraphBundled: React.FC<PRGraphBundledProps> = ({ graphData }) => {
       .attr("r", 5)
       .attr("fill", (d) => groupColor(d.data.group))
       .on("mouseover", function (event, d) {
-        // Highlight edges connected to this node
         const thisId = d.data.id;
         edgesSelection.attr("stroke", (edgeData) => {
           if (edgeData.source === thisId || edgeData.target === thisId) {
@@ -201,14 +190,13 @@ const PRGraphBundled: React.FC<PRGraphBundledProps> = ({ graphData }) => {
           .style("top", `${event.offsetY + 10}px`);
       })
       .on("mouseout", function () {
-        // Reset edges to original color
         edgesSelection.attr("stroke", (edgeData) => {
           return statusColorMap[edgeData.status as keyof typeof statusColorMap] || "black";
         });
         tooltip.style("opacity", 0);
       });
 
-    // Add labels for each leaf node
+    // Add labels
     svg
       .append("g")
       .attr("class", "labels")
@@ -226,13 +214,12 @@ const PRGraphBundled: React.FC<PRGraphBundledProps> = ({ graphData }) => {
       .attr("text-anchor", (d) => (d.x < Math.PI ? "start" : "end"))
       .text((d) => d.data.id);
 
-    // (Optional) Add a legend for statuses in the top-left corner
+    // legend
     const statuses = ["approved", "changes_requested", "dismissed", "commented"];
     const legend = svg
       .append("g")
       .attr("class", "legend")
       .attr("transform", `translate(${-width / 2 + 20}, ${-height / 2 + 60})`); 
-      // shift legend down a bit so it doesn't overlap the title
 
     legend
       .selectAll("rect")
@@ -258,28 +245,7 @@ const PRGraphBundled: React.FC<PRGraphBundledProps> = ({ graphData }) => {
   }, [graphData]);
 
   return (
-    <div style={{ position: "relative", width: "600px", height: "600px" }}>
-      <div
-        ref={tooltipRef}
-        style={{
-          position: "absolute",
-          padding: "6px 12px",
-          backgroundColor: "black",
-          color: "white",
-          fontSize: "12px",
-          borderRadius: "5px",
-          pointerEvents: "none",
-          transition: "opacity 0.3s ease",
-        }}
-      />
-      {/* The SVG has a border so the title is clearly inside */}
-      <svg
-        ref={svgRef}
-        width="600"
-        height="600"
-        style={{ border: "1px solid black" }}
-      />
-    </div>
+    <svg ref={svgRef} width="600" height="600" style={{ border: "1px solid #ccc", borderRadius: "8px" }}></svg>
   );
 };
 
