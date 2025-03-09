@@ -8,58 +8,36 @@ import { useRouter } from 'next/router';
 const Hero: React.FC = () => {
   const router = useRouter();
   return (
-    <Box className={classes.inner}>
+    <Box style={{
+      // backgroundImage: "url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8&auto=format&fit=crop&w=1080&q=80')",
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      textAlign: 'center',
+      height: '500px',
+      width: '100%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '100px 20px',
+    }}>
       <div className={classes.content}>
-        <Title className={classes.title}>
-          A{' '}
-          <Text
-            component="span"
-            inherit
-            variant="gradient"
-            gradient={{ from: 'blue', to: 'cyan' }}
-          >
-            fully featured
-          </Text>{' '}
-          multi-git classroom management solution
+        <Title style={{paddingLeft:'150px'}}>
+        <Text className={classes.title} style={{ fontWeight: 700, color: 'white', fontFamily: 'Verdana', marginTop:'100px'}}>Better Code</Text>
+          <br /> 
+          <Text className={classes.title} style={{ fontWeight: 700, color: 'white', fontFamily: 'Verdana'}}>Smarter Reviews</Text> 
+          <br />
+          <Text className={classes.title} style={{ fontWeight: 700, color: 'white', fontFamily: 'Verdana'}}>     Stronger Teams</Text>
+      
         </Title>
 
-        <Group className={classes.controls}>
-          {/* <Button
-          size="xl"
-          className={classes.control}
-          variant="gradient"
-          gradient={{ from: 'blue', to: 'cyan' }}
-          onClick={async () =>
-            await signIn('credentials', {
-              callbackUrl: '/courses?trial=true',
-              type: Role.TrialUser,
-            })
-          }
-          rightSection={<IconArrowRight size={20} className={classes.arrow} />}
-        >
-          Try it out
-        </Button> */}
-
+        <Group className={classes.controls}  mt="xl">
           <Button
             size="xl"
-            className={classes.control}
-            variant="gradient"
-            gradient={{ from: 'blue', to: 'cyan' }}
+            style={{ backgroundColor: '#3B82F6', color: 'white', fontWeight: 'bold', padding: '12px 24px', borderRadius: '8px', marginLeft: '270px' }}
             onClick={() => router.push('/auth/register')}
             rightSection={<IconArrowRight size={20} className={classes.arrow} />}
           >
-            Start Here
-          </Button>
-
-          <Button
-            component="a"
-            href="https://github.com/NUS-CRISP/CRISP"
-            size="xl"
-            variant="default"
-            className={classes.control}
-            leftSection={<IconBrandGithub size={20} />}
-          >
-            GitHub
+            Get Started
           </Button>
         </Group>
       </div>
