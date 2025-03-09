@@ -8,8 +8,13 @@ import PRList from './PRList';
 import PRGraph from './PRGraph';
 import PRChordDiagram from './PRChordDiagram';
 import PRMatrix from './PRMatrix';
+import PRMatrixStatusColor from './PRMatrixStatusColor';
+import PRHivePlot from './PRHivePlot';
+import PRSankeyDiagram from './PRSankeyDiagram';
+import PRGraphBundled from './PRGraphBundled';
+import PRDotMatrixChart from './PRDotMatrixChart';
 import PRManGraph from './PRMantineGraph';
-import PRStatusChart from './PRStatusChart'; 
+import PRStatusChart from './PRStatusChart';
 
 export interface Spacing {
   maxHeight: number;
@@ -28,6 +33,10 @@ interface PRNode {
   id: string; // Reviewer or PR author
 }
 
+interface PRNodeBundled extends PRNode {
+  group: string; // Additional property for bundled graph hierarchy
+}
+
 interface PREdge {
   source: string;
   target: string;
@@ -39,6 +48,102 @@ interface PRGraphData {
   nodes: PRNode[];
   edges: PREdge[];
 }
+
+interface PRGraphDataBundled {
+  nodes: PRNodeBundled[];
+  edges: PREdge[];
+}
+
+// Existing function for node-edge graph (without group info)
+const processPRInteractions = (teamPRs: PRProps['teamData']['teamPRs']): PRGraphData => {
+  const nodesSet = new Set<string>();
+  const edgesMap: Map<string, PREdge> = new Map();
+
+  teamPRs.forEach((pr) => {
+    const prAuthor = pr.user;
+    if (!prAuthor) return;
+
+    nodesSet.add(prAuthor);
+
+    pr.reviews.forEach((review) => {
+      const reviewer = review.user;
+      if (!reviewer || reviewer === prAuthor) return; // Ignore self-reviews
+
+      nodesSet.add(reviewer);
+
+      const edgeKey = `${reviewer}->${prAuthor}`;
+      if (edgesMap.has(edgeKey)) {
+        edgesMap.get(edgeKey)!.weight += 1;
+        // Overwrite the status with the latest review state
+        edgesMap.get(edgeKey)!.status = review.state.toLowerCase();
+      } else {
+        edgesMap.set(edgeKey, {
+          source: reviewer,
+          target: prAuthor,
+          weight: 1,
+          status: review.state.toLowerCase(), // Captures "approved", "changes_requested", "dismissed", "commented"
+        });
+      }
+    });
+  });
+
+  return {
+    nodes: Array.from(nodesSet).map((id) => ({ id })),
+    edges: Array.from(edgesMap.values()),
+  };
+};
+
+// New function for bundled graph that assigns a group to each node.
+// Here we assign a default group, but you can replace this logic with your actual grouping.
+const processPRInteractionsBundled = (
+  teamPRs: PRProps['teamData']['teamPRs']
+): PRGraphDataBundled => {
+  const nodesMap = new Map<string, PRNodeBundled>();
+  const edgesMap: Map<string, PREdge> = new Map();
+
+  teamPRs.forEach((pr) => {
+    const prAuthor = pr.user;
+    if (!prAuthor) return;
+
+    // Use actual group info if available; otherwise, assign "default"
+    const authorGroup = pr.authorGroup || "default";
+    nodesMap.set(prAuthor, { id: prAuthor, group: authorGroup });
+
+    pr.reviews.forEach((review) => {
+      const reviewer = review.user;
+      if (!reviewer || reviewer === prAuthor) return;
+      const reviewerGroup = review.reviewerGroup || "default";
+      nodesMap.set(reviewer, { id: reviewer, group: reviewerGroup });
+
+      const edgeKey = `${reviewer}->${prAuthor}`;
+      if (edgesMap.has(edgeKey)) {
+        const existingEdge = edgesMap.get(edgeKey)!;
+        existingEdge.weight += 1;
+        existingEdge.status = review.state.toLowerCase();
+      } else {
+        edgesMap.set(edgeKey, {
+          source: reviewer,
+          target: prAuthor,
+          weight: 1,
+          status: review.state.toLowerCase(),
+        });
+      }
+    });
+  });
+
+  return {
+    nodes: Array.from(nodesMap.values()),
+    edges: Array.from(edgesMap.values()),
+  };
+};
+const testData = {
+  nodes: [{ id: "Alice" }, { id: "Bob" }],
+  edges: [
+    { source: "Alice", target: "Bob", weight: 3, status: "approved" },
+  ],
+};
+
+
 
 const PR = forwardRef<HTMLDivElement, PRProps>(
   ({ team, teamData, selectedWeekRange, dateUtils, profileGetter }, ref) => {
@@ -63,48 +168,17 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
       });
     };
 
-    const processPRInteractions = (teamPRs: PRProps['teamData']['teamPRs']): PRGraphData => {
-      const nodesSet = new Set<string>();
-      const edgesMap: Map<string, PREdge> = new Map();
-    
-      teamPRs.forEach((pr) => {
-        const prAuthor = pr.user;
-        if (!prAuthor) return;
-    
-        nodesSet.add(prAuthor);
-    
-        pr.reviews.forEach((review) => {
-          const reviewer = review.user;
-          if (!reviewer || reviewer === prAuthor) return; // Ignore self-reviews
-    
-          nodesSet.add(reviewer);
-    
-          const edgeKey = `${reviewer}->${prAuthor}`;
-          if (edgesMap.has(edgeKey)) {
-            edgesMap.get(edgeKey)!.weight += 1; // Increase weight if reviewed multiple times
-          } else {
-            edgesMap.set(edgeKey, {
-              source: reviewer,
-              target: prAuthor,
-              weight: 1,
-              status: review.state.toLowerCase(), // Captures "approved", "changes_requested", "dismissed", "commented"
-            });
-          }
-        });
-      });
-    
-      return {
-        nodes: Array.from(nodesSet).map((id) => ({ id })),
-        edges: Array.from(edgesMap.values()),
-      };
-    };
-    
-
-    // graph data 
+    // graph data for node-edge graph
     const [graphData, setGraphData] = useState<PRGraphData>({ nodes: [], edges: [] });
+    // graph data for bundled graph (with grouping)
+    const [graphDataBundled, setGraphDataBundled] = useState<PRGraphDataBundled>({
+      nodes: [],
+      edges: [],
+    });
 
     useEffect(() => {
       setGraphData(processPRInteractions(teamData.teamPRs));
+      setGraphDataBundled(processPRInteractionsBundled(teamData.teamPRs));
     }, [teamData.teamPRs]);
 
     return (
@@ -131,16 +205,29 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
         </Group>
 
         {/* PR Visualization Graph */}
-        <Box mt={20} >
+        <Box mt={20}>
           <Text fw={500} size="lg">
             PR Review Interaction Graph
           </Text>
+          {/* Standard node-edge graph */}
           <PRGraph graphData={graphData} />
 
           <PRChordDiagram graphData={graphData} />
-          
-          {/* <PRStatusChart graphData={graphData} /> */}
 
+          <PRMatrix graphData={graphData} />
+
+          <PRMatrixStatusColor graphData={graphData} />
+
+          {/* <PRDotMatrixChart graphData={graphData} />
+          <PRDotMatrixChart graphData={testData} /> */}
+
+          {/* Bundled graph using processed data with group info */}
+          <PRGraphBundled graphData={graphDataBundled} />
+
+          {/* Uncomment or add other visualizations as needed */}
+          {/* <PRStatusChart graphData={graphData} /> */}
+          {/* <PRHivePlot graphData={graphData} /> */}
+          {/* <PRSankeyDiagram graphData={graphData} /> */}
           {/* <PRManGraph graphData={graphData} /> */}
         </Box>
       </Card>
