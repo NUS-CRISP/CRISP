@@ -1,142 +1,119 @@
-import { Carousel } from '@mantine/carousel';
-import { Button, Center, Paper, Text, Title, useMantineTheme } from '@mantine/core';
-import { useMediaQuery } from '@mantine/hooks';
-import classes from '@styles/FeatureCard.module.css';
-import ss6 from '@public/ss-6.png';
+import { Box, Center, Paper, Stack, Text, Title, useMantineTheme } from '@mantine/core';
 import { useRouter } from 'next/router';
-import { IconArrowRight, IconArrowLeft } from '@tabler/icons-react'
-
-interface CardProps {
-    image: string;
-    title: string;
-    category: string;
-}
-
-function Card({ image, title, category }: CardProps) {
-    return (
-        <div>
-            <Paper
-                shadow="md"
-                p="xl"
-                radius="md"
-                style={{ backgroundImage: `url(${image})` }}
-                className={classes.card}
-            >
-                <div>
-                    {/* <Text className={classes.category} size="xs">
-                    {category}
-                </Text> */}
-                    {/* <Title order={3} className={classes.title}>
-                    {title}
-                </Title> */}
-                </div>
-                {/* <Button variant="white" color="dark">
-                Read article
-            
-            </Button> */}
-
-            </Paper>
-            <Title order={3} className={classes.titleOverlay}>
-                {title}
-            </Title>
-        </div>
-    );
-}
+import { useEffect, useRef, useState } from 'react';
+import classes from '@styles/FeatureCard.module.css';
 
 const data = [
-    {
-        image: '/ss-6.png',
-        title: 'Track and compare team contributions',
-        category: 'nature',
-    },
-    {
-        image: '/ss-5.png',
-        title: 'Visualize team contribution over time',
-        category: 'beach',
-    },
-    {
-        image: '/ss-3.png',
-        title: 'Monitor code review interactions',
-        category: 'nature',
-    },
-    {
-        image: '/ss-7.png',
-        title: 'Track team issue and milestone performance',
-        category: 'nature',
-    },
-    {
-        image: '/ca-1.jpg',
-        title: 'SonarQube: test coverage and code quality',
-        category: 'nature',
-    },
-    {
-        image: '/ca-2.jpg',
-        title: 'Line of coverage and uncovered code',
-        category: 'tourism',
-    },
-    {
-        image: '/assess-1.png',
-        title: 'Fully featured assessment system',
-        category: 'nature',
-    },
-    {
-        image: '/assess-2.png',
-        title: 'Create and manage assessments',
-        category: 'nature',
-    },
+  {
+    image: '/ss-6.png',
+    title: 'Prioritized',
+    description: 'Track, sort and compare team contributions',
+  },
+  {
+    image: '/ss-3.png',
+    title: 'Visualized',
+    description: 'Monitor code review interactions',
+  },
+  {
+    image: '/ca-1.jpg',
+    title: 'Diagnosed',
+    description: 'Highlight test coverage and code quality',
+  },
+  {
+    image: '/assess-1.png',
+    title: 'Graded',
+    description: 'Fully featured assessment system',
+  },
 ];
 
-const FeatureCard: React.FC = () => {
-    const router = useRouter();
-    const theme = useMantineTheme();
-    const mobile = useMediaQuery(`(max-width: ${theme.breakpoints.sm})`);
-    const slides = data.map((item) => (
-        <Carousel.Slide key={item.title} >
-            <Card {...item} />
-        </Carousel.Slide>
-    ));
-
-    return (
-        <div>
-            <Center>
-                <Title
-                    className={classes.titleOverlay}
-                    style={{ marginBottom: '50px' }}
-                >
-                    Feature Showcase
-                </Title>
-            </Center>
-
-            <Carousel
-                slideSize={{ base: '100%', sm: '50%' }}
-                slideGap={{ base: 2, sm: 'xl' }}
-                align="start"
-                slidesToScroll={mobile ? 1 : 2}
-                controlsOffset="xs"
-                controlSize={40}
-                loop
-                nextControlIcon={<IconArrowRight size={20} />}
-                previousControlIcon={<IconArrowLeft size={20} />}
-     
-            >
-                {slides}
-            </Carousel>
-            
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-                <Button
-                    variant="gradient"
-
-                    gradient={{ deg: 133, from: 'blue', to: 'cyan' }}
-                    size="lg"
-                    radius="md"
-                    mt="xl"
-                    onClick={() => router.push('/auth/register')}
-                >
-                    Get started
-                </Button>
-            </div>
-        </div>
-    );
+interface AnimatedPaperProps {
+  image: string;
 }
+
+const AnimatedPaper: React.FC<AnimatedPaperProps> = ({ image }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setVisible(true);
+            observer.disconnect(); // Animate only once when visible
+          }
+        });
+      },
+      { threshold: 0.3 }
+    );
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <Paper
+      ref={ref}
+      shadow="md"
+      p="xl"
+      radius="md"
+      style={{
+        backgroundImage: `url(${image})`,
+        width: '60%',
+        height: '350px',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        border: '5px solid #fff', // Frame effect
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0)' : 'translateY(50px)',
+        transition: 'all 0.8s ease',
+      }}
+    />
+  );
+};
+
+const FeatureCard: React.FC = () => {
+  const router = useRouter();
+  const theme = useMantineTheme();
+
+  return (
+    <Box>
+      <Center>
+        <Title className={classes.titleOverlay} style={{ marginBottom: '50px', fontFamily: 'Verdana' }}>
+          Seamless Multi-Git Management
+        </Title>
+      </Center>
+
+      {data.map((item, index) => (
+        <Box
+          key={item.title}
+          className={classes.featureContainer}
+          style={{
+            display: 'flex',
+            flexDirection: index % 2 === 0 ? 'row' : 'row-reverse',
+            alignItems: 'center',
+            gap: '40px',
+            marginBottom: '70px',
+          }}
+        >
+          {/* Animated Image Section */}
+          <AnimatedPaper image={item.image} />
+
+          {/* Text Section */}
+          <Stack style={{ width: '50%' }}>
+            <Title order={1} style={{ color: 'white', fontFamily: 'Verdana' }}>
+              {item.title}
+            </Title>
+            <Text style={{ color: 'white', fontFamily: 'Verdana' }}>
+              {item.description}
+            </Text>
+          </Stack>
+        </Box>
+      ))}
+    </Box>
+  );
+};
 
 export default FeatureCard;
