@@ -21,14 +21,14 @@ const PRStatusChart: React.FC<PRStatusChartProps> = ({ graphData }) => {
   const data = [
     Object.fromEntries(
       Array.from(statusCounts.entries()).map(([status, count]) => [
-        status.charAt(0).toUpperCase() + status.slice(1), 
+        status.charAt(0).toUpperCase() + status.slice(1),
         count,
       ])
     ),
   ];
 
-  console.log("Chart Data:", data); 
-  
+  console.log("Chart Data:", data);
+
   return (
     <Box mt={20}>
       <Text fw={500} size="lg">
@@ -40,9 +40,9 @@ const PRStatusChart: React.FC<PRStatusChartProps> = ({ graphData }) => {
         dataKey="status"
         series={Object.keys(data[0]).map((status) => ({
           name: status,
-          color: status === 'Approved' ? 'green.6' 
-                : status === 'Dismissed' ? 'gray.6' 
-                : status === 'Commented' ? 'blue.6' 
+          color: status === 'Approved' ? 'green.6'
+            : status === 'Dismissed' ? 'gray.6'
+              : status === 'Commented' ? 'blue.6'
                 : 'red.6',
         }))}
         tickLine="none"
