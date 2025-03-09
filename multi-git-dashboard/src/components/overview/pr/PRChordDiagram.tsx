@@ -9,7 +9,7 @@ interface PREdge {
   source: string | PRNode;
   target: string | PRNode;
   weight: number;
-  status: string; // "approved", "changes_requested", "dismissed"
+  status: string;
 }
 
 interface PRGraphProps {
@@ -31,41 +31,35 @@ const PRChordDiagram: React.FC<PRGraphProps> = ({ graphData }) => {
     const innerRadius = 150;
     const outerRadius = innerRadius + 10;
 
-    // Clear previous svg contents if any.
     d3.select(svgRef.current).selectAll("*").remove();
 
     const rootSvg = d3.select(svgRef.current);
 
-
     rootSvg
-  .append("text")
-  .attr("x", 300) // Center horizontally (width / 2)
-  .attr("y", 20)  // Distance from the top
-  .attr("text-anchor", "middle")
-  .attr("font-size", "16px")
-  .attr("font-weight", "bold")
-  .text("Chord Diagram");
+      .append("text")
+      .attr("x", 300)
+      .attr("y", 20) 
+      .attr("text-anchor", "middle")
+      .attr("font-size", "16px")
+      .attr("font-weight", "bold")
+      .text("Chord Diagram");
 
-
-      const svg = rootSvg
-  .append("g")
-  .attr("transform", `translate(${width / 2}, ${height / 2})`);
+    const svg = rootSvg
+      .append("g")
+      .attr("transform", `translate(${width / 2}, ${height / 2})`);
 
     const tooltip = d3.select(tooltipRef.current);
 
-    // Map node id to index.
     const indexById = new Map<string, number>();
     graphData.nodes.forEach((node, i) => {
       indexById.set(node.id, i);
     });
 
     const n = graphData.nodes.length;
-    // Initialize a matrix of size n x n with zeros.
     const matrix: number[][] = Array.from({ length: n }, () =>
       new Array(n).fill(0)
     );
 
-    // Populate the matrix with the weights from each edge.
     graphData.edges.forEach((edge) => {
       const sourceId =
         typeof edge.source === "string" ? edge.source : edge.source.id;
@@ -78,22 +72,18 @@ const PRChordDiagram: React.FC<PRGraphProps> = ({ graphData }) => {
       }
     });
 
-    // Create the chord layout.
+    // Create the chord
     const chord = d3
       .chord()
       .padAngle(0.05)
       .sortSubgroups(d3.descending)(matrix);
 
-    // Arc generator for the outer arcs (groups).
     const arc = d3.arc().innerRadius(innerRadius).outerRadius(outerRadius);
 
-    // Ribbon generator for the chords.
     const ribbon = d3.ribbon().radius(innerRadius);
 
-    // Use a categorical color scale.
     const color = d3.scaleOrdinal(d3.schemeCategory10);
 
-    // Draw the group arcs.
     const group = svg
       .append("g")
       .selectAll("g")
@@ -122,11 +112,10 @@ const PRChordDiagram: React.FC<PRGraphProps> = ({ graphData }) => {
         tooltip.style("opacity", 0);
       });
 
-    // Add labels for each group.
+    // Add labels
     group
       .append("text")
       .each((d) => {
-        // Calculate the angle for positioning the label.
         // @ts-ignore
         d.angle = (d.startAngle + d.endAngle) / 2;
       })
@@ -139,7 +128,7 @@ const PRChordDiagram: React.FC<PRGraphProps> = ({ graphData }) => {
       .attr("text-anchor", (d) => (d.angle > Math.PI ? "end" : null))
       .text((d) => graphData.nodes[d.index].id);
 
-    // Draw the chords (ribbons) connecting the groups.
+    // Draw the chords (ribbons)
     svg
       .append("g")
       .attr("fill-opacity", 0.67)
@@ -170,31 +159,15 @@ const PRChordDiagram: React.FC<PRGraphProps> = ({ graphData }) => {
         tooltip.style("opacity", 0);
       });
 
-    // Clean up on component unmount.
     return () => {
       d3.select(svgRef.current).selectAll("*").remove();
     };
   }, [graphData]);
 
   return (
-    <div style={{ position: "relative", width: "600px", height: "600px" }}>
-      <div
-        ref={tooltipRef}
-        style={{
-          position: "absolute",
-          padding: "6px 12px",
-          backgroundColor: "black",
-          color: "white",
-          fontSize: "12px",
-          borderRadius: "5px",
-          opacity: 0,
-          pointerEvents: "none",
-          transition: "opacity 0.3s ease",
-        }}
-      ></div>
-      <svg ref={svgRef} width="600" height="600" style={{ border: "1px solid black" }}></svg>
-    
-    </div>
+
+    <svg ref={svgRef} width="600" height="600" style={{ border: "1px solid #ccc", borderRadius: "8px" }}></svg>
+
   );
 };
 
