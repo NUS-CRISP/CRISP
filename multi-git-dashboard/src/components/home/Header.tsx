@@ -2,6 +2,8 @@ import { AppBar, Toolbar, Typography, Button, Container, Box } from '@mui/materi
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import { IconChevronDown, IconGitBranch } from '@tabler/icons-react';
+import classes from '@styles/Home.module.css';
+
 
 const Header: React.FC = () => {
   const router = useRouter();
@@ -12,7 +14,7 @@ const Header: React.FC = () => {
         <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
           {/* Logo and Title */}
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <IconGitBranch size={40} className={classes.headerIcon} />
+            <IconGitBranch size={40} className={classes.headerIcon} />
             <Typography variant="h6" component="a" href="#" sx={{ color: 'white', fontWeight: 'bold', ml: 2, textDecoration: 'none' }}>
               CRISP
             </Typography>
