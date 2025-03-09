@@ -42,7 +42,7 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
             .forceSimulation(graphData.nodes)
             .force("link", d3.forceLink(graphData.edges).id((d: any) => d.id).distance(250))
             .force("charge", d3.forceManyBody().strength(-300))
-            .force("center", d3.forceCenter(width / 2 - 250, height / 2 - 200))
+            .force("center", d3.forceCenter(width / 2 - 150, height / 2 - 80))
             .force("collision", d3.forceCollide().radius(40));
 
         const colorMap = {
