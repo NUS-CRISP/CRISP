@@ -6,17 +6,27 @@ import {
   JiraIssueModel,
   JiraSprintModel,
 } from '@models/JiraData';
+import {
+  MultipleChoiceAnswerModel,
+  TeamMemberSelectionAnswerModel,
+} from '@models/Answer';
+import AssessmentAssignmentSetModel, {
+  AssignedTeam,
+} from '@models/AssessmentAssignmentSet';
+import InternalAssessmentModel from '@models/InternalAssessment';
+import {
+  MultipleChoiceQuestionModel,
+  TeamMemberSelectionQuestionModel,
+} from '@models/QuestionTypes';
 import TeamModel from '@models/Team';
 import TeamDataModel from '@models/TeamData';
 import TeamSetModel from '@models/TeamSet';
-import UserModel from '@models/User';
+import UserModel, { User } from '@models/User';
 import Role from '@shared/types/auth/Role';
 import { JiraBoard } from '@shared/types/JiraData';
+import { MultipleChoiceOption } from '@shared/types/Question';
 
 export const setupTutorialDataJob = async () => {
-  // -----------------------------------------------------------------------------
-  // 1) Ensure the "Trial User" (and its account) exists
-  // -----------------------------------------------------------------------------
   let trialUser = await UserModel.findOne({ identifier: 'trial' });
   let trialAccount = trialUser
     ? await AccountModel.findOne({
@@ -24,7 +34,6 @@ export const setupTutorialDataJob = async () => {
         user: trialUser._id,
       })
     : null;
-
   if (!trialUser) {
     const trialUserDoc = new UserModel({
       identifier: 'trial',
@@ -34,7 +43,6 @@ export const setupTutorialDataJob = async () => {
     });
     trialUser = await trialUserDoc.save();
   }
-
   if (!trialAccount) {
     const trialAccountDoc = new AccountModel({
       email: 'trial@example.com',
@@ -47,7 +55,6 @@ export const setupTutorialDataJob = async () => {
     });
     trialAccount = await trialAccountDoc.save();
   }
-
   const adminAccount = await AccountModel.findOne({
     role: Role.Admin,
   }).populate('user');
@@ -57,23 +64,14 @@ export const setupTutorialDataJob = async () => {
     );
   }
   const adminUser = adminAccount.user;
-
-  // -----------------------------------------------------------------------------
-  // 2) Delete existing trial course data so we can regenerate from scratch
-  // -----------------------------------------------------------------------------
   const existingTrialCourse = await CourseModel.findOne({ code: 'TRIAL' });
   if (existingTrialCourse) {
     const trialCourseId = existingTrialCourse._id;
-
     const teamSets = await TeamSetModel.find({ course: trialCourseId });
     const teamSetIds = teamSets.map(ts => ts._id);
-
     await TeamModel.deleteMany({ teamSet: { $in: teamSetIds } });
-
     await TeamSetModel.deleteMany({ _id: { $in: teamSetIds } });
-
     await TeamDataModel.deleteMany({ course: trialCourseId });
-
     const jiraBoards = await JiraBoardModel.find({ course: trialCourseId });
     for (const board of jiraBoards) {
       if (board.jiraIssues && board.jiraIssues.length > 0) {
@@ -89,6 +87,25 @@ export const setupTutorialDataJob = async () => {
       gitHubOrgName: existingTrialCourse.gitHubOrgName,
     });
 
+    const existingAssessments = await InternalAssessmentModel.find({
+      course: trialCourseId,
+    });
+    for (const asmt of existingAssessments) {
+      for (const questionId of asmt.questions) {
+        await MultipleChoiceQuestionModel.deleteOne({ _id: questionId });
+        await TeamMemberSelectionQuestionModel.deleteOne({ _id: questionId });
+        await MultipleChoiceAnswerModel.deleteMany({ question: questionId });
+        await TeamMemberSelectionAnswerModel.deleteMany({
+          question: questionId,
+        });
+      }
+      if (asmt.assessmentAssignmentSet) {
+        await AssessmentAssignmentSetModel.deleteOne({
+          _id: asmt.assessmentAssignmentSet,
+        });
+      }
+    }
+    await InternalAssessmentModel.deleteMany({ course: trialCourseId });
     const existingCourseRefreshed =
       await CourseModel.findById(trialCourseId).lean();
     if (existingCourseRefreshed?.students) {
@@ -96,24 +113,17 @@ export const setupTutorialDataJob = async () => {
         trialUser._id.toString(),
         adminUser._id.toString(),
       ]);
-
       const bogusStudentIds = existingCourseRefreshed.students.filter(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (stuId: any) => !keepUserIds.has(stuId.toString())
       );
-
       if (bogusStudentIds.length > 0) {
         await AccountModel.deleteMany({ user: { $in: bogusStudentIds } });
         await UserModel.deleteMany({ _id: { $in: bogusStudentIds } });
       }
     }
-
     await CourseModel.deleteOne({ _id: trialCourseId });
   }
-
-  // -----------------------------------------------------------------------------
-  // 3) Now we can create the brand-new trial course and data
-  // -----------------------------------------------------------------------------
   const trialCourse = await CourseModel.create({
     name: 'Trial',
     code: 'TRIAL',
@@ -124,23 +134,17 @@ export const setupTutorialDataJob = async () => {
     sprints: [],
     milestones: [],
   });
-  trialCourse.gitHubOrgName = 'trialrepo'; // Has to be saved separately. I don't know why, but assigning it directly in the .create method above doesn't correctly save it.
+  trialCourse.gitHubOrgName = 'trialrepo';
   await trialCourse.save();
-
   trialCourse.faculty.push(trialUser._id);
   trialCourse.faculty.push(adminUser._id);
   await trialCourse.save();
-
   if (!trialUser.enrolledCourses.includes(trialCourse._id)) {
     trialUser.enrolledCourses.push(trialCourse._id);
     await trialUser.save();
   }
-
-  // -----------------------------------------------------------------------------
-  // 4) Create or reuse any bogus students + enroll them
-  // -----------------------------------------------------------------------------
-  const studentArray: string[] = [];
-
+  const studentIdArray: string[] = [];
+  const studentArray: User[] = [];
   const createAndEnrollStudent = async ({
     identifier,
     name,
@@ -176,9 +180,9 @@ export const setupTutorialDataJob = async () => {
       trialCourse.students.push(studentUser._id);
       await trialCourse.save();
     }
-    studentArray.push(studentUser._id.toString());
+    studentIdArray.push(studentUser._id.toString());
+    studentArray.push(studentUser);
   };
-
   await createAndEnrollStudent({ identifier: 'john-doe', name: 'John Doe' });
   await createAndEnrollStudent({
     identifier: 'johnny-smith',
@@ -188,10 +192,6 @@ export const setupTutorialDataJob = async () => {
     identifier: 'hoshimachi-suisei',
     name: 'Hoshimachi Suisei',
   });
-
-  // -----------------------------------------------------------------------------
-  // 5) Create a TeamSet, Team, and TeamData with multiple example subdocuments
-  // -----------------------------------------------------------------------------
   const teamSet = await TeamSetModel.create({
     course: trialCourse._id,
     name: 'Project Groups',
@@ -199,41 +199,32 @@ export const setupTutorialDataJob = async () => {
   });
   trialCourse.teamSets.push(teamSet._id);
   await trialCourse.save();
-
   const team = await TeamModel.create({
     teamSet: teamSet._id,
     number: 100,
-    members: studentArray,
+    members: studentIdArray,
     TA: trialUser._id,
   });
   teamSet.teams.push(team._id);
   await teamSet.save();
-
-  // Now let's create TeamData with arrays filled in:
   const teamData = await TeamDataModel.create({
     teamId: team.number,
     course: trialCourse._id,
     gitHubOrgName: 'org',
     repoName: 'team',
-
-    // Example summary stats
     commits: 42,
     issues: 5,
     pullRequests: 3,
-
-    // Weekly commits: suppose we have 3 weeks, each with 3 days of commits
     weeklyCommits: [
       [1, 4, 2],
       [0, 2, 5],
       [3, 1, 3],
     ],
-
     updatedIssues: [
       '#12 Fix login bug',
       '#15 Update README',
-      '#20 Minor UI improvements',
+      '#20 UI improvements',
     ],
-
     teamContributions: {
       'John Doe': {
         commits: 10,
@@ -263,7 +254,6 @@ export const setupTutorialDataJob = async () => {
         comments: 8,
       },
     },
-
     teamPRs: [
       {
         id: 2171165196,
@@ -321,7 +311,6 @@ export const setupTutorialDataJob = async () => {
         ],
       },
     ],
-
     milestones: [
       {
         title: 'M1: Project Setup',
@@ -346,13 +335,8 @@ export const setupTutorialDataJob = async () => {
       },
     ],
   });
-
   team.teamData = teamData._id;
   await team.save();
-
-  // -----------------------------------------------------------------------------
-  // 6) Create JiraIssues, JiraSprints and JiraBoard
-  // -----------------------------------------------------------------------------
   const issue1 = {
     self: 'trial_jira_issue1',
     id: 'trial_jira_issue1',
@@ -533,9 +517,6 @@ export const setupTutorialDataJob = async () => {
   team.board = board_doc._id as unknown as JiraBoard;
   await team.save();
 
-  // -----------------------------------------------------------------------------
-  // 7) Create code analysis data
-  // -----------------------------------------------------------------------------
   const metrics = [
     'complexity',
     'duplicated_lines_density',
@@ -1666,6 +1647,73 @@ export const setupTutorialDataJob = async () => {
     await codeAnalysisDataModel.create(data);
   }
 
+  const teamMemberQuestion = new TeamMemberSelectionQuestionModel({
+    text: 'Select students',
+    type: 'Team Member Selection',
+    isRequired: true,
+    isLocked: true,
+    order: 1,
+  });
+  await teamMemberQuestion.save();
+  const teamMemberAnswer = new TeamMemberSelectionAnswerModel({
+    question: teamMemberQuestion._id,
+    type: 'Team Member Selection Answer',
+    selectedUserIds: studentIdArray,
+  });
+  await teamMemberAnswer.save();
+  const mcQuestion = new MultipleChoiceQuestionModel({
+    text: 'Is CRISP the best course management platform available?',
+    type: 'Multiple Choice',
+    isRequired: true,
+    isLocked: false,
+    isScored: true,
+    options: [
+      {
+        text: 'Yes',
+        points: 10,
+      },
+      {
+        text: 'No',
+        points: 0,
+      },
+    ] as MultipleChoiceOption[],
+    order: 2,
+  });
+  await mcQuestion.save();
+  const mcAnswer = new MultipleChoiceAnswerModel({
+    question: mcQuestion._id,
+    type: 'Multiple Choice Answer',
+    value: 'Yes',
+  });
+  await mcAnswer.save();
+  const startDate = new Date();
+  startDate.setUTCFullYear(new Date().getUTCFullYear() - 1);
+  const assessment = await InternalAssessmentModel.create({
+    course: trialCourse._id,
+    assessmentName: 'Midterm Exam',
+    description: 'Midterm assessment',
+    startDate: startDate,
+    maxMarks: 10,
+    scaleToMaxMarks: true,
+    granularity: 'team',
+    teamSet: teamSet._id,
+    areSubmissionsEditable: true,
+    results: [],
+    isReleased: true,
+    questions: [teamMemberQuestion._id, mcQuestion._id],
+  });
+  trialCourse.internalAssessments.push(assessment.id);
+  trialCourse.save();
+  const assignmentSet = await AssessmentAssignmentSetModel.create({
+    assessment: assessment._id,
+    assignedTeams: {
+      team: team,
+      tas: [trialUser],
+    } as AssignedTeam,
+  });
+  await assignmentSet.save();
+  assessment.assessmentAssignmentSet = assignmentSet._id;
+  await assessment.save();
   console.log(
     'Trial data setup complete! All old trial data replaced with fresh data.'
   );
