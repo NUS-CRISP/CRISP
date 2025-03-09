@@ -6,6 +6,8 @@ import { forwardRef, useEffect, useState } from 'react';
 import PRDetails from './PRDetails';
 import PRList from './PRList';
 import PRGraph from './PRGraph';
+import PRChordDiagram from './PRChordDiagram';
+import PRMatrix from './PRMatrix';
 import PRManGraph from './PRMantineGraph';
 import PRStatusChart from './PRStatusChart'; 
 
@@ -129,13 +131,17 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
         </Group>
 
         {/* PR Visualization Graph */}
-        <Box mt={20}>
+        <Box mt={20} >
           <Text fw={500} size="lg">
             PR Review Interaction Graph
           </Text>
           <PRGraph graphData={graphData} />
+
+          <PRChordDiagram graphData={graphData} />
+          
+          {/* <PRStatusChart graphData={graphData} /> */}
+
           {/* <PRManGraph graphData={graphData} /> */}
-          <PRStatusChart graphData={graphData} />
         </Box>
       </Card>
     );
