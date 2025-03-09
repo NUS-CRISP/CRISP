@@ -28,18 +28,28 @@ const PRChordDiagram: React.FC<PRGraphProps> = ({ graphData }) => {
 
     const width = 600;
     const height = 600;
-    const innerRadius = Math.min(width, height) * 0.5 - 100;
+    const innerRadius = 150;
     const outerRadius = innerRadius + 10;
 
     // Clear previous svg contents if any.
     d3.select(svgRef.current).selectAll("*").remove();
 
-    const svg = d3
-      .select(svgRef.current)
-      .attr("width", width)
-      .attr("height", height)
-      .append("g")
-      .attr("transform", `translate(${width / 2}, ${height / 2})`);
+    const rootSvg = d3.select(svgRef.current);
+
+
+    rootSvg
+  .append("text")
+  .attr("x", 300) // Center horizontally (width / 2)
+  .attr("y", 20)  // Distance from the top
+  .attr("text-anchor", "middle")
+  .attr("font-size", "16px")
+  .attr("font-weight", "bold")
+  .text("Chord Diagram");
+
+
+      const svg = rootSvg
+  .append("g")
+  .attr("transform", `translate(${width / 2}, ${height / 2})`);
 
     const tooltip = d3.select(tooltipRef.current);
 
