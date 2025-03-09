@@ -52,14 +52,16 @@ export const setupTutorialDataJob = async () => {
     role: Role.Admin,
   }).populate('user');
   if (!adminAccount || !adminAccount.user) {
-    throw new Error('Admin user does not exist, but is required by this script.');
+    throw new Error(
+      'Admin user does not exist, but is required by this script.'
+    );
   }
   const adminUser = adminAccount.user;
   const existingTrialCourse = await CourseModel.findOne({ code: 'TRIAL' });
   if (existingTrialCourse) {
     const trialCourseId = existingTrialCourse._id;
     const teamSets = await TeamSetModel.find({ course: trialCourseId });
-    const teamSetIds = teamSets.map((ts) => ts._id);
+    const teamSetIds = teamSets.map(ts => ts._id);
     await TeamModel.deleteMany({ teamSet: { $in: teamSetIds } });
     await TeamSetModel.deleteMany({ _id: { $in: teamSetIds } });
     await TeamDataModel.deleteMany({ course: trialCourseId });
@@ -71,16 +73,24 @@ export const setupTutorialDataJob = async () => {
         await MultipleChoiceQuestionModel.deleteOne({ _id: questionId });
         await TeamMemberSelectionQuestionModel.deleteOne({ _id: questionId });
         await MultipleChoiceAnswerModel.deleteMany({ question: questionId });
-        await TeamMemberSelectionAnswerModel.deleteMany({ question: questionId });
+        await TeamMemberSelectionAnswerModel.deleteMany({
+          question: questionId,
+        });
       }
       if (asmt.assessmentAssignmentSet) {
-        await AssessmentAssignmentSetModel.deleteOne({ _id: asmt.assessmentAssignmentSet });
+        await AssessmentAssignmentSetModel.deleteOne({
+          _id: asmt.assessmentAssignmentSet,
+        });
       }
     }
     await InternalAssessmentModel.deleteMany({ course: trialCourseId });
-    const existingCourseRefreshed = await CourseModel.findById(trialCourseId).lean();
+    const existingCourseRefreshed =
+      await CourseModel.findById(trialCourseId).lean();
     if (existingCourseRefreshed?.students) {
-      const keepUserIds = new Set([trialUser._id.toString(), adminUser._id.toString()]);
+      const keepUserIds = new Set([
+        trialUser._id.toString(),
+        adminUser._id.toString(),
+      ]);
       const bogusStudentIds = existingCourseRefreshed.students.filter(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (stuId: any) => !keepUserIds.has(stuId.toString())
@@ -152,7 +162,10 @@ export const setupTutorialDataJob = async () => {
     studentArray.push(studentUser);
   };
   await createAndEnrollStudent({ identifier: 'john-doe', name: 'John Doe' });
-  await createAndEnrollStudent({ identifier: 'johnny-smith', name: 'Johnny Smith' });
+  await createAndEnrollStudent({
+    identifier: 'johnny-smith',
+    name: 'Johnny Smith',
+  });
   await createAndEnrollStudent({
     identifier: 'hoshimachi-suisei',
     name: 'Hoshimachi Suisei',
@@ -185,7 +198,11 @@ export const setupTutorialDataJob = async () => {
       [0, 2, 5],
       [3, 1, 3],
     ],
-    updatedIssues: ['#12 Fix login bug', '#15 Update README', '#20 UI improvements'],
+    updatedIssues: [
+      '#12 Fix login bug',
+      '#15 Update README',
+      '#20 UI improvements',
+    ],
     teamContributions: {
       'John Doe': {
         commits: 10,
@@ -365,7 +382,9 @@ export const setupTutorialDataJob = async () => {
   await assignmentSet.save();
   assessment.assessmentAssignmentSet = assignmentSet._id;
   await assessment.save();
-  console.log('Trial data setup complete! All old trial data replaced with fresh data.');
+  console.log(
+    'Trial data setup complete! All old trial data replaced with fresh data.'
+  );
 };
 
 export default setupTutorialDataJob;

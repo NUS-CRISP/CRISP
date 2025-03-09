@@ -221,7 +221,8 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
           })),
         }));
         setTeamOptions(options);
-        if (teams[0].TA.identifier === process.env.TRIAL_USER_ID) setIsTrial(true);
+        if (teams[0].TA.identifier === process.env.TRIAL_USER_ID)
+          setIsTrial(true);
         console.log(teams, isTrial);
       } else if (assessment.granularity === 'individual') {
         const users = data as User[];
@@ -819,7 +820,9 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
             <Button
               onClick={handleSubmitClick}
               loading={isSubmitting}
-              disabled={(!canEdit && !(submission && submission.isDraft)) || isTrial}
+              disabled={
+                (!canEdit && !(submission && submission.isDraft)) || isTrial
+              }
               variant={
                 canEdit || (submission && submission.isDraft)
                   ? 'filled'
