@@ -5,16 +5,16 @@ import dayjs from 'dayjs';
 import { forwardRef, useEffect, useState } from 'react';
 import PRDetails from './PRDetails';
 import PRList from './PRList';
-import PRGraph from './PRGraph';
+import PRNetwork from './PRNetwork';
 import PRChordDiagram from './PRChordDiagram';
 import PRMatrix from './PRMatrix';
 import PRMatrixStatusColor from './PRMatrixStatusColor';
 import PRHivePlot from './PRHivePlot';
-import PRSankeyDiagram from './PRSankeyDiagram';
 import PRGraphBundled from './PRGraphBundled';
 import PRDotMatrixChart from './PRDotMatrixChart';
-import PRManGraph from './PRMantineGraph';
 import PRStatusChart from './PRStatusChart';
+import PRArcDiagram from './PRArcDiagram';
+import PRSunburstGraph from './PRSunburstGraph';
 
 export interface Spacing {
   maxHeight: number;
@@ -30,11 +30,11 @@ export interface PRProps {
 }
 
 interface PRNode {
-  id: string; // Reviewer or PR author
+  id: string;
 }
 
 interface PRNodeBundled extends PRNode {
-  group: string; // Additional property for bundled graph hierarchy
+  group: string;
 }
 
 interface PREdge {
@@ -54,7 +54,7 @@ interface PRGraphDataBundled {
   edges: PREdge[];
 }
 
-// Existing function for node-edge graph (without group info)
+// Process PR data to generate node-edge graph data
 const processPRInteractions = (teamPRs: PRProps['teamData']['teamPRs']): PRGraphData => {
   const nodesSet = new Set<string>();
   const edgesMap: Map<string, PREdge> = new Map();
@@ -93,8 +93,8 @@ const processPRInteractions = (teamPRs: PRProps['teamData']['teamPRs']): PRGraph
   };
 };
 
-// New function for bundled graph that assigns a group to each node.
-// Here we assign a default group, but you can replace this logic with your actual grouping.
+// New function for bundled graph that assigns a group to each node
+// Here I assume a default group if no group info is available
 const processPRInteractionsBundled = (
   teamPRs: PRProps['teamData']['teamPRs']
 ): PRGraphDataBundled => {
@@ -136,14 +136,14 @@ const processPRInteractionsBundled = (
     edges: Array.from(edgesMap.values()),
   };
 };
+
+// Test data
 const testData = {
   nodes: [{ id: "Alice" }, { id: "Bob" }],
   edges: [
     { source: "Alice", target: "Bob", weight: 3, status: "approved" },
   ],
 };
-
-
 
 const PR = forwardRef<HTMLDivElement, PRProps>(
   ({ team, teamData, selectedWeekRange, dateUtils, profileGetter }, ref) => {
@@ -209,26 +209,36 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
           <Text fw={500} size="lg">
             PR Review Interaction Graph
           </Text>
-          {/* Standard node-edge graph */}
-          <PRGraph graphData={graphData} />
+
+          <PRArcDiagram graphData={graphData} />
 
           <PRChordDiagram graphData={graphData} />
+
+          <PRDotMatrixChart graphData={graphData} />
+
+          <PRGraphBundled graphData={graphDataBundled} />
 
           <PRMatrix graphData={graphData} />
 
           <PRMatrixStatusColor graphData={graphData} />
 
-          {/* <PRDotMatrixChart graphData={graphData} />
-          <PRDotMatrixChart graphData={testData} /> */}
+          <PRNetwork graphData={graphData} />
 
-          {/* Bundled graph using processed data with group info */}
-          <PRGraphBundled graphData={graphDataBundled} />
+          <PRSunburstGraph graphData={graphDataBundled} />
 
-          {/* Uncomment or add other visualizations as needed */}
           {/* <PRStatusChart graphData={graphData} /> */}
+
+
+
+          Not for concern
+          hive plot
+
           {/* <PRHivePlot graphData={graphData} /> */}
-          {/* <PRSankeyDiagram graphData={graphData} /> */}
-          {/* <PRManGraph graphData={graphData} /> */}
+
+
+
+
+
         </Box>
       </Card>
     );
