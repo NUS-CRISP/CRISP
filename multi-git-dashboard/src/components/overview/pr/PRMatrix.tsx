@@ -26,19 +26,35 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
   useEffect(() => {
     if (!graphData.nodes.length) return;
 
-    // Set dimensions and margins.
-    const margin = { top: 100, right: 100, bottom: 100, left: 100 },
+    // Increase margins to make room for long row/column labels.
+    const margin = { top: 90, right: 100, bottom: 150, left: 170 },
       width = 600 - margin.left - margin.right,
       height = 600 - margin.top - margin.bottom;
 
-    // Clear previous SVG content.
-    d3.select(svgRef.current).selectAll("*").remove();
-    const svg = d3
-      .select(svgRef.current)
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom)
-      .append("g")
-      .attr("transform", `translate(${margin.left}, ${margin.top})`);
+// 1) Clear previous SVG content
+d3.select(svgRef.current).selectAll("*").remove();
+
+// 2) Create a "root" SVG selection (instead of appending the <g> directly)
+const rootSvg = d3
+  .select(svgRef.current)
+  .attr("width", width + margin.left + margin.right)
+  .attr("height", height + margin.top + margin.bottom);
+
+// 3) Add the title at the top
+rootSvg
+  .append("text")
+  .attr("x", (width + margin.left + margin.right) / 2)
+  .attr("y", 30) // Distance from the top; adjust as needed
+  .attr("text-anchor", "middle")
+  .attr("font-size", "16px")
+  .attr("font-weight", "bold")
+  .text("Matrix Diagram");
+
+// 4) Now append the main group for the matrix
+const svg = rootSvg
+  .append("g")
+  .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
 
     const tooltip = d3.select(tooltipRef.current);
 
@@ -122,32 +138,45 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
         tooltip.style("opacity", 0);
       });
 
-    // Add row labels.
+    // Add row labels (along the left).
     svg
       .selectAll(".rowLabel")
       .data(graphData.nodes)
       .enter()
       .append("text")
-      .attr("x", -6)
+      // Shift labels slightly more to the left for clarity.
+      .attr("x", -10)
+      // Center vertically in each band.
       .attr("y", (_, i) => (yScale(String(i)) || 0) + yScale.bandwidth() / 2)
       .attr("dy", ".32em")
       .attr("text-anchor", "end")
       .text((d) => d.id);
 
-    // Add column labels.
-    svg
-      .selectAll(".colLabel")
-      .data(graphData.nodes)
-      .enter()
-      .append("text")
-      .attr("x", (_, i) => (xScale(String(i)) || 0) + xScale.bandwidth() / 2)
-      .attr("y", -6)
-      .attr("dy", ".32em")
-      .attr("text-anchor", "middle")
-      .text((d) => d.id)
-      .attr("transform", (_, i) =>
-        `translate(0,0) rotate(-90, ${(xScale(String(i)) || 0) + xScale.bandwidth() / 2}, -6)`
-      );
+    // Add column labels (along the top).
+// Replace the "Add column labels (along the top)" block with this:
+
+// Add column labels (along the bottom).
+svg
+  .selectAll(".colLabel")
+  .data(graphData.nodes)
+  .enter()
+  .append("text")
+  .attr("class", "colLabel")
+  // Place each label horizontally in the center of its column
+  .attr("x", (_, i) => (xScale(String(i)) || 0) + xScale.bandwidth() / 2)
+  // Place the labels below the matrix area
+  .attr("y", height + 20) // Adjust as needed
+  .attr("dy", ".35em")
+  // Anchor text so rotation looks natural
+  .attr("text-anchor", "end")
+  // Rotate (e.g., -45 degrees) around each label's (x, y)
+  .attr("transform", (_, i) => {
+    const x = (xScale(String(i)) || 0) + xScale.bandwidth() / 2;
+    const y = height + 20;
+    return `rotate(-45, ${x}, ${y})`;
+  })
+  .text((d) => d.id);
+
   }, [graphData]);
 
   return (
@@ -166,7 +195,7 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
           transition: "opacity 0.3s ease",
         }}
       ></div>
-      <svg ref={svgRef}></svg>
+       <svg ref={svgRef} width="600" height="600" style={{ border: "1px solid black" }}></svg>
     </div>
   );
 };
