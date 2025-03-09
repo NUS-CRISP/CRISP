@@ -27,7 +27,7 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
   return (
     <Box mt="lg" style={{ textAlign: 'center' }}>
       {/* Render Unique Chips */}
-      <Group position="center">
+      <Group>
         {graphData.nodes.map((node) => (
           <Chip key={node.id} variant="filled">
             {node.id}
@@ -38,7 +38,7 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
       {/* Arrows for Interactions */}
       <Box mt="sm">
         {graphData.edges.map((edge, index) => (
-          <Group key={index} position="center">
+          <Group key={index} >
             <Chip variant="filled" color="blue">
               {edge.source}
             </Chip>
