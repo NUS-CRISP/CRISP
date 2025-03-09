@@ -83,14 +83,13 @@ const FeatureMono: React.FC = () => {
     const features = MOCKDATA.map((feature, index) => <Feature {...feature} key={index} />);
 
     return (
-        <Container className={classes.wrapper}
-        style={{
-            backgroundColor: 'rgba(0, 0, 0)',
-        }}>
-            <Title className={classes.title}>Integrate effortlessly with any technology stack</Title>
+        <Container className={classes.wrapper} 
+           
+            >
+            <Title className={classes.title} style={{fontFamily:'Verdana', }}>A Multi-Repo Git Mastery Platform</Title>
 
-            <Container size={560} p={0}>
-                <Text size="sm" className={classes.description}>
+            <Container p={0} >
+                <Text  className={classes.description} style={{fontFamily:'Verdana',fontSize:'18px' }}>
                     {<strong>CRISP</strong>} is a web-base <strong>dashboard</strong> designed to
                     streamline the <strong>management</strong> and <strong>assessment</strong> of
                     large-scale software engineering modules involving multiple teams working across multiple GitHub repositories.
