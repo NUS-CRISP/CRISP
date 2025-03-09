@@ -35,6 +35,15 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
 
         const svg = d3.select(svgRef.current);
         svg.selectAll("*").remove();
+        
+        svg
+        .append("text")
+        .attr("x", width / 2)      
+        .attr("y", 20)             
+        .attr("text-anchor", "middle")
+        .attr("font-size", "16px")
+        .attr("font-weight", "bold")
+        .text("Animated Node Arrow Graph");
 
         const tooltip = d3.select(tooltipRef.current);
 
