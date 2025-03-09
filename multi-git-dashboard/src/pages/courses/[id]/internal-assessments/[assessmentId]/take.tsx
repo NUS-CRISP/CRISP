@@ -91,6 +91,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
   const [newAdjustedScore, setNewAdjustedScore] = useState<number | undefined>(
     undefined
   );
+  const [isTrial, setIsTrial] = useState<boolean>(false);
 
   const isScoredQuestion = (
     question: QuestionUnion
@@ -220,6 +221,8 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
           })),
         }));
         setTeamOptions(options);
+        if (teams[0].TA.identifier === process.env.TRIAL_USER_ID) setIsTrial(true);
+        console.log(teams, isTrial);
       } else if (assessment.granularity === 'individual') {
         const users = data as User[];
         const options = users.map(user => ({
@@ -227,6 +230,9 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
           label: user.name,
         }));
         setTeamMembersOptions(options);
+        // There is no equivalent method for users for checking trial since
+        // Users don't have TA info. If you want that, you need to add
+        // a new method just to check if current user is a trial user.
       }
     } catch (error) {
       console.error('Error fetching assigned entities:', error);
@@ -813,7 +819,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
             <Button
               onClick={handleSubmitClick}
               loading={isSubmitting}
-              disabled={!canEdit && !(submission && submission.isDraft)}
+              disabled={(!canEdit && !(submission && submission.isDraft)) || isTrial}
               variant={
                 canEdit || (submission && submission.isDraft)
                   ? 'filled'
