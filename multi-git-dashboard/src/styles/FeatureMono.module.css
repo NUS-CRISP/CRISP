@@ -1,6 +1,11 @@
 .wrapper {
     padding-top: calc(var(--mantine-spacing-xl) * 4);
     padding-bottom: calc(var(--mantine-spacing-xl) * 4);
+
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-size: 100% 800px;
+    background-position: top center;
 }
 
 .title {
