@@ -71,6 +71,12 @@ export const courseSchema = new Schema<Course>({
     apiKey: { type: String },
     courseId: { type: Number },
   },
+  aiInsights: {
+    isOn: { type: Boolean, required: true, default: false },
+    provider: { type: String },
+    model: { type: String },
+    apiKey: { type: String },
+  }
 });
 
 const CourseModel = mongoose.model<Course>('Course', courseSchema);
