@@ -74,18 +74,8 @@ export const getAuthorizedTeamDataByCourse = async (
       throw new NotFoundError('User is not authorized to view course');
     }
 
-    // Extract the owner names from the course's GitHub repo links
-    const ownersFromRepoLinks = (course.gitHubRepoLinks || []).map(repoUrl => {
-      const urlParts = (repoUrl as string).split('/');
-      return urlParts[3].toLowerCase(); // Get the 'owner' part of the URL in lowercase
-    });
-
-    // Query for team data based on gitHubOrgName or gitHubRepoLinks
     const teamDatas = await TeamDataModel.find({
-      $or: [
-        { gitHubOrgName: course.gitHubOrgName },
-        { gitHubOrgName: { $in: ownersFromRepoLinks } },
-      ],
+      course: courseId,
     });
 
     if (!teamDatas) {

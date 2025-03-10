@@ -122,7 +122,8 @@ export const addStudentsToCourse = async (
         continue;
       }
       if (
-        studentAccount.role !== Role.Student ||
+        (studentAccount.role !== Role.Student &&
+          studentAccount.role !== Role.TrialUser) ||
         studentData.name !== student.name ||
         studentData.email !== studentAccount.email
       ) {
@@ -224,7 +225,7 @@ export const addTAsToCourse = async (courseId: string, TADataList: any[]) => {
         continue;
       }
       if (
-        TAAccount.role !== Role.TA ||
+        (TAAccount.role !== Role.TA && TAAccount.role !== Role.TrialUser) ||
         TAData.name !== TA.name ||
         TAData.email !== TAAccount.email
       ) {
@@ -340,7 +341,8 @@ export const addFacultyToCourse = async (
         continue;
       }
       if (
-        facultyAccount.role !== Role.Faculty ||
+        (facultyAccount.role !== Role.Faculty &&
+          facultyAccount.role !== Role.TrialUser) ||
         facultyData.name !== facultyMember.name ||
         facultyData.email !== facultyAccount.email
       ) {

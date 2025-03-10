@@ -21,6 +21,9 @@ import submissionRoutes from './routes/submissionRoutes';
 import assessmentAssignmentSetRoutes from './routes/assessmentAssignmentSetRoutes';
 import assessmentResultRoutes from './routes/assessmentResultRoutes';
 import setupAIInsightsJob from 'jobs/aiInsightsJob';
+import notificationRoutes from './routes/notificationRoutes';
+import setupTutorialDataJob from './jobs/tutorialDataJob';
+import setupNotificationJob from './jobs/notificationJob';
 
 const env = process.env.NODE_ENV ?? 'development';
 config({ path: `.env.${env}` });
@@ -32,6 +35,8 @@ const setupApp = async () => {
   setupTrofosJob();
   setupCodeAnalysisJob();
   setupAIInsightsJob();
+  setupNotificationJob();
+  setupTutorialDataJob();
 };
 setupApp();
 
@@ -56,6 +61,7 @@ app.use('/api/user', userRoutes);
 app.use('/api/assessment-results', assessmentResultRoutes);
 app.use('/api/assignment-sets', assessmentAssignmentSetRoutes);
 app.use('/api/codeanalysis', codeAnalysisRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
