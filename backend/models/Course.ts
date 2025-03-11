@@ -77,8 +77,8 @@ export const courseSchema = new Schema<Course>({
     model: { type: String },
     apiKey: { type: String },
     frequency: { type: String },
-    startDate: { type: Date},
-  }
+    startDate: { type: Date },
+  },
 });
 
 const CourseModel = mongoose.model<Course>('Course', courseSchema);
