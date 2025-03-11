@@ -29,27 +29,85 @@ export function isNotificationTime(
   return false;
 }
 
-export interface NotificationTrigger {
+export interface EmailTrigger {
   name: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  gatherNotificationText(account: any): Promise<string | null>;
+  gatherEmailText(account: any): Promise<string | null>;
 }
 
-const ungradedItemsTrigger: NotificationTrigger = {
-  name: 'ungradedItems',
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  gatherNotificationText: async (account: any) => {
-    const all = await InternalAssessmentModel.find();
+const ungradedItemsEmailTrigger: EmailTrigger = {
+  name: 'ungradedItemsEmail',
+  gatherEmailText: async account => {
+    const allAssessments = await InternalAssessmentModel.find();
     const parts: string[] = [];
-    for (const a of all) {
-      const unmarked = await getUnmarkedAssignmentsByTAId(account.user._id.toString(), a._id.toString());
+
+    for (const asmt of allAssessments) {
+      const unmarked = await getUnmarkedAssignmentsByTAId(account.user._id.toString(), asmt._id.toString());
       if (!unmarked.length) continue;
-      const segment =
-        a.granularity === 'team'
-          ? convertAssignedTeamsToString(unmarked as Team[], a)
-          : convertAssignedUsersToString(unmarked as User[], a);
-      if (segment) parts.push(segment);
+
+      if (asmt.granularity === 'team') {
+        const msg = convertAssignedTeamsToString(unmarked as Team[], asmt);
+        if (msg) parts.push(msg);
+      } else {
+        const msg = convertAssignedUsersToString(unmarked as User[], asmt);
+        if (msg) parts.push(msg);
+      }
     }
+
+    if (!parts.length) return null;
+    const userName = account.user?.name ?? 'User';
+    return `
+Hello ${userName},
+
+You have ungraded items:
+
+${parts.join('\n\n')}
+
+(This is the email version of the notification.)
+
+Regards,
+CRISP
+`.trim();
+  }
+};
+
+const EMAIL_TRIGGERS: EmailTrigger[] = [ungradedItemsEmailTrigger];
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function gatherAllEmailText(account: any): Promise<string | null> {
+  let combined = '';
+  for (const trig of EMAIL_TRIGGERS) {
+    const text = await trig.gatherEmailText(account);
+    if (text) combined += text + '\n\n';
+  }
+  return combined.trim() || null;
+}
+
+export interface TelegramTrigger {
+  name: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  gatherTelegramText(account: any): Promise<string | null>;
+}
+
+const ungradedItemsTelegramTrigger: TelegramTrigger = {
+  name: 'ungradedItemsTelegram',
+  gatherTelegramText: async account => {
+    const allAssessments = await InternalAssessmentModel.find();
+    const parts: string[] = [];
+
+    for (const asmt of allAssessments) {
+      const unmarked = await getUnmarkedAssignmentsByTAId(account.user._id.toString(), asmt._id.toString());
+      if (!unmarked.length) continue;
+
+      if (asmt.granularity === 'team') {
+        const msg = convertAssignedTeamsToString(unmarked as Team[], asmt);
+        if (msg) parts.push(msg);
+      } else {
+        const msg = convertAssignedUsersToString(unmarked as User[], asmt);
+        if (msg) parts.push(msg);
+      }
+    }
+
     if (!parts.length) return null;
     const userName = account.user?.name ?? 'User';
     return `
@@ -65,41 +123,35 @@ CRISP
   }
 };
 
-const NOTIFICATION_TRIGGERS: NotificationTrigger[] = [
-  ungradedItemsTrigger
-];
+const TELEGRAM_TRIGGERS: TelegramTrigger[] = [ungradedItemsTelegramTrigger];
 
-// For the final text we combine each non-null result (or you can send separate messages)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function gatherAllTriggerText(account: any): Promise<string | null> {
+async function gatherAllTelegramText(account: any): Promise<string | null> {
   let combined = '';
-  for (const trig of NOTIFICATION_TRIGGERS) {
-    const text = await trig.gatherNotificationText(account);
-    if (text) {
-      combined += text + '\n\n'; // or format differently
-    }
+  for (const trig of TELEGRAM_TRIGGERS) {
+    const text = await trig.gatherTelegramText(account);
+    if (text) combined += text + '\n\n';
   }
-  if (!combined.trim()) return null;
-  return combined.trim();
+  return combined.trim() || null;
 }
 
-function convertAssignedTeamsToString(teams: Team[], assessment: InternalAssessment) {
+function convertAssignedTeamsToString(teams: Team[], asmt: InternalAssessment) {
   if (!teams.length) return '';
-  let s = `Assessment: ${assessment.assessmentName}\n`;
+  let s = `Assessment: ${asmt.assessmentName}\n`;
   teams.forEach(t => (s += `Team #${t.number}\n`));
   return s.trim();
 }
 
-function convertAssignedUsersToString(users: User[], assessment: InternalAssessment) {
+function convertAssignedUsersToString(users: User[], asmt: InternalAssessment) {
   if (!users.length) return '';
-  let s = `Assessment: ${assessment.assessmentName}\n`;
+  let s = `Assessment: ${asmt.assessmentName}\n`;
   users.forEach(u => (s += `${u.name}\n`));
   return s.trim();
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function sendEmailNotification(account: any) {
-  const text = await gatherAllTriggerText(account);
+  const text = await gatherAllEmailText(account);
   if (!text) return;
   await sendNotification('email', {
     to: account.email,
@@ -108,10 +160,9 @@ async function sendEmailNotification(account: any) {
   });
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function sendTelegramNotification(account: any) {
   if (!account.telegramChatId || account.telegramChatId === -1) return;
-  const text = await gatherAllTriggerText(account);
+  const text = await gatherAllTelegramText(account);
   if (!text) return;
   await sendNotification('telegram', {
     chatId: account.telegramChatId,
@@ -135,17 +186,14 @@ export async function runNotificationCheck() {
     if (!acc.emailNotificationWeekday) acc.emailNotificationWeekday = 7;
 
     if (acc.wantsEmailNotifications) {
-      if (
-        isNotificationTime(
-          acc.emailNotificationType,
-          acc.emailNotificationHour,
-          acc.emailNotificationWeekday,
-          hour,
-          weekday
-        )
-      ) {
-        await sendEmailNotification(acc);
-      }
+      const ok = isNotificationTime(
+        acc.emailNotificationType,
+        acc.emailNotificationHour,
+        acc.emailNotificationWeekday,
+        hour,
+        weekday
+      );
+      if (ok) await sendEmailNotification(acc);
     }
 
     if (!acc.telegramNotificationType) acc.telegramNotificationType = 'daily';
@@ -153,17 +201,14 @@ export async function runNotificationCheck() {
     if (!acc.telegramNotificationWeekday) acc.telegramNotificationWeekday = 7;
 
     if (acc.wantsTelegramNotifications && acc.telegramChatId && acc.telegramChatId !== -1) {
-      if (
-        isNotificationTime(
-          acc.telegramNotificationType,
-          acc.telegramNotificationHour,
-          acc.telegramNotificationWeekday,
-          hour,
-          weekday
-        )
-      ) {
-        await sendTelegramNotification(acc);
-      }
+      const ok = isNotificationTime(
+        acc.telegramNotificationType,
+        acc.telegramNotificationHour,
+        acc.telegramNotificationWeekday,
+        hour,
+        weekday
+      );
+      if (ok) await sendTelegramNotification(acc);
     }
   }
 }
