@@ -63,5 +63,7 @@ export interface Course {
     provider: string;
     model: string;
     apiKey: string;
+    frequency: string;
+    startDate: Date;
   }
 }

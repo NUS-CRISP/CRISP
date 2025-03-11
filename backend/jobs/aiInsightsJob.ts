@@ -212,12 +212,12 @@ export const setupAIInsightsJob = () => {
   });
 
   // To run the job immediately for testing
-  // if (process.env.RUN_JOB_NOW === 'true') {
-  console.log('Running getAIInsights job');
-  queryAndSaveAIInsights().catch(err => {
-    console.error('Error running job manually:', err);
-  });
-  // }
+  if (process.env.RUN_JOB_NOW === 'true') {
+    console.log('Running getAIInsights job');
+    queryAndSaveAIInsights().catch(err => {
+      console.error('Error running job manually:', err);
+    });
+  }
 };
 
 export default setupAIInsightsJob;

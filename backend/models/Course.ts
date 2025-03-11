@@ -76,6 +76,8 @@ export const courseSchema = new Schema<Course>({
     provider: { type: String },
     model: { type: String },
     apiKey: { type: String },
+    frequency: { type: String },
+    startDate: { type: Date},
   }
 });
 
