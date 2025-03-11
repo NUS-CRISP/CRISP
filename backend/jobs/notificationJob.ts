@@ -3,308 +3,202 @@ import Role from '@shared/types/auth/Role';
 import cron from 'node-cron';
 import { Team } from '../models/Team';
 import { User } from '../models/User';
-import InternalAssessmentModel, {
-  InternalAssessment,
-} from '@models/InternalAssessment';
+import InternalAssessmentModel, { InternalAssessment } from '@models/InternalAssessment';
 import { getUnmarkedAssignmentsByTAId } from '../services/assessmentAssignmentSetService';
 import { sendNotification, sendTestNotification } from 'clients/notificationFacadeClient';
 
-/**
- * Returns true if it's time to send a notification for a given schedule.
- * @param type - 'hourly', 'daily', or 'weekly'
- * @param hour - The hour (0-23) the user wants to receive the notification.
- * @param weekday - The weekday (1-7, Mon=1...Sun=7) for weekly notifications.
- * @param nowHour - Current hour (0-23).
- * @param nowWeekday - Current weekday (1-7, Mon=1...Sun=7).
- * @returns boolean
- */
-export const isNotificationTime = (
+export function isNotificationTime(
   type: string | undefined,
   hour: number | undefined,
   weekday: number | undefined,
   nowHour: number,
   nowWeekday: number
-): boolean => {
-  // If missing or invalid type, default to daily at midnight
-  if (!type || !['hourly', 'daily', 'weekly'].includes(type)) {
-    return nowHour === 0; // midnight
-  }
-
+): boolean {
+  if (!type || !['hourly', 'daily', 'weekly'].includes(type)) return nowHour === 0;
   switch (type) {
     case 'hourly':
-      // If user says "hourly", we send once each hour
       return true;
-
     case 'daily':
-      // Check if user-provided hour is valid; if not, default to 0
-      if (hour === null || hour === undefined || hour < 0 || hour > 23) {
-        hour = 0;
-      }
+      if (!hour || hour < 0 || hour > 23) hour = 0;
       return nowHour === hour;
-
     case 'weekly':
-      // For weekly, we check hour & weekday
-      if (hour === null || hour === undefined || hour < 0 || hour > 23) {
-        hour = 0;
-      }
-      if (
-        weekday === null ||
-        weekday === undefined ||
-        weekday < 1 ||
-        weekday > 7
-      ) {
-        // Default to Sunday if invalid
-        weekday = 7;
-      }
+      if (!hour || hour < 0 || hour > 23) hour = 0;
+      if (!weekday || weekday < 1 || weekday > 7) weekday = 7;
       return nowHour === hour && nowWeekday === weekday;
   }
-
-  // Should never get here, but just in case
   return false;
-};
+}
 
-// Reuse your existing converters
-const convertAssignedTeamsToString = (
-  assignedTeams: Team[],
-  assessment: InternalAssessment
-): string => {
-  if (assignedTeams.length === 0) return '';
-  let result = `Assessment: ${assessment.assessmentName}\n`;
-  assignedTeams.forEach(team => {
-    result += `Team #${team.number}\n`;
-  });
-  return result.trim();
-};
-
-const convertAssignedUsersToString = (
-  assignedUsers: User[],
-  assessment: InternalAssessment
-): string => {
-  if (assignedUsers.length === 0) return '';
-  let result = `Assessment: ${assessment.assessmentName}\n`;
-  assignedUsers.forEach(user => {
-    result += `${user.name}\n`;
-  });
-  return result.trim();
-};
-
-/**
- * Send an email notification to a single account.
- */
-export const notifySingleAccountViaEmail = async (
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-  account: any
-) => {
-  const allInternalAssessments = await InternalAssessmentModel.find();
-  const summaries: string[] = [];
-
-  for (const internalAssessment of allInternalAssessments) {
-    const unmarkedAssignments = await getUnmarkedAssignmentsByTAId(
-      account.user._id.toString(),
-      internalAssessment._id.toString()
-    );
-
-    let summary = '';
-    if (internalAssessment.granularity === 'team') {
-      summary = convertAssignedTeamsToString(
-        unmarkedAssignments as Team[],
-        internalAssessment
-      );
-    } else {
-      summary = convertAssignedUsersToString(
-        unmarkedAssignments as User[],
-        internalAssessment
-      );
-    }
-
-    if (summary) {
-      summaries.push(summary);
-    }
-  }
-
+export interface NotificationTrigger {
+  name: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const username = (account.user as any).name ?? 'User';
-  const emailBodyFormatted = `
-Hello ${username},
+  gatherNotificationText(account: any): Promise<string | null>;
+}
 
-This is a reminder that you have outstanding assigned students/teams that have not been graded. Below is a list of unmarked items grouped by assessment:
+const ungradedItemsTrigger: NotificationTrigger = {
+  name: 'ungradedItems',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  gatherNotificationText: async (account: any) => {
+    const all = await InternalAssessmentModel.find();
+    const parts: string[] = [];
+    for (const a of all) {
+      const unmarked = await getUnmarkedAssignmentsByTAId(account.user._id.toString(), a._id.toString());
+      if (!unmarked.length) continue;
+      const segment =
+        a.granularity === 'team'
+          ? convertAssignedTeamsToString(unmarked as Team[], a)
+          : convertAssignedUsersToString(unmarked as User[], a);
+      if (segment) parts.push(segment);
+    }
+    if (!parts.length) return null;
+    const userName = account.user?.name ?? 'User';
+    return `
+Hello ${userName},
 
-${summaries.join('\n\n')}
+You have ungraded items:
 
-If you have any questions, please contact the CRISP support team.
+${parts.join('\n\n')}
 
 Regards,
 CRISP
-  `.trim();
+`.trim();
+  }
+};
 
+const NOTIFICATION_TRIGGERS: NotificationTrigger[] = [
+  ungradedItemsTrigger
+];
+
+// For the final text we combine each non-null result (or you can send separate messages)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function gatherAllTriggerText(account: any): Promise<string | null> {
+  let combined = '';
+  for (const trig of NOTIFICATION_TRIGGERS) {
+    const text = await trig.gatherNotificationText(account);
+    if (text) {
+      combined += text + '\n\n'; // or format differently
+    }
+  }
+  if (!combined.trim()) return null;
+  return combined.trim();
+}
+
+function convertAssignedTeamsToString(teams: Team[], assessment: InternalAssessment) {
+  if (!teams.length) return '';
+  let s = `Assessment: ${assessment.assessmentName}\n`;
+  teams.forEach(t => (s += `Team #${t.number}\n`));
+  return s.trim();
+}
+
+function convertAssignedUsersToString(users: User[], assessment: InternalAssessment) {
+  if (!users.length) return '';
+  let s = `Assessment: ${assessment.assessmentName}\n`;
+  users.forEach(u => (s += `${u.name}\n`));
+  return s.trim();
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function sendEmailNotification(account: any) {
+  const text = await gatherAllTriggerText(account);
+  if (!text) return;
   await sendNotification('email', {
     to: account.email,
-    subject: 'CRISP: You Have Pending Unmarked Assessments',
-    text: emailBodyFormatted
+    subject: 'CRISP: You Have Pending Notifications',
+    text
   });
-};
+}
 
-/**
- * Send a Telegram notification to a single account.
- */
-export const notifySingleAccountViaTelegram = async (
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  account: any
-) => {
-  if (account.telegramChatId === null || account.telegramChatId === -1) return;
-  const allInternalAssessments = await InternalAssessmentModel.find();
-  const summaries: string[] = [];
+async function sendTelegramNotification(account: any) {
+  if (!account.telegramChatId || account.telegramChatId === -1) return;
+  const text = await gatherAllTriggerText(account);
+  if (!text) return;
+  await sendNotification('telegram', {
+    chatId: account.telegramChatId,
+    text
+  });
+}
 
-  for (const internalAssessment of allInternalAssessments) {
-    const unmarkedAssignments = await getUnmarkedAssignmentsByTAId(
-      account.user._id.toString(),
-      internalAssessment._id.toString()
-    );
+export async function runNotificationCheck() {
+  const now = new Date();
+  const hour = now.getHours();
+  const weekday = now.getDay() === 0 ? 7 : now.getDay();
 
-    let summary = '';
-    if (internalAssessment.granularity === 'team') {
-      summary = convertAssignedTeamsToString(
-        unmarkedAssignments as Team[],
-        internalAssessment
-      );
-    } else {
-      summary = convertAssignedUsersToString(
-        unmarkedAssignments as User[],
-        internalAssessment
-      );
-    }
-
-    if (summary) {
-      summaries.push(summary);
-    }
-  }
-
-  if (summaries.length > 0) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const username = (account.user as any).name ?? 'User';
-    const telegramMessage = `
-Hello ${username},
-
-This is a reminder that you have outstanding assigned students/teams that have not been graded.
-
-Below is a list of unmarked items grouped by assessment:
-
-${summaries.join('\n\n')}
-
-If you have any questions, please contact the CRISP support team.
-
-Regards,
-CRISP
-    `.trim();
-
-    await sendNotification('telegram', {
-      chatId: account.telegramChatId,
-      text: telegramMessage
-    });
-  }
-};
-
-const notifyOnStartup = async () => {
-  const allAccounts = await AccountModel.find({
-    role: { $in: [Role.Admin] },
-    isApproved: true,
+  const accounts = await AccountModel.find({
+    role: { $in: [Role.TA, Role.Faculty, Role.Admin] },
+    isApproved: true
   }).populate('user');
 
-  for (const account of allAccounts) {
-    // 1. Check if they want email notifications
-    if (account.wantsEmailNotifications) {
-      await notifySingleAccountViaEmail(account);
+  for (const acc of accounts) {
+    if (!acc.emailNotificationType) acc.emailNotificationType = 'daily';
+    if (!acc.emailNotificationHour) acc.emailNotificationHour = 12;
+    if (!acc.emailNotificationWeekday) acc.emailNotificationWeekday = 7;
+
+    if (acc.wantsEmailNotifications) {
+      if (
+        isNotificationTime(
+          acc.emailNotificationType,
+          acc.emailNotificationHour,
+          acc.emailNotificationWeekday,
+          hour,
+          weekday
+        )
+      ) {
+        await sendEmailNotification(acc);
+      }
     }
 
-    // 2. Check if they want Telegram notifications
-    if (account.wantsTelegramNotifications && account.telegramChatId) {
-      await notifySingleAccountViaTelegram(account);
+    if (!acc.telegramNotificationType) acc.telegramNotificationType = 'daily';
+    if (!acc.telegramNotificationHour) acc.telegramNotificationHour = 12;
+    if (!acc.telegramNotificationWeekday) acc.telegramNotificationWeekday = 7;
+
+    if (acc.wantsTelegramNotifications && acc.telegramChatId && acc.telegramChatId !== -1) {
+      if (
+        isNotificationTime(
+          acc.telegramNotificationType,
+          acc.telegramNotificationHour,
+          acc.telegramNotificationWeekday,
+          hour,
+          weekday
+        )
+      ) {
+        await sendTelegramNotification(acc);
+      }
     }
   }
-};
+}
 
-/**
- * The main cron job: runs every hour on the hour (minute 0).
- */
-export const setupNotificationJob = () => {
+async function notifyOnStartup() {
+  const admins = await AccountModel.find({ role: Role.Admin, isApproved: true }).populate('user');
+  for (const a of admins) {
+    if (a.wantsEmailNotifications) await sendEmailNotification(a);
+    if (a.wantsTelegramNotifications && a.telegramChatId && a.telegramChatId !== -1) {
+      await sendTelegramNotification(a);
+    }
+  }
+}
+
+export function setupNotificationJob() {
   cron.schedule('0 * * * *', async () => {
-    console.log('Running hourly notification check:', new Date().toString());
+    console.log('Hourly notification check:', new Date().toString());
     try {
-      const now = new Date();
-      const currentHour = now.getHours(); // 0-23
-      // JS getDay() => Sunday=0, Monday=1, ... Saturday=6
-      // If you need Monday=1..Sunday=7, transform accordingly:
-      const rawDay = now.getDay() === 0 ? 7 : now.getDay();
-      const currentWeekday = rawDay; // Monday=1..Sunday=7
-
-      // Find all relevant accounts (TAs, Faculty, Admins, etc.)
-      const allAccounts = await AccountModel.find({
-        role: { $in: [Role.TA, Role.Faculty, Role.Admin] },
-        isApproved: true,
-      }).populate('user');
-
-      for (const account of allAccounts) {
-        if (!account.wantsEmailNotifications)
-          account.wantsEmailNotifications = false;
-        if (!account.emailNotificationType)
-          account.emailNotificationType = 'daily';
-        if (!account.emailNotificationHour) account.emailNotificationHour = 12;
-        if (!account.emailNotificationWeekday)
-          account.emailNotificationWeekday = 7;
-
-        // 1. Check if they want email notifications
-        if (account.wantsEmailNotifications) {
-          const shouldSendEmail = isNotificationTime(
-            account.emailNotificationType,
-            account.emailNotificationHour,
-            account.emailNotificationWeekday,
-            currentHour,
-            currentWeekday
-          );
-          if (shouldSendEmail) {
-            await notifySingleAccountViaEmail(account);
-          }
-        }
-
-        // 2. Check if they want Telegram notifications
-        if (
-          account.wantsTelegramNotifications &&
-          account.telegramChatId &&
-          account.telegramChatId !== -1
-        ) {
-          const shouldSendTelegram = isNotificationTime(
-            account.telegramNotificationType,
-            account.telegramNotificationHour,
-            account.telegramNotificationWeekday,
-            currentHour,
-            currentWeekday
-          );
-          if (shouldSendTelegram) {
-            await notifySingleAccountViaTelegram(account);
-          }
-        }
-      }
+      await runNotificationCheck();
     } catch (err) {
-      console.error('Error in cron job for notification:', err);
+      console.error('Notification job error:', err);
     }
   });
 
-  // For testing: run the job immediately if needed
-  if (
-    process.env.RUN_NOTIFICATION_JOB === 'true' ||
-    process.env.RUN_JOB_NOW === 'true'
-  ) {
-    console.log('Running notifyOnStartup job now...');
+  if (process.env.RUN_NOTIFICATION_JOB === 'true' || process.env.RUN_JOB_NOW === 'true') {
+    console.log('Running notification check now...');
     notifyOnStartup();
   }
 
-  // Optionally send a test email on startup
   if (process.env.TEST_EMAIL_ON_NOTIFICATION_JOB_START === 'true') {
-    console.log('Testing ability for Notification Job to send email...');
+    console.log('Testing email on startup...');
     sendTestNotification('email').catch(err => {
-      console.error('Error in notification job sending email:', err);
+      console.error('Error sending test email:', err);
     });
   }
-};
+}
 
 export default setupNotificationJob;
