@@ -72,8 +72,6 @@ You have ungraded items:
 
 ${parts.join('\n\n')}
 
-(This is the email version of the notification.)
-
 Regards,
 CRISP
 `.trim();
