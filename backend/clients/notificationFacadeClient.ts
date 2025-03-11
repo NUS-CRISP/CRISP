@@ -1,5 +1,11 @@
-import { sendNotificationEmail, sendTestNotificationEmail } from '../clients/emailClient';
-import { sendTelegramMessage, sendTestTelegramNotificationToAdmins } from '../clients/telegramClient';
+import {
+  sendNotificationEmail,
+  sendTestNotificationEmail,
+} from '../clients/emailClient';
+import {
+  sendTelegramMessage,
+  sendTestTelegramNotificationToAdmins,
+} from '../clients/telegramClient';
 
 export type NotificationChannel = 'email' | 'telegram';
 
@@ -71,8 +77,10 @@ export const sendTestNotification = async (channel: NotificationChannel) => {
     // You might prefer to accept a chatId and text instead,
     // but this function uses the existing logic from your telegramClient
     const result = await sendTestTelegramNotificationToAdmins();
-    console.log(`Test telegram notifications sent to ${result.count} admin(s).`);
+    console.log(
+      `Test telegram notifications sent to ${result.count} admin(s).`
+    );
   } else {
     throw new Error(`Unknown notification channel: ${channel}`);
   }
-}
+};

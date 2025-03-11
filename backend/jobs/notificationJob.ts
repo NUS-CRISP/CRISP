@@ -3,9 +3,14 @@ import Role from '@shared/types/auth/Role';
 import cron from 'node-cron';
 import { Team } from '../models/Team';
 import { User } from '../models/User';
-import InternalAssessmentModel, { InternalAssessment } from '@models/InternalAssessment';
+import InternalAssessmentModel, {
+  InternalAssessment,
+} from '@models/InternalAssessment';
 import { getUnmarkedAssignmentsByTAId } from '../services/assessmentAssignmentSetService';
-import { sendNotification, sendTestNotification } from 'clients/notificationFacadeClient';
+import {
+  sendNotification,
+  sendTestNotification,
+} from 'clients/notificationFacadeClient';
 
 export function isNotificationTime(
   type: string | undefined,
@@ -14,7 +19,8 @@ export function isNotificationTime(
   nowHour: number,
   nowWeekday: number
 ): boolean {
-  if (!type || !['hourly', 'daily', 'weekly'].includes(type)) return nowHour === 0;
+  if (!type || !['hourly', 'daily', 'weekly'].includes(type))
+    return nowHour === 0;
   switch (type) {
     case 'hourly':
       return true;
@@ -42,7 +48,10 @@ const ungradedItemsEmailTrigger: EmailTrigger = {
     const parts: string[] = [];
 
     for (const asmt of allAssessments) {
-      const unmarked = await getUnmarkedAssignmentsByTAId(account.user._id.toString(), asmt._id.toString());
+      const unmarked = await getUnmarkedAssignmentsByTAId(
+        account.user._id.toString(),
+        asmt._id.toString()
+      );
       if (!unmarked.length) continue;
 
       if (asmt.granularity === 'team') {
@@ -68,7 +77,7 @@ ${parts.join('\n\n')}
 Regards,
 CRISP
 `.trim();
-  }
+  },
 };
 
 const EMAIL_TRIGGERS: EmailTrigger[] = [ungradedItemsEmailTrigger];
@@ -96,7 +105,10 @@ const ungradedItemsTelegramTrigger: TelegramTrigger = {
     const parts: string[] = [];
 
     for (const asmt of allAssessments) {
-      const unmarked = await getUnmarkedAssignmentsByTAId(account.user._id.toString(), asmt._id.toString());
+      const unmarked = await getUnmarkedAssignmentsByTAId(
+        account.user._id.toString(),
+        asmt._id.toString()
+      );
       if (!unmarked.length) continue;
 
       if (asmt.granularity === 'team') {
@@ -120,7 +132,7 @@ ${parts.join('\n\n')}
 Regards,
 CRISP
 `.trim();
-  }
+  },
 };
 
 const TELEGRAM_TRIGGERS: TelegramTrigger[] = [ungradedItemsTelegramTrigger];
@@ -156,7 +168,7 @@ async function sendEmailNotification(account: any) {
   await sendNotification('email', {
     to: account.email,
     subject: 'CRISP: You Have Pending Notifications',
-    text
+    text,
   });
 }
 
@@ -166,7 +178,7 @@ async function sendTelegramNotification(account: any) {
   if (!text) return;
   await sendNotification('telegram', {
     chatId: account.telegramChatId,
-    text
+    text,
   });
 }
 
@@ -177,7 +189,7 @@ export async function runNotificationCheck() {
 
   const accounts = await AccountModel.find({
     role: { $in: [Role.TA, Role.Faculty, Role.Admin] },
-    isApproved: true
+    isApproved: true,
   }).populate('user');
 
   for (const acc of accounts) {
@@ -200,7 +212,11 @@ export async function runNotificationCheck() {
     if (!acc.telegramNotificationHour) acc.telegramNotificationHour = 12;
     if (!acc.telegramNotificationWeekday) acc.telegramNotificationWeekday = 7;
 
-    if (acc.wantsTelegramNotifications && acc.telegramChatId && acc.telegramChatId !== -1) {
+    if (
+      acc.wantsTelegramNotifications &&
+      acc.telegramChatId &&
+      acc.telegramChatId !== -1
+    ) {
       const ok = isNotificationTime(
         acc.telegramNotificationType,
         acc.telegramNotificationHour,
@@ -214,10 +230,17 @@ export async function runNotificationCheck() {
 }
 
 async function notifyOnStartup() {
-  const admins = await AccountModel.find({ role: Role.Admin, isApproved: true }).populate('user');
+  const admins = await AccountModel.find({
+    role: Role.Admin,
+    isApproved: true,
+  }).populate('user');
   for (const a of admins) {
     if (a.wantsEmailNotifications) await sendEmailNotification(a);
-    if (a.wantsTelegramNotifications && a.telegramChatId && a.telegramChatId !== -1) {
+    if (
+      a.wantsTelegramNotifications &&
+      a.telegramChatId &&
+      a.telegramChatId !== -1
+    ) {
       await sendTelegramNotification(a);
     }
   }
@@ -233,7 +256,10 @@ export function setupNotificationJob() {
     }
   });
 
-  if (process.env.RUN_NOTIFICATION_JOB === 'true' || process.env.RUN_JOB_NOW === 'true') {
+  if (
+    process.env.RUN_NOTIFICATION_JOB === 'true' ||
+    process.env.RUN_JOB_NOW === 'true'
+  ) {
     console.log('Running notification check now...');
     notifyOnStartup();
   }

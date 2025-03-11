@@ -132,7 +132,7 @@ CRISP
       }
       await sendNotification('telegram', {
         chatId,
-        text: testMessage
+        text: testMessage,
       });
       console.log(`Test Telegram message sent to admin with chatId: ${chatId}`);
     } catch (err) {

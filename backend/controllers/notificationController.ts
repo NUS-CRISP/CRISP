@@ -1,5 +1,8 @@
 import { Request, Response } from 'express';
-import { sendNotification, sendTestNotification } from 'clients/notificationFacadeClient';
+import {
+  sendNotification,
+  sendTestNotification,
+} from 'clients/notificationFacadeClient';
 
 // File not tested because these are just test notification methods.
 export const sendTestEmailController = async (req: Request, res: Response) => {
@@ -12,7 +15,7 @@ export const sendTestEmailController = async (req: Request, res: Response) => {
     await sendNotification('email', {
       to,
       subject,
-      text
+      text,
     });
     return res.status(200).json({ success: true });
   } catch (error) {
@@ -37,7 +40,7 @@ export const sendTestTelegramMessageController = async (
 
     const result = await sendNotification('telegram', {
       chatId,
-      text
+      text,
     });
     return res.status(200).json({ success: true, result });
   } catch (error) {
