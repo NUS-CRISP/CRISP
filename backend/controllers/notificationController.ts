@@ -1,9 +1,5 @@
 import { Request, Response } from 'express';
-import {
-  sendTelegramMessage,
-  sendTestTelegramNotificationToAdmins,
-} from './../clients/telegramClient';
-import { sendNotificationEmail } from './../clients/emailClient';
+import { sendNotification, sendTestNotification } from 'clients/notificationFacadeClient';
 
 // File not tested because these are just test notification methods.
 export const sendTestEmailController = async (req: Request, res: Response) => {
@@ -13,7 +9,11 @@ export const sendTestEmailController = async (req: Request, res: Response) => {
 
   try {
     const { to, subject, text } = req.body;
-    await sendNotificationEmail(to, subject, text);
+    await sendNotification('email', {
+      to,
+      subject,
+      text
+    });
     return res.status(200).json({ success: true });
   } catch (error) {
     console.error('Error sending email:', error);
@@ -35,7 +35,10 @@ export const sendTestTelegramMessageController = async (
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const result = await sendTelegramMessage(chatId, text);
+    const result = await sendNotification('telegram', {
+      chatId,
+      text
+    });
     return res.status(200).json({ success: true, result });
   } catch (error) {
     console.error('Error sending telegram message:', error);
@@ -56,7 +59,8 @@ export const sendTestTelegramNotificationToAdminsController = async (
   }
 
   try {
-    const result = await sendTestTelegramNotificationToAdmins();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result: any = await sendTestNotification('telegram');
     return res.status(200).json({ success: true, ...result });
   } catch (error) {
     console.error('Error sending telegram message to admins:', error);

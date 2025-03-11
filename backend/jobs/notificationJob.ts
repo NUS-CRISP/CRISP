@@ -1,9 +1,5 @@
 import AccountModel from '@models/Account';
 import Role from '@shared/types/auth/Role';
-import {
-  sendNotificationEmail,
-  sendTestNotificationEmail,
-} from '../clients/emailClient';
 import cron from 'node-cron';
 import { Team } from '../models/Team';
 import { User } from '../models/User';
@@ -11,7 +7,7 @@ import InternalAssessmentModel, {
   InternalAssessment,
 } from '@models/InternalAssessment';
 import { getUnmarkedAssignmentsByTAId } from '../services/assessmentAssignmentSetService';
-import { sendTelegramMessage } from '../clients/telegramClient';
+import { sendNotification, sendTestNotification } from 'clients/notificationFacadeClient';
 
 /**
  * Returns true if it's time to send a notification for a given schedule.
@@ -95,9 +91,9 @@ const convertAssignedUsersToString = (
 /**
  * Send an email notification to a single account.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const notifySingleAccountViaEmail = async (
-  account: any /* or your Account type */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+  account: any
 ) => {
   const allInternalAssessments = await InternalAssessmentModel.find();
   const summaries: string[] = [];
@@ -141,19 +137,19 @@ Regards,
 CRISP
   `.trim();
 
-  await sendNotificationEmail(
-    account.email,
-    'CRISP: You Have Pending Unmarked Assessments',
-    emailBodyFormatted
-  );
+  await sendNotification('email', {
+    to: account.email,
+    subject: 'CRISP: You Have Pending Unmarked Assessments',
+    text: emailBodyFormatted
+  });
 };
 
 /**
  * Send a Telegram notification to a single account.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const notifySingleAccountViaTelegram = async (
-  account: any /* or your Account type */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+  account: any
 ) => {
   if (account.telegramChatId === null || account.telegramChatId === -1) return;
   const allInternalAssessments = await InternalAssessmentModel.find();
@@ -201,7 +197,10 @@ Regards,
 CRISP
     `.trim();
 
-    await sendTelegramMessage(account.telegramChatId, telegramMessage);
+    await sendNotification('telegram', {
+      chatId: account.telegramChatId,
+      text: telegramMessage
+    });
   }
 };
 
@@ -302,7 +301,7 @@ export const setupNotificationJob = () => {
   // Optionally send a test email on startup
   if (process.env.TEST_EMAIL_ON_NOTIFICATION_JOB_START === 'true') {
     console.log('Testing ability for Notification Job to send email...');
-    sendTestNotificationEmail().catch(err => {
+    sendTestNotification('email').catch(err => {
       console.error('Error in notification job sending email:', err);
     });
   }
