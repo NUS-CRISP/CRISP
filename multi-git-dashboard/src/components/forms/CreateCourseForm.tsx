@@ -489,11 +489,21 @@ const CreateCourse: React.FC = () => {
                 <Select
                   required
                   comboboxProps={{ withinPortal: true }}
-                  data={['Daily', 'Weekly', 'Fornightly', 'Monthly']}
+                  data={[
+                    'Daily',
+                    'Weekly',
+                    'Fortnightly',
+                    'Every 4 weeks (~Monthly)',
+                  ]}
                   placeholder="Choose generation frequency"
                   label="Generation Frequency"
-                  {...form.getInputProps('frequency')}
-                  value={form.values.frequency}
+                  onChange={value => {
+                    const updatedFrequency =
+                      value === 'Every 4 weeks (~Monthly)'
+                        ? 'Monthly'
+                        : value || '';
+                    form.setFieldValue('frequency', updatedFrequency);
+                  }}
                 />
               </Tooltip>
               <Space h="sm" />

@@ -5,6 +5,7 @@ import { App } from 'octokit';
 import { getGitHubApp } from '../utils/github';
 import CourseModel from '@models/Course';
 import { OpenAI } from 'openai';
+import TeamDataModel from '@models/TeamData';
 
 let isLocked = false;
 
@@ -52,14 +53,42 @@ const queryAndSaveAIInsights = async () => {
         course &&
         course.installationId &&
         course.aiInsights &&
-        course.aiInsights.isOn
+        course.aiInsights.isOn &&
+        checkQueryDate(course) // Check if needed to check today
       ) {
         await getAIInsights(course);
       }
     })
   );
 
-  console.log('Code analysis data fetched');
+  console.log('AI insights data fetched');
+};
+
+const checkQueryDate = (course: any) => {
+  const { frequency, startDate } = course.aiInsights;
+  if (!frequency || !startDate) {
+    throw new Error('Missing frequency and/or start date for AI insights!');
+  }
+
+  const currentDate = new Date();
+  const diffInDays = Math.floor(
+    (currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+  );
+
+  if (frequency === 'Daily') {
+    return true;
+  } else if (frequency === 'Weekly') {
+    return diffInDays % 7 === 0;
+  } else if (frequency === 'Fortnightly') {
+    return diffInDays % 14 === 0;
+  } else if (frequency === 'Monthly') {
+    // Monthly checks every 4 weeks
+    return diffInDays % 28 === 0;
+  } else {
+    throw new Error(
+      `Unknown frequency for AI insights for ${course.name} ${course.code} ${course.semester}: ${frequency}`
+    );
+  }
 };
 
 const getAIInsights = async (course: any) => {
@@ -76,12 +105,14 @@ const getAIInsights = async (course: any) => {
     executionTime: { $gte: startOfDay, $lte: endOfDay },
   });
 
-  codeAnalysisData.forEach(async teamCodeAnalysisData => {
-    await processData(teamCodeAnalysisData);
-  });
+  await Promise.all(
+    codeAnalysisData.map(async teamCodeAnalysisData => {
+      await processData(course, teamCodeAnalysisData);
+    })
+  );
 };
 
-async function processData(data: any) {
+async function processData(course: any, data: any) {
   while (isLocked) {
     await new Promise(resolve => setTimeout(resolve, 1000)); // Check every second
   }
@@ -89,7 +120,7 @@ async function processData(data: any) {
   isLocked = true; // Acquire lock
 
   try {
-    const { metrics, values, types, domains, metricStats, aiInsights } = data;
+    const { metrics, values, types, domains, metricStats } = data;
 
     const prompt = `${header} \n\n\
     ${context} \n\n\
@@ -100,10 +131,18 @@ async function processData(data: any) {
     Domains: \n${JSON.stringify(domains)} \n\n\
     Metric Stats: \n${JSON.stringify(metricStats)}`;
 
-    const result = await generateResult(prompt, aiInsights);
+    const result = await generateResult(prompt, course.aiInsights);
 
-    data.aiInsights = result;
-    await data.save();
+    // Save result into the corresponding teamdata model
+    await TeamDataModel.updateOne(
+      {
+        course: course._id,
+        teamId: data.teamId,
+      },
+      { $set: { aiInsights: result } }
+    );
+
+    console.log(`AI insights for ${data.repoName} saved.`);
 
     await new Promise(resolve => setTimeout(resolve, 30000)); // Wait for 30s to avoid rate limiting
   } catch (error) {
