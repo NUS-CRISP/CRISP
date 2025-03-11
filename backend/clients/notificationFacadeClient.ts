@@ -12,6 +12,27 @@ export interface NotificationOptions {
 
 /**
  * Sends a standard (non-test) notification message via email or telegram.
+ * Usage:
+ * channel: string, either 'email' or 'telegram'
+ * options:
+ *  if email channel,
+ *   {
+ *     to: email to send to,
+ *     subject: email's subject,
+ *     text: email's body
+ *   }
+ *  if telegram channel,
+ *   {
+ *     chatId: user's chatId to send to (field of in their account),
+ *     text: message to send via telegram.
+ *   }
+ *
+ * Warnings:
+ * 1. This facade only takes care of sending the email/telegram message.
+ * It does not care about the user's notification settings. Please make sure
+ * that the user has enabled notifications for the channel before calling
+ * this function. Refer to ../jobs/notificationJob.ts for how to check permissions.
+ * 2. Mismatched fields in options will just be ignored.
  */
 export async function sendNotification(
   channel: NotificationChannel,
