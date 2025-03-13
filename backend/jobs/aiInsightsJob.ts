@@ -139,7 +139,14 @@ async function processData(course: any, data: any) {
         course: course._id,
         teamId: data.teamId,
       },
-      { $set: { aiInsights: result } }
+      {
+        $set: {
+          aiInsights: {
+            text: result,
+            date: new Date(),
+          },
+        },
+      }
     );
 
     console.log(`AI insights for ${data.repoName} saved.`);

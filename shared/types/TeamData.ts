@@ -63,5 +63,8 @@ export interface TeamData {
   teamContributions: Record<string, TeamContribution>;
   teamPRs: TeamPR[];
   milestones: Milestone[];
-  aiInsights?: string;
+  aiInsights: {
+    text: string;
+    date: Date;
+  }
 }

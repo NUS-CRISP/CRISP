@@ -93,7 +93,10 @@ const teamDataSchema = new Schema<TeamData>({
   },
   teamPRs: [teamPRSchema],
   milestones: [milestoneSchema],
-  aiInsights: { type: String },
+  aiInsights: {
+    text: { type: String },
+    date: { type: Date },
+  },
 });
 
 const TeamDataModel = mongoose.model<TeamData>('TeamData', teamDataSchema);

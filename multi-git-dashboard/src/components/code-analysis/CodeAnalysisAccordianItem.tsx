@@ -16,12 +16,14 @@ interface CodeAnalysisAccordionItemProps {
   };
 
   teamNumber: number;
+
+  aiInsights?: { text: string; date: Date };
 }
 
 const CodeAnalysisAccordionItem = forwardRef<
   HTMLDivElement,
   CodeAnalysisAccordionItemProps
->(({ codeData, teamNumber }, ref) => {
+>(({ codeData, teamNumber, aiInsights }, ref) => {
   const [viewMode, setViewMode] = useState<'overview' | 'timeline'>('overview');
 
   const sortedDates = Object.keys(codeData)
@@ -54,6 +56,7 @@ const CodeAnalysisAccordionItem = forwardRef<
             <CodeAnalysisOverview
               latestData={latestData}
               executedDate={latestExecutionDate}
+              aiInsights={aiInsights}
             />
           </Tabs.Panel>
           <Tabs.Panel value="timeline" pt="xs">

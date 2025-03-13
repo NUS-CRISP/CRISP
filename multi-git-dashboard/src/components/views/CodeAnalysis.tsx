@@ -75,6 +75,26 @@ const CodeAnalysis: React.FC<CodeAnalysisProps> = ({ courseId }) => {
     return relatedTeam.number;
   };
 
+  const getAIInsights = (teams: Team[], teamDatas: TeamData[]) => {
+    const res = new Map<number, { text: string; date: Date }>();
+
+    const teamDataMap = new Map();
+    for (const teamData of teamDatas) {
+      teamDataMap.set(teamData._id.toString(), teamData);
+    }
+
+    for (const team of teams) {
+      const teamData = teamDataMap.get(team.teamData.toString());
+
+      if (teamData && teamData.aiInsights) {
+        res.set(team.number, teamData.aiInsights);
+      }
+    }
+
+    return res;
+  };
+  const aiInsights = getAIInsights(teams, teamDatas);
+
   const data = codeAnalysisData.reduce(
     (
       acc: {
@@ -122,36 +142,11 @@ const CodeAnalysis: React.FC<CodeAnalysisProps> = ({ courseId }) => {
             key={teamNumber}
             codeData={data[Number(teamNumber)]}
             teamNumber={Number(teamNumber)}
+            aiInsights={aiInsights.get(Number(teamNumber))}
           />
         ))}
       </Accordion>
     </ScrollArea.Autosize>
-    /*
-    <div>
-      {Object.keys(data).map(teamNumber => (
-        <div key={teamNumber}>
-          <h2>Team {teamNumber}</h2>
-
-          {data[Number(teamNumber)].map((entry, index) => {
-            const timing = Object.keys(entry)[0];
-            const values = entry[timing];
-
-            return (
-              <div key={index}>
-                <h3>Execution Time: {timing}</h3>
-                <ul>
-                  <li>Metrics: {JSON.stringify(values.metrics)}</li>
-                  <li>Values: {JSON.stringify(values.values)}</li>
-                  <li>Types: {JSON.stringify(values.types)}</li>
-                  <li>Domains: {JSON.stringify(values.domains)}</li>
-                </ul>
-              </div>
-            );
-          })}
-        </div>
-      ))}
-    </div>
-    */
   );
 };
 
