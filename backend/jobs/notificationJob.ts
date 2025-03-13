@@ -10,7 +10,7 @@ import { getUnmarkedAssignmentsByTAId } from '../services/assessmentAssignmentSe
 import {
   sendNotification,
   sendTestNotification,
-} from 'clients/notificationFacadeClient';
+} from '../clients/notificationFacadeClient';
 
 export function isNotificationTime(
   type: string | undefined,

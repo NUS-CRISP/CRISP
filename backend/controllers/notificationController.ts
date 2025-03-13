@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import {
   sendNotification,
   sendTestNotification,
-} from 'clients/notificationFacadeClient';
+} from '../clients/notificationFacadeClient';
 
 // File not tested because these are just test notification methods.
 export const sendTestEmailController = async (req: Request, res: Response) => {
