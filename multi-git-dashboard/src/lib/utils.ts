@@ -168,7 +168,8 @@ export const metricExplanations: MetricExplanations = {
   code_smells_per_pr: 'Number of code smells issues per PR.',
   lines_per_pr: 'Number of lines of code per PR.',
   lines_per_story_point: 'Number of lines of code per story point.',
-  'AI Insights': 'AI-generated insights on Code Quality, Project Management, SWE principles and Agile practices based on code analysis of the team and the mean/median of the course. \
+  'AI Insights':
+    'AI-generated insights on Code Quality, Project Management, SWE principles and Agile practices based on code analysis of the team and the mean/median of the course. \
   These insights are generated using the provider, model and at the frequency selected during course creation.\n\
   *These insights should be used as supplementary guidance; always review them in accordance to the course/project context.',
 };
