@@ -368,7 +368,10 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
               <Spoiler maxHeight={120} showLabel="Show more" hideLabel="Hide">
                 {formatTextWithSections(aiInsights.text)}
                 <Text size="xs" mt="xs" ta={'right'} c="dimmed">
-                  Generated On {aiInsights.date ? new Date(aiInsights.date).toLocaleString() : 'N/A'}
+                  Generated On{' '}
+                  {aiInsights.date
+                    ? new Date(aiInsights.date).toLocaleString()
+                    : 'N/A'}
                 </Text>
               </Spoiler>
             </Card>

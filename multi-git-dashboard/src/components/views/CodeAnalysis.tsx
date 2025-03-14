@@ -162,7 +162,11 @@ const CodeAnalysis: React.FC<CodeAnalysisProps> = ({ courseId }) => {
         </div>
       )}
       <Modal opened={opened} onClose={close} title="Edit AI">
-        <EditAIInsightsConfigForm courseId={courseId} aiInsights={courseData?.aiInsights} closeModal={close}/>
+        <EditAIInsightsConfigForm
+          courseId={courseId}
+          aiInsights={courseData?.aiInsights}
+          closeModal={close}
+        />
       </Modal>
       <Accordion multiple variant="separated" mx={20}>
         {Object.keys(data).map(teamNumber => (
