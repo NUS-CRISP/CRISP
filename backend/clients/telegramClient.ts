@@ -1,10 +1,9 @@
-// telegramClient.ts
 import { Telegraf } from 'telegraf';
 import { config } from 'dotenv';
 import AccountModel from '@models/Account';
 import Role from '@shared/types/auth/Role';
+import { sendNotification } from './notificationFacadeClient';
 
-// Load environment variables
 const env = process.env.NODE_ENV ?? 'development';
 config({ path: `.env.${env}` });
 
@@ -15,13 +14,9 @@ if (!TELEGRAM_BOT_TOKEN) {
   );
 }
 
-// Initialize Telegraf (Optional: bot.launch() if you need inbound updates)
 export const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
 
-// Registration method: Connecting via Telegram queries
 bot.start(async ctx => {
-  // When user hits /start, we get ctx.chat.id
-  // We can do a flow here or ask for an email, etc.
   await ctx.reply(
     'Welcome to CRISP! Please type /register <your email> to link your account.'
   );
@@ -135,7 +130,10 @@ CRISP
       if (chatId === null || chatId === -1) {
         throw new Error();
       }
-      await sendTelegramMessage(chatId, testMessage);
+      await sendNotification('telegram', {
+        chatId,
+        text: testMessage,
+      });
       console.log(`Test Telegram message sent to admin with chatId: ${chatId}`);
     } catch (err) {
       console.error('Failed to send test Telegram message to admin:', err);
