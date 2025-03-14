@@ -349,7 +349,7 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
             </Text>
           </Card>
         </Grid.Col>
-        {aiInsights && (
+        {aiInsights?.text && (
           <Grid.Col span={12}>
             <Card padding="lg" shadow="sm" radius="md">
               <Title order={5}>
@@ -368,7 +368,7 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
               <Spoiler maxHeight={120} showLabel="Show more" hideLabel="Hide">
                 {formatTextWithSections(aiInsights.text)}
                 <Text size="xs" mt="xs" ta={'right'} c="dimmed">
-                  Generated On {new Date(aiInsights.date).toLocaleString()}
+                  Generated On {aiInsights.date ? new Date(aiInsights.date).toLocaleString() : 'N/A'}
                 </Text>
               </Spoiler>
             </Card>

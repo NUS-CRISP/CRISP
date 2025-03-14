@@ -1,10 +1,14 @@
-import { Center, ScrollArea, Accordion } from '@mantine/core';
+import { Center, ScrollArea, Accordion, Button, Modal } from '@mantine/core';
 import { CodeAnalysisData } from '@shared/types/CodeAnalysisData';
 import { Team as SharedTeam } from '@shared/types/Team';
 import { TeamData } from '@shared/types/TeamData';
 import { Status } from '@shared/types/util/Status';
 import { useEffect, useState } from 'react';
 import CodeAnalysisAccordianItem from '../code-analysis/CodeAnalysisAccordianItem';
+import { hasFacultyPermission } from '@/lib/auth/utils';
+import { useDisclosure } from '@mantine/hooks';
+import EditAIInsightsConfigForm from '../forms/EditAIInsightsConfigForm';
+import { Course } from '@shared/types/Course';
 
 interface CodeAnalysisProps {
   courseId: string;
@@ -21,6 +25,9 @@ const CodeAnalysis: React.FC<CodeAnalysisProps> = ({ courseId }) => {
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamDatas, setTeamDatas] = useState<TeamData[]>([]);
   const [status, setStatus] = useState<Status>(Status.Loading);
+  const permission = hasFacultyPermission();
+  const [opened, { open, close }] = useDisclosure(false);
+  const [courseData, setCourseData] = useState<Course>();
 
   const getCodeAnalysisData = async () => {
     const res = await fetch(`/api/codeanalysis/course/${courseId}`);
@@ -43,6 +50,13 @@ const CodeAnalysis: React.FC<CodeAnalysisProps> = ({ courseId }) => {
     return teamDatas;
   };
 
+  const getCourseDatas = async () => {
+    const res = await fetch(`/api/courses/${courseId}`);
+    if (!res.ok) throw new Error('Failed to fetch course data');
+    const courseData: Course = await res.json();
+    return courseData;
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -53,6 +67,10 @@ const CodeAnalysis: React.FC<CodeAnalysisProps> = ({ courseId }) => {
         const codeAnalysisData = await getCodeAnalysisData();
         setCodeAnalysisData(codeAnalysisData);
         setStatus(Status.Idle);
+        if (permission) {
+          const fetchedCourse = await getCourseDatas();
+          setCourseData(fetchedCourse);
+        }
       } catch (error) {
         setStatus(Status.Error);
         console.error(error);
@@ -84,7 +102,7 @@ const CodeAnalysis: React.FC<CodeAnalysisProps> = ({ courseId }) => {
     }
 
     for (const team of teams) {
-      const teamData = teamDataMap.get(team.teamData.toString());
+      const teamData = teamDataMap.get(team.teamData?.toString());
 
       if (teamData && teamData.aiInsights) {
         res.set(team.number, teamData.aiInsights);
@@ -136,6 +154,16 @@ const CodeAnalysis: React.FC<CodeAnalysisProps> = ({ courseId }) => {
 
   return (
     <ScrollArea.Autosize mt={20} style={{ height: '95vh', overflow: 'auto' }}>
+      {permission && (
+        <div>
+          <Button onClick={open} mt={16} mb={20}>
+            Edit AI Insights Config
+          </Button>
+        </div>
+      )}
+      <Modal opened={opened} onClose={close} title="Edit AI">
+        <EditAIInsightsConfigForm courseId={courseId} aiInsights={courseData?.aiInsights} closeModal={close}/>
+      </Modal>
       <Accordion multiple variant="separated" mx={20}>
         {Object.keys(data).map(teamNumber => (
           <CodeAnalysisAccordianItem
