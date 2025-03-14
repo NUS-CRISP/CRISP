@@ -20,7 +20,7 @@ import { connectToDatabase } from './utils/database';
 import submissionRoutes from './routes/submissionRoutes';
 import assessmentAssignmentSetRoutes from './routes/assessmentAssignmentSetRoutes';
 import assessmentResultRoutes from './routes/assessmentResultRoutes';
-import setupAIInsightsJob from 'jobs/aiInsightsJob';
+import setupAIInsightsJob from './jobs/aiInsightsJob';
 import notificationRoutes from './routes/notificationRoutes';
 import setupTutorialDataJob from './jobs/tutorialDataJob';
 import setupNotificationJob from './jobs/notificationJob';
