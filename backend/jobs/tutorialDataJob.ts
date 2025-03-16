@@ -34,6 +34,7 @@ export const setupTutorialDataJob = async () => {
         user: trialUser._id,
       })
     : null;
+
   if (!trialUser) {
     const trialUserDoc = new UserModel({
       identifier: 'trial',
@@ -43,6 +44,7 @@ export const setupTutorialDataJob = async () => {
     });
     trialUser = await trialUserDoc.save();
   }
+
   if (!trialAccount) {
     const trialAccountDoc = new AccountModel({
       email: 'trial@example.com',
@@ -55,6 +57,7 @@ export const setupTutorialDataJob = async () => {
     });
     trialAccount = await trialAccountDoc.save();
   }
+
   const adminAccount = await AccountModel.findOne({
     role: Role.Admin,
   }).populate('user');
@@ -64,14 +67,17 @@ export const setupTutorialDataJob = async () => {
     );
   }
   const adminUser = adminAccount.user;
+
   const existingTrialCourse = await CourseModel.findOne({ code: 'TRIAL' });
   if (existingTrialCourse) {
     const trialCourseId = existingTrialCourse._id;
     const teamSets = await TeamSetModel.find({ course: trialCourseId });
     const teamSetIds = teamSets.map(ts => ts._id);
+
     await TeamModel.deleteMany({ teamSet: { $in: teamSetIds } });
     await TeamSetModel.deleteMany({ _id: { $in: teamSetIds } });
     await TeamDataModel.deleteMany({ course: trialCourseId });
+
     const jiraBoards = await JiraBoardModel.find({ course: trialCourseId });
     for (const board of jiraBoards) {
       if (board.jiraIssues && board.jiraIssues.length > 0) {
@@ -82,7 +88,6 @@ export const setupTutorialDataJob = async () => {
       }
     }
     await JiraBoardModel.deleteMany({ course: trialCourseId });
-
     await codeAnalysisDataModel.deleteMany({
       gitHubOrgName: existingTrialCourse.gitHubOrgName,
     });
@@ -106,6 +111,7 @@ export const setupTutorialDataJob = async () => {
       }
     }
     await InternalAssessmentModel.deleteMany({ course: trialCourseId });
+
     const existingCourseRefreshed =
       await CourseModel.findById(trialCourseId).lean();
     if (existingCourseRefreshed?.students) {
@@ -124,6 +130,7 @@ export const setupTutorialDataJob = async () => {
     }
     await CourseModel.deleteOne({ _id: trialCourseId });
   }
+
   const trialCourse = await CourseModel.create({
     name: 'Trial',
     code: 'TRIAL',
@@ -136,13 +143,16 @@ export const setupTutorialDataJob = async () => {
   });
   trialCourse.gitHubOrgName = 'trialrepo';
   await trialCourse.save();
+
   trialCourse.faculty.push(trialUser._id);
   trialCourse.faculty.push(adminUser._id);
   await trialCourse.save();
+
   if (!trialUser.enrolledCourses.includes(trialCourse._id)) {
     trialUser.enrolledCourses.push(trialCourse._id);
     await trialUser.save();
   }
+
   const studentIdArray: string[] = [];
   const studentArray: User[] = [];
   const createAndEnrollStudent = async ({
@@ -183,6 +193,7 @@ export const setupTutorialDataJob = async () => {
     studentIdArray.push(studentUser._id.toString());
     studentArray.push(studentUser);
   };
+
   await createAndEnrollStudent({ identifier: 'john-doe', name: 'John Doe' });
   await createAndEnrollStudent({
     identifier: 'johnny-smith',
@@ -192,6 +203,7 @@ export const setupTutorialDataJob = async () => {
     identifier: 'hoshimachi-suisei',
     name: 'Hoshimachi Suisei',
   });
+
   const teamSet = await TeamSetModel.create({
     course: trialCourse._id,
     name: 'Project Groups',
@@ -199,6 +211,7 @@ export const setupTutorialDataJob = async () => {
   });
   trialCourse.teamSets.push(teamSet._id);
   await trialCourse.save();
+
   const team = await TeamModel.create({
     teamSet: teamSet._id,
     number: 100,
@@ -207,6 +220,7 @@ export const setupTutorialDataJob = async () => {
   });
   teamSet.teams.push(team._id);
   await teamSet.save();
+
   const teamData = await TeamDataModel.create({
     teamId: team.number,
     course: trialCourse._id,
@@ -258,7 +272,7 @@ export const setupTutorialDataJob = async () => {
       {
         id: 2171165196,
         title: 'feat: update test plan to use 600 threads',
-        user: 'Aloynz',
+        user: 'John Doe',
         url: 'https://github.com/cs4218/cs4218-project-2024-team01/pull/29',
         state: 'closed',
         createdAt: new Date('2024-11-09T20:13:24Z'),
@@ -266,16 +280,39 @@ export const setupTutorialDataJob = async () => {
         reviews: [
           {
             id: 9991,
-            user: 'WeeMingQing',
-            body: 'Looks good to me!',
-            state: 'APPROVED',
+            user: 'Johnny Smith',
+            body: 'Looks good, but can we handle bigger load?',
+            state: 'COMMENTED',
             submittedAt: new Date('2024-11-09T21:10:00Z'),
             comments: [
               {
                 id: 501,
-                user: 'WeeMingQing',
+                user: 'Johnny Smith',
                 body: 'One more detail: rename variable X to Y?',
                 createdAt: new Date('2024-11-09T21:12:00Z'),
+              },
+            ],
+          },
+          {
+            id: 9992,
+            user: 'Hoshimachi Suisei',
+            body: 'Tested locally, it works well!',
+            state: 'APPROVED',
+            submittedAt: new Date('2024-11-09T21:30:00Z'),
+            comments: [],
+          },
+          {
+            id: 9993,
+            user: 'Johnny Smith',
+            body: 'Ok, I added more concurrency tests. Approving now.',
+            state: 'APPROVED',
+            submittedAt: new Date('2024-11-09T21:45:00Z'),
+            comments: [
+              {
+                id: 502,
+                user: 'Johnny Smith',
+                body: 'Awesome! Merging this PR now.',
+                createdAt: new Date('2024-11-09T21:50:00Z'),
               },
             ],
           },
@@ -284,17 +321,26 @@ export const setupTutorialDataJob = async () => {
       {
         id: 2170847039,
         title: 'feat: add volume testing for create-product',
-        user: 'Aloynz',
+        user: 'John Doe',
         url: 'https://github.com/cs4218/cs4218-project-2024-team01/pull/28',
         state: 'closed',
         createdAt: new Date('2024-11-09T09:06:15Z'),
         updatedAt: new Date('2024-11-09T09:07:04Z'),
-        reviews: [],
+        reviews: [
+          {
+            id: 8881,
+            user: 'Hoshimachi Suisei',
+            body: 'Volume tests are fine. Let’s ensure logs are rotated properly.',
+            state: 'COMMENTED',
+            submittedAt: new Date('2024-11-09T09:10:00Z'),
+            comments: [],
+          },
+        ],
       },
       {
         id: 2170212614,
         title: 'Add endurance test for search product',
-        user: 'WeeMingQing',
+        user: 'John Doe',
         url: 'https://github.com/cs4218/cs4218-project-2024-team01/pull/27',
         state: 'closed',
         createdAt: new Date('2024-11-08T18:04:56Z'),
@@ -302,10 +348,18 @@ export const setupTutorialDataJob = async () => {
         reviews: [
           {
             id: 10001,
-            user: 'Aloynz',
-            body: 'LGTM, thanks!',
+            user: 'Johnny Smith',
+            body: 'LGTM, thanks for adding the search tests!',
             state: 'APPROVED',
             submittedAt: new Date('2024-11-08T19:00:00Z'),
+            comments: [],
+          },
+          {
+            id: 10002,
+            user: 'Hoshimachi Suisei',
+            body: 'Maybe add logs for slow queries? Otherwise it looks good!',
+            state: 'COMMENTED',
+            submittedAt: new Date('2024-11-08T19:05:00Z'),
             comments: [],
           },
         ],
@@ -337,25 +391,17 @@ export const setupTutorialDataJob = async () => {
   });
   team.teamData = teamData._id;
   await team.save();
+
   const issue1 = {
     self: 'trial_jira_issue1',
     id: 'trial_jira_issue1',
     key: 'Trial Planning Sprint1',
     fields: {
       summary: 'Implement API for Sprint 1',
-      resolution: {
-        name: 'Done',
-      },
-      issuetype: {
-        name: 'story',
-        subtask: false,
-      },
-      status: {
-        name: 'Done',
-      },
-      assignee: {
-        displayName: 'John Doe',
-      },
+      resolution: { name: 'Done' },
+      issuetype: { name: 'story', subtask: false },
+      status: { name: 'Done' },
+      assignee: { displayName: 'John Doe' },
     },
     storyPoints: 3,
   };
@@ -365,19 +411,10 @@ export const setupTutorialDataJob = async () => {
     key: 'Trial Planning Sprint1',
     fields: {
       summary: 'Implement SPA',
-      resolution: {
-        name: 'Done',
-      },
-      issuetype: {
-        name: 'story',
-        subtask: false,
-      },
-      status: {
-        name: 'Done',
-      },
-      assignee: {
-        displayName: 'Johnny Smith',
-      },
+      resolution: { name: 'Done' },
+      issuetype: { name: 'story', subtask: false },
+      status: { name: 'Done' },
+      assignee: { displayName: 'Johnny Smith' },
     },
     storyPoints: 2,
   };
@@ -387,19 +424,10 @@ export const setupTutorialDataJob = async () => {
     key: 'Trial Planning Sprint2',
     fields: {
       summary: 'SetUp MongoDB',
-      resolution: {
-        name: 'Done',
-      },
-      issuetype: {
-        name: 'story',
-        subtask: false,
-      },
-      status: {
-        name: 'Done',
-      },
-      assignee: {
-        displayName: 'Hoshimachi Suisei',
-      },
+      resolution: { name: 'Done' },
+      issuetype: { name: 'story', subtask: false },
+      status: { name: 'Done' },
+      assignee: { displayName: 'Hoshimachi Suisei' },
     },
     storyPoints: 1,
   };
@@ -409,19 +437,10 @@ export const setupTutorialDataJob = async () => {
     key: 'Trial Planning Sprint2',
     fields: {
       summary: 'Implement API for Sprint 2',
-      resolution: {
-        name: 'To Do',
-      },
-      issuetype: {
-        name: 'story',
-        subtask: false,
-      },
-      status: {
-        name: 'To Do',
-      },
-      assignee: {
-        displayName: 'John Doe',
-      },
+      resolution: { name: 'To Do' },
+      issuetype: { name: 'story', subtask: false },
+      status: { name: 'To Do' },
+      assignee: { displayName: 'John Doe' },
     },
     storyPoints: 3,
   };
@@ -431,22 +450,14 @@ export const setupTutorialDataJob = async () => {
     key: 'Trial Planning Sprint2',
     fields: {
       summary: 'Implement landing and hero page',
-      resolution: {
-        name: 'In progress',
-      },
-      issuetype: {
-        name: 'story',
-        subtask: false,
-      },
-      status: {
-        name: 'In progress',
-      },
-      assignee: {
-        displayName: 'Johnny Smith',
-      },
+      resolution: { name: 'In progress' },
+      issuetype: { name: 'story', subtask: false },
+      status: { name: 'In progress' },
+      assignee: { displayName: 'Johnny Smith' },
     },
     storyPoints: 3,
   };
+
   const issue1_doc = await JiraIssueModel.create(issue1);
   const issue2_doc = await JiraIssueModel.create(issue2);
   const issue3_doc = await JiraIssueModel.create(issue3);
@@ -486,17 +497,7 @@ export const setupTutorialDataJob = async () => {
     name: 'Trial Planning Board',
     type: 'Trofos',
     course: trialCourse._id,
-    columns: [
-      {
-        name: 'To Do',
-      },
-      {
-        name: 'In progress',
-      },
-      {
-        name: 'Done',
-      },
-    ],
+    columns: [{ name: 'To Do' }, { name: 'In progress' }, { name: 'Done' }],
     jiraLocation: {
       projectId: 99999,
       displayName: 'Team 100',
@@ -559,96 +560,96 @@ export const setupTutorialDataJob = async () => {
     'lines_per_story_point',
   ];
   const types = [
-      'INT',
-      'PERCENT',
-      'INT',
-      'INT',
-      'WORK_DUR',
-      'INT',
-      'INT',
-      'DATA',
-      'WORK_DUR',
-      'RATING',
-      'INT',
-      'INT',
-      'PERCENT',
-      'INT',
-      'INT',
-      'WORK_DUR',
-      'PERCENT',
-      'INT',
-      'PERCENT',
-      'RATING',
-      'INT',
-      'RATING',
-      'PERCENT',
-      'PERCENT',
-      'INT',
-      'LEVEL',
-      'INT',
-      'INT',
-      'INT',
-      'INT',
-      'INT',
-      'INT',
-      'FLOAT',
-      'FLOAT',
-      'FLOAT',
-      'FLOAT',
-      'FLOAT',
-      'FLOAT',
-      'FLOAT',
-    ],
-    domains = [
-      'Complexity',
-      'Duplications',
-      'Duplications',
-      'Size',
-      'Security',
-      'Size',
-      'Size',
-      'General',
-      'Maintainability',
-      'Maintainability',
-      'Reliability',
-      'Coverage',
-      'Coverage',
-      'Duplications',
-      'Size',
-      'Reliability',
-      'Coverage',
-      'Size',
-      'Coverage',
-      'Reliability',
-      'Maintainability',
-      'Security',
-      'Maintainability',
-      'Size',
-      'SecurityReview',
-      'Releasability',
-      'Size',
-      'Coverage',
-      'Complexity',
-      'Duplications',
-      'Size',
-      'Security',
-      'Composite',
-      'Composite',
-      'Composite',
-      'Composite',
-      'Composite',
-      'Composite',
-      'Composite',
-    ];
+    'INT',
+    'PERCENT',
+    'INT',
+    'INT',
+    'WORK_DUR',
+    'INT',
+    'INT',
+    'DATA',
+    'WORK_DUR',
+    'RATING',
+    'INT',
+    'INT',
+    'PERCENT',
+    'INT',
+    'INT',
+    'WORK_DUR',
+    'PERCENT',
+    'INT',
+    'PERCENT',
+    'RATING',
+    'INT',
+    'RATING',
+    'PERCENT',
+    'PERCENT',
+    'INT',
+    'LEVEL',
+    'INT',
+    'INT',
+    'INT',
+    'INT',
+    'INT',
+    'INT',
+    'FLOAT',
+    'FLOAT',
+    'FLOAT',
+    'FLOAT',
+    'FLOAT',
+    'FLOAT',
+    'FLOAT',
+  ];
+  const domains = [
+    'Complexity',
+    'Duplications',
+    'Duplications',
+    'Size',
+    'Security',
+    'Size',
+    'Size',
+    'General',
+    'Maintainability',
+    'Maintainability',
+    'Reliability',
+    'Coverage',
+    'Coverage',
+    'Duplications',
+    'Size',
+    'Reliability',
+    'Coverage',
+    'Size',
+    'Coverage',
+    'Reliability',
+    'Maintainability',
+    'Security',
+    'Maintainability',
+    'Size',
+    'SecurityReview',
+    'Releasability',
+    'Size',
+    'Coverage',
+    'Complexity',
+    'Duplications',
+    'Size',
+    'Security',
+    'Composite',
+    'Composite',
+    'Composite',
+    'Composite',
+    'Composite',
+    'Composite',
+    'Composite',
+  ];
   const codeAnalysisData = [
     {
       executionTime: new Date('2024-11-01T00:00:00Z'),
       gitHubOrgName: trialCourse.gitHubOrgName,
       repoName: teamData.repoName,
       teamId: teamData.teamId,
-      metrics: metrics,
-      types: types,
-      domains: domains,
+      metrics,
+      types,
+      domains,
       values: [
         '378',
         '9.3',
@@ -846,9 +847,9 @@ export const setupTutorialDataJob = async () => {
       gitHubOrgName: trialCourse.gitHubOrgName,
       repoName: teamData.repoName,
       teamId: teamData.teamId,
-      metrics: metrics,
-      types: types,
-      domains: domains,
+      metrics,
+      types,
+      domains,
       values: [
         '380',
         '9.4',
@@ -1046,9 +1047,9 @@ export const setupTutorialDataJob = async () => {
       gitHubOrgName: trialCourse.gitHubOrgName,
       repoName: teamData.repoName,
       teamId: teamData.teamId,
-      metrics: metrics,
-      types: types,
-      domains: domains,
+      metrics,
+      types,
+      domains,
       values: [
         '385',
         '9.6',
@@ -1246,9 +1247,9 @@ export const setupTutorialDataJob = async () => {
       gitHubOrgName: trialCourse.gitHubOrgName,
       repoName: teamData.repoName,
       teamId: teamData.teamId,
-      metrics: metrics,
-      types: types,
-      domains: domains,
+      metrics,
+      types,
+      domains,
       values: [
         '383',
         '9.2',
@@ -1446,9 +1447,9 @@ export const setupTutorialDataJob = async () => {
       gitHubOrgName: trialCourse.gitHubOrgName,
       repoName: teamData.repoName,
       teamId: teamData.teamId,
-      metrics: metrics,
-      types: types,
-      domains: domains,
+      metrics,
+      types,
+      domains,
       values: [
         '390',
         '9.0',
@@ -1642,7 +1643,6 @@ export const setupTutorialDataJob = async () => {
       },
     },
   ];
-
   for (const data of codeAnalysisData) {
     await codeAnalysisDataModel.create(data);
   }
@@ -1655,12 +1655,14 @@ export const setupTutorialDataJob = async () => {
     order: 1,
   });
   await teamMemberQuestion.save();
+
   const teamMemberAnswer = new TeamMemberSelectionAnswerModel({
     question: teamMemberQuestion._id,
     type: 'Team Member Selection Answer',
     selectedUserIds: studentIdArray,
   });
   await teamMemberAnswer.save();
+
   const mcQuestion = new MultipleChoiceQuestionModel({
     text: 'Is CRISP the best course management platform available?',
     type: 'Multiple Choice',
@@ -1668,26 +1670,23 @@ export const setupTutorialDataJob = async () => {
     isLocked: false,
     isScored: true,
     options: [
-      {
-        text: 'Yes',
-        points: 10,
-      },
-      {
-        text: 'No',
-        points: 0,
-      },
+      { text: 'Yes', points: 10 },
+      { text: 'No', points: 0 },
     ] as MultipleChoiceOption[],
     order: 2,
   });
   await mcQuestion.save();
+
   const mcAnswer = new MultipleChoiceAnswerModel({
     question: mcQuestion._id,
     type: 'Multiple Choice Answer',
     value: 'Yes',
   });
   await mcAnswer.save();
+
   const startDate = new Date();
   startDate.setUTCFullYear(new Date().getUTCFullYear() - 1);
+
   const assessment = await InternalAssessmentModel.create({
     course: trialCourse._id,
     assessmentName: 'Midterm Exam',
@@ -1704,18 +1703,451 @@ export const setupTutorialDataJob = async () => {
   });
   trialCourse.internalAssessments.push(assessment.id);
   trialCourse.save();
+
+  async function createNewUsersAndTeam(
+    teamNumber: number,
+    userSpecs: { identifier: string; name: string }[]
+  ) {
+    const newUserIds: string[] = [];
+    for (const spec of userSpecs) {
+      let newStudent = await UserModel.findOne({ identifier: spec.identifier });
+      if (!newStudent) {
+        newStudent = await UserModel.create({
+          identifier: spec.identifier,
+          name: spec.name,
+          enrolledCourses: [trialCourse._id],
+          gitHandle: '',
+        });
+        await AccountModel.create({
+          email: `${spec.identifier}@example.com`,
+          password:
+            '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
+          role: Role.Student,
+          isApproved: true,
+          wantsEmailNotifications: false,
+          wantsTelegramNotifications: false,
+          user: newStudent._id,
+        });
+      } else {
+        if (!newStudent.enrolledCourses.includes(trialCourse._id)) {
+          newStudent.enrolledCourses.push(trialCourse._id);
+          await newStudent.save();
+        }
+      }
+      if (!trialCourse.students.includes(newStudent._id)) {
+        trialCourse.students.push(newStudent._id);
+        await trialCourse.save();
+      }
+      newUserIds.push(newStudent._id.toString());
+    }
+
+    const newTeam = await TeamModel.create({
+      teamSet: teamSet._id,
+      number: teamNumber,
+      members: newUserIds,
+      TA: trialUser!._id,
+    });
+    teamSet.teams.push(newTeam._id);
+    await teamSet.save();
+
+    const complexityVal = 110 + (teamNumber % 100) * 10;
+    const coverageVal = (teamNumber % 5) * 10 + 50;
+    const codeSmellsVal = (teamNumber % 4) * 20 + 30;
+
+    const newTeamData = await TeamDataModel.create({
+      teamId: newTeam.number,
+      course: trialCourse._id,
+      gitHubOrgName: 'org',
+      repoName: `team${teamNumber}`,
+      commits: 10,
+      issues: 2,
+      pullRequests: 1,
+      weeklyCommits: [[1, 3, 1]],
+      updatedIssues: [`#${teamNumber}-1`, `#${teamNumber}-2`],
+      teamContributions: {
+        [userSpecs[0].name]: {
+          commits: 3,
+          createdIssues: 1,
+          openIssues: 0,
+          closedIssues: 1,
+          pullRequests: 0,
+          codeReviews: 1,
+          comments: 2,
+        },
+        [userSpecs[1].name]: {
+          commits: 2,
+          createdIssues: 1,
+          openIssues: 1,
+          closedIssues: 0,
+          pullRequests: 1,
+          codeReviews: 0,
+          comments: 1,
+        },
+        [userSpecs[2].name]: {
+          commits: 4,
+          createdIssues: 1,
+          openIssues: 0,
+          closedIssues: 1,
+          pullRequests: 0,
+          codeReviews: 1,
+          comments: 3,
+        },
+      },
+      teamPRs: [
+        {
+          id: 30000 + teamNumber,
+          title: 'Initial Setup',
+          user: userSpecs[0].name,
+          url: `https://github.com/cs4218/cs4218-project-2024-team${teamNumber}/pull/1`,
+          state: 'closed',
+          createdAt: new Date('2024-11-08T12:00:00Z'),
+          updatedAt: new Date('2024-11-08T13:00:00Z'),
+          reviews: [
+            {
+              id: 5000 + teamNumber,
+              user: userSpecs[1].name,
+              body: 'Good start, but we might need more validations on user input.',
+              state: 'COMMENTED',
+              submittedAt: new Date('2024-11-08T12:15:00Z'),
+              comments: [],
+            },
+            {
+              id: 5010 + teamNumber,
+              user: userSpecs[2].name,
+              body: 'LGTM! Let’s proceed to integrate this with the CI pipeline.',
+              state: 'APPROVED',
+              submittedAt: new Date('2024-11-08T12:30:00Z'),
+              comments: [
+                {
+                  id: 5011 + teamNumber,
+                  user: userSpecs[2].name,
+                  body: 'Be sure to include coverage reports in the pipeline as well!',
+                  createdAt: new Date('2024-11-08T12:40:00Z'),
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      milestones: [
+        {
+          title: `Team${teamNumber} Setup`,
+          description: `Initial environment for Team${teamNumber}.`,
+          open_issues: 0,
+          closed_issues: 2,
+          state: 'closed',
+          created_at: new Date('2024-11-01T00:00:00Z'),
+          updated_at: new Date('2024-11-02T00:00:00Z'),
+          due_on: new Date('2024-11-05T00:00:00Z'),
+          closed_at: new Date('2024-11-04T00:00:00Z'),
+        },
+      ],
+    });
+    newTeam.teamData = newTeamData._id;
+    await newTeam.save();
+
+    const tIssue1 = await JiraIssueModel.create({
+      self: `trial_jira_team${teamNumber}_issue1`,
+      id: `trial_jira_team${teamNumber}_issue1`,
+      key: `Team${teamNumber} Sprint1`,
+      fields: {
+        summary: `Team${teamNumber} initial environment`,
+        resolution: { name: 'Done' },
+        issuetype: { name: 'story', subtask: false },
+        status: { name: 'Done' },
+        assignee: { displayName: userSpecs[0].name },
+      },
+      storyPoints: 2,
+    });
+    const tIssue2 = await JiraIssueModel.create({
+      self: `trial_jira_team${teamNumber}_issue2`,
+      id: `trial_jira_team${teamNumber}_issue2`,
+      key: `Team${teamNumber} Sprint1`,
+      fields: {
+        summary: `Team${teamNumber} basic feature`,
+        resolution: { name: 'In progress' },
+        issuetype: { name: 'story', subtask: false },
+        status: { name: 'In progress' },
+        assignee: { displayName: userSpecs[1].name },
+      },
+      storyPoints: 1,
+    });
+    const tSprint = await JiraSprintModel.create({
+      self: `trial_jira_team${teamNumber}_sprint1`,
+      id: 110000 + teamNumber,
+      name: `Team${teamNumber} Sprint1`,
+      state: 'active',
+      createdDate: new Date('2024-11-01T10:00:00Z'),
+      startDate: new Date('2024-11-01T10:00:00Z'),
+      endDate: new Date('2024-11-10T10:00:00Z'),
+      originBoardId: 110000 + teamNumber,
+      goal: `Team${teamNumber} first sprint goal`,
+      jiraIssues: [tIssue1._id, tIssue2._id],
+    });
+    const tBoard = await JiraBoardModel.create({
+      self: `trial_jira_team${teamNumber}_board`,
+      id: 110000 + teamNumber,
+      name: `Team ${teamNumber} Board`,
+      type: 'Trofos',
+      course: trialCourse._id,
+      columns: [{ name: 'To Do' }, { name: 'In progress' }, { name: 'Done' }],
+      jiraLocation: {
+        projectId: 110000 + teamNumber,
+        displayName: `Team${teamNumber}`,
+        projectName: `Team${teamNumber}`,
+        projectKey: `Team${teamNumber}Key`,
+        name: `Team${teamNumber}`,
+      },
+      jiraIssues: [tIssue1._id, tIssue2._id],
+      jiraSprints: [tSprint._id],
+    });
+    newTeam.board = tBoard._id as unknown as JiraBoard;
+    await newTeam.save();
+    const creationDate = new Date('2024-11-01T00:00:00Z');
+    const cognitiveComp = 50;
+    for (let i = 0; i < 5; i++) {
+      await codeAnalysisDataModel.create({
+        executionTime: creationDate,
+        gitHubOrgName: trialCourse.gitHubOrgName,
+        repoName: newTeamData.repoName,
+        teamId: newTeamData.teamId,
+        metrics,
+        types,
+        domains,
+        values: [
+          (complexityVal + i * 10).toString(),
+          '5.0',
+          '200',
+          '100',
+          '0',
+          '0',
+          '500',
+          '{"level":"OK","conditions":[],"ignoredConditions":false}',
+          '200',
+          '1.0',
+          '1',
+          '10',
+          '60.0',
+          '5',
+          '1000',
+          '5',
+          coverageVal.toString(),
+          '1200',
+          (coverageVal + 10).toString(),
+          '2.0',
+          codeSmellsVal.toString(),
+          '1.0',
+          '0.3',
+          '5.0',
+          '1',
+          'OK',
+          '50',
+          '100',
+          (cognitiveComp + i * 5).toString(),
+          '5',
+          '10',
+          '0',
+          '0.200',
+          '150.000',
+          '2.000',
+          '0.100',
+          '50.000',
+          '2.500',
+          '100.00',
+        ],
+        metricStats: {
+          complexity: {
+            median: 403,
+            mean: 584.8,
+          },
+          duplicated_lines_density: {
+            median: 8.9,
+            mean: 11.059999999999999,
+          },
+          duplicated_lines: {
+            median: 394,
+            mean: 955.3,
+          },
+          functions: {
+            median: 257.5,
+            mean: 436.2,
+          },
+          security_remediation_effort: {
+            median: 30,
+            mean: 18,
+          },
+          classes: {
+            median: 0,
+            mean: 0.4,
+          },
+          statements: {
+            median: 1114,
+            mean: 1821.6,
+          },
+          sqale_index: {
+            median: 473.5,
+            mean: 689.7,
+          },
+          sqale_rating: {
+            median: 1,
+            mean: 1,
+          },
+          bugs: {
+            median: 4.5,
+            mean: 4.6,
+          },
+          duplicated_files: {
+            median: 8,
+            mean: 13,
+          },
+          ncloc: {
+            median: 4815,
+            mean: 6041.5,
+          },
+          reliability_remediation_effort: {
+            median: 13,
+            mean: 16.2,
+          },
+          line_coverage: {
+            median: 0,
+            mean: 5.14,
+          },
+          lines: {
+            median: 5495.5,
+            mean: 7216.7,
+          },
+          coverage: {
+            median: 0,
+            mean: 5.45,
+          },
+          reliability_rating: {
+            median: 4,
+            mean: 3.9,
+          },
+          code_smells: {
+            median: 127,
+            mean: 143.7,
+          },
+          security_rating: {
+            median: 5,
+            mean: 3.4,
+          },
+          sqale_debt_ratio: {
+            median: 0.3,
+            mean: 0.38,
+          },
+          comment_lines_density: {
+            median: 6.55,
+            mean: 7.17,
+          },
+          security_hotspots: {
+            median: 3,
+            mean: 16.9,
+          },
+          comment_lines: {
+            median: 325.5,
+            mean: 519.6,
+          },
+          uncovered_lines: {
+            median: 1093.5,
+            mean: 1744.6,
+          },
+          cognitive_complexity: {
+            median: 214.5,
+            mean: 215.2,
+          },
+          duplicated_blocks: {
+            median: 17,
+            mean: 81.7,
+          },
+          files: {
+            median: 78.5,
+            mean: 83.9,
+          },
+          vulnerabilities: {
+            median: 1,
+            mean: 0.6,
+          },
+          bugs_per_commit: {
+            median: 0.333,
+            mean: 0.5638571428571428,
+          },
+          lines_per_commit: {
+            median: 381.231,
+            mean: 632.6932857142857,
+          },
+          code_smells_per_commit: {
+            median: 9.471,
+            mean: 14.464285714285714,
+          },
+          bugs_per_pr: {
+            median: 0.167,
+            mean: 0.1885555555555556,
+          },
+          lines_per_pr: {
+            median: 269.933,
+            mean: 246.22322222222223,
+          },
+          code_smells_per_pr: {
+            median: 5.933,
+            mean: 5.942333333333333,
+          },
+        },
+        lines_per_story_point: {
+          median: 259.568,
+          mean: 447.095875,
+        },
+        uncovered_conditions: {
+          median: 22,
+          mean: 22,
+        },
+        branch_coverage: {
+          median: 81.8,
+          mean: 81.8,
+        },
+      });
+      creationDate.setDate(creationDate.getDate() + 1);
+    }
+  }
+
+  await createNewUsersAndTeam(101, [
+    { identifier: 'alice-lin', name: 'Alice Lin' },
+    { identifier: 'bob-chen', name: 'Bob Chen' },
+    { identifier: 'charlie-woo', name: 'Charlie Woo' },
+  ]);
+  await createNewUsersAndTeam(102, [
+    { identifier: 'veronica-tan', name: 'Veronica Tan' },
+    { identifier: 'michael-ong', name: 'Michael Ong' },
+    { identifier: 'jason-lee', name: 'Jason Lee' },
+  ]);
+  await createNewUsersAndTeam(103, [
+    { identifier: 'tanaka-tanaka', name: 'Tanaka Tanaka' },
+    { identifier: 'jonathan-seah', name: 'Jonathan Seah' },
+    { identifier: 'poh-ling', name: 'Poh Ling' },
+  ]);
+  await createNewUsersAndTeam(104, [
+    { identifier: 'alex-ho', name: 'Alex Ho' },
+    { identifier: 'kim-yang', name: 'Kim Yang' },
+    { identifier: 'rosalin-chan', name: 'Rosalin Chan' },
+  ]);
+
   const assignmentSet = await AssessmentAssignmentSetModel.create({
     assessment: assessment._id,
-    assignedTeams: {
-      team: team,
-      tas: [trialUser],
-    } as AssignedTeam,
+    assignedTeams: [
+      { team, tas: [trialUser] },
+      { team: await TeamModel.findOne({ number: 101 }), tas: [trialUser] },
+      { team: await TeamModel.findOne({ number: 102 }), tas: [trialUser] },
+      { team: await TeamModel.findOne({ number: 103 }), tas: [trialUser] },
+      { team: await TeamModel.findOne({ number: 104 }), tas: [trialUser] },
+    ] as AssignedTeam[],
   });
   await assignmentSet.save();
+
   assessment.assessmentAssignmentSet = assignmentSet._id;
   await assessment.save();
+
   console.log(
-    'Trial data setup complete! All old trial data replaced with fresh data.'
+    'Trial data setup complete! All old trial data replaced with fresh, more realistic data.'
   );
 };
 
