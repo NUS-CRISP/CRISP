@@ -143,7 +143,11 @@ bot.command('changeSettings', async ctx => {
     return;
   }
 
-  if (typeStr !== SETTINGS_HOURLY && typeStr !== SETTINGS_DAILY && typeStr !== SETTINGS_WEEKLY) {
+  if (
+    typeStr !== SETTINGS_HOURLY &&
+    typeStr !== SETTINGS_DAILY &&
+    typeStr !== SETTINGS_WEEKLY
+  ) {
     await ctx.reply(SETTINGS_CMD_USAGE + SETTINGS_ERR_FIRST_FIELD);
     return;
   }
@@ -183,7 +187,10 @@ bot.command('changeSettings', async ctx => {
     return;
   }
   const notificationDay = Number(dayStr);
-  if (typeStr === SETTINGS_WEEKLY && (isNaN(notificationDay) || notificationDay < 1 || notificationDay > 7)) {
+  if (
+    typeStr === SETTINGS_WEEKLY &&
+    (isNaN(notificationDay) || notificationDay < 1 || notificationDay > 7)
+  ) {
     await ctx.reply(SETTINGS_CMD_USAGE + SETTINGS_ERR_INVALID_DAY);
     return;
   }
