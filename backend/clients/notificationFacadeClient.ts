@@ -72,10 +72,13 @@ export async function sendNotification(
  * @returns true if account wants notifications. False otherwise,
  * and false if account not found or channel is invalid.
  */
-export const checkUserWantsNotification = async (channel: NotificationChannel, accountId: string) => {
+export const checkUserWantsNotification = async (
+  channel: NotificationChannel,
+  accountId: string
+) => {
   const account = await AccountModel.findById(accountId);
   if (!account) return false;
-  switch(channel) {
+  switch (channel) {
     case 'email':
       return account.wantsEmailNotifications || false;
     case 'telegram':
@@ -83,7 +86,7 @@ export const checkUserWantsNotification = async (channel: NotificationChannel, a
     default:
       return false;
   }
-}
+};
 
 /**
  * Sends a "test" notification.
