@@ -13,7 +13,7 @@ interface PREdge {
     source: string | PRNode;
     target: string | PRNode;
     weight: number;
-    status: string; // "approved", "changes_requested", "dismissed"
+    status: string;
 }
 
 interface PRGraphProps {
@@ -31,7 +31,7 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
         if (!graphData.nodes.length || !graphData.edges.length) return;
 
         const width = 600;
-        const height = 500;
+        const height = 600;
 
         const svg = d3.select(svgRef.current);
         svg.selectAll("*").remove();
@@ -51,7 +51,9 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
             .forceSimulation(graphData.nodes)
             .force("link", d3.forceLink(graphData.edges).id((d: any) => d.id).distance(250))
             .force("charge", d3.forceManyBody().strength(-300))
-            .force("center", d3.forceCenter(width / 2 - 300, height / 2 - 300))
+            .force("center", d3.forceCenter(width / 2, height / 2))
+            .force("x", d3.forceX(width / 2).strength(0.1))
+            .force("y", d3.forceY(height / 2).strength(0.1))
             .force("collision", d3.forceCollide().radius(40));
 
         const colorMap = {
@@ -77,7 +79,6 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
             .append("path")
             .attr("d", "M0,-5L10,0L0,5")
             .attr("fill", (d) => colorMap[d as keyof typeof colorMap]);
-
 
         const link = svg
             .append("g")
@@ -154,15 +155,18 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
                 const dx = x2 - x1;
                 const dy = y2 - y1;
                 const curveOffset = d.status === "approved" ? 20 : -20;
-
                 const mx = x1 + dx / 2 + curveOffset;
                 const my = y1 + dy / 2 + curveOffset;
 
                 return `M${x1},${y1} Q${mx},${my} ${x2},${y2}`;
             });
 
-            node.attr("cx", (d) => d.x!).attr("cy", (d) => d.y!);
-            labels.attr("x", (d) => d.x!).attr("y", (d) => d.y!);
+            node
+              .attr("cx", (d) => d.x = Math.max(15, Math.min(width - 15, d.x!)))
+              .attr("cy", (d) => d.y = Math.max(15, Math.min(height - 15, d.y!)));
+            labels
+              .attr("x", (d) => d.x!)
+              .attr("y", (d) => d.y!);
         });
     }, [graphData]);
 
