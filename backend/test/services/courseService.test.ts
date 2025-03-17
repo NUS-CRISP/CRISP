@@ -310,7 +310,7 @@ describe('courseService', () => {
         updatedCourse?.students.find(
           student => student.identifier === commonStudentDetails.identifier
         )?.name
-      ).toBe(commonStudentDetails.name + ' updated');
+      ).toBe(commonStudentDetails.name.toUpperCase() + ' UPDATED');
     });
 
     it('should throw NotFoundError for an invalid course', async () => {
@@ -488,7 +488,9 @@ describe('courseService', () => {
       const updatedUser = await UserModel.findOne({
         identifier: commonStudentDetails.identifier,
       });
-      expect(updatedUser?.name).toBe(commonStudentDetails.name + ' updated');
+      expect(updatedUser?.name).toBe(
+        commonStudentDetails.name.toUpperCase() + ' UPDATED'
+      );
     });
 
     it('should throw NotFoundError for invalid courseId', async () => {
@@ -645,7 +647,9 @@ describe('courseService', () => {
       const updatedUser = await UserModel.findOne({
         identifier: commonTADetails.identifier,
       });
-      expect(updatedUser?.name).toBe(commonTADetails.name + ' updated');
+      expect(updatedUser?.name).toBe(
+        commonTADetails.name.toUpperCase() + ' UPDATED'
+      );
     });
 
     it('should throw NotFoundError for invalid courseId', async () => {
@@ -831,7 +835,9 @@ describe('courseService', () => {
       const updatedUser = await UserModel.findOne({
         identifier: commonFacultyDetails.identifier,
       });
-      expect(updatedUser?.name).toBe(commonFacultyDetails.name + ' updated');
+      expect(updatedUser?.name).toBe(
+        commonFacultyDetails.name.toUpperCase() + ' UPDATED'
+      );
     });
 
     it('should throw NotFoundError for invalid courseId', async () => {
