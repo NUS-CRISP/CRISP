@@ -33,9 +33,6 @@ bot.command('register', async ctx => {
     return;
   }
 
-  // 1. Find the account by userEmail
-  // 2. If found, set account.telegramChatId = ctx.chat.id
-  // 3. Save the account, respond with success/fail
   const account = await AccountModel.findOne({
     email: userEmail,
   });
@@ -59,9 +56,6 @@ bot.command('register', async ctx => {
 });
 
 bot.command('unlink', async ctx => {
-  // 1. Find the account by chat id
-  // 2. If found, set account.telegramChatId = -1;
-  // 3. Save the account, respond with success/fail
   const account = await AccountModel.findOne({
     telegramChatId: ctx.chat.id,
   });
@@ -74,6 +68,130 @@ bot.command('unlink', async ctx => {
   await account.save();
   await ctx.reply(
     'This chat has been unlinked from your account. Notifications will no longer come through this chat.'
+  );
+  return;
+});
+
+bot.command('enable', async ctx => {
+  const account = await AccountModel.findOne({
+    telegramChatId: ctx.chat.id,
+  });
+  if (!account) {
+    await ctx.reply('This telegram chat is not registered with CRISP');
+    return;
+  }
+
+  account.wantsTelegramNotifications = true;
+  await account.save();
+  await ctx.reply('Telegram notifications have been enabled for your account.');
+  return;
+});
+
+bot.command('disable', async ctx => {
+  const account = await AccountModel.findOne({
+    telegramChatId: ctx.chat.id,
+  });
+  if (!account) {
+    await ctx.reply('This telegram chat is not registered with CRISP');
+    return;
+  }
+
+  account.wantsTelegramNotifications = false;
+  await account.save();
+  await ctx.reply(
+    'Telegram notifications have been disabled for your account.'
+  );
+  return;
+});
+
+const SETTINGS_HOURLY = 'hourly';
+const SETTINGS_DAILY = 'daily';
+const SETTINGS_WEEKLY = 'weekly';
+const SETTINGS_CMD_USAGE =
+  'Usage: /changeSettings <hourly/daily/weekly> <hour of the day (24h format)> <1 (Monday) - 7 (Sunday)>';
+const SETTINGS_ERR_FIRST_FIELD = `\nIncorrect first field. Must be ${SETTINGS_HOURLY}, ${SETTINGS_DAILY} or ${SETTINGS_WEEKLY}.`;
+const SETTINGS_ERR_MISSING_HOUR =
+  '\nMissing hour of the day to push notifications.';
+const SETTINGS_ERR_INVALID_HOUR =
+  '\nHour field is invalid. Input a number from 0 (midnight) to 23 (11pm)';
+const SETTINGS_ERR_MISSING_DAY =
+  '\nMissing day of the week to push notifications.';
+const SETTINGS_ERR_INVALID_DAY =
+  '\nDay field is invalid. Input a number from 1 (Monday) to 7 (Sunday)';
+
+bot.command('changeSettings', async ctx => {
+  //Configures user's notification settings
+  //Usage: /change-settings <hourly/daily/weekly> <hour of the day (24h format)> <1 (Monday) - 7 (Sunday)>
+  //Examples:
+  //  /change-settings weekly 16 2 => notifications pushed on Tuesday, at 4pm every week
+  //  /change-settings daily 8 => notifications pushed at 8am every day
+
+  const account = await AccountModel.findOne({
+    telegramChatId: ctx.chat.id,
+  });
+  if (!account) {
+    await ctx.reply('This telegram chat is not registered with CRISP');
+    return;
+  }
+
+  const message = ctx.message.text;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [cmd, typeStr, hourStr, dayStr] = message.split(' ');
+
+  if (!typeStr) {
+    await ctx.reply(SETTINGS_CMD_USAGE);
+    return;
+  }
+
+  if (typeStr !== SETTINGS_HOURLY && typeStr !== SETTINGS_DAILY && typeStr !== SETTINGS_WEEKLY) {
+    await ctx.reply(SETTINGS_CMD_USAGE + SETTINGS_ERR_FIRST_FIELD);
+    return;
+  }
+
+  account.telegramNotificationType = typeStr;
+  if (typeStr === SETTINGS_HOURLY) {
+    account.save();
+    await ctx.reply('Notifications set to be pushed every hour.');
+    return;
+  }
+
+  if ((typeStr === SETTINGS_DAILY || typeStr === SETTINGS_WEEKLY) && !hourStr) {
+    await ctx.reply(SETTINGS_CMD_USAGE + SETTINGS_ERR_MISSING_HOUR);
+    return;
+  }
+
+  const notificationHour = Number(hourStr);
+  if (
+    (typeStr === SETTINGS_DAILY || typeStr === SETTINGS_WEEKLY) &&
+    (isNaN(notificationHour) || notificationHour < 0 || notificationHour > 23)
+  ) {
+    await ctx.reply(SETTINGS_CMD_USAGE + SETTINGS_ERR_INVALID_HOUR);
+    return;
+  }
+
+  account.telegramNotificationHour = notificationHour;
+  if (typeStr === SETTINGS_DAILY) {
+    account.save();
+    await ctx.reply(
+      `Notifications set to be pushed every day, at ${notificationHour}00hrs (24h format).`
+    );
+    return;
+  }
+
+  if (typeStr === SETTINGS_WEEKLY && !dayStr) {
+    await ctx.reply(SETTINGS_CMD_USAGE + SETTINGS_ERR_MISSING_DAY);
+    return;
+  }
+  const notificationDay = Number(dayStr);
+  if (typeStr === SETTINGS_WEEKLY && (isNaN(notificationDay) || notificationDay < 1 || notificationDay > 7)) {
+    await ctx.reply(SETTINGS_CMD_USAGE + SETTINGS_ERR_INVALID_DAY);
+    return;
+  }
+
+  account.telegramNotificationWeekday = notificationDay;
+  await account.save();
+  await ctx.reply(
+    `Notifications set to be pushed every week, on day ${notificationDay} (where 1 = Monday, ..., 7 = Sunday), at ${notificationHour}00hrs (24h format).`
   );
   return;
 });
@@ -103,15 +221,12 @@ export const sendTelegramMessage = async (chatId: number, text: string) => {
  * Sends a test Telegram notification to all admin accounts.
  */
 export const sendTestTelegramNotificationToAdmins = async () => {
-  // 1. Retrieve all admin accounts
   const adminAccounts = await AccountModel.find({
     role: Role.Admin,
-    // Make sure they want Telegram notifications and have a chatId
     wantsTelegramNotifications: true,
     telegramChatId: { $exists: true, $ne: [null, -1] },
   });
 
-  // 2. Build the test message (whatever message you want to send)
   const testMessage = `
 Hello Admin,
 
@@ -122,7 +237,6 @@ Regards,
 CRISP
   `.trim();
 
-  // 3. Send the message to each admin
   for (const admin of adminAccounts) {
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
