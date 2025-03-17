@@ -280,7 +280,7 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
 
           {/* <PRArcDiagram graphData={graphData} /> */}
 
-          <PRChordDiagram graphData={graphData} />
+          {/* <PRChordDiagram graphData={graphData} /> */}
 
           <PRDotMatrixChart graphData={graphData} />
          
