@@ -35,6 +35,22 @@ export function isNotificationTime(
   return false;
 }
 
+/**
+ * Notification triggers: Adding a notification trigger will
+ * add a new source of information for the notification job
+ * to check.
+ *
+ * To add your own, refer to the other triggers to see how
+ * to make your own triggers. Then, just add the trigger
+ * to the array of triggers.
+ *
+ * There are 2 separate trigger interfaces, one for email and one
+ * for telegram. 2 different interfaces in case you want the email
+ * and telegram notifications to be handled differently.
+ *
+ * They do not inherit from a Trigger superclass because the interfaces
+ * are small and that is not a needed abstraction.
+ */
 export interface EmailTrigger {
   name: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -54,30 +70,23 @@ const ungradedItemsEmailTrigger: EmailTrigger = {
       );
       if (!unmarked.length) continue;
 
-      if (asmt.granularity === 'team') {
-        const msg = convertAssignedTeamsToString(unmarked as Team[], asmt);
-        if (msg) parts.push(msg);
-      } else {
-        const msg = convertAssignedUsersToString(unmarked as User[], asmt);
-        if (msg) parts.push(msg);
-      }
+      const msg =
+        asmt.granularity === 'team'
+          ? convertAssignedTeamsToString(unmarked as Team[], asmt)
+          : convertAssignedUsersToString(unmarked as User[], asmt);
+      if (msg) parts.push(msg);
     }
 
     if (!parts.length) return null;
-    const userName = account.user?.name ?? 'User';
     return `
-Hello ${userName},
-
 You have ungraded items:
 
 ${parts.join('\n\n')}
-
-Regards,
-CRISP
 `.trim();
   },
 };
 
+// Array of email notification triggers. Checked by notification job
 const EMAIL_TRIGGERS: EmailTrigger[] = [ungradedItemsEmailTrigger];
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -87,7 +96,16 @@ async function gatherAllEmailText(account: any): Promise<string | null> {
     const text = await trig.gatherEmailText(account);
     if (text) combined += text + '\n\n';
   }
-  return combined.trim() || null;
+  if (!combined.trim()) return null;
+  const userName = account.user?.name ?? 'User';
+  return `
+Hello ${userName},
+
+${combined.trim()}
+
+Regards,
+CRISP
+`.trim();
 }
 
 export interface TelegramTrigger {
@@ -109,30 +127,23 @@ const ungradedItemsTelegramTrigger: TelegramTrigger = {
       );
       if (!unmarked.length) continue;
 
-      if (asmt.granularity === 'team') {
-        const msg = convertAssignedTeamsToString(unmarked as Team[], asmt);
-        if (msg) parts.push(msg);
-      } else {
-        const msg = convertAssignedUsersToString(unmarked as User[], asmt);
-        if (msg) parts.push(msg);
-      }
+      const msg =
+        asmt.granularity === 'team'
+          ? convertAssignedTeamsToString(unmarked as Team[], asmt)
+          : convertAssignedUsersToString(unmarked as User[], asmt);
+      if (msg) parts.push(msg);
     }
 
     if (!parts.length) return null;
-    const userName = account.user?.name ?? 'User';
     return `
-Hello ${userName},
-
 You have ungraded items:
 
 ${parts.join('\n\n')}
-
-Regards,
-CRISP
 `.trim();
   },
 };
 
+// Array of telegram notification triggers. Checked by notification job
 const TELEGRAM_TRIGGERS: TelegramTrigger[] = [ungradedItemsTelegramTrigger];
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -142,7 +153,16 @@ async function gatherAllTelegramText(account: any): Promise<string | null> {
     const text = await trig.gatherTelegramText(account);
     if (text) combined += text + '\n\n';
   }
-  return combined.trim() || null;
+  if (!combined.trim()) return null;
+  const userName = account.user?.name ?? 'User';
+  return `
+Hello ${userName},
+
+${combined.trim()}
+
+Regards,
+CRISP
+`.trim();
 }
 
 function convertAssignedTeamsToString(teams: Team[], asmt: InternalAssessment) {
@@ -170,6 +190,7 @@ async function sendEmailNotification(account: any) {
   });
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function sendTelegramNotification(account: any) {
   if (!account.telegramChatId || account.telegramChatId === -1) return;
   const text = await gatherAllTelegramText(account);
