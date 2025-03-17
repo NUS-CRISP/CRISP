@@ -6,6 +6,11 @@ import { getGitHubApp } from '../utils/github';
 import CourseModel from '@models/Course';
 import { OpenAI } from 'openai';
 import TeamDataModel from '@models/TeamData';
+import {
+  checkUserWantsNotification,
+  sendNotification,
+} from '../clients/notificationFacadeClient';
+import AccountModel from '@models/Account';
 
 let isLocked = false;
 
@@ -57,6 +62,7 @@ const queryAndSaveAIInsights = async () => {
         checkQueryDate(course) // Check if needed to check today
       ) {
         await getAIInsights(course);
+        await sendInsightsNotification(course);
       }
     })
   );
@@ -243,6 +249,74 @@ const generateOpenAI = async (
       error
     );
     throw error;
+  }
+};
+
+const sendInsightsNotification = async (course?: any) => {
+  const facultyMembers = course.faculty;
+  const TAs = course.TAs;
+
+  const emailAccounts = [];
+  const telegramAccounts = [];
+
+  for (const faculty of facultyMembers) {
+    const facultyAccount = await AccountModel.findOne({
+      user: faculty,
+    });
+    if (
+      facultyAccount &&
+      (await checkUserWantsNotification('email', facultyAccount._id.toString()))
+    ) {
+      emailAccounts.push(facultyAccount);
+    }
+    if (
+      facultyAccount &&
+      (await checkUserWantsNotification(
+        'telegram',
+        facultyAccount._id.toString()
+      ))
+    ) {
+      telegramAccounts.push(facultyAccount);
+    }
+  }
+
+  for (const ta of TAs) {
+    const taAccount = await AccountModel.findOne({
+      user: ta,
+    });
+    if (
+      taAccount &&
+      (await checkUserWantsNotification('email', taAccount._id.toString()))
+    ) {
+      emailAccounts.push(taAccount);
+    }
+    if (
+      taAccount &&
+      (await checkUserWantsNotification('telegram', taAccount._id.toString()))
+    ) {
+      telegramAccounts.push(taAccount);
+    }
+  }
+
+  for (const emailAccount of emailAccounts) {
+    await sendNotification('email', {
+      to: emailAccount.email,
+      subject: `CRISP: New AI Insights for ${course.code}: ${course.name}`,
+      text: `
+Hello,
+
+New AI Insights for ${course.code}: ${course.name} have been generated. Please check the dashboard for more details.
+
+Regards,
+CRISP`.trim(),
+    });
+  }
+
+  for (const telegramAccount of telegramAccounts) {
+    await sendNotification('telegram', {
+      chatId: telegramAccount.telegramChatId,
+      text: `New AI Insights for ${course.code}: ${course.name} have been generated. Please check the dashboard for more details.`,
+    });
   }
 };
 
