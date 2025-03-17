@@ -121,7 +121,7 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
 
         const edgesByPairs = groupEdgesByPairs(filteredData.edges);
         
-        // Calculate the min and max weights for normalization
+        // Calculate weights for normalization
         const allEdges = Object.values(edgesByPairs).flat();
         const weights = allEdges.map(edge => edge.weight);
         const minWeight = Math.min(...weights);
@@ -130,7 +130,7 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
         // Create a stroke width scale function
         const strokeWidthScale = d3.scaleLinear()
             .domain([minWeight, maxWeight])
-            .range([1, 8]); // Minimum 1px, maximum 8px
+            .range([1, 8]); 
 
         const link = svg
             .append("g")
@@ -235,7 +235,7 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
         });
     }, [graphData]);
 
-    // Function to group edges by source-target pairs and add offset factor
+   
     const groupEdgesByPairs = (edges: PREdge[]) => {
         const pairs: Record<string, PREdge[]> = {};
         const bidirectionalPairs: Record<string, boolean> = {};
@@ -258,12 +258,12 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
             pairs[pairKey].push(edge);
         });
         
-        // Add offset factor for each edge considering both status and direction
+     
         Object.entries(pairs).forEach(([pairKey, pairEdges]) => {
             const [sourceId, targetId] = pairKey.split('-');
             const isBidirectional = bidirectionalPairs[pairKey];
             
-            // Group by status within the pair
+            // Group by status 
             const statusGroups: Record<string, PREdge[]> = {};
             pairEdges.forEach(edge => {
                 if (!statusGroups[edge.status]) {
@@ -272,18 +272,18 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
                 statusGroups[edge.status].push(edge);
             });
             
-            // Add offset factor to each edge based on the status and direction
+            
             Object.entries(statusGroups).forEach(([status, statusEdges], statusIndex) => {
                 statusEdges.forEach((edge, i) => {
-                    // @ts-ignore: Add offsetFactor and directionFactor properties
+                    // @ts-ignore
                     edge.offsetFactor = statusIndex;
                     
-                    // If bidirectional, apply different direction factors based on direction
+                    
                     if (isBidirectional) {
-                        // @ts-ignore: Add directionFactor property
+                        // @ts-ignore
                         edge.directionFactor = sourceId < targetId ? 1 : -1;
                     } else {
-                        // @ts-ignore: Add directionFactor property for non-bidirectional
+                        // @ts-ignore
                         edge.directionFactor = 1;
                     }
                 });
@@ -293,22 +293,22 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
         return pairs;
     };
 
-    // Function to filter top users based on interaction count
+    
     const filterTopUsers = (data: { nodes: PRNode[], edges: PREdge[] }, limit: number) => {
-        // Create a map to count interactions for each user
+        
         const interactionCounts = new Map<string, number>();
         
-        // Initialize all nodes with 0 count
+        
         data.nodes.forEach(node => {
             interactionCounts.set(node.id, 0);
         });
         
-        // Count interactions (both as source and target)
+        
         data.edges.forEach(edge => {
             const sourceId = typeof edge.source === 'string' ? edge.source : edge.source.id;
             const targetId = typeof edge.target === 'string' ? edge.target : edge.target.id;
             
-            // Add weight to both source and target counts
+            
             interactionCounts.set(
                 sourceId, 
                 (interactionCounts.get(sourceId) || 0) + edge.weight
@@ -325,12 +325,12 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
             .slice(0, limit)
             .map(entry => entry[0]);
         
-        // Filter nodes to include only top users
+        
         const filteredNodes = data.nodes.filter(node => 
             topUserIds.includes(node.id)
         );
         
-        // Filter edges to include only those between top users
+        
         const filteredEdges = data.edges.filter(edge => {
             const sourceId = typeof edge.source === 'string' ? edge.source : edge.source.id;
             const targetId = typeof edge.target === 'string' ? edge.target : edge.target.id;
