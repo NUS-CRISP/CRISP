@@ -121,10 +121,11 @@ const SETTINGS_ERR_INVALID_DAY =
 
 bot.command('changeSettings', async ctx => {
   //Configures user's notification settings
-  //Usage: /change-settings <hourly/daily/weekly> <hour of the day (24h format)> <1 (Monday) - 7 (Sunday)>
+  //Usage: /changeSettings <hourly/daily/weekly> <hour of the day (24h format)> <1 (Monday) - 7 (Sunday)>
   //Examples:
-  //  /change-settings weekly 16 2 => notifications pushed on Tuesday, at 4pm every week
-  //  /change-settings daily 8 => notifications pushed at 8am every day
+  //  /changeSettings weekly 16 2 => notifications pushed on Tuesday, at 4pm every week
+  //  /changeSettings daily 8 => notifications pushed at 8am every day
+  //  /changeSettings hourly => notifications pushed every hour
 
   const account = await AccountModel.findOne({
     telegramChatId: ctx.chat.id,
