@@ -9,7 +9,7 @@ interface PREdge {
   source: string | PRNode;
   target: string | PRNode;
   weight: number;
-  status: string; // "approved", "changes_requested", "dismissed"
+  status: string;
 }
 
 interface PRGraphProps {
@@ -19,12 +19,125 @@ interface PRGraphProps {
   };
 }
 
+// k-means clustering
+const kMeansClustering = (
+  data: {row: number, col: number, weight: number}[], 
+  k: number, 
+  maxIterations: number = 500
+): number[] => {
+  if (data.length === 0 || k <= 0 || k > data.length) {
+    return [];
+  }
+  
+  const centroids: {row: number, col: number, weight: number}[] = [];
+  const usedIndices = new Set<number>();
+  
+  while (centroids.length < k) {
+    const idx = Math.floor(Math.random() * data.length);
+    if (!usedIndices.has(idx)) {
+      usedIndices.add(idx);
+      centroids.push({...data[idx]});
+    }
+  }
+  
+  let clusters: number[] = new Array(data.length).fill(0);
+  let iterations = 0;
+  let changed = true;
+  
+  while (changed && iterations < maxIterations) {
+    changed = false;
+    iterations++;
+    
+    for (let i = 0; i < data.length; i++) {
+      let minDist = Infinity;
+      let newCluster = 0;
+      
+      for (let j = 0; j < k; j++) {
+        const dist = Math.sqrt(
+          Math.pow(data[i].row - centroids[j].row, 2) + 
+          Math.pow(data[i].col - centroids[j].col, 2) +
+          Math.pow(data[i].weight - centroids[j].weight, 2) / 10  // scale down
+        );
+        
+        if (dist < minDist) {
+          minDist = dist;
+          newCluster = j;
+        }
+      }
+      
+      if (clusters[i] !== newCluster) {
+        clusters[i] = newCluster;
+        changed = true;
+      }
+    }
+    
+    const counts = new Array(k).fill(0);
+    const newCentroids = Array.from({ length: k }, () => ({row: 0, col: 0, weight: 0}));
+    
+    for (let i = 0; i < data.length; i++) {
+      const cluster = clusters[i];
+      counts[cluster]++;
+      newCentroids[cluster].row += data[i].row;
+      newCentroids[cluster].col += data[i].col;
+      newCentroids[cluster].weight += data[i].weight;
+    }
+    
+    for (let i = 0; i < k; i++) {
+      if (counts[i] > 0) {
+        newCentroids[i].row /= counts[i];
+        newCentroids[i].col /= counts[i];
+        newCentroids[i].weight /= counts[i];
+        centroids[i] = newCentroids[i];
+      }
+    }
+  }
+  
+  return clusters;
+};
+
 const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!graphData.nodes.length) return;
+
+    const userInteractions = new Map<string, number>();
+    
+    graphData.nodes.forEach(node => {
+      userInteractions.set(node.id, 0);
+    });
+    
+    graphData.edges.forEach(edge => {
+      const sourceId = typeof edge.source === "string" ? edge.source : edge.source.id;
+      const targetId = typeof edge.target === "string" ? edge.target : edge.target.id;
+      
+      userInteractions.set(
+        sourceId, 
+        (userInteractions.get(sourceId) || 0) + edge.weight
+      );
+      
+      userInteractions.set(
+        targetId, 
+        (userInteractions.get(targetId) || 0) + edge.weight
+      );
+    });
+    
+    const topUsers = [...userInteractions.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6)
+      .map(([id]) => id);
+    
+    const filteredNodes = graphData.nodes.filter(node => 
+      topUsers.includes(node.id)
+    );
+    
+    const filteredEdges = graphData.edges.filter(edge => {
+      const sourceId = typeof edge.source === "string" ? edge.source : edge.source.id;
+      const targetId = typeof edge.target === "string" ? edge.target : edge.target.id;
+      
+      return topUsers.includes(sourceId) && topUsers.includes(targetId);
+    });
 
     const margin = { top: 90, right: 100, bottom: 150, left: 170 },
       width = 600 - margin.left - margin.right,
@@ -44,19 +157,18 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
       .attr("text-anchor", "middle")
       .attr("font-size", "16px")
       .attr("font-weight", "bold")
-      .text("Matrix Diagram");
+      .text("Top 6 Users Matrix with Clusters");
 
     const svg = rootSvg
       .append("g")
       .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-
     const tooltip = d3.select(tooltipRef.current);
 
-    const n = graphData.nodes.length;
+    const n = filteredNodes.length;
 
     const indexById = new Map<string, number>();
-    graphData.nodes.forEach((node, i) => {
+    filteredNodes.forEach((node, i) => {
       indexById.set(node.id, i);
     });
 
@@ -64,7 +176,7 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
       new Array(n).fill(0)
     );
 
-    graphData.edges.forEach((edge) => {
+    filteredEdges.forEach((edge) => {
       const sourceId =
         typeof edge.source === "string" ? edge.source : edge.source.id;
       const targetId =
@@ -79,7 +191,9 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
     const cells: { row: number; col: number; weight: number }[] = [];
     for (let i = 0; i < n; i++) {
       for (let j = 0; j < n; j++) {
-        cells.push({ row: i, col: j, weight: matrix[i][j] });
+        if (matrix[i][j] > 0) {
+          cells.push({ row: i, col: j, weight: matrix[i][j] });
+        }
       }
     }
 
@@ -100,7 +214,7 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
 
     svg
       .selectAll("rect")
-      .data(cells)
+      .data(cells.concat([]))
       .enter()
       .append("rect")
       .attr("x", (d) => xScale(String(d.col))!)
@@ -113,7 +227,7 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
         tooltip
           .style("opacity", 1)
           .html(
-            `<strong>${graphData.nodes[d.row].id} → ${graphData.nodes[d.col].id}</strong><br/>Weight: ${d.weight}`
+            `<strong>${filteredNodes[d.row].id} → ${filteredNodes[d.col].id}</strong><br/>Weight: ${d.weight}`
           )
           .style("left", `${event.offsetX + 10}px`)
           .style("top", `${event.offsetY + 10}px`);
@@ -127,10 +241,10 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
         tooltip.style("opacity", 0);
       });
 
-    // Add row labels (along the left)
+    // row label
     svg
       .selectAll(".rowLabel")
-      .data(graphData.nodes)
+      .data(filteredNodes)
       .enter()
       .append("text")
       .attr("x", -10)
@@ -139,10 +253,10 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
       .attr("text-anchor", "end")
       .text((d) => d.id);
 
-    // Add column labels (along the bottom)
+    // col label
     svg
       .selectAll(".colLabel")
-      .data(graphData.nodes)
+      .data(filteredNodes)
       .enter()
       .append("text")
       .attr("class", "colLabel")
@@ -156,10 +270,92 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
         return `rotate(-45, ${x}, ${y})`;
       })
       .text((d) => d.id);
+      
+    if (cells.length >= 3) {
+
+      const numClusters = Math.min(3, Math.ceil(cells.length / 2));
+      
+      const clusters = kMeansClustering(cells, numClusters);
+      
+      // group cells by cluster
+      const cellsByCluster = Array.from({ length: numClusters }, () => []);
+      cells.forEach((cell, i) => {
+        if (i < clusters.length) {
+          cellsByCluster[clusters[i]].push(cell);
+        }
+      });
+      
+      // ellipses around each cluster
+      cellsByCluster.forEach((clusterCells, idx) => {
+        if (clusterCells.length < 2) return;
+        
+        const uniquePeople = new Set<number>();
+        clusterCells.forEach(cell => {
+          uniquePeople.add(cell.row);
+          uniquePeople.add(cell.col);
+        });
+        
+        if (uniquePeople.size > 5) return;
+        
+        const positions = clusterCells.map(cell => ({
+          x: xScale(String(cell.col))! + xScale.bandwidth() / 2,
+          y: yScale(String(cell.row))! + yScale.bandwidth() / 2
+        }));
+        
+
+        const sumX = positions.reduce((sum, pos) => sum + pos.x, 0);
+        const sumY = positions.reduce((sum, pos) => sum + pos.y, 0);
+        const centerX = sumX / positions.length;
+        const centerY = sumY / positions.length;
+        
+        let maxDistanceX = 0;
+        let maxDistanceY = 0;
+        
+        positions.forEach(pos => {
+          const distanceX = Math.abs(pos.x - centerX);
+          const distanceY = Math.abs(pos.y - centerY);
+          maxDistanceX = Math.max(maxDistanceX, distanceX);
+          maxDistanceY = Math.max(maxDistanceY, distanceY);
+        });
+        
+        const rxPadding = xScale.bandwidth() * 0.6;
+        const ryPadding = yScale.bandwidth() * 0.6;
+        
+        svg.append("ellipse")
+          .attr("cx", centerX)
+          .attr("cy", centerY)
+          .attr("rx", maxDistanceX + rxPadding)
+          .attr("ry", maxDistanceY + ryPadding)
+          .attr("fill", "none")
+          .attr("stroke", "red")
+          .attr("stroke-dasharray", "5,5")
+          .attr("stroke-width", 2);
+      });
+    }
   }, [graphData]);
 
   return (
-    <svg ref={svgRef} width="600" height="600" style={{ border: "1px solid #ccc", borderRadius: "8px" }}></svg>
+    <div>
+      <svg 
+        ref={svgRef} 
+        width="600" 
+        height="600" 
+        style={{ border: "1px solid #ccc", borderRadius: "8px" }}
+      ></svg>
+      <div 
+        ref={tooltipRef} 
+        style={{
+          position: "absolute",
+          opacity: 0,
+          background: "rgba(0, 0, 0, 0.7)",
+          color: "white",
+          padding: "8px",
+          borderRadius: "4px",
+          pointerEvents: "none",
+          fontSize: "12px"
+        }}
+      ></div>
+    </div>
   );
 };
 
