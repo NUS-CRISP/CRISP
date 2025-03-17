@@ -137,6 +137,65 @@ const processPRInteractionsBundled = (
   };
 };
 
+
+// Returns a new PRGraphData with only the top 6 nodes (by total interactions).
+// Also renames those 6 nodes to "Student 1..6".
+function filterAndRenameTop6(graphData: PRGraphData): PRGraphData {
+  const { nodes, edges } = graphData;
+
+  // 1) Calculate total interactions for each node
+  //    We'll sum the weights of edges where the node is source OR target
+  const interactionCountMap: Record<string, number> = {};
+
+  edges.forEach((edge) => {
+    interactionCountMap[edge.source] =
+      (interactionCountMap[edge.source] || 0) + edge.weight;
+    interactionCountMap[edge.target] =
+      (interactionCountMap[edge.target] || 0) + edge.weight;
+  });
+
+  // 2) Sort nodes by total interactions descending
+  const sortedNodes = [...nodes].sort((a, b) => {
+    const aCount = interactionCountMap[a.id] || 0;
+    const bCount = interactionCountMap[b.id] || 0;
+    return bCount - aCount; // descending
+  });
+
+  // 3) Keep only the top 6
+  const top6 = sortedNodes.slice(0, 6);
+  const top6Ids = new Set(top6.map((n) => n.id));
+
+  // 4) Filter edges so they only connect those top 6
+  const filteredEdges = edges.filter(
+    (edge) => top6Ids.has(edge.source) && top6Ids.has(edge.target)
+  );
+
+  // 5) Rename the top 6 to "Student 1..6"
+  //    Create a mapping from oldId -> new label
+  const renameMap: Record<string, string> = {};
+  top6.forEach((node, i) => {
+    renameMap[node.id] = `Student ${i + 1}`;
+  });
+
+  // Create new node list with renamed IDs
+  const renamedNodes = top6.map((node) => ({
+    id: renameMap[node.id],
+  }));
+
+  // Create new edge list with renamed source/target
+  const renamedEdges = filteredEdges.map((edge) => ({
+    ...edge,
+    source: renameMap[edge.source],
+    target: renameMap[edge.target],
+  }));
+
+  return {
+    nodes: sortedNodes, // renamedNodes, for anoynmized version
+    edges: filteredEdges, // renamedEdges, for
+  };
+}
+
+
 // Test data
 const testData = {
   nodes: [{ id: "Alice" }, { id: "Bob" }],
@@ -177,13 +236,20 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
     });
 
     useEffect(() => {
-      setGraphData(processPRInteractions(teamData.teamPRs));
+      const rawGraphData = processPRInteractions(teamData.teamPRs);
+
+  // 2) filter and rename to top 6
+  const top6GraphData = filterAndRenameTop6(rawGraphData);
+
+  // 3) store in state
+  setGraphData(top6GraphData);
+
       setGraphDataBundled(processPRInteractionsBundled(teamData.teamPRs));
     }, [teamData.teamPRs]);
 
     return (
       <Card ref={ref} bg={getTutorialHighlightColor(9)}>
-        <Group grow align="start">
+        {/* <Group grow align="start">
           <Box style={{ maxWidth: 200, marginRight: 15 }}>
             <PRList
               team={team}
@@ -202,7 +268,7 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
               />
             </Box>
           )}
-        </Group>
+        </Group> */}
 
         {/* PR Visualization Graph */}
         <Box mt={20}>
@@ -210,34 +276,34 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
             PR Review Interaction Graph
           </Text>
 
-          <PRArcDiagram graphData={graphData} />
+
+
+          {/* <PRArcDiagram graphData={graphData} /> */}
 
           <PRChordDiagram graphData={graphData} />
 
           <PRDotMatrixChart graphData={graphData} />
-
-          <PRGraphBundled graphData={graphDataBundled} />
-
+         
           <PRMatrix graphData={graphData} />
 
           <PRMatrixStatusColor graphData={graphData} />
 
           <PRNetwork graphData={graphData} />
 
-          <PRSunburstGraph graphData={graphDataBundled} />
+          
+
+         
 
           {/* <PRStatusChart graphData={graphData} /> */}
 
 
 
-          Not for concern
-          hive plot
-
-          {/* <PRHivePlot graphData={graphData} /> */}
-
-
-
-
+         {/* Graph that don't work */}
+{/* 
+          <PRHivePlot graphData={graphData} />
+          <PRGraphBundled graphData={graphDataBundled} />
+          <PRSunburstGraph graphData={graphDataBundled} /> 
+*/}
 
         </Box>
       </Card>
