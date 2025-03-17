@@ -342,8 +342,6 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
 
           <PRMatrix graphData={graphData} />
 
-
-
           <PRNetwork graphData={graphData} />
 
 
@@ -351,7 +349,6 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
 
 
           {/* <PRStatusChart graphData={graphData} /> */}
-
 
 
           {/* Graph that don't work */}
