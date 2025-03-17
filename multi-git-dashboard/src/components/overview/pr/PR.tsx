@@ -333,16 +333,16 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
           </Text>
 
 
-
+{/* 
           <PRArcDiagram graphData={graphData} />
 
           <PRChordDiagram graphData={graphData} />
 
-          <PRDotMatrixChart graphData={graphDataDot} />
+          <PRDotMatrixChart graphData={graphDataDot} /> */}
 
           <PRMatrix graphData={graphData} />
 
-          <PRNetwork graphData={graphData} />
+          {/* <PRNetwork graphData={graphData} /> */}
 
 
 
