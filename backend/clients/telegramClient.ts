@@ -108,7 +108,7 @@ const SETTINGS_HOURLY = 'hourly';
 const SETTINGS_DAILY = 'daily';
 const SETTINGS_WEEKLY = 'weekly';
 const SETTINGS_CMD_USAGE =
-  'Usage: /changeSettings <hourly/daily/weekly> <hour of the day (24h format)> <1 (Monday) - 7 (Sunday)>';
+  'Usage: /changesettings <hourly/daily/weekly> <hour of the day (24h format)> <1 (Monday) - 7 (Sunday)>';
 const SETTINGS_ERR_FIRST_FIELD = `\nIncorrect first field. Must be ${SETTINGS_HOURLY}, ${SETTINGS_DAILY} or ${SETTINGS_WEEKLY}.`;
 const SETTINGS_ERR_MISSING_HOUR =
   '\nMissing hour of the day to push notifications.';
@@ -119,13 +119,13 @@ const SETTINGS_ERR_MISSING_DAY =
 const SETTINGS_ERR_INVALID_DAY =
   '\nDay field is invalid. Input a number from 1 (Monday) to 7 (Sunday)';
 
-bot.command('changeSettings', async ctx => {
+bot.command('changesettings', async ctx => {
   //Configures user's notification settings
-  //Usage: /changeSettings <hourly/daily/weekly> <hour of the day (24h format)> <1 (Monday) - 7 (Sunday)>
+  //Usage: /changesettings <hourly/daily/weekly> <hour of the day (24h format)> <1 (Monday) - 7 (Sunday)>
   //Examples:
-  //  /changeSettings weekly 16 2 => notifications pushed on Tuesday, at 4pm every week
-  //  /changeSettings daily 8 => notifications pushed at 8am every day
-  //  /changeSettings hourly => notifications pushed every hour
+  //  /changesettings weekly 16 2 => notifications pushed on Tuesday, at 4pm every week
+  //  /changesettings daily 8 => notifications pushed at 8am every day
+  //  /changesettings hourly => notifications pushed every hour
 
   const account = await AccountModel.findOne({
     telegramChatId: ctx.chat.id,
