@@ -305,7 +305,7 @@ const sendInsightsNotification = async (course?: any) => {
       text: `
 Hello,
 
-New AI Insights for ${course.code}: ${course.name} have been generated. Please check the dashboard for more details.
+New AI Insights for ${course.code}: ${course.name} have been generated. Please check CRISP code-analysis page for more details.
 
 Regards,
 CRISP`.trim(),
@@ -315,7 +315,7 @@ CRISP`.trim(),
   for (const telegramAccount of telegramAccounts) {
     await sendNotification('telegram', {
       chatId: telegramAccount.telegramChatId,
-      text: `New AI Insights for ${course.code}: ${course.name} have been generated. Please check the dashboard for more details.`,
+      text: `New AI Insights for ${course.code}: ${course.name} have been generated. Please check CRISP code-analysis page for more details.`,
     });
   }
 };
