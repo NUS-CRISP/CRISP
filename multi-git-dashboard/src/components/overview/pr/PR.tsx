@@ -2,7 +2,7 @@ import { OverviewProps } from '@/components/cards/OverviewCard';
 import { getTutorialHighlightColor } from '@/lib/utils';
 import { Box, Card, Group, Text } from '@mantine/core';
 import dayjs from 'dayjs';
-import { forwardRef, useEffect, useState } from 'react';
+import { forwardRef, useEffect, useState, useCallback } from 'react';
 import PRDetails from './PRDetails';
 import PRList from './PRList';
 import PRNetwork from './PRNetwork';
@@ -27,6 +27,8 @@ export interface PRProps {
   selectedWeekRange: [number, number];
   dateUtils: OverviewProps['dateUtils'];
   profileGetter: OverviewProps['profileGetter'];
+  dailyDateRange?: [dayjs.Dayjs, dayjs.Dayjs] | null;
+  useDailyRange?: boolean;
 }
 
 interface PRNode {
@@ -194,6 +196,10 @@ const processPRInteractionsDot = (teamPRs: PRProps['teamData']['teamPRs']): PRGr
 // Also renames those 6 nodes to "Student 1..6".
 function filterAndRenameTop6(graphData: PRGraphData): PRGraphData {
   const { nodes, edges } = graphData;
+  
+  if (nodes.length === 0 || edges.length === 0) {
+    return { nodes: [], edges: [] };
+  }
 
   // 1) Calculate total interactions for each node
   //    We'll sum the weights of edges where the node is source OR target
@@ -247,17 +253,8 @@ function filterAndRenameTop6(graphData: PRGraphData): PRGraphData {
   };
 }
 
-
-// Test data
-const testData = {
-  nodes: [{ id: "Alice" }, { id: "Bob" }],
-  edges: [
-    { source: "Alice", target: "Bob", weight: 3, status: "approved" },
-  ],
-};
-
 const PR = forwardRef<HTMLDivElement, PRProps>(
-  ({ team, teamData, selectedWeekRange, dateUtils, profileGetter }, ref) => {
+  ({ team, teamData, selectedWeekRange, dateUtils, profileGetter, dailyDateRange, useDailyRange = false }, ref) => {
     const SPACING: Spacing = {
       maxHeight: 500,
       bottomSpace: 7,
@@ -269,16 +266,6 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
       teamData.teamPRs[0]?.id ?? null
     );
 
-    const getDisplayedPRs = () => {
-      const startDate = weekToDate(selectedWeekRange[0]);
-      const endDate = getEndOfWeek(weekToDate(selectedWeekRange[1]));
-
-      return teamData.teamPRs.filter((pr) => {
-        const prDate = dayjs(pr.createdAt);
-        return prDate.isAfter(startDate) && prDate.isBefore(endDate);
-      });
-    };
-
     // graph data for node-edge graph
     const [graphData, setGraphData] = useState<PRGraphData>({ nodes: [], edges: [] });
     // graph data for bundled graph (with grouping)
@@ -287,21 +274,63 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
       nodes: [],
       edges: [],
     });
+    
+    // Track when data was last refreshed to force re-renders
+    const [dataRefreshKey, setDataRefreshKey] = useState<number>(0);
 
+    // Function to get PRs within the selected date range
+    const getDisplayedPRs = useCallback(() => {
+      let startDate, endDate;
+      
+      if (useDailyRange && dailyDateRange) {
+        // Use the daily date range if it's active and available
+        startDate = dailyDateRange[0];
+        endDate = dailyDateRange[1];
+      } else {
+        // Fall back to weekly date range
+        startDate = weekToDate(selectedWeekRange[0]);
+        endDate = getEndOfWeek(weekToDate(selectedWeekRange[1]));
+      }
+
+      return teamData.teamPRs.filter((pr) => {
+        const prDate = dayjs(pr.createdAt);
+        return prDate.isAfter(startDate) && prDate.isBefore(endDate);
+      });
+    }, [teamData.teamPRs, selectedWeekRange, dailyDateRange, useDailyRange, weekToDate, getEndOfWeek]);
+
+    // Get formatted date range for display
+    const getTimeRangeLabel = useCallback(() => {
+      if (useDailyRange && dailyDateRange) {
+        return `${dailyDateRange[0].format('MMM D')} - ${dailyDateRange[1].format('MMM D, YYYY')}`;
+      } else {
+        return `Weeks ${selectedWeekRange[0] + 1} - ${selectedWeekRange[1] + 1}`;
+      }
+    }, [selectedWeekRange, dailyDateRange, useDailyRange]);
+
+    // Update graph data when range selection changes
     useEffect(() => {
-      const rawGraphData = processPRInteractions(teamData.teamPRs);
-      const rawGraphDataDot = processPRInteractionsDot(teamData.teamPRs);
+      console.log("Date range changed, refreshing data");
+      
+      // Get PRs within the selected range
+      const filteredPRs = getDisplayedPRs();
+      console.log(`Filtered ${filteredPRs.length} PRs within date range`);
+      
+      // Process filtered PRs to generate graph data
+      const rawGraphData = processPRInteractions(filteredPRs);
+      const rawGraphDataDot = processPRInteractionsDot(filteredPRs);
 
-      // 2) filter and rename to top 6
+      // Filter and rename to top 6
       const top6GraphData = filterAndRenameTop6(rawGraphData);
       const top6GraphDataDot = filterAndRenameTop6(rawGraphDataDot);
 
-      // 3) store in state
+      // Store in state
       setGraphData(top6GraphData);
       setGraphDataDot(top6GraphDataDot);
-
-      setGraphDataBundled(processPRInteractionsBundled(teamData.teamPRs));
-    }, [teamData.teamPRs]);
+      setGraphDataBundled(processPRInteractionsBundled(filteredPRs));
+      
+      // Increment refresh key to force re-renders of child components
+      setDataRefreshKey(prev => prev + 1);
+    }, [teamData.teamPRs, selectedWeekRange, dailyDateRange, useDailyRange, getDisplayedPRs]);
 
     return (
       <Card ref={ref} bg={getTutorialHighlightColor(9)}>
@@ -329,37 +358,29 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
         {/* PR Visualization Graph */}
         <Box mt={20}>
           <Text fw={500} size="lg">
-            PR Review Interaction Graph
+            PR Review Interaction Graph ({getTimeRangeLabel()})
           </Text>
 
+          {/* Add a key prop with dataRefreshKey to force re-render when data changes */}
+          {/* <PRArcDiagram key={`arc-${dataRefreshKey}`} graphData={graphData} /> */}
 
-{/* 
-          <PRArcDiagram graphData={graphData} />
+          {/* <PRChordDiagram key={`chord-${dataRefreshKey}`} graphData={graphData} /> */}
 
-          <PRChordDiagram graphData={graphData} />
+          {/* <PRDotMatrixChart key={`dot-${dataRefreshKey}`} graphData={graphDataDot} /> */}
 
-          <PRDotMatrixChart graphData={graphDataDot} /> */}
+          {/* <PRMatrix key={`matrix-${dataRefreshKey}`} graphData={graphData} /> */}
 
-          <PRMatrix graphData={graphData} />
+          <PRNetwork key={`network-${dataRefreshKey}`} graphData={graphData} />
 
-          {/* <PRNetwork graphData={graphData} /> */}
-
-
-
-
-
-          {/* <PRStatusChart graphData={graphData} /> */}
-
+          {/* <PRStatusChart key={`status-${dataRefreshKey}`} graphData={graphData} /> */}
 
           {/* Graph that don't work */}
           {/* 
           <PRHivePlot graphData={graphData} />
-
           <PRGraphBundled graphData={graphDataBundled} />
           <PRSunburstGraph graphData={graphDataBundled} /> 
           <PRMatrixStatusColor graphData={graphData} />
-*/}
-
+          */}
         </Box>
       </Card>
     );
