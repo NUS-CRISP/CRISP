@@ -142,13 +142,13 @@ export const addStudentsToCourse = async (
     if (!student) {
       student = new UserModel({
         identifier: studentId,
-        name: studentData.name,
+        name: studentData.name.toUpperCase(), // Save name as all caps
         enrolledCourses: [],
-        gitHandle: studentData.gitHandle ?? null,
+        gitHandle: studentData.gitHandle ?? null, // Keep githandle as case-sensitive
       });
       await student.save();
       const newAccount = new AccountModel({
-        email: studentData.email,
+        email: studentData.email, // Email is saved as case-sensitive (depends on organisation)
         role: Role.Student,
         isApproved: false,
         user: student._id,
@@ -162,8 +162,8 @@ export const addStudentsToCourse = async (
       if (
         (studentAccount.role !== Role.Student &&
           studentAccount.role !== Role.TrialUser) ||
-        studentData.name !== student.name ||
-        studentData.email !== studentAccount.email
+        studentData.name.toUpperCase() !== student.name.toUpperCase() ||
+        studentData.email.toLowerCase() !== studentAccount.email.toLowerCase() // Check is case-insensitive to handle email case-insensitivity cases
       ) {
         continue;
       }
@@ -204,7 +204,9 @@ export const updateStudentsInCourse = async (
     if (!course.students.includes(student._id)) {
       continue;
     }
-    student.name = studentData.name ?? student.name;
+    student.name = studentData.name
+      ? studentData.name.toUpperCase()
+      : student.name; // Update to given name in caps if needed.
     student.gitHandle = studentData.gitHandle ?? student.gitHandle;
     await student.save();
   }
