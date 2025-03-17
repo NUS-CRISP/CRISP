@@ -39,6 +39,7 @@ export interface NotificationOptions {
  * It does not care about the user's notification settings. Please make sure
  * that the user has enabled notifications for the channel before calling
  * this function. Refer to ../jobs/notificationJob.ts for how to check permissions.
+ * Alternatively, use the method checkUserWantsNotification() in this file.
  * 2. Mismatched fields in options will just be ignored.
  */
 export async function sendNotification(
