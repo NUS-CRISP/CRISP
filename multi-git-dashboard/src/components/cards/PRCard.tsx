@@ -6,8 +6,8 @@ import PR from '../overview/pr/PR';
 import TutorialPopover from '../tutorial/TutorialPopover';
 import { ProfileGetter, Team } from '../views/TeamReview';
 import { TeamData } from '@shared/types/TeamData';
-import DailyRangeSlider from './slider'; // Import the new component
-import dayjs from 'dayjs'; // Make sure dayjs is imported
+import DailyRangeSlider from './DailyRangeSlider';
+import dayjs from 'dayjs';
 
 export interface OverviewProps {
     index: number;
@@ -76,12 +76,10 @@ export const PRCard: React.FC<OverviewProps> = ({
         openAliasModal(weekValue);
     };
 
-    // Handler for daily range changes
     const handleDailyRangeChange = (range: [dayjs.Dayjs, dayjs.Dayjs]) => {
         setSelectedDailyRange(range);
     };
 
-    // Handler for toggling between weekly and daily range
     const handleUseDailyRangeChange = (useDaily: boolean) => {
         setUseDailyRange(useDaily);
     };
@@ -106,11 +104,10 @@ export const PRCard: React.FC<OverviewProps> = ({
                     marks={marks}
                     mb={30}
                     onDoubleClick={handleSliderDoubleClick}
-                    disabled={useDailyRange} // Disable when daily range is active
+                    disabled={useDailyRange}
                 />
             </Box>
-
-            {/* Add the Daily Range Slider component */}
+            
             <DailyRangeSlider 
                 teamData={teamData}
                 onRangeChange={handleDailyRangeChange}
