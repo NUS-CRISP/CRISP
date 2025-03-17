@@ -1,3 +1,4 @@
+import AccountModel from '@models/Account';
 import {
   sendNotificationEmail,
   sendTestNotificationEmail,
@@ -38,6 +39,7 @@ export interface NotificationOptions {
  * It does not care about the user's notification settings. Please make sure
  * that the user has enabled notifications for the channel before calling
  * this function. Refer to ../jobs/notificationJob.ts for how to check permissions.
+ * Alternatively, use the method checkUserWantsNotification() in this file.
  * 2. Mismatched fields in options will just be ignored.
  */
 export async function sendNotification(
@@ -61,6 +63,31 @@ export async function sendNotification(
     throw new Error(`Unknown notification channel: ${channel}`);
   }
 }
+
+/**
+ * Checks if the given account's user wants notifications.
+ * Notification type determined by channel.
+ * @param channel Notification type to check permissions of.
+ * Either 'email' or 'telegram'.
+ * @param accountId Account ID of the user to check.
+ * @returns true if account wants notifications. False otherwise,
+ * and false if account not found or channel is invalid.
+ */
+export const checkUserWantsNotification = async (
+  channel: NotificationChannel,
+  accountId: string
+) => {
+  const account = await AccountModel.findById(accountId);
+  if (!account) return false;
+  switch (channel) {
+    case 'email':
+      return account.wantsEmailNotifications || false;
+    case 'telegram':
+      return account.wantsTelegramNotifications || false;
+    default:
+      return false;
+  }
+};
 
 /**
  * Sends a "test" notification.
