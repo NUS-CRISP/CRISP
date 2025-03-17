@@ -137,6 +137,58 @@ const processPRInteractionsBundled = (
   };
 };
 
+const processPRInteractionsDot = (teamPRs: PRProps['teamData']['teamPRs']): PRGraphData => {
+  const nodesSet = new Set<string>();
+  const edgesArray: PREdge[] = [];
+
+  teamPRs.forEach((pr) => {
+    const prAuthor = pr.user;
+    if (!prAuthor) return;
+
+    nodesSet.add(prAuthor);
+
+    // Group reviews by reviewer and status
+    const reviewsByUser = new Map<string, Map<string, number>>();
+
+    pr.reviews.forEach((review) => {
+      const reviewer = review.user;
+      if (!reviewer || reviewer === prAuthor) return; // Ignore self-reviews
+
+      nodesSet.add(reviewer);
+
+      if (!reviewsByUser.has(reviewer)) {
+        reviewsByUser.set(reviewer, new Map<string, number>());
+      }
+
+      const statusCounts = reviewsByUser.get(reviewer)!;
+      const status = review.state.toLowerCase();
+
+      if (statusCounts.has(status)) {
+        statusCounts.set(status, statusCounts.get(status)! + 1);
+      } else {
+        statusCounts.set(status, 1);
+      }
+    });
+
+    // Create separate edges for each reviewer-status combination
+    reviewsByUser.forEach((statusCounts, reviewer) => {
+      statusCounts.forEach((count, status) => {
+        edgesArray.push({
+          source: reviewer,
+          target: prAuthor,
+          weight: count,
+          status: status
+        });
+      });
+    });
+  });
+
+  return {
+    nodes: Array.from(nodesSet).map((id) => ({ id })),
+    edges: edgesArray
+  };
+};
+
 
 // Returns a new PRGraphData with only the top 6 nodes (by total interactions).
 // Also renames those 6 nodes to "Student 1..6".
@@ -230,6 +282,7 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
     // graph data for node-edge graph
     const [graphData, setGraphData] = useState<PRGraphData>({ nodes: [], edges: [] });
     // graph data for bundled graph (with grouping)
+    const [graphDataDot, setGraphDataDot] = useState<PRGraphData>({ nodes: [], edges: [] });
     const [graphDataBundled, setGraphDataBundled] = useState<PRGraphDataBundled>({
       nodes: [],
       edges: [],
@@ -237,12 +290,15 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
 
     useEffect(() => {
       const rawGraphData = processPRInteractions(teamData.teamPRs);
+      const rawGraphDataDot = processPRInteractionsDot(teamData.teamPRs);
 
-  // 2) filter and rename to top 6
-  const top6GraphData = filterAndRenameTop6(rawGraphData);
+      // 2) filter and rename to top 6
+      const top6GraphData = filterAndRenameTop6(rawGraphData);
+      const top6GraphDataDot = filterAndRenameTop6(rawGraphDataDot);
 
-  // 3) store in state
-  setGraphData(top6GraphData);
+      // 3) store in state
+      setGraphData(top6GraphData);
+      setGraphDataDot(top6GraphDataDot);
 
       setGraphDataBundled(processPRInteractionsBundled(teamData.teamPRs));
     }, [teamData.teamPRs]);
@@ -278,31 +334,33 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
 
 
 
-          {/* <PRArcDiagram graphData={graphData} /> */}
+          <PRArcDiagram graphData={graphData} />
 
-          {/* <PRChordDiagram graphData={graphData} /> */}
+          <PRChordDiagram graphData={graphData} />
 
-          <PRDotMatrixChart graphData={graphData} />
-         
+          <PRDotMatrixChart graphData={graphDataDot} />
+
           <PRMatrix graphData={graphData} />
 
-          <PRMatrixStatusColor graphData={graphData} />
+
 
           <PRNetwork graphData={graphData} />
 
-          
 
-         
+
+
 
           {/* <PRStatusChart graphData={graphData} /> */}
 
 
 
-         {/* Graph that don't work */}
-{/* 
+          {/* Graph that don't work */}
+          {/* 
           <PRHivePlot graphData={graphData} />
+
           <PRGraphBundled graphData={graphDataBundled} />
           <PRSunburstGraph graphData={graphDataBundled} /> 
+          <PRMatrixStatusColor graphData={graphData} />
 */}
 
         </Box>
