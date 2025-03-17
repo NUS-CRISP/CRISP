@@ -157,7 +157,7 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
       .attr("text-anchor", "middle")
       .attr("font-size", "16px")
       .attr("font-weight", "bold")
-      .text("Top 6 Users Matrix with Clusters");
+      .text("Heatmap with K-means Clustering");
 
     const svg = rootSvg
       .append("g")
@@ -270,6 +270,18 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
         return `rotate(-45, ${x}, ${y})`;
       })
       .text((d) => d.id);
+
+      svg.append("text")
+      .attr("transform", `translate(${(width - margin.left - margin.right) / 2 + 100}, ${height - margin.top - margin.bottom + 350})`)
+      .style("text-anchor", "middle")
+      .text("PR Author");
+
+    svg.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", -130)
+      .attr("x", -(height - margin.top - margin.bottom) / 2 - 100)
+      .style("text-anchor", "middle")
+      .text("Reviewer");
       
     if (cells.length >= 3) {
 
