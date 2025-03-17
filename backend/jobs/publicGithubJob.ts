@@ -237,7 +237,7 @@ const getPublicCourseData = async (course: any) => {
         milestones: milestones,
       };
 
-      console.log('Saving team data:', teamData);
+      console.log('Saving team data:', teamData.repoName);
 
       await TeamData.findOneAndUpdate({ teamId: teamData.teamId }, teamData, {
         upsert: true,

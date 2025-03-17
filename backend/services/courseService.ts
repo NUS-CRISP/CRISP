@@ -19,7 +19,45 @@ export const createNewCourse = async (courseData: any, accountId: string) => {
   if (!user) {
     throw new NotFoundError('User not found');
   }
-  const course = await CourseModel.create(courseData);
+  const {
+    name,
+    code,
+    semester,
+    startDate,
+    duration,
+    courseType,
+    gitHubOrgName,
+    repoNameFilter,
+    installationId,
+    isOn,
+    provider,
+    model,
+    apiKey,
+    frequency,
+    aiStartDate,
+  } = courseData;
+
+  const courseFields = {
+    name,
+    code,
+    semester,
+    startDate,
+    durationWeeks: duration,
+    courseType,
+    ...(gitHubOrgName && { gitHubOrgName }),
+    ...(repoNameFilter && { repoNameFilter }),
+    ...(installationId && { installationId }),
+    aiInsights: {
+      isOn: isOn,
+      ...(provider && { provider }),
+      ...(model && { model }),
+      ...(apiKey && { apiKey }),
+      ...(frequency && { frequency }),
+      ...(aiStartDate && { startDate: aiStartDate }),
+    },
+  };
+
+  const course = await CourseModel.create(courseFields);
   course.faculty.push(user._id);
   await course.save();
   return course;
