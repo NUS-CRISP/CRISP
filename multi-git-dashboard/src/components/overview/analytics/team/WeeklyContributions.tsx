@@ -9,7 +9,6 @@ import {
   YAxis,
 } from 'recharts';
 import { AnalyticsProps } from '../Analytics';
-import { Center } from '@mantine/core';
 
 interface WeeklyContributionsProps extends Omit<AnalyticsProps, 'team'> {
   selectedWeekRange: [number, number];
