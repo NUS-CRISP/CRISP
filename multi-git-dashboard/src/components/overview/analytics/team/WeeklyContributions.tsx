@@ -19,27 +19,35 @@ const convertChartData = (
   data: number[][],
   selectedWeekRange: [number, number]
 ) => {
-  const startDate = new Date(data[0][0] * 1000);
+  if (!data || data.length === 0) {
+    console.warn('No data available');
+    return [];
+  }
+
+  const firstItem = data[0] || [Date.now(), 0, 0];
+  const startDate = new Date(firstItem[0] * 1000);
   const endDate = new Date(startDate);
   endDate.setMonth(startDate.getMonth() + 3.5);
 
   return data
     .filter(item => {
+      if (item.length < 3) return false;
+
       const itemDate = new Date(item[0] * 1000);
       return itemDate >= startDate && itemDate <= endDate;
     })
     .filter(
       (_, index) =>
         index >= selectedWeekRange[0] && index <= selectedWeekRange[1]
-    ) // Filter by selected week range
+    )
     .map(item => ({
       weekStarting: new Date(item[0] * 1000).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
       }),
-      additions: item[1],
-      deletions: -Math.abs(item[2]), // Negative for deletions
+      additions: item[1] || 0,
+      deletions: -Math.abs(item[2] || 0),
     }));
 };
 
@@ -47,12 +55,6 @@ const WeeklyContributions: React.FC<WeeklyContributionsProps> = ({
   teamData,
   selectedWeekRange,
 }) => {
-  if (
-    !teamData ||
-    !teamData.weeklyCommits ||
-    teamData.weeklyCommits.length === 0
-  )
-    return <Center>No Data Available</Center>;
   const formattedData = convertChartData(
     teamData.weeklyCommits,
     selectedWeekRange
