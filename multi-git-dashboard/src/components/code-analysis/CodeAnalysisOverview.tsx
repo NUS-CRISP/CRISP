@@ -4,7 +4,15 @@ import {
   metricExplanations,
 } from '@/lib/utils';
 import React, { useState } from 'react';
-import { Grid, Card, Text, Title, Container, Center } from '@mantine/core';
+import {
+  Grid,
+  Card,
+  Text,
+  Title,
+  Container,
+  Center,
+  Spoiler,
+} from '@mantine/core';
 import { IconHelpCircle, IconChartDots } from '@tabler/icons-react';
 
 interface CodeAnalysisOverviewProps {
@@ -16,6 +24,7 @@ interface CodeAnalysisOverviewProps {
     metricStats: Map<string, { median: number; mean: number }>;
   };
   executedDate: Date;
+  aiInsights?: { text: string; date: Date };
 }
 
 const getColorForRating = (rating: string) => {
@@ -75,6 +84,7 @@ const getColorForQualityGate = (qualityGate: string) => {
 const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
   latestData,
   executedDate,
+  aiInsights,
 }) => {
   const metricStatsMap = new Map(Object.entries(latestData.metricStats));
 
@@ -203,6 +213,52 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
     );
   };
 
+  const formatTextWithSections = (text: string) => {
+    // Split based on sections (code quality, project management, etc. - each section is separated by 2 blank lines)
+    const sections = text.split(/\n\n+/);
+
+    return sections.map((section, index) => {
+      const [header, ...contentLines] = section.split('\n');
+
+      const formattedContent = contentLines
+        .filter(line => line.trim())
+        .map((line, lineIndex) => {
+          // There are bolded parts in recommendations, so we need to split based on **
+          const parts = line.split('**');
+          return (
+            <Text
+              key={lineIndex}
+              style={{
+                whiteSpace: 'pre-line',
+                marginInline: '16px',
+                lineHeight: 1.5,
+                marginBottom: '5px',
+                textAlign: 'justify',
+              }}
+              size="sm"
+            >
+              {parts.map((part, partIndex) =>
+                partIndex % 2 === 1 ? (
+                  <strong key={partIndex}>{part}</strong>
+                ) : (
+                  part
+                )
+              )}
+            </Text>
+          );
+        });
+
+      return (
+        <div key={index} style={{ marginTop: '15px' }}>
+          <Title order={6} style={{ marginBottom: '5px' }} td="underline">
+            {header.trim()}
+          </Title>
+          {formattedContent}
+        </div>
+      );
+    });
+  };
+
   return (
     <Container>
       <Grid gutter="lg">
@@ -293,6 +349,34 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
             </Text>
           </Card>
         </Grid.Col>
+        {aiInsights?.text && (
+          <Grid.Col span={12}>
+            <Card padding="lg" shadow="sm" radius="md">
+              <Title order={5}>
+                AI Insights
+                <IconHelpCircle
+                  size={16}
+                  onMouseEnter={() => handleMouseEnterMetric('AI Insights')}
+                  onMouseLeave={handleMouseLeaveMetric}
+                  style={{
+                    cursor: 'pointer',
+                    marginLeft: '4px',
+                    color: 'gray',
+                  }}
+                />
+              </Title>
+              <Spoiler maxHeight={120} showLabel="Show more" hideLabel="Hide">
+                {formatTextWithSections(aiInsights.text)}
+                <Text size="xs" mt="xs" ta={'right'} c="dimmed">
+                  Generated On{' '}
+                  {aiInsights.date
+                    ? new Date(aiInsights.date).toLocaleString()
+                    : 'N/A'}
+                </Text>
+              </Spoiler>
+            </Card>
+          </Grid.Col>
+        )}
       </Grid>
       <Center mt={5} style={{ fontSize: '12px' }}>
         As of {executedDate.toLocaleString()}
@@ -308,6 +392,7 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
             backgroundColor: 'rgba(0, 0, 0, 0.7)',
             color: 'white',
             borderRadius: '5px',
+            whiteSpace: 'pre-line',
           }}
         >
           <strong>{hoveredMetric}</strong>: {metricExplanations[hoveredMetric]}

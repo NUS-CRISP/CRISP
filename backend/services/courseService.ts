@@ -19,7 +19,45 @@ export const createNewCourse = async (courseData: any, accountId: string) => {
   if (!user) {
     throw new NotFoundError('User not found');
   }
-  const course = await CourseModel.create(courseData);
+  const {
+    name,
+    code,
+    semester,
+    startDate,
+    duration,
+    courseType,
+    gitHubOrgName,
+    repoNameFilter,
+    installationId,
+    isOn,
+    provider,
+    model,
+    apiKey,
+    frequency,
+    aiStartDate,
+  } = courseData;
+
+  const courseFields = {
+    name,
+    code,
+    semester,
+    startDate,
+    durationWeeks: duration,
+    courseType,
+    ...(gitHubOrgName && { gitHubOrgName }),
+    ...(repoNameFilter && { repoNameFilter }),
+    ...(installationId && { installationId }),
+    aiInsights: {
+      isOn: isOn,
+      ...(provider && { provider }),
+      ...(model && { model }),
+      ...(apiKey && { apiKey }),
+      ...(frequency && { frequency }),
+      ...(aiStartDate && { startDate: aiStartDate }),
+    },
+  };
+
+  const course = await CourseModel.create(courseFields);
   course.faculty.push(user._id);
   await course.save();
   return course;
@@ -104,13 +142,13 @@ export const addStudentsToCourse = async (
     if (!student) {
       student = new UserModel({
         identifier: studentId,
-        name: studentData.name,
+        name: studentData.name.toUpperCase(), // Save name as all caps
         enrolledCourses: [],
-        gitHandle: studentData.gitHandle ?? null,
+        gitHandle: studentData.gitHandle ?? null, // Keep githandle as case-sensitive
       });
       await student.save();
       const newAccount = new AccountModel({
-        email: studentData.email,
+        email: studentData.email, // Email is saved as case-sensitive (depends on organisation)
         role: Role.Student,
         isApproved: false,
         user: student._id,
@@ -124,8 +162,8 @@ export const addStudentsToCourse = async (
       if (
         (studentAccount.role !== Role.Student &&
           studentAccount.role !== Role.TrialUser) ||
-        studentData.name !== student.name ||
-        studentData.email !== studentAccount.email
+        studentData.name.toUpperCase() !== student.name.toUpperCase() ||
+        studentData.email.toLowerCase() !== studentAccount.email.toLowerCase() // Check is case-insensitive to handle email case-insensitivity cases
       ) {
         continue;
       }
@@ -166,7 +204,9 @@ export const updateStudentsInCourse = async (
     if (!course.students.includes(student._id)) {
       continue;
     }
-    student.name = studentData.name ?? student.name;
+    student.name = studentData.name
+      ? studentData.name.toUpperCase()
+      : student.name; // Update to given name in caps if needed.
     student.gitHandle = studentData.gitHandle ?? student.gitHandle;
     await student.save();
   }
@@ -207,7 +247,7 @@ export const addTAsToCourse = async (courseId: string, TADataList: any[]) => {
     if (!TA) {
       TA = new UserModel({
         identifier: TAId,
-        name: TAData.name,
+        name: TAData.name.toUpperCase(),
         enrolledCourses: [],
         gitHandle: TAData.gitHandle ?? null,
       });
@@ -226,8 +266,8 @@ export const addTAsToCourse = async (courseId: string, TADataList: any[]) => {
       }
       if (
         (TAAccount.role !== Role.TA && TAAccount.role !== Role.TrialUser) ||
-        TAData.name !== TA.name ||
-        TAData.email !== TAAccount.email
+        TAData.name.toUpperCase() !== TA.name.toUpperCase() ||
+        TAData.email.toLowerCase() !== TAAccount.email.toLowerCase()
       ) {
         continue;
       }
@@ -268,7 +308,7 @@ export const updateTAsInCourse = async (
     if (!course.TAs.includes(TA._id)) {
       continue;
     }
-    TA.name = TAData.name ?? TA.name;
+    TA.name = TAData.name ? TAData.name.toUpperCase() : TA.name;
     TA.gitHandle = TAData.gitHandle ?? TA.gitHandle;
     await TA.save();
   }
@@ -321,7 +361,7 @@ export const addFacultyToCourse = async (
     if (!facultyMember) {
       facultyMember = new UserModel({
         identifier: facultyId,
-        name: facultyData.name,
+        name: facultyData.name.toUpperCase(),
         enrolledCourses: [],
         gitHandle: facultyData.gitHandle ?? null,
       });
@@ -343,8 +383,8 @@ export const addFacultyToCourse = async (
       if (
         (facultyAccount.role !== Role.Faculty &&
           facultyAccount.role !== Role.TrialUser) ||
-        facultyData.name !== facultyMember.name ||
-        facultyData.email !== facultyAccount.email
+        facultyData.name.toUpperCase() !== facultyMember.name.toUpperCase() ||
+        facultyData.email.toLowerCase() !== facultyAccount.email.toLowerCase()
       ) {
         continue;
       }
@@ -393,7 +433,9 @@ export const updateFacultyInCourse = async (
     if (!course.faculty.includes(faculty._id)) {
       continue;
     }
-    faculty.name = facultyData.name ?? faculty.name;
+    faculty.name = facultyData.name
+      ? facultyData.name.toUpperCase()
+      : faculty.name;
     faculty.gitHandle = facultyData.gitHandle ?? faculty.gitHandle;
     await faculty.save();
   }

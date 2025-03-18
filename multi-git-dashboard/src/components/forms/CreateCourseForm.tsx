@@ -9,9 +9,11 @@ import {
   SegmentedControl,
   Select,
   Space,
+  Switch,
   Text,
   TextInput,
   Title,
+  Tooltip,
 } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
@@ -43,6 +45,13 @@ interface CreateCourseFormValues {
   gitHubOrgName: string;
   repoNameFilter: string;
   installationId: string;
+  isOn: boolean;
+  customisedAI: boolean;
+  provider: string;
+  model: string;
+  apiKey: string;
+  frequency: string;
+  aiStartDate: Date | null;
 }
 
 const CreateCourse: React.FC = () => {
@@ -64,6 +73,13 @@ const CreateCourse: React.FC = () => {
       gitHubOrgName: '',
       repoNameFilter: '',
       installationId: '',
+      isOn: true,
+      customisedAI: false,
+      provider: '',
+      model: '',
+      apiKey: '',
+      frequency: '',
+      aiStartDate: null,
     },
     validate: {
       name: (value: string) =>
@@ -90,6 +106,39 @@ const CreateCourse: React.FC = () => {
           appInstallationStatus === InstallationStatus.SUCCESS)
           ? null
           : 'Repo name filter is required',
+      provider: (value: string, values: CreateCourseFormValues) =>
+        values.isOn && values.customisedAI
+          ? value && value.trim().length > 0
+            ? null
+            : 'Provider is required'
+          : null,
+      model: (value: string, values: CreateCourseFormValues) =>
+        values.isOn &&
+        values.customisedAI &&
+        values.provider &&
+        modelOptions[values.provider]?.includes(value)
+          ? null
+          : values.customisedAI
+            ? 'Model is missing / invalid'
+            : null, // Only validate if 'customisedAI' is ON
+      apiKey: (value: string, values: CreateCourseFormValues) =>
+        values.isOn &&
+        values.customisedAI &&
+        values.provider &&
+        values.model &&
+        value.trim().length > 0
+          ? null
+          : values.customisedAI
+            ? 'Model is missing / invalid'
+            : null, // Only validate if 'customisedAI' is ON
+      frequency: (value: string, values: CreateCourseFormValues) =>
+        values.isOn
+          ? value.trim().length
+            ? null
+            : 'Frequency is required'
+          : null,
+      aiStartDate: (value: Date | null, values: CreateCourseFormValues) =>
+        values.isOn ? (value ? null : 'Start date is required') : null,
     },
   });
 
@@ -146,6 +195,24 @@ const CreateCourse: React.FC = () => {
     }
 
     router.push(`/courses/${data._id}?new=true`);
+  };
+
+  const modelOptions: Record<string, string[]> = {
+    Gemini: [
+      'gemini-1.5-pro',
+      'gemini-1.5-flash',
+      'gemini-2.0-flash-lite',
+      'gemini-2.0-flash',
+    ],
+    OpenAI: [
+      'gpt-3.5-turbo',
+      'gpt-4o-mini',
+      'gpt-4o',
+      'gpt-4.5-preview',
+      'o1-mini',
+      'o1',
+    ],
+    DeepSeek: ['deepseek-chat', 'deepseek-reasoner'],
   };
 
   return (
@@ -360,6 +427,100 @@ const CreateCourse: React.FC = () => {
                 </List>
               </Card>
             </Box>
+          </Collapse>
+        </Box>
+        <Space h="md" />
+        <Box>
+          <Tooltip
+            label="Enable using AI to generate insights for each group based on their code analysis metrics."
+            refProp="rootRef"
+          >
+            <Switch
+              defaultChecked
+              label="AI Insights"
+              size="lg"
+              {...form.getInputProps('isOn', { type: 'checkbox' })}
+            />
+          </Tooltip>
+          <Collapse in={form.values.isOn}>
+            <Title order={4} my={15}>
+              AI Insights Setup:
+            </Title>
+            <Card withBorder>
+              <Switch
+                onLabel="Input your own model and API key"
+                offLabel="Use default gemini-1.5-pro model"
+                size="xl"
+                {...form.getInputProps('customisedAI', { type: 'checkbox' })}
+              />
+              <Space h="sm" />
+              <Collapse in={form.values.customisedAI}>
+                <Select
+                  required
+                  comboboxProps={{ withinPortal: true }}
+                  data={['Gemini', 'OpenAI', 'DeepSeek']}
+                  placeholder="Choose AI provider"
+                  label="AI Provider"
+                  {...form.getInputProps('provider')}
+                  value={form.values.provider}
+                />
+                <Space h="sm" />
+                <Select
+                  required
+                  disabled={!form.values.provider}
+                  comboboxProps={{ withinPortal: true }}
+                  data={modelOptions[form.values.provider] || []}
+                  placeholder="Choose AI model"
+                  label="AI model"
+                  {...form.getInputProps('model')}
+                  value={form.values.model}
+                />
+                <Space h="sm" />
+                <TextInput
+                  withAsterisk
+                  label="API Key"
+                  disabled={!form.values.provider || !form.values.model}
+                  placeholder="e.g. 123456"
+                  {...form.getInputProps('apiKey')}
+                  value={form.values.apiKey}
+                />
+              </Collapse>
+              <Tooltip label="How often to generate ai insights for each group">
+                <Select
+                  required
+                  comboboxProps={{ withinPortal: true }}
+                  data={[
+                    'Daily',
+                    'Weekly',
+                    'Fortnightly',
+                    'Every 4 weeks (~Monthly)',
+                  ]}
+                  placeholder="Choose generation frequency"
+                  label="Generation Frequency"
+                  onChange={value => {
+                    const updatedFrequency =
+                      value === 'Every 4 weeks (~Monthly)'
+                        ? 'Monthly'
+                        : value || '';
+                    form.setFieldValue('frequency', updatedFrequency);
+                  }}
+                />
+              </Tooltip>
+              <Space h="sm" />
+              <Tooltip label="Starting date for AI insights generation. First scan will be performed on this date">
+                <DatePickerInput
+                  withAsterisk
+                  label="Start Date"
+                  placeholder="Pick start date"
+                  error={form.errors.aiStartDate}
+                  value={form.values.aiStartDate}
+                  minDate={
+                    new Date(new Date().setDate(new Date().getDate() + 1))
+                  } // Only allow from next day onwards
+                  onChange={value => form.setFieldValue('aiStartDate', value)}
+                />
+              </Tooltip>
+            </Card>
           </Collapse>
         </Box>
         <Space h="md" mt="md" />
