@@ -9,6 +9,7 @@ import {
   YAxis,
 } from 'recharts';
 import { AnalyticsProps } from '../Analytics';
+import { Center } from '@mantine/core';
 
 interface WeeklyContributionsProps extends Omit<AnalyticsProps, 'team'> {
   selectedWeekRange: [number, number];
@@ -46,6 +47,12 @@ const WeeklyContributions: React.FC<WeeklyContributionsProps> = ({
   teamData,
   selectedWeekRange,
 }) => {
+  if (
+    !teamData ||
+    !teamData.weeklyCommits ||
+    teamData.weeklyCommits.length === 0
+  )
+    return <Center>No Data Available</Center>;
   const formattedData = convertChartData(
     teamData.weeklyCommits,
     selectedWeekRange
