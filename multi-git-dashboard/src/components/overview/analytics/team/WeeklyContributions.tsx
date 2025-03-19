@@ -31,7 +31,7 @@ const convertChartData = (
   return data
     .filter(item => {
       if (item.length < 3) return false;
-      
+
       const itemDate = new Date(item[0] * 1000);
       return itemDate >= startDate && itemDate <= endDate;
     })
@@ -58,10 +58,6 @@ const WeeklyContributions: React.FC<WeeklyContributionsProps> = ({
     teamData.weeklyCommits,
     selectedWeekRange
   );
-
-  if (formattedData.length === 0) {
-    return <div>No data available</div>;
-  }
 
   return (
     <ResponsiveContainer width="100%" height={400}>
