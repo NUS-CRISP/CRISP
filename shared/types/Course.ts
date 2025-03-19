@@ -57,5 +57,13 @@ export interface Course {
     isRegistered: boolean;
     apiKey: string;
     courseId: number;
+  };
+  aiInsights: {
+    isOn: boolean;
+    provider: string;
+    model: string;
+    apiKey: string;
+    frequency: string;
+    startDate: Date;
   }
 }

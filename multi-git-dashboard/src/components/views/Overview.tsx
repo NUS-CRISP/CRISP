@@ -132,7 +132,12 @@ const TeamReview: React.FC<OverviewProps> = ({
         </Container>
       </Center>
     );
-  if (status === Status.Error) return <Center>No GitHub Data Available</Center>;
+  if (status === Status.Error)
+    return (
+      <TutorialPopover stage={7} position="bottom">
+        <Center>No GitHub Data Available</Center>
+      </TutorialPopover>
+    );
   if (!teams.length || !teamDatas.length)
     return <Center>No teams found.</Center>;
 

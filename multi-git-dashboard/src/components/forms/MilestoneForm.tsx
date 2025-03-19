@@ -19,9 +19,9 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({
       description: '',
     },
     validate: {
-      number: value =>
+      number: (value: number) =>
         value >= 1 && value <= 100 ? null : 'Invalid milestone number',
-      dateline: value => (value ? null : 'Dateline is required'),
+      dateline: (value: Date) => (value ? null : 'Dateline is required'),
     },
   });
 

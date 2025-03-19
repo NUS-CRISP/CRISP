@@ -512,6 +512,7 @@ const getMedianAndMeanCodeData = async (course: any) => {
 
   const codeAnalysisData = await codeAnalysisDataModel.find({
     gitHubOrgName: course.gitHubOrgName,
+    repoName: { $regex: `^${course.repoNameFilter}` },
     executionTime: {
       $gte: startOfDay,
       $lte: endOfDay,
@@ -519,7 +520,7 @@ const getMedianAndMeanCodeData = async (course: any) => {
   });
 
   console.log(
-    `Getting mean and median code analysis values for ${course.gitHubOrgName} - ${codeAnalysisData.length} records`
+    `Getting mean and median code analysis values for ${course.gitHubOrgName}, ${course.repoNameFilter} - ${codeAnalysisData.length} records`
   );
 
   if (codeAnalysisData.length === 0) return;

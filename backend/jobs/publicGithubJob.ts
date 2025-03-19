@@ -224,6 +224,7 @@ const getPublicCourseData = async (course: any) => {
 
       const teamData = {
         gitHubOrgName: owner.toLowerCase(),
+        course: course._id,
         teamId: repoData.data.id,
         repoName: repo,
         commits: commits.length,
@@ -236,7 +237,7 @@ const getPublicCourseData = async (course: any) => {
         milestones: milestones,
       };
 
-      console.log('Saving team data:', teamData);
+      console.log('Saving team data:', teamData.repoName);
 
       await TeamData.findOneAndUpdate({ teamId: teamData.teamId }, teamData, {
         upsert: true,

@@ -13,6 +13,34 @@ const accountSchema = new Schema<Account>({
     lowercase: true,
     required: true,
   },
+  emailNotificationType: {
+    type: String,
+    required: false,
+  },
+  emailNotificationHour: {
+    type: Number,
+    required: false,
+  },
+  emailNotificationWeekday: {
+    type: Number,
+    required: false,
+  },
+  telegramChatId: {
+    type: Number,
+    required: false,
+  },
+  telegramNotificationType: {
+    type: String,
+    required: false,
+  },
+  telegramNotificationHour: {
+    type: Number,
+    required: false,
+  },
+  telegramNotificationWeekday: {
+    type: Number,
+    required: false,
+  },
   password: { type: String },
   role: {
     type: String,
@@ -20,6 +48,14 @@ const accountSchema = new Schema<Account>({
     default: Role.TA,
   },
   isApproved: {
+    type: Boolean,
+    default: false,
+  },
+  wantsEmailNotifications: {
+    type: Boolean,
+    default: false,
+  },
+  wantsTelegramNotifications: {
     type: Boolean,
     default: false,
   },

@@ -1,3 +1,5 @@
+import { Course } from './Course';
+
 export interface TeamContribution {
   commits: number;
   createdIssues: number;
@@ -49,6 +51,7 @@ export interface Milestone {
 
 export interface TeamData {
   _id: string;
+  course: Course;
   gitHubOrgName: string;
   teamId: number;
   repoName: string;
@@ -60,4 +63,8 @@ export interface TeamData {
   teamContributions: Record<string, TeamContribution>;
   teamPRs: TeamPR[];
   milestones: Milestone[];
+  aiInsights: {
+    text: string;
+    date: Date;
+  }
 }

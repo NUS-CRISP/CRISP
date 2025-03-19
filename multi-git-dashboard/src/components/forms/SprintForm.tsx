@@ -20,10 +20,10 @@ const SprintForm: React.FC<SprintFormProps> = ({
       endDate: new Date(),
     },
     validate: {
-      number: value =>
+      number: (value: number) =>
         value >= 1 && value <= 100 ? null : 'Invalid sprint number',
-      startDate: value => (value ? null : 'Start date is required'),
-      endDate: value => (value ? null : 'End date is required'),
+      startDate: (value: Date) => (value ? null : 'Start date is required'),
+      endDate: (value: Date) => (value ? null : 'End date is required'),
     },
   });
 

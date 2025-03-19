@@ -9,7 +9,7 @@ import { Review, TeamContribution, TeamPR } from '@shared/types/TeamData';
 import cron from 'node-cron';
 import { App, Octokit } from 'octokit';
 import TeamData from '../models/TeamData';
-import { getGitHubApp, getTeamMembers } from '../utils/github';
+import { getGitHubApp } from '../utils/github';
 
 const fetchAndSaveTeamData = async () => {
   const app: App = getGitHubApp();
@@ -238,6 +238,7 @@ const getCourseData = async (octokit: Octokit, course: any) => {
     }
 
     const teamData = {
+      course: course._id,
       gitHubOrgName: gitHubOrgName.toLowerCase(),
       teamId: repo.id,
       repoName: repo.name,
@@ -251,7 +252,7 @@ const getCourseData = async (octokit: Octokit, course: any) => {
       milestones: milestones,
     };
 
-    console.log('Saving team data:', teamData);
+    console.log('Saving team data:', teamData.repoName);
 
     await TeamData.findOneAndUpdate({ teamId: teamData.teamId }, teamData, {
       upsert: true,

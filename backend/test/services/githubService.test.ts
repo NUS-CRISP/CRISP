@@ -79,7 +79,7 @@ describe('gitHubService', () => {
     const teamData1 = new TeamDataModel({
       repoName: 'team1',
       gitHubOrgName: 'org',
-      courseId: mockFacultyCourseId,
+      course: mockCourse._id,
       teamContributions: [],
       pullRequests: 0,
       issues: 0,
@@ -89,7 +89,7 @@ describe('gitHubService', () => {
     const teamData2 = new TeamDataModel({
       repoName: 'team2',
       gitHubOrgName: 'org',
-      courseId: mockFacultyCourseId,
+      course: mockCourse._id,
       teamContributions: [],
       pullRequests: 0,
       issues: 0,

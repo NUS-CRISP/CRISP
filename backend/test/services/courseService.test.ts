@@ -310,8 +310,29 @@ describe('courseService', () => {
         updatedCourse?.students.find(
           student => student.identifier === commonStudentDetails.identifier
         )?.name
-      ).toBe(commonStudentDetails.name + ' updated');
+      ).toBe(commonStudentDetails.name.toUpperCase() + ' UPDATED');
     });
+
+    it('should update students in a course, even if name is not provided', async () => {
+      const studentDataList = [
+        {
+          identifier: commonStudentDetails.identifier,
+          email: commonStudentDetails.identifier + '@example.com.sg',
+        },
+      ];
+      await updateStudentsInCourse(courseId, studentDataList);
+      const updatedCourse = await CourseModel.findById(courseId).populate<{
+        students: User[];
+      }>('students');
+
+      // Check if the student details have been updated
+      expect(
+        updatedCourse?.students.find(
+          student => student.identifier === commonStudentDetails.identifier
+        )?.name
+      ).toBe(commonStudentDetails.name);
+    });
+
 
     it('should throw NotFoundError for an invalid course', async () => {
       const invalidCourseId = new mongoose.Types.ObjectId().toString();
@@ -488,7 +509,9 @@ describe('courseService', () => {
       const updatedUser = await UserModel.findOne({
         identifier: commonStudentDetails.identifier,
       });
-      expect(updatedUser?.name).toBe(commonStudentDetails.name + ' updated');
+      expect(updatedUser?.name).toBe(
+        commonStudentDetails.name.toUpperCase() + ' UPDATED'
+      );
     });
 
     it('should throw NotFoundError for invalid courseId', async () => {
@@ -645,7 +668,33 @@ describe('courseService', () => {
       const updatedUser = await UserModel.findOne({
         identifier: commonTADetails.identifier,
       });
-      expect(updatedUser?.name).toBe(commonTADetails.name + ' updated');
+      expect(updatedUser?.name).toBe(
+        commonTADetails.name.toUpperCase() + ' UPDATED'
+      );
+    });
+
+    it('should update tas in a course, even if name is not provided', async () => {
+      const taDataList = [
+        {
+          identifier: commonTADetails.identifier,
+          name: commonTADetails.name,
+          email: commonTADetails.identifier + '@example.com',
+        },
+      ];
+      await addTAsToCourse(courseId, taDataList);
+
+      const updatedTADataList = [
+        {
+          identifier: commonTADetails.identifier,
+          email: commonTADetails.identifier + '@example.com.sg',
+        },
+      ];
+      await updateTAsInCourse(courseId, updatedTADataList);
+
+      const updatedUser = await UserModel.findOne({
+        identifier: commonTADetails.identifier,
+      });
+      expect(updatedUser?.name).toBe(commonTADetails.name);
     });
 
     it('should throw NotFoundError for invalid courseId', async () => {
@@ -831,7 +880,33 @@ describe('courseService', () => {
       const updatedUser = await UserModel.findOne({
         identifier: commonFacultyDetails.identifier,
       });
-      expect(updatedUser?.name).toBe(commonFacultyDetails.name + ' updated');
+      expect(updatedUser?.name).toBe(
+        commonFacultyDetails.name.toUpperCase() + ' UPDATED'
+      );
+    });
+
+    it('should update faculty in a course, even if name is not provided', async () => {
+      const facultyDataList = [
+        {
+          identifier: commonFacultyDetails.identifier,
+          name: commonFacultyDetails.name,
+          email: commonFacultyDetails.identifier + '@example.com',
+        },
+      ];
+      await addFacultyToCourse(courseId, facultyDataList);
+
+      const updatedFacultyDataList = [
+        {
+          identifier: commonFacultyDetails.identifier,
+          email: commonFacultyDetails.identifier + '@example.com.sg',
+        },
+      ];
+      await updateFacultyInCourse(courseId, updatedFacultyDataList);
+
+      const updatedUser = await UserModel.findOne({
+        identifier: commonFacultyDetails.identifier,
+      });
+      expect(updatedUser?.name).toBe(commonFacultyDetails.name);
     });
 
     it('should throw NotFoundError for invalid courseId', async () => {
