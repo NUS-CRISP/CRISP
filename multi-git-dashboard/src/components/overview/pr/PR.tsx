@@ -1,6 +1,6 @@
 import { OverviewProps } from '@/components/cards/OverviewCard';
 import { getTutorialHighlightColor } from '@/lib/utils';
-import { Box, Card, Group, Text } from '@mantine/core';
+import { Box, Card, Group, Text, Tabs, Button } from '@mantine/core';
 import dayjs from 'dayjs';
 import { forwardRef, useEffect, useState, useCallback } from 'react';
 import PRDetails from './PRDetails';
@@ -212,6 +212,9 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
   
     const [dataRefreshKey, setDataRefreshKey] = useState<number>(0);
 
+    // State for currently active visualization
+    const [activeView, setActiveView] = useState<string>("network");
+
     const getDisplayedPRs = useCallback(() => {
       let startDate, endDate;
       
@@ -253,61 +256,118 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
       setGraphData(top6GraphData);
       setGraphDataDot(top6GraphDataDot);
       
-      
       setDataRefreshKey(prev => prev + 1);
     }, [teamData.teamPRs, selectedWeekRange, dailyDateRange, useDailyRange, getDisplayedPRs]);
 
+    // Render the currently active visualization
+    const renderActiveVisualization = () => {
+      switch (activeView) {
+        case "list":
+          return (
+            <Group grow align="start">
+              <Box style={{ maxWidth: 200, marginRight: 15 }}>
+                <PRList
+                  team={team}
+                  teamPRs={getDisplayedPRs()}
+                  selectedPR={selectedPR}
+                  onSelectPR={setSelectedPR}
+                  spacing={SPACING}
+                />
+              </Box>
+              {selectedPR !== null && (
+                <Box maw={700} mt={10} mr={10}>
+                  <PRDetails
+                    pr={teamData.teamPRs.find((pr) => pr.id === selectedPR)}
+                    spacing={SPACING}
+                    profileGetter={profileGetter}
+                  />
+                </Box>
+              )}
+            </Group>
+          );
+        case "arc":
+          return <PRArcDiagram key={`arc-${dataRefreshKey}`} graphData={graphData} />;
+        case "chord":
+          return <PRChordDiagram key={`chord-${dataRefreshKey}`} graphData={graphData} />;
+        case "dot":
+          return <PRDotMatrixChart key={`dot-${dataRefreshKey}`} graphData={graphDataDot} />;
+        case "matrix":
+          return <PRMatrix key={`matrix-${dataRefreshKey}`} graphData={graphData} />;
+        case "network":
+        default:
+          return <PRNetwork key={`network-${dataRefreshKey}`} graphData={graphData} />;
+      }
+    };
+
     return (
       <Card ref={ref} bg={getTutorialHighlightColor(9)}>
-        {/* <Group grow align="start">
-          <Box style={{ maxWidth: 200, marginRight: 15 }}>
-            <PRList
-              team={team}
-              teamPRs={getDisplayedPRs()}
-              selectedPR={selectedPR}
-              onSelectPR={setSelectedPR}
-              spacing={SPACING}
-            />
-          </Box>
-          {selectedPR !== null && (
-            <Box maw={700} mt={10} mr={10}>
-              <PRDetails
-                pr={teamData.teamPRs.find((pr) => pr.id === selectedPR)}
-                spacing={SPACING}
-                profileGetter={profileGetter}
-              />
-            </Box>
-          )}
-        </Group> */}
-
-        {/* PR Visualization Graph */}
-        <Box mt={20}>
-          <Text fw={500} size="lg">
-            PR Review Interaction Graph ({getTimeRangeLabel()})
+        <Box mb={20}>
+          <Text fw={500} size="lg" mb={10}>
+            PR Review Interactions ({getTimeRangeLabel()})
           </Text>
-
-          {/* <PRArcDiagram key={`arc-${dataRefreshKey}`} graphData={graphData} /> */}
-
-          {/* <PRChordDiagram key={`chord-${dataRefreshKey}`} graphData={graphData} /> */}
-
-          {/* <PRDotMatrixChart key={`dot-${dataRefreshKey}`} graphData={graphDataDot} /> */}
-
-          {/* <PRMatrix key={`matrix-${dataRefreshKey}`} graphData={graphData} /> */}
-
-          <PRNetwork key={`network-${dataRefreshKey}`} graphData={graphData} />
-
-          {/* <PRStatusChart key={`status-${dataRefreshKey}`} graphData={graphData} /> */}
-
-
-
           
-          {/* Graph that don't work */}
-          {/* 
-          <PRHivePlot graphData={graphData} />
-          <PRGraphBundled graphData={graphDataBundled} />
-          <PRSunburstGraph graphData={graphDataBundled} /> 
-          <PRMatrixStatusColor graphData={graphData} />
-          */}
+          {/* Visualization selector with buttons */}
+          <Group spacing="xs" mb={15}>
+            <Button 
+              variant={activeView === "list" ? "filled" : "outline"} 
+              onClick={() => setActiveView("list")}
+              size="sm"
+            >
+              PR List
+            </Button>
+            <Button 
+              variant={activeView === "network" ? "filled" : "outline"} 
+              onClick={() => setActiveView("network")}
+              size="sm"
+            >
+              Network
+            </Button>
+            <Button 
+              variant={activeView === "arc" ? "filled" : "outline"} 
+              onClick={() => setActiveView("arc")}
+              size="sm"
+            >
+              Arc Diagram
+            </Button>
+            <Button 
+              variant={activeView === "chord" ? "filled" : "outline"} 
+              onClick={() => setActiveView("chord")}
+              size="sm"
+            >
+              Chord Diagram
+            </Button>
+            <Button 
+              variant={activeView === "dot" ? "filled" : "outline"} 
+              onClick={() => setActiveView("dot")}
+              size="sm"
+            >
+              Dot Matrix
+            </Button>
+            <Button 
+              variant={activeView === "matrix" ? "filled" : "outline"} 
+              onClick={() => setActiveView("matrix")}
+              size="sm"
+            >
+              Matrix
+            </Button>
+          </Group>
+          
+          {/* Alternative approach using Mantine Tabs */}
+          {/* <Tabs defaultValue="network" value={activeView} onTabChange={setActiveView}>
+            <Tabs.List>
+              <Tabs.Tab value="list">PR List</Tabs.Tab>
+              <Tabs.Tab value="network">Network</Tabs.Tab>
+              <Tabs.Tab value="arc">Arc Diagram</Tabs.Tab>
+              <Tabs.Tab value="chord">Chord Diagram</Tabs.Tab>
+              <Tabs.Tab value="dot">Dot Matrix</Tabs.Tab>
+              <Tabs.Tab value="matrix">Matrix</Tabs.Tab>
+            </Tabs.List>
+          </Tabs> */}
+        </Box>
+
+        {/* Visualization container */}
+        <Box style={{ minHeight: 400 }}>
+          {renderActiveVisualization()}
         </Box>
       </Card>
     );

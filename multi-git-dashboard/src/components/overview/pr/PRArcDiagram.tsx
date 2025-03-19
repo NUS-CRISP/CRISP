@@ -408,9 +408,7 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
 
   }, [graphData, width, height]);
 
-  if (!graphData?.nodes?.length || !graphData?.edges?.length) {
-    return <Text mt={15}>No interaction data available for arc diagram</Text>;
-  }
+
 
   return (
     <svg

@@ -3,7 +3,7 @@ import { Accordion, Center } from '@mantine/core';
 import { TeamData } from '@shared/types/TeamData';
 import { forwardRef } from 'react';
 import PRCard from '../cards/PRCard';
-import { ProfileGetter, Team } from '../views/TeamReview';
+import { ProfileGetter, Team } from '../views/Overview';
 
 interface OverviewAccordionItemProps {
   index: number;
