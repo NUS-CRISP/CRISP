@@ -9,6 +9,7 @@ import {
   rem,
 } from '@mantine/core';
 import {
+  IconBell,
   IconGitBranch,
   IconHelp,
   IconHome2,
@@ -26,7 +27,7 @@ import TutorialPopover from './tutorial/TutorialPopover';
 import { Course } from '@shared/types/Course';
 import { IconInfoCircle } from '@tabler/icons-react';
 import Image from 'next/image';
-import { LinksGroup } from './NavbarLinksGroup/NavbarLinksGroup';
+import NotificationSettingsForm from './forms/NotificationSettingsForm';
 
 interface NavbarLinkProps {
   icon: typeof IconHome2;
@@ -85,6 +86,7 @@ const Navbar: React.FC = () => {
 
   const [mainLinkPopoverOpened, setMainLinkPopoverOpened] = useState(false);
   const [questionPopoverOpened, setQuestionPopoverOpened] = useState(false);
+  const [notificationModalOpened, setNotificationModalOpened] = useState(false);
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -151,8 +153,6 @@ const Navbar: React.FC = () => {
       return 'Class Review';
     } else if (path.startsWith('/courses/[id]/code-analysis')) {
       return 'Code Analysis';
-    } else if (path.startsWith('/courses/[id]/pr-review')) {
-      return 'PR Review';
     } else if (path.startsWith('/courses/[id]')) {
       return 'Team Overview';
     } else {
@@ -192,34 +192,9 @@ const Navbar: React.FC = () => {
     />
   ));
 
-  const mockdata = [
-    {
-      label: 'Dashboard',
-      links: [
-        { label: 'Class Overview', link: `/courses/${courseId}/class-overview` },
-        { label: 'Team Review', link: `/courses/${courseId}` },
-        { label: 'PR Review', link: `/courses/${courseId}/pr-review` },
-        { label: 'Code Analysis', link: `/courses/${courseId}/code-analysis` },
-      ],
-      icon: '/class-overview.png'
-    },
-    {
-      label: 'Config',
-      links: [
-        { label: 'People', link: `/courses/${courseId}/people` },
-        { label: 'Repositories', link: `/courses/${courseId}/repositories` },
-        { label: 'Teams', link: `/courses/${courseId}/teams` },
-        { label: 'Timeline', link: `/courses/${courseId}/timeline` },
-        { label: 'Project Management', link: `/courses/${courseId}/project-management` },
-      ],
-      icon: '/class-overview.png'
-    },
-    { label: 'Assessments', link: `/courses/${courseId}/assessments` },
-  ];
-
   const courseLinksData = [
     {
-      link: `/courses/${courseId}/class-overview`,
+      link: `/courses/${courseId}/class-review`,
       label: 'Class Overview',
       disabled: !peopleAdded,
       pngSrc: '/class-overview.png',
@@ -229,12 +204,6 @@ const Navbar: React.FC = () => {
       label: 'Team Review',
       disabled: !peopleAdded,
       pngSrc: '/team-view.png',
-    },
-    {
-      link: `/courses/${courseId}/pr-review`,
-      label: 'PR Review',
-      disabled: !peopleAdded,
-      pngSrc: '/timeline.png',
     },
     {
       link: `/courses/${courseId}/people`,
@@ -275,45 +244,45 @@ const Navbar: React.FC = () => {
       label: 'Code Analysis',
       disabled: !peopleAdded,
       pngSrc: '/code-analysis.png',
-    }
+    },
   ];
-  const courseLinks = mockdata.map((item) => (
-    <LinksGroup
-      key={item.label}
-      {...item}
-      renderLink={(link) => (
-        <TutorialPopover
-          stage={6}
-          position="right"
-          key={link.label}
-          disabled={link.label !== 'Overview' || curTutorialStage !== 6}
-        >
-          <a
-            className={classes.courseLink}
-            data-active={link.label === activeCourseTab || undefined}
-            href={link.link}
-            onClick={(event) => {
-              event.preventDefault();
-              if (!link.disabled) {
-                logSessionTime(link.label, false);
-                setActiveCourseTab(link.label);
-                router.push(link.link);
-              } else {
-                setAlertOpened(true); // Show alert if people are not added
-              }
-            }}
-            style={link.disabled ? { cursor: 'not-allowed', opacity: 0.5 } : {}}
-          >
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <span style={{ marginLeft: '5px' }}>{link.label}</span>
-            </div>
-          </a>
-        </TutorialPopover>
-      )}
-    />
-  ));
-  
 
+  const courseLinks = courseLinksData.map(item => (
+    <TutorialPopover
+      stage={6}
+      position="right"
+      key={item.label}
+      disabled={item.label !== 'Class Overview' || curTutorialStage !== 6}
+    >
+      <a
+        className={classes.courseLink}
+        data-active={item.label === activeCourseTab || undefined}
+        href={item.link}
+        onClick={event => {
+          event.preventDefault();
+          if (!item.disabled) {
+            logSessionTime(item.label, false);
+            setActiveCourseTab(item.label);
+            router.push(item.link);
+          } else {
+            setAlertOpened(true); // Show alert if people are not added
+          }
+        }}
+        key={item.label}
+        style={item.disabled ? { cursor: 'not-allowed', opacity: 0.5 } : {}}
+      >
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <Image
+            src={item.pngSrc ?? ''}
+            alt={`${item.label} icon`}
+            width={25}
+            height={25}
+          />
+          <span style={{ marginLeft: '5px' }}>{item.label}</span>
+        </div>
+      </a>
+    </TutorialPopover>
+  ));
 
   useEffect(() => {
     const path = router.pathname;
@@ -354,9 +323,13 @@ const Navbar: React.FC = () => {
     };
   }, [activeCourseTab]);
 
+  useEffect(() => {
+    console.log('Navbar Tutorial Stage: ' + curTutorialStage);
+  }, [curTutorialStage]);
+
   return (
     <div className={classes.navbarsContainer}>
-      <TutorialPopover stage={1}>
+      <TutorialPopover stage={1} position={'right'}>
         <nav
           className={classes.navbar}
           style={{
@@ -424,6 +397,13 @@ const Navbar: React.FC = () => {
               </TutorialPopover>
 
               <NavbarLink
+                onClick={() => setNotificationModalOpened(true)}
+                icon={IconBell}
+                label="Configure Notifications"
+                popoverOpened={questionPopoverOpened}
+              />
+
+              <NavbarLink
                 onClick={handleSignOut}
                 icon={IconLogout}
                 label="Sign out"
@@ -487,6 +467,10 @@ const Navbar: React.FC = () => {
       >
         <p>You need to add people for this course first.</p>
       </Alert>
+      <NotificationSettingsForm
+        opened={notificationModalOpened}
+        onClose={() => setNotificationModalOpened(false)}
+      />
     </div>
   );
 };
