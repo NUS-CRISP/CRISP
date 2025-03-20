@@ -61,7 +61,7 @@ export const createNewCourse = async (courseData: any, accountId: string) => {
   course.faculty.push(user._id);
   if (account.role !== Role.Admin) {
     const adminAccount = await AccountModel.findOne({
-      role: Role.Admin
+      role: Role.Admin,
     });
     if (!adminAccount) console.warn('Admin account missing!');
     else {
@@ -484,7 +484,9 @@ export const getPeopleFromCourse = async (courseId: string) => {
   if (!course) {
     throw new NotFoundError('Course not found');
   }
-  course.faculty.filter((f) => f.identifier !== 'admin').sort((a, b) => a.name.localeCompare(b.name));
+  course.faculty
+    .filter(f => f.identifier !== 'admin')
+    .sort((a, b) => a.name.localeCompare(b.name));
   course.TAs.sort((a, b) => a.name.localeCompare(b.name));
   course.students.sort((a, b) => a.name.localeCompare(b.name));
   return {

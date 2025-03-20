@@ -110,7 +110,6 @@ const commonAdminDetails = {
   gitHandle: 'johndoefaculty',
 };
 
-
 async function createTestCourse(courseData: any) {
   const course = new CourseModel(courseData);
   await course.save();
@@ -259,7 +258,7 @@ describe('courseService', () => {
 
     it('should create a new course, even if admin account is missing', async () => {
       await AccountModel.deleteOne({
-        role: Role.Admin
+        role: Role.Admin,
       });
       const newCourse = await createNewCourse(
         commonCourseDetails,
@@ -372,7 +371,6 @@ describe('courseService', () => {
         )?.name
       ).toBe(commonStudentDetails.name);
     });
-
 
     it('should throw NotFoundError for an invalid course', async () => {
       const invalidCourseId = new mongoose.Types.ObjectId().toString();
