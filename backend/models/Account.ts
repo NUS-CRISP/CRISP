@@ -1,6 +1,7 @@
 import mongoose, { Schema, Types } from 'mongoose';
 import { Account as SharedAccount } from '@shared/types/Account';
-import Role from '@shared/types/auth/Role';
+import CrispRole from '@shared/types/auth/CrispRole';
+import CourseRole from '@shared/types/auth/CourseRole';
 
 export interface Account extends Omit<SharedAccount, 'user'>, Document {
   user: Types.ObjectId;
@@ -42,11 +43,18 @@ const accountSchema = new Schema<Account>({
     required: false,
   },
   password: { type: String },
-  role: {
+  crispRole: {
     type: String,
-    enum: Role,
-    default: Role.TA,
+    enum: CrispRole,
+    default: CrispRole.Normal,
   },
+  courseRoles: [{
+    type: Schema.Types.ObjectId,
+  }, {
+    type: String,
+    enum: CourseRole,
+    default: CourseRole.TA,
+  }],
   isApproved: {
     type: Boolean,
     default: false,

@@ -1,5 +1,6 @@
 import { User } from './User';
-import type { Role } from './auth/Role';
+import type { CrispRole } from './auth/CrispRole';
+import type { CourseRoleTuple } from './auth/CourseRole';
 
 export type NotificationPeriod = 'hourly' | 'daily' | 'weekly';
 
@@ -14,7 +15,8 @@ export interface Account {
   telegramNotificationHour: number; // 0-23
   telegramNotificationWeekday: number; // 1-7, from Monday to Sunday
   password: string;
-  role: Role;
+  crispRole: CrispRole;
+  courseRoles: CourseRoleTuple[];
   isApproved: boolean;
   wantsEmailNotifications: boolean;
   wantsTelegramNotifications: boolean;

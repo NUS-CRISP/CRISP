@@ -22,9 +22,11 @@ import TeamModel from '@models/Team';
 import TeamDataModel from '@models/TeamData';
 import TeamSetModel from '@models/TeamSet';
 import UserModel, { User } from '@models/User';
-import Role from '@shared/types/auth/Role';
+import Role from '@shared/types/auth/CrispRole';
 import { JiraBoard } from '@shared/types/JiraData';
 import { MultipleChoiceOption } from '@shared/types/Question';
+import CrispRole from '@shared/types/auth/CrispRole';
+import CourseRole from '@shared/types/auth/CourseRole';
 
 export const setupTutorialDataJob = async () => {
   let trialUser = await UserModel.findOne({ identifier: 'trial' });
@@ -49,7 +51,7 @@ export const setupTutorialDataJob = async () => {
     const trialAccountDoc = new AccountModel({
       email: 'trial@example.com',
       password: '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
-      role: 'Trial User',
+      role: CrispRole.TrialUser,
       isApproved: true,
       wantsEmailNotifications: false,
       wantsTelegramNotifications: false,
@@ -59,7 +61,7 @@ export const setupTutorialDataJob = async () => {
   }
 
   const adminAccount = await AccountModel.findOne({
-    role: Role.Admin,
+    crispRole: Role.Admin,
   }).populate('user');
   if (!adminAccount || !adminAccount.user) {
     throw new Error(
@@ -148,6 +150,9 @@ export const setupTutorialDataJob = async () => {
   trialCourse.faculty.push(adminUser._id);
   await trialCourse.save();
 
+  trialAccount.courseRoles.push([trialCourse._id.toString(), CourseRole.Faculty]);
+  await trialAccount.save();
+
   if (!trialUser.enrolledCourses.includes(trialCourse._id)) {
     trialUser.enrolledCourses.push(trialCourse._id);
     await trialUser.save();
@@ -174,11 +179,12 @@ export const setupTutorialDataJob = async () => {
         email: `${identifier}@example.com`,
         password:
           '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
-        role: Role.Student,
+        crispRole: Role.Normal,
         isApproved: true,
         wantsEmailNotifications: false,
         wantsTelegramNotifications: false,
         user: studentUser._id,
+        courseRoles: [trialCourse._id, CourseRole.Student],
       });
     } else {
       if (!studentUser.enrolledCourses.includes(trialCourse._id)) {
@@ -1730,11 +1736,12 @@ export const setupTutorialDataJob = async () => {
           email: `${spec.identifier}@example.com`,
           password:
             '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
-          role: Role.Student,
+          crispRole: Role.Normal,
           isApproved: true,
           wantsEmailNotifications: false,
           wantsTelegramNotifications: false,
           user: newStudent._id,
+          courseRoles: [trialCourse._id, CourseRole.Student],
         });
       } else {
         if (!newStudent.enrolledCourses.includes(trialCourse._id)) {

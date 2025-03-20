@@ -4,14 +4,14 @@ import UserModel from '../models/User';
 import { BadRequestError, NotFoundError } from './errors';
 import mongoose from 'mongoose';
 import { NotificationPeriod } from '@shared/types/Account';
-import Role from '@shared/types/auth/Role';
+import CrispRoles, { CrispRole } from '@shared/types/auth/CrispRole';
 
 export const createNewAccount = async (
   identifier: string,
   name: string,
   email: string,
   password: string,
-  role: string
+  role: CrispRole
 ) => {
   const existingAccount = await AccountModel.findOne({ email });
   let newUser;
@@ -41,7 +41,7 @@ export const createNewAccount = async (
     const newAccount = new AccountModel({
       email,
       password: passwordHash,
-      role,
+      crispRole: role,
       isApproved: false,
       user: newUser._id,
     });
@@ -153,5 +153,5 @@ export const updateTelegramNotificationSettings = async (
 };
 
 export const getAllTrialAccounts = async () => {
-  return await AccountModel.find({ role: Role.TrialUser }).populate('user');
+  return await AccountModel.find({ crispRole: CrispRoles.TrialUser }).populate('user');
 };

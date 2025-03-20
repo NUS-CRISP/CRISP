@@ -44,6 +44,9 @@ import AccountModel from '@models/Account';
 import AssessmentResultModel, { MarkEntry } from '@models/AssessmentResult';
 import UserModel, { User } from '@models/User';
 import { recalculateResult } from './assessmentResultService';
+import CrispRole from '@shared/types/auth/CrispRole';
+import CourseModel from '@models/Course';
+import { ObjectId } from 'mongodb';
 
 /**
  * Checks if an AnswerUnion is a NUSNET ID Answer.
@@ -596,11 +599,20 @@ export const updateSubmission = async (
     throw new NotFoundError('Submission updater not found');
   }
 
+  const assessment = await getAssessmentWithQuestions(
+    submission.assessment.toString()
+  );
+
   let bypass = false;
   const account = await AccountModel.findById(accountId);
+  const course = await CourseModel.findById(assessment.course);
+  if (!course) throw new BadRequestError('Assessment course id invalid');
+  const isCourseFaculty = course.faculty.includes(new ObjectId(userId));
+  // Alternative method would be to check if account's .courseRole
+  // contains this course and has faculty role in the same tuple.
   if (
     account &&
-    (account.role === 'Faculty member' || account.role === 'admin')
+    (isCourseFaculty || account.crispRole === CrispRole.Admin)
   ) {
     bypass = true;
   }
@@ -610,10 +622,6 @@ export const updateSubmission = async (
       'You do not have permission to update this submission.'
     );
   }
-
-  const assessment = await getAssessmentWithQuestions(
-    submission.assessment.toString()
-  );
 
   await validateSubmissionPeriod(assessment);
   await validateAnswers(assessment, answers);

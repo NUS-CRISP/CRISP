@@ -11,8 +11,8 @@ import {
   Title,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import type { Role } from '@shared/types/auth/Role';
-import Roles from '@shared/types/auth/Role';
+import type { CrispRole } from '@shared/types/auth/CrispRole';
+import CrispRoles from '@shared/types/auth/CrispRole';
 import { IconInfoCircle } from '@tabler/icons-react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -24,7 +24,7 @@ interface FormValues {
   email: string;
   password: string;
   confirmPassword: string;
-  role: Role;
+  role: CrispRole;
 }
 
 const RegisterPage: React.FC = () => {
@@ -36,7 +36,7 @@ const RegisterPage: React.FC = () => {
       email: '',
       password: '',
       confirmPassword: '',
-      role: Roles.TA,
+      role: CrispRoles.Normal,
     },
     validate: {
       identifier: (value: string) =>
@@ -53,11 +53,11 @@ const RegisterPage: React.FC = () => {
         value.length < 6 ? 'Password must be at least 6 characters long' : null,
       confirmPassword: (value: string, values: FormValues) =>
         value !== values.password ? 'Passwords do not match' : null,
-      role: (value: Role) =>
-        !Object.values(Roles).includes(value) ? 'Invalid role' : null,
+      role: (value: CrispRole) =>
+        !Object.values(CrispRoles).includes(value) ? 'Invalid role' : null,
     },
   });
-  const roleData = [Roles.TA, Roles.Faculty];
+  const roleData = [CrispRoles.Normal, CrispRoles.Faculty];
 
   const [errors, setErrors] = useState({
     passwordMismatch: false,
@@ -149,7 +149,7 @@ const RegisterPage: React.FC = () => {
           <Text size="sm" fw={500} mt="md">
             Are you signing up as a:
           </Text>
-          <SegmentedControl data={roleData} {...form.getInputProps('role')} />
+          <SegmentedControl data={roleData} {...form.getInputProps('crispRole')} />
           <Button type="submit" fullWidth mt="xl">
             Register
           </Button>

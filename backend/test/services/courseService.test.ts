@@ -258,7 +258,7 @@ describe('courseService', () => {
 
     it('should create a new course, even if admin account is missing', async () => {
       await AccountModel.deleteOne({
-        role: Role.Admin,
+        crispRole: Role.Admin,
       });
       const newCourse = await createNewCourse(
         commonCourseDetails,

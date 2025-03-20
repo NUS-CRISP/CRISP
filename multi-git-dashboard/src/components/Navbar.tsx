@@ -28,6 +28,7 @@ import { Course } from '@shared/types/Course';
 import { IconInfoCircle } from '@tabler/icons-react';
 import Image from 'next/image';
 import NotificationSettingsForm from './forms/NotificationSettingsForm';
+import CrispRole from '@shared/types/auth/CrispRole';
 
 interface NavbarLinkProps {
   icon: typeof IconHome2;
@@ -170,7 +171,7 @@ const Navbar: React.FC = () => {
   const mainLinksData = [
     { link: '/courses', label: 'View Courses', icon: IconListDetails },
   ];
-  if (session?.user?.role === 'admin') {
+  if (session?.user?.crispRole === CrispRole.Admin) {
     mainLinksData.push({ link: '/admin', label: 'Admin', icon: IconSettings2 });
   }
 

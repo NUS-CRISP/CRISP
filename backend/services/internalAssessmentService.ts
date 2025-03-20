@@ -35,6 +35,7 @@ import {
   MultipleChoiceAnswer,
   MultipleResponseAnswer,
 } from '@models/Answer';
+import CrispRole from '@shared/types/auth/CrispRole';
 
 /**
  * Retrieves an internal assessment by ID.
@@ -64,7 +65,7 @@ export const getInternalAssessmentById = async (
 
   // Populates different fields depending on the user's role
   const assessment =
-    account.role === 'Faculty member' || account.role === 'admin'
+    account.crispRole === CrispRole.Faculty || account.crispRole === CrispRole.Admin
       ? await InternalAssessmentModel.findById(assessmentId)
           .populate<{
             results: AssessmentResult[];
@@ -104,7 +105,7 @@ export const getInternalAssessmentById = async (
   }
 
   // Sorts the results by student name if user is admin/faculty
-  if (account.role === 'Faculty member' || account.role === 'admin') {
+  if (account.crispRole === CrispRole.Faculty || account.crispRole === CrispRole.Admin) {
     (assessment.results as AssessmentResult[]).sort((a, b) =>
       (a.student as User).name.localeCompare((b.student as User).name)
     );
@@ -136,7 +137,7 @@ export const updateInternalAssessmentById = async (
     throw new NotFoundError('Account not found');
   }
 
-  if (account.role !== 'admin' && account.role !== 'Faculty member') {
+  if (account.crispRole === CrispRole.Faculty || account.crispRole === CrispRole.Admin) {
     throw new BadRequestError('Unauthorized');
   }
 
@@ -367,7 +368,7 @@ export const addQuestionToAssessment = async (
     throw new NotFoundError('Account not found');
   }
 
-  if (account.role !== 'admin' && account.role !== 'Faculty member') {
+  if (account.crispRole === CrispRole.Faculty || account.crispRole === CrispRole.Admin) {
     throw new BadRequestError('Unauthorized');
   }
 
@@ -670,7 +671,7 @@ export const updateQuestionById = async (
     throw new NotFoundError('Account not found');
   }
 
-  if (account.role !== 'admin' && account.role !== 'Faculty member') {
+  if (account.crispRole === CrispRole.Faculty || account.crispRole === CrispRole.Admin) {
     throw new BadRequestError('Unauthorized');
   }
 
@@ -1026,7 +1027,7 @@ export const deleteQuestionById = async (
     throw new NotFoundError('Account not found');
   }
 
-  if (account.role !== 'admin' && account.role !== 'Faculty member') {
+  if (account.crispRole === CrispRole.Faculty || account.crispRole === CrispRole.Admin) {
     throw new BadRequestError('Unauthorized');
   }
 
@@ -1081,7 +1082,7 @@ export const releaseInternalAssessmentById = async (
     throw new NotFoundError('Account not found');
   }
 
-  if (account.role !== 'admin' && account.role !== 'Faculty member') {
+  if (account.crispRole === CrispRole.Faculty || account.crispRole === CrispRole.Admin) {
     throw new BadRequestError('Unauthorized');
   }
 
@@ -1123,7 +1124,7 @@ export const recallInternalAssessmentById = async (
     throw new NotFoundError('Account not found');
   }
 
-  if (account.role !== 'admin' && account.role !== 'Faculty member') {
+  if (account.crispRole === CrispRole.Faculty || account.crispRole === CrispRole.Admin) {
     throw new BadRequestError('Unauthorized');
   }
 
@@ -1162,7 +1163,7 @@ export const recaluculateSubmissionsForAssessment = async (
     throw new NotFoundError('Account not found');
   }
 
-  if (account.role !== 'admin' && account.role !== 'Faculty member') {
+  if (account.crispRole === CrispRole.Faculty || account.crispRole === CrispRole.Admin) {
     throw new BadRequestError('Unauthorized');
   }
 
@@ -1197,7 +1198,7 @@ export const reorderQuestions = async (
   if (!account) {
     throw new NotFoundError('Account not found');
   }
-  if (account.role !== 'admin' && account.role !== 'Faculty member') {
+  if (account.crispRole === CrispRole.Faculty || account.crispRole === CrispRole.Admin) {
     throw new BadRequestError('Unauthorized');
   }
 
