@@ -484,7 +484,7 @@ export const getPeopleFromCourse = async (courseId: string) => {
   if (!course) {
     throw new NotFoundError('Course not found');
   }
-  course.faculty.sort((a, b) => a.name.localeCompare(b.name));
+  course.faculty.filter((f) => f.identifier !== 'admin').sort((a, b) => a.name.localeCompare(b.name));
   course.TAs.sort((a, b) => a.name.localeCompare(b.name));
   course.students.sort((a, b) => a.name.localeCompare(b.name));
   return {
