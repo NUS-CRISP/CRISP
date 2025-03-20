@@ -46,6 +46,7 @@ import {
 } from '../../services/courseService';
 import { NotFoundError } from '../../services/errors';
 import InternalAssessmentModel from '@models/InternalAssessment';
+import Role from '@shared/types/auth/Role';
 
 let mongo: MongoMemoryServer;
 
@@ -102,6 +103,13 @@ const commonFacultyDetails = {
   name: 'John Doe faculty',
   gitHandle: 'johndoefaculty',
 };
+
+const commonAdminDetails = {
+  identifier: 'admin',
+  name: 'admin',
+  gitHandle: 'johndoefaculty',
+};
+
 
 async function createTestCourse(courseData: any) {
   const course = new CourseModel(courseData);
@@ -166,6 +174,25 @@ async function createFacultyUser(userData: any) {
   return { user, account };
 }
 
+async function createAdminUser(userData: any) {
+  const user = new UserModel({
+    ...userData,
+    enrolledCourses: [],
+  });
+  await user.save();
+
+  const account = new AccountModel({
+    email: `${userData.identifier}@example.com`,
+    password: 'hashedpassword',
+    role: Role.Admin,
+    user: user._id,
+    isApproved: true,
+  });
+  await account.save();
+
+  return { user, account };
+}
+
 async function createInternalAssessment(courseId: string, assessmentData: any) {
   const assessment = new InternalAssessmentModel({
     ...assessmentData,
@@ -221,6 +248,19 @@ describe('courseService', () => {
 
   describe('createNewCourse', () => {
     it('should create a new course', async () => {
+      await createAdminUser(commonAdminDetails);
+      const newCourse = await createNewCourse(
+        commonCourseDetails,
+        facultyAccountId
+      );
+      expect(newCourse).toBeDefined();
+      expect(newCourse.name).toBe(commonCourseDetails.name);
+    });
+
+    it('should create a new course, even if admin account is missing', async () => {
+      await AccountModel.deleteOne({
+        role: Role.Admin
+      });
       const newCourse = await createNewCourse(
         commonCourseDetails,
         facultyAccountId

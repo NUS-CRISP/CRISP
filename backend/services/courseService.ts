@@ -59,6 +59,16 @@ export const createNewCourse = async (courseData: any, accountId: string) => {
 
   const course = await CourseModel.create(courseFields);
   course.faculty.push(user._id);
+  if (account.role !== Role.Admin) {
+    const adminAccount = await AccountModel.findOne({
+      role: Role.Admin
+    });
+    if (!adminAccount) console.warn('Admin account missing!');
+    else {
+      const adminUser = await UserModel.findById(adminAccount.user);
+      course.faculty.push(adminUser!._id);
+    }
+  }
   await course.save();
   return course;
 };
