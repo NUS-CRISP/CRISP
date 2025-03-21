@@ -1,4 +1,4 @@
-import AccountModel, { Account } from '@models/Account';
+import AccountModel from '@models/Account';
 import { Assessment } from '@models/Assessment';
 import CourseModel from '@models/Course';
 import TeamModel, { Team } from '@models/Team';
