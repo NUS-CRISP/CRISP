@@ -55,7 +55,7 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
             .force("center", d3.forceCenter(width / 2, height / 2))
             .force("x", d3.forceX(width / 2).strength(0.1))
             .force("y", d3.forceY(height / 2).strength(0.1))
-            .force("collision", d3.forceCollide().radius(120));
+            .force("collision", d3.forceCollide().radius(40));
 
         const colorMap = {
             approved: "#2ca02c", // Green
@@ -74,11 +74,11 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
 
         const legend = svg.append("g")
             .attr("class", "legend")
-            .attr("transform", `translate(${width - 180}, 60)`);
+            .attr("transform", `translate(${width - 230}, 60)`);
 
         legend.append("text")
-            .attr("x", 0)
-            .attr("y", -10)
+            .attr("x", -20)
+            .attr("y", 0)
             .attr("font-weight", "bold")
             .text("Interaction Types");
 

@@ -1,49 +1,77 @@
-import { AppBar, Toolbar, Typography, Button, Container, Box } from '@mui/material';
+import { AppBar, Toolbar, Typography, Container, Box } from '@mui/material';
 import { useRouter } from 'next/router';
-import Image from 'next/image';
-import { IconChevronDown, IconGitBranch } from '@tabler/icons-react';
+import { IconGitBranch } from '@tabler/icons-react';
 import classes from '@styles/Home.module.css';
-
+import { Button, useMantineTheme } from '@mantine/core';
 
 const Header: React.FC = () => {
   const router = useRouter();
+  const theme = useMantineTheme();
 
   return (
-    <AppBar position="fixed" sx={{ backgroundColor: 'black', padding: '10px 0' }}>
+    <AppBar
+      position="static"
+      sx={{
+        backgroundColor: 'black',
+        boxShadow: 'none',
+        padding: '20px 0',
+        height: '100px',
+      }}
+    >
       <Container maxWidth="lg">
-        <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          {/* Logo and Title */}
+        <Toolbar
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            minHeight: '60px',
+            padding: '0 16px'
+          }}
+        >
+
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <IconGitBranch size={40} className={classes.headerIcon} />
-            <Typography variant="h6" component="a" href="#" sx={{ color: 'white', fontWeight: 'bold', ml: 2, textDecoration: 'none' }}>
+            <IconGitBranch size={36} className={classes.headerIcon} stroke={2} color="white" />
+
+            <Typography
+              variant="h5"
+              component="a"
+              href="#"
+              sx={{
+                color: 'white',
+                fontWeight: 'bold',
+                ml: 1.5,
+                textDecoration: 'none',
+                letterSpacing: '0.5px',
+                fontSize: '1.5rem'
+              }}
+            >
               CRISP
             </Typography>
           </Box>
 
-          {/* Navigation Links */}
-          <Box sx={{ display: 'flex', gap: 4 }}>
-            <Button color="inherit" sx={{ fontWeight: 'bold' }} href="#">
-              About
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Button
+              key="signin"
+              onClick={() => router.push('/auth/signin')}
+              color={theme.colors.blue[9]}
+              size="md"
+              sx={{ height: '40px', fontSize: '0.9rem' }}
+              autoContrast
+            >
+              Sign in
             </Button>
-            <Button color="inherit" sx={{ fontWeight: 'bold' }} href="#">
-              Features
-            </Button>
-          </Box>
 
-          {/* Login Button */}
-          <Button
-            variant="contained"
-            sx={{
-              backgroundColor: '#4B7048',
-              color: 'white',
-              borderRadius: '8px',
-              padding: '8px 16px',
-              '&:hover': { backgroundColor: '#3a5c38' },
-            }}
-            onClick={() => router.push('/auth/signin')}
-          >
-            Login
-          </Button>
+            <Button
+              key="getstarted"
+              onClick={() => router.push('/auth/register')}
+              color={theme.colors.blue[9]}
+              size="md"
+              sx={{ height: '40px', fontSize: '0.9rem' }}
+              autoContrast
+            >
+              Sign up
+            </Button>
+
+          </Box>
         </Toolbar>
       </Container>
     </AppBar>

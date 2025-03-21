@@ -41,6 +41,8 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
         return '#17a2b8';
       case 'dismissed':
         return '#6c757d';
+      case 'all':
+        return '#ffc107'; // yellow
       default:
         return '#6c757d';
     }
@@ -69,7 +71,7 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    // Title
+  
     svg
       .append('text')
       .attr('x', width / 2 - 50)
@@ -79,7 +81,7 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
       .attr('font-weight', 'bold')
       .text('Arc Diagram');
 
-    // node IDs
+
     const nodeIds = Array.from(
       new Set([
         ...graphData.edges.map((e) => e.source),
@@ -87,7 +89,7 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
       ])
     );
 
-    // total interactions for each node
+
     const interactionCount: Record<string, number> = {};
     graphData.edges.forEach((edge) => {
       interactionCount[edge.source] =
@@ -221,12 +223,13 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
       .attr('transform', (d) => `rotate(45, ${d.x}, ${d.y + 20})`)
       .text((d) => {
         const name = d.id;
-        // Truncate if very long
+    
         return name.length > 12 ? name.substring(0, 10) + '...' : name;
       });
 
     // legend data for status colors
     const legendData = [
+      { status: 'all', color: getStatusColor('all') }, // Add the "All" legend item
       { status: 'approved', color: getStatusColor('approved') },
       { status: 'changes_requested', color: getStatusColor('changes_requested') },
       { status: 'commented', color: getStatusColor('commented') },
@@ -236,10 +239,14 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
     // group edges by status
     const edgesByStatus: Record<string, typeof links> = {};
     legendData.forEach(item => {
-      edgesByStatus[item.status] = links.filter(link => link.status === item.status);
+      if (item.status === 'all') {
+        edgesByStatus[item.status] = links; // links for "all" status
+      } else {
+        edgesByStatus[item.status] = links.filter(link => link.status === item.status);
+      }
     });
 
-    // weight stats by status
+
     const weightStatsByStatus: Record<string, {min: number, max: number, mid?: number}> = {};
     
     Object.entries(edgesByStatus).forEach(([status, statusLinks]) => {
@@ -259,7 +266,7 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
       };
     });
 
-    // weight legend (updated on hover)
+    // weight legend 
     const weightLegendX = 10;
     const weightLegendY = 10;
     
@@ -267,7 +274,6 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
       .attr('transform', `translate(${weightLegendX}, ${weightLegendY})`)
       .attr('class', 'weight-legend');
     
-    // weight legend title
     weightLegendGroup.append('text')
       .attr('x', 0)
       .attr('y', 0)
@@ -275,15 +281,15 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
       .attr('font-weight', 'bold')
       .text('Weight Legend');
     
-    // update weight legend based on status
+
     const updateWeightLegend = (status: string) => {
       const stats = weightStatsByStatus[status] || { min: 0, max: 0 };
       
-      // clear
+
       weightLegendGroup.selectAll('.weight-line, .weight-text').remove();
       
       if (stats.min === stats.max) {
-        // when only one weight value
+
         weightLegendGroup.append('line')
           .attr('class', 'weight-line')
           .attr('x1', 0)
@@ -364,19 +370,22 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
 
     const legend = svg.append('g').attr('transform', `translate(${legendX}, ${legendY})`);
 
-
     legendData.forEach((item, i) => {
-
       const legendRow = legend
         .append('g')
         .attr('transform', `translate(0, ${i * 20})`)
         .on('mouseover', () => {
-          // arcs for the hovered status
-          arcSelection.style('display', (d) =>
-            d.status === item.status ? 'block' : 'none'
-          );
+          if (item.status === 'all') {
+            // Show all arcs
+            arcSelection.style('display', 'block');
+          } else {
+            // Show arcs only for the hovered status
+            arcSelection.style('display', (d) =>
+              d.status === item.status ? 'block' : 'none'
+            );
+          }
           
-          // update weight legend
+
           updateWeightLegend(item.status);
         })
         .on('mouseout', () => {
@@ -403,12 +412,10 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
         .attr('x', 20)
         .attr('y', 12)
         .attr('font-size', '12px')
-        .text(item.status);
+        .text(item.status.charAt(0).toUpperCase() + item.status.slice(1)); 
     });
 
   }, [graphData, width, height]);
-
-
 
   return (
     <svg

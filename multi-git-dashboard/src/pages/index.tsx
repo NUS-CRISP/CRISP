@@ -10,34 +10,28 @@ import AssessmentCard from '@/components/home/AssessmentCard';
 import { Container } from '@mantine/core';
 import classes from '@styles/Home.module.css';
 
-
 const Home: React.FC = () => (
-  <div className={classes.root}>
-    <Container size="lg">
+  <div style={{ overflow: 'hidden' }}>
+    <div style={{ background: 'black' }}>
       <Header />
       <Hero />
-    </Container>
-
-
-    <div style={{ marginTop: "350px" }}>
-      <FeatureMono />
     </div>
 
+    <FeatureMono />
 
+    <div style={{ background: '#062343' }}>
+      <Container >
 
-    {/* <FeatureShowcase /> */}
+        <div style={{ marginBottom: '200px' }}>
+          <FeatureCard />
+        </div>
 
-    <Container size="lg">
-      <div style={{ marginBottom: "250px" }}>
-        <FeatureCard />
-      </div>
-      {/* <div style={{ marginBottom: "250px" }}>
-        <AssessmentCard />
-      </div> */}
-      {/* <Features /> */}
-      <ContactUs />
-      <Footer />
-    </Container>
+        <ContactUs />
+
+        <Footer />
+
+      </Container>
+    </div>
   </div>
 );
 

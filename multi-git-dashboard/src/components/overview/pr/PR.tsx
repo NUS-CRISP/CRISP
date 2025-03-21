@@ -8,13 +8,8 @@ import PRList from './PRList';
 import PRNetwork from './PRNetwork';
 import PRChordDiagram from './PRChordDiagram';
 import PRMatrix from './PRMatrix';
-import PRMatrixStatusColor from './PRMatrixStatusColor';
-import PRHivePlot from './PRHivePlot';
-import PRGraphBundled from './PRGraphBundled';
 import PRDotMatrixChart from './PRDotMatrixChart';
-import PRStatusChart from './PRStatusChart';
 import PRArcDiagram from './PRArcDiagram';
-import PRSunburstGraph from './PRSunburstGraph';
 
 export interface Spacing {
   maxHeight: number;
@@ -187,8 +182,10 @@ function filterAndRenameTop6(graphData: PRGraphData): PRGraphData {
   }));
 
   return {
+    // sortedNodes, 
+    // filteredEdges
     nodes: sortedNodes, // renamedNodes, for anoynmized version
-    edges: filteredEdges, // renamedEdges, for
+    edges: filteredEdges, // renamedEdges, for anoynmized version
   };
 }
 
@@ -212,8 +209,8 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
   
     const [dataRefreshKey, setDataRefreshKey] = useState<number>(0);
 
-    // State for currently active visualization
-    const [activeView, setActiveView] = useState<string>("network");
+
+    const [activeView, setActiveView] = useState<string>("list");
 
     const getDisplayedPRs = useCallback(() => {
       let startDate, endDate;
@@ -259,7 +256,7 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
       setDataRefreshKey(prev => prev + 1);
     }, [teamData.teamPRs, selectedWeekRange, dailyDateRange, useDailyRange, getDisplayedPRs]);
 
-    // Render the currently active visualization
+
     const renderActiveVisualization = () => {
       switch (activeView) {
         case "list":
@@ -315,13 +312,7 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
             >
               PR List
             </Button>
-            <Button 
-              variant={activeView === "network" ? "filled" : "outline"} 
-              onClick={() => setActiveView("network")}
-              size="sm"
-            >
-              Network
-            </Button>
+           
             <Button 
               variant={activeView === "arc" ? "filled" : "outline"} 
               onClick={() => setActiveView("arc")}
@@ -348,7 +339,14 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
               onClick={() => setActiveView("matrix")}
               size="sm"
             >
-              Matrix
+              Heat Map
+            </Button>
+            <Button 
+              variant={activeView === "network" ? "filled" : "outline"} 
+              onClick={() => setActiveView("network")}
+              size="sm"
+            >
+              Network
             </Button>
           </Group>
           
@@ -365,7 +363,7 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
           </Tabs> */}
         </Box>
 
-        {/* Visualization container */}
+      
         <Box style={{ minHeight: 400 }}>
           {renderActiveVisualization()}
         </Box>

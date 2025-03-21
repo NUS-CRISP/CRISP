@@ -1,4 +1,4 @@
-// exportDiagrams.js - A script to automate exporting PR diagrams
+// script to automate exporting PR diagrams
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
@@ -23,19 +23,19 @@ program
 
 const options = program.opts();
 
-// Diagram types
+
 const DIAGRAM_TYPES = {
   ARC: 'arc',
   NETWORK: 'network'
 };
 
-// SVG selectors for different diagram types
+
 const SVG_SELECTORS = {
   [DIAGRAM_TYPES.ARC]: '.arc-diagram svg, [data-testid="arc-diagram"] svg, svg',
   [DIAGRAM_TYPES.NETWORK]: '.network-diagram svg, [data-testid="network-diagram"] svg, svg'
 };
 
-// Interactive prompt helper
+
 function createPrompt() {
   return readline.createInterface({
     input: process.stdin,
@@ -43,7 +43,7 @@ function createPrompt() {
   });
 }
 
-// Helper to ask questions in interactive mode
+
 async function prompt(question, defaultAnswer = '') {
   const rl = createPrompt();
   return new Promise(resolve => {
@@ -54,11 +54,11 @@ async function prompt(question, defaultAnswer = '') {
   });
 }
 
-// Main export function
+
 async function exportDiagrams() {
   let config = { ...options };
   
-  // If interactive mode is enabled, prompt for configuration
+
   if (options.interactive) {
     console.log('💻 PR Diagram Export Tool - Interactive Mode 💻');
     console.log('----------------------------------------------');
@@ -75,18 +75,18 @@ async function exportDiagrams() {
     }
   }
   
-  // Convert delay to number
+
   config.delay = parseInt(config.delay, 10);
   config.width = parseInt(config.width, 10);
   config.height = parseInt(config.height, 10);
   
-  // Create output directory if it doesn't exist
+
   if (!fs.existsSync(config.output)) {
     fs.mkdirSync(config.output, { recursive: true });
     console.log(`Created output directory: ${config.output}`);
   }
   
-  // Determine which diagram types to export
+
   const typesToExport = config.type === 'all' 
     ? [DIAGRAM_TYPES.ARC, DIAGRAM_TYPES.NETWORK] 
     : [config.type];
@@ -111,7 +111,7 @@ async function exportDiagrams() {
   try {
     const page = await browser.newPage();
     
-    // Navigate to the app
+
     const fullUrl = `${config.url}${config.path}`;
     console.log(`Navigating to ${fullUrl}...`);
     
@@ -122,8 +122,7 @@ async function exportDiagrams() {
     
     console.log('Waiting for page to fully load...');
     await page.waitForSelector('svg', { timeout: 30000 });
-    
-    // Generate all week ranges to export (1-2 to 1-15)
+
     const weekRanges = [];
     for (let endWeek = 1; endWeek <= 14; endWeek++) {
       weekRanges.push([0, endWeek]);
@@ -131,33 +130,31 @@ async function exportDiagrams() {
     
     console.log(`\nStarting export of ${weekRanges.length} week ranges for ${typesToExport.length} diagram types...`);
     
-    // Loop through diagram types
+
     for (const type of typesToExport) {
       console.log(`\n🔄 Processing ${type.toUpperCase()} diagrams...`);
       
-      // Get the appropriate selector
+
       let svgSelector = config.selector || SVG_SELECTORS[type];
       
-      // Loop through all week ranges
+
       for (let i = 0; i < weekRanges.length; i++) {
         const range = weekRanges[i];
         const rangeLabel = `Week ${range[0] + 1}-${range[1] + 1}`;
         console.log(`  Processing ${rangeLabel}...`);
         
-        // Set the week range via browser eval
+
         await page.evaluate((range) => {
-          // Try different methods to set the range
-          
-          // Method 1: Direct component access if available
+     
           if (window.setSelectedWeekRange) {
             window.setSelectedWeekRange(range);
             return;
           }
           
-          // Method 2: Find React component instance
+
           const rangeSlider = document.querySelector('.mantine-RangeSlider-root');
           if (rangeSlider && rangeSlider.__reactProps$) {
-            // This is a simplification - actual React prop access may vary
+            
             const props = Object.entries(rangeSlider).find(([key]) => 
               key.startsWith('__reactProps$')
             );
@@ -166,32 +163,30 @@ async function exportDiagrams() {
               return;
             }
           }
-          
-          // Method 3: Dispatch custom event if supported
+
           document.dispatchEvent(new CustomEvent('setWeekRange', { 
             detail: { range }
           }));
           
-          // Method 4: Try to find and click UI elements directly
+
           const sliderTrack = document.querySelector('.mantine-RangeSlider-track');
           if (sliderTrack) {
-            // Calculate position on slider based on range
+
             const maxWeeks = 15;
             const startPct = (range[0] / (maxWeeks - 1)) * 100;
             const endPct = (range[1] / (maxWeeks - 1)) * 100;
-            
-            // Log intention (this won't actually change the slider)
+
             console.log(`Setting slider to ${startPct}% - ${endPct}%`);
           }
           
           console.log(`Set week range to [${range[0]}, ${range[1]}]`);
         }, range);
         
-        // Allow time for the diagram to update
+
         console.log(`  Waiting ${config.delay}ms for diagram to update...`);
         await page.waitForTimeout(config.delay);
         
-        // Try to find the SVG element
+
         const svgElement = await page.$(svgSelector);
         if (svgElement) {
           const filename = path.join(
@@ -199,7 +194,7 @@ async function exportDiagrams() {
             `${type}_diagram_week_${range[0] + 1}_to_${range[1] + 1}.png`
           );
           
-          // Take screenshot with high resolution
+
           await svgElement.screenshot({
             path: filename,
             omitBackground: false,
@@ -209,8 +204,7 @@ async function exportDiagrams() {
           console.log(`  ✅ Saved to: ${filename}`);
         } else {
           console.error(`  ❌ SVG element not found using selector: ${svgSelector}`);
-          
-          // Try to help diagnose the issue
+
           const allSvgs = await page.$$('svg');
           console.log(`  Found ${allSvgs.length} SVG elements on the page`);
           
@@ -219,7 +213,7 @@ async function exportDiagrams() {
             await page.evaluate(() => {
               const svgs = document.querySelectorAll('svg');
               svgs.forEach((svg, i) => {
-                // Get parent elements to help identify
+
                 let parent = svg.parentElement;
                 let parentSelector = '';
                 
@@ -251,5 +245,5 @@ async function exportDiagrams() {
   }
 }
 
-// Run the export function
+
 exportDiagrams().catch(console.error);

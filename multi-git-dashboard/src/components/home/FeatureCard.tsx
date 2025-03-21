@@ -1,36 +1,43 @@
-import { Box, Center, Paper, Stack, Text, Title, useMantineTheme } from '@mantine/core';
+import { Box, Center, Paper, Stack, Text, Title, useMantineTheme, ActionIcon } from '@mantine/core';
 import { useRouter } from 'next/router';
 import { useEffect, useRef, useState } from 'react';
 import classes from '@styles/FeatureCard.module.css';
 
+
 const data = [
   {
-    image: '/ss-6.png',
+    images: ['/ss-1.png', '/ss-2.png', '/ss-3.png', '/ss-4.png', '/ss-5.png'],  
     title: 'Prioritized',
-    description: 'Track, sort and compare team contributions',
+    description: 'Analyze and rank team contributions with metrics, giving educators clear insight into students productivity and early prevention.',
   },
   {
-    image: '/ss-3.png',
+    images: ['/viz-1.png','/viz-2.png', '/viz-3.png', '/viz-4.png', '/viz-5.png'],
     title: 'Visualized',
-    description: 'Monitor code review interactions',
+    description: 'Transform data into visual dashboards that reveal team dynamics, knowledge transfer patterns, and bottlenecks in real-time.',
   },
   {
-    image: '/ca-1.jpg',
-    title: 'Diagnosed',
-    description: 'Highlight test coverage and code quality',
+    images: ['/ca-1.jpg', '/ca-2.jpg'],
+    title: 'AI Diagnosed',
+    description: 'Pinpoint critical quality issues with SonarCube diagnostics that combine test coverage metrics, static analysis, and technical debt indicators into actionable insights.',
   },
   {
-    image: '/assess-1.png',
+    images: ['/assess-1.png', '/assess-2.png', '/assess-3.png', '/assess-4.png'],
     title: 'Graded',
-    description: 'Fully featured assessment system',
+    description: 'Evaluate students performance through customizable assessment frameworks for fair and transparent skill evaluation.',
+  },
+  {
+    images: ['/pm-3.png','/pm-1.png', '/pm-2.png',  '/pm-4.png', '/pm-5.png'],
+    title: 'Managed',
+    description: 'Seamlessly bridge development workflows with Jira and Trofos integration, allowing synchronization of tickets, sprints, and milestone tracking across platforms.',
   },
 ];
 
-interface AnimatedPaperProps {
-  image: string;
+interface ImageCarouselProps {
+  images: string[];
 }
 
-const AnimatedPaper: React.FC<AnimatedPaperProps> = ({ image }) => {
+const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
@@ -40,7 +47,7 @@ const AnimatedPaper: React.FC<AnimatedPaperProps> = ({ image }) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             setVisible(true);
-            observer.disconnect(); // Animate only once when visible
+            observer.disconnect(); 
           }
         });
       },
@@ -53,24 +60,103 @@ const AnimatedPaper: React.FC<AnimatedPaperProps> = ({ image }) => {
     return () => observer.disconnect();
   }, []);
 
+  const nextSlide = () => {
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length);
+  };
+
   return (
-    <Paper
+    <Box
       ref={ref}
-      shadow="md"
-      p="xl"
-      radius="md"
       style={{
-        backgroundImage: `url(${image})`,
+        position: 'relative',
         width: '60%',
         height: '350px',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        border: '5px solid #fff', // Frame effect
         opacity: visible ? 1 : 0,
         transform: visible ? 'translateY(0)' : 'translateY(50px)',
         transition: 'all 0.8s ease',
       }}
-    />
+    >
+      <Paper
+        shadow="md"
+        p="xl"
+        radius="md"
+        style={{
+          backgroundImage: `url(${images[currentIndex]})`,
+          width: '100%',
+          height: '100%',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          border: '5px solid #fff',
+        }}
+      />
+      
+    
+      {images.length > 1 && (
+        <>
+          <ActionIcon 
+            className={classes.carouselButton}
+            style={{
+              position: 'absolute',
+              left: '10px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              backgroundColor: 'rgba(255, 255, 255, 0.8)',
+              zIndex: 2,
+            }}
+            onClick={prevSlide}
+          >
+            <Text style={{ fontSize: '24px', fontWeight: 'bold', color: '#3498db' }}>←</Text>
+          </ActionIcon>
+          
+          <ActionIcon 
+            className={classes.carouselButton}
+            style={{
+              position: 'absolute',
+              right: '10px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              backgroundColor: 'rgba(255, 255, 255, 0.8)',
+              zIndex: 2,
+            }}
+            onClick={nextSlide}
+          >
+            <Text style={{ fontSize: '24px', fontWeight: 'bold', color: '#3498db' }}>→</Text>
+          </ActionIcon>
+          
+      
+          <Box 
+            style={{
+              position: 'absolute',
+              bottom: '15px',
+              left: '0',
+              right: '0',
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '8px',
+              zIndex: 2,
+            }}
+          >
+            {images.map((_, index) => (
+              <Box
+                key={index}
+                onClick={() => setCurrentIndex(index)}
+                style={{
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  backgroundColor: currentIndex === index ? '#3498db' : 'rgba(52, 152, 219, 0.4)',
+                  cursor: 'pointer',
+                }}
+              />
+            ))}
+          </Box>
+        </>
+      )}
+    </Box>
   );
 };
 
@@ -81,7 +167,7 @@ const FeatureCard: React.FC = () => {
   return (
     <Box>
       <Center>
-        <Title className={classes.titleOverlay} style={{ marginBottom: '50px', fontFamily: 'Verdana' }}>
+        <Title className={classes.titleOverlay} style={{ marginBottom: '50px', fontFamily: 'Verdana', paddingTop: '100px' }}>
           Seamless Multi-Git Management
         </Title>
       </Center>
@@ -98,15 +184,14 @@ const FeatureCard: React.FC = () => {
             marginBottom: '70px',
           }}
         >
-          {/* Animated Image Section */}
-          <AnimatedPaper image={item.image} />
+          
+          <ImageCarousel images={item.images} />
 
-          {/* Text Section */}
           <Stack style={{ width: '50%' }}>
             <Title order={1} style={{ color: 'white', fontFamily: 'Verdana' }}>
               {item.title}
             </Title>
-            <Text style={{ color: 'white', fontFamily: 'Verdana' }}>
+            <Text style={{ color: '#3498db', fontFamily: 'Verdana' }}>
               {item.description}
             </Text>
           </Stack>

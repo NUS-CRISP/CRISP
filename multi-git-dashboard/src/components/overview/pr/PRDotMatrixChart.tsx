@@ -104,16 +104,18 @@ const PRDotMatrixChart: React.FC<PRDotMatrixChartProps> = ({ graphData }) => {
       }
     });
 
+    
     const xScale = d3
       .scaleBand()
       .domain(sortedUsers)
       .range([0, width - margin.left - margin.right])
       .padding(0.1);
 
+   
     const yScale = d3
       .scaleBand()
-      .domain(sortedUsers)
-      .range([0, height - margin.top - margin.bottom])
+      .domain(sortedUsers) 
+      .range([height - margin.top - margin.bottom, 0]) 
       .padding(0.1);
 
     let maxCount = 0;
@@ -123,7 +125,7 @@ const PRDotMatrixChart: React.FC<PRDotMatrixChartProps> = ({ graphData }) => {
       });
     });
 
-    // scale for circle radii
+   
     const rScale = d3
       .scaleSqrt()
       .domain([0, maxCount])
@@ -144,9 +146,9 @@ const PRDotMatrixChart: React.FC<PRDotMatrixChartProps> = ({ graphData }) => {
       "changes_requested",
     ];
 
-    // x axis
+    // x axis (reviewer)
     svg.append("g")
-      .attr("transform", `translate(0, ${yScale.range()[1]})`)
+      .attr("transform", `translate(0, ${height - margin.top - margin.bottom})`)
       .call(d3.axisBottom(xScale))
       .selectAll("text")
       .attr("text-anchor", "end")
@@ -154,7 +156,7 @@ const PRDotMatrixChart: React.FC<PRDotMatrixChartProps> = ({ graphData }) => {
       .attr("dx", "-0.5em")
       .attr("dy", "0.5em");
 
-    // y axis
+    // y axis (author)
     svg.append("g").call(d3.axisLeft(yScale));
 
     const allPairs: Array<{ reviewer: string; author: string }> = [];
@@ -166,15 +168,16 @@ const PRDotMatrixChart: React.FC<PRDotMatrixChartProps> = ({ graphData }) => {
       });
     });
 
-    // cricles
+    // circles
     allPairs.forEach(pair => {
+      // key: reviewer->author (source->target)
       const key = `${pair.reviewer}->${pair.author}`;
       const interactions = filteredInteractionMap.get(key);
 
       if (interactions) {
-        // center point for this cell
-        const cx = xScale(pair.author)! + xScale.bandwidth() / 2;
-        const cy = yScale(pair.reviewer)! + yScale.bandwidth() / 2;
+        // X coordinate is based on reviewer, Y coordinate is based on author
+        const cx = xScale(pair.reviewer)! + xScale.bandwidth() / 2;
+        const cy = yScale(pair.author)! + yScale.bandwidth() / 2;
 
         // sort statuses by their count in ascending order
         const sortedStatuses = (Object.keys(interactions) as Array<keyof StatusCount>)
@@ -268,14 +271,14 @@ const PRDotMatrixChart: React.FC<PRDotMatrixChartProps> = ({ graphData }) => {
     svg.append("text")
       .attr("transform", `translate(${(width - margin.left - margin.right) / 2}, ${height - margin.top - margin.bottom + 70})`)
       .style("text-anchor", "middle")
-      .text("PR Author");
+      .text("PR Reviewer");
 
     svg.append("text")
       .attr("transform", "rotate(-90)")
-      .attr("y", -70)
+      .attr("y", -90)
       .attr("x", -(height - margin.top - margin.bottom) / 2)
       .style("text-anchor", "middle")
-      .text("Reviewer");
+      .text("PR Author");
 
   }, [graphData]);
 

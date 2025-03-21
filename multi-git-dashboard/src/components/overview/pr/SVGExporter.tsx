@@ -28,25 +28,23 @@ const SVGExporter = ({
   const [outputDirectory, setOutputDirectory] = useState('pr-diagrams');
   
   const totalWeeks = 15;
-  
-  // Generate all week ranges to export (from 1-2 to 1-15)
+
   const weekRangesToExport = Array.from({ length: totalWeeks - 1 }, (_, i) => {
     return [0, i + 1]; // 0-indexed, so [0,1] is weeks 1-2
   });
 
-  // Function to export all SVGs as PNGs
   const exportSVGsAsPNGs = async () => {
     setExporting(true);
     setProgress(0);
     setExportedCount(0);
     setExportComplete(false);
     
-    // If callback provided, notify parent component
+
     if (onExportStart) {
       onExportStart();
     }
     
-    // Determine which types to export
+
     const typesToExport = exportAllTypes 
       ? Object.values(EXPORT_TYPES) 
       : [exportType];
@@ -60,27 +58,27 @@ const SVGExporter = ({
         const rangeLabel = `Week ${range[0] + 1}-${range[1] + 1}`;
         setCurrentRange(`${type.toUpperCase()} - ${rangeLabel}`);
         
-        // Update selected range in parent components
+
         if (window.setSelectedWeekRange) {
           window.setSelectedWeekRange(range);
         }
         
-        // Wait for components to render with the current range
+
         await new Promise(resolve => setTimeout(resolve, 1500));
         
-        // Find the correct SVG element based on type
+
         let svgElement;
         
         if (type === EXPORT_TYPES.ARC_DIAGRAM) {
-          // Target the arc diagram SVG
+       
           svgElement = document.querySelector('.arc-diagram svg');
         } else if (type === EXPORT_TYPES.NETWORK_DIAGRAM) {
-          // Target the network diagram SVG 
+
           svgElement = document.querySelector('.network-diagram svg');
         }
         
         if (svgElement) {
-          // Create filename with type and range
+
           const filename = `${type}_diagram_week_${range[0] + 1}_to_${range[1] + 1}`;
           await exportSVGAsPNG(svgElement, filename, outputDirectory);
           setExportedCount(prev => prev + 1);
@@ -108,15 +106,15 @@ const SVGExporter = ({
   };
 
   const exportSVGAsPNG = async (svgElement, filename, directory = '') => {
-    // Get SVG dimensions and data
+   
     const svgData = new XMLSerializer().serializeToString(svgElement);
     const svgRect = svgElement.getBoundingClientRect();
     
-    // Create canvas with matching dimensions
+   
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     
-    // Set canvas size - use actual SVG viewBox if available for better quality
+    // Set canvas size
     const viewBox = svgElement.getAttribute('viewBox');
     let width, height;
     
@@ -129,12 +127,12 @@ const SVGExporter = ({
       height = svgRect.height;
     }
     
-    // Set dimensions with higher resolution for better quality
+
     const scale = 2; // Increase for higher resolution
     canvas.width = width * scale;
     canvas.height = height * scale;
     
-    // Create an image from SVG
+
     const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
     const URL = window.URL || window.webkitURL || window;
     const svgUrl = URL.createObjectURL(svgBlob);
@@ -147,14 +145,14 @@ const SVGExporter = ({
           return;
         }
         
-        // Scale the context for higher resolution
+        
         ctx.scale(scale, scale);
         
-        // Fill with white background
+      
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, width, height);
         
-        // Draw the image
+
         ctx.drawImage(img, 0, 0, width, height);
         
         // Convert to PNG and trigger download
@@ -163,18 +161,15 @@ const SVGExporter = ({
           const downloadLink = document.createElement('a');
           downloadLink.href = pngUrl;
           
-          // Add directory if provided
+         
           let fullPath = filename;
           if (directory) {
             fullPath = `${directory}/${filename}`;
             
-            // Try to create directory if it doesn't exist
-            // Note: This only works in environments that support the File System Access API
             try {
               if (window.showDirectoryPicker) {
                 console.log('Directory support available');
-                // This is just to indicate support - actual directory creation
-                // would need to be handled by the backend or File System Access API
+                
               }
             } catch (err) {
               console.log('Directory creation not supported in this browser');
@@ -287,7 +282,7 @@ const SVGExporter = ({
   );
 };
 
-// Helper component for text input
+
 const TextInput = ({ label, placeholder, value, onChange, disabled }) => (
   <Box>
     <Text size="sm" weight={500} mb={5}>{label}</Text>

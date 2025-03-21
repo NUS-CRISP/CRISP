@@ -1,7 +1,6 @@
 import { DateUtils } from '@/lib/utils';
 import { RangeSlider, Stack, Modal, TextInput, Button, Box, Group, Space, Divider, Switch, Text } from '@mantine/core';
 import { useState, useRef } from 'react';
-import Analytics from '../overview/analytics/Analytics';
 import PR from '../overview/pr/PR';
 import TutorialPopover from '../tutorial/TutorialPopover';
 import { ProfileGetter, Team } from '../views/Overview';
@@ -93,13 +92,10 @@ export const PRCard: React.FC<OverviewProps> = ({
 
     // Export SVG as PNG
     const exportSVGAsPNG = async (weekRange: [number, number], filename: string) => {
-        // Set the current week range
         setSelectedWeekRange(weekRange);
         
-        // Wait for the SVG to render with the new range
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // Find SVG element in the PR component
         if (prRef.current) {
             const svg = prRef.current.querySelector('svg');
             if (svg) {
@@ -121,7 +117,6 @@ export const PRCard: React.FC<OverviewProps> = ({
                     ctx.fillStyle = 'white';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
                     
-                    // Load SVG as image
                     const img = new Image();
                     
                     await new Promise((resolve, reject) => {
@@ -135,7 +130,7 @@ export const PRCard: React.FC<OverviewProps> = ({
                             downloadLink.download = filename;
                             downloadLink.click();
                             
-                            // Clean up
+        
                             URL.revokeObjectURL(svgUrl);
                             resolve(null);
                         };
@@ -170,7 +165,7 @@ export const PRCard: React.FC<OverviewProps> = ({
             const rangeLabel = `Week ${range[0] + 1}-${range[1] + 1}`;
             setCurrentExportRange(rangeLabel);
             
-            // Export the SVG
+
             const success = await exportSVGAsPNG(
                 range,
                 `diagram_week_${range[0] + 1}_to_${range[1] + 1}.png`
@@ -184,7 +179,7 @@ export const PRCard: React.FC<OverviewProps> = ({
         
         setIsExporting(false);
         
-        // Reset to original range
+
         setSelectedWeekRange([0, totalWeeks - 1]);
         
         alert(`Export complete. ${successCount} of ${weekRangesToExport.length} files were exported.`);

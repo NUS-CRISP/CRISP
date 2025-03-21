@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
-import { Box, Text } from '@mantine/core';
+import { Box } from '@mantine/core';
 
 interface PRNode {
   id: string;
@@ -37,17 +37,17 @@ const processGraphDataForChord = (graphData: PRGraphData): PRGraphData => {
     };
   });
 
+ 
   const interactionCounts: Record<string, number> = {};
   processedEdges.forEach(edge => {
     interactionCounts[edge.source] = (interactionCounts[edge.source] || 0) + edge.weight;
     interactionCounts[edge.target] = (interactionCounts[edge.target] || 0) + edge.weight;
   });
 
-  // sort nodes by total interactions
+
   const sortedNodes = [...graphData.nodes].sort((a, b) =>
     (interactionCounts[b.id] || 0) - (interactionCounts[a.id] || 0)
   );
-
 
   if (Object.values(interactionCounts).every(count => count === 0)) {
     console.log("No interactions found, creating dummy connections");
@@ -94,6 +94,7 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
 
     d3.select(svgRef.current).selectAll("*").remove();
 
+
     const interactionCounts: Record<string, number> = {};
     processedData.edges.forEach(edge => {
       interactionCounts[edge.source] = (interactionCounts[edge.source] || 0) + edge.weight;
@@ -102,16 +103,16 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
 
     console.log("Interaction counts:", interactionCounts);
 
+    // Get top 6 nodes by total interactions
     const top6Nodes = processedData.nodes.slice(0, Math.min(6, processedData.nodes.length));
-
     top6Nodes.sort((a, b) => {
       return (interactionCounts[b.id] || 0) - (interactionCounts[a.id] || 0);
     });
-
     const top6NodeIds = new Set(top6Nodes.map(node => node.id));
 
     console.log("Top 6 nodes (sorted):", top6Nodes);
 
+    
     const filteredEdges = processedData.edges.filter(edge =>
       top6NodeIds.has(edge.source) && top6NodeIds.has(edge.target)
     );
@@ -140,7 +141,6 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
     const height = 600;
     const innerRadius = 180;
     const outerRadius = innerRadius * 1.1;
-    const labelRadius = outerRadius + 10;
 
     const colorScale = d3.scaleOrdinal<string>()
       .domain(top6Nodes.map(node => node.id))
@@ -165,6 +165,7 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
       indexByName[node.id] = i;
     });
 
+    // matrix for chord connections
     const matrix: number[][] = Array(top6Nodes.length)
       .fill(0)
       .map(() => Array(top6Nodes.length).fill(0));
@@ -179,19 +180,104 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
 
     console.log("Matrix data:", matrix);
 
+    // Calculate total incoming and outgoing for each node
+    const interactionsMap = {}; // Store by node ID for sorting
+    const outgoingInteractions: number[] = [];
+    const incomingInteractions: number[] = [];
+    const totalInteractions: number[] = [];
+    
+    for (let i = 0; i < top6Nodes.length; i++) {
+      let outgoing = 0;
+      let incoming = 0;
+      
+
+      for (let j = 0; j < top6Nodes.length; j++) {
+        outgoing += matrix[i][j];
+      }
+      
+
+      for (let j = 0; j < top6Nodes.length; j++) {
+        if (j !== i) {
+          incoming += matrix[j][i];
+        }
+      }
+      
+      outgoingInteractions[i] = outgoing;
+      incomingInteractions[i] = incoming;
+      totalInteractions[i] = outgoing + incoming;
+      interactionsMap[top6Nodes[i].id] = totalInteractions[i];
+    }
+    console.log("Total interactions per node:", totalInteractions);
+
+    // Sort 
+    top6Nodes.sort((a, b) => interactionsMap[b.id] - interactionsMap[a.id]);
+
+    top6Nodes.forEach((node, i) => {
+      indexByName[node.id] = i;
+    });
+    
+
+    const sortedMatrix: number[][] = Array(top6Nodes.length)
+      .fill(0)
+      .map(() => Array(top6Nodes.length).fill(0));
+    
+    filteredEdges.forEach(edge => {
+      const sourceIndex = indexByName[edge.source];
+      const targetIndex = indexByName[edge.target];
+      if (sourceIndex !== undefined && targetIndex !== undefined) {
+        sortedMatrix[sourceIndex][targetIndex] = Math.max(1, edge.weight);
+      }
+    });
+    
+
+    const sortedTotalInteractions: number[] = [];
+    const sortedOutgoingInteractions: number[] = [];
+    const sortedIncomingInteractions: number[] = [];
+    
+    for (let i = 0; i < top6Nodes.length; i++) {
+      let outgoing = 0;
+      let incoming = 0;
+      
+
+      for (let j = 0; j < top6Nodes.length; j++) {
+        outgoing += sortedMatrix[i][j];
+      }
+      
+
+      for (let j = 0; j < top6Nodes.length; j++) {
+        if (j !== i) {
+          incoming += sortedMatrix[j][i];
+        }
+      }
+      
+      sortedOutgoingInteractions[i] = outgoing;
+      sortedIncomingInteractions[i] = incoming;
+      sortedTotalInteractions[i] = outgoing + incoming;
+    }
+    
+    // matrix for arc sizes based on total interactions
+    const arcSizeMatrix: number[][] = Array(top6Nodes.length)
+      .fill(0)
+      .map((_, i) => Array(top6Nodes.length).fill(0));
+
+    // Fill the diagonal
+    for (let i = 0; i < top6Nodes.length; i++) {
+      arcSizeMatrix[i][i] = sortedTotalInteractions[i];
+    }
+
+    // chord layout for arc sizes
     const chord = d3.chord()
       .padAngle(0.05)
       .sortSubgroups(d3.descending)
-      .sortChords(d3.descending);
+      .sortGroups(null); // Don't sort groups to preserve the ordering!!!
 
-    const chords = chord(matrix);
-
+    const chords = chord(arcSizeMatrix);
+    
+    // arc and ribbon generators
     const arc = d3.arc()
       .innerRadius(innerRadius)
       .outerRadius(outerRadius);
 
-    const ribbon = d3.ribbon()
-      .radius(innerRadius);
 
     const tooltip = d3.select("body").append("div")
       .attr("class", "chord-tooltip")
@@ -206,6 +292,7 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
       .style("pointer-events", "none")
       .style("z-index", "10");
 
+
     const groups = svg.append("g")
       .selectAll("g")
       .data(chords.groups)
@@ -217,22 +304,14 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
       .attr("d", arc as any)
       .on("mouseover", (event, d) => {
         const nodeName = top6Nodes[d.index].id;
-        const totalOutgoing = matrix[d.index].reduce((sum, val) => sum + val, 0);
-
-        let totalIncoming = 0;
-        for (let i = 0; i < matrix.length; i++) {
-          if (i !== d.index) {
-            totalIncoming += matrix[i][d.index];
-          }
-        }
-
+        
         tooltip
           .style("visibility", "visible")
           .html(`
             <div style="font-weight: bold; margin-bottom: 4px;">${nodeName}</div>
-            <div>Outgoing reviews: ${totalOutgoing}</div>
-            <div>Incoming reviews: ${totalIncoming}</div>
-            <div>Total interactions: ${totalOutgoing + totalIncoming}</div>
+            <div>Outgoing reviews: ${sortedOutgoingInteractions[d.index]}</div>
+            <div>Incoming reviews: ${sortedIncomingInteractions[d.index]}</div>
+            <div>Total interactions: ${sortedTotalInteractions[d.index]}</div>
           `);
       })
       .on("mousemove", (event) => {
@@ -244,7 +323,7 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
         tooltip.style("visibility", "hidden");
       });
 
-    // Add labels
+
     groups.append("text")
       .each(d => {
         // @ts-ignore
@@ -253,49 +332,94 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
       .attr("dy", "0.35em")
       .attr("transform", d => `
         rotate(${(d.angle * 180) / Math.PI - 90})
-          translate(${outerRadius + 10})
-          ${d.angle > Math.PI ? "rotate(180)" : ""}
-        `)
+        translate(${outerRadius + 10})
+        ${d.angle > Math.PI ? "rotate(180)" : ""}
+      `)
       .attr("text-anchor", (d) => (d.angle > Math.PI ? "end" : null))
       .text((d) => top6Nodes[d.index].id);
 
-    // ribbons
+
+    const arcUsage = {};
+    top6Nodes.forEach((_, i) => {
+      arcUsage[i] = {
+        startAngle: chords.groups[i].startAngle,
+        endAngle: chords.groups[i].endAngle,
+        used: 0
+      };
+    });
+
+    const ribbonGenerator = d3.ribbon()
+      .radius(innerRadius);
+    
     svg.append("g")
-      .attr("fill-opacity", 0.8)
+      .attr("fill-opacity", 0.7)
       .selectAll("path")
-      .data(chords)
+      .data(matrix.flatMap((row, i) => 
+        row.map((value, j) => ({
+          source: i,
+          target: j,
+          value: value
+        })).filter(d => d.value > 0)
+      ))
       .join("path")
-      .attr("d", ribbon as any)
-      .attr("fill", d => colorScale(top6Nodes[d.source.index].id))
+      .attr("d", d => {
+        // Get the arc info for source and target
+        const sourceArc = chords.groups[d.source];
+        const targetArc = chords.groups[d.target];
+        
+        // Calculate the proportion of total interactions this edge represents
+        const sourceValue = d.value / totalInteractions[d.source];
+        const targetValue = d.value / totalInteractions[d.target];
+        
+        // Calculate how much of the arc angle this ribbon should use
+        const sourceArcLength = sourceArc.endAngle - sourceArc.startAngle;
+        const targetArcLength = targetArc.endAngle - targetArc.startAngle;
+        
+        const sourcePadding = sourceArcLength * 0.001;
+        const targetPadding = targetArcLength * 0.001;
+        
+        // Calculate the ribbon width in the arc (proportional to its value but with reasonable limits)
+        const sourceWidth = Math.max(sourceArcLength * 0.1, sourceArcLength * sourceValue);
+        const targetWidth = Math.max(targetArcLength * 0.1, targetArcLength * targetValue);
+        
+        // Position the ribbon connection point within the arc
+        // Add random positioning to spread ribbons within the arc
+        const sourcePosition = sourceArc.startAngle + sourcePadding + 
+                              (sourceArcLength - 2 * sourcePadding - sourceWidth) * Math.random();
+        const targetPosition = targetArc.startAngle + targetPadding + 
+                              (targetArcLength - 2 * targetPadding - targetWidth) * Math.random();
+        
+        // Create ribbon data
+        const ribbonData = {
+          source: {
+            startAngle: sourcePosition,
+            endAngle: sourcePosition + sourceWidth,
+            radius: innerRadius,
+            index: d.source
+          },
+          target: {
+            startAngle: targetPosition,
+            endAngle: targetPosition + targetWidth,
+            radius: innerRadius,
+            index: d.target
+          }
+        };
+        
+     
+        return ribbonGenerator(ribbonData);
+      })
+      .attr("fill", d => colorScale(top6Nodes[d.source].id))
       .attr("stroke", "white")
       .attr("stroke-width", 0.5)
       .on("mouseover", (event, d) => {
-        const sourceName = top6Nodes[d.source.index].id;
-        const targetName = top6Nodes[d.target.index].id;
-        const value = d.source.value;
-        const targetValue = matrix[d.target.index][d.source.index];
-
-        let statusText = "";
-        // Find status from filteredEdges
-        for (const edge of filteredEdges) {
-          if (edge.source === sourceName && edge.target === targetName) {
-            const statusMap: Record<string, string> = {
-              'approved': 'Approved',
-              'changes_requested': 'Changes Requested',
-              'commented': 'Commented',
-              'dismissed': 'Dismissed'
-            };
-            statusText = statusMap[edge.status] || edge.status;
-            break;
-          }
-        }
+        const sourceName = top6Nodes[d.source].id;
+        const targetName = top6Nodes[d.target].id;
 
         tooltip
           .style("visibility", "visible")
           .html(`
             <div style="font-weight: bold; margin-bottom: 4px;">${sourceName} → ${targetName}</div>
-            <div>Reviews: ${value}</div>
-        
+            <div>Reviews: ${d.value}</div>
           `);
       })
       .on("mousemove", (event) => {
