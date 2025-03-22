@@ -13,12 +13,14 @@ import cron from 'node-cron';
 
 // Check functions (and if errors are found, repair if possible)
 async function checkCrispRoles() {
-  const allAccounts: any = await AccountModel.find();
+  const allAccounts: any = await AccountModel.find({});
   for (const account of allAccounts) {
-    if (account.role && !account.crispRole) {
+    console.log(account);
+    if (account.role !== null) {
       console.warn(
         `Account ${account._id} has the old .role field. Mapping to the new .crispRole field...`
       );
+      console.log(account.role);
       switch (account.role) {
         case 'Student':
         case 'Teaching assistant':
@@ -36,8 +38,10 @@ async function checkCrispRoles() {
         default:
           break;
       }
+      account.role = null;
       await account.save();
     }
+    console.log(account);
   }
   return;
 }
@@ -68,8 +72,7 @@ async function checkCourseRoles() {
           courseRole: CourseRole.Student,
         });
         await studentAccount.save();
-      }
-      if (courseRoleTuple[0].courseRole !== CourseRole.Student) {
+      } else if (courseRoleTuple[0].courseRole !== CourseRole.Student) {
         console.warn(
           `Student account with id ${studentAccount._id} does not have correct course role for course ${course._id}. Fixing...`
         );
@@ -98,8 +101,7 @@ async function checkCourseRoles() {
           courseRole: CourseRole.TA,
         });
         await TAAccount.save();
-      }
-      if (courseRoleTuple[0].courseRole !== CourseRole.TA) {
+      } else if (courseRoleTuple[0].courseRole !== CourseRole.TA) {
         console.warn(
           `TA account with id ${TAAccount._id} does not have correct course role for course ${course._id}. Fixing...`
         );
@@ -128,8 +130,7 @@ async function checkCourseRoles() {
           courseRole: CourseRole.Faculty,
         });
         await facultyAccount.save();
-      }
-      if (courseRoleTuple[0].courseRole !== CourseRole.Faculty) {
+      } else if (courseRoleTuple[0].courseRole !== CourseRole.Faculty) {
         console.warn(
           `Faculty account with id ${facultyAccount._id} does not have correct course role for course ${course._id}. Fixing...`
         );
@@ -154,7 +155,7 @@ async function notifyOnStartup() {
   return;
 }
 
-export function setupDataIntegrityJob() {
+export async function setupDataIntegrityJob() {
   cron.schedule('0 3 * * *', async () => {
     try {
       await runDataIntegrityCheck();

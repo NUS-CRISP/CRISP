@@ -31,14 +31,14 @@ config({ path: `.env.${env}` });
 
 const setupApp = async () => {
   await connectToDatabase();
+  await setupDataIntegrityJob();
+  await setupTutorialDataJob();
   setupGitHubJob();
   setupJiraJob();
   setupTrofosJob();
   setupCodeAnalysisJob();
   setupAIInsightsJob();
   setupNotificationJob();
-  setupTutorialDataJob();
-  setupDataIntegrityJob();
 };
 setupApp();
 

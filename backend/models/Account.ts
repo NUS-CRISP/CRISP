@@ -55,6 +55,10 @@ const accountSchema = new Schema<Account>({
     required: false,
   },
   password: { type: String },
+  role: {
+    type: String,
+    required: false,
+  },
   crispRole: {
     type: String,
     enum: CrispRole,

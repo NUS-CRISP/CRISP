@@ -390,6 +390,8 @@ export const getUnmarkedAssignmentsByTAId = async (
   const assessment = await InternalAssessmentModel.findById(assessmentId);
   if (!assessment) throw new NotFoundError('Assessment not found');
   if (
+    account.courseRoles.filter(r => r.course === assessment.course.toString())
+      .length !== 0 &&
     account.courseRoles.filter(
       r => r.course === assessment.course.toString()
     )[0].courseRole === CourseRole.Student
