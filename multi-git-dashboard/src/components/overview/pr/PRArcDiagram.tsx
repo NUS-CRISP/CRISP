@@ -71,7 +71,6 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
-  
     svg
       .append('text')
       .attr('x', width / 2 - 50)
@@ -81,17 +80,15 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
       .attr('font-weight', 'bold')
       .text('Arc Diagram');
 
-
     const nodeIds = Array.from(
       new Set([
-        ...graphData.edges.map((e) => e.source),
-        ...graphData.edges.map((e) => e.target),
+        ...graphData.edges.map(e => e.source),
+        ...graphData.edges.map(e => e.target),
       ])
     );
 
-
     const interactionCount: Record<string, number> = {};
-    graphData.edges.forEach((edge) => {
+    graphData.edges.forEach(edge => {
       interactionCount[edge.source] =
         (interactionCount[edge.source] || 0) + edge.weight;
       interactionCount[edge.target] =
@@ -99,7 +96,9 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
     });
 
     // sort DESC
-    nodeIds.sort((a, b) => (interactionCount[b] || 0) - (interactionCount[a] || 0));
+    nodeIds.sort(
+      (a, b) => (interactionCount[b] || 0) - (interactionCount[a] || 0)
+    );
 
     const nodeMap = new Map<string, number>();
     nodeIds.forEach((id, i) => {
@@ -117,7 +116,7 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
 
     // links array
     const links = graphData.edges
-      .map((edge) => {
+      .map(edge => {
         const sourceIndex = nodeMap.get(edge.source);
         const targetIndex = nodeMap.get(edge.target);
 
@@ -134,26 +133,27 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
           status: edge.status,
         };
       })
-      .filter((link) => link !== null) as {
-        source: number;
-        sourceId: string;
-        target: number;
-        targetId: string;
-        weight: number;
-        status: string;
-      }[];
+      .filter(link => link !== null) as {
+      source: number;
+      sourceId: string;
+      target: number;
+      targetId: string;
+      weight: number;
+      status: string;
+    }[];
 
     // min and max weights for normalization
     const weights = links.map(link => link.weight);
     const minWeight = Math.min(...weights);
     const maxWeight = Math.max(...weights);
-    
+
     // linear scale for stroke width
     const MIN_STROKE_WIDTH = 1;
     const MAX_STROKE_WIDTH = 8;
-    
+
     // scale func: map weights to stroke widths
-    const strokeWidthScale = d3.scaleLinear()
+    const strokeWidthScale = d3
+      .scaleLinear()
       .domain([minWeight, maxWeight])
       .range([MIN_STROKE_WIDTH, MAX_STROKE_WIDTH]);
 
@@ -164,7 +164,7 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
       .enter()
       .append('path')
       .attr('class', 'arc')
-      .attr('d', (d) => {
+      .attr('d', d => {
         const sourceNode = nodePositions[d.source];
         const targetNode = nodePositions[d.target];
 
@@ -188,14 +188,12 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
         return `M${x1},${y} A${distance / 2},${arcHeight} 0 0,1 ${x2},${y}`;
       })
       .attr('fill', 'none')
-      .attr('stroke', (d) => getStatusColor(d.status))
-      .attr('stroke-width', (d) => strokeWidthScale(d.weight)) // Use the scale function
+      .attr('stroke', d => getStatusColor(d.status))
+      .attr('stroke-width', d => strokeWidthScale(d.weight)) // Use the scale function
       .attr('opacity', 0.8);
 
     // hide arcs that are NOT "approved" by default
-    arcSelection
-      .filter((d) => d.status !== 'approved')
-      .style('display', 'none');
+    arcSelection.filter(d => d.status !== 'approved').style('display', 'none');
 
     // nodes
     svg
@@ -204,8 +202,8 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
       .enter()
       .append('circle')
       .attr('class', 'node')
-      .attr('cx', (d) => d.x)
-      .attr('cy', (d) => d.y)
+      .attr('cx', d => d.x)
+      .attr('cy', d => d.y)
       .attr('r', 6)
       .attr('fill', '#4c78a8');
 
@@ -216,14 +214,14 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
       .enter()
       .append('text')
       .attr('class', 'node-label')
-      .attr('x', (d) => d.x)
-      .attr('y', (d) => d.y + 20)
+      .attr('x', d => d.x)
+      .attr('y', d => d.y + 20)
       .attr('text-anchor', 'middle')
       .attr('font-size', '10px')
-      .attr('transform', (d) => `rotate(45, ${d.x}, ${d.y + 20})`)
-      .text((d) => {
+      .attr('transform', d => `rotate(45, ${d.x}, ${d.y + 20})`)
+      .text(d => {
         const name = d.id;
-    
+
         return name.length > 12 ? name.substring(0, 10) + '...' : name;
       });
 
@@ -231,7 +229,10 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
     const legendData = [
       { status: 'all', color: getStatusColor('all') }, // Add the "All" legend item
       { status: 'approved', color: getStatusColor('approved') },
-      { status: 'changes_requested', color: getStatusColor('changes_requested') },
+      {
+        status: 'changes_requested',
+        color: getStatusColor('changes_requested'),
+      },
       { status: 'commented', color: getStatusColor('commented') },
       { status: 'dismissed', color: getStatusColor('dismissed') },
     ];
@@ -242,55 +243,59 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
       if (item.status === 'all') {
         edgesByStatus[item.status] = links; // links for "all" status
       } else {
-        edgesByStatus[item.status] = links.filter(link => link.status === item.status);
+        edgesByStatus[item.status] = links.filter(
+          link => link.status === item.status
+        );
       }
     });
 
+    const weightStatsByStatus: Record<
+      string,
+      { min: number; max: number; mid?: number }
+    > = {};
 
-    const weightStatsByStatus: Record<string, {min: number, max: number, mid?: number}> = {};
-    
     Object.entries(edgesByStatus).forEach(([status, statusLinks]) => {
       if (statusLinks.length === 0) {
         weightStatsByStatus[status] = { min: 0, max: 0 };
         return;
       }
-      
+
       const statusWeights = statusLinks.map(link => link.weight);
       const min = Math.min(...statusWeights);
       const max = Math.max(...statusWeights);
-      
+
       weightStatsByStatus[status] = {
         min,
         max,
-        ...(max - min > 2 ? { mid: Math.round((min + max) / 2) } : {})
+        ...(max - min > 2 ? { mid: Math.round((min + max) / 2) } : {}),
       };
     });
 
-    // weight legend 
+    // weight legend
     const weightLegendX = 10;
     const weightLegendY = 10;
-    
-    const weightLegendGroup = svg.append('g')
+
+    const weightLegendGroup = svg
+      .append('g')
       .attr('transform', `translate(${weightLegendX}, ${weightLegendY})`)
       .attr('class', 'weight-legend');
-    
-    weightLegendGroup.append('text')
+
+    weightLegendGroup
+      .append('text')
       .attr('x', 0)
       .attr('y', 0)
       .attr('font-size', '12px')
       .attr('font-weight', 'bold')
       .text('Weight Legend');
-    
 
     const updateWeightLegend = (status: string) => {
       const stats = weightStatsByStatus[status] || { min: 0, max: 0 };
-      
 
       weightLegendGroup.selectAll('.weight-line, .weight-text').remove();
-      
-      if (stats.min === stats.max) {
 
-        weightLegendGroup.append('line')
+      if (stats.min === stats.max) {
+        weightLegendGroup
+          .append('line')
           .attr('class', 'weight-line')
           .attr('x1', 0)
           .attr('y1', 20)
@@ -298,8 +303,9 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
           .attr('y2', 20)
           .attr('stroke', getStatusColor(status))
           .attr('stroke-width', MIN_STROKE_WIDTH);
-        
-        weightLegendGroup.append('text')
+
+        weightLegendGroup
+          .append('text')
           .attr('class', 'weight-text')
           .attr('x', 35)
           .attr('y', 24)
@@ -307,7 +313,8 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
           .text(`Weight: ${stats.min}`);
       } else {
         // min weight
-        weightLegendGroup.append('line')
+        weightLegendGroup
+          .append('line')
           .attr('class', 'weight-line')
           .attr('x1', 0)
           .attr('y1', 20)
@@ -315,18 +322,20 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
           .attr('y2', 20)
           .attr('stroke', getStatusColor(status))
           .attr('stroke-width', MIN_STROKE_WIDTH);
-        
-        weightLegendGroup.append('text')
+
+        weightLegendGroup
+          .append('text')
           .attr('class', 'weight-text')
           .attr('x', 35)
           .attr('y', 24)
           .attr('font-size', '10px')
           .text(`Min: ${stats.min}`);
-        
+
         // mid weight
         if (stats.mid !== undefined) {
           const midStrokeWidth = strokeWidthScale(stats.mid);
-          weightLegendGroup.append('line')
+          weightLegendGroup
+            .append('line')
             .attr('class', 'weight-line')
             .attr('x1', 0)
             .attr('y1', 40)
@@ -334,18 +343,20 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
             .attr('y2', 40)
             .attr('stroke', getStatusColor(status))
             .attr('stroke-width', midStrokeWidth);
-          
-          weightLegendGroup.append('text')
+
+          weightLegendGroup
+            .append('text')
             .attr('class', 'weight-text')
             .attr('x', 35)
             .attr('y', 44)
             .attr('font-size', '10px')
             .text(`Mid: ${stats.mid}`);
         }
-        
+
         // max weight
         const yPos = stats.mid !== undefined ? 60 : 40;
-        weightLegendGroup.append('line')
+        weightLegendGroup
+          .append('line')
           .attr('class', 'weight-line')
           .attr('x1', 0)
           .attr('y1', yPos)
@@ -353,8 +364,9 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
           .attr('y2', yPos)
           .attr('stroke', getStatusColor(status))
           .attr('stroke-width', MAX_STROKE_WIDTH);
-        
-        weightLegendGroup.append('text')
+
+        weightLegendGroup
+          .append('text')
           .attr('class', 'weight-text')
           .attr('x', 35)
           .attr('y', yPos + 4)
@@ -362,13 +374,15 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
           .text(`Max: ${stats.max}`);
       }
     };
-    
+
     updateWeightLegend('approved');
-    
+
     const legendX = 400;
     const legendY = 10;
 
-    const legend = svg.append('g').attr('transform', `translate(${legendX}, ${legendY})`);
+    const legend = svg
+      .append('g')
+      .attr('transform', `translate(${legendX}, ${legendY})`);
 
     legendData.forEach((item, i) => {
       const legendRow = legend
@@ -380,20 +394,19 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
             arcSelection.style('display', 'block');
           } else {
             // Show arcs only for the hovered status
-            arcSelection.style('display', (d) =>
+            arcSelection.style('display', d =>
               d.status === item.status ? 'block' : 'none'
             );
           }
-          
 
           updateWeightLegend(item.status);
         })
         .on('mouseout', () => {
           // revert to default: "approved" arcs
-          arcSelection.style('display', (d) =>
+          arcSelection.style('display', d =>
             d.status === 'approved' ? 'block' : 'none'
           );
-          
+
           updateWeightLegend('approved');
         });
 
@@ -412,9 +425,8 @@ const PRArcDiagram: React.FC<PRArcDiagramProps> = ({
         .attr('x', 20)
         .attr('y', 12)
         .attr('font-size', '12px')
-        .text(item.status.charAt(0).toUpperCase() + item.status.slice(1)); 
+        .text(item.status.charAt(0).toUpperCase() + item.status.slice(1));
     });
-
   }, [graphData, width, height]);
 
   return (

@@ -14,10 +14,7 @@ interface OverviewAccordionItemProps {
   getStudentNameByGitHandle: ProfileGetter;
 }
 
-const PRAccordionItem = forwardRef<
-  HTMLDivElement,
-  OverviewAccordionItemProps
->(
+const PRAccordionItem = forwardRef<HTMLDivElement, OverviewAccordionItemProps>(
   (
     { index, teamData, team, teamDatas, dateUtils, getStudentNameByGitHandle },
     ref

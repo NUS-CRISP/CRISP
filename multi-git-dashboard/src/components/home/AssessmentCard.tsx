@@ -1,4 +1,11 @@
-import { Box, Center, Paper, Stack, Title, useMantineTheme } from '@mantine/core';
+import {
+  Box,
+  Center,
+  Paper,
+  Stack,
+  Title,
+  useMantineTheme,
+} from '@mantine/core';
 import { useRouter } from 'next/router';
 import { useEffect, useRef, useState } from 'react';
 import classes from '@styles/FeatureCard.module.css';
@@ -20,8 +27,8 @@ const AnimatedPaper: React.FC<AnimatedPaperProps> = ({ image }) => {
 
   useEffect(() => {
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
+      entries => {
+        entries.forEach(entry => {
           if (entry.isIntersecting) {
             setVisible(true);
             observer.disconnect(); // Trigger animation only once
@@ -82,7 +89,9 @@ const AssessmentCard: React.FC = () => {
           <AnimatedPaper image={item.image} />
 
           {/* Text Section */}
-          <Stack style={{ width: '50%', fontFamily: 'Verdana', color: 'white' }}>
+          <Stack
+            style={{ width: '50%', fontFamily: 'Verdana', color: 'white' }}
+          >
             <Title order={3}>{item.title}</Title>
           </Stack>
         </Box>

@@ -1,33 +1,33 @@
 .wrapper {
-    padding-top: 100px;
-    padding-bottom: 100px;
+  padding-top: 100px;
+  padding-bottom: 100px;
 
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-size: 100% 800px;
-    background-position: top center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-size: 100% 800px;
+  background-position: top center;
 }
 
 .title {
-    font-family:
-        Greycliff CF,
-        var(--mantine-font-family);
-    font-weight: 900;
-    margin-bottom: var(--mantine-spacing-md);
-    text-align: center;
-    color: white;
+  font-family:
+    Greycliff CF,
+    var(--mantine-font-family);
+  font-weight: 900;
+  margin-bottom: var(--mantine-spacing-md);
+  text-align: center;
+  color: white;
 
-    @media (max-width: $mantine-breakpoint-sm) {
-        font-size: 28px;
-        text-align: left;
-    }
+  @media (max-width: $mantine-breakpoint-sm) {
+    font-size: 28px;
+    text-align: left;
+  }
 }
 
 .description {
-    text-align: center;
-    color: white;
+  text-align: center;
+  color: white;
 
-    @media (max-width: $mantine-breakpoint-sm) {
-        text-align: left;
-    }
+  @media (max-width: $mantine-breakpoint-sm) {
+    text-align: left;
+  }
 }

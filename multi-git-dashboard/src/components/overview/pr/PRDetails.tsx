@@ -32,7 +32,11 @@ const getReviewStats = (pr: TeamData['teamPRs'][number]) => {
   }
 
   const totalReviews = pr.reviews.length;
-  const reviewDepth = pr.reviews.reduce((sum: number, r: typeof pr.reviews[number]) => sum + (r.comments?.length || 0), 0);
+  const reviewDepth = pr.reviews.reduce(
+    (sum: number, r: (typeof pr.reviews)[number]) =>
+      sum + (r.comments?.length || 0),
+    0
+  );
 
   return {
     totalReviews,
@@ -53,7 +57,6 @@ const PRDetails: React.FC<PRDetailsProps> = ({
   const theme = useMantineTheme();
 
   const [userColors, setUserColors] = useState<Map<string, string>>(new Map());
-
 
   const stats = getReviewStats(pr);
 
@@ -97,7 +100,9 @@ const PRDetails: React.FC<PRDetailsProps> = ({
 
       <Text size="sm">Total Reviews: {stats.totalReviews}</Text>
       <Text size="sm">Total Review Depth: {stats.reviewDepth}</Text>
-      <Text size="sm">Avg Comments per Review: {stats.avgCommentsPerReview.toFixed(2)}</Text>
+      <Text size="sm">
+        Avg Comments per Review: {stats.avgCommentsPerReview.toFixed(2)}
+      </Text>
 
       <Divider my="sm" />
 

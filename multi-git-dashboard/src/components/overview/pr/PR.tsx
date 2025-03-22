@@ -51,17 +51,19 @@ interface PRGraphDataBundled {
   edges: PREdge[];
 }
 
-const processPRInteractions = (teamPRs: PRProps['teamData']['teamPRs']): PRGraphData => {
+const processPRInteractions = (
+  teamPRs: PRProps['teamData']['teamPRs']
+): PRGraphData => {
   const nodesSet = new Set<string>();
   const edgesMap: Map<string, PREdge> = new Map();
 
-  teamPRs.forEach((pr) => {
+  teamPRs.forEach(pr => {
     const prAuthor = pr.user;
     if (!prAuthor) return;
 
     nodesSet.add(prAuthor);
 
-    pr.reviews.forEach((review) => {
+    pr.reviews.forEach(review => {
       const reviewer = review.user;
       if (!reviewer || reviewer === prAuthor) return;
 
@@ -83,23 +85,25 @@ const processPRInteractions = (teamPRs: PRProps['teamData']['teamPRs']): PRGraph
   });
 
   return {
-    nodes: Array.from(nodesSet).map((id) => ({ id })),
+    nodes: Array.from(nodesSet).map(id => ({ id })),
     edges: Array.from(edgesMap.values()),
   };
 };
 
-const processPRInteractionsDot = (teamPRs: PRProps['teamData']['teamPRs']): PRGraphData => {
+const processPRInteractionsDot = (
+  teamPRs: PRProps['teamData']['teamPRs']
+): PRGraphData => {
   const nodesSet = new Set<string>();
   const edgesArray: PREdge[] = [];
 
-  teamPRs.forEach((pr) => {
+  teamPRs.forEach(pr => {
     const prAuthor = pr.user;
     if (!prAuthor) return;
 
     nodesSet.add(prAuthor);
     const reviewsByUser = new Map<string, Map<string, number>>();
 
-    pr.reviews.forEach((review) => {
+    pr.reviews.forEach(review => {
       const reviewer = review.user;
       if (!reviewer || reviewer === prAuthor) return;
 
@@ -125,28 +129,28 @@ const processPRInteractionsDot = (teamPRs: PRProps['teamData']['teamPRs']): PRGr
           source: reviewer,
           target: prAuthor,
           weight: count,
-          status: status
+          status: status,
         });
       });
     });
   });
 
   return {
-    nodes: Array.from(nodesSet).map((id) => ({ id })),
-    edges: edgesArray
+    nodes: Array.from(nodesSet).map(id => ({ id })),
+    edges: edgesArray,
   };
 };
 
 function filterAndRenameTop6(graphData: PRGraphData): PRGraphData {
   const { nodes, edges } = graphData;
-  
+
   if (nodes.length === 0 || edges.length === 0) {
     return { nodes: [], edges: [] };
   }
 
   const interactionCountMap: Record<string, number> = {};
 
-  edges.forEach((edge) => {
+  edges.forEach(edge => {
     interactionCountMap[edge.source] =
       (interactionCountMap[edge.source] || 0) + edge.weight;
     interactionCountMap[edge.target] =
@@ -160,10 +164,10 @@ function filterAndRenameTop6(graphData: PRGraphData): PRGraphData {
   });
 
   const top6 = sortedNodes.slice(0, 6);
-  const top6Ids = new Set(top6.map((n) => n.id));
+  const top6Ids = new Set(top6.map(n => n.id));
 
   const filteredEdges = edges.filter(
-    (edge) => top6Ids.has(edge.source) && top6Ids.has(edge.target)
+    edge => top6Ids.has(edge.source) && top6Ids.has(edge.target)
   );
 
   const renameMap: Record<string, string> = {};
@@ -171,18 +175,18 @@ function filterAndRenameTop6(graphData: PRGraphData): PRGraphData {
     renameMap[node.id] = `Student ${i + 1}`;
   });
 
-  const renamedNodes = top6.map((node) => ({
+  const renamedNodes = top6.map(node => ({
     id: renameMap[node.id],
   }));
 
-  const renamedEdges = filteredEdges.map((edge) => ({
+  const renamedEdges = filteredEdges.map(edge => ({
     ...edge,
     source: renameMap[edge.source],
     target: renameMap[edge.target],
   }));
 
   return {
-    // sortedNodes, 
+    // sortedNodes,
     // filteredEdges
     nodes: sortedNodes, // renamedNodes, for anoynmized version
     edges: filteredEdges, // renamedEdges, for anoynmized version
@@ -190,7 +194,18 @@ function filterAndRenameTop6(graphData: PRGraphData): PRGraphData {
 }
 
 const PR = forwardRef<HTMLDivElement, PRProps>(
-  ({ team, teamData, selectedWeekRange, dateUtils, profileGetter, dailyDateRange, useDailyRange = false }, ref) => {
+  (
+    {
+      team,
+      teamData,
+      selectedWeekRange,
+      dateUtils,
+      profileGetter,
+      dailyDateRange,
+      useDailyRange = false,
+    },
+    ref
+  ) => {
     const SPACING: Spacing = {
       maxHeight: 500,
       bottomSpace: 7,
@@ -203,20 +218,25 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
     );
 
     // graph data for node-edge graph
-    const [graphData, setGraphData] = useState<PRGraphData>({ nodes: [], edges: [] });
+    const [graphData, setGraphData] = useState<PRGraphData>({
+      nodes: [],
+      edges: [],
+    });
     // graph data for dot matrix chart
-    const [graphDataDot, setGraphDataDot] = useState<PRGraphData>({ nodes: [], edges: [] });
-  
+    const [graphDataDot, setGraphDataDot] = useState<PRGraphData>({
+      nodes: [],
+      edges: [],
+    });
+
     const [dataRefreshKey, setDataRefreshKey] = useState<number>(0);
 
-
-    const [activeView, setActiveView] = useState<string>("list");
+    const [activeView, setActiveView] = useState<string>('list');
 
     const getDisplayedPRs = useCallback(() => {
       let startDate, endDate;
-      
+
       if (useDailyRange && dailyDateRange) {
-        // Use the daily date range 
+        // Use the daily date range
         startDate = dailyDateRange[0];
         endDate = dailyDateRange[1];
       } else {
@@ -225,11 +245,18 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
         endDate = getEndOfWeek(weekToDate(selectedWeekRange[1]));
       }
 
-      return teamData.teamPRs.filter((pr) => {
+      return teamData.teamPRs.filter(pr => {
         const prDate = dayjs(pr.createdAt);
         return prDate.isAfter(startDate) && prDate.isBefore(endDate);
       });
-    }, [teamData.teamPRs, selectedWeekRange, dailyDateRange, useDailyRange, weekToDate, getEndOfWeek]);
+    }, [
+      teamData.teamPRs,
+      selectedWeekRange,
+      dailyDateRange,
+      useDailyRange,
+      weekToDate,
+      getEndOfWeek,
+    ]);
 
     const getTimeRangeLabel = useCallback(() => {
       if (useDailyRange && dailyDateRange) {
@@ -240,7 +267,7 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
     }, [selectedWeekRange, dailyDateRange, useDailyRange]);
 
     useEffect(() => {
-      console.log("Date range changed, refreshing data");
+      console.log('Date range changed, refreshing data');
 
       const filteredPRs = getDisplayedPRs();
 
@@ -252,14 +279,19 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
 
       setGraphData(top6GraphData);
       setGraphDataDot(top6GraphDataDot);
-      
-      setDataRefreshKey(prev => prev + 1);
-    }, [teamData.teamPRs, selectedWeekRange, dailyDateRange, useDailyRange, getDisplayedPRs]);
 
+      setDataRefreshKey(prev => prev + 1);
+    }, [
+      teamData.teamPRs,
+      selectedWeekRange,
+      dailyDateRange,
+      useDailyRange,
+      getDisplayedPRs,
+    ]);
 
     const renderActiveVisualization = () => {
       switch (activeView) {
-        case "list":
+        case 'list':
           return (
             <Group grow align="start">
               <Box style={{ maxWidth: 200, marginRight: 15 }}>
@@ -274,7 +306,7 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
               {selectedPR !== null && (
                 <Box maw={700} mt={10} mr={10}>
                   <PRDetails
-                    pr={teamData.teamPRs.find((pr) => pr.id === selectedPR)}
+                    pr={teamData.teamPRs.find(pr => pr.id === selectedPR)}
                     spacing={SPACING}
                     profileGetter={profileGetter}
                   />
@@ -282,17 +314,36 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
               )}
             </Group>
           );
-        case "arc":
-          return <PRArcDiagram key={`arc-${dataRefreshKey}`} graphData={graphData} />;
-        case "chord":
-          return <PRChordDiagram key={`chord-${dataRefreshKey}`} graphData={graphData} />;
-        case "dot":
-          return <PRDotMatrixChart key={`dot-${dataRefreshKey}`} graphData={graphDataDot} />;
-        case "matrix":
-          return <PRMatrix key={`matrix-${dataRefreshKey}`} graphData={graphData} />;
-        case "network":
+        case 'arc':
+          return (
+            <PRArcDiagram key={`arc-${dataRefreshKey}`} graphData={graphData} />
+          );
+        case 'chord':
+          return (
+            <PRChordDiagram
+              key={`chord-${dataRefreshKey}`}
+              graphData={graphData}
+            />
+          );
+        case 'dot':
+          return (
+            <PRDotMatrixChart
+              key={`dot-${dataRefreshKey}`}
+              graphData={graphDataDot}
+            />
+          );
+        case 'matrix':
+          return (
+            <PRMatrix key={`matrix-${dataRefreshKey}`} graphData={graphData} />
+          );
+        case 'network':
         default:
-          return <PRNetwork key={`network-${dataRefreshKey}`} graphData={graphData} />;
+          return (
+            <PRNetwork
+              key={`network-${dataRefreshKey}`}
+              graphData={graphData}
+            />
+          );
       }
     };
 
@@ -302,54 +353,54 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
           <Text fw={500} size="lg" mb={10}>
             PR Review Interactions ({getTimeRangeLabel()})
           </Text>
-          
+
           {/* Visualization selector with buttons */}
           <Group spacing="xs" mb={15}>
-            <Button 
-              variant={activeView === "list" ? "filled" : "outline"} 
-              onClick={() => setActiveView("list")}
+            <Button
+              variant={activeView === 'list' ? 'filled' : 'outline'}
+              onClick={() => setActiveView('list')}
               size="sm"
             >
               PR List
             </Button>
-           
-            <Button 
-              variant={activeView === "arc" ? "filled" : "outline"} 
-              onClick={() => setActiveView("arc")}
+
+            <Button
+              variant={activeView === 'arc' ? 'filled' : 'outline'}
+              onClick={() => setActiveView('arc')}
               size="sm"
             >
               Arc Diagram
             </Button>
-            <Button 
-              variant={activeView === "chord" ? "filled" : "outline"} 
-              onClick={() => setActiveView("chord")}
+            <Button
+              variant={activeView === 'chord' ? 'filled' : 'outline'}
+              onClick={() => setActiveView('chord')}
               size="sm"
             >
               Chord Diagram
             </Button>
-            <Button 
-              variant={activeView === "dot" ? "filled" : "outline"} 
-              onClick={() => setActiveView("dot")}
+            <Button
+              variant={activeView === 'dot' ? 'filled' : 'outline'}
+              onClick={() => setActiveView('dot')}
               size="sm"
             >
               Dot Matrix
             </Button>
-            <Button 
-              variant={activeView === "matrix" ? "filled" : "outline"} 
-              onClick={() => setActiveView("matrix")}
+            <Button
+              variant={activeView === 'matrix' ? 'filled' : 'outline'}
+              onClick={() => setActiveView('matrix')}
               size="sm"
             >
               Heat Map
             </Button>
-            <Button 
-              variant={activeView === "network" ? "filled" : "outline"} 
-              onClick={() => setActiveView("network")}
+            <Button
+              variant={activeView === 'network' ? 'filled' : 'outline'}
+              onClick={() => setActiveView('network')}
               size="sm"
             >
               Network
             </Button>
           </Group>
-          
+
           {/* Alternative approach using Mantine Tabs */}
           {/* <Tabs defaultValue="network" value={activeView} onTabChange={setActiveView}>
             <Tabs.List>
@@ -363,10 +414,7 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
           </Tabs> */}
         </Box>
 
-      
-        <Box style={{ minHeight: 400 }}>
-          {renderActiveVisualization()}
-        </Box>
+        <Box style={{ minHeight: 400 }}>{renderActiveVisualization()}</Box>
       </Card>
     );
   }

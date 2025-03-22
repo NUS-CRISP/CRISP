@@ -20,8 +20,7 @@ const Home: React.FC = () => (
     <FeatureMono />
 
     <div style={{ background: '#062343' }}>
-      <Container >
-
+      <Container>
         <div style={{ marginBottom: '200px' }}>
           <FeatureCard />
         </div>
@@ -29,7 +28,6 @@ const Home: React.FC = () => (
         <ContactUs />
 
         <Footer />
-
       </Container>
     </div>
   </div>

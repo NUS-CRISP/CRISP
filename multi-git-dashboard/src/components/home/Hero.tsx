@@ -1,4 +1,12 @@
-import { Box, Button, Group, Text, Container, Flex, Stack } from '@mantine/core';
+import {
+  Box,
+  Button,
+  Group,
+  Text,
+  Container,
+  Flex,
+  Stack,
+} from '@mantine/core';
 import Role from '@shared/types/auth/Role';
 import classes from '@styles/Home.module.css';
 import { IconArrowRight, IconBrandGithub } from '@tabler/icons-react';
@@ -9,11 +17,7 @@ const Hero = () => {
     <div className={classes.heroSection} style={{ marginTop: 0 }}>
       <Container size="lg" className={classes.heroContainer}>
         <div className={classes.heroContent}>
-          <Flex
-            direction="column"
-            align="center"
-            className={classes.title}
-          >
+          <Flex direction="column" align="center" className={classes.title}>
             <Box
               style={{
                 textAlign: 'left',
@@ -24,9 +28,15 @@ const Hero = () => {
               }}
             >
               <Stack spacing={30}>
-                <Text component="span" inherit>Code.</Text>
-                <Text component="span" inherit>Collaborate.</Text>
-                <Text component="span" inherit>Conquer.</Text>
+                <Text component="span" inherit>
+                  Code.
+                </Text>
+                <Text component="span" inherit>
+                  Collaborate.
+                </Text>
+                <Text component="span" inherit>
+                  Conquer.
+                </Text>
               </Stack>
             </Box>
 
@@ -45,8 +55,7 @@ const Hero = () => {
               variant="gradient"
               gradient={{ from: 'blue', to: 'cyan' }}
             >
-              A fully featured multi-git classroom
-              management solution
+              A fully featured multi-git classroom management solution
             </Text>
           </Flex>
 
@@ -62,7 +71,9 @@ const Hero = () => {
                   type: Role.TrialUser,
                 })
               }
-              rightSection={<IconArrowRight size={20} className={classes.arrow} />}
+              rightSection={
+                <IconArrowRight size={20} className={classes.arrow} />
+              }
             >
               Try it out
             </Button>

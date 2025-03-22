@@ -24,12 +24,16 @@ const Header: React.FC = () => {
             display: 'flex',
             justifyContent: 'space-between',
             minHeight: '60px',
-            padding: '0 16px'
+            padding: '0 16px',
           }}
         >
-
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <IconGitBranch size={36} className={classes.headerIcon} stroke={2} color="white" />
+            <IconGitBranch
+              size={36}
+              className={classes.headerIcon}
+              stroke={2}
+              color="white"
+            />
 
             <Typography
               variant="h5"
@@ -41,7 +45,7 @@ const Header: React.FC = () => {
                 ml: 1.5,
                 textDecoration: 'none',
                 letterSpacing: '0.5px',
-                fontSize: '1.5rem'
+                fontSize: '1.5rem',
               }}
             >
               CRISP
@@ -70,7 +74,6 @@ const Header: React.FC = () => {
             >
               Sign up
             </Button>
-
           </Box>
         </Toolbar>
       </Container>

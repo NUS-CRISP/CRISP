@@ -26,14 +26,16 @@ const social = [
   },
 ];
 
-const AnimatedWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const AnimatedWrapper: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
+      entries => {
+        entries.forEach(entry => {
           if (entry.isIntersecting) {
             setVisible(true);
             observer.disconnect(); // Animate only once when visible
@@ -99,7 +101,7 @@ const ContactUs: React.FC = () => {
 
             <form
               className={classes.form}
-              onSubmit={(event) => event.preventDefault()}
+              onSubmit={event => event.preventDefault()}
             >
               <Text fz="lg" fw={700} className={classes.title}>
                 Get in touch
@@ -115,7 +117,12 @@ const ContactUs: React.FC = () => {
                   />
                 </SimpleGrid>
 
-                <TextInput mt="md" label="Subject" placeholder="Subject" required />
+                <TextInput
+                  mt="md"
+                  label="Subject"
+                  placeholder="Subject"
+                  required
+                />
 
                 <Textarea
                   mt="md"

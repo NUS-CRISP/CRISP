@@ -9,13 +9,16 @@ interface PRStatusChartProps {
 }
 
 const PRStatusChart: React.FC<PRStatusChartProps> = ({ graphData }) => {
-  console.log("Graph Data Edges:", graphData.edges);
+  console.log('Graph Data Edges:', graphData.edges);
 
   const statusCounts = new Map<string, number>();
 
   graphData.edges.forEach(({ status, weight }) => {
     const normalizedStatus = status.toLowerCase(); // Normalize case
-    statusCounts.set(normalizedStatus, (statusCounts.get(normalizedStatus) || 0) + weight);
+    statusCounts.set(
+      normalizedStatus,
+      (statusCounts.get(normalizedStatus) || 0) + weight
+    );
   });
 
   const data = [
@@ -27,7 +30,7 @@ const PRStatusChart: React.FC<PRStatusChartProps> = ({ graphData }) => {
     ),
   ];
 
-  console.log("Chart Data:", data);
+  console.log('Chart Data:', data);
 
   return (
     <Box mt={20}>
@@ -38,12 +41,16 @@ const PRStatusChart: React.FC<PRStatusChartProps> = ({ graphData }) => {
         h={300}
         data={data}
         dataKey="status"
-        series={Object.keys(data[0]).map((status) => ({
+        series={Object.keys(data[0]).map(status => ({
           name: status,
-          color: status === 'Approved' ? 'green.6'
-            : status === 'Dismissed' ? 'gray.6'
-              : status === 'Commented' ? 'blue.6'
-                : 'red.6',
+          color:
+            status === 'Approved'
+              ? 'green.6'
+              : status === 'Dismissed'
+                ? 'gray.6'
+                : status === 'Commented'
+                  ? 'blue.6'
+                  : 'red.6',
         }))}
         tickLine="none"
       />

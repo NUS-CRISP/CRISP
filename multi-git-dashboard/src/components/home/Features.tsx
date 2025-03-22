@@ -37,7 +37,7 @@ const features = [
     icon: IconLayout,
     title: 'User-Friendly Interface',
     description:
-      "CRISP features a clean, intuitive interface designed for efficiency and ease of use. ",
+      'CRISP features a clean, intuitive interface designed for efficiency and ease of use. ',
   },
   {
     icon: IconTools,
@@ -88,9 +88,11 @@ const Features: React.FC = () => {
             Features
           </Title>
           <Text className={classes.description} mt={30}>
-            {<strong>CRISP</strong>} is a web-base <strong>dashboard</strong> designed to 
-            streamline the <strong>management</strong> and <strong>assessment</strong> of 
-            large-scale software engineering modules involving multiple teams working across multiple GitHub repositories.
+            {<strong>CRISP</strong>} is a web-base <strong>dashboard</strong>{' '}
+            designed to streamline the <strong>management</strong> and{' '}
+            <strong>assessment</strong> of large-scale software engineering
+            modules involving multiple teams working across multiple GitHub
+            repositories.
           </Text>
 
           <Button
@@ -106,14 +108,10 @@ const Features: React.FC = () => {
         </Grid.Col>
 
         <Grid.Col span={{ base: 12, md: 7 }}>
-         
           <SimpleGrid cols={{ base: 1, md: 2 }} spacing={30}>
             {items}
-          </SimpleGrid> 
-          
-         
+          </SimpleGrid>
         </Grid.Col>
-
       </Grid>
     </div>
   );

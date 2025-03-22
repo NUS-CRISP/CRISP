@@ -31,7 +31,7 @@ const convertChartData = (
   return data
     .filter(item => {
       if (item.length < 3) return false;
-      
+
       const itemDate = new Date(item[0] * 1000);
       return itemDate >= startDate && itemDate <= endDate;
     })

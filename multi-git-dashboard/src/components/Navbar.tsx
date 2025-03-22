@@ -248,7 +248,7 @@ const Navbar: React.FC = () => {
       label: 'Assessments',
       disabled: !peopleAdded,
       pngSrc: '/assessments.png',
-    }
+    },
   ];
 
   // Helper function to render a navigation link
@@ -275,7 +275,7 @@ const Navbar: React.FC = () => {
         }}
         style={{
           ...(item.disabled ? { cursor: 'not-allowed', opacity: 0.5 } : {}),
-          padding: '6px 0'
+          padding: '6px 0',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -301,7 +301,7 @@ const Navbar: React.FC = () => {
         height: '1px',
         backgroundColor: '#e0e0e0',
         margin: '2px 0',
-        width: '100%'
+        width: '100%',
       }}
     />
   );
@@ -319,7 +319,7 @@ const Navbar: React.FC = () => {
         height: '1px',
         backgroundColor: '#e0e0e0',
         margin: '10px 0',
-        width: '100%'
+        width: '100%',
       }}
     />
   );
@@ -375,7 +375,11 @@ const Navbar: React.FC = () => {
             backgroundColor: getTutorialHighlightColor(1),
           }}
         >
-          <Center className={classes.logo} onClick={() => router.push('/')} style={{ cursor: 'pointer' }}>
+          <Center
+            className={classes.logo}
+            onClick={() => router.push('/')}
+            style={{ cursor: 'pointer' }}
+          >
             <IconGitBranch size={30} />
           </Center>
 
@@ -415,10 +419,11 @@ const Navbar: React.FC = () => {
               }}
             >
               <NavbarLink
-                onClick={() => { }}
+                onClick={() => {}}
                 icon={IconUserCircle}
-                label={`Hello, ${session && session.user ? session.user.name : 'user'
-                  }`}
+                label={`Hello, ${
+                  session && session.user ? session.user.name : 'user'
+                }`}
                 disabled
                 popoverOpened={questionPopoverOpened}
               />
@@ -452,7 +457,7 @@ const Navbar: React.FC = () => {
             style={{
               width: '180px',
               backgroundColor: getTutorialHighlightColor(5),
-              paddingTop: '5px' // Reduced top padding
+              paddingTop: '5px', // Reduced top padding
             }}
           >
             <div className={classes.navbarMain}>

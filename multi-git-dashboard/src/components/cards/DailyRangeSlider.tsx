@@ -1,4 +1,13 @@
-import { RangeSlider, Stack, Modal, TextInput, Button, Box, Group, Switch } from '@mantine/core';
+import {
+  RangeSlider,
+  Stack,
+  Modal,
+  TextInput,
+  Button,
+  Box,
+  Group,
+  Switch,
+} from '@mantine/core';
 import { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 
@@ -16,7 +25,9 @@ const DailyRangeSlider: React.FC<DailyRangeSliderProps> = ({
   const [earliestDate, setEarliestDate] = useState<dayjs.Dayjs | null>(null);
   const [latestDate, setLatestDate] = useState<dayjs.Dayjs | null>(null);
   const [totalDays, setTotalDays] = useState<number>(0);
-  const [selectedDayRange, setSelectedDayRange] = useState<[number, number]>([0, 0]);
+  const [selectedDayRange, setSelectedDayRange] = useState<[number, number]>([
+    0, 0,
+  ]);
   const [isEnabled, setIsEnabled] = useState<boolean>(false);
 
   useEffect(() => {
@@ -48,7 +59,6 @@ const DailyRangeSlider: React.FC<DailyRangeSliderProps> = ({
 
     setSelectedDayRange([0, days]);
   }, [teamData]);
-
 
   const generateMarks = () => {
     if (!earliestDate || totalDays === 0) return [];
@@ -107,7 +117,7 @@ const DailyRangeSlider: React.FC<DailyRangeSliderProps> = ({
           <Switch
             label="Filter by date range"
             checked={isEnabled}
-            onChange={(event) => handleToggleChange(event.currentTarget.checked)}
+            onChange={event => handleToggleChange(event.currentTarget.checked)}
           />
         </Group>
 
@@ -128,7 +138,7 @@ const DailyRangeSlider: React.FC<DailyRangeSliderProps> = ({
               max={totalDays}
               min={0}
               minRange={1}
-              label={(value) => {
+              label={value => {
                 if (!earliestDate) return '';
                 return earliestDate.add(value, 'day').format('MMM D');
               }}

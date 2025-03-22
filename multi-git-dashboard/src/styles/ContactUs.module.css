@@ -1,9 +1,13 @@
 .wrapper {
   display: flex;
-  background-color: light-dark(var(--mantine-color-white), var(--mantine-color-dark-8));
+  background-color: light-dark(
+    var(--mantine-color-white),
+    var(--mantine-color-dark-8)
+  );
   border-radius: var(--mantine-radius-lg);
   padding: 4px;
-  border: 1px solid light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-8));
+  border: 1px solid
+    light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-8));
 
   @media (max-width: $mantine-breakpoint-sm) {
     flex-direction: column;
