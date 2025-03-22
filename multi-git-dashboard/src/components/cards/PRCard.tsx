@@ -202,7 +202,7 @@ export const PRCard: React.FC<OverviewProps> = ({
   return (
     <Stack>
       <Box px={20}>
-        <Group position="apart" mb={10}>
+        <Group mb={10}>
           <Box>
             <strong>Time Period:</strong> Weeks {selectedWeekRange[0] + 1} -{' '}
             {selectedWeekRange[1] + 1}
@@ -236,12 +236,11 @@ export const PRCard: React.FC<OverviewProps> = ({
         <Box
           px={20}
           py={10}
-          sx={{ backgroundColor: '#f9f9f9', borderRadius: '8px' }}
         >
-          <Text weight={600} mb={10}>
+          <Text mb={10}>
             Export Options
           </Text>
-          <Group position="apart">
+          <Group>
             <Button
               onClick={() =>
                 exportSVGAsPNG(
@@ -268,8 +267,8 @@ export const PRCard: React.FC<OverviewProps> = ({
           {isExporting && (
             <Box mt={10}>
               <Text size="sm">Exporting {currentExportRange}...</Text>
-              <Group spacing={5} align="center">
-                <Box sx={{ flex: 1 }}>
+              <Group align="center">
+                <Box>
                   <RangeSlider
                     value={[0, exportProgress]}
                     disabled
@@ -288,8 +287,7 @@ export const PRCard: React.FC<OverviewProps> = ({
       <DailyRangeSlider
         teamData={teamData}
         onRangeChange={handleDailyRangeChange}
-        onUseDailyRangeChange={handleUseDailyRangeChange}
-        disabled={isExporting}
+        onUseDailyRangeChange={handleUseDailyRangeChange} 
       />
 
       <TutorialPopover stage={9} position="top" disabled={index !== 0}>
@@ -317,7 +315,7 @@ export const PRCard: React.FC<OverviewProps> = ({
           value={aliasInput}
           onChange={e => setAliasInput(e.target.value)}
         />
-        <Group position="right" mt="md">
+        <Group mt="md">
           <Button variant="outline" onClick={() => setIsModalOpen(false)}>
             Cancel
           </Button>

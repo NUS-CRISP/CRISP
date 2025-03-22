@@ -105,7 +105,7 @@ const DailyRangeSlider: React.FC<DailyRangeSliderProps> = ({
   return (
     <Stack>
       <Box px={20}>
-        <Group position="apart" mb={10}>
+        <Group mb={10}>
           <Switch
             label="Filter by date range"
             checked={isEnabled}
@@ -115,7 +115,7 @@ const DailyRangeSlider: React.FC<DailyRangeSliderProps> = ({
 
         {isEnabled && (
           <>
-            <Group position="apart" mb={10}>
+            <Group mb={10}>
               <Box>
                 <strong>Date Range:</strong> {getSelectedDateRange()}
               </Box>
