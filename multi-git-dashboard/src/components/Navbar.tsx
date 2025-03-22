@@ -314,8 +314,8 @@ const Navbar: React.FC = () => {
   );
 
   // Second section: Config related links
-  courseLinksData.slice(4, 9).forEach((item, index) => {
-    courseLinks.push(renderNavLink(item, index + 4));
+  courseLinksData.slice(4, 9).forEach(item => {
+    courseLinks.push(renderNavLink(item));
   });
 
   // Second divider before Assessments

@@ -25,7 +25,7 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
       'commits',
       'issues',
     ]);
-    const [singleMetric, setSingleMetric] = useState<string>('issues');
+    const [singleMetric, setSingleMetric] = useState<string>('pullRequests');
     const [sortType, setSortType] = useState<string>('all');
 
     const uniqueTeamData = teamDatas.filter(
