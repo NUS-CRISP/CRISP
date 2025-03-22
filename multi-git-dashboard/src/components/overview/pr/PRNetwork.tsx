@@ -156,7 +156,7 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
       .attr('fill', 'none')
       .attr('marker-end', d => `url(#arrow-${d.status})`)
       .on('mouseover', (event: MouseEvent, d: PREdge) => {
-        const currentTarget = event.currentTarget as SVGPathElement;
+        // const currentTarget = event.currentTarget as SVGPathElement;
         tooltip
           .style('opacity', 1)
           .html(
@@ -290,22 +290,20 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
         statusGroups[edge.status].push(edge);
       });
 
-      Object.entries(statusGroups).forEach(
-        ([_status, statusEdges], statusIndex) => {
-          statusEdges.forEach(edge => {
-            // @ts-expect-error Adding custom property offsetFactor to edge which is not in the original type definition
-            edge.offsetFactor = statusIndex;
+      Object.values(statusGroups).forEach((statusEdges, statusIndex) => {
+        statusEdges.forEach(edge => {
+          // @ts-expect-error Adding custom property offsetFactor to edge which is not in the original type definition
+          edge.offsetFactor = statusIndex;
 
-            if (isBidirectional) {
-              // @ts-expect-error Adding custom property directionFactor to edge which is not in the original type definition
-              edge.directionFactor = sourceId < targetId ? 1 : -1;
-            } else {
-              // @ts-expect-error Adding custom property directionFactor to edge which is not in the original type definition
-              edge.directionFactor = 1;
-            }
-          });
-        }
-      );
+          if (isBidirectional) {
+            // @ts-expect-error Adding custom property directionFactor to edge which is not in the original type definition
+            edge.directionFactor = sourceId < targetId ? 1 : -1;
+          } else {
+            // @ts-expect-error Adding custom property directionFactor to edge which is not in the original type definition
+            edge.directionFactor = 1;
+          }
+        });
+      });
     });
 
     return pairs;
