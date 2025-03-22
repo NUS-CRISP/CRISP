@@ -1,7 +1,5 @@
 import { Center, Grid, Image, Stack, Text, Title } from '@mantine/core';
 import ss1 from '@public/ss-1.png';
-// import ss2 from '@public/ss-2.png';
-// import ss3 from '@public/ss-3.png';
 import ss4 from '@public/ss-4.png';
 import ss5 from '@public/ss-5.png';
 import ss6 from '@public/ss-6.png';
