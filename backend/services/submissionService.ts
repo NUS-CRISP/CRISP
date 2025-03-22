@@ -46,7 +46,6 @@ import UserModel, { User } from '@models/User';
 import { recalculateResult } from './assessmentResultService';
 import CrispRole from '@shared/types/auth/CrispRole';
 import CourseModel from '@models/Course';
-import { ObjectId } from 'mongodb';
 
 /**
  * Checks if an AnswerUnion is a NUSNET ID Answer.
