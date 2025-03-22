@@ -296,8 +296,8 @@ const Navbar: React.FC = () => {
   const courseLinks = [];
 
   // First section: Dashboard related links
-  courseLinksData.slice(0, 4).forEach((item, index) => {
-    courseLinks.push(renderNavLink(item, index));
+  courseLinksData.slice(0, 4).forEach(item => {
+    courseLinks.push(renderNavLink(item));
   });
 
   // First divider after Code Analysis
