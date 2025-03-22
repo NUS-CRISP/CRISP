@@ -139,12 +139,12 @@ const PRDotMatrixChart: React.FC<PRDotMatrixChartProps> = ({ graphData }) => {
       commented: '#3498db', // Blue
     };
 
-    const statusOrder: Array<keyof StatusCount> = [
-      'approved',
-      'dismissed',
-      'commented',
-      'changes_requested',
-    ];
+    // const statusOrder: Array<keyof StatusCount> = [
+    //   'approved',
+    //   'dismissed',
+    //   'commented',
+    //   'changes_requested',
+    // ];
 
     // x axis (reviewer)
     svg
@@ -207,7 +207,7 @@ const PRDotMatrixChart: React.FC<PRDotMatrixChartProps> = ({ graphData }) => {
               .on('mouseover', function (event) {
                 d3.select(this).attr('stroke', '#000').attr('stroke-width', 2);
 
-                let tooltipContent = `
+                const tooltipContent = `
                   <strong>Reviewer:</strong> ${pair.reviewer}<br/>
                   <strong>Author:</strong> ${pair.author}<br/>
                   <strong>${status}:</strong> ${count}<br/>

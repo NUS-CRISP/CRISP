@@ -1,4 +1,3 @@
-import { Carousel } from '@mantine/carousel';
 import {
   Button,
   Grid,
@@ -49,7 +48,7 @@ const features = [
 
 const Features: React.FC = () => {
   const router = useRouter();
-  const autoplay = useRef(Autoplay({ delay: 5000 }));
+  // const autoplay = useRef(Autoplay({ delay: 5000 }));
 
   const items = features.map(feature => (
     <div key={feature.title}>

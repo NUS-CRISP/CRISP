@@ -290,14 +290,14 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
       Object.entries(statusGroups).forEach(
         ([status, statusEdges], statusIndex) => {
           statusEdges.forEach((edge, i) => {
-            // @ts-ignore
+            // @ts-expect-error
             edge.offsetFactor = statusIndex;
 
             if (isBidirectional) {
-              // @ts-ignore
+              // @ts-expect-error
               edge.directionFactor = sourceId < targetId ? 1 : -1;
             } else {
-              // @ts-ignore
+              // @ts-expect-error
               edge.directionFactor = 1;
             }
           });

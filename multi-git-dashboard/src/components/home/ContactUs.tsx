@@ -1,16 +1,11 @@
 import {
   ActionIcon,
-  Box,
   Button,
   Group,
   Paper,
   SimpleGrid,
-  Stack,
   TextInput,
   Textarea,
-  Title,
-  getGradient,
-  useMantineTheme,
   Text,
 } from '@mantine/core';
 import classes from '@styles/ContactUs.module.css';
@@ -66,7 +61,7 @@ const AnimatedWrapper: React.FC<{ children: React.ReactNode }> = ({
 };
 
 const ContactUs: React.FC = () => {
-  const theme = useMantineTheme();
+
 
   const icons = social.map((item, index) => (
     <ActionIcon

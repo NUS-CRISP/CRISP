@@ -7,9 +7,6 @@ import {
   Button,
   Box,
   Group,
-  Space,
-  Divider,
-  Switch,
   Text,
 } from '@mantine/core';
 import { useState, useRef } from 'react';
@@ -33,7 +30,6 @@ export const PRCard: React.FC<OverviewProps> = ({
   index,
   team,
   teamData,
-  teamDatas,
   dateUtils,
   profileGetter,
 }) => {

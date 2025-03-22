@@ -1,10 +1,5 @@
-import {
-  IconBrandInstagram,
-  IconBrandTwitter,
-  IconBrandYoutube,
-} from '@tabler/icons-react';
-import { ActionIcon, Container, Group } from '@mantine/core';
-import { IconChevronDown, IconGitBranch } from '@tabler/icons-react';
+import { Container, Group } from '@mantine/core';
+import { IconGitBranch } from '@tabler/icons-react';
 import classes from '@styles/Footer.module.css';
 import { Text } from '@mantine/core';
 

@@ -196,8 +196,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
 };
 
 const FeatureCard: React.FC = () => {
-  const router = useRouter();
-  const theme = useMantineTheme();
+
 
   return (
     <Box>

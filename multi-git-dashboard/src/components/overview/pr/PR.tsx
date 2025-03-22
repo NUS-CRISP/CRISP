@@ -1,6 +1,6 @@
 import { OverviewProps } from '@/components/cards/OverviewCard';
 import { getTutorialHighlightColor } from '@/lib/utils';
-import { Box, Card, Group, Text, Tabs, Button } from '@mantine/core';
+import { Box, Card, Group, Text, Button } from '@mantine/core';
 import dayjs from 'dayjs';
 import { forwardRef, useEffect, useState, useCallback } from 'react';
 import PRDetails from './PRDetails';
@@ -46,10 +46,10 @@ interface PRGraphData {
   edges: PREdge[];
 }
 
-interface PRGraphDataBundled {
-  nodes: PRNodeBundled[];
-  edges: PREdge[];
-}
+// interface PRGraphDataBundled {
+//   nodes: PRNodeBundled[];
+//   edges: PREdge[];
+// }
 
 const processPRInteractions = (
   teamPRs: PRProps['teamData']['teamPRs']
@@ -175,15 +175,15 @@ function filterAndRenameTop6(graphData: PRGraphData): PRGraphData {
     renameMap[node.id] = `Student ${i + 1}`;
   });
 
-  const renamedNodes = top6.map(node => ({
-    id: renameMap[node.id],
-  }));
+  // const renamedNodes = top6.map(node => ({
+  //   id: renameMap[node.id],
+  // }));
 
-  const renamedEdges = filteredEdges.map(edge => ({
-    ...edge,
-    source: renameMap[edge.source],
-    target: renameMap[edge.target],
-  }));
+  // const renamedEdges = filteredEdges.map(edge => ({
+  //   ...edge,
+  //   source: renameMap[edge.source],
+  //   target: renameMap[edge.target],
+  // }));
 
   return {
     // sortedNodes,

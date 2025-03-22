@@ -1,6 +1,5 @@
 import {
   Box,
-  Center,
   Paper,
   Stack,
   Title,
@@ -67,8 +66,8 @@ const AnimatedPaper: React.FC<AnimatedPaperProps> = ({ image }) => {
 };
 
 const AssessmentCard: React.FC = () => {
-  const router = useRouter();
-  const theme = useMantineTheme();
+  // const router = useRouter();
+  // const theme = useMantineTheme();
 
   return (
     <Box>

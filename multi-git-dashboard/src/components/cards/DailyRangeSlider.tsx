@@ -1,9 +1,6 @@
 import {
   RangeSlider,
   Stack,
-  Modal,
-  TextInput,
-  Button,
   Box,
   Group,
   Switch,
@@ -23,7 +20,7 @@ const DailyRangeSlider: React.FC<DailyRangeSliderProps> = ({
   onUseDailyRangeChange,
 }) => {
   const [earliestDate, setEarliestDate] = useState<dayjs.Dayjs | null>(null);
-  const [latestDate, setLatestDate] = useState<dayjs.Dayjs | null>(null);
+  //const [latestDate, setLatestDate] = useState<dayjs.Dayjs | null>(null);
   const [totalDays, setTotalDays] = useState<number>(0);
   const [selectedDayRange, setSelectedDayRange] = useState<[number, number]>([
     0, 0,
@@ -52,7 +49,7 @@ const DailyRangeSlider: React.FC<DailyRangeSliderProps> = ({
     }
 
     setEarliestDate(earliest);
-    setLatestDate(latest);
+    // setLatestDate(latest);
 
     const days = latest.diff(earliest, 'day');
     setTotalDays(days);

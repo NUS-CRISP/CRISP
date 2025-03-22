@@ -116,7 +116,7 @@ const kMeansClustering = (
     }
   }
 
-  let clusters: number[] = new Array(data.length).fill(0);
+  const clusters: number[] = new Array(data.length).fill(0);
   let iterations = 0;
   let changed = true;
 
@@ -399,7 +399,7 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
       });
 
       // ellipses around each cluster
-      cellsByCluster.forEach((clusterCells, idx) => {
+      cellsByCluster.forEach((clusterCells) => {
         if (clusterCells.length < 2) return;
 
         const uniquePeople = new Set<number>();

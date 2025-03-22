@@ -321,7 +321,7 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
     groups
       .append('text')
       .each(d => {
-        // @ts-ignore
+        // @ts-expect-error
         d.angle = (d.startAngle + d.endAngle) / 2;
       })
       .attr('dy', '0.35em')
