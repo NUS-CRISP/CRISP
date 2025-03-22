@@ -18,8 +18,27 @@ interface PRGraphProps {
     edges: PREdge[];
   };
 }
+
+// Interface for data point structure
+interface DataPoint {
+  row: number;
+  col: number;
+  weight: number;
+}
+
+// Interface for centroid structure (same as DataPoint)
+interface Centroid {
+  row: number;
+  col: number;
+  weight: number;
+}
+
 // Calculate Within-Cluster Sum of Squares (WCSS)
-const calculateWCSS = (data, clusters, centroids) => {
+const calculateWCSS = (
+  data: DataPoint[],
+  clusters: number[],
+  centroids: Centroid[]
+): number => {
   let wcss = 0;
   for (let i = 0; i < data.length; i++) {
     const centroidIndex = clusters[i];
@@ -35,7 +54,11 @@ const calculateWCSS = (data, clusters, centroids) => {
 };
 
 // Calculate centroids for each cluster
-const calculateCentroids = (data, clusters, k) => {
+const calculateCentroids = (
+  data: DataPoint[],
+  clusters: number[],
+  k: number
+): Centroid[] => {
   const centroids = Array.from({ length: k }, () => ({
     row: 0,
     col: 0,
@@ -63,10 +86,10 @@ const calculateCentroids = (data, clusters, k) => {
 };
 
 // Find optimal k using the elbow method
-const findOptimalKElbow = (data, maxK = 6) => {
+const findOptimalKElbow = (data: DataPoint[], maxK = 6): number => {
   if (data.length < 3) return 1;
 
-  const wcssValues = [];
+  const wcssValues: number[] = [];
   maxK = Math.min(maxK, data.length - 1);
 
   for (let k = 1; k <= maxK; k++) {
@@ -97,7 +120,7 @@ const findOptimalKElbow = (data, maxK = 6) => {
 
 // k-means clustering
 const kMeansClustering = (
-  data: { row: number; col: number; weight: number }[],
+  data: DataPoint[],
   k: number,
   maxIterations: number = 500
 ): number[] => {
@@ -105,7 +128,7 @@ const kMeansClustering = (
     return [];
   }
 
-  const centroids: { row: number; col: number; weight: number }[] = [];
+  const centroids: Centroid[] = [];
   const usedIndices = new Set<number>();
 
   while (centroids.length < k) {
@@ -285,7 +308,7 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
     });
 
     // Extract non-zero cells
-    const cells: { row: number; col: number; weight: number }[] = [];
+    const cells: DataPoint[] = [];
     for (let i = 0; i < n; i++) {
       for (let j = 0; j < n; j++) {
         if (matrix[i][j] > 0) {
@@ -391,7 +414,10 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
       const clusters = kMeansClustering(cells, numClusters);
 
       // group cells by cluster
-      const cellsByCluster = Array.from({ length: numClusters }, () => []);
+      const cellsByCluster: DataPoint[][] = Array.from(
+        { length: numClusters },
+        () => []
+      );
       cells.forEach((cell, i) => {
         if (i < clusters.length) {
           cellsByCluster[clusters[i]].push(cell);
