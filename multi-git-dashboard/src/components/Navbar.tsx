@@ -35,6 +35,13 @@ interface NavbarLinkProps {
   popoverOpened?: boolean;
 }
 
+interface CourseLink {
+  link: string;
+  label: string;
+  disabled?: boolean;
+  pngSrc: string;
+}
+
 const NavbarLink = forwardRef<HTMLButtonElement, NavbarLinkProps>(
   ({ icon: Icon, label, active, disabled, onClick, popoverOpened }, ref) =>
     popoverOpened ? (
@@ -252,7 +259,7 @@ const Navbar: React.FC = () => {
   ];
 
   // Helper function to render a navigation link
-  const renderNavLink = item => (
+  const renderNavLink = (item: CourseLink) => (
     <TutorialPopover
       stage={6}
       position="right"

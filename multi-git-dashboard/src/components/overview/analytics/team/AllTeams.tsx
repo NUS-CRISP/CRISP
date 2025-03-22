@@ -21,6 +21,8 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
   ({ teamDatas }, ref) => {
     const [chartType, setChartType] = useState<string>('AreaChart');
     const [selectedMetrics, setSelectedMetrics] = useState<string[]>([
+      'pullRequests',
+      'commits',
       'issues',
     ]);
     const [singleMetric, setSingleMetric] = useState<string>('issues');
