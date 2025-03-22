@@ -17,11 +17,7 @@ const EXPORT_TYPES = {
   NETWORK_DIAGRAM: 'network',
 };
 
-const SVGExporter = ({
-  onExportStart,
-  onExportProgress,
-  onExportComplete,
-}) => {
+const SVGExporter = ({ onExportStart, onExportProgress, onExportComplete }) => {
   const [exporting, setExporting] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentRange, setCurrentRange] = useState('');
