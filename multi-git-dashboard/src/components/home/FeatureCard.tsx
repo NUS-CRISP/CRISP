@@ -5,10 +5,8 @@ import {
   Stack,
   Text,
   Title,
-  useMantineTheme,
   ActionIcon,
 } from '@mantine/core';
-import { useRouter } from 'next/router';
 import { useEffect, useRef, useState } from 'react';
 import classes from '@styles/FeatureCard.module.css';
 

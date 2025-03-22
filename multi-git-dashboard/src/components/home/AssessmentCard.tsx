@@ -1,5 +1,4 @@
-import { Box, Paper, Stack, Title, useMantineTheme } from '@mantine/core';
-import { useRouter } from 'next/router';
+import { Box, Paper, Stack, Title } from '@mantine/core';
 import { useEffect, useRef, useState } from 'react';
 import classes from '@styles/FeatureCard.module.css';
 

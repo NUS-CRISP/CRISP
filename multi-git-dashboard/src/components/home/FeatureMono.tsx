@@ -17,6 +17,7 @@ import {
 } from '@tabler/icons-react';
 import PRGraph from '../overview/pr/PRNetwork';
 import { useRouter } from 'next/router';
+import { SVGProps } from 'react';
 
 const MOCKDATA = [
   {
@@ -81,7 +82,7 @@ const mockGraphData = {
 };
 
 interface FeatureProps {
-  icon: React.FC<any>;
+  icon: React.FC<SVGProps<SVGSVGElement>>;
   title: React.ReactNode;
   description: React.ReactNode;
 }

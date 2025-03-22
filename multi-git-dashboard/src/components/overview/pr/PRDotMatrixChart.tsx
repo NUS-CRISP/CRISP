@@ -219,7 +219,7 @@ const PRDotMatrixChart: React.FC<PRDotMatrixChartProps> = ({ graphData }) => {
                   .style('left', `${event.offsetX + 10}px`)
                   .style('top', `${event.offsetY + 10}px`);
               })
-              .on('mousemove', function (event) {
+              .on('mousemove', (event: MouseEvent) => {
                 tooltip
                   .style('left', `${event.offsetX + 10}px`)
                   .style('top', `${event.offsetY + 10}px`);

@@ -256,9 +256,10 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
     }
 
     // matrix for arc sizes based on total interactions
-    const arcSizeMatrix: number[][] = Array(top6Nodes.length)
-      .fill(0)
-      .map((_, i) => Array(top6Nodes.length).fill(0));
+    const arcSizeMatrix: number[][] = Array.from(
+      { length: top6Nodes.length },
+      () => Array(top6Nodes.length).fill(0)
+    );
 
     // Fill the diagonal
     for (let i = 0; i < top6Nodes.length; i++) {
@@ -298,7 +299,7 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
       .append('path')
       .attr('fill', d => colorScale(top6Nodes[d.index].id))
       .attr('stroke', 'white')
-      .attr('d', arc as any)
+      .attr('d', arc)
       .on('mouseover', (event, d) => {
         const nodeName = top6Nodes[d.index].id;
 
@@ -321,7 +322,7 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
     groups
       .append('text')
       .each(d => {
-        // @ts-expect-error
+        // @ts-expect-error Adding custom property 'angle' to D3's arc datum which is not in original type definition
         d.angle = (d.startAngle + d.endAngle) / 2;
       })
       .attr('dy', '0.35em')

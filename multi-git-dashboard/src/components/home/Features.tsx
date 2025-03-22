@@ -15,9 +15,7 @@ import {
   IconLayout,
   IconTools,
 } from '@tabler/icons-react';
-import Autoplay from 'embla-carousel-autoplay';
 import { useRouter } from 'next/router';
-import { useRef } from 'react';
 
 const features = [
   {

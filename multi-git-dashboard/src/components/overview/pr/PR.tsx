@@ -30,9 +30,9 @@ interface PRNode {
   id: string;
 }
 
-interface PRNodeBundled extends PRNode {
-  group: string;
-}
+// interface PRNodeBundled extends PRNode {
+//   group: string;
+// }
 
 interface PREdge {
   source: string;
