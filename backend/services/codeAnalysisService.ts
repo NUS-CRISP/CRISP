@@ -44,7 +44,11 @@ export const getAuthorizedCodeAnalysisDataByCourse = async (
   const crispRole = account.crispRole;
   const courseRoleTuple = account.courseRoles.filter(r => r[0] === courseId);
 
-  if (crispRole === Role.Faculty || crispRole === Role.Admin || crispRole === Role.TrialUser) {
+  if (
+    crispRole === Role.Faculty ||
+    crispRole === Role.Admin ||
+    crispRole === Role.TrialUser
+  ) {
     if (!course.gitHubOrgName) {
       throw new NotFoundError('Course GitHub organization not found');
     }
@@ -63,7 +67,11 @@ export const getAuthorizedCodeAnalysisDataByCourse = async (
       return 0;
     });
     return sortedDatas;
-  } else if (crispRole === Role.Normal && courseRoleTuple.length > 0 && courseRoleTuple[0][1] === CourseRole.TA) {
+  } else if (
+    crispRole === Role.Normal &&
+    courseRoleTuple.length > 0 &&
+    courseRoleTuple[0][1] === CourseRole.TA
+  ) {
     const teamSets = await TeamSetModel.find({ course: courseId });
     if (!teamSets || teamSets.length === 0) {
       throw new NotFoundError('No team sets found for course');

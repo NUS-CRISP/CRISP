@@ -69,8 +69,9 @@ export const addStudentsToTeam = async (courseId: string, students: any[]) => {
     const account = await AccountModel.findOne({ user: student._id });
     if (
       !account ||
-      !account.courseRoles.filter((r) => r[0] === courseId) ||
-      account.courseRoles.filter((r) => r[0] === courseId)[0][1] !== CourseRole.Student ||
+      !account.courseRoles.filter(r => r[0] === courseId) ||
+      account.courseRoles.filter(r => r[0] === courseId)[0][1] !==
+        CourseRole.Student ||
       !student.enrolledCourses.includes(course._id) ||
       !course.students.some(s => s._id.equals(student._id)) ||
       !studentData.teamSet ||
@@ -120,8 +121,9 @@ export const addTAsToTeam = async (courseId: string, tas: any[]) => {
     const account = await AccountModel.findOne({ user: ta._id });
     if (
       !account ||
-      !account.courseRoles.filter((r) => r[0] === courseId) ||
-      account.courseRoles.filter((r) => r[0] === courseId)[0][1] !== CourseRole.TA ||
+      !account.courseRoles.filter(r => r[0] === courseId) ||
+      account.courseRoles.filter(r => r[0] === courseId)[0][1] !==
+        CourseRole.TA ||
       !ta.enrolledCourses.includes(course._id) ||
       !course.TAs.some(t => t._id.equals(ta._id)) ||
       !taData.teamSet ||

@@ -66,7 +66,11 @@ export const getAuthorizedTeamDataByCourse = async (
 
   const role = account.crispRole;
 
-  if (role === CrispRole.Faculty || role === CrispRole.Admin || role === CrispRole.TrialUser) {
+  if (
+    role === CrispRole.Faculty ||
+    role === CrispRole.Admin ||
+    role === CrispRole.TrialUser
+  ) {
     if (!course.gitHubOrgName) {
       throw new NotFoundError('Course GitHub organization not found');
     }

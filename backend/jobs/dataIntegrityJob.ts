@@ -16,7 +16,9 @@ async function checkCrispRoles() {
   const allAccounts: any = await AccountModel.find();
   for (const account of allAccounts) {
     if (account.role && !account.crispRole) {
-      console.warn(`Account ${account._id} has the old .role field. Mapping to the new .crispRole field...`);
+      console.warn(
+        `Account ${account._id} has the old .role field. Mapping to the new .crispRole field...`
+      );
       switch (account.role) {
         case 'Student':
         case 'Teaching assistant':
@@ -37,7 +39,7 @@ async function checkCrispRoles() {
       await account.save();
     }
   }
-  return ;
+  return;
 }
 
 async function checkCourseRoles() {
@@ -48,20 +50,29 @@ async function checkCourseRoles() {
     const courseFaculty = course.faculty;
     for (const studentId of courseStudents) {
       const studentAccount = await AccountModel.findOne({
-        user: studentId
+        user: studentId,
       });
       if (!studentAccount) {
         console.warn(`Student account with user id ${studentId} missing`);
         continue; // Not fixing it here cuz this is indicative of a larger issue at hand
       }
-      const courseRoleTuple = studentAccount.courseRoles.filter(r => r[0] === course._id.toString());
+      const courseRoleTuple = studentAccount.courseRoles.filter(
+        r => r[0] === course._id.toString()
+      );
       if (courseRoleTuple.length === 0) {
-        console.warn(`Student account with id ${studentAccount._id} does not have course role for course ${course._id}. Fixing...`);
-        studentAccount.courseRoles.push([course._id.toString(), CourseRole.Student]);
+        console.warn(
+          `Student account with id ${studentAccount._id} does not have course role for course ${course._id}. Fixing...`
+        );
+        studentAccount.courseRoles.push([
+          course._id.toString(),
+          CourseRole.Student,
+        ]);
         await studentAccount.save();
       }
       if (courseRoleTuple[0][1] !== CourseRole.Student) {
-        console.warn(`Student account with id ${studentAccount._id} does not have correct course role for course ${course._id}. Fixing...`);
+        console.warn(
+          `Student account with id ${studentAccount._id} does not have correct course role for course ${course._id}. Fixing...`
+        );
         courseRoleTuple[0][1] = CourseRole.Student;
         await studentAccount.save();
       }
@@ -69,20 +80,26 @@ async function checkCourseRoles() {
 
     for (const TAId of courseTAs) {
       const TAAccount = await AccountModel.findOne({
-        user: TAId
+        user: TAId,
       });
       if (!TAAccount) {
         console.warn(`TA account with user id ${TAId} missing`);
         continue; // Not fixing it here cuz this is indicative of a larger issue at hand
       }
-      const courseRoleTuple = TAAccount.courseRoles.filter(r => r[0] === course._id.toString());
+      const courseRoleTuple = TAAccount.courseRoles.filter(
+        r => r[0] === course._id.toString()
+      );
       if (courseRoleTuple.length === 0) {
-        console.warn(`TA account with id ${TAAccount._id} does not have course role for course ${course._id}. Fixing...`);
+        console.warn(
+          `TA account with id ${TAAccount._id} does not have course role for course ${course._id}. Fixing...`
+        );
         TAAccount.courseRoles.push([course._id.toString(), CourseRole.TA]);
         await TAAccount.save();
       }
       if (courseRoleTuple[0][1] !== CourseRole.TA) {
-        console.warn(`TA account with id ${TAAccount._id} does not have correct course role for course ${course._id}. Fixing...`);
+        console.warn(
+          `TA account with id ${TAAccount._id} does not have correct course role for course ${course._id}. Fixing...`
+        );
         courseRoleTuple[0][1] = CourseRole.TA;
         await TAAccount.save();
       }
@@ -90,39 +107,48 @@ async function checkCourseRoles() {
 
     for (const facultyId of courseFaculty) {
       const facultyAccount = await AccountModel.findOne({
-        user: facultyId
+        user: facultyId,
       });
       if (!facultyAccount) {
         console.warn(`Faculty account with user id ${facultyId} missing`);
         continue; // Not fixing it here cuz this is indicative of a larger issue at hand
       }
-      const courseRoleTuple = facultyAccount.courseRoles.filter(r => r[0] === course._id.toString());
+      const courseRoleTuple = facultyAccount.courseRoles.filter(
+        r => r[0] === course._id.toString()
+      );
       if (courseRoleTuple.length === 0) {
-        console.warn(`Faculty account with id ${facultyAccount._id} does not have course role for course ${course._id}. Fixing...`);
-        facultyAccount.courseRoles.push([course._id.toString(), CourseRole.Faculty]);
+        console.warn(
+          `Faculty account with id ${facultyAccount._id} does not have course role for course ${course._id}. Fixing...`
+        );
+        facultyAccount.courseRoles.push([
+          course._id.toString(),
+          CourseRole.Faculty,
+        ]);
         await facultyAccount.save();
       }
       if (courseRoleTuple[0][1] !== CourseRole.Faculty) {
-        console.warn(`Faculty account with id ${facultyAccount._id} does not have correct course role for course ${course._id}. Fixing...`);
+        console.warn(
+          `Faculty account with id ${facultyAccount._id} does not have correct course role for course ${course._id}. Fixing...`
+        );
         courseRoleTuple[0][1] = CourseRole.Faculty;
         await facultyAccount.save();
       }
     }
   }
-  return ;
+  return;
 }
 
 // Starter functions
 async function runDataIntegrityCheck() {
   await checkCrispRoles();
   await checkCourseRoles();
-  return ;
+  return;
 }
 
 async function notifyOnStartup() {
   await checkCrispRoles();
   await checkCourseRoles();
-  return ;
+  return;
 }
 
 export function setupDataIntegrityJob() {
@@ -134,9 +160,7 @@ export function setupDataIntegrityJob() {
     }
   });
 
-  if (
-    process.env.RUN_JOB_NOW === 'true'
-  ) {
+  if (process.env.RUN_JOB_NOW === 'true') {
     console.log('Running data integrity check now...');
     notifyOnStartup();
   }

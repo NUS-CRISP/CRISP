@@ -54,7 +54,9 @@ export const getAssessmentById = async (
   if (!assessment) {
     throw new NotFoundError('Assessment not found');
   }
-  const courseRoleTuple = account.courseRoles.filter(r => r[0] === assessment.course.toString());
+  const courseRoleTuple = account.courseRoles.filter(
+    r => r[0] === assessment.course.toString()
+  );
   if (courseRoleTuple.length > 0 && courseRoleTuple[0][1] === CourseRoles.TA) {
     const userId = account.user;
     assessment.results = assessment.results.filter(result =>
@@ -90,7 +92,10 @@ export const updateAssessmentById = async (
   if (!account) {
     throw new NotFoundError('Account not found');
   }
-  if (account.crispRole !== CrispRole.Admin && account.crispRole !== CrispRole.Faculty) {
+  if (
+    account.crispRole !== CrispRole.Admin &&
+    account.crispRole !== CrispRole.Faculty
+  ) {
     throw new BadRequestError('Unauthorized');
   }
   const updatedAssessment = await AssessmentModel.findByIdAndUpdate(

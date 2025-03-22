@@ -34,7 +34,9 @@ export const authOptions: AuthOptions = {
           .collection('accounts');
 
         if (credentials?.type === CrispRole.TrialUser) {
-          const trialAccount = await accountsCollection.findOne({ crispRole: CrispRole.TrialUser });
+          const trialAccount = await accountsCollection.findOne({
+            crispRole: CrispRole.TrialUser,
+          });
           return {
             id: process.env.TRIAL_USER_ID || '',
             name: CrispRole.TrialUser,
@@ -103,7 +105,11 @@ export const authOptions: AuthOptions = {
       session.user.crispRole = token.crispRole;
       session.user.courseRoles = token.courseRoles;
       return {
-        user: { name: token.name, crispRole: token.crispRole, courseRoles: token.courseRoles },
+        user: {
+          name: token.name,
+          crispRole: token.crispRole,
+          courseRoles: token.courseRoles,
+        },
         expires: session.expires,
       };
     },

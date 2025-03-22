@@ -150,7 +150,10 @@ export const setupTutorialDataJob = async () => {
   trialCourse.faculty.push(adminUser._id);
   await trialCourse.save();
 
-  trialAccount.courseRoles.push([trialCourse._id.toString(), CourseRole.Faculty]);
+  trialAccount.courseRoles.push([
+    trialCourse._id.toString(),
+    CourseRole.Faculty,
+  ]);
   await trialAccount.save();
 
   if (!trialUser.enrolledCourses.includes(trialCourse._id)) {

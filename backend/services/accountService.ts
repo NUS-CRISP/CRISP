@@ -153,5 +153,7 @@ export const updateTelegramNotificationSettings = async (
 };
 
 export const getAllTrialAccounts = async () => {
-  return await AccountModel.find({ crispRole: CrispRoles.TrialUser }).populate('user');
+  return await AccountModel.find({ crispRole: CrispRoles.TrialUser }).populate(
+    'user'
+  );
 };

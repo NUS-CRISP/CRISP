@@ -174,9 +174,12 @@ export const addStudentsToCourse = async (
       if (!studentAccount) {
         continue;
       }
-      const courseRoleTuple = studentAccount.courseRoles.filter(r => r[0] === courseId);
+      const courseRoleTuple = studentAccount.courseRoles.filter(
+        r => r[0] === courseId
+      );
       if (
-        ((courseRoleTuple.length === 0 || courseRoleTuple[0][1] !== CourseRole.Student) &&
+        ((courseRoleTuple.length === 0 ||
+          courseRoleTuple[0][1] !== CourseRole.Student) &&
           studentAccount.crispRole !== CrispRole.TrialUser) ||
         studentData.name.toUpperCase() !== student.name.toUpperCase() ||
         studentData.email.toLowerCase() !== studentAccount.email.toLowerCase() // Check is case-insensitive to handle email case-insensitivity cases
@@ -187,7 +190,10 @@ export const addStudentsToCourse = async (
     }
     if (!student.enrolledCourses.includes(course._id)) {
       student.enrolledCourses.push(course._id);
-      studentAccount.courseRoles.push([course._id.toString(), CourseRole.Student])
+      studentAccount.courseRoles.push([
+        course._id.toString(),
+        CourseRole.Student,
+      ]);
     }
     await student.save();
     await studentAccount.save();
@@ -216,8 +222,13 @@ export const updateStudentsInCourse = async (
     if (!studentAccount) {
       continue;
     }
-    const courseRoleTuple = studentAccount.courseRoles.filter(r => r[0] === courseId);
-    if (courseRoleTuple.length === 0 || courseRoleTuple[0][1] !== CourseRole.Student) {
+    const courseRoleTuple = studentAccount.courseRoles.filter(
+      r => r[0] === courseId
+    );
+    if (
+      courseRoleTuple.length === 0 ||
+      courseRoleTuple[0][1] !== CourseRole.Student
+    ) {
       continue;
     }
     if (!course.students.includes(student._id)) {
@@ -285,9 +296,12 @@ export const addTAsToCourse = async (courseId: string, TADataList: any[]) => {
       if (!TAAccount) {
         continue;
       }
-      const courseRoleTuple = TAAccount.courseRoles.filter(r => r[0] === courseId);
+      const courseRoleTuple = TAAccount.courseRoles.filter(
+        r => r[0] === courseId
+      );
       if (
-        ((courseRoleTuple.length === 0 || courseRoleTuple[0][1] !== CourseRole.TA) &&
+        ((courseRoleTuple.length === 0 ||
+          courseRoleTuple[0][1] !== CourseRole.TA) &&
           TAAccount.crispRole !== CrispRole.TrialUser) ||
         TAData.name.toUpperCase() !== TA.name.toUpperCase() ||
         TAData.email.toLowerCase() !== TAAccount.email.toLowerCase()
@@ -327,8 +341,13 @@ export const updateTAsInCourse = async (
     if (!TAAccount) {
       continue;
     }
-    const courseRoleTuple = TAAccount.courseRoles.filter(r => r[0] === courseId);
-    if (courseRoleTuple.length === 0 || courseRoleTuple[0][1] !== CourseRole.TA) {
+    const courseRoleTuple = TAAccount.courseRoles.filter(
+      r => r[0] === courseId
+    );
+    if (
+      courseRoleTuple.length === 0 ||
+      courseRoleTuple[0][1] !== CourseRole.TA
+    ) {
       continue;
     }
     if (!course.TAs.includes(TA._id)) {
@@ -408,9 +427,12 @@ export const addFacultyToCourse = async (
       if (!facultyAccount) {
         continue;
       }
-      const courseRoleTuple = facultyAccount.courseRoles.filter(r => r[0] === courseId);
+      const courseRoleTuple = facultyAccount.courseRoles.filter(
+        r => r[0] === courseId
+      );
       if (
-        ((courseRoleTuple.length === 0 || courseRoleTuple[0][1] !== CourseRole.Faculty) &&
+        ((courseRoleTuple.length === 0 ||
+          courseRoleTuple[0][1] !== CourseRole.Faculty) &&
           facultyAccount.crispRole !== CrispRole.TrialUser) ||
         facultyData.name.toUpperCase() !== facultyMember.name.toUpperCase() ||
         facultyData.email.toLowerCase() !== facultyAccount.email.toLowerCase()
@@ -455,9 +477,12 @@ export const updateFacultyInCourse = async (
     if (!facultyAccount) {
       continue;
     }
-    const courseRoleTuple = facultyAccount.courseRoles.filter(r => r[0] === courseId);
+    const courseRoleTuple = facultyAccount.courseRoles.filter(
+      r => r[0] === courseId
+    );
     if (
-      (courseRoleTuple.length === 0 || courseRoleTuple[0][1] !== CourseRole.Faculty) &&
+      (courseRoleTuple.length === 0 ||
+        courseRoleTuple[0][1] !== CourseRole.Faculty) &&
       facultyAccount.crispRole !== CrispRole.Faculty &&
       facultyAccount.crispRole !== CrispRole.Admin
     ) {

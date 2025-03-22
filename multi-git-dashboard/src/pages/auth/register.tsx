@@ -149,7 +149,10 @@ const RegisterPage: React.FC = () => {
           <Text size="sm" fw={500} mt="md">
             Are you signing up as a:
           </Text>
-          <SegmentedControl data={roleData} {...form.getInputProps('crispRole')} />
+          <SegmentedControl
+            data={roleData}
+            {...form.getInputProps('crispRole')}
+          />
           <Button type="submit" fullWidth mt="xl">
             Register
           </Button>

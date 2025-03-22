@@ -19,7 +19,10 @@ export const editUser = async (
   if (!account) {
     throw new NotFoundError('Account not found');
   }
-  if (account.crispRole !== CrispRole.Admin && account.crispRole !== CrispRole.Faculty) {
+  if (
+    account.crispRole !== CrispRole.Admin &&
+    account.crispRole !== CrispRole.Faculty
+  ) {
     throw new BadRequestError('Unauthorized');
   }
   const updatedUser = await UserModel.findByIdAndUpdate(userId, updateData, {

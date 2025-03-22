@@ -48,13 +48,16 @@ const accountSchema = new Schema<Account>({
     enum: CrispRole,
     default: CrispRole.Normal,
   },
-  courseRoles: [{
-    type: Schema.Types.ObjectId,
-  }, {
-    type: String,
-    enum: CourseRole,
-    default: CourseRole.TA,
-  }],
+  courseRoles: [
+    {
+      type: Schema.Types.ObjectId,
+    },
+    {
+      type: String,
+      enum: CourseRole,
+      default: CourseRole.TA,
+    },
+  ],
   isApproved: {
     type: Boolean,
     default: false,

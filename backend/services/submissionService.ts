@@ -610,10 +610,7 @@ export const updateSubmission = async (
   const isCourseFaculty = course.faculty.includes(new ObjectId(userId));
   // Alternative method would be to check if account's .courseRole
   // contains this course and has faculty role in the same tuple.
-  if (
-    account &&
-    (isCourseFaculty || account.crispRole === CrispRole.Admin)
-  ) {
+  if (account && (isCourseFaculty || account.crispRole === CrispRole.Admin)) {
     bypass = true;
   }
 

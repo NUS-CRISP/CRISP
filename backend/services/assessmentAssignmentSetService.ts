@@ -384,12 +384,16 @@ export const getUnmarkedAssignmentsByTAId = async (
   assessmentId: string
 ): Promise<Team[] | User[]> => {
   const account = await AccountModel.findOne({
-    user: taId
+    user: taId,
   });
   if (!account) throw new NotFoundError('TA account not found');
   const assessment = await InternalAssessmentModel.findById(assessmentId);
   if (!assessment) throw new NotFoundError('Assessment not found');
-  if (account.courseRoles.filter(r => r[0] === assessment.course.toString())[0][1] === CourseRole.Student) {
+  if (
+    account.courseRoles.filter(
+      r => r[0] === assessment.course.toString()
+    )[0][1] === CourseRole.Student
+  ) {
     return []; // For the sake of notifications, this returns an empty array.
   }
   const assignmentSet = await AssessmentAssignmentSetModel.findOne({
