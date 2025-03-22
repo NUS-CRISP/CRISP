@@ -3,7 +3,6 @@ import { Center } from '@mantine/core';
 import dayjs from 'dayjs';
 import { useEffect } from 'react';
 import { AnalyticsProps } from '../Analytics';
-// import { Tooltip } from 'recharts';
 
 interface TeamIssuesTrackerProps extends AnalyticsProps {}
 
