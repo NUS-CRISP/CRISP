@@ -233,13 +233,8 @@ export const PRCard: React.FC<OverviewProps> = ({
       </Box>
 
       {showExportOptions && (
-        <Box
-          px={20}
-          py={10}
-        >
-          <Text mb={10}>
-            Export Options
-          </Text>
+        <Box px={20} py={10}>
+          <Text mb={10}>Export Options</Text>
           <Group>
             <Button
               onClick={() =>
@@ -287,7 +282,7 @@ export const PRCard: React.FC<OverviewProps> = ({
       <DailyRangeSlider
         teamData={teamData}
         onRangeChange={handleDailyRangeChange}
-        onUseDailyRangeChange={handleUseDailyRangeChange} 
+        onUseDailyRangeChange={handleUseDailyRangeChange}
       />
 
       <TutorialPopover stage={9} position="top" disabled={index !== 0}>
