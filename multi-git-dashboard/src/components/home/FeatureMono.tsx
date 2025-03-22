@@ -96,7 +96,7 @@ export function Feature({ icon: Icon, title, description }: FeatureProps) {
         variant="gradient"
         gradient={{ deg: 133, from: 'blue', to: 'cyan' }}
       >
-        <Icon size={30} stroke={1.5} color="white" />
+        <Icon color="white" />
       </ThemeIcon>
       <Text mt="sm" mb={7} color="white">
         {title}
