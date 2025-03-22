@@ -689,9 +689,9 @@ export const setupGitHubJob = () => {
 
   // To run the job immediately for testing
   // if (process.env.RUN_JOB_NOW === 'true') {
-    fetchAndSaveTeamData().catch(err => {
-      console.error('Error running job manually:', err);
-    });
+  fetchAndSaveTeamData().catch(err => {
+    console.error('Error running job manually:', err);
+  });
   // }
 };
 

@@ -400,9 +400,9 @@ export const setupPublicGitHubJob = () => {
 
   // To run the job immediately for testing
   // if (process.env.RUN_JOB_NOW === 'true') {
-    fetchPublicRepoData().catch(err => {
-      console.error('Error running job manually:', err);
-    });
+  fetchPublicRepoData().catch(err => {
+    console.error('Error running job manually:', err);
+  });
   // }
 };
 
