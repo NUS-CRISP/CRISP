@@ -1,9 +1,10 @@
 import { RangeSlider, Stack, Box, Group, Switch } from '@mantine/core';
 import { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
+import { TeamData } from '@shared/types/TeamData';
 
 export interface DailyRangeSliderProps {
-  teamData: any;
+  teamData: TeamData | null;
   onRangeChange: (range: [dayjs.Dayjs, dayjs.Dayjs]) => void;
   onUseDailyRangeChange: (useDailyRange: boolean) => void;
 }
