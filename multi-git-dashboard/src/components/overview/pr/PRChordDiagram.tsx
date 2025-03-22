@@ -405,7 +405,7 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
         )
       )
       .join('path')
-      .attr('d', function (this: any, d: any) {
+      .attr('d', (d: { source: number; target: number; value: number }) => {
         // Get the arc info for source and target
         const sourceArc = chords.groups[d.source];
         const targetArc = chords.groups[d.target];
@@ -458,9 +458,12 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
           },
         };
 
-        // D3 typings are confusing TypeScript - ribbon generator actually returns string
-        // Use type assertion to inform TypeScript
-        return ribbonGenerator(ribbonData) as unknown as string;
+        // Using a direct return with a cast to make TypeScript happy
+        const pathData = ribbonGenerator(ribbonData);
+        // TypeScript doesn't recognize that ribbonGenerator returns a string
+        // So we need to tell it explicitly
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return pathData as any;
       })
       .attr('fill', d => colorScale(top6Nodes[d.source].id))
       .attr('stroke', 'white')
