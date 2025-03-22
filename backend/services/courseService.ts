@@ -181,8 +181,7 @@ export const addStudentsToCourse = async (
         r => r.course === courseId
       );
       if (
-        ((courseRoleTuple.length === 0 ||
-          courseRoleTuple[0].courseRole !== CourseRole.Student) &&
+        ((courseRoleTuple.length !== 0) &&
           studentAccount.crispRole !== CrispRole.TrialUser) ||
         studentData.name.toUpperCase() !== student.name.toUpperCase() ||
         studentData.email.toLowerCase() !== studentAccount.email.toLowerCase() // Check is case-insensitive to handle email case-insensitivity cases
@@ -303,8 +302,7 @@ export const addTAsToCourse = async (courseId: string, TADataList: any[]) => {
         r => r.course === courseId
       );
       if (
-        ((courseRoleTuple.length === 0 ||
-          courseRoleTuple[0].courseRole !== CourseRole.TA) &&
+        ((courseRoleTuple.length !== 0) &&
           TAAccount.crispRole !== CrispRole.TrialUser) ||
         TAData.name.toUpperCase() !== TA.name.toUpperCase() ||
         TAData.email.toLowerCase() !== TAAccount.email.toLowerCase()
@@ -437,8 +435,7 @@ export const addFacultyToCourse = async (
         r => r.course === courseId
       );
       if (
-        ((courseRoleTuple.length === 0 ||
-          courseRoleTuple[0].courseRole !== CourseRole.Faculty) &&
+        ((courseRoleTuple.length !== 0) &&
           facultyAccount.crispRole !== CrispRole.TrialUser) ||
         facultyData.name.toUpperCase() !== facultyMember.name.toUpperCase() ||
         facultyData.email.toLowerCase() !== facultyAccount.email.toLowerCase()
