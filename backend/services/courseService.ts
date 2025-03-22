@@ -59,6 +59,16 @@ export const createNewCourse = async (courseData: any, accountId: string) => {
 
   const course = await CourseModel.create(courseFields);
   course.faculty.push(user._id);
+  if (account.role !== Role.Admin) {
+    const adminAccount = await AccountModel.findOne({
+      role: Role.Admin,
+    });
+    if (!adminAccount) console.warn('Admin account missing!');
+    else {
+      const adminUser = await UserModel.findById(adminAccount.user);
+      course.faculty.push(adminUser!._id);
+    }
+  }
   await course.save();
   return course;
 };
@@ -474,7 +484,9 @@ export const getPeopleFromCourse = async (courseId: string) => {
   if (!course) {
     throw new NotFoundError('Course not found');
   }
-  course.faculty.sort((a, b) => a.name.localeCompare(b.name));
+  course.faculty
+    .filter(f => f.identifier !== 'admin')
+    .sort((a, b) => a.name.localeCompare(b.name));
   course.TAs.sort((a, b) => a.name.localeCompare(b.name));
   course.students.sort((a, b) => a.name.localeCompare(b.name));
   return {
