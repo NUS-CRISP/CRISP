@@ -25,7 +25,7 @@ export const hasCoursePermission = (
     (session?.user.courseRoles &&
       CourseRoles.includes(
         session.user.courseRoles.filter(
-          (r: CourseRoleTuple) => r[0] === courseId
+          (r: CourseRoleTuple) => r.course === courseId
         )[1]
       )) ||
     false
