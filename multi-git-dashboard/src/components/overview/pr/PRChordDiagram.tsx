@@ -36,7 +36,19 @@ interface ArcChordGroup extends ChordGroup {
   outerRadius: number;
 }
 
-// Removed unused RibbonData interface
+// Type for ribbon data source and target
+interface RibbonEndpoint {
+  startAngle: number;
+  endAngle: number;
+  radius: number;
+  index: number;
+}
+
+// Interface for ribbon data
+interface RibbonData {
+  source: RibbonEndpoint;
+  target: RibbonEndpoint;
+}
 
 // Type for arc usage tracking
 interface ArcUsage {
@@ -45,6 +57,13 @@ interface ArcUsage {
     endAngle: number;
     used: number;
   };
+}
+
+// Interface for data points in matrix
+interface MatrixPoint {
+  source: number;
+  target: number;
+  value: number;
 }
 
 const processGraphDataForChord = (graphData: PRGraphData): PRGraphData => {
@@ -386,14 +405,21 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
       };
     });
 
-    // Create the ribbon generator
+    // Create the ribbon generator - no type parameters needed
     const ribbonGenerator = d3.ribbon().radius(innerRadius);
+
+    // Create a wrapper function for ribbon generation that returns string
+    function generateRibbonPath(ribbonData: RibbonData): string {
+      // The d3 ribbon generator returns a path string
+      const path = ribbonGenerator(ribbonData);
+      return typeof path === 'string' ? path : '';
+    }
 
     svg
       .append('g')
       .attr('fill-opacity', 0.7)
       .selectAll('path')
-      .data(
+      .data<MatrixPoint>(
         matrix.flatMap((row, i) =>
           row
             .map((value, j) => ({
@@ -405,7 +431,7 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
         )
       )
       .join('path')
-      .attr('d', (d: { source: number; target: number; value: number }) => {
+      .attr('d', (d: MatrixPoint) => {
         // Get the arc info for source and target
         const sourceArc = chords.groups[d.source];
         const targetArc = chords.groups[d.target];
@@ -443,7 +469,7 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
           (targetArcLength - 2 * targetPadding - targetWidth) * Math.random();
 
         // Create ribbon data with proper typing
-        const ribbonData = {
+        const ribbonData: RibbonData = {
           source: {
             startAngle: sourcePosition,
             endAngle: sourcePosition + sourceWidth,
@@ -458,9 +484,8 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
           },
         };
 
-        // Using a direct return with a cast to make TypeScript happy
-        const pathData = ribbonGenerator(ribbonData);
-        return pathData as any;
+        // Use our wrapper function to generate a path string
+        return generateRibbonPath(ribbonData);
       })
       .attr('fill', d => colorScale(top6Nodes[d.source].id))
       .attr('stroke', 'white')
