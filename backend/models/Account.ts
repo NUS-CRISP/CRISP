@@ -19,7 +19,6 @@ const CourseRoleTupleSchema = new mongoose.Schema(
   { _id: false }
 );
 
-
 const accountSchema = new Schema<Account>({
   email: {
     type: String,

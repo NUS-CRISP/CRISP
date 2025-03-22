@@ -60,7 +60,7 @@ describe('assessmentAssignmentSetService (team granularity)', () => {
     const faculty = new UserModel({
       identifier: 'faculty@example.com',
       name: 'Test Faculty',
-    })
+    });
     const facultyAccount = new AccountModel({
       email: 'faculty@example.com',
       password: 'password',
@@ -80,10 +80,9 @@ describe('assessmentAssignmentSetService (team granularity)', () => {
     facultyAccount.courseRoles.push({
       course: course._id.toString(),
       courseRole: CourseRole.Faculty,
-    })
+    });
     await facultyAccount.save();
     accountId = facultyAccount._id;
-
 
     const internalAssessment = await InternalAssessmentModel.create({
       course: course._id,
@@ -510,7 +509,7 @@ describe('assessmentAssignmentSetService (individual granularity)', () => {
     facultyAccount.courseRoles.push({
       course: course._id.toString(),
       courseRole: CourseRole.Faculty,
-    })
+    });
     await facultyAccount.save();
 
     const individualAssessment = await InternalAssessmentModel.create({

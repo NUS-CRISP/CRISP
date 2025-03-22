@@ -314,7 +314,10 @@ describe('internalAssessmentService', () => {
 
     it('should retrieve an internal assessment by ID (Teaching assistant)', async () => {
       account.crispRole = CrispRole.Normal;
-      account.courseRoles.filter((r: { course: String, courseRole: String } ) => r.course === course._id.toString())[0].courseRole = CourseRole.TA;
+      account.courseRoles.filter(
+        (r: { course: String; courseRole: String }) =>
+          r.course === course._id.toString()
+      )[0].courseRole = CourseRole.TA;
       await account.save();
       const fetched = await getInternalAssessmentById(
         assessment._id.toString(),
@@ -411,7 +414,7 @@ describe('internalAssessmentService', () => {
         courseRoles: {
           course: course._id.toString(),
           courseRole: CourseRole.Student,
-        }
+        },
       });
       await expect(
         updateInternalAssessmentById(
@@ -1044,7 +1047,7 @@ describe('internalAssessmentService', () => {
         courseRoles: {
           course: course._id.toString(),
           courseRole: CourseRole.Student,
-        }
+        },
       });
       await expect(
         addQuestionToAssessment(
@@ -1825,7 +1828,7 @@ describe('internalAssessmentService', () => {
           courseRoles: {
             course: course._id.toString(),
             courseRole: CourseRole.Student,
-          }
+          },
         });
         await expect(
           updateQuestionById(
@@ -2464,7 +2467,7 @@ describe('internalAssessmentService', () => {
           courseRoles: {
             course: course._id.toString(),
             courseRole: CourseRole.Student,
-          }
+          },
         });
         await expect(
           updateQuestionById(
@@ -2571,7 +2574,7 @@ describe('internalAssessmentService', () => {
         courseRoles: {
           course: course._id.toString(),
           courseRole: CourseRole.Student,
-        }
+        },
       });
       await expect(
         deleteQuestionById(
@@ -2663,7 +2666,7 @@ describe('internalAssessmentService', () => {
         courseRoles: {
           course: course._id.toString(),
           courseRole: CourseRole.Student,
-        }
+        },
       });
       await expect(
         releaseInternalAssessmentById(
@@ -2710,7 +2713,7 @@ describe('internalAssessmentService', () => {
         courseRoles: {
           course: course._id.toString(),
           courseRole: CourseRole.Student,
-        }
+        },
       });
       await expect(
         recallInternalAssessmentById(
@@ -2752,7 +2755,7 @@ describe('internalAssessmentService', () => {
         courseRoles: {
           course: course._id.toString(),
           courseRole: CourseRole.Student,
-        }
+        },
       });
       await expect(
         recaluculateSubmissionsForAssessment(
@@ -2803,7 +2806,7 @@ describe('internalAssessmentService', () => {
         courseRoles: {
           course: course._id.toString(),
           courseRole: CourseRole.Student,
-        }
+        },
       });
       const docs = await InternalAssessmentModel.findById(
         assessment._id

@@ -108,10 +108,12 @@ describe('accountController', () => {
     it('should retrieve pending accounts and send a 200 status', async () => {
       const req = mockRequest();
       const res = mockResponse();
-      const mockAccounts = [{
-        email: 'pending@example.com',
-        crispRole: CrispRole.Normal,
-      }];
+      const mockAccounts = [
+        {
+          email: 'pending@example.com',
+          crispRole: CrispRole.Normal,
+        },
+      ];
 
       jest
         .spyOn(accountService, 'getAllPendingAccounts')
@@ -496,10 +498,12 @@ describe('retrieveTrialAccounts', () => {
   it('should retrieve trial accounts and send a 200 status', async () => {
     const req = mockRequest();
     const res = mockResponse();
-    const mockAccounts = [{
-      email: 'trial@example.com',
-      crispRole: CrispRole.TrialUser,
-    }];
+    const mockAccounts = [
+      {
+        email: 'trial@example.com',
+        crispRole: CrispRole.TrialUser,
+      },
+    ];
 
     jest
       .spyOn(accountService, 'getAllTrialAccounts')

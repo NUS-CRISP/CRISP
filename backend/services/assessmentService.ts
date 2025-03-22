@@ -57,7 +57,10 @@ export const getAssessmentById = async (
   const courseRoleTuple = account.courseRoles.filter(
     r => r.course === assessment.course.toString()
   );
-  if (courseRoleTuple.length > 0 && courseRoleTuple[0].courseRole === CourseRoles.TA) {
+  if (
+    courseRoleTuple.length > 0 &&
+    courseRoleTuple[0].courseRole === CourseRoles.TA
+  ) {
     const userId = account.user;
     assessment.results = assessment.results.filter(result =>
       result.marker?.equals(userId)

@@ -77,7 +77,7 @@ describe('gitHubService', () => {
     mockFacultyAccount.courseRoles.push({
       course: mockCourse._id.toString(),
       courseRole: CourseRole.Faculty,
-    })
+    });
     await mockFacultyAccount.save();
 
     mockFacultyAccountId = mockFacultyAccount._id.toString();

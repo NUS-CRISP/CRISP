@@ -42,7 +42,9 @@ export const getAuthorizedCodeAnalysisDataByCourse = async (
   }
 
   const crispRole = account.crispRole;
-  const courseRoleTuple = account.courseRoles.filter(r => r.course === courseId);
+  const courseRoleTuple = account.courseRoles.filter(
+    r => r.course === courseId
+  );
 
   if (
     crispRole === Role.Faculty ||

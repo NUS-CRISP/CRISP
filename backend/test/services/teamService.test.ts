@@ -90,7 +90,7 @@ async function createStudentUser(userData: any) {
   });
   await account.save();
 
-  return {user, account};
+  return { user, account };
 }
 
 async function createTAUser(userData: any) {
@@ -109,7 +109,7 @@ async function createTAUser(userData: any) {
   });
   await account.save();
 
-  return {user, account};
+  return { user, account };
 }
 
 async function createTestTeamSet(
@@ -133,12 +133,12 @@ describe('teamService', () => {
       const course = await createTestCourse(commonCourseDetails);
 
       // Create TAs
-      const {user: ta1, account: ta1Acc} = await createTAUser({
+      const { user: ta1, account: ta1Acc } = await createTAUser({
         identifier: 'ta1',
         name: 'TA One',
         gitHandle: 'taone',
       });
-      const {user: ta2, account: ta2Acc} = await createTAUser({
+      const { user: ta2, account: ta2Acc } = await createTAUser({
         identifier: 'ta2',
         name: 'TA Two',
         gitHandle: 'tatwo',
@@ -151,11 +151,11 @@ describe('teamService', () => {
       await ta2.save();
       ta1Acc.courseRoles.push({
         course: course._id.toString(),
-        courseRole: CourseRole.TA
+        courseRole: CourseRole.TA,
       });
       ta2Acc.courseRoles.push({
         course: course._id.toString(),
-        courseRole: CourseRole.TA
+        courseRole: CourseRole.TA,
       });
       await ta1Acc.save();
       await ta2Acc.save();
@@ -221,7 +221,7 @@ describe('teamService', () => {
       const course = await createTestCourse(commonCourseDetails);
 
       // Create TA
-      const {user: ta, account: taAcc} = await createTAUser({
+      const { user: ta, account: taAcc } = await createTAUser({
         identifier: 'ta3',
         name: 'TA Three',
         gitHandle: 'tathree',
@@ -232,7 +232,7 @@ describe('teamService', () => {
       await ta.save();
       taAcc.courseRoles.push({
         course: course._id.toString(),
-        courseRole: CourseRole.TA
+        courseRole: CourseRole.TA,
       });
       await taAcc.save();
       course.TAs.push(ta._id);
@@ -279,7 +279,7 @@ describe('teamService', () => {
       const course = await createTestCourse(commonCourseDetails);
 
       // Create TA but do not enroll in course
-      const {user: ta} = await createTAUser({
+      const { user: ta } = await createTAUser({
         identifier: 'ta4',
         name: 'TA Four',
         gitHandle: 'tafour',
@@ -316,7 +316,7 @@ describe('teamService', () => {
 
     it('should return an empty array if the course does not exist', async () => {
       // Create TA
-      const {user: ta} = await createTAUser({
+      const { user: ta } = await createTAUser({
         identifier: 'ta5',
         name: 'TA Five',
         gitHandle: 'tafive',
@@ -444,7 +444,8 @@ describe('teamService', () => {
   describe('addStudentsToTeam', () => {
     it('should add students to a team in a course', async () => {
       const course = await createTestCourse(commonCourseDetails);
-      const {user: student, account: studentAcc} = await createStudentUser(commonUserDetails);
+      const { user: student, account: studentAcc } =
+        await createStudentUser(commonUserDetails);
       const teamSet = new TeamSetModel({
         name: 'Team Set 1',
         course: course._id,
@@ -455,7 +456,7 @@ describe('teamService', () => {
       await student.save();
       studentAcc.courseRoles.push({
         course: course._id.toString(),
-        courseRole: CourseRole.Student
+        courseRole: CourseRole.Student,
       });
       await studentAcc.save();
       course.students.push(student._id);
@@ -500,7 +501,7 @@ describe('teamService', () => {
 
     it('should throw error if student not enrolled in course', async () => {
       const course = await createTestCourse(commonCourseDetails);
-      const {user: student} = await createStudentUser(commonUserDetails);
+      const { user: student } = await createStudentUser(commonUserDetails);
       await expect(
         addStudentsToTeam(course._id.toHexString(), [
           {
@@ -514,12 +515,13 @@ describe('teamService', () => {
 
     it('should throw error if invalid teamSet', async () => {
       const course = await createTestCourse(commonCourseDetails);
-      const {user: student, account: studentAcc} = await createStudentUser(commonUserDetails);
+      const { user: student, account: studentAcc } =
+        await createStudentUser(commonUserDetails);
       student.enrolledCourses.push(course._id);
       await student.save();
       studentAcc.courseRoles.push({
         course: course._id.toString(),
-        courseRole: CourseRole.Student
+        courseRole: CourseRole.Student,
       });
       await studentAcc.save();
       course.students.push(student._id);
@@ -539,7 +541,7 @@ describe('teamService', () => {
   describe('addTAsToTeam', () => {
     it('should assign TAs to a team in a course', async () => {
       const course = await createTestCourse(commonCourseDetails);
-      const {user: ta, account: taAcc} = await createTAUser({
+      const { user: ta, account: taAcc } = await createTAUser({
         identifier: 'ta1',
         name: 'ta1',
         gitHandle: 'ta1',
@@ -554,7 +556,7 @@ describe('teamService', () => {
       await ta.save();
       taAcc.courseRoles.push({
         course: course._id.toString(),
-        courseRole: CourseRole.TA
+        courseRole: CourseRole.TA,
       });
       await taAcc.save();
       course.TAs.push(ta._id);
@@ -596,7 +598,7 @@ describe('teamService', () => {
 
     it('should throw error if TA not enrolled in course', async () => {
       const course = await createTestCourse(commonCourseDetails);
-      const {user: ta} = await createTAUser(commonUserDetails);
+      const { user: ta } = await createTAUser(commonUserDetails);
       await expect(
         addTAsToTeam(course._id.toHexString(), [
           {
@@ -610,12 +612,13 @@ describe('teamService', () => {
 
     it('should throw error if invalid teamSet', async () => {
       const course = await createTestCourse(commonCourseDetails);
-      const {user: ta, account: taAcc} = await createTAUser(commonUserDetails);
+      const { user: ta, account: taAcc } =
+        await createTAUser(commonUserDetails);
       ta.enrolledCourses.push(course._id);
       await ta.save();
       taAcc.courseRoles.push({
         course: course._id.toString(),
-        courseRole: CourseRole.TA
+        courseRole: CourseRole.TA,
       });
       await taAcc.save();
       course.TAs.push(ta._id);
@@ -635,7 +638,7 @@ describe('teamService', () => {
   describe('removeMembersById', () => {
     it('should remove member by id', async () => {
       const team = await createTestTeam(commonTeamDetails);
-      const {user} = await createStudentUser(commonUserDetails);
+      const { user } = await createStudentUser(commonUserDetails);
       if (!team || !user) {
         throw new Error('Test team or user could not be created');
       }
@@ -650,7 +653,7 @@ describe('teamService', () => {
     });
 
     it('should throw error if invalid team', async () => {
-      const {user} = await createStudentUser(commonUserDetails);
+      const { user } = await createStudentUser(commonUserDetails);
       const team = await createTestTeam(commonTeamDetails);
       const teamId = team._id.toHexString();
       await TeamModel.deleteOne({ _id: team._id });
@@ -660,7 +663,7 @@ describe('teamService', () => {
     });
 
     it('should throw error if invalid user', async () => {
-      const {user} = await createStudentUser(commonUserDetails);
+      const { user } = await createStudentUser(commonUserDetails);
       const userId = user._id.toHexString();
       await UserModel.deleteOne({ _id: user._id });
       const team = await createTestTeam(commonTeamDetails);

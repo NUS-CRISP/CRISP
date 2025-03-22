@@ -336,7 +336,7 @@ const setupData = async (overrideEndDate?: Date) => {
   taAccount.courseRoles.push({
     course: course._id.toString(),
     courseRole: CourseRole.TA,
-  })
+  });
   await taAccount.save();
   studentAccount.courseRoles.push({
     course: course._id.toString(),
@@ -2002,7 +2002,7 @@ describe('submissionService', () => {
       const admin = new UserModel({
         name: 'admin',
         password: 'pass',
-      })
+      });
       const adminAccount = new AccountModel({
         email: 'admin@example.com',
         crispRole: CrispRole.Admin,

@@ -95,7 +95,7 @@ async function checkCourseRoles() {
         );
         TAAccount.courseRoles.push({
           course: course._id.toString(),
-          courseRole: CourseRole.TA
+          courseRole: CourseRole.TA,
         });
         await TAAccount.save();
       }

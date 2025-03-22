@@ -77,7 +77,9 @@ export const addStudentsToTeam = async (courseId: string, students: any[]) => {
       !studentData.teamSet ||
       !studentData.teamNumber
     ) {
-      throw new BadRequestError('Invalid Student' + account + student + studentData);
+      throw new BadRequestError(
+        'Invalid Student' + account + student + studentData
+      );
     }
     const teamSet = await TeamSetModel.findOne({
       course: course._id,

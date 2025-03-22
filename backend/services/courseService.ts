@@ -62,7 +62,7 @@ export const createNewCourse = async (courseData: any, accountId: string) => {
   course.faculty.push(user._id);
   account.courseRoles.push({
     course: course._id.toString(),
-    courseRole: CourseRole.Faculty
+    courseRole: CourseRole.Faculty,
   });
   await account.save();
   if (account.crispRole !== CrispRole.Admin) {
@@ -317,7 +317,7 @@ export const addTAsToCourse = async (courseId: string, TADataList: any[]) => {
       TA.enrolledCourses.push(course._id);
       TAAccount?.courseRoles.push({
         course: course._id.toString(),
-        courseRole: CourseRole.TA
+        courseRole: CourseRole.TA,
       });
     }
     await TA.save();
@@ -452,7 +452,7 @@ export const addFacultyToCourse = async (
       facultyMember.enrolledCourses.push(course._id);
       facultyAccount.courseRoles.push({
         course: courseId,
-        courseRole: CourseRole.Faculty
+        courseRole: CourseRole.Faculty,
       });
     }
     await facultyMember.save();
@@ -652,7 +652,9 @@ export const getTeamSetsFromCourse = async (
   if (!course) {
     throw new NotFoundError('Course not found');
   }
-  const courseRoleTuple = account.courseRoles.filter(r => r.course === courseId);
+  const courseRoleTuple = account.courseRoles.filter(
+    r => r.course === courseId
+  );
   if (courseRoleTuple.length === 0) throw new BadRequestError('Unauthorized');
   const role = courseRoleTuple[0].courseRole;
   if (role === CourseRole.TA) {
@@ -817,7 +819,9 @@ export const getProjectManagementBoardFromCourse = async (
     throw new NotFoundError('Course not found');
   }
 
-  const courseRoleTuple = account.courseRoles.filter(r => r.course === courseId);
+  const courseRoleTuple = account.courseRoles.filter(
+    r => r.course === courseId
+  );
   if (courseRoleTuple.length === 0) throw new BadRequestError('Unauthorized');
   const role = courseRoleTuple[0].courseRole;
   if (role === CourseRole.TA) {
