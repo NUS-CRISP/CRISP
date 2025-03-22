@@ -22,6 +22,18 @@ interface PRChordDiagramProps {
   graphData: PRGraphData;
 }
 
+interface ChordGroup {
+  startAngle: number;
+  endAngle: number;
+  value: number;
+  index: number;
+}
+
+interface ArcChordGroup extends ChordGroup {
+  innerRadius: number;
+  outerRadius: number;
+}
+
 const processGraphDataForChord = (graphData: PRGraphData): PRGraphData => {
   console.log('Original graph data:', JSON.stringify(graphData, null, 2));
 
@@ -276,7 +288,10 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
     const chords = chord(arcSizeMatrix);
 
     // arc and ribbon generators
-    const arc = d3.arc().innerRadius(innerRadius).outerRadius(outerRadius);
+    const arc = d3
+      .arc<ChordGroup>()
+      .innerRadius(innerRadius)
+      .outerRadius(outerRadius);
 
     const tooltip = d3
       .select('body')
@@ -299,7 +314,15 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
       .append('path')
       .attr('fill', d => colorScale(top6Nodes[d.index].id))
       .attr('stroke', 'white')
-      .attr('d', arc)
+      .attr('d', d => {
+        // Create an object that satisfies both the chord group and the arc requirements
+        const arcData: ArcChordGroup = {
+          ...d,
+          innerRadius: innerRadius,
+          outerRadius: outerRadius,
+        };
+        return arc(arcData);
+      })
       .on('mouseover', (event, d) => {
         const nodeName = top6Nodes[d.index].id;
 
