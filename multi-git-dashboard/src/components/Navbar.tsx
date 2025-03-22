@@ -332,7 +332,7 @@ const Navbar: React.FC = () => {
   );
 
   // Third section: Assessment link
-  courseLinks.push(renderNavLink(courseLinksData[9], 9));
+  courseLinks.push(renderNavLink(courseLinksData[9]));
 
   useEffect(() => {
     const path = router.pathname;
