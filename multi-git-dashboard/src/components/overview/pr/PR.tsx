@@ -233,7 +233,8 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
     const [activeView, setActiveView] = useState<string>('list');
 
     const getDisplayedPRs = useCallback(() => {
-      let startDate, endDate;
+      // Add explicit type annotation for startDate and endDate
+      let startDate: dayjs.Dayjs, endDate: dayjs.Dayjs;
 
       if (useDailyRange && dailyDateRange) {
         // Use the daily date range
@@ -355,7 +356,7 @@ const PR = forwardRef<HTMLDivElement, PRProps>(
           </Text>
 
           {/* Visualization selector with buttons */}
-          <Group spacing="xs" mb={15}>
+          <Group mb={15}>
             <Button
               variant={activeView === 'list' ? 'filled' : 'outline'}
               onClick={() => setActiveView('list')}
