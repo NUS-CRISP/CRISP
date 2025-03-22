@@ -333,7 +333,6 @@ describe('courseService', () => {
       ).toBe(commonStudentDetails.name);
     });
 
-
     it('should throw NotFoundError for an invalid course', async () => {
       const invalidCourseId = new mongoose.Types.ObjectId().toString();
       const studentDataList = [
