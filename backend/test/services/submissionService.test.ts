@@ -1979,6 +1979,48 @@ describe('submissionService', () => {
       expect(updatedSubmission.isDraft).toBe(false);
     });
 
+    it('should update a submission, whilst activating admin bypass', async () => {
+      // First create with full answers
+      let fullAnswers = buildAllAnswers(assessment, student._id.toString());
+      const submission = await createSubmission(
+        assessment._id.toString(),
+        ta._id.toString(),
+        fullAnswers,
+        true
+      );
+
+      const result = await AssessmentResultModel.findOne({
+        student: student._id,
+        assessment: assessment._id,
+      });
+      expect(result).toBeDefined();
+
+      // Now we update: for instance, let's change the MC (index 1) from 'Option B' to 'Option A'
+      fullAnswers = buildAllAnswers(assessment, student._id.toString());
+      (fullAnswers[1] as MultipleChoiceAnswer).value = 'Option A';
+
+      const admin = new UserModel({
+        name: 'admin',
+        password: 'pass',
+      })
+      const adminAccount = new AccountModel({
+        email: 'admin@example.com',
+        crispRole: CrispRole.Admin,
+        password: 'hi',
+        user: admin._id,
+      });
+      await adminAccount.save();
+
+      const updatedSubmission = await updateSubmission(
+        submission._id.toString(),
+        ta._id.toString(),
+        adminAccount._id.toString(),
+        fullAnswers,
+        false
+      );
+      expect(updatedSubmission.isDraft).toBe(false);
+    });
+
     it('should throw NotFoundError if submission not found', async () => {
       const invalidSubmissionId = new mongoose.Types.ObjectId().toString();
       const fullAnswers = buildAllAnswers(assessment, student._id.toString());

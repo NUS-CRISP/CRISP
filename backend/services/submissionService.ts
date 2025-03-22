@@ -607,7 +607,7 @@ export const updateSubmission = async (
   const account = await AccountModel.findById(accountId);
   const course = await CourseModel.findById(assessment.course);
   if (!course) throw new BadRequestError('Assessment course id invalid');
-  const isCourseFaculty = course.faculty.includes(new ObjectId(userId));
+  const isCourseFaculty = course.faculty.filter(f => f === account!.user).length !== 0;
   // Alternative method would be to check if account's .courseRole
   // contains this course and has faculty role in the same tuple.
   if (account && (isCourseFaculty || account.crispRole === CrispRole.Admin)) {
