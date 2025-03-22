@@ -1,0 +1,89 @@
+import {
+  Anchor,
+  Box,
+  Burger,
+  Button,
+  Center,
+  Container,
+  Group,
+  HoverCard,
+  useMantineTheme,
+  Text,
+  Divider,
+  SimpleGrid,
+} from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
+import classes from '@styles/Home.module.css';
+import { IconChevronDown, IconGitBranch } from '@tabler/icons-react';
+import { useRouter } from 'next/router';
+
+const Header: React.FC = () => {
+  const [opened, { toggle }] = useDisclosure(false);
+  const router = useRouter();
+  const theme = useMantineTheme();
+
+  const links: { link: string; label: string }[] = [];
+
+  const items = links.map(link => (
+    <Button
+      key={link.link}
+      onClick={() => router.push(link.link)}
+      color={theme.colors.blue[4]}
+      variant="subtle"
+    >
+      {link.label}
+    </Button>
+  ));
+
+
+
+  return (
+    <header className={classes.header}>
+      <Container size="lg" className={classes.headerInner}>
+        <Group>
+          <IconGitBranch size={40} className={classes.headerIcon} />
+          <a href="#" className={classes.link}>
+            CRISP
+          </a>
+        </Group>
+
+        <Group h="100%" gap={0} visibleFrom="sm">
+          <a href="http://localhost:3002/" className={classes.link}>
+            Home
+          </a>
+
+          <a href="#" className={classes.link}>
+            Code
+          </a>
+          <a href="#" className={classes.link}>
+            Contributor
+          </a>
+
+        </Group>
+
+
+
+        <Group visibleFrom="xs">
+          {items}
+
+
+
+
+
+          <Button
+            key="signin"
+            onClick={() => router.push('/auth/signin')}
+            color={theme.colors.blue[9]}
+           size={'sm'}
+          >
+            Sign in
+          </Button>
+        </Group>
+
+        <Burger opened={opened} onClick={toggle} hiddenFrom="xs" size="sm" />
+      </Container>
+    </header>
+  );
+};
+
+export default Header;
