@@ -460,9 +460,6 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
 
         // Using a direct return with a cast to make TypeScript happy
         const pathData = ribbonGenerator(ribbonData);
-        // TypeScript doesn't recognize that ribbonGenerator returns a string
-        // So we need to tell it explicitly
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return pathData as any;
       })
       .attr('fill', d => colorScale(top6Nodes[d.source].id))
