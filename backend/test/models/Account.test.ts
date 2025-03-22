@@ -42,7 +42,7 @@ describe('AccountModel', () => {
 
     expect(savedAccount.email).toEqual(accountData.email);
     expect(savedAccount.isApproved).toBe(false);
-    expect(savedAccount.role).toEqual('Faculty member');
+    expect(savedAccount.crispRole).toEqual('Faculty member');
   });
 
   it('should update an existing account', async () => {

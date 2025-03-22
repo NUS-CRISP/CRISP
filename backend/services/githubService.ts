@@ -3,7 +3,7 @@ import CourseModel from '@models/Course';
 import TeamModel from '@models/Team';
 import TeamDataModel, { TeamData } from '@models/TeamData';
 import TeamSetModel from '@models/TeamSet';
-import Role from '@shared/types/auth/Role';
+import CrispRole from '@shared/types/auth/CrispRole';
 import { getGitHubApp } from '../utils/github';
 import { GitHubError, NotFoundError } from './errors';
 
@@ -64,9 +64,13 @@ export const getAuthorizedTeamDataByCourse = async (
     throw new NotFoundError('Course not found');
   }
 
-  const role = account.role;
+  const role = account.crispRole;
 
-  if (role === Role.Faculty || role === Role.Admin || role === Role.TrialUser) {
+  if (
+    role === CrispRole.Faculty ||
+    role === CrispRole.Admin ||
+    role === CrispRole.TrialUser
+  ) {
     if (!course.gitHubOrgName) {
       throw new NotFoundError('Course GitHub organization not found');
     }
@@ -87,7 +91,7 @@ export const getAuthorizedTeamDataByCourse = async (
       return 0;
     });
     return sortedDatas;
-  } else if (role === Role.TA) {
+  } else if (role === CrispRole.Normal) {
     const teamSets = await TeamSetModel.find({ course: courseId });
     if (!teamSets) {
       throw new NotFoundError('No team sets found for course');

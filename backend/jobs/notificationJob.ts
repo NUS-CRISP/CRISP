@@ -1,5 +1,5 @@
 import AccountModel from '@models/Account';
-import Role from '@shared/types/auth/Role';
+import Role from '@shared/types/auth/CrispRole';
 import cron from 'node-cron';
 import { Team } from '../models/Team';
 import { User } from '../models/User';
@@ -207,7 +207,7 @@ export async function runNotificationCheck() {
   const weekday = now.getDay() === 0 ? 7 : now.getDay();
 
   const accounts = await AccountModel.find({
-    role: { $in: [Role.TA, Role.Faculty, Role.Admin] },
+    crispRole: { $in: [Role.Normal, Role.Faculty, Role.Admin] },
     isApproved: true,
   }).populate('user');
 
@@ -250,7 +250,7 @@ export async function runNotificationCheck() {
 
 async function notifyOnStartup() {
   const admins = await AccountModel.find({
-    role: Role.Admin,
+    crispRole: Role.Admin,
     isApproved: true,
   }).populate('user');
   for (const a of admins) {

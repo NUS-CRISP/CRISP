@@ -1,5 +1,5 @@
 import clientPromise from '@/lib/mongodb';
-import Role from '@shared/types/auth/Role';
+import CrispRole from '@shared/types/auth/CrispRole';
 import bcrypt from 'bcrypt';
 import {
   GetServerSidePropsContext,
@@ -33,11 +33,15 @@ export const authOptions: AuthOptions = {
           .db(process.env.DB_NAME)
           .collection('accounts');
 
-        if (credentials?.type === Role.TrialUser) {
+        if (credentials?.type === CrispRole.TrialUser) {
+          const trialAccount = await accountsCollection.findOne({
+            crispRole: CrispRole.TrialUser,
+          });
           return {
             id: process.env.TRIAL_USER_ID || '',
-            name: Role.TrialUser,
-            role: Role.TrialUser,
+            name: CrispRole.TrialUser,
+            crispRole: CrispRole.TrialUser,
+            courseRoles: trialAccount!.courseRoles,
           };
         }
 
@@ -76,7 +80,8 @@ export const authOptions: AuthOptions = {
         return {
           id: account._id.toString(),
           name: user?.name || '',
-          role: account.role,
+          crispRole: account.crispRole,
+          courseRoles: account.courseRoles,
         };
       },
     }),
@@ -88,7 +93,8 @@ export const authOptions: AuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = user.role;
+        token.crispRole = user.crispRole;
+        token.courseRoles = user.courseRoles;
       }
       return token;
     },
@@ -96,9 +102,14 @@ export const authOptions: AuthOptions = {
       if (token.name) {
         session.user.name = token.name;
       }
-      session.user.role = token.role;
+      session.user.crispRole = token.crispRole;
+      session.user.courseRoles = token.courseRoles;
       return {
-        user: { name: token.name, role: token.role },
+        user: {
+          name: token.name,
+          crispRole: token.crispRole,
+          courseRoles: token.courseRoles,
+        },
         expires: session.expires,
       };
     },
