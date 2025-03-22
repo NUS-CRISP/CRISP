@@ -196,8 +196,6 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
 };
 
 const FeatureCard: React.FC = () => {
-
-
   return (
     <Box>
       <Center>

@@ -61,8 +61,6 @@ const AnimatedWrapper: React.FC<{ children: React.ReactNode }> = ({
 };
 
 const ContactUs: React.FC = () => {
-
-
   const icons = social.map((item, index) => (
     <ActionIcon
       key={index}

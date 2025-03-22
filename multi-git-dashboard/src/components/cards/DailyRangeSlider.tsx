@@ -1,10 +1,4 @@
-import {
-  RangeSlider,
-  Stack,
-  Box,
-  Group,
-  Switch,
-} from '@mantine/core';
+import { RangeSlider, Stack, Box, Group, Switch } from '@mantine/core';
 import { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 

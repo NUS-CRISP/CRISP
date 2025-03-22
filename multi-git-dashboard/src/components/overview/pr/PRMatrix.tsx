@@ -399,7 +399,7 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
       });
 
       // ellipses around each cluster
-      cellsByCluster.forEach((clusterCells) => {
+      cellsByCluster.forEach(clusterCells => {
         if (clusterCells.length < 2) return;
 
         const uniquePeople = new Set<number>();

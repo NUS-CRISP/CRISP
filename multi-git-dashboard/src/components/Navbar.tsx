@@ -252,7 +252,7 @@ const Navbar: React.FC = () => {
   ];
 
   // Helper function to render a navigation link
-  const renderNavLink = (item) => (
+  const renderNavLink = item => (
     <TutorialPopover
       stage={6}
       position="right"
