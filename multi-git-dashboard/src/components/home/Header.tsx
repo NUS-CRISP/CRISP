@@ -58,7 +58,6 @@ const Header: React.FC = () => {
               onClick={() => router.push('/auth/signin')}
               color={theme.colors.blue[9]}
               size="md"
-              sx={{ height: '40px', fontSize: '0.9rem' }}
               autoContrast
             >
               Sign in
@@ -69,7 +68,6 @@ const Header: React.FC = () => {
               onClick={() => router.push('/auth/register')}
               color={theme.colors.blue[9]}
               size="md"
-              sx={{ height: '40px', fontSize: '0.9rem' }}
               autoContrast
             >
               Sign up
