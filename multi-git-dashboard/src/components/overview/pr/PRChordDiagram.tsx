@@ -187,7 +187,7 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
     console.log('Matrix data:', matrix);
 
     // Calculate total incoming and outgoing for each node
-    const interactionsMap = {}; // Store by node ID for sorting
+    const interactionsMap: Record<string, number> = {}; // Store by node ID for sorting
     const outgoingInteractions: number[] = [];
     const incomingInteractions: number[] = [];
     const totalInteractions: number[] = [];
