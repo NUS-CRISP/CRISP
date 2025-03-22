@@ -36,6 +36,8 @@ interface ArcChordGroup extends ChordGroup {
   outerRadius: number;
 }
 
+// Removed unused RibbonData interface
+
 // Type for arc usage tracking
 interface ArcUsage {
   [key: number]: {
@@ -384,6 +386,7 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
       };
     });
 
+    // Create the ribbon generator
     const ribbonGenerator = d3.ribbon().radius(innerRadius);
 
     svg
@@ -402,7 +405,7 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
         )
       )
       .join('path')
-      .attr('d', d => {
+      .attr('d', function (this: any, d: any) {
         // Get the arc info for source and target
         const sourceArc = chords.groups[d.source];
         const targetArc = chords.groups[d.target];
@@ -439,7 +442,7 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
           targetPadding +
           (targetArcLength - 2 * targetPadding - targetWidth) * Math.random();
 
-        // Create ribbon data
+        // Create ribbon data with proper typing
         const ribbonData = {
           source: {
             startAngle: sourcePosition,
@@ -455,7 +458,9 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
           },
         };
 
-        return ribbonGenerator(ribbonData);
+        // D3 typings are confusing TypeScript - ribbon generator actually returns string
+        // Use type assertion to inform TypeScript
+        return ribbonGenerator(ribbonData) as unknown as string;
       })
       .attr('fill', d => colorScale(top6Nodes[d.source].id))
       .attr('stroke', 'white')
