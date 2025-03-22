@@ -59,6 +59,8 @@ import AssessmentResultModel, {
   AssessmentResult,
 } from '@models/AssessmentResult';
 import QuestionModel from '@models/Question';
+import CourseRole from '@shared/types/auth/CourseRole';
+import CrispRole from '@shared/types/auth/CrispRole';
 
 let mongo: MongoMemoryServer;
 
@@ -84,14 +86,17 @@ afterAll(async () => {
 
 const setupData = async () => {
   // 1) Faculty account
-  const account = new AccountModel({
+  const faculty = new UserModel({
+    identifier: 'faculty',
+    name: 'Test Faculty',
+  });
+  const facultyAccount = new AccountModel({
     email: 'faculty@example.com',
     password: 'password',
-    role: 'Faculty member',
-    user: new mongoose.Types.ObjectId(),
+    crispRole: CrispRole.Faculty,
+    user: faculty._id,
     isApproved: true,
   });
-  await account.save();
 
   // 2) A course
   const course = await CourseModel.create({
@@ -101,18 +106,50 @@ const setupData = async () => {
     startDate: new Date('2024-08-15'),
     courseType: 'Normal',
   });
+  course.faculty.push(faculty._id);
   await course.save();
+  facultyAccount.courseRoles.push({
+    course: course._id.toString(),
+    courseRole: CourseRole.Faculty,
+  });
+  await facultyAccount.save();
 
   // 3) A student & TA
   const student = await UserModel.create({
     identifier: 'studentUser',
     name: 'Test Student',
   });
+  const studentAccount = new AccountModel({
+    email: 'student@example.com',
+    password: 'password',
+    crispRole: CrispRole.Normal,
+    user: student._id,
+    isApproved: true,
+  });
+  studentAccount.courseRoles.push({
+    course: course._id.toString(),
+    courseRole: CourseRole.Student,
+  });
+  await studentAccount.save();
+
   const ta = await UserModel.create({
     identifier: 'taUser',
     name: 'Test TA',
   });
+  const taAccount = new AccountModel({
+    email: 'ta@example.com',
+    password: 'password',
+    crispRole: CrispRole.Normal,
+    user: student._id,
+    isApproved: true,
+  });
+  taAccount.courseRoles.push({
+    course: course._id.toString(),
+    courseRole: CourseRole.TA,
+  });
+  await taAccount.save();
   course.students.push(student._id);
+  course.TAs.push(ta._id);
   await course.save();
 
   // 4) A team referencing that student & TA
@@ -226,7 +263,7 @@ const setupData = async () => {
 
   return {
     course,
-    account,
+    account: facultyAccount,
     teamSet,
     teamMemberQuestion,
     teamMemberAnswer,
@@ -258,7 +295,7 @@ describe('internalAssessmentService', () => {
 
   describe('getInternalAssessmentById', () => {
     it('should retrieve an internal assessment by ID (admin)', async () => {
-      account.role = 'admin';
+      account.crispRole = CrispRole.Admin;
       await account.save();
       const fetched = await getInternalAssessmentById(
         assessment._id.toString(),
@@ -276,7 +313,8 @@ describe('internalAssessmentService', () => {
     });
 
     it('should retrieve an internal assessment by ID (Teaching assistant)', async () => {
-      account.role = 'Teaching assistant';
+      account.crispRole = CrispRole.Normal;
+      account.courseRoles.filter((r: { course: String, courseRole: String } ) => r.course === course._id.toString())[0].courseRole = CourseRole.TA;
       await account.save();
       const fetched = await getInternalAssessmentById(
         assessment._id.toString(),
@@ -369,7 +407,11 @@ describe('internalAssessmentService', () => {
       const studentAcc = await AccountModel.create({
         email: 'student-acc@example.com',
         password: 'password',
-        role: 'Student',
+        crispRole: CrispRole.Normal,
+        courseRoles: {
+          course: course._id.toString(),
+          courseRole: CourseRole.Student,
+        }
       });
       await expect(
         updateInternalAssessmentById(
@@ -998,7 +1040,11 @@ describe('internalAssessmentService', () => {
       const studAcc = await AccountModel.create({
         email: 'stud@example.com',
         password: 'pass',
-        role: 'Student',
+        crispRole: CrispRole.Normal,
+        courseRoles: {
+          course: course._id.toString(),
+          courseRole: CourseRole.Student,
+        }
       });
       await expect(
         addQuestionToAssessment(
@@ -1775,7 +1821,11 @@ describe('internalAssessmentService', () => {
         const studAcc = await AccountModel.create({
           email: 'stud2@example.com',
           password: 'pass',
-          role: 'Student',
+          crispRole: CrispRole.Normal,
+          courseRoles: {
+            course: course._id.toString(),
+            courseRole: CourseRole.Student,
+          }
         });
         await expect(
           updateQuestionById(
@@ -2410,7 +2460,11 @@ describe('internalAssessmentService', () => {
         const studAcc = await AccountModel.create({
           email: 'unauthorized@example.com',
           password: 'pass',
-          role: 'Student',
+          crispRole: CrispRole.Normal,
+          courseRoles: {
+            course: course._id.toString(),
+            courseRole: CourseRole.Student,
+          }
         });
         await expect(
           updateQuestionById(
@@ -2513,7 +2567,11 @@ describe('internalAssessmentService', () => {
       const studAcc = await AccountModel.create({
         email: 'stud-deleteQ@example.com',
         password: 'password',
-        role: 'Student',
+        crispRole: CrispRole.Normal,
+        courseRoles: {
+          course: course._id.toString(),
+          courseRole: CourseRole.Student,
+        }
       });
       await expect(
         deleteQuestionById(
@@ -2601,7 +2659,11 @@ describe('internalAssessmentService', () => {
       const studAcc = await AccountModel.create({
         email: 'someguy@example.com',
         password: 'pass',
-        role: 'Student',
+        crispRole: CrispRole.Normal,
+        courseRoles: {
+          course: course._id.toString(),
+          courseRole: CourseRole.Student,
+        }
       });
       await expect(
         releaseInternalAssessmentById(
@@ -2644,7 +2706,11 @@ describe('internalAssessmentService', () => {
       const studAcc = await AccountModel.create({
         email: 'stud1@example.com',
         password: 'pass',
-        role: 'Student',
+        crispRole: CrispRole.Normal,
+        courseRoles: {
+          course: course._id.toString(),
+          courseRole: CourseRole.Student,
+        }
       });
       await expect(
         recallInternalAssessmentById(
@@ -2682,7 +2748,11 @@ describe('internalAssessmentService', () => {
       const studAcc = await AccountModel.create({
         email: 'stud99@example.com',
         password: 'pass',
-        role: 'Student',
+        crispRole: CrispRole.Normal,
+        courseRoles: {
+          course: course._id.toString(),
+          courseRole: CourseRole.Student,
+        }
       });
       await expect(
         recaluculateSubmissionsForAssessment(
@@ -2729,7 +2799,11 @@ describe('internalAssessmentService', () => {
       const studAcc = await AccountModel.create({
         email: 'stud-reorder@example.com',
         password: 'pwd',
-        role: 'Student',
+        crispRole: CrispRole.Normal,
+        courseRoles: {
+          course: course._id.toString(),
+          courseRole: CourseRole.Student,
+        }
       });
       const docs = await InternalAssessmentModel.findById(
         assessment._id

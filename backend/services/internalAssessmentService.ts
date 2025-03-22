@@ -142,8 +142,8 @@ export const updateInternalAssessmentById = async (
   }
 
   if (
-    account.crispRole === CrispRole.Faculty ||
-    account.crispRole === CrispRole.Admin
+    account.crispRole !== CrispRole.Faculty &&
+    account.crispRole !== CrispRole.Admin
   ) {
     throw new BadRequestError('Unauthorized');
   }
@@ -376,8 +376,8 @@ export const addQuestionToAssessment = async (
   }
 
   if (
-    account.crispRole === CrispRole.Faculty ||
-    account.crispRole === CrispRole.Admin
+    account.crispRole !== CrispRole.Faculty &&
+    account.crispRole !== CrispRole.Admin
   ) {
     throw new BadRequestError('Unauthorized');
   }
@@ -682,10 +682,10 @@ export const updateQuestionById = async (
   }
 
   if (
-    account.crispRole === CrispRole.Faculty ||
-    account.crispRole === CrispRole.Admin
+    account.crispRole !== CrispRole.Faculty &&
+    account.crispRole !== CrispRole.Admin
   ) {
-    throw new BadRequestError('Unauthorized');
+    throw new BadRequestError('Unauthorized' + account);
   }
 
   const existingQuestion: QuestionUnion | null =
@@ -1041,8 +1041,8 @@ export const deleteQuestionById = async (
   }
 
   if (
-    account.crispRole === CrispRole.Faculty ||
-    account.crispRole === CrispRole.Admin
+    account.crispRole !== CrispRole.Faculty &&
+    account.crispRole !== CrispRole.Admin
   ) {
     throw new BadRequestError('Unauthorized');
   }
@@ -1099,8 +1099,8 @@ export const releaseInternalAssessmentById = async (
   }
 
   if (
-    account.crispRole === CrispRole.Faculty ||
-    account.crispRole === CrispRole.Admin
+    account.crispRole !== CrispRole.Faculty &&
+    account.crispRole !== CrispRole.Admin
   ) {
     throw new BadRequestError('Unauthorized');
   }
@@ -1144,8 +1144,8 @@ export const recallInternalAssessmentById = async (
   }
 
   if (
-    account.crispRole === CrispRole.Faculty ||
-    account.crispRole === CrispRole.Admin
+    account.crispRole !== CrispRole.Faculty &&
+    account.crispRole !== CrispRole.Admin
   ) {
     throw new BadRequestError('Unauthorized');
   }
@@ -1186,8 +1186,8 @@ export const recaluculateSubmissionsForAssessment = async (
   }
 
   if (
-    account.crispRole === CrispRole.Faculty ||
-    account.crispRole === CrispRole.Admin
+    account.crispRole !== CrispRole.Faculty &&
+    account.crispRole !== CrispRole.Admin
   ) {
     throw new BadRequestError('Unauthorized');
   }
@@ -1224,8 +1224,8 @@ export const reorderQuestions = async (
     throw new NotFoundError('Account not found');
   }
   if (
-    account.crispRole === CrispRole.Faculty ||
-    account.crispRole === CrispRole.Admin
+    account.crispRole !== CrispRole.Faculty &&
+    account.crispRole !== CrispRole.Admin
   ) {
     throw new BadRequestError('Unauthorized');
   }

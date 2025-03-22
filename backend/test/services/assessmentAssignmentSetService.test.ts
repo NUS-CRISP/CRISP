@@ -22,6 +22,8 @@ import { NotFoundError, BadRequestError } from '../../services/errors';
 import * as submissionService from '../../services/submissionService';
 import * as assessmentAssignmentSetService from '../../services/assessmentAssignmentSetService';
 import AccountModel from '@models/Account';
+import CrispRole from '@shared/types/auth/CrispRole';
+import CourseRole from '@shared/types/auth/CourseRole';
 
 let mongo: MongoMemoryServer;
 
@@ -55,15 +57,17 @@ describe('assessmentAssignmentSetService (team granularity)', () => {
   let accountId: string;
 
   beforeEach(async () => {
-    const account = new AccountModel({
+    const faculty = new UserModel({
+      identifier: 'faculty@example.com',
+      name: 'Test Faculty',
+    })
+    const facultyAccount = new AccountModel({
       email: 'faculty@example.com',
       password: 'password',
-      role: 'Faculty member',
-      user: new mongoose.Types.ObjectId(),
+      crispRole: CrispRole.Faculty,
+      user: faculty._id,
       isApproved: true,
     });
-    await account.save();
-    accountId = account._id;
 
     const course = await CourseModel.create({
       name: 'Introduction to Computer Science',
@@ -73,6 +77,13 @@ describe('assessmentAssignmentSetService (team granularity)', () => {
       courseType: 'Normal',
     });
     await course.save();
+    facultyAccount.courseRoles.push({
+      course: course._id.toString(),
+      courseRole: CourseRole.Faculty,
+    })
+    await facultyAccount.save();
+    accountId = facultyAccount._id;
+
 
     const internalAssessment = await InternalAssessmentModel.create({
       course: course._id,
@@ -117,12 +128,36 @@ describe('assessmentAssignmentSetService (team granularity)', () => {
       name: 'hello',
     });
     studentId = student._id;
+    const studentAccount = new AccountModel({
+      email: 'student@example.com',
+      password: 'password',
+      crispRole: CrispRole.Normal,
+      user: student._id,
+      isApproved: true,
+    });
+    studentAccount.courseRoles.push({
+      course: course._id.toString(),
+      courseRole: CourseRole.Student,
+    });
+    await studentAccount.save();
 
     const ta = await UserModel.create({
       identifier: 'taUser',
       name: 'Test TA',
     });
     taId = ta._id;
+    const taAccount = new AccountModel({
+      email: 'ta@example.com',
+      password: 'password',
+      crispRole: CrispRole.Normal,
+      user: ta._id,
+      isApproved: true,
+    });
+    taAccount.courseRoles.push({
+      course: course._id.toString(),
+      courseRole: CourseRole.TA,
+    });
+    await taAccount.save();
 
     const team = await TeamModel.create({
       teamSet: teamSetId,
@@ -454,17 +489,16 @@ describe('assessmentAssignmentSetService (individual granularity)', () => {
   let accountId: string;
 
   beforeEach(async () => {
-    const account = new AccountModel({
+    const facultyAccount = new AccountModel({
       email: 'faculty@example.com',
       password: 'password',
-      role: 'Faculty member',
+      crispRole: CrispRole.Faculty,
       user: new mongoose.Types.ObjectId(),
       isApproved: true,
     });
-    await account.save();
-    accountId = account._id;
+    await facultyAccount.save();
+    accountId = facultyAccount._id;
 
-    // 1) Create mock course
     const course = await CourseModel.create({
       name: 'Advanced Computer Science',
       code: 'CS201',
@@ -473,8 +507,12 @@ describe('assessmentAssignmentSetService (individual granularity)', () => {
       courseType: 'Normal',
     });
     await course.save();
+    facultyAccount.courseRoles.push({
+      course: course._id.toString(),
+      courseRole: CourseRole.Faculty,
+    })
+    await facultyAccount.save();
 
-    // 2) Create mock internal assessment with granularity=individual
     const individualAssessment = await InternalAssessmentModel.create({
       course: course._id,
       assessmentName: 'Individual Assessment',
@@ -489,26 +527,47 @@ describe('assessmentAssignmentSetService (individual granularity)', () => {
     individualAssessmentId = individualAssessment._id;
     await individualAssessment.save();
 
-    // 3) Create mock teamSet
     const ts = await TeamSetModel.create({
       course: course._id,
       name: 'Individual Team Set',
     });
     teamSetId = ts._id;
 
-    // 4) Create multiple users (this time we treat them as "members" of a single team, or multiple teams)
     const user1 = await UserModel.create({
       identifier: 'u001',
       name: 'User One',
     });
+    const studentAccount1 = new AccountModel({
+      email: 'student1@example.com',
+      password: 'password',
+      crispRole: CrispRole.Normal,
+      user: user1._id,
+      isApproved: true,
+    });
+    studentAccount1.courseRoles.push({
+      course: course._id.toString(),
+      courseRole: CourseRole.Student,
+    });
+    await studentAccount1.save();
     const user2 = await UserModel.create({
       identifier: 'u002',
       name: 'User Two',
     });
+    const studentAccount2 = new AccountModel({
+      email: 'student2@example.com',
+      password: 'password',
+      crispRole: CrispRole.Normal,
+      user: user2._id,
+      isApproved: true,
+    });
+    studentAccount2.courseRoles.push({
+      course: course._id.toString(),
+      courseRole: CourseRole.Student,
+    });
+    await studentAccount2.save();
     user1Id = user1._id;
     user2Id = user2._id;
 
-    // Create a single "team" with those 2 members
     const team = await TeamModel.create({
       teamSet: teamSetId,
       number: 100,
@@ -517,12 +576,23 @@ describe('assessmentAssignmentSetService (individual granularity)', () => {
     ts.teams.push(team._id);
     await ts.save();
 
-    // 5) Create a TA user
     const ta = await UserModel.create({
       identifier: 'TA-123',
       name: 'Individual Granularity TA',
     });
     taId = ta._id;
+    const taAccount = new AccountModel({
+      email: 'ta@example.com',
+      password: 'password',
+      crispRole: CrispRole.Normal,
+      user: ta._id,
+      isApproved: true,
+    });
+    taAccount.courseRoles.push({
+      course: course._id.toString(),
+      courseRole: CourseRole.TA,
+    });
+    await taAccount.save();
 
     // For an "individual" scenario, we typically do not store a single TA on the team object
     // But let's do it anyway to test assignedUsers

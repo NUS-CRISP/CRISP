@@ -391,8 +391,8 @@ export const getUnmarkedAssignmentsByTAId = async (
   if (!assessment) throw new NotFoundError('Assessment not found');
   if (
     account.courseRoles.filter(
-      r => r[0] === assessment.course.toString()
-    )[0][1] === CourseRole.Student
+      r => r.course === assessment.course.toString()
+    )[0].courseRole === CourseRole.Student
   ) {
     return []; // For the sake of notifications, this returns an empty array.
   }

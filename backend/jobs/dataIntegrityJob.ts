@@ -57,23 +57,23 @@ async function checkCourseRoles() {
         continue; // Not fixing it here cuz this is indicative of a larger issue at hand
       }
       const courseRoleTuple = studentAccount.courseRoles.filter(
-        r => r[0] === course._id.toString()
+        r => r.course === course._id.toString()
       );
       if (courseRoleTuple.length === 0) {
         console.warn(
           `Student account with id ${studentAccount._id} does not have course role for course ${course._id}. Fixing...`
         );
-        studentAccount.courseRoles.push([
-          course._id.toString(),
-          CourseRole.Student,
-        ]);
+        studentAccount.courseRoles.push({
+          course: course._id.toString(),
+          courseRole: CourseRole.Student,
+        });
         await studentAccount.save();
       }
-      if (courseRoleTuple[0][1] !== CourseRole.Student) {
+      if (courseRoleTuple[0].courseRole !== CourseRole.Student) {
         console.warn(
           `Student account with id ${studentAccount._id} does not have correct course role for course ${course._id}. Fixing...`
         );
-        courseRoleTuple[0][1] = CourseRole.Student;
+        courseRoleTuple[0].courseRole = CourseRole.Student;
         await studentAccount.save();
       }
     }
@@ -87,20 +87,23 @@ async function checkCourseRoles() {
         continue; // Not fixing it here cuz this is indicative of a larger issue at hand
       }
       const courseRoleTuple = TAAccount.courseRoles.filter(
-        r => r[0] === course._id.toString()
+        r => r.course === course._id.toString()
       );
       if (courseRoleTuple.length === 0) {
         console.warn(
           `TA account with id ${TAAccount._id} does not have course role for course ${course._id}. Fixing...`
         );
-        TAAccount.courseRoles.push([course._id.toString(), CourseRole.TA]);
+        TAAccount.courseRoles.push({
+          course: course._id.toString(),
+          courseRole: CourseRole.TA
+        });
         await TAAccount.save();
       }
-      if (courseRoleTuple[0][1] !== CourseRole.TA) {
+      if (courseRoleTuple[0].courseRole !== CourseRole.TA) {
         console.warn(
           `TA account with id ${TAAccount._id} does not have correct course role for course ${course._id}. Fixing...`
         );
-        courseRoleTuple[0][1] = CourseRole.TA;
+        courseRoleTuple[0].courseRole = CourseRole.TA;
         await TAAccount.save();
       }
     }
@@ -114,23 +117,23 @@ async function checkCourseRoles() {
         continue; // Not fixing it here cuz this is indicative of a larger issue at hand
       }
       const courseRoleTuple = facultyAccount.courseRoles.filter(
-        r => r[0] === course._id.toString()
+        r => r.course === course._id.toString()
       );
       if (courseRoleTuple.length === 0) {
         console.warn(
           `Faculty account with id ${facultyAccount._id} does not have course role for course ${course._id}. Fixing...`
         );
-        facultyAccount.courseRoles.push([
-          course._id.toString(),
-          CourseRole.Faculty,
-        ]);
+        facultyAccount.courseRoles.push({
+          course: course._id.toString(),
+          courseRole: CourseRole.Faculty,
+        });
         await facultyAccount.save();
       }
-      if (courseRoleTuple[0][1] !== CourseRole.Faculty) {
+      if (courseRoleTuple[0].courseRole !== CourseRole.Faculty) {
         console.warn(
           `Faculty account with id ${facultyAccount._id} does not have correct course role for course ${course._id}. Fixing...`
         );
-        courseRoleTuple[0][1] = CourseRole.Faculty;
+        courseRoleTuple[0].courseRole = CourseRole.Faculty;
         await facultyAccount.save();
       }
     }

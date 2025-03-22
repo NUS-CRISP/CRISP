@@ -14,6 +14,7 @@ import {
 } from '../../services/accountService';
 import { BadRequestError, NotFoundError } from '../../services/errors';
 import UserModel from '@models/User';
+import CrispRole from '@shared/types/auth/CrispRole';
 
 let mongo: MongoMemoryServer;
 
@@ -42,7 +43,7 @@ const testAccountDetails = {
   name: 'Test User',
   email: 'test@example.com',
   password: 'password123',
-  role: 'Teaching assistant',
+  crispRole: CrispRole.Normal,
 };
 
 async function createTestAccount(changes = {}) {
@@ -52,7 +53,7 @@ async function createTestAccount(changes = {}) {
     accountData.name,
     accountData.email,
     accountData.password,
-    accountData.role
+    accountData.crispRole
   );
   return await AccountModel.findOne({ email: accountData.email });
 }
@@ -61,7 +62,7 @@ async function createTestAccountWithoutPassword(changes = {}) {
   const accountData = { ...testAccountDetails, ...changes };
   const newAccount = new AccountModel({
     email: accountData.email,
-    role: accountData.role,
+    crispRole: accountData.crispRole,
     isApproved: false,
   });
 
@@ -92,7 +93,7 @@ describe('accountService', () => {
           testAccountDetails.name,
           testAccountDetails.email,
           testAccountDetails.password,
-          testAccountDetails.role
+          testAccountDetails.crispRole
         )
       ).rejects.toThrow(BadRequestError);
     });
@@ -106,7 +107,7 @@ describe('accountService', () => {
         testAccountDetails.name,
         testAccountDetails.email,
         testAccountDetails.password,
-        testAccountDetails.role
+        testAccountDetails.crispRole
       );
       const savedAccount = await AccountModel.findOne({
         email: testAccountDetails.email,
@@ -415,7 +416,7 @@ describe('getAllTrialAccounts', () => {
     await createTestAccount({
       email: 'pending@example.com',
       identifier: 'testIdentifier1',
-      role: 'Trial User',
+      crispRole: CrispRole.TrialUser,
     });
 
     const pendingAccounts = await getAllTrialAccounts();

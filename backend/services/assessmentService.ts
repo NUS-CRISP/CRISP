@@ -55,9 +55,9 @@ export const getAssessmentById = async (
     throw new NotFoundError('Assessment not found');
   }
   const courseRoleTuple = account.courseRoles.filter(
-    r => r[0] === assessment.course.toString()
+    r => r.course === assessment.course.toString()
   );
-  if (courseRoleTuple.length > 0 && courseRoleTuple[0][1] === CourseRoles.TA) {
+  if (courseRoleTuple.length > 0 && courseRoleTuple[0].courseRole === CourseRoles.TA) {
     const userId = account.user;
     assessment.results = assessment.results.filter(result =>
       result.marker?.equals(userId)

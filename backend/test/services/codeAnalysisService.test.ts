@@ -9,6 +9,8 @@ import { NotFoundError } from '../../services/errors';
 import TeamModel from '@models/Team';
 import TeamSetModel from '@models/TeamSet';
 import TeamDataModel from '@models/TeamData';
+import CrispRole from '@shared/types/auth/CrispRole';
+import CourseRole from '@shared/types/auth/CourseRole';
 
 let mongo: MongoMemoryServer;
 
@@ -55,7 +57,7 @@ describe('codeAnalysisService', () => {
     const mockFacultyAccount = new AccountModel({
       email: 'test@example.com',
       password: 'hashedpassword',
-      role: 'Faculty member',
+      crispRole: CrispRole.Faculty,
       user: mockFacultyUser._id,
       isApproved: true,
     });
@@ -71,7 +73,7 @@ describe('codeAnalysisService', () => {
     const mockTAAccount = new AccountModel({
       email: 'mockTA@example.com',
       password: 'hashedpassword',
-      role: 'Teaching assistant',
+      crispRole: CrispRole.Normal,
       user: mockTAUser._id,
       isApproved: true,
     });
@@ -92,6 +94,16 @@ describe('codeAnalysisService', () => {
       installationId: 12345,
     });
     await mockCourse.save();
+    mockTAAccount.courseRoles.push({
+      course: mockCourse._id.toString(),
+      courseRole: CourseRole.TA
+    });
+    await mockTAAccount.save();
+    mockFacultyAccount.courseRoles.push({
+      course: mockCourse._id.toString(),
+      courseRole: CourseRole.Faculty
+    });
+    await mockFacultyAccount.save();
 
     mockFacultyAccountId = mockFacultyAccount._id.toString();
     mockFacultyUserId = mockFacultyUser._id.toString();
@@ -280,7 +292,7 @@ describe('codeAnalysisService', () => {
       const adminAccount = new AccountModel({
         email: 'test1@example.com',
         password: 'hashedpassword',
-        role: 'admin',
+        crispRole: CrispRole.Admin,
         user: adminUser._id,
         isApproved: true,
       });
@@ -323,7 +335,7 @@ describe('codeAnalysisService', () => {
       const unauthorizedFacultyAccount = new AccountModel({
         email: 'test1@example.com',
         password: 'hashedpassword',
-        role: 'Faculty member',
+        crispRole: CrispRole.Faculty,
         user: unauthorizedFacultyUser._id,
         isApproved: true,
       });
@@ -408,6 +420,18 @@ describe('codeAnalysisService', () => {
         installationId: 12345,
       });
       await courseWithoutTeamSets.save();
+      const mockTAAccount = await AccountModel.findById(mockTAAccountId);
+      mockTAAccount!.courseRoles.push({
+        course: courseWithoutTeamSets._id.toString(),
+        courseRole: CourseRole.TA,
+      })
+      await mockTAAccount!.save();
+      const mockFacultyAccount = await AccountModel.findById(mockFacultyAccountId);
+      mockFacultyAccount!.courseRoles.push({
+        course: courseWithoutTeamSets._id.toString(),
+        courseRole: CourseRole.Faculty,
+      })
+      await mockFacultyAccount!.save();
 
       await expect(
         codeAnalysisService.getAuthorizedCodeAnalysisDataByCourse(
@@ -432,6 +456,18 @@ describe('codeAnalysisService', () => {
         installationId: 12345,
       });
       await courseWithoutTeams.save();
+      const mockTAAccount = await AccountModel.findById(mockTAAccountId);
+      mockTAAccount!.courseRoles.push({
+        course: courseWithoutTeams._id.toString(),
+        courseRole: CourseRole.TA,
+      })
+      await mockTAAccount!.save();
+      const mockFacultyAccount = await AccountModel.findById(mockFacultyAccountId);
+      mockFacultyAccount!.courseRoles.push({
+        course: courseWithoutTeams._id.toString(),
+        courseRole: CourseRole.Faculty,
+      })
+      await mockFacultyAccount!.save();
 
       const teamSet = new TeamSetModel({
         course: courseWithoutTeams._id,
@@ -466,6 +502,18 @@ describe('codeAnalysisService', () => {
         installationId: 345,
       });
       await courseWithoutCodeAnalysisData.save();
+      const mockTAAccount = await AccountModel.findById(mockTAAccountId);
+      mockTAAccount!.courseRoles.push({
+        course: courseWithoutCodeAnalysisData._id.toString(),
+        courseRole: CourseRole.TA,
+      })
+      await mockTAAccount!.save();
+      const mockFacultyAccount = await AccountModel.findById(mockFacultyAccountId);
+      mockFacultyAccount!.courseRoles.push({
+        course: courseWithoutCodeAnalysisData._id.toString(),
+        courseRole: CourseRole.Faculty,
+      })
+      await mockFacultyAccount!.save();
 
       const teamDataA = new TeamDataModel({
         teamId: 123,

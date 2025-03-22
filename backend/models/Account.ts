@@ -7,6 +7,19 @@ export interface Account extends Omit<SharedAccount, 'user'>, Document {
   user: Types.ObjectId;
 }
 
+const CourseRoleTupleSchema = new mongoose.Schema(
+  {
+    course: { type: String, required: true },
+    courseRole: {
+      type: String,
+      enum: Object.values(CourseRole),
+      default: CourseRole.TA,
+    },
+  },
+  { _id: false }
+);
+
+
 const accountSchema = new Schema<Account>({
   email: {
     type: String,
@@ -48,16 +61,7 @@ const accountSchema = new Schema<Account>({
     enum: CrispRole,
     default: CrispRole.Normal,
   },
-  courseRoles: [
-    {
-      type: Schema.Types.ObjectId,
-    },
-    {
-      type: String,
-      enum: CourseRole,
-      default: CourseRole.TA,
-    },
-  ],
+  courseRoles: [CourseRoleTupleSchema],
   isApproved: {
     type: Boolean,
     default: false,

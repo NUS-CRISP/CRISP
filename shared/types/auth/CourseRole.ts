@@ -5,6 +5,9 @@ const CourseRole = {
 } as const;
 
 export type CourseRole = (typeof CourseRole)[keyof typeof CourseRole];
-export type CourseRoleTuple = [string, CourseRole];
+export type CourseRoleTuple = {
+  course: string;
+  courseRole: CourseRole;
+};
 
 export default CourseRole;

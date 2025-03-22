@@ -60,7 +60,10 @@ export const createNewCourse = async (courseData: any, accountId: string) => {
 
   const course = await CourseModel.create(courseFields);
   course.faculty.push(user._id);
-  account.courseRoles.push([course._id.toString(), CourseRole.Faculty]);
+  account.courseRoles.push({
+    course: course._id.toString(),
+    courseRole: CourseRole.Faculty
+  });
   await account.save();
   if (account.crispRole !== CrispRole.Admin) {
     const adminAccount = await AccountModel.findOne({
@@ -175,11 +178,11 @@ export const addStudentsToCourse = async (
         continue;
       }
       const courseRoleTuple = studentAccount.courseRoles.filter(
-        r => r[0] === courseId
+        r => r.course === courseId
       );
       if (
         ((courseRoleTuple.length === 0 ||
-          courseRoleTuple[0][1] !== CourseRole.Student) &&
+          courseRoleTuple[0].courseRole !== CourseRole.Student) &&
           studentAccount.crispRole !== CrispRole.TrialUser) ||
         studentData.name.toUpperCase() !== student.name.toUpperCase() ||
         studentData.email.toLowerCase() !== studentAccount.email.toLowerCase() // Check is case-insensitive to handle email case-insensitivity cases
@@ -190,10 +193,10 @@ export const addStudentsToCourse = async (
     }
     if (!student.enrolledCourses.includes(course._id)) {
       student.enrolledCourses.push(course._id);
-      studentAccount.courseRoles.push([
-        course._id.toString(),
-        CourseRole.Student,
-      ]);
+      studentAccount.courseRoles.push({
+        course: course._id.toString(),
+        courseRole: CourseRole.Student,
+      });
     }
     await student.save();
     await studentAccount.save();
@@ -223,11 +226,11 @@ export const updateStudentsInCourse = async (
       continue;
     }
     const courseRoleTuple = studentAccount.courseRoles.filter(
-      r => r[0] === courseId
+      r => r.course === courseId
     );
     if (
       courseRoleTuple.length === 0 ||
-      courseRoleTuple[0][1] !== CourseRole.Student
+      courseRoleTuple[0].courseRole !== CourseRole.Student
     ) {
       continue;
     }
@@ -297,11 +300,11 @@ export const addTAsToCourse = async (courseId: string, TADataList: any[]) => {
         continue;
       }
       const courseRoleTuple = TAAccount.courseRoles.filter(
-        r => r[0] === courseId
+        r => r.course === courseId
       );
       if (
         ((courseRoleTuple.length === 0 ||
-          courseRoleTuple[0][1] !== CourseRole.TA) &&
+          courseRoleTuple[0].courseRole !== CourseRole.TA) &&
           TAAccount.crispRole !== CrispRole.TrialUser) ||
         TAData.name.toUpperCase() !== TA.name.toUpperCase() ||
         TAData.email.toLowerCase() !== TAAccount.email.toLowerCase()
@@ -312,7 +315,10 @@ export const addTAsToCourse = async (courseId: string, TADataList: any[]) => {
     }
     if (!TA.enrolledCourses.includes(course._id)) {
       TA.enrolledCourses.push(course._id);
-      TAAccount?.courseRoles.push([course._id.toString(), CourseRole.TA]);
+      TAAccount?.courseRoles.push({
+        course: course._id.toString(),
+        courseRole: CourseRole.TA
+      });
     }
     await TA.save();
     await TAAccount.save();
@@ -342,11 +348,11 @@ export const updateTAsInCourse = async (
       continue;
     }
     const courseRoleTuple = TAAccount.courseRoles.filter(
-      r => r[0] === courseId
+      r => r.course === courseId
     );
     if (
       courseRoleTuple.length === 0 ||
-      courseRoleTuple[0][1] !== CourseRole.TA
+      courseRoleTuple[0].courseRole !== CourseRole.TA
     ) {
       continue;
     }
@@ -428,11 +434,11 @@ export const addFacultyToCourse = async (
         continue;
       }
       const courseRoleTuple = facultyAccount.courseRoles.filter(
-        r => r[0] === courseId
+        r => r.course === courseId
       );
       if (
         ((courseRoleTuple.length === 0 ||
-          courseRoleTuple[0][1] !== CourseRole.Faculty) &&
+          courseRoleTuple[0].courseRole !== CourseRole.Faculty) &&
           facultyAccount.crispRole !== CrispRole.TrialUser) ||
         facultyData.name.toUpperCase() !== facultyMember.name.toUpperCase() ||
         facultyData.email.toLowerCase() !== facultyAccount.email.toLowerCase()
@@ -444,7 +450,10 @@ export const addFacultyToCourse = async (
     }
     if (!facultyMember.enrolledCourses.includes(course._id)) {
       facultyMember.enrolledCourses.push(course._id);
-      facultyAccount.courseRoles.push([courseId, CourseRole.Faculty]);
+      facultyAccount.courseRoles.push({
+        course: courseId,
+        courseRole: CourseRole.Faculty
+      });
     }
     await facultyMember.save();
     await facultyAccount.save();
@@ -478,11 +487,11 @@ export const updateFacultyInCourse = async (
       continue;
     }
     const courseRoleTuple = facultyAccount.courseRoles.filter(
-      r => r[0] === courseId
+      r => r.course === courseId
     );
     if (
       (courseRoleTuple.length === 0 ||
-        courseRoleTuple[0][1] !== CourseRole.Faculty) &&
+        courseRoleTuple[0].courseRole !== CourseRole.Faculty) &&
       facultyAccount.crispRole !== CrispRole.Faculty &&
       facultyAccount.crispRole !== CrispRole.Admin
     ) {
@@ -643,9 +652,9 @@ export const getTeamSetsFromCourse = async (
   if (!course) {
     throw new NotFoundError('Course not found');
   }
-  const courseRoleTuple = account.courseRoles.filter(r => r[0] === courseId);
+  const courseRoleTuple = account.courseRoles.filter(r => r.course === courseId);
   if (courseRoleTuple.length === 0) throw new BadRequestError('Unauthorized');
-  const role = courseRoleTuple[0][1];
+  const role = courseRoleTuple[0].courseRole;
   if (role === CourseRole.TA) {
     const userId = account.user;
     course.teamSets.forEach(
@@ -808,9 +817,9 @@ export const getProjectManagementBoardFromCourse = async (
     throw new NotFoundError('Course not found');
   }
 
-  const courseRoleTuple = account.courseRoles.filter(r => r[0] === courseId);
+  const courseRoleTuple = account.courseRoles.filter(r => r.course === courseId);
   if (courseRoleTuple.length === 0) throw new BadRequestError('Unauthorized');
-  const role = courseRoleTuple[0][1];
+  const role = courseRoleTuple[0].courseRole;
   if (role === CourseRole.TA) {
     const userId = account.user;
     course.teamSets.forEach(
