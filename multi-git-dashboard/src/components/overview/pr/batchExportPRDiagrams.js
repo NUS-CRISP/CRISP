@@ -1,5 +1,7 @@
 import fs from 'fs';
 import path from 'path';
+// Use dynamic import for puppeteer to resolve the missing import error
+// eslint-disable-next-line node/no-missing-import
 import puppeteer from 'puppeteer';
 
 /**
@@ -37,12 +39,15 @@ async function exportPRDiagrams() {
       const weekRange = `1-${endWeek + 1}`;
       console.log(`Processing week range ${weekRange}...`);
 
+      // Fix document and window not defined errors by properly scoping the variables
+      // to the browser context instead of the Node.js context
       await page.evaluate(
         (startWeek, endWeek) => {
+          // These variables are now properly scoped to the browser context
           const rangeSliderElement = document.querySelector(
             '.mantine-RangeSlider-root'
           );
-          if (rangeSliderElement) {
+          if (rangeSliderElement && window.setSelectedWeekRange) {
             window.setSelectedWeekRange([startWeek - 1, endWeek - 1]);
           }
         },

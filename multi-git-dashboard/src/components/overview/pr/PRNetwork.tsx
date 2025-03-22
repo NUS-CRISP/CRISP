@@ -14,6 +14,8 @@ interface PREdge {
   target: string | PRNode;
   weight: number;
   status: string;
+  offsetFactor?: number;
+  directionFactor?: number;
 }
 
 interface PRGraphProps {
@@ -54,7 +56,7 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
         'link',
         d3
           .forceLink(filteredData.edges)
-          .id((d: any) => d.id)
+          .id((d: PRNode) => d.id)
           .distance(300)
       )
       .force('charge', d3.forceManyBody().strength(-300))
@@ -90,10 +92,10 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
       .attr('font-weight', 'bold')
       .text('Interaction Types');
 
-    statusTypes.forEach((item, i) => {
+    statusTypes.forEach((item, _index) => {
       const legendItem = legend
         .append('g')
-        .attr('transform', `translate(-15, ${i * 25 + 20})`);
+        .attr('transform', `translate(-15, ${_index * 25 + 20})`);
 
       legendItem
         .append('line')
@@ -153,7 +155,8 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
       .attr('stroke-width', d => strokeWidthScale(d.weight))
       .attr('fill', 'none')
       .attr('marker-end', d => `url(#arrow-${d.status})`)
-      .on('mouseover', function (event, d) {
+      .on('mouseover', (event: MouseEvent, d: PREdge) => {
+        const currentTarget = event.currentTarget as SVGPathElement;
         tooltip
           .style('opacity', 1)
           .html(
@@ -162,7 +165,7 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
           .style('left', `${event.offsetX + 10}px`)
           .style('top', `${event.offsetY + 10}px`);
       })
-      .on('mousemove', function (event) {
+      .on('mousemove', (event: MouseEvent) => {
         tooltip
           .style('left', `${event.offsetX + 10}px`)
           .style('top', `${event.offsetY + 10}px`);
@@ -211,7 +214,7 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
       .text(d => d.id);
 
     simulation.on('tick', () => {
-      link.attr('d', (d: any) => {
+      link.attr('d', (d: PREdge) => {
         const x1 = (d.source as PRNode).x!;
         const y1 = (d.source as PRNode).y!;
         const x2 = (d.target as PRNode).x!;
@@ -288,16 +291,16 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
       });
 
       Object.entries(statusGroups).forEach(
-        ([status, statusEdges], statusIndex) => {
-          statusEdges.forEach((edge, i) => {
-            // @ts-expect-error
+        ([_status, statusEdges], statusIndex) => {
+          statusEdges.forEach(edge => {
+            // @ts-expect-error Adding custom property offsetFactor to edge which is not in the original type definition
             edge.offsetFactor = statusIndex;
 
             if (isBidirectional) {
-              // @ts-expect-error
+              // @ts-expect-error Adding custom property directionFactor to edge which is not in the original type definition
               edge.directionFactor = sourceId < targetId ? 1 : -1;
             } else {
-              // @ts-expect-error
+              // @ts-expect-error Adding custom property directionFactor to edge which is not in the original type definition
               edge.directionFactor = 1;
             }
           });

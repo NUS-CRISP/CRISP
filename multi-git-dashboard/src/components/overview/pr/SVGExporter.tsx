@@ -1,8 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   Button,
   Box,
-  Group,
   Stack,
   Text,
   Progress,
@@ -11,7 +10,6 @@ import {
   Switch,
   Select,
 } from '@mantine/core';
-import dayjs from 'dayjs';
 
 // Component types we want to export
 const EXPORT_TYPES = {
@@ -20,11 +18,6 @@ const EXPORT_TYPES = {
 };
 
 const SVGExporter = ({
-  team,
-  teamData,
-  teamDatas,
-  dateUtils,
-  profileGetter,
   onExportStart,
   onExportProgress,
   onExportComplete,
@@ -58,7 +51,7 @@ const SVGExporter = ({
       ? Object.values(EXPORT_TYPES)
       : [exportType];
 
-    let totalExports = weekRangesToExport.length * typesToExport.length;
+    const totalExports = weekRangesToExport.length * typesToExport.length;
     let completedExports = 0;
 
     for (const type of typesToExport) {
