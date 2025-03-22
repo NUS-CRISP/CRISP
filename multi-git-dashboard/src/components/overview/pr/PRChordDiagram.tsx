@@ -22,16 +22,43 @@ interface PRChordDiagramProps {
   graphData: PRGraphData;
 }
 
+// Extended ChordGroup interface with optional angle property
 interface ChordGroup {
   startAngle: number;
   endAngle: number;
   value: number;
   index: number;
+  angle?: number; // Adding optional angle property to fix TypeScript error
 }
 
 interface ArcChordGroup extends ChordGroup {
   innerRadius: number;
   outerRadius: number;
+}
+
+// Interface for ribbon data
+interface RibbonData {
+  source: {
+    startAngle: number;
+    endAngle: number;
+    radius: number;
+    index: number;
+  };
+  target: {
+    startAngle: number;
+    endAngle: number;
+    radius: number;
+    index: number;
+  };
+}
+
+// Type for arc usage tracking
+interface ArcUsage {
+  [key: number]: {
+    startAngle: number;
+    endAngle: number;
+    used: number;
+  };
 }
 
 const processGraphDataForChord = (graphData: PRGraphData): PRGraphData => {
@@ -289,7 +316,7 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
 
     // arc and ribbon generators
     const arc = d3
-      .arc<ChordGroup>()
+      .arc<ArcChordGroup>()
       .innerRadius(innerRadius)
       .outerRadius(outerRadius);
 
@@ -323,7 +350,7 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
         };
         return arc(arcData);
       })
-      .on('mouseover', (event, d) => {
+      .on('mouseover', function (event, d) {
         const nodeName = top6Nodes[d.index].id;
 
         tooltip.style('visibility', 'visible').html(`
@@ -333,34 +360,38 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
             <div>Total interactions: ${sortedTotalInteractions[d.index]}</div>
           `);
       })
-      .on('mousemove', event => {
+      .on('mousemove', function (event) {
         tooltip
           .style('top', event.pageY - 10 + 'px')
           .style('left', event.pageX + 10 + 'px');
       })
-      .on('mouseout', () => {
+      .on('mouseout', function () {
         tooltip.style('visibility', 'hidden');
       });
 
     groups
       .append('text')
-      .each(d => {
-        // @ts-expect-error Adding custom property 'angle' to D3's arc datum which is not in original type definition
-        d.angle = (d.startAngle + d.endAngle) / 2;
+      .each(function (d) {
+        // Add angle property to d
+        const dWithAngle = d as ChordGroup;
+        dWithAngle.angle = (dWithAngle.startAngle + dWithAngle.endAngle) / 2;
       })
       .attr('dy', '0.35em')
-      .attr(
-        'transform',
-        d => `
-        rotate(${(d.angle * 180) / Math.PI - 90})
-        translate(${outerRadius + 10})
-        ${d.angle > Math.PI ? 'rotate(180)' : ''}
-      `
-      )
-      .attr('text-anchor', d => (d.angle > Math.PI ? 'end' : null))
+      .attr('transform', function (d) {
+        const dWithAngle = d as ChordGroup;
+        return `
+          rotate(${((dWithAngle.angle || 0) * 180) / Math.PI - 90})
+          translate(${outerRadius + 10})
+          ${(dWithAngle.angle || 0) > Math.PI ? 'rotate(180)' : ''}
+        `;
+      })
+      .attr('text-anchor', function (d) {
+        const dWithAngle = d as ChordGroup;
+        return (dWithAngle.angle || 0) > Math.PI ? 'end' : null;
+      })
       .text(d => top6Nodes[d.index].id);
 
-    const arcUsage = {};
+    const arcUsage: ArcUsage = {};
     top6Nodes.forEach((_, i) => {
       arcUsage[i] = {
         startAngle: chords.groups[i].startAngle,
@@ -445,7 +476,7 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
       .attr('fill', d => colorScale(top6Nodes[d.source].id))
       .attr('stroke', 'white')
       .attr('stroke-width', 0.5)
-      .on('mouseover', (event, d) => {
+      .on('mouseover', function (event, d) {
         const sourceName = top6Nodes[d.source].id;
         const targetName = top6Nodes[d.target].id;
 
@@ -454,12 +485,12 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
             <div>Reviews: ${d.value}</div>
           `);
       })
-      .on('mousemove', event => {
+      .on('mousemove', function (event) {
         tooltip
           .style('top', event.pageY - 10 + 'px')
           .style('left', event.pageX + 10 + 'px');
       })
-      .on('mouseout', () => {
+      .on('mouseout', function () {
         tooltip.style('visibility', 'hidden');
       });
 
