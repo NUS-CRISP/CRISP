@@ -36,22 +36,6 @@ interface ArcChordGroup extends ChordGroup {
   outerRadius: number;
 }
 
-// Interface for ribbon data
-interface RibbonData {
-  source: {
-    startAngle: number;
-    endAngle: number;
-    radius: number;
-    index: number;
-  };
-  target: {
-    startAngle: number;
-    endAngle: number;
-    radius: number;
-    index: number;
-  };
-}
-
 // Type for arc usage tracking
 interface ArcUsage {
   [key: number]: {
@@ -350,7 +334,7 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
         };
         return arc(arcData);
       })
-      .on('mouseover', function (event, d) {
+      .on('mouseover', (event, d) => {
         const nodeName = top6Nodes[d.index].id;
 
         tooltip.style('visibility', 'visible').html(`
@@ -360,24 +344,24 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
             <div>Total interactions: ${sortedTotalInteractions[d.index]}</div>
           `);
       })
-      .on('mousemove', function (event) {
+      .on('mousemove', event => {
         tooltip
           .style('top', event.pageY - 10 + 'px')
           .style('left', event.pageX + 10 + 'px');
       })
-      .on('mouseout', function () {
+      .on('mouseout', () => {
         tooltip.style('visibility', 'hidden');
       });
 
     groups
       .append('text')
-      .each(function (d) {
+      .each(d => {
         // Add angle property to d
         const dWithAngle = d as ChordGroup;
         dWithAngle.angle = (dWithAngle.startAngle + dWithAngle.endAngle) / 2;
       })
       .attr('dy', '0.35em')
-      .attr('transform', function (d) {
+      .attr('transform', d => {
         const dWithAngle = d as ChordGroup;
         return `
           rotate(${((dWithAngle.angle || 0) * 180) / Math.PI - 90})
@@ -385,7 +369,7 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
           ${(dWithAngle.angle || 0) > Math.PI ? 'rotate(180)' : ''}
         `;
       })
-      .attr('text-anchor', function (d) {
+      .attr('text-anchor', d => {
         const dWithAngle = d as ChordGroup;
         return (dWithAngle.angle || 0) > Math.PI ? 'end' : null;
       })
@@ -476,7 +460,7 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
       .attr('fill', d => colorScale(top6Nodes[d.source].id))
       .attr('stroke', 'white')
       .attr('stroke-width', 0.5)
-      .on('mouseover', function (event, d) {
+      .on('mouseover', (event, d) => {
         const sourceName = top6Nodes[d.source].id;
         const targetName = top6Nodes[d.target].id;
 
@@ -485,12 +469,12 @@ const PRChordDiagram: React.FC<PRChordDiagramProps> = ({ graphData }) => {
             <div>Reviews: ${d.value}</div>
           `);
       })
-      .on('mousemove', function (event) {
+      .on('mousemove', event => {
         tooltip
           .style('top', event.pageY - 10 + 'px')
           .style('left', event.pageX + 10 + 'px');
       })
-      .on('mouseout', function () {
+      .on('mouseout', () => {
         tooltip.style('visibility', 'hidden');
       });
 
