@@ -180,11 +180,9 @@ const SVGExporter = ({ onExportStart, onExportProgress, onExportComplete }) => {
   };
 
   return (
-    <Stack spacing="md">
+    <Stack>
       <Box>
-        <Text size="xl" weight={700}>
-          SVG Diagram Exporter
-        </Text>
+        <Text size="xl">SVG Diagram Exporter</Text>
         <Text size="sm" color="dimmed">
           Export week-by-week PR diagrams as PNG files
         </Text>
@@ -242,10 +240,8 @@ const SVGExporter = ({ onExportStart, onExportProgress, onExportComplete }) => {
 
         <Tabs.Panel value="preview" pt="md">
           <Box>
-            <Text weight={500} mb={10}>
-              Week Ranges to Export:
-            </Text>
-            <Stack spacing={0}>
+            <Text mb={10}>Week Ranges to Export:</Text>
+            <Stack>
               {weekRangesToExport.map((range, index) => (
                 <Text key={index} size="sm">
                   Weeks {range[0] + 1}-{range[1] + 1}
@@ -285,7 +281,7 @@ const SVGExporter = ({ onExportStart, onExportProgress, onExportComplete }) => {
 
 const TextInput = ({ label, placeholder, value, onChange, disabled }) => (
   <Box>
-    <Text size="sm" weight={500} mb={5}>
+    <Text size="sm" mb={5}>
       {label}
     </Text>
     <input

@@ -27,7 +27,7 @@ const Hero = () => {
                 fontWeight: '1000',
               }}
             >
-              <Stack spacing={30}>
+              <Stack>
                 <Text component="span" inherit>
                   Code.
                 </Text>
