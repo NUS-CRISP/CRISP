@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 
-interface PRNode {
+// Extend the SimulationNodeDatum interface from D3
+interface PRNode extends d3.SimulationNodeDatum {
   id: string;
   fx?: number | null;
   fy?: number | null;
@@ -9,7 +10,8 @@ interface PRNode {
   y?: number;
 }
 
-interface PREdge {
+// Define the SimulationLinkDatum for edges
+interface PREdge extends d3.SimulationLinkDatum<PRNode> {
   source: string | PRNode;
   target: string | PRNode;
   weight: number;
@@ -51,12 +53,12 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
     const tooltip = d3.select(tooltipRef.current);
 
     const simulation = d3
-      .forceSimulation(filteredData.nodes)
+      .forceSimulation<PRNode>(filteredData.nodes)
       .force(
         'link',
         d3
-          .forceLink(filteredData.edges)
-          .id((d: PRNode) => d.id)
+          .forceLink<PRNode, PREdge>(filteredData.edges)
+          .id(d => d.id)
           .distance(300)
       )
       .force('charge', d3.forceManyBody().strength(-300))
@@ -156,7 +158,6 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
       .attr('fill', 'none')
       .attr('marker-end', d => `url(#arrow-${d.status})`)
       .on('mouseover', (event: MouseEvent, d: PREdge) => {
-        // const currentTarget = event.currentTarget as SVGPathElement;
         tooltip
           .style('opacity', 1)
           .html(
@@ -215,10 +216,13 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
 
     simulation.on('tick', () => {
       link.attr('d', (d: PREdge) => {
-        const x1 = (d.source as PRNode).x!;
-        const y1 = (d.source as PRNode).y!;
-        const x2 = (d.target as PRNode).x!;
-        const y2 = (d.target as PRNode).y!;
+        const source = d.source as PRNode;
+        const target = d.target as PRNode;
+
+        const x1 = source.x!;
+        const y1 = source.y!;
+        const x2 = target.x!;
+        const y2 = target.y!;
 
         const dx = x2 - x1;
         const dy = y2 - y1;
@@ -292,14 +296,11 @@ const PRGraph: React.FC<PRGraphProps> = ({ graphData }) => {
 
       Object.values(statusGroups).forEach((statusEdges, statusIndex) => {
         statusEdges.forEach(edge => {
-          // @ts-expect-error Adding custom property offsetFactor to edge which is not in the original type definition
           edge.offsetFactor = statusIndex;
 
           if (isBidirectional) {
-            // @ts-expect-error Adding custom property directionFactor to edge which is not in the original type definition
             edge.directionFactor = sourceId < targetId ? 1 : -1;
           } else {
-            // @ts-expect-error Adding custom property directionFactor to edge which is not in the original type definition
             edge.directionFactor = 1;
           }
         });
