@@ -22,9 +22,10 @@ import TeamModel from '@models/Team';
 import TeamDataModel from '@models/TeamData';
 import TeamSetModel from '@models/TeamSet';
 import UserModel, { User } from '@models/User';
-import Role from '@shared/types/auth/Role';
 import { JiraBoard } from '@shared/types/JiraData';
 import { MultipleChoiceOption } from '@shared/types/Question';
+import CrispRole from '@shared/types/auth/CrispRole';
+import CourseRole from '@shared/types/auth/CourseRole';
 
 export const setupTutorialDataJob = async () => {
   let trialUser = await UserModel.findOne({ identifier: 'trial' });
@@ -49,7 +50,7 @@ export const setupTutorialDataJob = async () => {
     const trialAccountDoc = new AccountModel({
       email: 'trial@example.com',
       password: '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
-      role: 'Trial User',
+      role: CrispRole.TrialUser,
       isApproved: true,
       wantsEmailNotifications: false,
       wantsTelegramNotifications: false,
@@ -59,7 +60,7 @@ export const setupTutorialDataJob = async () => {
   }
 
   const adminAccount = await AccountModel.findOne({
-    role: Role.Admin,
+    crispRole: CrispRole.Admin,
   }).populate('user');
   if (!adminAccount || !adminAccount.user) {
     throw new Error(
@@ -70,6 +71,10 @@ export const setupTutorialDataJob = async () => {
 
   const existingTrialCourse = await CourseModel.findOne({ code: 'TRIAL' });
   if (existingTrialCourse) {
+    adminAccount.courseRoles = adminAccount.courseRoles.filter(
+      r => r.course !== existingTrialCourse._id.toString()
+    );
+    await adminAccount.save();
     const trialCourseId = existingTrialCourse._id;
     const teamSets = await TeamSetModel.find({ course: trialCourseId });
     const teamSetIds = teamSets.map(ts => ts._id);
@@ -148,6 +153,18 @@ export const setupTutorialDataJob = async () => {
   trialCourse.faculty.push(adminUser._id);
   await trialCourse.save();
 
+  trialAccount.courseRoles.push({
+    course: trialCourse._id.toString(),
+    courseRole: CourseRole.Faculty,
+  });
+  await trialAccount.save();
+
+  adminAccount.courseRoles.push({
+    course: trialCourse._id.toString(),
+    courseRole: CourseRole.Faculty,
+  });
+  await adminAccount.save();
+
   if (!trialUser.enrolledCourses.includes(trialCourse._id)) {
     trialUser.enrolledCourses.push(trialCourse._id);
     await trialUser.save();
@@ -174,16 +191,38 @@ export const setupTutorialDataJob = async () => {
         email: `${identifier}@example.com`,
         password:
           '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
-        role: Role.Student,
+        crispRole: CrispRole.Normal,
         isApproved: true,
         wantsEmailNotifications: false,
         wantsTelegramNotifications: false,
         user: studentUser._id,
+        courseRoles: [],
       });
     } else {
       if (!studentUser.enrolledCourses.includes(trialCourse._id)) {
         studentUser.enrolledCourses.push(trialCourse._id);
+        let studentAccount = await AccountModel.findOne({
+          user: studentUser._id,
+        });
+        if (!studentAccount) {
+          studentAccount = await AccountModel.create({
+            email: `${identifier}@example.com`,
+            password:
+              '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
+            crispRole: CrispRole.Normal,
+            isApproved: true,
+            wantsEmailNotifications: false,
+            wantsTelegramNotifications: false,
+            user: studentUser._id,
+            courseRoles: [],
+          });
+        }
+        studentAccount.courseRoles.push({
+          course: trialCourse._id.toString(),
+          courseRole: CourseRole.Student,
+        });
         await studentUser.save();
+        await studentAccount.save();
       }
     }
     if (!trialCourse.students.includes(studentUser._id)) {
@@ -1730,15 +1769,37 @@ export const setupTutorialDataJob = async () => {
           email: `${spec.identifier}@example.com`,
           password:
             '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
-          role: Role.Student,
+          crispRole: CrispRole.Normal,
           isApproved: true,
           wantsEmailNotifications: false,
           wantsTelegramNotifications: false,
           user: newStudent._id,
+          courseRoles: [],
         });
       } else {
         if (!newStudent.enrolledCourses.includes(trialCourse._id)) {
           newStudent.enrolledCourses.push(trialCourse._id);
+          let studentAccount = await AccountModel.findOne({
+            user: newStudent._id,
+          });
+          if (!studentAccount) {
+            studentAccount = await AccountModel.create({
+              email: `${spec.identifier}@example.com`,
+              password:
+                '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
+              crispRole: CrispRole.Normal,
+              isApproved: true,
+              wantsEmailNotifications: false,
+              wantsTelegramNotifications: false,
+              user: newStudent._id,
+              courseRoles: [],
+            });
+          }
+          studentAccount.courseRoles.push({
+            course: trialCourse._id.toString(),
+            courseRole: CourseRole.Student,
+          });
+          await studentAccount.save();
           await newStudent.save();
         }
       }

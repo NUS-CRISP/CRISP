@@ -22,8 +22,9 @@ import { useEffect, useState } from 'react';
 import { GetServerSideProps } from 'next';
 import classes from '../styles/admin.module.css';
 import { getServerSessionHelper } from './api/auth/[...nextauth]';
+import CrispRole from '@shared/types/auth/CrispRole';
 
-type RowData = Pick<Account, 'email' | 'role'>;
+type RowData = Pick<Account, 'email' | 'crispRole'>;
 
 interface ThProps {
   children: React.ReactNode;
@@ -38,7 +39,7 @@ const filterData = (data: Account[], search: string) => {
   return data.filter(
     item =>
       item.email.toLowerCase().includes(query) ||
-      item.role.toLowerCase().includes(query)
+      item.crispRole.toLowerCase().includes(query)
   );
 };
 
@@ -219,7 +220,7 @@ const AdminPage: React.FC = () => {
         />
       </Table.Td>
       <Table.Td>{account.email}</Table.Td>
-      <Table.Td>{account.role}</Table.Td>
+      <Table.Td>{account.crispRole}</Table.Td>
       <Table.Td>
         <Group>
           <Button onClick={() => handleApprove([account._id])}>Approve</Button>
@@ -251,7 +252,7 @@ const AdminPage: React.FC = () => {
   const trialRows = trialAccounts.map(account => (
     <Table.Tr key={account._id}>
       <Table.Td>{account.email}</Table.Td>
-      <Table.Td>{account.role}</Table.Td>
+      <Table.Td>{account.crispRole}</Table.Td>
       {/* Display the account's id field here */}
       <Table.Td>{account._id}</Table.Td>
       <Table.Td>{account.user._id}</Table.Td>
@@ -286,11 +287,11 @@ const AdminPage: React.FC = () => {
               Email
             </Th>
             <Th
-              sorted={sortBy === 'role'}
+              sorted={sortBy === 'crispRole'}
               reversed={reverseSortDirection}
-              onSort={() => setSorting('role')}
+              onSort={() => setSorting('crispRole')}
             >
-              Role
+              Crisp Role
             </Th>
             <Table.Th>Actions</Table.Th>
           </Table.Tr>
@@ -329,7 +330,7 @@ const AdminPage: React.FC = () => {
         <Table.Thead>
           <Table.Tr>
             <Table.Th>Email</Table.Th>
-            <Table.Th>Role</Table.Th>
+            <Table.Th>Crisp Role</Table.Th>
             <Table.Th>Acc ID</Table.Th>
             <Table.Th>User ID</Table.Th>
           </Table.Tr>
@@ -356,7 +357,7 @@ const AdminPage: React.FC = () => {
 export const getServerSideProps: GetServerSideProps = async context => {
   const session = await getServerSessionHelper(context.req, context.res);
 
-  if (!session || session.user.role !== 'admin') {
+  if (!session || session.user.crispRole !== CrispRole.Admin) {
     return {
       redirect: {
         destination: '/auth/signin',

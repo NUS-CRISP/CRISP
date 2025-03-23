@@ -46,7 +46,8 @@ import {
 } from '../../services/courseService';
 import { NotFoundError } from '../../services/errors';
 import InternalAssessmentModel from '@models/InternalAssessment';
-import Role from '@shared/types/auth/Role';
+import CrispRole from '@shared/types/auth/CrispRole';
+import CourseRole from '@shared/types/auth/CourseRole';
 
 let mongo: MongoMemoryServer;
 
@@ -126,7 +127,7 @@ async function createStudentUser(userData: any) {
   const account = new AccountModel({
     email: `${userData.identifier}@example.com`,
     password: 'hashedpassword',
-    role: 'Student',
+    crispRole: CrispRole.Normal,
     user: user._id,
     isApproved: true,
   });
@@ -145,7 +146,7 @@ async function createTAUser(userData: any) {
   const account = new AccountModel({
     email: `${userData.identifier}@example.com`,
     password: 'hashedpassword',
-    role: 'Teaching assistant',
+    crispRole: CrispRole.Normal,
     user: user._id,
     isApproved: true,
   });
@@ -164,7 +165,7 @@ async function createFacultyUser(userData: any) {
   const account = new AccountModel({
     email: `${userData.identifier}@example.com`,
     password: 'hashedpassword',
-    role: 'Faculty member',
+    crispRole: CrispRole.Faculty,
     user: user._id,
     isApproved: true,
   });
@@ -183,7 +184,7 @@ async function createAdminUser(userData: any) {
   const account = new AccountModel({
     email: `${userData.identifier}@example.com`,
     password: 'hashedpassword',
-    role: Role.Admin,
+    crispRole: CrispRole.Admin,
     user: user._id,
     isApproved: true,
   });
@@ -227,6 +228,11 @@ describe('courseService', () => {
     const student = studentPair.user;
     studentId = student._id.toString();
     course.students.push(student._id);
+    studentPair.account.courseRoles.push({
+      course: course._id.toString(),
+      courseRole: CourseRole.Student,
+    });
+    await studentPair.account.save();
 
     const taPair = await createTAUser(commonTADetails);
     const ta = taPair.user;
@@ -234,6 +240,11 @@ describe('courseService', () => {
     const taAccount = taPair.account;
     taAccountId = taAccount._id.toString();
     course.TAs.push(ta._id);
+    taPair.account.courseRoles.push({
+      course: course._id.toString(),
+      courseRole: CourseRole.TA,
+    });
+    await taPair.account.save();
 
     const facultyPair = await createFacultyUser(commonFacultyDetails);
     const faculty = facultyPair.user;
@@ -241,6 +252,11 @@ describe('courseService', () => {
     const facultyAccount = facultyPair.account;
     facultyAccountId = facultyAccount._id.toString();
     course.faculty.push(faculty._id);
+    facultyPair.account.courseRoles.push({
+      course: course._id.toString(),
+      courseRole: CourseRole.Faculty,
+    });
+    await facultyPair.account.save();
 
     await course.save();
   });
@@ -258,7 +274,7 @@ describe('courseService', () => {
 
     it('should create a new course, even if admin account is missing', async () => {
       await AccountModel.deleteOne({
-        role: Role.Admin,
+        crispRole: CrispRole.Admin,
       });
       const newCourse = await createNewCourse(
         commonCourseDetails,

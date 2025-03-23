@@ -1,12 +1,12 @@
 import { Box, Notification } from '@mantine/core';
 import { useState } from 'react';
 import CSVUpload from '../csv/CSVUpload';
-import Role, { Role as RoleType } from '@shared/types/auth/Role';
+import CourseRoles, { CourseRole } from '@shared/types/auth/CourseRole';
 
 interface UpdateUserCSVFormProps {
   courseId: string | string[] | undefined;
   onUpdate: () => void;
-  role: RoleType;
+  role: CourseRole;
 }
 
 const UpdateUserCSVForm: React.FC<UpdateUserCSVFormProps> = ({
@@ -16,9 +16,9 @@ const UpdateUserCSVForm: React.FC<UpdateUserCSVFormProps> = ({
 }) => {
   let apiRoute = `/api/courses/${courseId}/`;
 
-  if (role === Role.Faculty) {
+  if (role === CourseRoles.Faculty) {
     apiRoute += 'faculty';
-  } else if (role === Role.TA) {
+  } else if (role === CourseRoles.TA) {
     apiRoute += 'tas';
   } else {
     apiRoute += 'students';

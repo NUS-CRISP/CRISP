@@ -7,6 +7,8 @@ import ResultModel, { Result } from '../models/Result';
 import { Team } from '../models/Team';
 import TeamSetModel from '../models/TeamSet';
 import { BadRequestError, NotFoundError } from './errors';
+import CrispRole from '@shared/types/auth/CrispRole';
+import CourseRoles from '@shared/types/auth/CourseRole';
 
 interface ResultItem {
   teamNumber: number;
@@ -52,8 +54,13 @@ export const getAssessmentById = async (
   if (!assessment) {
     throw new NotFoundError('Assessment not found');
   }
-  const role = account.role;
-  if (role === 'Teaching assistant') {
+  const courseRoleTuple = account.courseRoles.filter(
+    r => r.course === assessment.course.toString()
+  );
+  if (
+    courseRoleTuple.length > 0 &&
+    courseRoleTuple[0].courseRole === CourseRoles.TA
+  ) {
     const userId = account.user;
     assessment.results = assessment.results.filter(result =>
       result.marker?.equals(userId)
@@ -88,7 +95,10 @@ export const updateAssessmentById = async (
   if (!account) {
     throw new NotFoundError('Account not found');
   }
-  if (account.role !== 'admin' && account.role !== 'Faculty member') {
+  if (
+    account.crispRole !== CrispRole.Admin &&
+    account.crispRole !== CrispRole.Faculty
+  ) {
     throw new BadRequestError('Unauthorized');
   }
   const updatedAssessment = await AssessmentModel.findByIdAndUpdate(

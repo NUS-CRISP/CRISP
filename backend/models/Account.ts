@@ -1,10 +1,23 @@
 import mongoose, { Schema, Types } from 'mongoose';
 import { Account as SharedAccount } from '@shared/types/Account';
-import Role from '@shared/types/auth/Role';
+import CrispRole from '@shared/types/auth/CrispRole';
+import CourseRole from '@shared/types/auth/CourseRole';
 
 export interface Account extends Omit<SharedAccount, 'user'>, Document {
   user: Types.ObjectId;
 }
+
+const CourseRoleTupleSchema = new mongoose.Schema(
+  {
+    course: { type: String, required: true },
+    courseRole: {
+      type: String,
+      enum: Object.values(CourseRole),
+      default: CourseRole.TA,
+    },
+  },
+  { _id: false }
+);
 
 const accountSchema = new Schema<Account>({
   email: {
@@ -44,9 +57,14 @@ const accountSchema = new Schema<Account>({
   password: { type: String },
   role: {
     type: String,
-    enum: Role,
-    default: Role.TA,
+    required: false,
   },
+  crispRole: {
+    type: String,
+    enum: CrispRole,
+    default: CrispRole.Normal,
+  },
+  courseRoles: [CourseRoleTupleSchema],
   isApproved: {
     type: Boolean,
     default: false,
