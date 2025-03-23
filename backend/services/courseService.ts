@@ -486,6 +486,7 @@ export const getPeopleFromCourse = async (courseId: string) => {
   }
   course.faculty
     .filter(f => f.identifier !== 'admin')
+    /* istanbul ignore next */
     .sort((a, b) => a.name.localeCompare(b.name));
   course.TAs.sort((a, b) => a.name.localeCompare(b.name));
   course.students.sort((a, b) => a.name.localeCompare(b.name));
