@@ -1016,7 +1016,7 @@ describe('courseService', () => {
   });
 
   describe('getPeopleFromCourse', () => {
-    it('should get people from a course', async () => {
+    it('should get people from a course and sort them', async () => {
       const student = await UserModel.findOne({ _id: studentId });
       const ta = await UserModel.findOne({ _id: taId });
       const faculty = await UserModel.findOne({ _id: facultyId });
