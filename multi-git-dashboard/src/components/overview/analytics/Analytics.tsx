@@ -3,7 +3,6 @@ import { DateUtils, getTutorialHighlightColor } from '@/lib/utils';
 import { Carousel, Embla } from '@mantine/carousel';
 import { Card, Center, Stack, Title } from '@mantine/core';
 import { TeamData } from '@shared/types/TeamData';
-// import { User } from '@shared/types/User';
 import { forwardRef, useState } from 'react';
 import IndividualAnalytics from './individual/IndividualAnalytics';
 import OverallActivity from './team/OverallActivity';

@@ -1,304 +1,352 @@
-// import React, { useState } from 'react';
-// import {
-//   Button,
-//   Box,
-//   Stack,
-//   Text,
-//   Progress,
-//   Modal,
-//   Tabs,
-//   Switch,
-//   Select,
-// } from '@mantine/core';
+import React, { useState } from 'react';
+import {
+  Button,
+  Box,
+  Stack,
+  Text,
+  Progress,
+  Modal,
+  Tabs,
+  Switch,
+  Select,
+} from '@mantine/core';
 
-// // Component types we want to export
-// const EXPORT_TYPES = {
-//   ARC_DIAGRAM: 'arc',
-//   NETWORK_DIAGRAM: 'network',
-// };
+const EXPORT_TYPES = {
+  ARC_DIAGRAM: 'arc',
+  NETWORK_DIAGRAM: 'network',
+} as const;
 
-// const SVGExporter = ({ onExportStart, onExportProgress, onExportComplete }) => {
-//   const [exporting, setExporting] = useState(false);
-//   const [progress, setProgress] = useState(0);
-//   const [currentRange, setCurrentRange] = useState('');
-//   const [exportComplete, setExportComplete] = useState(false);
-//   const [exportedCount, setExportedCount] = useState(0);
-//   const [exportType, setExportType] = useState(EXPORT_TYPES.ARC_DIAGRAM);
-//   const [exportAllTypes, setExportAllTypes] = useState(false);
-//   const [outputDirectory, setOutputDirectory] = useState('pr-diagrams');
+type ExportType = (typeof EXPORT_TYPES)[keyof typeof EXPORT_TYPES];
 
-//   const totalWeeks = 15;
+interface SVGExporterProps {
+  onExportStart?: () => void;
+  onExportProgress?: (progress: number) => void;
+  onExportComplete?: (
+    exportedCount: React.Dispatch<React.SetStateAction<number>>
+  ) => void;
+}
 
-//   const weekRangesToExport = Array.from({ length: totalWeeks - 1 }, (_, i) => {
-//     return [0, i + 1]; // 0-indexed, so [0,1] is weeks 1-2
-//   });
+interface TextInputProps {
+  label: string;
+  placeholder?: string;
+  value: string;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  disabled?: boolean;
+}
 
-//   const exportSVGsAsPNGs = async () => {
-//     setExporting(true);
-//     setProgress(0);
-//     setExportedCount(0);
-//     setExportComplete(false);
+const TextInput: React.FC<TextInputProps> = ({
+  label,
+  placeholder,
+  value,
+  onChange,
+  disabled,
+}) => (
+  <Box>
+    <Text size="sm" mb={5}>
+      {label}
+    </Text>
+    <input
+      type="text"
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      disabled={disabled}
+      style={{
+        width: '100%',
+        padding: '8px 12px',
+        border: '1px solid #ced4da',
+        borderRadius: '4px',
+        fontSize: '14px',
+      }}
+    />
+  </Box>
+);
 
-//     if (onExportStart) {
-//       onExportStart();
-//     }
+const SVGExporter: React.FC<SVGExporterProps> = ({
+  onExportStart,
+  onExportProgress,
+  onExportComplete,
+}) => {
+  const [exporting, setExporting] = useState<boolean>(false);
+  const [progress, setProgress] = useState<number>(0);
+  const [currentRange, setCurrentRange] = useState<string>('');
+  const [exportComplete, setExportComplete] = useState<boolean>(false);
+  const [exportedCount, setExportedCount] = useState<number>(0);
+  const [exportType, setExportType] = useState<ExportType>(
+    EXPORT_TYPES.ARC_DIAGRAM
+  );
+  const [exportAllTypes, setExportAllTypes] = useState<boolean>(false);
+  const [outputDirectory, setOutputDirectory] = useState<string>('pr-diagrams');
 
-//     const typesToExport = exportAllTypes
-//       ? Object.values(EXPORT_TYPES)
-//       : [exportType];
+  const totalWeeks = 15;
 
-//     const totalExports = weekRangesToExport.length * typesToExport.length;
-//     let completedExports = 0;
+  const weekRangesToExport: [number, number][] = Array.from(
+    { length: totalWeeks - 1 },
+    (_, i) => {
+      return [0, i + 1];
+    }
+  );
 
-//     for (const type of typesToExport) {
-//       for (let i = 0; i < weekRangesToExport.length; i++) {
-//         const range = weekRangesToExport[i];
-//         const rangeLabel = `Week ${range[0] + 1}-${range[1] + 1}`;
-//         setCurrentRange(`${type.toUpperCase()} - ${rangeLabel}`);
+  const exportSVGsAsPNGs = async (): Promise<void> => {
+    setExporting(true);
+    setProgress(0);
+    setExportedCount(0);
+    setExportComplete(false);
 
-//         if (window.setSelectedWeekRange) {
-//           window.setSelectedWeekRange(range);
-//         }
+    if (onExportStart) {
+      onExportStart();
+    }
 
-//         await new Promise(resolve => setTimeout(resolve, 1500));
+    const typesToExport: ExportType[] = exportAllTypes
+      ? Object.values(EXPORT_TYPES)
+      : [exportType];
 
-//         let svgElement;
+    const totalExports = weekRangesToExport.length * typesToExport.length;
+    let completedExports = 0;
 
-//         if (type === EXPORT_TYPES.ARC_DIAGRAM) {
-//           svgElement = document.querySelector('.arc-diagram svg');
-//         } else if (type === EXPORT_TYPES.NETWORK_DIAGRAM) {
-//           svgElement = document.querySelector('.network-diagram svg');
-//         }
+    for (const type of typesToExport) {
+      for (let i = 0; i < weekRangesToExport.length; i++) {
+        const range = weekRangesToExport[i];
+        const rangeLabel = `Week ${range[0] + 1}-${range[1] + 1}`;
+        setCurrentRange(`${type.toUpperCase()} - ${rangeLabel}`);
 
-//         if (svgElement) {
-//           const filename = `${type}_diagram_week_${range[0] + 1}_to_${range[1] + 1}`;
-//           await exportSVGAsPNG(svgElement, filename, outputDirectory);
-//           setExportedCount(prev => prev + 1);
-//         } else {
-//           console.error(
-//             `SVG element not found for ${type} diagram, week range ${rangeLabel}`
-//           );
-//         }
+        if (window.setSelectedWeekRange) {
+          window.setSelectedWeekRange(range);
+        }
 
-//         // Update progress
-//         completedExports++;
-//         const progressValue = (completedExports / totalExports) * 100;
-//         setProgress(progressValue);
+        await new Promise(resolve => setTimeout(resolve, 1500));
 
-//         if (onExportProgress) {
-//           onExportProgress(progressValue);
-//         }
-//       }
-//     }
+        let svgElement: SVGSVGElement | null;
 
-//     setExporting(false);
-//     setExportComplete(true);
+        if (type === EXPORT_TYPES.ARC_DIAGRAM) {
+          svgElement = document.querySelector('.arc-diagram svg');
+        } else if (type === EXPORT_TYPES.NETWORK_DIAGRAM) {
+          svgElement = document.querySelector('.network-diagram svg');
+        } else {
+          // exhaustiveness checking
+          svgElement = null;
+          console.error(`Unknown export type: ${type}`);
+        }
 
-//     if (onExportComplete) {
-//       onExportComplete(setExportedCount);
-//     }
-//   };
+        if (svgElement) {
+          const filename = `${type}_diagram_week_${range[0] + 1}_to_${range[1] + 1}`;
+          await exportSVGAsPNG(svgElement, filename, outputDirectory);
+          setExportedCount(prev => prev + 1);
+        } else {
+          console.error(
+            `SVG element not found for ${type} diagram, week range ${rangeLabel}`
+          );
+        }
 
-//   const exportSVGAsPNG = async (svgElement, filename, directory = '') => {
-//     const svgData = new XMLSerializer().serializeToString(svgElement);
-//     const svgRect = svgElement.getBoundingClientRect();
+        // Update progress
+        completedExports++;
+        const progressValue = (completedExports / totalExports) * 100;
+        setProgress(progressValue);
 
-//     const canvas = document.createElement('canvas');
-//     const ctx = canvas.getContext('2d');
+        if (onExportProgress) {
+          onExportProgress(progressValue);
+        }
+      }
+    }
 
-//     // Set canvas size
-//     const viewBox = svgElement.getAttribute('viewBox');
-//     let width, height;
+    setExporting(false);
+    setExportComplete(true);
 
-//     if (viewBox) {
-//       const [, , vbWidth, vbHeight] = viewBox.split(' ').map(Number);
-//       width = vbWidth || svgRect.width;
-//       height = vbHeight || svgRect.height;
-//     } else {
-//       width = svgRect.width;
-//       height = svgRect.height;
-//     }
+    if (onExportComplete) {
+      onExportComplete(setExportedCount);
+    }
+  };
 
-//     const scale = 2; // Increase for higher resolution
-//     canvas.width = width * scale;
-//     canvas.height = height * scale;
+  const exportSVGAsPNG = async (
+    svgElement: SVGSVGElement,
+    filename: string,
+    directory: string = ''
+  ): Promise<void> => {
+    const svgData = new XMLSerializer().serializeToString(svgElement);
+    const svgRect = svgElement.getBoundingClientRect();
 
-//     const svgBlob = new Blob([svgData], {
-//       type: 'image/svg+xml;charset=utf-8',
-//     });
-//     const URL = window.URL || window.webkitURL || window;
-//     const svgUrl = URL.createObjectURL(svgBlob);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
 
-//     return new Promise((resolve, reject) => {
-//       const img = new Image();
-//       img.onload = () => {
-//         if (!ctx) {
-//           reject(new Error('Could not get canvas context'));
-//           return;
-//         }
+    const viewBox = svgElement.getAttribute('viewBox');
+    let width: number, height: number;
 
-//         ctx.scale(scale, scale);
+    if (viewBox) {
+      const [, , vbWidth, vbHeight] = viewBox.split(' ').map(Number);
+      width = vbWidth || svgRect.width;
+      height = vbHeight || svgRect.height;
+    } else {
+      width = svgRect.width;
+      height = svgRect.height;
+    }
 
-//         ctx.fillStyle = 'white';
-//         ctx.fillRect(0, 0, width, height);
+    const scale = 2;
+    canvas.width = width * scale;
+    canvas.height = height * scale;
 
-//         ctx.drawImage(img, 0, 0, width, height);
+    const svgBlob = new Blob([svgData], {
+      type: 'image/svg+xml;charset=utf-8',
+    });
+    const URL = window.URL || window.webkitURL || window;
+    const svgUrl = URL.createObjectURL(svgBlob);
 
-//         // Convert to PNG and trigger download
-//         try {
-//           const pngUrl = canvas.toDataURL('image/png');
-//           const downloadLink = document.createElement('a');
-//           downloadLink.href = pngUrl;
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        if (!ctx) {
+          reject(new Error('Could not get canvas context'));
+          return;
+        }
 
-//           let fullPath = filename;
-//           if (directory) {
-//             fullPath = `${directory}/${filename}`;
+        ctx.scale(scale, scale);
 
-//             try {
-//               if (window.showDirectoryPicker) {
-//                 console.log('Directory support available');
-//               }
-//             } catch (err) {
-//               console.log('Directory creation not supported in this browser');
-//             }
-//           }
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, width, height);
 
-//           downloadLink.download = `${fullPath}.png`;
-//           document.body.appendChild(downloadLink);
-//           downloadLink.click();
-//           document.body.removeChild(downloadLink);
-//           URL.revokeObjectURL(svgUrl);
-//           resolve();
-//         } catch (error) {
-//           console.error('Error exporting PNG:', error);
-//           reject(error);
-//         }
-//       };
-//       img.onerror = reject;
-//       img.src = svgUrl;
-//     });
-//   };
+        ctx.drawImage(img, 0, 0, width, height);
 
-//   return (
-//     <Stack>
-//       <Box>
-//         <Text size="xl">SVG Diagram Exporter</Text>
-//         <Text size="sm" color="dimmed">
-//           Export week-by-week PR diagrams as PNG files
-//         </Text>
-//       </Box>
+        // Convert to PNG and trigger download
+        try {
+          const pngUrl = canvas.toDataURL('image/png');
+          const downloadLink = document.createElement('a');
+          downloadLink.href = pngUrl;
 
-//       <Tabs defaultValue="settings">
-//         <Tabs.List>
-//           <Tabs.Tab value="settings">Export Settings</Tabs.Tab>
-//           <Tabs.Tab value="preview">Preview Ranges</Tabs.Tab>
-//         </Tabs.List>
+          let fullPath = filename;
+          if (directory) {
+            fullPath = `${directory}/${filename}`;
 
-//         <Tabs.Panel value="settings" pt="md">
-//           <Stack>
-//             <Select
-//               label="Export Diagram Type"
-//               value={exportType}
-//               onChange={setExportType}
-//               data={[
-//                 { value: EXPORT_TYPES.ARC_DIAGRAM, label: 'Arc Diagram' },
-//                 {
-//                   value: EXPORT_TYPES.NETWORK_DIAGRAM,
-//                   label: 'Network Diagram',
-//                 },
-//               ]}
-//               disabled={exporting || exportAllTypes}
-//             />
+            try {
+              if ('showDirectoryPicker' in window) {
+                console.log('Directory support available');
+              }
+            } catch (err) {
+              console.log('Directory creation not supported in this browser');
+            }
+          }
 
-//             <Switch
-//               label="Export all diagram types"
-//               checked={exportAllTypes}
-//               onChange={event => setExportAllTypes(event.currentTarget.checked)}
-//               disabled={exporting}
-//             />
+          downloadLink.download = `${fullPath}.png`;
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+          URL.revokeObjectURL(svgUrl);
+          resolve();
+        } catch (error) {
+          console.error('Error exporting PNG:', error);
+          reject(error);
+        }
+      };
+      img.onerror = reject;
+      img.src = svgUrl;
+    });
+  };
 
-//             <TextInput
-//               label="Output Directory (for script usage only)"
-//               placeholder="pr-diagrams"
-//               value={outputDirectory}
-//               onChange={e => setOutputDirectory(e.target.value)}
-//               disabled={exporting}
-//             />
+  return (
+    <Stack>
+      <Box>
+        <Text size="xl">SVG Diagram Exporter</Text>
+        <Text size="sm" color="dimmed">
+          Export week-by-week PR diagrams as PNG files
+        </Text>
+      </Box>
 
-//             <Button
-//               color="blue"
-//               onClick={exportSVGsAsPNGs}
-//               disabled={exporting}
-//               fullWidth
-//             >
-//               {exporting
-//                 ? 'Exporting...'
-//                 : 'Export Diagrams for All Week Ranges'}
-//             </Button>
-//           </Stack>
-//         </Tabs.Panel>
+      <Tabs defaultValue="settings">
+        <Tabs.List>
+          <Tabs.Tab value="settings">Export Settings</Tabs.Tab>
+          <Tabs.Tab value="preview">Preview Ranges</Tabs.Tab>
+        </Tabs.List>
 
-//         <Tabs.Panel value="preview" pt="md">
-//           <Box>
-//             <Text mb={10}>Week Ranges to Export:</Text>
-//             <Stack>
-//               {weekRangesToExport.map((range, index) => (
-//                 <Text key={index} size="sm">
-//                   Weeks {range[0] + 1}-{range[1] + 1}
-//                 </Text>
-//               ))}
-//             </Stack>
-//           </Box>
-//         </Tabs.Panel>
-//       </Tabs>
+        <Tabs.Panel value="settings" pt="md">
+          <Stack>
+            <Select
+              label="Export Diagram Type"
+              value={exportType}
+              onChange={value => setExportType(value as ExportType)}
+              data={[
+                { value: EXPORT_TYPES.ARC_DIAGRAM, label: 'Arc Diagram' },
+                {
+                  value: EXPORT_TYPES.NETWORK_DIAGRAM,
+                  label: 'Network Diagram',
+                },
+              ]}
+              disabled={exporting || exportAllTypes}
+            />
 
-//       {exporting && (
-//         <Box>
-//           <Text size="sm" mb={5}>
-//             Exporting {currentRange}... ({exportedCount}/
-//             {weekRangesToExport.length *
-//               (exportAllTypes ? Object.keys(EXPORT_TYPES).length : 1)}
-//             )
-//           </Text>
-//           <Progress value={progress} animate />
-//         </Box>
-//       )}
+            <Switch
+              label="Export all diagram types"
+              checked={exportAllTypes}
+              onChange={event => setExportAllTypes(event.currentTarget.checked)}
+              disabled={exporting}
+            />
 
-//       <Modal
-//         opened={exportComplete}
-//         onClose={() => setExportComplete(false)}
-//         title="Export Complete"
-//         centered
-//       >
-//         <Text>Successfully exported {exportedCount} PNG files.</Text>
-//         <Button fullWidth mt="md" onClick={() => setExportComplete(false)}>
-//           Close
-//         </Button>
-//       </Modal>
-//     </Stack>
-//   );
-// };
+            <TextInput
+              label="Output Directory (for script usage only)"
+              placeholder="pr-diagrams"
+              value={outputDirectory}
+              onChange={e => setOutputDirectory(e.target.value)}
+              disabled={exporting}
+            />
 
-// const TextInput = ({ label, placeholder, value, onChange, disabled }) => (
-//   <Box>
-//     <Text size="sm" mb={5}>
-//       {label}
-//     </Text>
-//     <input
-//       type="text"
-//       placeholder={placeholder}
-//       value={value}
-//       onChange={onChange}
-//       disabled={disabled}
-//       style={{
-//         width: '100%',
-//         padding: '8px 12px',
-//         border: '1px solid #ced4da',
-//         borderRadius: '4px',
-//         fontSize: '14px',
-//       }}
-//     />
-//   </Box>
-// );
+            <Button
+              color="blue"
+              onClick={exportSVGsAsPNGs}
+              disabled={exporting}
+              fullWidth
+            >
+              {exporting
+                ? 'Exporting...'
+                : 'Export Diagrams for All Week Ranges'}
+            </Button>
+          </Stack>
+        </Tabs.Panel>
 
-// export default SVGExporter;
+        <Tabs.Panel value="preview" pt="md">
+          <Box>
+            <Text mb={10}>Week Ranges to Export:</Text>
+            <Stack>
+              {weekRangesToExport.map((range, index) => (
+                <Text key={index} size="sm">
+                  Weeks {range[0] + 1}-{range[1] + 1}
+                </Text>
+              ))}
+            </Stack>
+          </Box>
+        </Tabs.Panel>
+      </Tabs>
+
+      {exporting && (
+        <Box>
+          <Text size="sm" mb={5}>
+            Exporting {currentRange}... ({exportedCount}/
+            {weekRangesToExport.length *
+              (exportAllTypes ? Object.keys(EXPORT_TYPES).length : 1)}
+            )
+          </Text>
+          <Progress value={progress} animated />
+        </Box>
+      )}
+
+      <Modal
+        opened={exportComplete}
+        onClose={() => setExportComplete(false)}
+        title="Export Complete"
+        centered
+      >
+        <Text>Successfully exported {exportedCount} PNG files.</Text>
+        <Button fullWidth mt="md" onClick={() => setExportComplete(false)}>
+          Close
+        </Button>
+      </Modal>
+    </Stack>
+  );
+};
+
+// window interface extension for TypeScript
+declare global {
+  interface Window {
+    setSelectedWeekRange?: (range: [number, number]) => void;
+    webkitURL?: typeof URL;
+    showDirectoryPicker?: () => Promise<any>;
+  }
+}
+
+export default SVGExporter;

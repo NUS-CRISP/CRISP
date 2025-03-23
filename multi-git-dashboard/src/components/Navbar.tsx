@@ -9,6 +9,7 @@ import {
   rem,
 } from '@mantine/core';
 import {
+  IconBell,
   IconGitBranch,
   IconHelp,
   IconHome2,
@@ -25,6 +26,7 @@ import { useTutorialContext } from './tutorial/TutorialContext';
 import TutorialPopover from './tutorial/TutorialPopover';
 import { Course } from '@shared/types/Course';
 import { IconInfoCircle } from '@tabler/icons-react';
+import NotificationSettingsForm from './forms/NotificationSettingsForm';
 
 interface NavbarLinkProps {
   icon: typeof IconHome2;
@@ -90,6 +92,8 @@ const Navbar: React.FC = () => {
 
   const [mainLinkPopoverOpened, setMainLinkPopoverOpened] = useState(false);
   const [questionPopoverOpened, setQuestionPopoverOpened] = useState(false);
+
+  const [notificationModalOpened, setNotificationModalOpened] = useState(false);
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -258,7 +262,6 @@ const Navbar: React.FC = () => {
     },
   ];
 
-  // Helper function to render a navigation link
   const renderNavLink = (item: CourseLink) => (
     <TutorialPopover
       stage={6}
@@ -292,15 +295,13 @@ const Navbar: React.FC = () => {
     </TutorialPopover>
   );
 
-  // Create the course links with dividers at appropriate positions
   const courseLinks = [];
 
-  // First section: Dashboard related links
   courseLinksData.slice(0, 4).forEach(item => {
     courseLinks.push(renderNavLink(item));
   });
 
-  // First divider after Code Analysis
+  // First section: Class Overview, Team Review, PR Review, Code Analysis
   courseLinks.push(
     <div
       key="divider-1"
@@ -313,12 +314,12 @@ const Navbar: React.FC = () => {
     />
   );
 
-  // Second section: Config related links
+  // Second section: People, Repositories, Teams, Timeline
   courseLinksData.slice(4, 9).forEach(item => {
     courseLinks.push(renderNavLink(item));
   });
 
-  // Second divider before Assessments
+  // Second divider
   courseLinks.push(
     <div
       key="divider-2"
@@ -331,7 +332,7 @@ const Navbar: React.FC = () => {
     />
   );
 
-  // Third section: Assessment link
+  // Third section: Assessment
   courseLinks.push(renderNavLink(courseLinksData[9]));
 
   useEffect(() => {
@@ -435,6 +436,13 @@ const Navbar: React.FC = () => {
                 popoverOpened={questionPopoverOpened}
               />
 
+              <NavbarLink
+                onClick={() => setNotificationModalOpened(true)}
+                icon={IconBell}
+                label="Configure Notifications"
+                popoverOpened={questionPopoverOpened}
+              />
+
               <TutorialPopover stage={11} position="right-end" w={250} finish>
                 <NavbarLink
                   onClick={() =>
@@ -464,7 +472,7 @@ const Navbar: React.FC = () => {
             style={{
               width: '180px',
               backgroundColor: getTutorialHighlightColor(5),
-              paddingTop: '5px', // Reduced top padding
+              paddingTop: '5px',
             }}
           >
             <div className={classes.navbarMain}>
@@ -512,6 +520,11 @@ const Navbar: React.FC = () => {
       >
         <p>You need to add people for this course first.</p>
       </Alert>
+
+      <NotificationSettingsForm
+        opened={notificationModalOpened}
+        onClose={() => setNotificationModalOpened(false)}
+      />
     </div>
   );
 };
