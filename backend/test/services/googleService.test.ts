@@ -9,6 +9,7 @@ import {
   fetchAndSaveSheetData,
   getAssessmentSheetData,
 } from '../../services/googleService';
+import CrispRole from '@shared/types/auth/CrispRole';
 
 jest.mock('../../utils/google');
 
@@ -98,7 +99,7 @@ describe('googleService', () => {
       const account = new AccountModel({
         email: 'ta1@example.com',
         password: 'hashedpassword',
-        role: 'Teaching assistant',
+        crispRole: CrispRole.Normal,
         isApproved: true,
       });
       await account.save();
@@ -111,7 +112,7 @@ describe('googleService', () => {
       const account = new AccountModel({
         email: 'ta1@example.com',
         password: 'hashedpassword',
-        role: 'Teaching assistant',
+        crispRole: CrispRole.Normal,
         isApproved: true,
       });
       await account.save();
@@ -135,7 +136,7 @@ describe('googleService', () => {
       const account = new AccountModel({
         email: 'ta1@example.com',
         password: 'hashedpassword',
-        role: 'Teaching assistant',
+        crispRole: CrispRole.Normal,
         isApproved: true,
       });
       await account.save();
@@ -151,7 +152,7 @@ describe('googleService', () => {
       const account = new AccountModel({
         email: 'ta1@example.com',
         password: 'hashedpassword',
-        role: 'Teaching assistant',
+        crispRole: CrispRole.Normal,
         isApproved: true,
       });
       await account.save();

@@ -46,6 +46,8 @@ import {
 } from '../../services/courseService';
 import { NotFoundError } from '../../services/errors';
 import InternalAssessmentModel from '@models/InternalAssessment';
+import CrispRole from '@shared/types/auth/CrispRole';
+import CourseRole from '@shared/types/auth/CourseRole';
 
 let mongo: MongoMemoryServer;
 
@@ -103,6 +105,12 @@ const commonFacultyDetails = {
   gitHandle: 'johndoefaculty',
 };
 
+const commonAdminDetails = {
+  identifier: 'admin',
+  name: 'admin',
+  gitHandle: 'johndoefaculty',
+};
+
 async function createTestCourse(courseData: any) {
   const course = new CourseModel(courseData);
   await course.save();
@@ -119,7 +127,7 @@ async function createStudentUser(userData: any) {
   const account = new AccountModel({
     email: `${userData.identifier}@example.com`,
     password: 'hashedpassword',
-    role: 'Student',
+    crispRole: CrispRole.Normal,
     user: user._id,
     isApproved: true,
   });
@@ -138,7 +146,7 @@ async function createTAUser(userData: any) {
   const account = new AccountModel({
     email: `${userData.identifier}@example.com`,
     password: 'hashedpassword',
-    role: 'Teaching assistant',
+    crispRole: CrispRole.Normal,
     user: user._id,
     isApproved: true,
   });
@@ -157,7 +165,26 @@ async function createFacultyUser(userData: any) {
   const account = new AccountModel({
     email: `${userData.identifier}@example.com`,
     password: 'hashedpassword',
-    role: 'Faculty member',
+    crispRole: CrispRole.Faculty,
+    user: user._id,
+    isApproved: true,
+  });
+  await account.save();
+
+  return { user, account };
+}
+
+async function createAdminUser(userData: any) {
+  const user = new UserModel({
+    ...userData,
+    enrolledCourses: [],
+  });
+  await user.save();
+
+  const account = new AccountModel({
+    email: `${userData.identifier}@example.com`,
+    password: 'hashedpassword',
+    crispRole: CrispRole.Admin,
     user: user._id,
     isApproved: true,
   });
@@ -201,6 +228,11 @@ describe('courseService', () => {
     const student = studentPair.user;
     studentId = student._id.toString();
     course.students.push(student._id);
+    studentPair.account.courseRoles.push({
+      course: course._id.toString(),
+      courseRole: CourseRole.Student,
+    });
+    await studentPair.account.save();
 
     const taPair = await createTAUser(commonTADetails);
     const ta = taPair.user;
@@ -208,6 +240,11 @@ describe('courseService', () => {
     const taAccount = taPair.account;
     taAccountId = taAccount._id.toString();
     course.TAs.push(ta._id);
+    taPair.account.courseRoles.push({
+      course: course._id.toString(),
+      courseRole: CourseRole.TA,
+    });
+    await taPair.account.save();
 
     const facultyPair = await createFacultyUser(commonFacultyDetails);
     const faculty = facultyPair.user;
@@ -215,12 +252,30 @@ describe('courseService', () => {
     const facultyAccount = facultyPair.account;
     facultyAccountId = facultyAccount._id.toString();
     course.faculty.push(faculty._id);
+    facultyPair.account.courseRoles.push({
+      course: course._id.toString(),
+      courseRole: CourseRole.Faculty,
+    });
+    await facultyPair.account.save();
 
     await course.save();
   });
 
   describe('createNewCourse', () => {
     it('should create a new course', async () => {
+      await createAdminUser(commonAdminDetails);
+      const newCourse = await createNewCourse(
+        commonCourseDetails,
+        facultyAccountId
+      );
+      expect(newCourse).toBeDefined();
+      expect(newCourse.name).toBe(commonCourseDetails.name);
+    });
+
+    it('should create a new course, even if admin account is missing', async () => {
+      await AccountModel.deleteOne({
+        crispRole: CrispRole.Admin,
+      });
       const newCourse = await createNewCourse(
         commonCourseDetails,
         facultyAccountId
@@ -977,7 +1032,7 @@ describe('courseService', () => {
   });
 
   describe('getPeopleFromCourse', () => {
-    it('should get people from a course', async () => {
+    it('should get people from a course and sort them', async () => {
       const student = await UserModel.findOne({ _id: studentId });
       const ta = await UserModel.findOne({ _id: taId });
       const faculty = await UserModel.findOne({ _id: facultyId });

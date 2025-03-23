@@ -18,6 +18,7 @@ import AccountModel from '../models/Account';
 import SubmissionModel from '../models/Submission';
 import { AnswerUnion } from '../models/Answer';
 import { getUserIdByAccountId } from '../services/accountService';
+import CrispRole from '@shared/types/auth/CrispRole';
 
 /**
  * Controller to submit or update a submission for a particular assessment.
@@ -122,7 +123,10 @@ export const getUserSubmissions = async (req: Request, res: Response) => {
       assessmentId,
       userId
     );
-    if (account.role !== 'admin' && account.role !== 'Faculty member') {
+    if (
+      account.crispRole !== CrispRole.Admin &&
+      account.crispRole !== CrispRole.Faculty
+    ) {
       submissions.forEach(sub => {
         sub.score = -1;
         sub.adjustedScore = -1;
@@ -167,21 +171,14 @@ export const getAllSubmissions = async (req: Request, res: Response) => {
 
     if (
       !account ||
-      (account.role !== 'admin' &&
-        account.role !== 'Faculty member' &&
-        account.role !== 'Teaching assistant')
+      (account.crispRole !== CrispRole.Admin &&
+        account.crispRole !== CrispRole.Faculty)
     ) {
       throw new MissingAuthorizationError('Access denied');
     }
 
     const { assessmentId } = req.params;
     const submissions = await getSubmissionsByAssessment(assessmentId);
-    if (account.role !== 'admin' && account.role !== 'Faculty member') {
-      submissions.forEach(sub => {
-        sub.score = -1;
-        sub.adjustedScore = -1;
-      });
-    }
     res.status(200).json(submissions);
   } catch (error) {
     if (error instanceof MissingAuthorizationError) {
@@ -203,7 +200,7 @@ export const getAllSubmissions = async (req: Request, res: Response) => {
  * @returns {Promise<void>}
  *  - 200 OK: Indicates successful deletion.
  *  - 404 Not Found: If the submission is not found.
- *  - 403 Forbidden: If the user lacks permission to delete (not the owner nor an admin).
+ *  - 403 Forbidden: If the user lacks permission to delete (not the owner nor an admin nor faculty).
  *  - 500 Internal Server Error: For any unknown runtime or server errors.
  *
  * @description
@@ -227,7 +224,7 @@ export const deleteUserSubmission = async (req: Request, res: Response) => {
 
     if (!submission.user.equals(userId)) {
       const account = await AccountModel.findById(accountId);
-      if (!account || account.role !== 'admin') {
+      if (!account || account.crispRole !== CrispRole.Admin) {
         throw new MissingAuthorizationError(
           'You do not have permission to delete this submission'
         );
@@ -275,7 +272,8 @@ export const bulkDeleteSubmissionsByAssessment = async (
 
     if (
       !account ||
-      (account.role !== 'admin' && account.role !== 'Faculty member')
+      (account.crispRole !== CrispRole.Admin &&
+        account.crispRole !== CrispRole.Faculty)
     ) {
       throw new MissingAuthorizationError(
         'You do not have permission to perform this action.'
@@ -350,7 +348,8 @@ export const getSubmissionByIdController = async (
       const account = await AccountModel.findById(accountId);
       if (
         !account ||
-        (account.role !== 'admin' && account.role !== 'Faculty member')
+        (account.crispRole !== CrispRole.Admin &&
+          account.crispRole !== CrispRole.Faculty)
       ) {
         throw new MissingAuthorizationError(
           'You do not have permission to view this submission'
@@ -401,7 +400,8 @@ export const adjustSubmissionScoreController = async (
 
     if (
       !account ||
-      (account.role !== 'Faculty member' && account.role !== 'admin')
+      (account.crispRole !== CrispRole.Faculty &&
+        account.crispRole !== CrispRole.Admin)
     ) {
       throw new MissingAuthorizationError(
         'You do not have permission to adjust scores.'

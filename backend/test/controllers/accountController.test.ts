@@ -12,6 +12,7 @@ import {
 } from '../../controllers/accountController';
 import * as accountService from '../../services/accountService';
 import { BadRequestError, NotFoundError } from '../../services/errors';
+import CrispRole from '@shared/types/auth/CrispRole';
 
 jest.mock('../../services/accountService');
 
@@ -28,7 +29,9 @@ const mockRequest = () => {
 };
 
 const mockResponse = () => {
-  const res = {} as Response;
+  const res = {
+    setHeader: jest.fn(),
+  } as unknown as Response;
   res.status = jest.fn().mockReturnValue(res);
   res.send = jest.fn().mockReturnValue(res);
   res.json = jest.fn().mockReturnValue(res);
@@ -44,7 +47,7 @@ describe('accountController', () => {
         name: 'John Doe',
         email: 'john@example.com',
         password: 'password123',
-        role: 'student',
+        crispRole: CrispRole.Normal,
       };
       const res = mockResponse();
 
@@ -65,7 +68,7 @@ describe('accountController', () => {
         name: 'John Doe',
         email: 'john@example.com',
         password: 'password123',
-        role: 'student',
+        crispRole: CrispRole.Normal,
       };
       const res = mockResponse();
 
@@ -86,7 +89,7 @@ describe('accountController', () => {
         name: 'John Doe',
         email: 'john@example.com',
         password: 'password123',
-        role: 'student',
+        crispRole: CrispRole.Normal,
       };
       const res = mockResponse();
 
@@ -107,7 +110,12 @@ describe('accountController', () => {
     it('should retrieve pending accounts and send a 200 status', async () => {
       const req = mockRequest();
       const res = mockResponse();
-      const mockAccounts = [{ email: 'pending@example.com', role: 'student' }];
+      const mockAccounts = [
+        {
+          email: 'pending@example.com',
+          crispRole: CrispRole.Normal,
+        },
+      ];
 
       jest
         .spyOn(accountService, 'getAllPendingAccounts')
@@ -492,7 +500,12 @@ describe('retrieveTrialAccounts', () => {
   it('should retrieve trial accounts and send a 200 status', async () => {
     const req = mockRequest();
     const res = mockResponse();
-    const mockAccounts = [{ email: 'trial@example.com', role: 'Trial User' }];
+    const mockAccounts = [
+      {
+        email: 'trial@example.com',
+        crispRole: CrispRole.TrialUser,
+      },
+    ];
 
     jest
       .spyOn(accountService, 'getAllTrialAccounts')

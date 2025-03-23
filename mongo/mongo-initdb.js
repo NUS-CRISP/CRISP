@@ -28,7 +28,7 @@ let res = [
     "_id": adminAccountId,
     "email": "admin@example.com",
     "password": "$2b$10$Zl4PRJxyXJVLlBUv2aUn9uR5dvado3uINtVBcpeTPxEuAGwkXteKS",
-    "role": "admin",
+    "crispRole": "admin",
     "isApproved": true,
     "user": adminUserId
   })
