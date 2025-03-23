@@ -28,7 +28,7 @@ const fetchAndSaveTrofosData = async () => {
     const trofosCourseUri = `${process.env.TROFOS_URI}${TROFOS_COURSE_PATH}`;
     try {
       const trofosCourseResponse = await fetch(trofosCourseUri, {
-        method: 'GET',
+        method: 'POST',
         headers: {
           'x-api-key': apiKey,
           Accept: 'application/json',
@@ -49,7 +49,7 @@ const fetchAndSaveTrofosData = async () => {
     const trofosProjectUri = `${process.env.TROFOS_URI}${TROFOS_PROJECT_PATH}`;
     try {
       const trofosProjectResponse = await fetch(trofosProjectUri, {
-        method: 'GET',
+        method: 'POST',
         headers: {
           'x-api-key': apiKey,
           Accept: 'application/json',
