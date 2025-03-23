@@ -193,25 +193,6 @@ async function createAdminUser(userData: any) {
   return { user, account };
 }
 
-async function createAdminUser(userData: any) {
-  const user = new UserModel({
-    ...userData,
-    enrolledCourses: [],
-  });
-  await user.save();
-
-  const account = new AccountModel({
-    email: `${userData.identifier}@example.com`,
-    password: 'hashedpassword',
-    role: Role.Admin,
-    user: user._id,
-    isApproved: true,
-  });
-  await account.save();
-
-  return { user, account };
-}
-
 async function createInternalAssessment(courseId: string, assessmentData: any) {
   const assessment = new InternalAssessmentModel({
     ...assessmentData,
