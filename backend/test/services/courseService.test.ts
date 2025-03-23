@@ -1007,6 +1007,17 @@ describe('courseService', () => {
       expect(people.faculty.some(person => person._id.equals(facultyId))).toBe(
         true
       );
+
+      // Verify sorting
+      expect(people.students).toEqual(
+        people.students.sort((a, b) => a.name.localeCompare(b.name))
+      );
+      expect(people.TAs).toEqual(
+        people.TAs.sort((a, b) => a.name.localeCompare(b.name))
+      );
+      expect(people.faculty).toEqual(
+        people.faculty.sort((a, b) => a.name.localeCompare(b.name))
+      );
     });
 
     it('should throw NotFoundError for invalid courseId', async () => {
