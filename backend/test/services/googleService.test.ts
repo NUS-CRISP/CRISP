@@ -230,9 +230,9 @@ describe('googleService', () => {
     });
 
     it('should throw NotFoundError for invalid assessment id', async () => {
-      expect(fetchAndSaveSheetData(new mongoose.Types.ObjectId().toHexString(), true)).rejects.toThrow(
-        NotFoundError
-      );
+      expect(
+        fetchAndSaveSheetData(new mongoose.Types.ObjectId().toHexString(), true)
+      ).rejects.toThrow(NotFoundError);
     });
   });
 });
