@@ -123,12 +123,44 @@ describe('googleService', () => {
       expect(sheetData).toBeDefined();
     });
 
+    it('should retrieve sheet data for an assessment team', async () => {
+      const account = new AccountModel({
+        email: 'ta1@example.com',
+        password: 'hashedpassword',
+        crispRole: CrispRole.Faculty,
+        isApproved: true,
+      });
+      await account.save();
+      const sheetData = await getAssessmentSheetData(
+        assessmentTeamId,
+        account._id
+      );
+      expect(sheetData).toBeDefined();
+    });
+
     it('should throw error for invalid account', async () => {
-      expect(
+      await expect(
         getAssessmentSheetData(
           assessmentId,
           new mongoose.Types.ObjectId().toHexString()
         )
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should throw NotFoundError for invalid sheet data id', async () => {
+      const account = new AccountModel({
+        email: 'ta1@example.com',
+        password: 'hashedpassword',
+        crispRole: CrispRole.Normal,
+        isApproved: true,
+      });
+      await account.save();
+      const assessment = await AssessmentModel.findById(assessmentId);
+      assessment!.sheetData = new mongoose.Types.ObjectId();
+      await assessment!.save();
+
+      await expect(
+        getAssessmentSheetData(assessmentId, account._id)
       ).rejects.toThrow(NotFoundError);
     });
 
@@ -140,7 +172,7 @@ describe('googleService', () => {
         isApproved: true,
       });
       await account.save();
-      expect(
+      await expect(
         getAssessmentSheetData(
           new mongoose.Types.ObjectId().toHexString(),
           account._id
@@ -162,9 +194,9 @@ describe('googleService', () => {
       }
       assessment.sheetData = new mongoose.Types.ObjectId();
       await assessment.save();
-      expect(getAssessmentSheetData(assessmentId, account._id)).rejects.toThrow(
-        NotFoundError
-      );
+      await expect(
+        getAssessmentSheetData(assessmentId, account._id)
+      ).rejects.toThrow(NotFoundError);
     });
   });
 
@@ -196,6 +228,22 @@ describe('googleService', () => {
       expect(newSheetData).toBeDefined();
       expect(newSheetData?.rows).toEqual(rows);
       expect(newSheetData?.headers).toEqual(['Student ID', 'Name', 'Grade']);
+    });
+
+    it('should throw NotFoundError for invalid assessment id', async () => {
+      const mockFetchDataFromSheet = jest.fn().mockResolvedValue([
+        ['Student ID', 'Name', 'Grade'],
+        ['1123', 'hello', '3'],
+        ['2222', 'world', '4'],
+        ['3333', 'next', '5'],
+        ['4444', 'please', '6'],
+      ]);
+      jest
+        .spyOn(require('../../utils/google'), 'fetchDataFromSheet')
+        .mockImplementation(mockFetchDataFromSheet);
+      await expect(
+        fetchAndSaveSheetData(new mongoose.Types.ObjectId().toString(), true)
+      ).rejects.toThrow(NotFoundError);
     });
   });
 });
