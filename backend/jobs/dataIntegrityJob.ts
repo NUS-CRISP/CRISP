@@ -166,7 +166,7 @@ export async function setupDataIntegrityJob() {
 
   if (process.env.RUN_JOB_NOW === 'true') {
     console.log('Running data integrity check now...');
-    notifyOnStartup();
+    await notifyOnStartup();
   }
 }
 
