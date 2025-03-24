@@ -158,9 +158,10 @@ describe('googleService', () => {
       const assessment = await AssessmentModel.findById(assessmentId);
       assessment!.sheetData = new mongoose.Types.ObjectId();
       await assessment!.save();
-      const sheetData = await getAssessmentSheetData(assessmentId, account._id);
 
-      expect(sheetData).toBeDefined();
+      expect(getAssessmentSheetData(assessmentId, account._id)).rejects.toThrow(
+        NotFoundError
+      );
     });
 
     it('should throw error for invalid assessment', async () => {
