@@ -426,6 +426,19 @@ describe('assessmentAssignmentSetService (team granularity)', () => {
       expect(unmarked[0]!._id.toString()).toEqual(teamId.toString());
     });
 
+    it('should retrieve empty array if requester is student', async () => {
+      // Instead of throwing unauthorized, we return empty array. This simplifies
+      // NotificationJob workflow
+      await createAssignmentSet(assessmentId.toString(), teamSetId.toString());
+
+      const unmarked = await getUnmarkedAssignmentsByTAId(
+        studentId.toString(),
+        assessmentId.toString()
+      );
+
+      expect(unmarked).toHaveLength(0);
+    });
+
     it('should return empty array if the team has submitted (simulate partial TeamMemberSelectionAnswer)', async () => {
       const assignmentSet = await createAssignmentSet(
         assessmentId.toString(),
