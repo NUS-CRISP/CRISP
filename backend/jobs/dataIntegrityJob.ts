@@ -143,7 +143,7 @@ async function checkCourseRoles() {
 }
 
 // Starter functions
-async function runDataIntegrityCheck() {
+export async function runDataIntegrityCheck() {
   await checkCrispRoles();
   await checkCourseRoles();
   return;
