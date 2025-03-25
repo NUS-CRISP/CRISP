@@ -218,11 +218,17 @@ const getLatestCommit = async (
     }
 
     // Remove .scannerwork and sonar-project.properties if they exist
-    const sonarPropsFiles = glob.sync(path.join(repoPath, '**/sonar-project.properties'));
+    const sonarPropsFiles = glob.sync(
+      path.join(repoPath, '**/sonar-project.properties')
+    );
     sonarPropsFiles.forEach(file => fs.unlinkSync(file));
 
-    const scannerworkDirs = glob.sync(path.join(repoPath, '**/.scannerwork'), { dot: true });
-    scannerworkDirs.forEach(dir => fs.rmSync(dir, { recursive: true, force: true }));
+    const scannerworkDirs = glob.sync(path.join(repoPath, '**/.scannerwork'), {
+      dot: true,
+    });
+    scannerworkDirs.forEach(dir =>
+      fs.rmSync(dir, { recursive: true, force: true })
+    );
   } catch (error) {
     console.error(`Error updating repository ${repo.name}: ${error}`);
   }
