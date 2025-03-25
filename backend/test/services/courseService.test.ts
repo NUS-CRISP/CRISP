@@ -105,6 +105,13 @@ const commonFacultyDetails = {
   gitHandle: 'johndoefaculty',
 };
 
+const commonFaculty2Details = {
+  identifier: 'uniquefaculty2id',
+  name: 'Johnny Smith faculty',
+  gitHandle: 'johnnysmithfaculty',
+};
+
+
 const commonAdminDetails = {
   identifier: 'admin',
   name: 'admin',
@@ -257,6 +264,15 @@ describe('courseService', () => {
       courseRole: CourseRole.Faculty,
     });
     await facultyPair.account.save();
+
+    const facultyPair2 = await createFacultyUser(commonFaculty2Details);
+    const faculty2 = facultyPair2.user;
+    course.faculty.push(faculty2._id);
+    facultyPair2.account.courseRoles.push({
+      course: course._id.toString(),
+      courseRole: CourseRole.Faculty,
+    });
+    await facultyPair2.account.save();
 
     await course.save();
   });
@@ -1058,7 +1074,7 @@ describe('courseService', () => {
       );
       expect(people.TAs.length).toBe(1);
       expect(people.TAs.some(person => person._id.equals(taId))).toBe(true);
-      expect(people.faculty.length).toBe(1);
+      expect(people.faculty.length).toBe(2);
       expect(people.faculty.some(person => person._id.equals(facultyId))).toBe(
         true
       );
