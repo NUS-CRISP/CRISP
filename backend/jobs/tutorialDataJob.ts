@@ -27,6 +27,8 @@ import { MultipleChoiceOption } from '@shared/types/Question';
 import CrispRole from '@shared/types/auth/CrispRole';
 import CourseRole from '@shared/types/auth/CourseRole';
 
+const START_DATE_STRING = '2024-10-10T20:13:24Z';
+
 export const setupTutorialDataJob = async () => {
   let trialUser = await UserModel.findOne({ identifier: 'trial' });
   let trialAccount = trialUser
@@ -140,7 +142,7 @@ export const setupTutorialDataJob = async () => {
     name: 'Trial',
     code: 'TRIAL',
     semester: 'AY2323 S2',
-    startDate: new Date(),
+    startDate: new Date(START_DATE_STRING),
     durationWeeks: 13,
     courseType: 'Normal',
     sprints: [],
@@ -1731,8 +1733,8 @@ export const setupTutorialDataJob = async () => {
   });
   await mcAnswer.save();
 
-  const startDate = new Date();
-  startDate.setUTCFullYear(new Date().getUTCFullYear() - 1);
+  const startDate = new Date(START_DATE_STRING);
+  startDate.setUTCFullYear(new Date(START_DATE_STRING).getUTCFullYear() - 1);
 
   const assessment = await InternalAssessmentModel.create({
     course: trialCourse._id,

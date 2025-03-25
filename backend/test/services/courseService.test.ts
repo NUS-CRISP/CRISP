@@ -111,7 +111,6 @@ const commonFaculty2Details = {
   gitHandle: 'johnnysmithfaculty',
 };
 
-
 const commonAdminDetails = {
   identifier: 'admin',
   name: 'admin',
