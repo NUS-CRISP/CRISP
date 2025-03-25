@@ -9,6 +9,7 @@ import { mean, median } from 'mathjs';
 import TeamDataModel from '@models/TeamData';
 import TeamModel from '@models/Team';
 import { Types } from 'mongoose';
+import { glob } from 'glob';
 
 const { exec } = require('child_process');
 
@@ -212,8 +213,16 @@ const getLatestCommit = async (
       await execShellCommand(`git clone ${cloneUrl} ${repoPath}`);
     } else {
       console.log(`Pulling repository ${repo.name}`);
+      await execShellCommand(`git -C ${repoPath} --hard`); // reset any changes
       await execShellCommand(`git -C ${repoPath} pull ${cloneUrl}`);
     }
+
+    // Remove .scannerwork and sonar-project.properties if they exist
+    const sonarPropsFiles = glob.sync(path.join(repoPath, '**/sonar-project.properties'));
+    sonarPropsFiles.forEach(file => fs.unlinkSync(file));
+
+    const scannerworkDirs = glob.sync(path.join(repoPath, '**/.scannerwork'), { dot: true });
+    scannerworkDirs.forEach(dir => fs.rmSync(dir, { recursive: true, force: true }));
   } catch (error) {
     console.error(`Error updating repository ${repo.name}: ${error}`);
   }
