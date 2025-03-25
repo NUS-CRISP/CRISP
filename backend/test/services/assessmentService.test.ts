@@ -89,7 +89,7 @@ async function createStudentUser(userData: any) {
   });
   await account.save();
 
-  return {user, account};
+  return { user, account };
 }
 
 async function createTAUser(userData: any) {
@@ -163,7 +163,8 @@ describe('assessmentService', () => {
     teamSet.teams.push(team._id);
     await teamSet.save();
 
-    const {user: student, account: studentAccount} = await createStudentUser(commonStudentDetails);
+    const { user: student, account: studentAccount } =
+      await createStudentUser(commonStudentDetails);
     studentId = student._id.toHexString();
     student.enrolledCourses.push(course._id);
     await student.save();
@@ -173,12 +174,13 @@ describe('assessmentService', () => {
       courseRole: CourseRole.Student,
     });
     await studentAccount.save();
-    const {user: student2, account: studentAccount2} = await createStudentUser({
-      identifier: 'uniqueuserid2',
-      name: 'Jane Doe',
-      gitHandle: 'janedoe',
-      enrolledCourses: [course._id],
-    });
+    const { user: student2, account: studentAccount2 } =
+      await createStudentUser({
+        identifier: 'uniqueuserid2',
+        name: 'Jane Doe',
+        gitHandle: 'janedoe',
+        enrolledCourses: [course._id],
+      });
     course.students.push(student2._id);
     await student2.save();
     studentAccount2.courseRoles.push({
@@ -205,7 +207,7 @@ describe('assessmentService', () => {
     facultyAccount.courseRoles.push({
       course: course._id.toString(),
       courseRole: CourseRole.Faculty,
-    })
+    });
     await facultyAccount.save();
 
     const assessment = new AssessmentModel({
