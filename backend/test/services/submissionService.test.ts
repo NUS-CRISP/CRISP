@@ -61,6 +61,8 @@ import AssessmentAssignmentSetModel, {
 import TeamModel from '@models/Team';
 import AssessmentResultModel from '@models/AssessmentResult';
 import { Question } from '@models/Question';
+import CrispRole from '@shared/types/auth/CrispRole';
+import CourseRole from '@shared/types/auth/CourseRole';
 
 let mongo: MongoMemoryServer;
 
@@ -273,14 +275,47 @@ afterAll(async () => {
  *   5) Returns references for the global usage in tests.
  */
 const setupData = async (overrideEndDate?: Date) => {
-  const account = new AccountModel({
+  const faculty = await UserModel.create({
+    identifier: 'facultyUser',
+    name: 'Test Faculty',
+  });
+
+  const facultyAccount = new AccountModel({
     email: 'faculty@example.com',
     password: 'password',
-    role: 'Faculty member',
-    user: new mongoose.Types.ObjectId(),
+    crispRole: CrispRole.Faculty,
+    user: faculty._id,
     isApproved: true,
   });
-  await account.save();
+  await facultyAccount.save();
+
+  const student = await UserModel.create({
+    identifier: 'studentUser',
+    name: 'Test Student',
+  });
+
+  const studentAccount = new AccountModel({
+    email: 'student@example.com',
+    password: 'password',
+    crispRole: CrispRole.Normal,
+    user: student._id,
+    isApproved: true,
+  });
+  await studentAccount.save();
+
+  const ta = await UserModel.create({
+    identifier: 'taUser',
+    name: 'Test TA',
+  });
+
+  const taAccount = new AccountModel({
+    email: 'ta@example.com',
+    password: 'password',
+    crispRole: CrispRole.Normal,
+    user: ta._id,
+    isApproved: true,
+  });
+  await taAccount.save();
 
   const course = await CourseModel.create({
     name: 'Introduction to Computer Science',
@@ -289,17 +324,25 @@ const setupData = async (overrideEndDate?: Date) => {
     startDate: new Date('2024-08-15'),
     courseType: 'Normal',
   });
+  course.faculty.push(faculty._id);
+  course.TAs.push(ta._id);
+  course.students.push(student._id);
   await course.save();
-
-  const student = await UserModel.create({
-    identifier: 'studentUser',
-    name: 'Test Student',
+  facultyAccount.courseRoles.push({
+    course: course._id.toString(),
+    courseRole: CourseRole.Faculty,
   });
-
-  const ta = await UserModel.create({
-    identifier: 'taUser',
-    name: 'Test TA',
+  await facultyAccount.save();
+  taAccount.courseRoles.push({
+    course: course._id.toString(),
+    courseRole: CourseRole.TA,
   });
+  await taAccount.save();
+  studentAccount.courseRoles.push({
+    course: course._id.toString(),
+    courseRole: CourseRole.Student,
+  });
+  await studentAccount.save();
 
   const team = new TeamModel({
     number: 1,
@@ -657,7 +700,7 @@ const setupData = async (overrideEndDate?: Date) => {
   await assessment.save();
 
   return {
-    account,
+    account: facultyAccount,
     student,
     ta,
     assessment,
@@ -1936,6 +1979,48 @@ describe('submissionService', () => {
       expect(updatedSubmission.isDraft).toBe(false);
     });
 
+    it('should update a submission, whilst activating admin bypass', async () => {
+      // First create with full answers
+      let fullAnswers = buildAllAnswers(assessment, student._id.toString());
+      const submission = await createSubmission(
+        assessment._id.toString(),
+        ta._id.toString(),
+        fullAnswers,
+        true
+      );
+
+      const result = await AssessmentResultModel.findOne({
+        student: student._id,
+        assessment: assessment._id,
+      });
+      expect(result).toBeDefined();
+
+      // Now we update: for instance, let's change the MC (index 1) from 'Option B' to 'Option A'
+      fullAnswers = buildAllAnswers(assessment, student._id.toString());
+      (fullAnswers[1] as MultipleChoiceAnswer).value = 'Option A';
+
+      const admin = new UserModel({
+        name: 'admin',
+        password: 'pass',
+      });
+      const adminAccount = new AccountModel({
+        email: 'admin@example.com',
+        crispRole: CrispRole.Admin,
+        password: 'hi',
+        user: admin._id,
+      });
+      await adminAccount.save();
+
+      const updatedSubmission = await updateSubmission(
+        submission._id.toString(),
+        ta._id.toString(),
+        adminAccount._id.toString(),
+        fullAnswers,
+        false
+      );
+      expect(updatedSubmission.isDraft).toBe(false);
+    });
+
     it('should throw NotFoundError if submission not found', async () => {
       const invalidSubmissionId = new mongoose.Types.ObjectId().toString();
       const fullAnswers = buildAllAnswers(assessment, student._id.toString());
@@ -1955,7 +2040,7 @@ describe('submissionService', () => {
       const studentAccount = new AccountModel({
         email: 'someStudent@example.com',
         password: 'password',
-        role: 'Student',
+        crispRole: CrispRole.Normal,
         user: student._id,
         isApproved: true,
       });
@@ -1998,7 +2083,7 @@ describe('submissionService', () => {
       );
 
       // Switch role from faculty to TA => no bypass
-      account.role = 'Teaching assistant';
+      account.crispRole = CrispRole.Normal;
       await account.save();
 
       await expect(

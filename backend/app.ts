@@ -24,19 +24,24 @@ import setupAIInsightsJob from './jobs/aiInsightsJob';
 import notificationRoutes from './routes/notificationRoutes';
 import setupTutorialDataJob from './jobs/tutorialDataJob';
 import setupNotificationJob from './jobs/notificationJob';
+import setupDataIntegrityJob, {
+  runDataIntegrityCheck,
+} from './jobs/dataIntegrityJob';
 
 const env = process.env.NODE_ENV ?? 'development';
 config({ path: `.env.${env}` });
 
 const setupApp = async () => {
   await connectToDatabase();
+  await runDataIntegrityCheck();
+  setupDataIntegrityJob();
+  setupTutorialDataJob();
   setupGitHubJob();
   setupJiraJob();
   setupTrofosJob();
   setupCodeAnalysisJob();
   setupAIInsightsJob();
   setupNotificationJob();
-  setupTutorialDataJob();
 };
 setupApp();
 

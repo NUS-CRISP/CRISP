@@ -1,8 +1,8 @@
 import { Telegraf } from 'telegraf';
 import { config } from 'dotenv';
 import AccountModel from '@models/Account';
-import Role from '@shared/types/auth/Role';
 import { sendNotification } from './notificationFacadeClient';
+import CrispRole from '@shared/types/auth/CrispRole';
 
 const env = process.env.NODE_ENV ?? 'development';
 config({ path: `.env.${env}` });
@@ -230,7 +230,7 @@ export const sendTelegramMessage = async (chatId: number, text: string) => {
  */
 export const sendTestTelegramNotificationToAdmins = async () => {
   const adminAccounts = await AccountModel.find({
-    role: Role.Admin,
+    crispRole: CrispRole.Admin,
     wantsTelegramNotifications: true,
     telegramChatId: { $exists: true, $ne: [null, -1] },
   });

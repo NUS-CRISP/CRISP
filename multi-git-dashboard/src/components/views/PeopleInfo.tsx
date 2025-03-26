@@ -13,7 +13,7 @@ import TAForm from '../forms/TAForm';
 import StudentForm from '../forms/StudentForm';
 import CSVExport from '../csv/CSVExport';
 import UpdateUserForm from '../forms/UpdateUserForm';
-import Role from '@shared/types/auth/Role';
+import Role from '@shared/types/auth/CourseRole';
 import { User } from '@shared/types/User';
 import UpdateUserCSVForm from '../forms/UpdateUserCSVForm';
 
