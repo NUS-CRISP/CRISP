@@ -474,7 +474,7 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
 
         svg
           .selectAll('rect.cell')
-          .filter((d: any) => cellBelongsToSubgroup(d, subgroup))
+          .filter((d: unknown) => cellBelongsToSubgroup(d as DataPoint, subgroup))
           .attr('stroke', color)
           .attr('stroke-width', 2);
 
