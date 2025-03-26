@@ -35,6 +35,18 @@ export const hasCoursePermission = (
 export const hasCourseFacultyPermission = (courseId: string) =>
   hasCoursePermission(courseId, CourseRoles.Faculty);
 
+
+export const isTrialUser = (...CrispRoles: CrispRole[]) => {
+  const { data: session } = useSession();
+  return (
+    (session?.user.crispRole && CrispRoles.includes(session.user.crispRole)) ||
+    false
+  );
+};
+
+export const isTrial = () =>
+  isTrialUser(CrispRoles.TrialUser);
+
 export const logLogin = async () => {
   const res = await fetch('/api/metrics/login', {
     method: 'POST',

@@ -33,6 +33,7 @@ interface AssessmentInternalOverviewProps {
   initialAssignedTeams?: AssignedTeam[];
   initialAssignedUsers?: AssignedUser[];
   teachingStaff: User[];
+  onTakeAssessmentClicked: () => void;
 }
 
 const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
@@ -45,6 +46,7 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
   initialAssignedTeams = [],
   initialAssignedUsers = [],
   teachingStaff,
+  onTakeAssessmentClicked,
 }) => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [assignedTeams, setAssignedTeams] =
@@ -485,14 +487,12 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
             <strong>End Date:</strong> {formatDate(assessment?.endDate)}
           </Text>
         </Group>
-        {assessment?.isReleased && (
+        {assessment && assessment.isReleased && (
           <Group justify="center" mt="md">
             {assignedEntitiesAvailable ? (
               <Button
                 onClick={() =>
-                  router.push(
-                    `/courses/${courseId}/internal-assessments/${assessment?._id}/take`
-                  )
+                  onTakeAssessmentClicked()
                 }
               >
                 Submit Assessment

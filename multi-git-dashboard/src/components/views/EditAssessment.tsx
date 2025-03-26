@@ -31,14 +31,14 @@ import TakeAssessmentCard from '@/components/cards/TakeAssessmentCard';
 import { Team } from '@shared/types/Team';
 import { User } from '@shared/types/User';
 
-interface TakeAssessmentProps {
+interface EditAssessmentProps {
   inputAssessment: InternalAssessment;
   existingSubmission?: Submission;
   canEdit?: boolean;
   isFaculty?: boolean;
 }
 
-const TakeAssessment: React.FC<TakeAssessmentProps> = ({
+const EditAssessment: React.FC<EditAssessmentProps> = ({
   inputAssessment,
   existingSubmission,
   canEdit = true,
@@ -223,7 +223,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         setTeamOptions(options);
         if (teams[0].TA.identifier === process.env.TRIAL_USER_ID)
           setIsTrial(true);
-        console.log(teams, isTrial);
       } else if (assessment.granularity === 'individual') {
         const users = data as User[];
         const options = users.map(user => ({
@@ -1026,4 +1025,4 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
   );
 };
 
-export default TakeAssessment;
+export default EditAssessment;
