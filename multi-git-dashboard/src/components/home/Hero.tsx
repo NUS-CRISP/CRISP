@@ -1,5 +1,5 @@
 import { Button, Group, Container, Image } from '@mantine/core';
-import Role from '@shared/types/auth/Role';
+import Role from '@shared/types/auth/CrispRole';
 import classes from '@styles/Home.module.css';
 import { IconArrowRight, IconBrandGithub } from '@tabler/icons-react';
 import { signIn } from 'next-auth/react';
