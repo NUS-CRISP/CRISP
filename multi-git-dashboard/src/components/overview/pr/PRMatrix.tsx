@@ -26,14 +26,24 @@ interface DataPoint {
   weight: number;
 }
 
-// Interface for centroid structure (same as DataPoint)
 interface Centroid {
   row: number;
   col: number;
   weight: number;
 }
+interface StudentSubgroup {
+  students: Set<number>;
+  cells: DataPoint[];
+}
 
-// Calculate Within-Cluster Sum of Squares (WCSS)
+const calculateDistance = (point1: DataPoint, point2: DataPoint): number => {
+  return Math.sqrt(
+    Math.pow(point1.row - point2.row, 2) +
+    Math.pow(point1.col - point2.col, 2) +
+    Math.pow((point1.weight - point2.weight) / 10, 2)
+  );
+};
+
 const calculateWCSS = (
   data: DataPoint[],
   clusters: number[],
@@ -43,17 +53,12 @@ const calculateWCSS = (
   for (let i = 0; i < data.length; i++) {
     const centroidIndex = clusters[i];
     const centroid = centroids[centroidIndex];
-    const dist = Math.sqrt(
-      Math.pow(data[i].row - centroid.row, 2) +
-        Math.pow(data[i].col - centroid.col, 2) +
-        Math.pow(data[i].weight - centroid.weight, 2) / 10
-    );
+    const dist = calculateDistance(data[i], centroid);
     wcss += dist * dist;
   }
   return wcss;
 };
 
-// Calculate centroids for each cluster
 const calculateCentroids = (
   data: DataPoint[],
   clusters: number[],
@@ -152,11 +157,7 @@ const kMeansClustering = (
       let newCluster = 0;
 
       for (let j = 0; j < k; j++) {
-        const dist = Math.sqrt(
-          Math.pow(data[i].row - centroids[j].row, 2) +
-            Math.pow(data[i].col - centroids[j].col, 2) +
-            Math.pow(data[i].weight - centroids[j].weight, 2) / 10 // scale down
-        );
+        const dist = calculateDistance(data[i], centroids[j]);
 
         if (dist < minDist) {
           minDist = dist;
@@ -196,6 +197,48 @@ const kMeansClustering = (
   }
 
   return clusters;
+};
+
+// identify student subgroups from cell clusters
+const identifyStudentSubgroups = (
+  cells: DataPoint[],
+  clusters: number[],
+  numClusters: number
+): StudentSubgroup[] => {
+ 
+  const cellsByCluster: DataPoint[][] = Array.from({ length: numClusters }, () => []);
+  
+  cells.forEach((cell, i) => {
+    if (i < clusters.length) {
+      cellsByCluster[clusters[i]].push(cell);
+    }
+  });
+
+  // For each cluster, identify the distinct students involved
+  const subgroups: StudentSubgroup[] = cellsByCluster.map(clusterCells => {
+    const students = new Set<number>();
+    
+    clusterCells.forEach(cell => {
+      students.add(cell.row); // reviewer
+      students.add(cell.col); // author
+    });
+    
+    return {
+      students,
+      cells: clusterCells
+    };
+  });
+
+  return subgroups.filter(subgroup => 
+    subgroup.students.size >= 2 && subgroup.students.size <= 5
+  );
+};
+
+const cellBelongsToSubgroup = (
+  cell: DataPoint,
+  subgroup: StudentSubgroup
+): boolean => {
+  return subgroup.students.has(cell.row) && subgroup.students.has(cell.col);
 };
 
 const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
@@ -335,10 +378,11 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
       .domain([0, maxWeight]);
 
     svg
-      .selectAll('rect')
+      .selectAll('rect.cell')
       .data(cells)
       .enter()
       .append('rect')
+      .attr('class', 'cell')
       .attr('x', d => xScale(String(d.row))!) // Use row (reviewer) for x-axis
       .attr('y', d => yScale(String(d.col))!) // Use col (author) for y-axis
       .attr('width', xScale.bandwidth())
@@ -407,59 +451,64 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
       .style('text-anchor', 'middle')
       .text('PR Author');
 
-    // K-means clustering visualization
     if (cells.length >= 3) {
       const numClusters = findOptimalKElbow(cells);
-
       const clusters = kMeansClustering(cells, numClusters);
+      
+      const studentSubgroups = identifyStudentSubgroups(cells, clusters, numClusters);
+      
+      const subgroupColors = d3.scaleOrdinal(["red", "orange", ...d3.schemeCategory10.slice(2)]).domain(studentSubgroups.map((_, i) => String(i)));
+      
+      studentSubgroups.forEach((subgroup, subgroupIndex) => {
+        if (subgroup.cells.length < 2) return;
+        
+        const color = subgroupColors(String(subgroupIndex));
+        
 
-      // group cells by cluster
-      const cellsByCluster: DataPoint[][] = Array.from(
-        { length: numClusters },
-        () => []
-      );
-      cells.forEach((cell, i) => {
-        if (i < clusters.length) {
-          cellsByCluster[clusters[i]].push(cell);
-        }
-      });
+        svg.selectAll('rect.cell')
+          .filter((d: any) => cellBelongsToSubgroup(d, subgroup))
+          .attr('stroke', color)
+          .attr('stroke-width', 2);
+        
+        const students = Array.from(subgroup.students);
+        
+        const hullPoints: [number, number][] = [];
+        
+        students.forEach(student => {
+          const x = (xScale(String(student)) || 0) + xScale.bandwidth() / 2;
+          const yTop = height + 50; 
+          hullPoints.push([x, yTop]);
+          
+          const y = (yScale(String(student)) || 0) + yScale.bandwidth() / 2;
+          const xLeft = -50; 
 
-      // ellipses around each cluster
-      cellsByCluster.forEach(clusterCells => {
-        if (clusterCells.length < 2) return;
+          hullPoints.push([xLeft, y]);
 
-        const uniquePeople = new Set<number>();
-        clusterCells.forEach(cell => {
-          uniquePeople.add(cell.row);
-          uniquePeople.add(cell.col);
         });
-
-        if (uniquePeople.size > 5) return;
-
-        const positions = clusterCells.map(cell => ({
-          // Swap x and y coordinates
-          x: xScale(String(cell.row))! + xScale.bandwidth() / 2,
-          y: yScale(String(cell.col))! + yScale.bandwidth() / 2,
+        
+        const studentsLabel = Array.from(subgroup.students)
+          .map(idx => topUsers[idx])
+          .sort()
+          .join(", ");
+        
+        const cellPositions = subgroup.cells.map(cell => ({
+          x: (xScale(String(cell.row)) || 0) + xScale.bandwidth() / 2,
+          y: (yScale(String(cell.col)) || 0) + yScale.bandwidth() / 2
         }));
-
-        const sumX = positions.reduce((sum, pos) => sum + pos.x, 0);
-        const sumY = positions.reduce((sum, pos) => sum + pos.y, 0);
-        const centerX = sumX / positions.length;
-        const centerY = sumY / positions.length;
-
-        let maxDistanceX = 0;
-        let maxDistanceY = 0;
-
-        positions.forEach(pos => {
-          const distanceX = Math.abs(pos.x - centerX);
-          const distanceY = Math.abs(pos.y - centerY);
-          maxDistanceX = Math.max(maxDistanceX, distanceX);
-          maxDistanceY = Math.max(maxDistanceY, distanceY);
-        });
-
+        
+        const centerX = d3.mean(cellPositions, d => d.x) || 0;
+        const centerY = d3.mean(cellPositions, d => d.y) || 0;
+        
+        const maxDistanceX = Math.max(
+          ...cellPositions.map(pos => Math.abs(pos.x - centerX))
+        );
+        const maxDistanceY = Math.max(
+          ...cellPositions.map(pos => Math.abs(pos.y - centerY))
+        );
+        
         const rxPadding = xScale.bandwidth() * 0.6;
         const ryPadding = yScale.bandwidth() * 0.6;
-
+        
         svg
           .append('ellipse')
           .attr('cx', centerX)
@@ -467,9 +516,21 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
           .attr('rx', maxDistanceX + rxPadding)
           .attr('ry', maxDistanceY + ryPadding)
           .attr('fill', 'none')
-          .attr('stroke', 'red')
+          .attr('stroke', color)
           .attr('stroke-dasharray', '5,5')
           .attr('stroke-width', 2);
+        
+        // group label
+        svg
+          .append('text')
+          .attr('x', centerX)
+          .attr('y', centerY - maxDistanceY - ryPadding - 10)
+          .attr('text-anchor', 'middle')
+          .attr('font-size', '12px')
+          .attr('font-weight', 'bold')
+          .attr('fill', color)
+          .text(`Group ${subgroupIndex + 1}: ${studentsLabel}`);
+
       });
     }
   }, [graphData]);
@@ -487,12 +548,15 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
         style={{
           position: 'absolute',
           opacity: 0,
-          background: 'rgba(0, 0, 0, 0.7)',
+          background: 'rgba(0, 0, 0, 0.8)',
           color: 'white',
           padding: '8px',
           borderRadius: '4px',
           pointerEvents: 'none',
           fontSize: '12px',
+          boxShadow: '0 2px 5px rgba(0, 0, 0, 0.3)',
+          zIndex: 1000,
+          transition: 'opacity 0.2s'
         }}
       ></div>
     </div>
