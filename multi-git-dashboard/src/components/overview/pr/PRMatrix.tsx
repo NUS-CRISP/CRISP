@@ -39,8 +39,8 @@ interface StudentSubgroup {
 const calculateDistance = (point1: DataPoint, point2: DataPoint): number => {
   return Math.sqrt(
     Math.pow(point1.row - point2.row, 2) +
-    Math.pow(point1.col - point2.col, 2) +
-    Math.pow((point1.weight - point2.weight) / 10, 2)
+      Math.pow(point1.col - point2.col, 2) +
+      Math.pow((point1.weight - point2.weight) / 10, 2)
   );
 };
 
@@ -205,9 +205,11 @@ const identifyStudentSubgroups = (
   clusters: number[],
   numClusters: number
 ): StudentSubgroup[] => {
- 
-  const cellsByCluster: DataPoint[][] = Array.from({ length: numClusters }, () => []);
-  
+  const cellsByCluster: DataPoint[][] = Array.from(
+    { length: numClusters },
+    () => []
+  );
+
   cells.forEach((cell, i) => {
     if (i < clusters.length) {
       cellsByCluster[clusters[i]].push(cell);
@@ -217,20 +219,20 @@ const identifyStudentSubgroups = (
   // For each cluster, identify the distinct students involved
   const subgroups: StudentSubgroup[] = cellsByCluster.map(clusterCells => {
     const students = new Set<number>();
-    
+
     clusterCells.forEach(cell => {
       students.add(cell.row); // reviewer
       students.add(cell.col); // author
     });
-    
+
     return {
       students,
-      cells: clusterCells
+      cells: clusterCells,
     };
   });
 
-  return subgroups.filter(subgroup => 
-    subgroup.students.size >= 2 && subgroup.students.size <= 5
+  return subgroups.filter(
+    subgroup => subgroup.students.size >= 2 && subgroup.students.size <= 5
   );
 };
 
@@ -454,61 +456,66 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
     if (cells.length >= 3) {
       const numClusters = findOptimalKElbow(cells);
       const clusters = kMeansClustering(cells, numClusters);
-      
-      const studentSubgroups = identifyStudentSubgroups(cells, clusters, numClusters);
-      
-      const subgroupColors = d3.scaleOrdinal(["red", "orange", ...d3.schemeCategory10.slice(2)]).domain(studentSubgroups.map((_, i) => String(i)));
-      
+
+      const studentSubgroups = identifyStudentSubgroups(
+        cells,
+        clusters,
+        numClusters
+      );
+
+      const subgroupColors = d3
+        .scaleOrdinal(['red', 'orange', ...d3.schemeCategory10.slice(2)])
+        .domain(studentSubgroups.map((_, i) => String(i)));
+
       studentSubgroups.forEach((subgroup, subgroupIndex) => {
         if (subgroup.cells.length < 2) return;
-        
-        const color = subgroupColors(String(subgroupIndex));
-        
 
-        svg.selectAll('rect.cell')
+        const color = subgroupColors(String(subgroupIndex));
+
+        svg
+          .selectAll('rect.cell')
           .filter((d: any) => cellBelongsToSubgroup(d, subgroup))
           .attr('stroke', color)
           .attr('stroke-width', 2);
-        
+
         const students = Array.from(subgroup.students);
-        
+
         const hullPoints: [number, number][] = [];
-        
+
         students.forEach(student => {
           const x = (xScale(String(student)) || 0) + xScale.bandwidth() / 2;
-          const yTop = height + 50; 
+          const yTop = height + 50;
           hullPoints.push([x, yTop]);
-          
+
           const y = (yScale(String(student)) || 0) + yScale.bandwidth() / 2;
-          const xLeft = -50; 
+          const xLeft = -50;
 
           hullPoints.push([xLeft, y]);
-
         });
-        
+
         const studentsLabel = Array.from(subgroup.students)
           .map(idx => topUsers[idx])
           .sort()
-          .join(", ");
-        
+          .join(', ');
+
         const cellPositions = subgroup.cells.map(cell => ({
           x: (xScale(String(cell.row)) || 0) + xScale.bandwidth() / 2,
-          y: (yScale(String(cell.col)) || 0) + yScale.bandwidth() / 2
+          y: (yScale(String(cell.col)) || 0) + yScale.bandwidth() / 2,
         }));
-        
+
         const centerX = d3.mean(cellPositions, d => d.x) || 0;
         const centerY = d3.mean(cellPositions, d => d.y) || 0;
-        
+
         const maxDistanceX = Math.max(
           ...cellPositions.map(pos => Math.abs(pos.x - centerX))
         );
         const maxDistanceY = Math.max(
           ...cellPositions.map(pos => Math.abs(pos.y - centerY))
         );
-        
+
         const rxPadding = xScale.bandwidth() * 0.6;
         const ryPadding = yScale.bandwidth() * 0.6;
-        
+
         svg
           .append('ellipse')
           .attr('cx', centerX)
@@ -519,7 +526,7 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
           .attr('stroke', color)
           .attr('stroke-dasharray', '5,5')
           .attr('stroke-width', 2);
-        
+
         // group label
         svg
           .append('text')
@@ -530,7 +537,6 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
           .attr('font-weight', 'bold')
           .attr('fill', color)
           .text(`Group ${subgroupIndex + 1}: ${studentsLabel}`);
-
       });
     }
   }, [graphData]);
@@ -556,7 +562,7 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
           fontSize: '12px',
           boxShadow: '0 2px 5px rgba(0, 0, 0, 0.3)',
           zIndex: 1000,
-          transition: 'opacity 0.2s'
+          transition: 'opacity 0.2s',
         }}
       ></div>
     </div>
