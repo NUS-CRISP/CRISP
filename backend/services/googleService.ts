@@ -4,7 +4,9 @@ import { NotFoundError } from './errors';
 import AssessmentModel from '../models/Assessment';
 import AccountModel from '../models/Account';
 import ResultModel from '../models/Result';
+import CrispRole from '@shared/types/auth/CrispRole';
 
+// TODO: This file will get nuked in a few months anyway, so don't care about the logical inaccuracies
 export const getAssessmentSheetData = async (
   assessmentId: string,
   accountId: string
@@ -27,7 +29,7 @@ export const getAssessmentSheetData = async (
     throw new NotFoundError('Sheets data not found');
   }
 
-  if (account.role === 'Teaching assistant') {
+  if (account.crispRole === CrispRole.Faculty) {
     const results = await ResultModel.find({
       assessment: assessmentId,
       marker: account.user,

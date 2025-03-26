@@ -22,9 +22,12 @@ import TeamModel from '@models/Team';
 import TeamDataModel from '@models/TeamData';
 import TeamSetModel from '@models/TeamSet';
 import UserModel, { User } from '@models/User';
-import Role from '@shared/types/auth/Role';
 import { JiraBoard } from '@shared/types/JiraData';
 import { MultipleChoiceOption } from '@shared/types/Question';
+import CrispRole from '@shared/types/auth/CrispRole';
+import CourseRole from '@shared/types/auth/CourseRole';
+
+const START_DATE_STRING = '2024-10-10T20:13:24Z';
 
 export const setupTutorialDataJob = async () => {
   let trialUser = await UserModel.findOne({ identifier: 'trial' });
@@ -49,7 +52,7 @@ export const setupTutorialDataJob = async () => {
     const trialAccountDoc = new AccountModel({
       email: 'trial@example.com',
       password: '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
-      role: 'Trial User',
+      role: CrispRole.TrialUser,
       isApproved: true,
       wantsEmailNotifications: false,
       wantsTelegramNotifications: false,
@@ -59,7 +62,7 @@ export const setupTutorialDataJob = async () => {
   }
 
   const adminAccount = await AccountModel.findOne({
-    role: Role.Admin,
+    crispRole: CrispRole.Admin,
   }).populate('user');
   if (!adminAccount || !adminAccount.user) {
     throw new Error(
@@ -70,6 +73,10 @@ export const setupTutorialDataJob = async () => {
 
   const existingTrialCourse = await CourseModel.findOne({ code: 'TRIAL' });
   if (existingTrialCourse) {
+    adminAccount.courseRoles = adminAccount.courseRoles.filter(
+      r => r.course !== existingTrialCourse._id.toString()
+    );
+    await adminAccount.save();
     const trialCourseId = existingTrialCourse._id;
     const teamSets = await TeamSetModel.find({ course: trialCourseId });
     const teamSetIds = teamSets.map(ts => ts._id);
@@ -135,7 +142,7 @@ export const setupTutorialDataJob = async () => {
     name: 'Trial',
     code: 'TRIAL',
     semester: 'AY2323 S2',
-    startDate: new Date(),
+    startDate: new Date(START_DATE_STRING),
     durationWeeks: 13,
     courseType: 'Normal',
     sprints: [],
@@ -147,6 +154,18 @@ export const setupTutorialDataJob = async () => {
   trialCourse.faculty.push(trialUser._id);
   trialCourse.faculty.push(adminUser._id);
   await trialCourse.save();
+
+  trialAccount.courseRoles.push({
+    course: trialCourse._id.toString(),
+    courseRole: CourseRole.Faculty,
+  });
+  await trialAccount.save();
+
+  adminAccount.courseRoles.push({
+    course: trialCourse._id.toString(),
+    courseRole: CourseRole.Faculty,
+  });
+  await adminAccount.save();
 
   if (!trialUser.enrolledCourses.includes(trialCourse._id)) {
     trialUser.enrolledCourses.push(trialCourse._id);
@@ -174,16 +193,38 @@ export const setupTutorialDataJob = async () => {
         email: `${identifier}@example.com`,
         password:
           '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
-        role: Role.Student,
+        crispRole: CrispRole.Normal,
         isApproved: true,
         wantsEmailNotifications: false,
         wantsTelegramNotifications: false,
         user: studentUser._id,
+        courseRoles: [],
       });
     } else {
       if (!studentUser.enrolledCourses.includes(trialCourse._id)) {
         studentUser.enrolledCourses.push(trialCourse._id);
+        let studentAccount = await AccountModel.findOne({
+          user: studentUser._id,
+        });
+        if (!studentAccount) {
+          studentAccount = await AccountModel.create({
+            email: `${identifier}@example.com`,
+            password:
+              '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
+            crispRole: CrispRole.Normal,
+            isApproved: true,
+            wantsEmailNotifications: false,
+            wantsTelegramNotifications: false,
+            user: studentUser._id,
+            courseRoles: [],
+          });
+        }
+        studentAccount.courseRoles.push({
+          course: trialCourse._id.toString(),
+          courseRole: CourseRole.Student,
+        });
         await studentUser.save();
+        await studentAccount.save();
       }
     }
     if (!trialCourse.students.includes(studentUser._id)) {
@@ -388,6 +429,10 @@ export const setupTutorialDataJob = async () => {
         due_on: new Date('2024-12-01T00:00:00Z'),
       },
     ],
+    aiInsights: {
+      text: "Code Quality:\n  - The project has a high number of code smells, above the average, indicating potential maintainability issues and a need for code cleanup.\n  - Duplicated lines density is above the median, suggesting some code duplication which could be improved.\n  - The project has a low coverage, indicating a lack of testing. This raises concerns about the code's reliability and potential for undiscovered bugs. \n\n\nProject Management:\n  - Lines per commit are higher than the median, implying potentially infrequent commits which is generally a bad practice. However, the relatively low bugs per commit compared to the average may indicate sufficient testing before committing or integrating code.\n\nAgile Principles and Practices:\n -  While the frequency of commits appears reasonable, the high number of bugs and code smells per commit and PR indicate a deviation from agile best practices. The team may not be adequately prioritizing code quality and testing throughout the development process.\n\nSoftware Development Best Practices:\n  - The low line coverage reveals a critical gap in testing practices.  Comprehensive testing is fundamental to ensuring software quality and reliability.\n  - The high number of code smells indicates potential deviations from established coding standards and best practices.\n  -  The project exhibits some code duplication, indicating potential areas for code refactoring and consolidation.\n\nRecommendations:\n1. **Prioritize implementing comprehensive testing.** The low line coverage signify a critical need for more rigorous testing practices. Implement unit, integration, and system tests to improve code reliability and catch bugs early. Aim to achieve a higher level of test coverage gradually.\n2. **Address code quality issues.** The high number of code smells and duplicated code suggest opportunities for improvement. Introduce regular code reviews and static analysis tools to identify and address these issues promptly.  Encourage refactoring to eliminate duplicated code and improve maintainability.\n3. **Reinforce agile principles, particularly regarding quality.**  While the project appears to have reasonably sized commits and PRs, the high number of associated bugs and code smells indicates a need to integrate quality checks more effectively into the agile workflow. Consider implementing quality gates or checklists at different stages of the development process to prevent quality issues from accumulating.\n",
+      date: new Date('2024-11-11T00:00:00Z'),
+    },
   });
   team.teamData = teamData._id;
   await team.save();
@@ -1692,8 +1737,8 @@ export const setupTutorialDataJob = async () => {
   });
   await mcAnswer.save();
 
-  const startDate = new Date();
-  startDate.setUTCFullYear(new Date().getUTCFullYear() - 1);
+  const startDate = new Date(START_DATE_STRING);
+  startDate.setUTCFullYear(new Date(START_DATE_STRING).getUTCFullYear() - 1);
 
   const assessment = await InternalAssessmentModel.create({
     course: trialCourse._id,
@@ -1730,15 +1775,37 @@ export const setupTutorialDataJob = async () => {
           email: `${spec.identifier}@example.com`,
           password:
             '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
-          role: Role.Student,
+          crispRole: CrispRole.Normal,
           isApproved: true,
           wantsEmailNotifications: false,
           wantsTelegramNotifications: false,
           user: newStudent._id,
+          courseRoles: [],
         });
       } else {
         if (!newStudent.enrolledCourses.includes(trialCourse._id)) {
           newStudent.enrolledCourses.push(trialCourse._id);
+          let studentAccount = await AccountModel.findOne({
+            user: newStudent._id,
+          });
+          if (!studentAccount) {
+            studentAccount = await AccountModel.create({
+              email: `${spec.identifier}@example.com`,
+              password:
+                '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
+              crispRole: CrispRole.Normal,
+              isApproved: true,
+              wantsEmailNotifications: false,
+              wantsTelegramNotifications: false,
+              user: newStudent._id,
+              courseRoles: [],
+            });
+          }
+          studentAccount.courseRoles.push({
+            course: trialCourse._id.toString(),
+            courseRole: CourseRole.Student,
+          });
+          await studentAccount.save();
           await newStudent.save();
         }
       }
@@ -1850,6 +1917,10 @@ export const setupTutorialDataJob = async () => {
           closed_at: new Date('2024-11-04T00:00:00Z'),
         },
       ],
+      aiInsights: {
+        text: 'Code Quality:\n  - The project has a low number of code smells, significantly above the average, indicating good maintainability and code quality.\n  - The project has a high coverage (0.0%), indicating a strong testing framework. \n\nProject Management:\n  - Lines per commit are lower than the average, implying potentially frequent commits which is generally a good practice. However, the relatively high bugs per commit may indicate insufficient testing before committing or integrating code. \n\n\nAgile Principles and Practices:\n -  The team has a good frequency of commits, and sufficient testing as shown by the low bugs per commit and low code smells per commit.\n  - The low number of code smells indicates low deviations from established coding standards and best practices.\n  -  The project exhibits some code duplication, indicating potential areas for code refactoring and consolidation.\n\nRecommendations:\n1. **Continue implementing comprehensive testing.** The  high line coverage signify rigorous testing practices. Continue mplementing unit, integration, and system tests to improve code reliability and catch bugs early.\n2. **Address code quality issues.** The number of code smells and duplicated code suggest there still exists some opportunities for improvement. Introduce regular code reviews and static analysis tools to identify and address these issues promptly.  Encourage refactoring to eliminate duplicated code and improve maintainability.\n3. **Reinforce agile principles, particularly regarding quality.**  While the project appears to have reasonably sized commits and PRs, the moderate number of associated bugs and code smells indicates a need to integrate quality checks more effectively into the agile workflow. Consider implementing quality gates or checklists at different stages of the development process to prevent quality issues from accumulating.\n',
+        date: new Date('2024-11-05T00:00:00Z'),
+      },
     });
     newTeam.teamData = newTeamData._id;
     await newTeam.save();

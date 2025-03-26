@@ -1,20 +1,23 @@
-import { Role } from '@shared/types/auth/Role';
+import { CourseRoleTuple } from '@shared/types/auth/CourseRole';
+import { CrispRole } from '@shared/types/auth/CrispRole';
 
 declare module 'next-auth' {
   interface User {
     id: string;
     name: string;
-    role: Role;
+    crispRole: CrispRole;
+    courseRoles: CourseRoleTuple[]
   }
 
   interface Session {
-    user: User;
+    user: CrispUser;
   }
 }
 
 declare module 'next-auth/jwt' {
   interface JWT {
     name: string;
-    role: Role;
+    crispRole: CrispRole;
+    courseRoles: CourseRoleTuple[]
   }
 }

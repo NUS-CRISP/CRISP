@@ -11,6 +11,6 @@ export const BOARD_API_PATH = '/rest/agile/1.0/board';
 export const ISSUE_API_PATH = '/rest/agile/1.0/issue';
 
 /*---------------------------------------Trofos---------------------------------------*/
-export const TROFOS_COURSE_PATH = '/course';
+export const TROFOS_COURSE_PATH = '/course/list';
 export const TROFOS_PROJECT_PATH = '/project';
 export const TROFOS_SPRINT_PATH = '/sprint';

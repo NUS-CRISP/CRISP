@@ -1,13 +1,39 @@
-import Roles, { Role } from '@shared/types/auth/Role';
+import CrispRoles, { CrispRole } from '@shared/types/auth/CrispRole';
+import CourseRoles, {
+  CourseRole,
+  CourseRoleTuple,
+} from '@shared/types/auth/CourseRole';
 import { useSession } from 'next-auth/react';
 
-export const hasPermission = (...roles: Role[]) => {
+export const hasPermission = (...CrispRoles: CrispRole[]) => {
   const { data: session } = useSession();
-  return (session?.user.role && roles.includes(session.user.role)) || false;
+  return (
+    (session?.user.crispRole && CrispRoles.includes(session.user.crispRole)) ||
+    false
+  );
 };
 
 export const hasFacultyPermission = () =>
-  hasPermission(Roles.Admin, Roles.Faculty);
+  hasPermission(CrispRoles.Admin, CrispRoles.Faculty);
+
+export const hasCoursePermission = (
+  courseId: string,
+  ...CourseRoles: CourseRole[]
+) => {
+  const { data: session } = useSession();
+  return (
+    (session?.user.courseRoles &&
+      CourseRoles.includes(
+        session.user.courseRoles.filter(
+          (r: CourseRoleTuple) => r.course === courseId
+        )[1]
+      )) ||
+    false
+  );
+};
+
+export const hasCourseFacultyPermission = (courseId: string) =>
+  hasCoursePermission(courseId, CourseRoles.Faculty);
 
 export const logLogin = async () => {
   const res = await fetch('/api/metrics/login', {
