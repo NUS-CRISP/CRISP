@@ -603,6 +603,7 @@ export const setupTutorialDataJob = async () => {
     'lines_per_pr',
     'code_smells_per_pr',
     'lines_per_story_point',
+    'overview_rank'
   ];
   const types = [
     'INT',
@@ -644,6 +645,7 @@ export const setupTutorialDataJob = async () => {
     'FLOAT',
     'FLOAT',
     'FLOAT',
+    'INT',
   ];
   const domains = [
     'Complexity',
@@ -685,6 +687,7 @@ export const setupTutorialDataJob = async () => {
     'Composite',
     'Composite',
     'Composite',
+    'Overview',
   ];
   const metricStats = [
     {
@@ -1476,6 +1479,7 @@ export const setupTutorialDataJob = async () => {
         '315.500',
         '9.000',
         '267.92',
+        '1',
       ],
       metricStats: metricStats[0],
       lines_per_story_point: {
@@ -1539,6 +1543,7 @@ export const setupTutorialDataJob = async () => {
         '316.000',
         '9.100',
         '254.50',
+        '1'
       ],
       metricStats: metricStats[1],
     },
@@ -1590,6 +1595,7 @@ export const setupTutorialDataJob = async () => {
         '317.000',
         '9.300',
         '241.25',
+        '1',
       ],
       metricStats: metricStats[2],
     },
@@ -1641,6 +1647,7 @@ export const setupTutorialDataJob = async () => {
         '318.000',
         '8.900',
         '302.47',
+        '1',
       ],
       metricStats: metricStats[3],
     },
@@ -1692,6 +1699,7 @@ export const setupTutorialDataJob = async () => {
         '319.000',
         '8.500',
         '294.59',
+        '1',
       ],
       metricStats: metricStats[4],
     },
@@ -2033,6 +2041,7 @@ export const setupTutorialDataJob = async () => {
           '50.000',
           '2.500',
           '100.00',
+          (teamNumber - 99).toString(),
         ],
         metricStats: metricStats[i],
       });
