@@ -6,7 +6,7 @@ declare module 'next-auth' {
     id: string;
     name: string;
     crispRole: CrispRole;
-    courseRoles: CourseRoleTuple[]
+    courseRoles: CourseRoleTuple[];
   }
 
   interface Session {
@@ -18,6 +18,6 @@ declare module 'next-auth/jwt' {
   interface JWT {
     name: string;
     crispRole: CrispRole;
-    courseRoles: CourseRoleTuple[]
+    courseRoles: CourseRoleTuple[];
   }
 }
