@@ -603,7 +603,7 @@ export const setupTutorialDataJob = async () => {
     'lines_per_pr',
     'code_smells_per_pr',
     'lines_per_story_point',
-    'overview_rank'
+    'overview_rank',
   ];
   const types = [
     'INT',
@@ -1543,7 +1543,7 @@ export const setupTutorialDataJob = async () => {
         '316.000',
         '9.100',
         '254.50',
-        '1'
+        '1',
       ],
       metricStats: metricStats[1],
     },
