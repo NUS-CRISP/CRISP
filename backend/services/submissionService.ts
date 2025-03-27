@@ -394,6 +394,7 @@ export const checkSubmissionUniqueness = async (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     a
       .toObject()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .selectedUserIds.map((uid: { toString: () => any }) => uid.toString())
   );
 
@@ -476,25 +477,10 @@ export const createSubmission = async (
         q => q._id.toString() === answer.question.toString()
       );
       if (!question) continue;
-      const { Model, question: savedQuestion } =
-        await getAnswerModelForTypeForCreation(
-          answer.type,
-          question._id.toString()
-        );
-      if (!Model) {
-        console.warn(`Question of type ${Model} not found`);
-        continue;
-      }
-      if (!savedQuestion) {
-        console.warn(`Question with ID ${answer.question} not found.`);
-        const newAnswer = new Model({
-          ...answer,
-          score: 0,
-        });
-        await newAnswer.save();
-        scoredAnswers.push(newAnswer);
-        continue;
-      }
+      const { Model } = await getAnswerModelForTypeForCreation(
+        answer.type,
+        question._id.toString()
+      );
       const newAnswer = new Model({
         ...answer,
         score: 0,
@@ -512,23 +498,9 @@ export const createSubmission = async (
         await getAnswerModelForTypeForCreation(
           answer.type,
           question!._id.toString()
-        );
-      if (!Model) {
-        console.warn(`Question of type ${Model} not found`);
-        continue;
-      }
-      if (!savedQuestion) {
-        console.warn(`Question with ID ${answer.question} not found.`);
-        const newAnswer = new Model({
-          ...answer,
-          score: 0,
-        });
-        await newAnswer.save();
-        scoredAnswers.push(newAnswer);
-        continue;
-      }
+        ); // Assume the data in the assessment above is valid, so question should always be findable.
       const answerScore = await calculateAnswerScore(
-        savedQuestion,
+        savedQuestion!,
         answer,
         assessment
       );
@@ -556,23 +528,23 @@ export const createSubmission = async (
   await submission.save();
 
   // If it is not a draft, update the AssessmentResult for each selected user
-  if (!isDraft) {
-    for (const selUserId of selectedStudentIds) {
-      let assessmentResult = await AssessmentResultModel.findOne({
+  for (const selUserId of selectedStudentIds) {
+    let assessmentResult = await AssessmentResultModel.findOne({
+      assessment: assessmentId,
+      student: selUserId,
+    });
+
+    if (!assessmentResult) {
+      assessmentResult = new AssessmentResultModel({
         assessment: assessmentId,
         student: selUserId,
+        marks: [],
+        averageScore: 0,
       });
+      await assessmentResult.save();
+    }
 
-      if (!assessmentResult) {
-        assessmentResult = new AssessmentResultModel({
-          assessment: assessmentId,
-          student: selUserId,
-          marks: [],
-          averageScore: 0,
-        });
-        await assessmentResult.save();
-      }
-
+    if (!isDraft) {
       const newMarkEntry: MarkEntry = {
         marker: user,
         submission: submission._id,
@@ -716,10 +688,7 @@ export const updateSubmission = async (
 
   const savedAssignment = submission.answers.find(
     ans => ans.type === 'Team Member Selection Answer'
-  ) as TeamMemberSelectionAnswer;
-  if (!savedAssignment) {
-    console.warn('Original Submission missing Team Member Selection Answer');
-  }
+  ) as TeamMemberSelectionAnswer; // We just assume the one in the database is valid.
 
   if (savedAssignment) {
     for (const memberId of assignment.selectedUserIds) {
@@ -760,12 +729,7 @@ export const updateSubmission = async (
       );
 
       if (!question) {
-        console.warn(
-          `Question with ID ${answer.question} not found in assessment ${assessment.id}.`
-        );
-        // Just store 0 if the question doesn't exist
-        answer.score = 0;
-        return;
+        throw new BadRequestError('Question referenced in answer not found');
       }
       const questionId = question._id;
 
@@ -774,23 +738,12 @@ export const updateSubmission = async (
         questionId.toString(),
         answer.type
       );
-      if (!questionDoc) {
-        console.warn(
-          `Mismatched question or doc not found for question ${questionId}`
-        );
-        answer.score = 0;
-        return;
-      }
       const savedAnswer = getAnswerModelForTypeForUpdate(
         answer.type,
         answer._id
       );
-      if (!savedAnswer) {
-        console.warn(`Answer type ${savedAnswer} not found`);
-        return;
-      }
       const answerScore = await calculateAnswerScore(
-        questionDoc,
+        questionDoc!,
         answer,
         assessment
       );
@@ -816,57 +769,41 @@ export const updateSubmission = async (
 
   await submission.save();
 
-  if (!isDraft && assignment) {
-    for (const selectedUserId of assignment.selectedUserIds) {
-      const assessmentResult = await AssessmentResultModel.findOne({
-        assessment: assessment._id,
-        student: selectedUserId,
-      });
+  for (const selectedUserId of assignment.selectedUserIds) {
+    const assessmentResult = await AssessmentResultModel.findOne({
+      assessment: assessment._id,
+      student: selectedUserId,
+    });
 
-      if (!assessmentResult && !initIsDraft) {
-        throw new NotFoundError(
-          'No previous assessment result found. Something went wrong with the flow.'
-        );
-      } else if (!assessmentResult) {
-        const newResult = new AssessmentResultModel({
-          assessment: assessment._id,
-          student: selectedUserId,
-          marks: [
-            {
-              marker: user,
-              submission: submission._id,
-              score: totalScore,
-            },
-          ],
-          averageScore: 0,
-        });
-        await newResult.save();
-        await recalculateResult(newResult.id);
-      } else {
-        // Update an existing mark entry or add a new one
-        const markEntryIndex = assessmentResult.marks.findIndex(
-          mark => mark.submission.toString() === submission._id.toString()
-        );
-
-        if (markEntryIndex !== -1) {
-          assessmentResult.marks[markEntryIndex].marker = user;
-          assessmentResult.marks[markEntryIndex].score = totalScore;
-        } else if (!initIsDraft) {
-          throw new NotFoundError(
-            'Mark entry for this submission not found in assessment result.'
-          );
-        } else {
-          // If no MarkEntry yet, push a new one
-          assessmentResult.marks.push({
-            marker: user,
-            submission: submission._id,
-            score: totalScore,
-          });
-        }
-        await assessmentResult.save();
-        await recalculateResult(assessmentResult.id);
-      }
+    if (!assessmentResult) {
+      throw new NotFoundError(
+        'No previous assessment result found. Something went wrong with the flow.'
+      );
     }
+
+    if (isDraft) return submission;
+    const markEntryIndex = assessmentResult.marks.findIndex(
+      mark => mark.submission.toString() === submission._id.toString()
+    );
+
+    if (markEntryIndex !== -1) {
+      assessmentResult.marks[markEntryIndex].marker = user;
+      assessmentResult.marks[markEntryIndex].score = totalScore;
+    } else if (!initIsDraft) {
+      throw new NotFoundError(
+        'Mark entry for this submission not found in assessment result.'
+      );
+    } else {
+      // If no MarkEntry yet, push a new one
+      assessmentResult.marks.push({
+        marker: user,
+        submission: submission._id,
+        score: totalScore,
+      });
+    }
+
+    await assessmentResult.save();
+    await recalculateResult(assessmentResult.id);
   }
 
   return submission;

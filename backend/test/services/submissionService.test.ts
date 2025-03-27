@@ -1823,6 +1823,27 @@ describe('submissionService', () => {
       expect(draftSubmission.isDraft).toBe(true);
     });
 
+    it('should throw BadRequestError if question referenced by answer does not match', async () => {
+      const fullAnswers = buildAllAnswers(assessment, student._id.toString());
+      // Optionally change the TMS to reference the student
+      (fullAnswers[0] as TeamMemberSelectionAnswer).selectedUserIds = [
+        student._id.toString(),
+      ];
+      (fullAnswers[1] as MultipleChoiceAnswer).question =
+        new mongoose.Types.ObjectId();
+
+      await expect(
+        createSubmission(
+          assessment._id.toString(),
+          ta._id.toString(),
+          fullAnswers,
+          false
+        )
+      ).rejects.toThrow(
+        `Question ${(fullAnswers[1] as MultipleChoiceAnswer).question} not found in this assessment`
+      );
+    });
+
     it('should throw an error if the same grader tries to create a second submission for the same user(s)', async () => {
       const answers = [
         {
@@ -2087,7 +2108,69 @@ describe('submissionService', () => {
       expect(updatedSubmission.isDraft).toBe(false);
     });
 
-    it('should not create or update an AssessmentResult if the submission is a draft', async () => {
+    it('should update a submission with isDraft not changing', async () => {
+      // First create with full answers
+      let fullAnswers = buildAllAnswers(assessment, student._id.toString());
+      const submission = await createSubmission(
+        assessment._id.toString(),
+        ta._id.toString(),
+        fullAnswers,
+        true
+      );
+
+      const result = await AssessmentResultModel.findOne({
+        student: student._id,
+        assessment: assessment._id,
+      });
+      expect(result).toBeDefined();
+
+      // Now we update: for instance, let's change the MC (index 1) from 'Option B' to 'Option A'
+      fullAnswers = buildAllAnswers(assessment, student._id.toString());
+      (fullAnswers[1] as MultipleChoiceAnswer).value = 'Option A';
+
+      const updatedSubmission = await updateSubmission(
+        submission._id.toString(),
+        ta._id.toString(),
+        account._id.toString(), // faculty => bypass = true
+        fullAnswers,
+        true
+      );
+      expect(updatedSubmission.isDraft).toBe(true);
+    });
+
+    it('should throw BadRequestError because of missing TMS answer', async () => {
+      // First create with full answers
+      let fullAnswers = buildAllAnswers(assessment, student._id.toString());
+      const submission = await createSubmission(
+        assessment._id.toString(),
+        ta._id.toString(),
+        fullAnswers,
+        true
+      );
+
+      const result = await AssessmentResultModel.findOne({
+        student: student._id,
+        assessment: assessment._id,
+      });
+      expect(result).toBeDefined();
+
+      // Now we update: for instance, let's change the MC (index 1) from 'Option B' to 'Option A'
+      fullAnswers = buildAllAnswers(assessment, student._id.toString());
+      (fullAnswers[1] as MultipleChoiceAnswer).value = 'Option A';
+      fullAnswers[0].type = 'Short Response Answer';
+
+      await expect(
+        updateSubmission(
+          submission._id.toString(),
+          ta._id.toString(),
+          account._id.toString(), // faculty => bypass = true
+          fullAnswers,
+          true
+        )
+      ).rejects.toThrow('Team Member Selection Answer is required');
+    });
+
+    it('should create or update an AssessmentResult if the submission is a draft', async () => {
       const answers = [
         {
           question: teamMemberQuestion._id,
@@ -2107,7 +2190,38 @@ describe('submissionService', () => {
         student: student._id,
         assessment: assessment._id,
       });
-      expect(result).toBeNull();
+      expect(result).toBeDefined();
+    });
+
+    it('should throw BadRequestError for answer referencing wrong question id', async () => {
+      // First create with full answers
+      let fullAnswers = buildAllAnswers(assessment, student._id.toString());
+      const submission = await createSubmission(
+        assessment._id.toString(),
+        ta._id.toString(),
+        fullAnswers,
+        true
+      );
+
+      const result = await AssessmentResultModel.findOne({
+        student: student._id,
+        assessment: assessment._id,
+      });
+      expect(result).toBeDefined();
+
+      fullAnswers = buildAllAnswers(assessment, student._id.toString());
+      (fullAnswers[1] as MultipleChoiceAnswer).question =
+        new mongoose.Types.ObjectId();
+
+      await expect(
+        updateSubmission(
+          submission._id.toString(),
+          ta._id.toString(),
+          account._id.toString(),
+          fullAnswers,
+          true
+        )
+      ).rejects.toThrow('Question referenced in answer not found');
     });
 
     it('should throw BadRequestError if the new TMS answer has different selectedUserIds than the original submission', async () => {
