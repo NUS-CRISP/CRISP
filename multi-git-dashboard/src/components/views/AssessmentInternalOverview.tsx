@@ -76,6 +76,11 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
   const router = useRouter();
   const deleteInternalAssessmentApiRoute = `/api/internal-assessments/${assessment?._id}`;
 
+  const hasDraftSubmissions = useMemo(
+    () => submissions.some(sub => sub.isDraft),
+    [submissions]
+  );
+
   const formatDate = (date: Date | string | undefined) => {
     if (!date) return 'N/A';
     const d = new Date(date);
@@ -120,12 +125,7 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
         return;
       }
 
-      let data: Submission[] = await response.json();
-
-      // For faculty, filter out drafts
-      if (hasFacultyPermission) {
-        data = data.filter(submission => !submission.isDraft);
-      }
+      const data: Submission[] = await response.json();
 
       setSubmissions(data);
     } catch (error) {
@@ -374,8 +374,6 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
         );
         return;
       }
-      const data = await response.json();
-      console.log('TA assignments saved successfully:', data);
       toggleTeamAssignmentModal();
     } catch (error) {
       console.error('Error saving TA assignments:', error);
@@ -490,15 +488,17 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
         {assessment && assessment.isReleased && (
           <Group justify="center" mt="md">
             {assignedEntitiesAvailable ? (
-              <Button
-                onClick={() =>
-                  onTakeAssessmentClicked()
-                }
-              >
+              <Button onClick={() => onTakeAssessmentClicked()}>
                 Submit Assessment
               </Button>
+            ) : hasDraftSubmissions ? (
+              <Text c="dimmed">
+                Pending submission drafts only; no remaining teams or users await new submissions.
+              </Text>
             ) : (
-              <Text c="dimmed">All assigned teams/users have been graded</Text>
+              <Text c="dimmed">
+                All assigned teams/users have been graded
+              </Text>
             )}
           </Group>
         )}

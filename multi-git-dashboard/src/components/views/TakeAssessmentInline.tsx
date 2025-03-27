@@ -44,6 +44,7 @@ interface TakeAssessmentInlineProps {
 }
 
 const TakeAssessmentInline: React.FC<TakeAssessmentInlineProps> = ({
+  courseId,
   assessmentId,
   onReturnToOverview,
 }) => {
@@ -448,6 +449,61 @@ const TakeAssessmentInline: React.FC<TakeAssessmentInlineProps> = ({
     }
   };
 
+  const handleSaveDraft = async () => {
+    setIsSubmitting(true);
+    try {
+      const formattedAnswers = Object.entries(answers)
+        .map(([qId, ans]) => {
+          const questionObj = questions.find(q => q._id === qId);
+          if (!questionObj) return null;
+          return {
+            question: qId,
+            type: questionObj.type + ' Answer',
+            ...formatAnswerForSubmission(questionObj, ans),
+          };
+        })
+        .filter((a): a is AnswerUnion => a !== null);
+
+      const submissionData = {
+        answers: formattedAnswers,
+        isDraft: true,
+        submissionId: submission?._id,
+      };
+
+      const resp = await fetch(submitAssessmentApiRoute, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submissionData),
+      });
+      if (!resp.ok) {
+        throw new Error('Error submitting assessment');
+      }
+
+      const { submission: savedSubmission } = await resp.json();
+
+      // If you want to discard the submission data after final submission:
+      // (Based on your note “submit clicked will delete saved answers after submission is complete”)
+      setSubmission(undefined);
+      setAnswers({});
+
+      showNotification({
+        title: 'Submission Draft Saved',
+        message: 'Your assessment draft has been saved.',
+        color: 'green',
+      });
+
+      // Return to overview
+      onReturnToOverview();
+
+      router.push(`/courses/${courseId}/internal-assessments/${assessmentId}/submission/${savedSubmission._id}`);
+    } catch (err) {
+      console.error(err);
+      alert('Error submitting assessment: ' + err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleBackClick = () => {
     setShowBackModal(true);
   };
@@ -620,9 +676,7 @@ const TakeAssessmentInline: React.FC<TakeAssessmentInlineProps> = ({
               Delete Draft
             </Button>
           )}
-          {/* Temporarily disabled
-              <Button variant="default" onClick={handleSaveDraft}>Save Draft</Button>
-          */}
+          <Button variant="default" onClick={handleSaveDraft}>Save Draft</Button>
           <Button
             onClick={handleSubmitClick}
             loading={isSubmitting}
