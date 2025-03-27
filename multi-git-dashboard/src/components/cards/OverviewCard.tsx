@@ -21,7 +21,6 @@ export const OverviewCard: React.FC<OverviewProps> = ({
   teamData,
   teamDatas,
   dateUtils,
-  profileGetter,
 }) => {
   const totalWeeks = 15;
   const [selectedWeekRange, setSelectedWeekRange] = useState<[number, number]>([

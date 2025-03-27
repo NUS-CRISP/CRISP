@@ -33,9 +33,9 @@ export const setupTutorialDataJob = async () => {
   let trialUser = await UserModel.findOne({ identifier: 'trial' });
   let trialAccount = trialUser
     ? await AccountModel.findOne({
-      email: 'trial@example.com',
-      user: trialUser._id,
-    })
+        email: 'trial@example.com',
+        user: trialUser._id,
+      })
     : null;
 
   if (!trialUser) {
@@ -434,13 +434,13 @@ export const setupTutorialDataJob = async () => {
                 user: 'Student 2',
                 body: 'Please add rate limiting to prevent brute force attacks.',
                 createdAt: new Date('2024-11-15T11:27:00Z'),
-              }
+              },
             ],
           },
           {
             id: 9002,
             user: 'Student 3',
-            body: 'The authentication module looks good overall, but I agree with Student 2\'s security concerns.',
+            body: "The authentication module looks good overall, but I agree with Student 2's security concerns.",
             state: 'COMMENTED',
             submittedAt: new Date('2024-11-15T13:45:00Z'),
             comments: [
@@ -449,13 +449,13 @@ export const setupTutorialDataJob = async () => {
                 user: 'Student 3',
                 body: 'Also, consider adding JWT expiration times for better security.',
                 createdAt: new Date('2024-11-15T13:47:00Z'),
-              }
+              },
             ],
           },
           {
             id: 9003,
             user: 'Student 1',
-            body: 'I\'ve addressed all the security concerns raised. Updated the hashing, added rate limiting, and implemented JWT expiration.',
+            body: "I've addressed all the security concerns raised. Updated the hashing, added rate limiting, and implemented JWT expiration.",
             state: 'COMMENTED',
             submittedAt: new Date('2024-11-16T10:30:00Z'),
             comments: [],
@@ -475,7 +475,7 @@ export const setupTutorialDataJob = async () => {
             state: 'APPROVED',
             submittedAt: new Date('2024-11-16T16:15:00Z'),
             comments: [],
-          }
+          },
         ],
       },
       {
@@ -505,13 +505,13 @@ export const setupTutorialDataJob = async () => {
                 user: 'Student 6',
                 body: 'The color scheme might be difficult for colorblind users. Could we use a more accessible palette?',
                 createdAt: new Date('2024-11-18T10:20:00Z'),
-              }
+              },
             ],
           },
           {
             id: 9007,
             user: 'Student 3',
-            body: 'I\'m concerned about the performance with large datasets. Did you test with 10k+ records?',
+            body: "I'm concerned about the performance with large datasets. Did you test with 10k+ records?",
             state: 'CHANGES_REQUESTED',
             submittedAt: new Date('2024-11-18T11:30:00Z'),
             comments: [
@@ -520,13 +520,13 @@ export const setupTutorialDataJob = async () => {
                 user: 'Student 3',
                 body: 'Suggest implementing data pagination or virtualized lists to handle larger data sets more efficiently.',
                 createdAt: new Date('2024-11-18T11:32:00Z'),
-              }
+              },
             ],
           },
           {
             id: 9008,
             user: 'Student 5',
-            body: 'I\'ve added tooltips, updated the color scheme to be colorblind-friendly, and implemented virtualized lists for better performance with large datasets.',
+            body: "I've added tooltips, updated the color scheme to be colorblind-friendly, and implemented virtualized lists for better performance with large datasets.",
             state: 'COMMENTED',
             submittedAt: new Date('2024-11-19T09:45:00Z'),
             comments: [],
@@ -534,7 +534,7 @@ export const setupTutorialDataJob = async () => {
           {
             id: 9009,
             user: 'Student 3',
-            body: 'I\'ve tested the performance improvements and they work well. Approving now.',
+            body: "I've tested the performance improvements and they work well. Approving now.",
             state: 'APPROVED',
             submittedAt: new Date('2024-11-19T14:10:00Z'),
             comments: [],
@@ -546,7 +546,7 @@ export const setupTutorialDataJob = async () => {
             state: 'APPROVED',
             submittedAt: new Date('2024-11-19T16:20:00Z'),
             comments: [],
-          }
+          },
         ],
       },
       {
@@ -570,13 +570,13 @@ export const setupTutorialDataJob = async () => {
                 user: 'Student 2',
                 body: 'Did you consider adding indexes for the frequently queried fields?',
                 createdAt: new Date('2024-11-22T13:42:00Z'),
-              }
+              },
             ],
           },
           {
             id: 9012,
             user: 'Student 4',
-            body: 'Good point about indexes. I\'ve added them for the most frequently queried fields.',
+            body: "Good point about indexes. I've added them for the most frequently queried fields.",
             state: 'COMMENTED',
             submittedAt: new Date('2024-11-22T15:30:00Z'),
             comments: [],
@@ -584,7 +584,7 @@ export const setupTutorialDataJob = async () => {
           {
             id: 9013,
             user: 'Student 6',
-            body: 'I\'m not convinced by the approach in the repository layer. Let\'s discuss this further.',
+            body: "I'm not convinced by the approach in the repository layer. Let's discuss this further.",
             state: 'CHANGES_REQUESTED',
             submittedAt: new Date('2024-11-22T16:45:00Z'),
             comments: [
@@ -599,13 +599,13 @@ export const setupTutorialDataJob = async () => {
                 user: 'Student 6',
                 body: 'I suggest simplifying it to improve maintainability without sacrificing performance.',
                 createdAt: new Date('2024-11-22T16:50:00Z'),
-              }
+              },
             ],
           },
           {
             id: 9014,
             user: 'Student 4',
-            body: 'After our offline discussion, I\'ve simplified the repository implementation while maintaining the performance improvements.',
+            body: "After our offline discussion, I've simplified the repository implementation while maintaining the performance improvements.",
             state: 'COMMENTED',
             submittedAt: new Date('2024-11-23T10:15:00Z'),
             comments: [],
@@ -625,12 +625,13 @@ export const setupTutorialDataJob = async () => {
             state: 'APPROVED',
             submittedAt: new Date('2024-11-23T14:20:00Z'),
             comments: [],
-          }
+          },
         ],
       },
       {
         id: 2171165199,
-        title: 'fix: Resolve concurrent modification issues in shared data structures',
+        title:
+          'fix: Resolve concurrent modification issues in shared data structures',
         user: 'Student 3',
         url: 'https://github.com/cs4218/cs4218-project-2024-team01/pull/33',
         state: 'closed',
@@ -640,7 +641,7 @@ export const setupTutorialDataJob = async () => {
           {
             id: 9017,
             user: 'Student 5',
-            body: 'I\'m concerned that the thread synchronization approach might lead to deadlocks.',
+            body: "I'm concerned that the thread synchronization approach might lead to deadlocks.",
             state: 'CHANGES_REQUESTED',
             submittedAt: new Date('2024-11-25T15:10:00Z'),
             comments: [
@@ -649,13 +650,13 @@ export const setupTutorialDataJob = async () => {
                 user: 'Student 5',
                 body: 'Consider using the read-write lock pattern instead of full synchronization to reduce contention.',
                 createdAt: new Date('2024-11-25T15:12:00Z'),
-              }
+              },
             ],
           },
           {
             id: 9018,
             user: 'Student 3',
-            body: 'Good suggestion. I\'ve updated the implementation to use read-write locks where appropriate.',
+            body: "Good suggestion. I've updated the implementation to use read-write locks where appropriate.",
             state: 'COMMENTED',
             submittedAt: new Date('2024-11-25T17:30:00Z'),
             comments: [],
@@ -663,7 +664,7 @@ export const setupTutorialDataJob = async () => {
           {
             id: 9019,
             user: 'Student 1',
-            body: 'I\'ve reviewed the changes and I\'m still seeing a potential race condition in the cache update logic.',
+            body: "I've reviewed the changes and I'm still seeing a potential race condition in the cache update logic.",
             state: 'CHANGES_REQUESTED',
             submittedAt: new Date('2024-11-26T09:15:00Z'),
             comments: [
@@ -672,7 +673,7 @@ export const setupTutorialDataJob = async () => {
                 user: 'Student 1',
                 body: 'Check line 157 - the cache invalidation and update needs to be atomic.',
                 createdAt: new Date('2024-11-26T09:17:00Z'),
-              }
+              },
             ],
           },
           {
@@ -698,7 +699,7 @@ export const setupTutorialDataJob = async () => {
             state: 'APPROVED',
             submittedAt: new Date('2024-11-26T16:30:00Z'),
             comments: [],
-          }
+          },
         ],
       },
       {
@@ -722,7 +723,7 @@ export const setupTutorialDataJob = async () => {
                 user: 'Student 4',
                 body: 'Consider adding screenshots on test failures for better debugging.',
                 createdAt: new Date('2024-11-28T13:17:00Z'),
-              }
+              },
             ],
           },
           {
@@ -736,7 +737,7 @@ export const setupTutorialDataJob = async () => {
           {
             id: 9025,
             user: 'Student 6',
-            body: 'I\'m dismissing my review because I realized I don\'t have enough context on Cypress to provide a meaningful review.',
+            body: "I'm dismissing my review because I realized I don't have enough context on Cypress to provide a meaningful review.",
             state: 'DISMISSED',
             submittedAt: new Date('2024-11-28T16:45:00Z'),
             comments: [
@@ -745,7 +746,7 @@ export const setupTutorialDataJob = async () => {
                 user: 'Student 6',
                 body: 'I initially had concerns about the test structure but after reading the docs, I see this is the recommended approach.',
                 createdAt: new Date('2024-11-28T16:47:00Z'),
-              }
+              },
             ],
           },
           {
@@ -760,7 +761,7 @@ export const setupTutorialDataJob = async () => {
                 user: 'Student 5',
                 body: 'Please add a GitHub Actions workflow file that runs the Cypress tests on PRs.',
                 createdAt: new Date('2024-11-29T09:12:00Z'),
-              }
+              },
             ],
           },
           {
@@ -786,7 +787,7 @@ export const setupTutorialDataJob = async () => {
             state: 'APPROVED',
             submittedAt: new Date('2024-11-29T15:20:00Z'),
             comments: [],
-          }
+          },
         ],
       },
       {
@@ -816,13 +817,13 @@ export const setupTutorialDataJob = async () => {
                 user: 'Student 3',
                 body: 'Also, the reconnection strategy could be improved with exponential backoff.',
                 createdAt: new Date('2024-12-01T11:35:00Z'),
-              }
+              },
             ],
           },
           {
             id: 9031,
             user: 'Student 1',
-            body: 'Great work on implementing the WebSockets! I second Student 3\'s concerns about scaling.',
+            body: "Great work on implementing the WebSockets! I second Student 3's concerns about scaling.",
             state: 'COMMENTED',
             submittedAt: new Date('2024-12-01T13:45:00Z'),
             comments: [
@@ -831,13 +832,13 @@ export const setupTutorialDataJob = async () => {
                 user: 'Student 1',
                 body: 'We should also consider adding message compression for bandwidth efficiency.',
                 createdAt: new Date('2024-12-01T13:47:00Z'),
-              }
+              },
             ],
           },
           {
             id: 9032,
             user: 'Student 6',
-            body: 'I\'ve added Redis for pub/sub, implemented exponential backoff for reconnection, and added message compression.',
+            body: "I've added Redis for pub/sub, implemented exponential backoff for reconnection, and added message compression.",
             state: 'COMMENTED',
             submittedAt: new Date('2024-12-02T09:15:00Z'),
             comments: [],
@@ -845,16 +846,16 @@ export const setupTutorialDataJob = async () => {
           {
             id: 9033,
             user: 'Student 3',
-            body: 'The Redis integration looks good, but there\'s an issue with the error handling in the reconnection logic.',
+            body: "The Redis integration looks good, but there's an issue with the error handling in the reconnection logic.",
             state: 'CHANGES_REQUESTED',
             submittedAt: new Date('2024-12-02T10:30:00Z'),
             comments: [
               {
                 id: 618,
                 user: 'Student 3',
-                body: 'The error callback in the reconnection attempt doesn\'t propagate the error correctly.',
+                body: "The error callback in the reconnection attempt doesn't propagate the error correctly.",
                 createdAt: new Date('2024-12-02T10:32:00Z'),
-              }
+              },
             ],
           },
           {
@@ -872,7 +873,7 @@ export const setupTutorialDataJob = async () => {
             state: 'APPROVED',
             submittedAt: new Date('2024-12-02T12:30:00Z'),
             comments: [],
-          }
+          },
         ],
       },
       {
@@ -887,7 +888,7 @@ export const setupTutorialDataJob = async () => {
           {
             id: 9036,
             user: 'Student 4',
-            body: 'Great security improvements! I\'ve tested the fixes and they work well.',
+            body: "Great security improvements! I've tested the fixes and they work well.",
             state: 'APPROVED',
             submittedAt: new Date('2024-12-03T10:15:00Z'),
             comments: [
@@ -896,7 +897,7 @@ export const setupTutorialDataJob = async () => {
                 user: 'Student 4',
                 body: 'I appreciate the thorough approach to fixing these vulnerabilities.',
                 createdAt: new Date('2024-12-03T10:17:00Z'),
-              }
+              },
             ],
           },
           {
@@ -909,15 +910,15 @@ export const setupTutorialDataJob = async () => {
               {
                 id: 620,
                 user: 'Student 2',
-                body: 'There\'s still a path traversal vulnerability in the file name validation.',
+                body: "There's still a path traversal vulnerability in the file name validation.",
                 createdAt: new Date('2024-12-03T11:32:00Z'),
-              }
+              },
             ],
           },
           {
             id: 9038,
             user: 'Student 1',
-            body: 'Good catch! I\'ve fixed the path traversal vulnerability and added tests for it.',
+            body: "Good catch! I've fixed the path traversal vulnerability and added tests for it.",
             state: 'COMMENTED',
             submittedAt: new Date('2024-12-03T13:45:00Z'),
             comments: [],
@@ -933,11 +934,11 @@ export const setupTutorialDataJob = async () => {
           {
             id: 9040,
             user: 'Student 5',
-            body: 'I\'ve reviewed the security fixes and they\'re solid. Let\'s merge this ASAP.',
+            body: "I've reviewed the security fixes and they're solid. Let's merge this ASAP.",
             state: 'APPROVED',
             submittedAt: new Date('2024-12-03T16:30:00Z'),
             comments: [],
-          }
+          },
         ],
       },
       {
@@ -965,9 +966,9 @@ export const setupTutorialDataJob = async () => {
               {
                 id: 622,
                 user: 'Student 3',
-                body: 'Also, let\'s add caching for these expensive aggregation queries.',
+                body: "Also, let's add caching for these expensive aggregation queries.",
                 createdAt: new Date('2024-12-05T11:20:00Z'),
-              }
+              },
             ],
           },
           {
@@ -982,13 +983,13 @@ export const setupTutorialDataJob = async () => {
                 user: 'Student 6',
                 body: 'Could we add the ability to export the analytics data to CSV?',
                 createdAt: new Date('2024-12-05T13:32:00Z'),
-              }
+              },
             ],
           },
           {
             id: 9043,
             user: 'Student 5',
-            body: 'I\'ve moved the aggregation to the database layer, added caching, and implemented CSV export functionality.',
+            body: "I've moved the aggregation to the database layer, added caching, and implemented CSV export functionality.",
             state: 'COMMENTED',
             submittedAt: new Date('2024-12-06T10:45:00Z'),
             comments: [],
@@ -1016,12 +1017,13 @@ export const setupTutorialDataJob = async () => {
             state: 'APPROVED',
             submittedAt: new Date('2024-12-06T17:45:00Z'),
             comments: [],
-          }
+          },
         ],
       },
       {
         id: 2171165204,
-        title: 'refactor: Modularize codebase with better separation of concerns',
+        title:
+          'refactor: Modularize codebase with better separation of concerns',
         user: 'Student 3',
         url: 'https://github.com/cs4218/cs4218-project-2024-team01/pull/38',
         state: 'closed',
@@ -1040,20 +1042,20 @@ export const setupTutorialDataJob = async () => {
                 user: 'Student 2',
                 body: 'I especially like the new service layer that separates business logic from the controllers.',
                 createdAt: new Date('2024-12-08T13:17:00Z'),
-              }
+              },
             ],
           },
           {
             id: 9048,
             user: 'Student 1',
-            body: 'While I appreciate the improved organization, I\'m concerned about some circular dependencies.',
+            body: "While I appreciate the improved organization, I'm concerned about some circular dependencies.",
             state: 'CHANGES_REQUESTED',
             submittedAt: new Date('2024-12-08T15:30:00Z'),
             comments: [
               {
                 id: 625,
                 user: 'Student 1',
-                body: 'There\'s a circular import between the user service and the auth service.',
+                body: "There's a circular import between the user service and the auth service.",
                 createdAt: new Date('2024-12-08T15:32:00Z'),
               },
               {
@@ -1061,13 +1063,13 @@ export const setupTutorialDataJob = async () => {
                 user: 'Student 1',
                 body: 'Also, the naming convention for services is inconsistent in some places.',
                 createdAt: new Date('2024-12-08T15:35:00Z'),
-              }
+              },
             ],
           },
           {
             id: 9049,
             user: 'Student 3',
-            body: 'I\'ve fixed the circular dependencies by creating a shared types module and standardized the naming conventions.',
+            body: "I've fixed the circular dependencies by creating a shared types module and standardized the naming conventions.",
             state: 'COMMENTED',
             submittedAt: new Date('2024-12-09T09:45:00Z'),
             comments: [],
@@ -1095,9 +1097,9 @@ export const setupTutorialDataJob = async () => {
             state: 'APPROVED',
             submittedAt: new Date('2024-12-09T16:30:00Z'),
             comments: [],
-          }
+          },
         ],
-      }
+      },
     ],
 
     milestones: [
