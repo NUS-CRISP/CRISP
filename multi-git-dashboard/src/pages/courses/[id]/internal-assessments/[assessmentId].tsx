@@ -401,7 +401,9 @@ const InternalAssessmentDetail: React.FC = () => {
                   userIdToNameMap={userIdToNameMap}
                   teachingStaff={teachingTeam}
                   initialAssignedTeams={
-                    assessment.granularity === 'team' ? assignedTeams : undefined
+                    assessment.granularity === 'team'
+                      ? assignedTeams
+                      : undefined
                   }
                   initialAssignedUsers={
                     assessment.granularity === 'individual'

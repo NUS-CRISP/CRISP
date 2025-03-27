@@ -493,12 +493,11 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
               </Button>
             ) : hasDraftSubmissions ? (
               <Text c="dimmed">
-                Pending submission drafts only; no remaining teams or users await new submissions.
+                Pending submission drafts only; no remaining teams or users
+                await new submissions.
               </Text>
             ) : (
-              <Text c="dimmed">
-                All assigned teams/users have been graded
-              </Text>
+              <Text c="dimmed">All assigned teams/users have been graded</Text>
             )}
           </Group>
         )}

@@ -460,7 +460,11 @@ export const createSubmission = async (
         q => q._id.toString() === answer.question.toString()
       );
       if (!question) continue;
-      const { Model, question: savedQuestion } = await getAnswerModelForTypeForCreation(answer.type, question._id.toString());
+      const { Model, question: savedQuestion } =
+        await getAnswerModelForTypeForCreation(
+          answer.type,
+          question._id.toString()
+        );
       if (!Model) {
         console.warn(`Question of type ${Model} not found`);
         continue;
@@ -488,7 +492,11 @@ export const createSubmission = async (
       const question = assessment.questions.find(
         q => q._id.toString() === answer.question.toString()
       ); // Guaranteed by validateAnswers()
-      const { Model, question: savedQuestion } = await getAnswerModelForTypeForCreation(answer.type, question!._id.toString());
+      const { Model, question: savedQuestion } =
+        await getAnswerModelForTypeForCreation(
+          answer.type,
+          question!._id.toString()
+        );
       if (!Model) {
         console.warn(`Question of type ${Model} not found`);
         continue;
@@ -567,7 +575,10 @@ export const createSubmission = async (
 /**
  * A small helper to get the correct Mongoose model for each answer type.
  */
-async function getAnswerModelForTypeForCreation(type: string, questionId: string) {
+async function getAnswerModelForTypeForCreation(
+  type: string,
+  questionId: string
+) {
   let question = null;
   let Model = null;
   switch (type) {
@@ -588,9 +599,8 @@ async function getAnswerModelForTypeForCreation(type: string, questionId: string
       Model = MultipleResponseAnswerModel;
       return { Model, question };
     case 'Team Member Selection Answer':
-      question =
-        await TeamMemberSelectionQuestionModel.findById(questionId);
-        Model = TeamMemberSelectionAnswerModel;
+      question = await TeamMemberSelectionQuestionModel.findById(questionId);
+      Model = TeamMemberSelectionAnswerModel;
       return { Model, question };
     case 'Date Answer':
       question = await DateQuestionModel.findById(questionId);
@@ -688,7 +698,12 @@ export const updateSubmission = async (
 
   if (savedAssignment) {
     for (const memberId of assignment.selectedUserIds) {
-      if (!savedAssignment.toObject().selectedUserIds.some((uid: string) => uid !== memberId)) {// .selectedUserId is undefined here
+      if (
+        !savedAssignment
+          .toObject()
+          .selectedUserIds.some((uid: string) => uid !== memberId)
+      ) {
+        // .selectedUserId is undefined here
         throw new BadRequestError('Selected team/users should not change');
       }
     }
@@ -731,7 +746,10 @@ export const updateSubmission = async (
       const questionId = question._id;
 
       // Re-grade
-      const questionDoc = await getQuestionDoc(questionId.toString(), answer.type);
+      const questionDoc = await getQuestionDoc(
+        questionId.toString(),
+        answer.type
+      );
       if (!questionDoc) {
         console.warn(
           `Mismatched question or doc not found for question ${questionId}`
@@ -739,12 +757,19 @@ export const updateSubmission = async (
         answer.score = 0;
         return;
       }
-      const savedAnswer = getAnswerModelForTypeForUpdate(answer.type, answer._id);
+      const savedAnswer = getAnswerModelForTypeForUpdate(
+        answer.type,
+        answer._id
+      );
       if (!savedAnswer) {
         console.warn(`Answer type ${savedAnswer} not found`);
         return;
       }
-      const answerScore = await calculateAnswerScore(questionDoc, answer, assessment);
+      const answerScore = await calculateAnswerScore(
+        questionDoc,
+        answer,
+        assessment
+      );
       totalScore += answerScore;
 
       // Save the updated answer doc (with new score)
@@ -820,7 +845,10 @@ export const updateSubmission = async (
  * Simple utility that returns the correct question doc from the DB
  * given the question id and answer type.
  */
-async function getQuestionDoc(questionId: QuestionUnion | string, answerType: string) {
+async function getQuestionDoc(
+  questionId: QuestionUnion | string,
+  answerType: string
+) {
   switch (answerType) {
     case 'Number Answer':
       return NumberQuestionModel.findById(questionId);
@@ -868,7 +896,6 @@ function getAnswerModelForTypeForUpdate(answerType: string, answerId: string) {
       return UndecidedAnswerModel.findById(answerId);
   }
 }
-
 
 /**
  * Retrieves all submissions by a single user for a specific assessment.

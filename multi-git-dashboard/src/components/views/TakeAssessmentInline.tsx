@@ -1,12 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* Example file: components/views/TakeAssessmentInline.tsx */
 
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  Fragment
-} from 'react';
+import React, { useState, useEffect, useCallback, Fragment } from 'react';
 import {
   Container,
   Button,
@@ -27,9 +22,7 @@ import {
   ScaleQuestion,
   NumberQuestion,
 } from '@shared/types/Question';
-import {
-  AnswerUnion
-} from '@shared/types/Answer';
+import { AnswerUnion } from '@shared/types/Answer';
 import { AnswerInput } from '@shared/types/AnswerInput';
 import { Submission } from '@shared/types/Submission';
 import { User } from '@shared/types/User';
@@ -51,20 +44,29 @@ const TakeAssessmentInline: React.FC<TakeAssessmentInlineProps> = ({
   const router = useRouter();
   const [assessment, setAssessment] = useState<InternalAssessment | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [answers, setAnswers] = useState<{ [questionId: string]: AnswerInput }>({});
+  const [answers, setAnswers] = useState<{ [questionId: string]: AnswerInput }>(
+    {}
+  );
   const [submission, setSubmission] = useState<Submission | undefined>();
 
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [showConfirmationModal, setShowConfirmationModal] = useState<boolean>(false);
-  const [missingRequiredQuestions, setMissingRequiredQuestions] = useState<string[]>([]);
+  const [showConfirmationModal, setShowConfirmationModal] =
+    useState<boolean>(false);
+  const [missingRequiredQuestions, setMissingRequiredQuestions] = useState<
+    string[]
+  >([]);
   const [showErrorModal, setShowErrorModal] = useState<boolean>(false);
 
-  const [showAdjustScoreModal, setShowAdjustScoreModal] = useState<boolean>(false);
-  const [newAdjustedScore, setNewAdjustedScore] = useState<number | undefined>(undefined);
+  const [showAdjustScoreModal, setShowAdjustScoreModal] =
+    useState<boolean>(false);
+  const [newAdjustedScore, setNewAdjustedScore] = useState<number | undefined>(
+    undefined
+  );
 
   const [showSummaryModal, setShowSummaryModal] = useState<boolean>(false);
   const [showBackModal, setShowBackModal] = useState<boolean>(false);
-  const [showDeleteDraftModal, setShowDeleteDraftModal] = useState<boolean>(false);
+  const [showDeleteDraftModal, setShowDeleteDraftModal] =
+    useState<boolean>(false);
 
   const [teamOptions, setTeamOptions] = useState<
     {
@@ -88,12 +90,16 @@ const TakeAssessmentInline: React.FC<TakeAssessmentInlineProps> = ({
   // =========== UTILS =============
   const isScoredQuestion = (
     question: QuestionUnion
-  ): question is MultipleChoiceQuestion | MultipleResponseQuestion | ScaleQuestion | NumberQuestion => {
+  ): question is
+    | MultipleChoiceQuestion
+    | MultipleResponseQuestion
+    | ScaleQuestion
+    | NumberQuestion => {
     return (
       (question.type === 'Multiple Choice' ||
-       question.type === 'Multiple Response' ||
-       question.type === 'Scale' ||
-       question.type === 'Number') &&
+        question.type === 'Multiple Response' ||
+        question.type === 'Scale' ||
+        question.type === 'Number') &&
       question.isScored
     );
   };
@@ -255,7 +261,8 @@ const TakeAssessmentInline: React.FC<TakeAssessmentInlineProps> = ({
             const selectedNames = selectedMembers
               .map(
                 id =>
-                  teamMembersOptions.find(option => option.value === id)?.label || id
+                  teamMembersOptions.find(option => option.value === id)
+                    ?.label || id
               )
               .join(', ');
             return selectedNames;
@@ -286,7 +293,7 @@ const TakeAssessmentInline: React.FC<TakeAssessmentInlineProps> = ({
       showNotification({
         title: 'Error',
         message: 'Failed to load assessment data.',
-        color: 'red'
+        color: 'red',
       });
     }
   }, [assessment, assessmentApiRoute]);
@@ -304,7 +311,7 @@ const TakeAssessmentInline: React.FC<TakeAssessmentInlineProps> = ({
       showNotification({
         title: 'Error',
         message: 'Failed to load questions.',
-        color: 'red'
+        color: 'red',
       });
     }
   }, [questionsApiRoute]);
@@ -324,7 +331,7 @@ const TakeAssessmentInline: React.FC<TakeAssessmentInlineProps> = ({
         const options = teams.map(team => ({
           value: team._id,
           label: `Team ${team.number}`,
-          members: team.members.map((member: { _id: any; name: any; }) => ({
+          members: team.members.map((member: { _id: any; name: any }) => ({
             value: member._id,
             label: member.name,
           })),
@@ -343,7 +350,7 @@ const TakeAssessmentInline: React.FC<TakeAssessmentInlineProps> = ({
       showNotification({
         title: 'Error',
         message: 'Failed to load assigned data.',
-        color: 'red'
+        color: 'red',
       });
     }
   }, [assessment, assignedEntitiesApiRoute]);
@@ -495,7 +502,9 @@ const TakeAssessmentInline: React.FC<TakeAssessmentInlineProps> = ({
       // Return to overview
       onReturnToOverview();
 
-      router.push(`/courses/${courseId}/internal-assessments/${assessmentId}/submission/${savedSubmission._id}`);
+      router.push(
+        `/courses/${courseId}/internal-assessments/${assessmentId}/submission/${savedSubmission._id}`
+      );
     } catch (err) {
       console.error(err);
       alert('Error submitting assessment: ' + err);
@@ -529,7 +538,7 @@ const TakeAssessmentInline: React.FC<TakeAssessmentInlineProps> = ({
         showNotification({
           title: 'Error',
           message: 'Failed to delete draft',
-          color: 'red'
+          color: 'red',
         });
         return;
       }
@@ -554,7 +563,10 @@ const TakeAssessmentInline: React.FC<TakeAssessmentInlineProps> = ({
 
   // ========== SCORING / ADJUSTMENTS ==========
 
-  const calculatePerQuestionScores = (): { question: Question; score: number }[] => {
+  const calculatePerQuestionScores = (): {
+    question: Question;
+    score: number;
+  }[] => {
     if (!submission || !submission.answers) return [];
     return questions
       .map(question => {
@@ -579,7 +591,7 @@ const TakeAssessmentInline: React.FC<TakeAssessmentInlineProps> = ({
       showNotification({
         title: 'Error',
         message: 'Failed to adjust submission score.',
-        color: 'red'
+        color: 'red',
       });
     }
   };
@@ -627,7 +639,8 @@ const TakeAssessmentInline: React.FC<TakeAssessmentInlineProps> = ({
         const hasTeamOptions =
           assessment.granularity === 'team' && teamOptions.length > 0;
         const hasMemberOptions =
-          assessment.granularity === 'individual' && teamMembersOptions.length > 0;
+          assessment.granularity === 'individual' &&
+          teamMembersOptions.length > 0;
 
         // If it's a "Team Member Selection" question, we want to wait until
         // we have the relevant teamOptions or teamMembersOptions
@@ -638,7 +651,9 @@ const TakeAssessmentInline: React.FC<TakeAssessmentInlineProps> = ({
 
         return (
           <Fragment key={question._id}>
-            {(hasTeamOptions || hasMemberOptions || question.type !== 'Team Member Selection') && (
+            {(hasTeamOptions ||
+              hasMemberOptions ||
+              question.type !== 'Team Member Selection') && (
               <TakeAssessmentCard
                 index={index}
                 question={question}
@@ -676,7 +691,9 @@ const TakeAssessmentInline: React.FC<TakeAssessmentInlineProps> = ({
               Delete Draft
             </Button>
           )}
-          <Button variant="default" onClick={handleSaveDraft}>Save Draft</Button>
+          <Button variant="default" onClick={handleSaveDraft}>
+            Save Draft
+          </Button>
           <Button
             onClick={handleSubmitClick}
             loading={isSubmitting}
@@ -702,7 +719,7 @@ const TakeAssessmentInline: React.FC<TakeAssessmentInlineProps> = ({
           max={submission ? submission.score + 100 : undefined}
           required
         />
-        <Group justify='flex-end' mt="md">
+        <Group justify="flex-end" mt="md">
           <Button
             variant="default"
             onClick={() => setShowAdjustScoreModal(false)}
@@ -723,7 +740,9 @@ const TakeAssessmentInline: React.FC<TakeAssessmentInlineProps> = ({
       >
         <ScrollArea style={{ height: '60vh' }}>
           {calculatePerQuestionScores().map(({ question, score }, idx) => {
-            const ans = submission?.answers.find(a => a.question === question._id);
+            const ans = submission?.answers.find(
+              a => a.question === question._id
+            );
             const formatted = ans
               ? formatAnswer(extractAnswerValue(ans), question.type)
               : 'No answer provided';
@@ -739,7 +758,7 @@ const TakeAssessmentInline: React.FC<TakeAssessmentInlineProps> = ({
             );
           })}
         </ScrollArea>
-        <Group justify='flex-end' mt="md">
+        <Group justify="flex-end" mt="md">
           <Button onClick={() => setShowSummaryModal(false)}>Close</Button>
         </Group>
       </Modal>
@@ -762,16 +781,18 @@ const TakeAssessmentInline: React.FC<TakeAssessmentInlineProps> = ({
               {isScoredQuestion(question) && (
                 <Text>
                   Score:{' '}
-                  {submission?.answers.find(
-                    a => a.question === question._id
-                  )?.score || 0}
+                  {submission?.answers.find(a => a.question === question._id)
+                    ?.score || 0}
                 </Text>
               )}
             </div>
           ))}
         </ScrollArea>
-        <Group justify='flex-end' mt="md">
-          <Button variant="default" onClick={() => setShowConfirmationModal(false)}>
+        <Group justify="flex-end" mt="md">
+          <Button
+            variant="default"
+            onClick={() => setShowConfirmationModal(false)}
+          >
             Cancel
           </Button>
           <Button onClick={handleSubmit}>Confirm</Button>
@@ -801,8 +822,11 @@ const TakeAssessmentInline: React.FC<TakeAssessmentInlineProps> = ({
         onClose={() => setShowBackModal(false)}
         title="Leaving submission"
       >
-        <Text>Are you sure you want to leave this page? Any unsaved changes will be lost.</Text>
-        <Group justify='flex-end' mt="md">
+        <Text>
+          Are you sure you want to leave this page? Any unsaved changes will be
+          lost.
+        </Text>
+        <Group justify="flex-end" mt="md">
           <Button variant="default" onClick={() => setShowBackModal(false)}>
             Cancel
           </Button>
@@ -821,8 +845,11 @@ const TakeAssessmentInline: React.FC<TakeAssessmentInlineProps> = ({
           Are you sure you want to delete your draft submission? This action
           cannot be undone.
         </Text>
-        <Group justify='flex-end' mt="md">
-          <Button variant="default" onClick={() => setShowDeleteDraftModal(false)}>
+        <Group justify="flex-end" mt="md">
+          <Button
+            variant="default"
+            onClick={() => setShowDeleteDraftModal(false)}
+          >
             Cancel
           </Button>
           <Button color="red" onClick={confirmDeleteDraft}>
