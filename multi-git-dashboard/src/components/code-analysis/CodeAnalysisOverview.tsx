@@ -271,7 +271,13 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
     <Container>
       <Grid gutter="lg">
         <Grid.Col span={12}>
-          {metricCard('Predicted Ranking', overview_rank === '-' ? '-' : ordinal(parseInt(overview_rank)), 'overview_rank', () => 'blue' , false)}
+          {metricCard(
+            'Predicted Ranking',
+            overview_rank === '-' ? '-' : ordinal(parseInt(overview_rank)),
+            'overview_rank',
+            () => 'blue',
+            false
+          )}
         </Grid.Col>
         <Grid.Col span={4}>
           {metricCard(
