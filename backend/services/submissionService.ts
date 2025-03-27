@@ -20,6 +20,8 @@ import {
   ShortResponseAnswerModel,
   LongResponseAnswerModel,
   AnswerModel,
+  NUSNETIDAnswerModel,
+  NUSNETEmailAnswerModel,
 } from '../models/Answer';
 import {
   QuestionUnion,
@@ -38,6 +40,8 @@ import {
   ShortResponseQuestionModel,
   LongResponseQuestionModel,
   UndecidedQuestionModel,
+  NUSNETIDQuestionModel,
+  NUSNETEmailQuestionModel,
 } from '../models/QuestionTypes';
 import { NotFoundError, BadRequestError } from './errors';
 import AccountModel from '@models/Account';
@@ -377,26 +381,29 @@ export const checkSubmissionUniqueness = async (
   targetStudentIds: string[]
 ): Promise<boolean> => {
   const userSubmissions = await SubmissionModel.find({
-    assessment: assessment,
-    user: user,
+    assessment: assessment._id,
+    user: user._id,
     deleted: { $ne: true },
-  })
-    .populate('answers.type')
-    .populate({
-      path: 'answers.selectedUserIds',
-      strictPopulate: false,
-    });
-  const submittedUserIds = userSubmissions.flatMap(
-    sub =>
-      (
-        sub.answers.find(
-          ans => ans.type === 'Team Member Selection Answer'
-        ) as TeamMemberSelectionAnswer
-      ).selectedUserIds
+  }).populate('answers.selectedUserIds');
+
+  const tmsAnswers = userSubmissions.flatMap(s =>
+    s.answers.filter(a => a.type === 'Team Member Selection Answer')
+  ) as TeamMemberSelectionAnswer[];
+
+  const submittedUserIds = tmsAnswers.flatMap(a =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    a
+      .toObject()
+      .selectedUserIds.map((uid: { toString: () => any }) => uid.toString())
   );
-  return !submittedUserIds.find(userId =>
-    targetStudentIds.find(targetId => targetId === userId)
+
+  const targetStudentIdsAsStrings = targetStudentIds.map(id => id.toString());
+
+  const isUnique = !submittedUserIds.some(existing =>
+    targetStudentIdsAsStrings.includes(existing)
   );
+
+  return isUnique;
 };
 
 /**
@@ -448,7 +455,16 @@ export const createSubmission = async (
 
   // Check for uniqueness of selected members (optional to do for drafts; up to you)
   const selectedStudentIds = tmsAnswer.selectedUserIds;
-  await checkSubmissionUniqueness(assessment, user, selectedStudentIds);
+  const isUnique = await checkSubmissionUniqueness(
+    assessment,
+    user,
+    selectedStudentIds
+  );
+  if (!isUnique) {
+    throw new BadRequestError(
+      'Selected user/team already has an existing submission/draft.'
+    );
+  }
 
   let totalScore = 0;
   const scoredAnswers = [];
@@ -586,6 +602,14 @@ async function getAnswerModelForTypeForCreation(
       question = await NumberQuestionModel.findById(questionId);
       Model = NumberAnswerModel;
       return { Model, question };
+    case 'NUSNET ID Answer':
+      question = await NUSNETIDQuestionModel.findById(questionId);
+      Model = NUSNETIDAnswerModel;
+      return { Model, question };
+    case 'NUSNET Email Answer':
+      question = await NUSNETEmailQuestionModel.findById(questionId);
+      Model = NUSNETEmailAnswerModel;
+      return { Model, question };
     case 'Scale Answer':
       question = await ScaleQuestionModel.findById(questionId);
       Model = ScaleAnswerModel;
@@ -648,6 +672,7 @@ export const updateSubmission = async (
   if (!submission) {
     throw new NotFoundError('Submission not found.');
   }
+  const initIsDraft = submission.isDraft;
   if (submission.deleted) {
     throw new NotFoundError('Submission not found (Deleted).');
   }
@@ -699,11 +724,10 @@ export const updateSubmission = async (
   if (savedAssignment) {
     for (const memberId of assignment.selectedUserIds) {
       if (
-        !savedAssignment
+        savedAssignment
           .toObject()
-          .selectedUserIds.some((uid: string) => uid !== memberId)
+          .selectedUserIds.some((uid: string) => uid.toString() !== memberId)
       ) {
-        // .selectedUserId is undefined here
         throw new BadRequestError('Selected team/users should not change');
       }
     }
@@ -799,8 +823,11 @@ export const updateSubmission = async (
         student: selectedUserId,
       });
 
-      if (!assessmentResult) {
-        // If no existing result, create it
+      if (!assessmentResult && !initIsDraft) {
+        throw new NotFoundError(
+          'No previous assessment result found. Something went wrong with the flow.'
+        );
+      } else if (!assessmentResult) {
         const newResult = new AssessmentResultModel({
           assessment: assessment._id,
           student: selectedUserId,
@@ -824,6 +851,10 @@ export const updateSubmission = async (
         if (markEntryIndex !== -1) {
           assessmentResult.marks[markEntryIndex].marker = user;
           assessmentResult.marks[markEntryIndex].score = totalScore;
+        } else if (!initIsDraft) {
+          throw new NotFoundError(
+            'Mark entry for this submission not found in assessment result.'
+          );
         } else {
           // If no MarkEntry yet, push a new one
           assessmentResult.marks.push({
@@ -852,6 +883,10 @@ async function getQuestionDoc(
   switch (answerType) {
     case 'Number Answer':
       return NumberQuestionModel.findById(questionId);
+    case 'NUSNET ID Answer':
+      return NUSNETIDQuestionModel.findById(questionId);
+    case 'NUSNET Email Answer':
+      return NUSNETEmailQuestionModel.findById(questionId);
     case 'Scale Answer':
       return ScaleQuestionModel.findById(questionId);
     case 'Multiple Choice Answer':
@@ -878,6 +913,10 @@ function getAnswerModelForTypeForUpdate(answerType: string, answerId: string) {
   switch (answerType) {
     case 'Number Answer':
       return NumberAnswerModel.findById(answerId);
+    case 'NUSNET ID Answer':
+      return NUSNETIDAnswerModel.findById(answerId);
+    case 'NUSNET Email Answer':
+      return NUSNETEmailAnswerModel.findById(answerId);
     case 'Scale Answer':
       return ScaleAnswerModel.findById(answerId);
     case 'Multiple Choice Answer':
