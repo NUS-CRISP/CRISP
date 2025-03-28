@@ -157,14 +157,14 @@ const Navbar: React.FC = () => {
       return 'Assessments';
     } else if (path.startsWith('/courses/[id]/project-management')) {
       return 'Project Management';
-    } else if (path.startsWith('/courses/[id]/class-review')) {
-      return 'Class Review';
+    } else if (path.startsWith('/courses/[id]/class-overview')) {
+      return 'Class Overview';
     } else if (path.startsWith('/courses/[id]/code-analysis')) {
       return 'Code Analysis';
     } else if (path.startsWith('/courses/[id]/pr-review')) {
       return 'PR Review';
     } else if (path.startsWith('/courses/[id]')) {
-      return 'Team Overview';
+      return 'Team Review';
     } else {
       return '';
     }

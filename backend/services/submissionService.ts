@@ -20,6 +20,8 @@ import {
   ShortResponseAnswerModel,
   LongResponseAnswerModel,
   AnswerModel,
+  NUSNETIDAnswerModel,
+  NUSNETEmailAnswerModel,
 } from '../models/Answer';
 import {
   QuestionUnion,
@@ -38,6 +40,8 @@ import {
   ShortResponseQuestionModel,
   LongResponseQuestionModel,
   UndecidedQuestionModel,
+  NUSNETIDQuestionModel,
+  NUSNETEmailQuestionModel,
 } from '../models/QuestionTypes';
 import { NotFoundError, BadRequestError } from './errors';
 import AccountModel from '@models/Account';
@@ -377,26 +381,30 @@ export const checkSubmissionUniqueness = async (
   targetStudentIds: string[]
 ): Promise<boolean> => {
   const userSubmissions = await SubmissionModel.find({
-    assessment: assessment,
-    user: user,
+    assessment: assessment._id,
+    user: user._id,
     deleted: { $ne: true },
-  })
-    .populate('answers.type')
-    .populate({
-      path: 'answers.selectedUserIds',
-      strictPopulate: false,
-    });
-  const submittedUserIds = userSubmissions.flatMap(
-    sub =>
-      (
-        sub.answers.find(
-          ans => ans.type === 'Team Member Selection Answer'
-        ) as TeamMemberSelectionAnswer
-      ).selectedUserIds
+  }).populate('answers.selectedUserIds');
+
+  const tmsAnswers = userSubmissions.flatMap(s =>
+    s.answers.filter(a => a.type === 'Team Member Selection Answer')
+  ) as TeamMemberSelectionAnswer[];
+
+  const submittedUserIds = tmsAnswers.flatMap(a =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    a
+      .toObject()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .selectedUserIds.map((uid: { toString: () => any }) => uid.toString())
   );
-  return !submittedUserIds.find(userId =>
-    targetStudentIds.find(targetId => targetId === userId)
+
+  const targetStudentIdsAsStrings = targetStudentIds.map(id => id.toString());
+
+  const isUnique = !submittedUserIds.some(existing =>
+    targetStudentIdsAsStrings.includes(existing)
   );
+
+  return isUnique;
 };
 
 /**
@@ -421,141 +429,193 @@ export const createSubmission = async (
 ): Promise<Submission> => {
   const assessment = await getAssessmentWithQuestions(assessmentId);
 
-  let user: User | null = null;
-  try {
-    user = await UserModel.findById(userId);
-    if (!user) {
-      throw new NotFoundError('Submission creator not found');
-    }
-  } catch (e) {
+  const user = await UserModel.findById(userId);
+  if (!user) {
     throw new NotFoundError('Submission creator not found');
   }
 
-  await validateSubmissionPeriod(assessment);
-  await validateAnswers(assessment, answers);
-  const selectedStudentIds = (
-    answers.find(
-      answer => answer.type === 'Team Member Selection Answer'
-    ) as TeamMemberSelectionAnswer
-  ).selectedUserIds;
-  await checkSubmissionUniqueness(assessment, user, selectedStudentIds);
+  // We always need a Team Member Selection Answer, even in a draft.
+  const tmsAnswer = answers.find(
+    ans => ans.type === 'Team Member Selection Answer'
+  ) as TeamMemberSelectionAnswer;
+
+  if (!tmsAnswer) {
+    throw new BadRequestError(
+      'A Team Member Selection Answer is required for all submissions (including drafts).'
+    );
+  }
+
+  // If isDraft, skip normal validation and scoring. Otherwise proceed as before.
+  if (!isDraft) {
+    // Only check if the assessment is open for submission if not a draft
+    await validateSubmissionPeriod(assessment);
+
+    // Run full validation on all answers (will throw if invalid).
+    await validateAnswers(assessment, answers);
+  }
+
+  // Check for uniqueness of selected members (optional to do for drafts; up to you)
+  const selectedStudentIds = tmsAnswer.selectedUserIds;
+  const isUnique = await checkSubmissionUniqueness(
+    assessment,
+    user,
+    selectedStudentIds
+  );
+  if (!isUnique) {
+    throw new BadRequestError(
+      'Selected user/team already has an existing submission/draft.'
+    );
+  }
 
   let totalScore = 0;
+  const scoredAnswers = [];
 
-  const scoredAnswers = await Promise.all(
-    answers.map(async answer => {
-      const questionId = assessment.questions.find(
+  if (isDraft) {
+    // Skip scoring: just store the answers with score = 0
+    for (const answer of answers) {
+      const question = assessment.questions.find(
+        q => q._id.toString() === answer.question.toString()
+      );
+      if (!question) continue;
+      const { Model } = await getAnswerModelForTypeForCreation(
+        answer.type,
+        question._id.toString()
+      );
+      const newAnswer = new Model({
+        ...answer,
+        score: 0,
+      });
+      await newAnswer.save();
+      scoredAnswers.push(newAnswer);
+    }
+  } else {
+    // If final, do normal scoring
+    for (const answer of answers) {
+      const question = assessment.questions.find(
         q => q._id.toString() === answer.question.toString()
       ); // Guaranteed by validateAnswers()
-
-      let question = null;
-      let SaveAnswerModel = null;
-
-      switch (answer.type) {
-        case 'Number Answer':
-          question = await NumberQuestionModel.findById(questionId);
-          SaveAnswerModel = NumberAnswerModel;
-          break;
-        case 'Scale Answer':
-          question = await ScaleQuestionModel.findById(questionId);
-          SaveAnswerModel = ScaleAnswerModel;
-          break;
-        case 'Multiple Choice Answer':
-          question = await MultipleChoiceQuestionModel.findById(questionId);
-          SaveAnswerModel = MultipleChoiceAnswerModel;
-          break;
-        case 'Multiple Response Answer':
-          question = await MultipleResponseQuestionModel.findById(questionId);
-          SaveAnswerModel = MultipleResponseAnswerModel;
-          break;
-        case 'Team Member Selection Answer':
-          question =
-            await TeamMemberSelectionQuestionModel.findById(questionId);
-          SaveAnswerModel = TeamMemberSelectionAnswerModel;
-          break;
-        case 'Date Answer':
-          question = await DateQuestionModel.findById(questionId);
-          SaveAnswerModel = DateAnswerModel;
-          break;
-        case 'Short Response Answer':
-          question = await ShortResponseQuestionModel.findById(questionId);
-          SaveAnswerModel = ShortResponseAnswerModel;
-          break;
-        case 'Long Response Answer':
-          question = await LongResponseQuestionModel.findById(questionId);
-          SaveAnswerModel = LongResponseAnswerModel;
-          break;
-        case 'Undecided Answer':
-        default:
-          question = await UndecidedQuestionModel.findById(questionId);
-          SaveAnswerModel = UndecidedAnswerModel;
-          break;
-      }
-
-      if (!question) {
-        console.warn(`Question with ID ${answer.question} not found.`);
-        return { ...answer, score: 0 };
-      }
-
+      const { Model, question: savedQuestion } =
+        await getAnswerModelForTypeForCreation(
+          answer.type,
+          question!._id.toString()
+        ); // Assume the data in the assessment above is valid, so question should always be findable.
       const answerScore = await calculateAnswerScore(
-        question,
+        savedQuestion!,
         answer,
         assessment
       );
       totalScore += answerScore;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { type, ...scoredAnswer } = { ...answer, score: answerScore };
 
-      const newAnswer = new SaveAnswerModel(scoredAnswer);
+      const newAnswer = new Model({
+        ...answer,
+        score: answerScore,
+      });
       await newAnswer.save();
-      return newAnswer;
-    })
-  );
+      scoredAnswers.push(newAnswer);
+    }
+  }
 
-  const assignment = answers.find(
-    answer => answer.type === 'Team Member Selection Answer'
-  ) as TeamMemberSelectionAnswer;
-
+  // Create the submission document
   const submission = new SubmissionModel({
     assessment: assessmentId,
     user: userId,
     answers: scoredAnswers,
     isDraft,
     submittedAt: new Date(),
-    score: totalScore,
+    score: isDraft ? 0 : totalScore, // If draft => 0, else => totalScore
     submissionReleaseNumber: assessment.releaseNumber,
   });
-
   await submission.save();
-  for (const userId of assignment.selectedUserIds) {
+
+  // If it is not a draft, update the AssessmentResult for each selected user
+  for (const selUserId of selectedStudentIds) {
     let assessmentResult = await AssessmentResultModel.findOne({
       assessment: assessmentId,
-      student: userId,
+      student: selUserId,
     });
 
     if (!assessmentResult) {
       assessmentResult = new AssessmentResultModel({
         assessment: assessmentId,
-        student: userId,
+        student: selUserId,
         marks: [],
         averageScore: 0,
       });
-
       await assessmentResult.save();
     }
-    const newMarkEntry: MarkEntry = {
-      marker: user,
-      submission: submission._id,
-      score: totalScore,
-    };
-    assessmentResult.marks.push(newMarkEntry);
-    await assessmentResult.save();
 
-    await recalculateResult(assessmentResult.id);
+    if (!isDraft) {
+      const newMarkEntry: MarkEntry = {
+        marker: user,
+        submission: submission._id,
+        score: totalScore,
+      };
+      assessmentResult.marks.push(newMarkEntry);
+      await assessmentResult.save();
+
+      await recalculateResult(assessmentResult.id);
+    }
   }
 
   return submission;
 };
+
+/**
+ * A small helper to get the correct Mongoose model for each answer type.
+ */
+async function getAnswerModelForTypeForCreation(
+  type: string,
+  questionId: string
+) {
+  let question = null;
+  let Model = null;
+  switch (type) {
+    case 'Number Answer':
+      question = await NumberQuestionModel.findById(questionId);
+      Model = NumberAnswerModel;
+      return { Model, question };
+    case 'NUSNET ID Answer':
+      question = await NUSNETIDQuestionModel.findById(questionId);
+      Model = NUSNETIDAnswerModel;
+      return { Model, question };
+    case 'NUSNET Email Answer':
+      question = await NUSNETEmailQuestionModel.findById(questionId);
+      Model = NUSNETEmailAnswerModel;
+      return { Model, question };
+    case 'Scale Answer':
+      question = await ScaleQuestionModel.findById(questionId);
+      Model = ScaleAnswerModel;
+      return { Model, question };
+    case 'Multiple Choice Answer':
+      question = await MultipleChoiceQuestionModel.findById(questionId);
+      Model = MultipleChoiceAnswerModel;
+      return { Model, question };
+    case 'Multiple Response Answer':
+      question = await MultipleResponseQuestionModel.findById(questionId);
+      Model = MultipleResponseAnswerModel;
+      return { Model, question };
+    case 'Team Member Selection Answer':
+      question = await TeamMemberSelectionQuestionModel.findById(questionId);
+      Model = TeamMemberSelectionAnswerModel;
+      return { Model, question };
+    case 'Date Answer':
+      question = await DateQuestionModel.findById(questionId);
+      Model = DateAnswerModel;
+      return { Model, question };
+    case 'Short Response Answer':
+      question = await ShortResponseQuestionModel.findById(questionId);
+      Model = ShortResponseAnswerModel;
+      return { Model, question };
+    case 'Long Response Answer':
+      question = await LongResponseQuestionModel.findById(questionId);
+      Model = LongResponseAnswerModel;
+      return { Model, question };
+    default:
+      question = await UndecidedQuestionModel.findById(questionId);
+      Model = UndecidedAnswerModel;
+      return { Model, question };
+  }
+}
 
 /**
  * Updates an existing submission by its ID.
@@ -584,6 +644,7 @@ export const updateSubmission = async (
   if (!submission) {
     throw new NotFoundError('Submission not found.');
   }
+  const initIsDraft = submission.isDraft;
   if (submission.deleted) {
     throw new NotFoundError('Submission not found (Deleted).');
   }
@@ -608,8 +669,6 @@ export const updateSubmission = async (
   if (!course) throw new BadRequestError('Assessment course id invalid');
   const isCourseFaculty =
     course.faculty.filter(f => f === account!.user).length !== 0;
-  // Alternative method would be to check if account's .courseRole
-  // contains this course and has faculty role in the same tuple.
   if (account && (isCourseFaculty || account.crispRole === CrispRole.Admin)) {
     bypass = true;
   }
@@ -620,8 +679,33 @@ export const updateSubmission = async (
     );
   }
 
-  await validateSubmissionPeriod(assessment);
-  await validateAnswers(assessment, answers);
+  const assignment = answers.find(
+    ans => ans.type === 'Team Member Selection Answer'
+  ) as TeamMemberSelectionAnswer;
+  if (!assignment) {
+    throw new BadRequestError('Team Member Selection Answer is required');
+  }
+
+  const savedAssignment = submission.answers.find(
+    ans => ans.type === 'Team Member Selection Answer'
+  ) as TeamMemberSelectionAnswer; // We just assume the one in the database is valid.
+
+  if (savedAssignment) {
+    for (const memberId of assignment.selectedUserIds) {
+      if (
+        savedAssignment
+          .toObject()
+          .selectedUserIds.some((uid: string) => uid.toString() !== memberId)
+      ) {
+        throw new BadRequestError('Selected team/users should not change');
+      }
+    }
+  }
+
+  if (!isDraft) {
+    await validateSubmissionPeriod(assessment);
+    await validateAnswers(assessment, answers);
+  }
 
   if (
     !bypass &&
@@ -634,83 +718,49 @@ export const updateSubmission = async (
     );
   }
 
+  // Always re-grade to get the latest score in submission.score,
+  // even if isDraft == true
   let totalScore = 0;
 
   await Promise.all(
     answers.map(async answer => {
-      const questionId = assessment.questions.find(
+      const question = assessment.questions.find(
         q => q._id.toString() === answer.question.toString()
-      ); // Question Id exists, verified by validateAnswers()
-
-      let question = null;
-      let savedAnswer = null;
-
-      switch (answer.type) {
-        case 'Number Answer':
-          question = await NumberQuestionModel.findById(questionId);
-          savedAnswer = NumberAnswerModel.findById(answer.id);
-          break;
-        case 'Scale Answer':
-          question = await ScaleQuestionModel.findById(questionId);
-          savedAnswer = ScaleAnswerModel.findById(answer.id);
-          break;
-        case 'Multiple Choice Answer':
-          question = await MultipleChoiceQuestionModel.findById(questionId);
-          savedAnswer = MultipleChoiceAnswerModel.findById(answer.id);
-          break;
-        case 'Multiple Response Answer':
-          question = await MultipleResponseQuestionModel.findById(questionId);
-          savedAnswer = MultipleResponseAnswerModel.findById(answer.id);
-          break;
-        case 'Team Member Selection Answer':
-          question =
-            await TeamMemberSelectionQuestionModel.findById(questionId);
-          savedAnswer = TeamMemberSelectionAnswerModel.findById(answer.id);
-          break;
-        case 'Date Answer':
-          question = await DateQuestionModel.findById(questionId);
-          savedAnswer = DateAnswerModel.findById(answer.id);
-          break;
-        case 'Short Response Answer':
-          question = await ShortResponseQuestionModel.findById(questionId);
-          savedAnswer = ShortResponseAnswerModel.findById(answer.id);
-          break;
-        case 'Long Response Answer':
-          question = await LongResponseQuestionModel.findById(questionId);
-          savedAnswer = LongResponseAnswerModel.findById(answer.id);
-          break;
-        case 'Undecided Answer':
-        default:
-          question = await UndecidedQuestionModel.findById(questionId);
-          savedAnswer = UndecidedAnswerModel.findById(answer.id);
-          break;
-      }
+      );
 
       if (!question) {
-        console.warn(
-          `Question with ID ${answer.question} not found in assessment ${assessment.id}.`
-        );
-        answer.score = 0;
-        return;
+        throw new BadRequestError('Question referenced in answer not found');
       }
+      const questionId = question._id;
 
+      // Re-grade
+      const questionDoc = await getQuestionDoc(
+        questionId.toString(),
+        answer.type
+      );
+      const savedAnswer = getAnswerModelForTypeForUpdate(
+        answer.type,
+        answer._id
+      );
       const answerScore = await calculateAnswerScore(
-        question,
+        questionDoc!,
         answer,
         assessment
       );
       totalScore += answerScore;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { type, ...scoredAnswer } = { ...answer, score: answerScore };
 
+      // Save the updated answer doc (with new score)
       answer.score = answerScore;
-      savedAnswer.model.findByIdAndUpdate(answer._id, answer);
+      await savedAnswer.model.findByIdAndUpdate(answer._id, answer);
     })
   );
 
+  // Update the submission object itself
   submission.answers = answers;
   submission.isDraft = isDraft;
   submission.submittedAt = new Date();
+
+  // If the total score changed, reset any manual adjustedScore
   if (submission.score !== totalScore) {
     submission.score = totalScore;
     submission.adjustedScore = undefined;
@@ -719,12 +769,7 @@ export const updateSubmission = async (
 
   await submission.save();
 
-  const assignment = answers.find(
-    answer => answer.type === 'Team Member Selection Answer'
-  ) as TeamMemberSelectionAnswer;
-
   for (const selectedUserId of assignment.selectedUserIds) {
-    console.log(selectedUserId, assessment._id);
     const assessmentResult = await AssessmentResultModel.findOne({
       assessment: assessment._id,
       student: selectedUserId,
@@ -736,7 +781,7 @@ export const updateSubmission = async (
       );
     }
 
-    // Find existing mark entry for this submission
+    if (isDraft) return submission;
     const markEntryIndex = assessmentResult.marks.findIndex(
       mark => mark.submission.toString() === submission._id.toString()
     );
@@ -744,19 +789,89 @@ export const updateSubmission = async (
     if (markEntryIndex !== -1) {
       assessmentResult.marks[markEntryIndex].marker = user;
       assessmentResult.marks[markEntryIndex].score = totalScore;
-    } else {
+    } else if (!initIsDraft) {
       throw new NotFoundError(
         'Mark entry for this submission not found in assessment result.'
       );
+    } else {
+      // If no MarkEntry yet, push a new one
+      assessmentResult.marks.push({
+        marker: user,
+        submission: submission._id,
+        score: totalScore,
+      });
     }
 
     await assessmentResult.save();
-
     await recalculateResult(assessmentResult.id);
   }
 
   return submission;
 };
+
+/**
+ * Simple utility that returns the correct question doc from the DB
+ * given the question id and answer type.
+ */
+async function getQuestionDoc(
+  questionId: QuestionUnion | string,
+  answerType: string
+) {
+  switch (answerType) {
+    case 'Number Answer':
+      return NumberQuestionModel.findById(questionId);
+    case 'NUSNET ID Answer':
+      return NUSNETIDQuestionModel.findById(questionId);
+    case 'NUSNET Email Answer':
+      return NUSNETEmailQuestionModel.findById(questionId);
+    case 'Scale Answer':
+      return ScaleQuestionModel.findById(questionId);
+    case 'Multiple Choice Answer':
+      return MultipleChoiceQuestionModel.findById(questionId);
+    case 'Multiple Response Answer':
+      return MultipleResponseQuestionModel.findById(questionId);
+    case 'Team Member Selection Answer':
+      return TeamMemberSelectionQuestionModel.findById(questionId);
+    case 'Date Answer':
+      return DateQuestionModel.findById(questionId);
+    case 'Short Response Answer':
+      return ShortResponseQuestionModel.findById(questionId);
+    case 'Long Response Answer':
+      return LongResponseQuestionModel.findById(questionId);
+    default:
+      return UndecidedQuestionModel.findById(questionId);
+  }
+}
+
+/**
+ * Simple utility that returns the correct Answer Model for creation / updates.
+ */
+function getAnswerModelForTypeForUpdate(answerType: string, answerId: string) {
+  switch (answerType) {
+    case 'Number Answer':
+      return NumberAnswerModel.findById(answerId);
+    case 'NUSNET ID Answer':
+      return NUSNETIDAnswerModel.findById(answerId);
+    case 'NUSNET Email Answer':
+      return NUSNETEmailAnswerModel.findById(answerId);
+    case 'Scale Answer':
+      return ScaleAnswerModel.findById(answerId);
+    case 'Multiple Choice Answer':
+      return MultipleChoiceAnswerModel.findById(answerId);
+    case 'Multiple Response Answer':
+      return MultipleResponseAnswerModel.findById(answerId);
+    case 'Team Member Selection Answer':
+      return TeamMemberSelectionAnswerModel.findById(answerId);
+    case 'Date Answer':
+      return DateAnswerModel.findById(answerId);
+    case 'Short Response Answer':
+      return ShortResponseAnswerModel.findById(answerId);
+    case 'Long Response Answer':
+      return LongResponseAnswerModel.findById(answerId);
+    default:
+      return UndecidedAnswerModel.findById(answerId);
+  }
+}
 
 /**
  * Retrieves all submissions by a single user for a specific assessment.
