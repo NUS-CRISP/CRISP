@@ -14,7 +14,7 @@ import {
   getRatingsMapping,
   OVERVIEW_METRICS,
   OVERVIEW_WEIGHTS,
-} from 'utils/overviewMetrics';
+} from '../utils/overviewMetrics';
 
 const { exec } = require('child_process');
 
