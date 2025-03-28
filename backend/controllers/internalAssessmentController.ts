@@ -500,12 +500,10 @@ export const gatherComments = async (req: Request, res: Response) => {
     const submissions = await getSubmissionsByAssessment(assessmentId);
 
     if (!submissions || submissions.length === 0) {
-      res
-      .status(200)
-      .json({
-        message: 'No submissions yet.'
+      res.status(200).json({
+        message: 'No submissions yet.',
       });
-      return ;
+      return;
     }
 
     const commentFilter =
@@ -530,12 +528,10 @@ export const gatherComments = async (req: Request, res: Response) => {
       const commentAnswers = submission.answers.filter(commentFilter);
 
       if (commentAnswers.length === 0) {
-        res
-        .status(200)
-        .json({
-          message: 'No comments yet.'
+        res.status(200).json({
+          message: 'No comments yet.',
         });
-        return ;
+        return;
       }
       // Extract the comment text from each answer.
       const texts = commentAnswers
@@ -553,12 +549,10 @@ export const gatherComments = async (req: Request, res: Response) => {
       });
     });
 
-    res
-      .status(200)
-      .json({
-        message: 'Comments gathered.',
-        commentsByStudent,
-      });
+    res.status(200).json({
+      message: 'Comments gathered.',
+      commentsByStudent,
+    });
   } catch (error) {
     if (error instanceof MissingAuthorizationError) {
       res.status(403).json({ error: error.message });
