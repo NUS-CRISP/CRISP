@@ -265,7 +265,7 @@ const InternalAssessmentDetail: React.FC = () => {
     permission,
   ]);
 
-  const addQuestion = (qNo: number) => {
+  const addQuestion = (qNo: number): Question => {
     const newQuestion: Question = {
       _id: `temp-${Date.now()}`,
       text: '',
@@ -276,6 +276,7 @@ const InternalAssessmentDetail: React.FC = () => {
       customInstruction: '',
     };
     setQuestions([...questions, newQuestion]);
+    return newQuestion;
   };
 
   const handleSaveQuestion = async (id: string, updatedQuestion: Question) => {

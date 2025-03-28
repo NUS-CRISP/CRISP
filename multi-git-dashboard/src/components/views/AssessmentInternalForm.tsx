@@ -209,6 +209,22 @@ function downloadCsvTemplateWithInstructions() {
   }
 }
 
+function escapeCsvValue(value: any): string {
+  if (value === null || value === undefined) {
+    return '""';
+  }
+  // Convert the value to a string
+  const stringValue = String(value);
+
+  // If the value contains quotes, commas, or newlines, we need to wrap it in quotes
+  // and escape quotes by doubling them (according to CSV standard).
+  // You can use a generic approach: always wrap and escape.
+  const needsQuotes = /["\n\r,]/.test(stringValue);
+  const escaped = stringValue.replace(/"/g, '""'); // double any existing quotes
+
+  return needsQuotes ? `"${escaped}"` : escaped;
+}
+
 function downloadExistingQuestionsCsv(questions: Question[]) {
   const filtered = questions.filter(q => {
     return (
@@ -219,7 +235,9 @@ function downloadExistingQuestionsCsv(questions: Question[]) {
   });
 
   const rows: string[] = [];
-  rows.push(questionHeaders.join(',')); // header row
+  rows.push(
+    questionHeaders.map(header => escapeCsvValue(header)).join(',')
+  ); // header row
 
   filtered.forEach(q => {
     const rowValues = questionHeaders.map(header => {
@@ -236,7 +254,7 @@ function downloadExistingQuestionsCsv(questions: Question[]) {
           return q.customInstruction || '';
         case 'isScored':
           return (q as any).isScored ? 'true' : 'false';
-        case 'options': {
+        case 'options':
           if (
             (q.type === 'Multiple Choice' || q.type === 'Multiple Response') &&
             (q as any).options
@@ -246,7 +264,6 @@ function downloadExistingQuestionsCsv(questions: Question[]) {
               .join(';');
           }
           return '';
-        }
         case 'allowNegative':
           return (q as any).allowNegative ? 'true' : 'false';
         case 'areWrongAnswersPenalized':
@@ -255,28 +272,26 @@ function downloadExistingQuestionsCsv(questions: Question[]) {
           return (q as any).allowPartialMarks ? 'true' : 'false';
         case 'scaleMax':
           return (q as any).scaleMax?.toString() || '';
-        case 'labels': {
+        case 'labels':
           if (q.type === 'Scale' && (q as any).labels) {
             return (q as any).labels
               .map((lab: any) => `${lab.value}|${lab.label}|${lab.points}`)
               .join(';');
           }
           return '';
-        }
         case 'maxNumber':
           return (q as any).maxNumber?.toString() || '';
         case 'scoringMethod':
           return (q as any).scoringMethod || '';
         case 'maxPoints':
           return (q as any).maxPoints?.toString() || '';
-        case 'scoringRanges': {
+        case 'scoringRanges':
           if (q.type === 'Number' && (q as any).scoringRanges) {
             return (q as any).scoringRanges
               .map((r: any) => `${r.minValue}|${r.maxValue}|${r.points}`)
               .join(';');
           }
           return '';
-        }
         case 'shortResponsePlaceholder':
           return (q as any).shortResponsePlaceholder || '';
         case 'longResponsePlaceholder':
@@ -296,14 +311,13 @@ function downloadExistingQuestionsCsv(questions: Question[]) {
       }
     });
 
-    // Remove linebreaks; join columns with commas
-    rows.push(
-      rowValues.map(val => String(val).replace(/\r?\n|\r/g, ' ')).join(',')
-    );
+    // Now escape each value properly, then join with commas
+    rows.push(rowValues.map(escapeCsvValue).join(','));
   });
 
   const csvString = rows.join('\n');
 
+  // Download the CSV
   const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8' });
   const filename = 'existing_questions.csv';
   const navObj: any = window.navigator;
@@ -341,11 +355,13 @@ function SortableQuestionCard({
   totalUnlockedCount,
   onChangeOrder,
   children,
+  disabled,
 }: {
   question: Question;
   totalUnlockedCount: number;
   onChangeOrder: (questionId: string, newPos: number) => void;
   children: React.ReactNode;
+  disabled: boolean,
 }) {
   const {
     attributes,
@@ -356,7 +372,7 @@ function SortableQuestionCard({
     isDragging,
   } = useSortable({
     id: question._id,
-    disabled: false,
+    disabled: disabled,
     animateLayoutChanges: defaultAnimateLayoutChanges,
   });
 
@@ -367,7 +383,7 @@ function SortableQuestionCard({
     border: '1px solid #ccc',
     borderRadius: '4px',
     marginBottom: '1rem',
-    background: '#fff',
+    background: disabled ? '#f5f5f5' : '#fff',
   };
 
   return (
@@ -376,6 +392,7 @@ function SortableQuestionCard({
         <Box
           {...listeners}
           style={{ cursor: 'grab', display: 'flex', alignItems: 'center' }}
+          hidden={disabled}
         >
           <svg width="18" height="18" fill="gray">
             <circle cx="3" cy="3" r="1.5" />
@@ -385,6 +402,11 @@ function SortableQuestionCard({
             <circle cx="9" cy="9" r="1.5" />
             <circle cx="9" cy="15" r="1.5" />
           </svg>
+          {disabled &&
+            <Text size="sm" c="dimmed" mb="xs" mt="xs">
+              Disabled until question being edited is saved.
+            </Text>
+          }
         </Box>
 
         <NumberInput
@@ -399,6 +421,7 @@ function SortableQuestionCard({
             }
           }}
           styles={{ input: { width: 70 } }}
+          disabled={disabled}
         />
       </Group>
 
@@ -412,7 +435,7 @@ function SortableQuestionCard({
 interface AssessmentInternalFormProps {
   assessment: InternalAssessment | null;
   questions: Question[];
-  addQuestion: (qNo: number) => void;
+  addQuestion: (qNo: number) => Question;
   handleSaveQuestion: (id: string, updatedQuestion: Question) => void;
   handleDeleteQuestion: (id: string) => void;
   onAssessmentUpdated: () => void;
@@ -429,6 +452,7 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
   const isAssessmentLocked = !!assessment?.isReleased;
   const isAssessmentReleased = !!assessment?.isReleased;
 
+  const [editingQuestionId, setEditingQuestionId] = useState('');
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [csvErrorMessage, setCsvErrorMessage] = useState('');
 
@@ -439,6 +463,11 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
   const handleCsvProcessComplete = () => {
     onAssessmentUpdated();
   };
+
+  const handleSaveQuestionAndExitEditMode = (id: string, updatedQuestion: Question) => {
+    setEditingQuestionId('');
+    handleSaveQuestion(id, updatedQuestion);
+  }
 
   const [isReleaseModalOpen, setIsReleaseModalOpen] = useState(false);
   const [isRecallModalOpen, setIsRecallModalOpen] = useState(false);
@@ -540,6 +569,10 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
   -------------------------------- */
   const [sortedQuestions, setSortedQuestions] = useState<Question[]>([]);
 
+  const [latestQuestionNumber, setLatestQuestionNumber] = useState(
+    questions.length + 1
+  );
+
   useEffect(() => {
     const sorted = [...questions].sort((a, b) => {
       const orderA = a.order ?? 9999;
@@ -547,15 +580,19 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
       return orderA - orderB;
     });
     setSortedQuestions(sorted);
+    setLatestQuestionNumber(questions.length + 1);
   }, [questions]);
 
-  const [latestQuestionNumber, setLatestQuestionNumber] = useState(
-    questions.length + 1
-  );
-
   const handleAddQuestionClick = () => {
-    addQuestion(latestQuestionNumber);
+    const newQ = addQuestion(latestQuestionNumber);
     setLatestQuestionNumber(prev => prev + 1);
+    setSortedQuestions(prev => {
+      const newList = [...prev, newQ];
+      // Let reassignUnlockedOrder handle the final positions
+      const finalList = reassignUnlockedOrder(newList);
+      return finalList;
+    });
+    setEditingQuestionId(newQ._id);
   };
 
   /* --------------------------------
@@ -769,14 +806,14 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
                 padding: '1rem',
               }}
             >
-              <Text size="sm" color="dimmed" mb="xs">
+              <Text size="sm" c="dimmed" mb="xs">
                 Locked (Order: {question.order})
               </Text>
               <AssessmentMakeQuestionCard
                 index={index}
                 questionData={question}
                 onSave={updatedQuestion =>
-                  handleSaveQuestion(question._id, updatedQuestion)
+                  handleSaveQuestionAndExitEditMode(question._id, updatedQuestion)
                 }
                 onDelete={() => handleDeleteQuestion(question._id)}
                 isLocked={true}
@@ -817,7 +854,7 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
                         index={index}
                         questionData={question}
                         onSave={updatedQuestion =>
-                          handleSaveQuestion(question._id, updatedQuestion)
+                          handleSaveQuestionAndExitEditMode(question._id, updatedQuestion)
                         }
                         onDelete={() => handleDeleteQuestion(question._id)}
                         isLocked={true}
@@ -837,15 +874,16 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
                     question={question}
                     totalUnlockedCount={unlockedCount}
                     onChangeOrder={handlePositionChange}
+                    disabled={(editingQuestionId !== '') && (editingQuestionId !== question._id)}
                   >
                     <AssessmentMakeQuestionCard
                       index={index}
                       questionData={question}
                       onSave={updatedQuestion =>
-                        handleSaveQuestion(question._id, updatedQuestion)
+                        handleSaveQuestionAndExitEditMode(question._id, updatedQuestion)
                       }
                       onDelete={() => handleDeleteQuestion(question._id)}
-                      isLocked={false}
+                      isLocked={(editingQuestionId !== '') && (editingQuestionId !== question._id)}
                     />
                   </SortableQuestionCard>
                 );
@@ -872,7 +910,7 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
       {/* Add Question + Release/Recall Buttons */}
       <Group mt="md" pb="sm">
         {!isAssessmentLocked && (
-          <Button onClick={handleAddQuestionClick} color="blue">
+          <Button onClick={handleAddQuestionClick} color="blue" disabled={editingQuestionId !== ''}>
             Add Question
           </Button>
         )}
