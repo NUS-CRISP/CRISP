@@ -235,9 +235,7 @@ function downloadExistingQuestionsCsv(questions: Question[]) {
   });
 
   const rows: string[] = [];
-  rows.push(
-    questionHeaders.map(header => escapeCsvValue(header)).join(',')
-  ); // header row
+  rows.push(questionHeaders.map(header => escapeCsvValue(header)).join(',')); // header row
 
   filtered.forEach(q => {
     const rowValues = questionHeaders.map(header => {
@@ -361,7 +359,7 @@ function SortableQuestionCard({
   totalUnlockedCount: number;
   onChangeOrder: (questionId: string, newPos: number) => void;
   children: React.ReactNode;
-  disabled: boolean,
+  disabled: boolean;
 }) {
   const {
     attributes,
@@ -402,11 +400,11 @@ function SortableQuestionCard({
             <circle cx="9" cy="9" r="1.5" />
             <circle cx="9" cy="15" r="1.5" />
           </svg>
-          {disabled &&
+          {disabled && (
             <Text size="sm" c="dimmed" mb="xs" mt="xs">
               Disabled until question being edited is saved.
             </Text>
-          }
+          )}
         </Box>
 
         <NumberInput
@@ -464,10 +462,13 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
     onAssessmentUpdated();
   };
 
-  const handleSaveQuestionAndExitEditMode = (id: string, updatedQuestion: Question) => {
+  const handleSaveQuestionAndExitEditMode = (
+    id: string,
+    updatedQuestion: Question
+  ) => {
     setEditingQuestionId('');
     handleSaveQuestion(id, updatedQuestion);
-  }
+  };
 
   const [isReleaseModalOpen, setIsReleaseModalOpen] = useState(false);
   const [isRecallModalOpen, setIsRecallModalOpen] = useState(false);
@@ -813,7 +814,10 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
                 index={index}
                 questionData={question}
                 onSave={updatedQuestion =>
-                  handleSaveQuestionAndExitEditMode(question._id, updatedQuestion)
+                  handleSaveQuestionAndExitEditMode(
+                    question._id,
+                    updatedQuestion
+                  )
                 }
                 onDelete={() => handleDeleteQuestion(question._id)}
                 isLocked={true}
@@ -854,7 +858,10 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
                         index={index}
                         questionData={question}
                         onSave={updatedQuestion =>
-                          handleSaveQuestionAndExitEditMode(question._id, updatedQuestion)
+                          handleSaveQuestionAndExitEditMode(
+                            question._id,
+                            updatedQuestion
+                          )
                         }
                         onDelete={() => handleDeleteQuestion(question._id)}
                         isLocked={true}
@@ -874,16 +881,25 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
                     question={question}
                     totalUnlockedCount={unlockedCount}
                     onChangeOrder={handlePositionChange}
-                    disabled={(editingQuestionId !== '') && (editingQuestionId !== question._id)}
+                    disabled={
+                      editingQuestionId !== '' &&
+                      editingQuestionId !== question._id
+                    }
                   >
                     <AssessmentMakeQuestionCard
                       index={index}
                       questionData={question}
                       onSave={updatedQuestion =>
-                        handleSaveQuestionAndExitEditMode(question._id, updatedQuestion)
+                        handleSaveQuestionAndExitEditMode(
+                          question._id,
+                          updatedQuestion
+                        )
                       }
                       onDelete={() => handleDeleteQuestion(question._id)}
-                      isLocked={(editingQuestionId !== '') && (editingQuestionId !== question._id)}
+                      isLocked={
+                        editingQuestionId !== '' &&
+                        editingQuestionId !== question._id
+                      }
                     />
                   </SortableQuestionCard>
                 );
@@ -910,7 +926,11 @@ const AssessmentInternalForm: React.FC<AssessmentInternalFormProps> = ({
       {/* Add Question + Release/Recall Buttons */}
       <Group mt="md" pb="sm">
         {!isAssessmentLocked && (
-          <Button onClick={handleAddQuestionClick} color="blue" disabled={editingQuestionId !== ''}>
+          <Button
+            onClick={handleAddQuestionClick}
+            color="blue"
+            disabled={editingQuestionId !== ''}
+          >
             Add Question
           </Button>
         )}
