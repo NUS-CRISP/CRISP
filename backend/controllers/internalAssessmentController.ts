@@ -540,8 +540,6 @@ export const gatherComments = async (req: Request, res: Response) => {
       // Extract the comment text from each answer.
       const texts = commentAnswers
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .filter((a: any) => !a.isRequired)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .map((a: any) => a.value)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .filter((v: any) => v); // filter out any falsy values

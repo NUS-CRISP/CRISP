@@ -1,5 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Button, Group, Modal, Select, Text, Loader, TextInput } from '@mantine/core';
+import {
+  Button,
+  Group,
+  Modal,
+  Select,
+  Text,
+  Loader,
+  TextInput,
+} from '@mantine/core';
 import { Virtuoso } from 'react-virtuoso';
 
 import { AssessmentResult } from '@shared/types/AssessmentResults';
@@ -38,11 +46,25 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
   assessmentReleaseNumber,
   assessmentId,
 }) => {
+  // State for the existing results list and filters
   const [isResultFormOpen, setIsResultFormOpen] = useState<boolean>(false);
   const [isCommentsModalOpen, setIsCommentsModalOpen] = useState<boolean>(false);
+
+  // New state for configurable headers for Comments CSV (already existing)
   const [studentIdHeader, setStudentIdHeader] = useState<string>('SIS User ID');
-  const [commentHeader, setCommentHeader] = useState<string>('Assignment title (<Paste your Assignment ID here>)');
-  const [selectedCommentType, setSelectedCommentType] = useState<'short' | 'long' | 'both'>('both');
+  const [commentHeader, setCommentHeader] = useState<string>(
+    'Assignment title (<Paste your Assignment ID here>)'
+  );
+  const [selectedCommentType, setSelectedCommentType] = useState<
+    'short' | 'long' | 'both'
+  >('both');
+
+  // NEW: State for configurable headers for Results CSV
+  const [resultStudentHeader, setResultStudentHeader] = useState<string>(
+    'Student'
+  );
+  const [resultIdHeader, setResultIdHeader] = useState<string>('SIS User ID');
+  const [resultMarksHeader, setResultMarksHeader] = useState<string>('New Assignment');
 
   const [markerFilter, setMarkerFilter] = useState<string>('All');
   const [markedFilter, setMarkedFilter] = useState<string>('All');
@@ -53,16 +75,15 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const toggleResultForm = () => {
-    setIsResultFormOpen(prev => !prev);
+    setIsResultFormOpen((prev) => !prev);
   };
 
-  // New toggle for comments modal
   const toggleCommentsModal = () => {
-    setIsCommentsModalOpen(prev => !prev);
+    setIsCommentsModalOpen((prev) => !prev);
   };
 
   // Prepare TA filter options
-  const taOptions = teachingTeam.map(user => ({
+  const taOptions = teachingTeam.map((user) => ({
     value: user._id,
     label: user.name,
   }));
@@ -71,22 +92,24 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
     const buildStudentResults = () => {
       const srList: StudentResult[] = [];
       if (assignedUsers?.length) {
-        assignedUsers.forEach(assignedUser => {
+        assignedUsers.forEach((assignedUser) => {
           srList.push({
             student: assignedUser.user,
-            assignedTAIds: assignedUser.tas.map(ta => ta._id),
+            assignedTAIds: assignedUser.tas.map((ta) => ta._id),
             team: null,
-            result: results.find(r => r.student?._id === assignedUser.user._id),
+            result: results.find(
+              (r) => r.student?._id === assignedUser.user._id
+            ),
           });
         });
       } else if (assignedTeams?.length) {
-        assignedTeams.forEach(assignedTeam => {
-          assignedTeam.team.members.forEach(member => {
+        assignedTeams.forEach((assignedTeam) => {
+          assignedTeam.team.members.forEach((member) => {
             srList.push({
               student: member,
-              assignedTAIds: assignedTeam.tas.map(ta => ta._id),
+              assignedTAIds: assignedTeam.tas.map((ta) => ta._id),
               team: assignedTeam.team,
-              result: results.find(r => r.student?._id === member._id),
+              result: results.find((r) => r.student?._id === member._id),
             });
           });
         });
@@ -102,9 +125,9 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
 
     if (markerFilter !== 'All') {
       if (markerFilter === 'Unassigned') {
-        filtered = filtered.filter(sr => sr.assignedTAIds.length === 0);
+        filtered = filtered.filter((sr) => sr.assignedTAIds.length === 0);
       } else {
-        filtered = filtered.filter(sr =>
+        filtered = filtered.filter((sr) =>
           sr.assignedTAIds.includes(markerFilter)
         );
       }
@@ -112,23 +135,25 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
 
     if (markedFilter !== 'All') {
       if (markedFilter === 'Complete') {
-        filtered = filtered.filter(sr => {
+        filtered = filtered.filter((sr) => {
           if (sr.result && sr.result.marks.length > 0) {
-            return !sr.result.marks.some(mark => !mark.submission);
+            return !sr.result.marks.some((mark) => !mark.submission);
           }
           return false;
         });
       } else if (markedFilter === 'Incomplete') {
-        filtered = filtered.filter(sr => {
+        filtered = filtered.filter((sr) => {
           if (!sr.result || sr.result.marks.length === 0) return true;
-          return sr.result.marks.some(mark => !mark.submission);
+          return sr.result.marks.some((mark) => !mark.submission);
         });
       }
     }
 
     switch (sortCriterion) {
       case 'name':
-        filtered.sort((a, b) => a.student.name.localeCompare(b.student.name));
+        filtered.sort((a, b) =>
+          a.student.name.localeCompare(b.student.name)
+        );
         break;
       case 'studentID':
         filtered.sort((a, b) =>
@@ -156,14 +181,19 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
     setFilteredAndSortedStudentResults(filtered);
   }, [studentResults, markerFilter, markedFilter, sortCriterion]);
 
+  // Modified generateCSV to use configurable headers
   const generateCSV = () => {
-    const headers = ['Student', 'ID', 'Marks'];
-    const rows = filteredAndSortedStudentResults.map(sr => [
+    const headers = [
+      resultStudentHeader,
+      resultIdHeader,
+      resultMarksHeader,
+    ];
+    const rows = filteredAndSortedStudentResults.map((sr) => [
       sr.student.name,
       sr.student.identifier,
       sr.result ? sr.result.averageScore.toString() : 'N/A',
     ]);
-    return [headers, ...rows].map(line => line.join(',')).join('\n');
+    return [headers, ...rows].map((line) => line.join(',')).join('\n');
   };
 
   const downloadCSV = () => {
@@ -179,7 +209,7 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
     document.body.removeChild(link);
   };
 
-  // New function to download comments as CSV
+  // New function to download comments as CSV (unchanged from previous version)
   const handleDownloadComments = async () => {
     try {
       const response = await fetch(
@@ -199,13 +229,16 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
         alert(data.message);
         return;
       }
-      const commentsByStudent: { [studentId: string]: string[] } = data.commentsByStudent;
+      const commentsByStudent: { [studentId: string]: string[] } =
+        data.commentsByStudent;
       let csvContent = `"${studentIdHeader}","${commentHeader}"\n`;
       Object.entries(commentsByStudent).forEach(([studentId, comments]) => {
         const aggregatedComments = comments.join('\n');
         csvContent += `"${studentId}","${aggregatedComments}"\n`;
       });
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const blob = new Blob([csvContent], {
+        type: 'text/csv;charset=utf-8;',
+      });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -216,7 +249,7 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
       setIsCommentsModalOpen(false);
     } catch (error) {
       console.error('Error downloading comments:', error);
-      // Optionally, you could show an error notification here.
+      // Optionally, display an error notification here.
     }
   };
 
@@ -246,7 +279,6 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
       const teamId = sr.team?._id ?? 'No Team';
       if (!visitedIds.has(teamId)) {
         visitedIds.add(teamId);
-
         const studentsInTeam = groupsMap[teamId];
         const label =
           teamId === 'No Team'
@@ -262,9 +294,7 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
     return grouped;
   }, [filteredAndSortedStudentResults, sortCriterion]);
 
-  // Conditionally render normal Virtuoso:
-  //    (A) If grouping by team, pass an array of "team groups" to Virtuoso
-  //    (B) Otherwise, pass the array of StudentResults as is
+  // Conditionally render Virtuoso list
   const renderVirtualList = () => {
     if (sortCriterion === 'teamNumber' && groupedTeams.length > 0) {
       return (
@@ -307,7 +337,7 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
           <Text size="sm">Marker</Text>
           <Select
             value={markerFilter}
-            onChange={value => setMarkerFilter(value || 'All')}
+            onChange={(value) => setMarkerFilter(value || 'All')}
             data={[
               { value: 'All', label: 'All' },
               { value: 'Unassigned', label: 'Unassigned' },
@@ -323,7 +353,7 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
           <Text size="sm">Marked Status</Text>
           <Select
             value={markedFilter}
-            onChange={value => setMarkedFilter(value || 'All')}
+            onChange={(value) => setMarkedFilter(value || 'All')}
             data={[
               { value: 'All', label: 'All' },
               { value: 'Complete', label: 'Marking completed' },
@@ -339,7 +369,7 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
           <Text size="sm">Sort by</Text>
           <Select
             value={sortCriterion}
-            onChange={value => setSortCriterion(value || 'name')}
+            onChange={(value) => setSortCriterion(value || 'name')}
             data={[
               { value: 'name', label: 'Name' },
               { value: 'studentID', label: 'Student ID' },
@@ -377,7 +407,7 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
         </Group>
       </Group>
 
-      {/* Modal for Download Results */}
+      {/* Modal for Download Results with configurable headers */}
       <Modal
         opened={isResultFormOpen}
         onClose={toggleResultForm}
@@ -385,28 +415,31 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
         centered
       >
         <Group gap="md">
-          <Text>
-            Click below to download the assessment results as a CSV file. It
-            includes:
-            <ul>
-              <li>
-                <strong>Name</strong>: The name of the student.
-              </li>
-              <li>
-                <strong>ID</strong>: The identifier of the student.
-              </li>
-              <li>
-                <strong>Marks</strong>: The average score of the student.
-              </li>
-            </ul>
-          </Text>
+          <TextInput
+            label="Student Header"
+            placeholder="Student"
+            value={resultStudentHeader}
+            onChange={(e) => setResultStudentHeader(e.currentTarget.value)}
+          />
+          <TextInput
+            label="ID Header"
+            placeholder="ID"
+            value={resultIdHeader}
+            onChange={(e) => setResultIdHeader(e.currentTarget.value)}
+          />
+          <TextInput
+            label="Marks Header"
+            placeholder="Marks"
+            value={resultMarksHeader}
+            onChange={(e) => setResultMarksHeader(e.currentTarget.value)}
+          />
           <Button onClick={downloadCSV} color="blue">
             Download CSV
           </Button>
         </Group>
       </Modal>
 
-      {/* New Modal for Download Comments */}
+      {/* Modal for Download Comments */}
       <Modal
         opened={isCommentsModalOpen}
         onClose={toggleCommentsModal}
@@ -435,7 +468,9 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
               { value: 'both', label: 'Both' },
             ]}
             value={selectedCommentType}
-            onChange={(value) => setSelectedCommentType(value as 'short' | 'long' | 'both')}
+            onChange={(value) =>
+              setSelectedCommentType(value as 'short' | 'long' | 'both')
+            }
           />
           <Button onClick={handleDownloadComments} color="blue">
             Download CSV
