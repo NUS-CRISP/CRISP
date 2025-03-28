@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Button, Group, Modal, Select, Text, Loader } from '@mantine/core';
+import { Button, Group, Modal, Select, Text, Loader, TextInput } from '@mantine/core';
 import { Virtuoso } from 'react-virtuoso';
 
 import { AssessmentResult } from '@shared/types/AssessmentResults';
@@ -12,6 +12,13 @@ import {
 import AssessmentResultCard from '../cards/AssessmentResultCard';
 import AssessmentResultCardGroup from '../cards/AssessmentResultCardGroup';
 
+export interface StudentResult {
+  student: User;
+  assignedTAIds: string[];
+  team?: Team | null;
+  result?: AssessmentResult;
+}
+
 interface AssessmentInternalResultsProps {
   results: AssessmentResult[];
   teachingTeam: User[];
@@ -19,13 +26,7 @@ interface AssessmentInternalResultsProps {
   assignedUsers?: AssignedUser[];
   maxScore?: number;
   assessmentReleaseNumber: number;
-}
-
-export interface StudentResult {
-  student: User;
-  assignedTAIds: string[];
-  team?: Team | null;
-  result?: AssessmentResult;
+  assessmentId: string;
 }
 
 const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
@@ -35,8 +36,14 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
   assignedUsers,
   maxScore,
   assessmentReleaseNumber,
+  assessmentId,
 }) => {
   const [isResultFormOpen, setIsResultFormOpen] = useState<boolean>(false);
+  const [isCommentsModalOpen, setIsCommentsModalOpen] = useState<boolean>(false);
+  const [studentIdHeader, setStudentIdHeader] = useState<string>('SIS User ID');
+  const [commentHeader, setCommentHeader] = useState<string>('Assignment title (<Paste your Assignment ID here>)');
+  const [selectedCommentType, setSelectedCommentType] = useState<'short' | 'long' | 'both'>('both');
+
   const [markerFilter, setMarkerFilter] = useState<string>('All');
   const [markedFilter, setMarkedFilter] = useState<string>('All');
   const [sortCriterion, setSortCriterion] = useState<string>('name');
@@ -47,6 +54,11 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
 
   const toggleResultForm = () => {
     setIsResultFormOpen(prev => !prev);
+  };
+
+  // New toggle for comments modal
+  const toggleCommentsModal = () => {
+    setIsCommentsModalOpen(prev => !prev);
   };
 
   // Prepare TA filter options
@@ -145,8 +157,9 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
   }, [studentResults, markerFilter, markedFilter, sortCriterion]);
 
   const generateCSV = () => {
-    const headers = ['StudentID', 'Marks'];
+    const headers = ['Student', 'ID', 'Marks'];
     const rows = filteredAndSortedStudentResults.map(sr => [
+      sr.student.name,
       sr.student.identifier,
       sr.result ? sr.result.averageScore.toString() : 'N/A',
     ]);
@@ -164,6 +177,47 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  // New function to download comments as CSV
+  const handleDownloadComments = async () => {
+    try {
+      const response = await fetch(
+        `/api/internal-assessments/${assessmentId}/comments/${selectedCommentType}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      if (!response.ok) {
+        throw new Error('Failed to gather comments');
+      }
+      const data = await response.json();
+      if (!data || !data.commentsByStudent) {
+        alert(data.message);
+        return;
+      }
+      const commentsByStudent: { [studentId: string]: string[] } = data.commentsByStudent;
+      let csvContent = `"${studentIdHeader}","${commentHeader}"\n`;
+      Object.entries(commentsByStudent).forEach(([studentId, comments]) => {
+        const aggregatedComments = comments.join('\n');
+        csvContent += `"${studentId}","${aggregatedComments}"\n`;
+      });
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'assessment_comments.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setIsCommentsModalOpen(false);
+    } catch (error) {
+      console.error('Error downloading comments:', error);
+      // Optionally, you could show an error notification here.
+    }
   };
 
   // Build a new data array if grouping by team
@@ -248,7 +302,7 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
 
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Group mt="xs" align="flex-end" gap="md" wrap="wrap">
+      <Group mt="xs" align="flex-end" gap="md">
         <div>
           <Text size="sm">Marker</Text>
           <Select
@@ -298,18 +352,32 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
           />
         </div>
 
-        <Button
-          onClick={toggleResultForm}
-          style={{
-            marginBottom: '10px',
-            alignSelf: 'flex-end',
-            marginLeft: 'auto',
-          }}
-        >
-          Download Results
-        </Button>
+        <Group justify="flex-end">
+          <Button
+            onClick={toggleResultForm}
+            style={{
+              marginBottom: '10px',
+              alignSelf: 'flex-end',
+              marginLeft: 'auto',
+            }}
+          >
+            Download Results
+          </Button>
+
+          <Button
+            onClick={toggleCommentsModal}
+            style={{
+              marginBottom: '10px',
+              alignSelf: 'flex-end',
+              marginLeft: '10px',
+            }}
+          >
+            Download Comments
+          </Button>
+        </Group>
       </Group>
 
+      {/* Modal for Download Results */}
       <Modal
         opened={isResultFormOpen}
         onClose={toggleResultForm}
@@ -322,7 +390,10 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
             includes:
             <ul>
               <li>
-                <strong>StudentID</strong>: The identifier of the student.
+                <strong>Name</strong>: The name of the student.
+              </li>
+              <li>
+                <strong>ID</strong>: The identifier of the student.
               </li>
               <li>
                 <strong>Marks</strong>: The average score of the student.
@@ -330,6 +401,43 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
             </ul>
           </Text>
           <Button onClick={downloadCSV} color="blue">
+            Download CSV
+          </Button>
+        </Group>
+      </Modal>
+
+      {/* New Modal for Download Comments */}
+      <Modal
+        opened={isCommentsModalOpen}
+        onClose={toggleCommentsModal}
+        title="Download Comments"
+        centered
+      >
+        <Group gap="md">
+          <TextInput
+            label="Student ID Header"
+            placeholder="Student ID"
+            value={studentIdHeader}
+            onChange={(e) => setStudentIdHeader(e.currentTarget.value)}
+          />
+          <TextInput
+            label="Comment Header"
+            placeholder="Comments"
+            value={commentHeader}
+            onChange={(e) => setCommentHeader(e.currentTarget.value)}
+          />
+          <Select
+            label="Comment Type"
+            placeholder="Select comment type"
+            data={[
+              { value: 'short', label: 'Short Response' },
+              { value: 'long', label: 'Long Response' },
+              { value: 'both', label: 'Both' },
+            ]}
+            value={selectedCommentType}
+            onChange={(value) => setSelectedCommentType(value as 'short' | 'long' | 'both')}
+          />
+          <Button onClick={handleDownloadComments} color="blue">
             Download CSV
           </Button>
         </Group>
