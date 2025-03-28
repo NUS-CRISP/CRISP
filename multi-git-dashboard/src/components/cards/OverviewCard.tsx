@@ -2,7 +2,6 @@ import { DateUtils } from '@/lib/utils';
 import { RangeSlider, Stack, Modal, TextInput, Button } from '@mantine/core';
 import { useState } from 'react';
 import Analytics from '../overview/analytics/Analytics';
-import PR from '../overview/pr/PR';
 import TutorialPopover from '../tutorial/TutorialPopover';
 import { ProfileGetter, Team } from '../views/Overview';
 import { TeamData } from '@shared/types/TeamData';
@@ -22,7 +21,6 @@ export const OverviewCard: React.FC<OverviewProps> = ({
   teamData,
   teamDatas,
   dateUtils,
-  profileGetter,
 }) => {
   const totalWeeks = 15;
   const [selectedWeekRange, setSelectedWeekRange] = useState<[number, number]>([
@@ -92,15 +90,6 @@ export const OverviewCard: React.FC<OverviewProps> = ({
           teamDatas={teamDatas}
           selectedWeekRange={selectedWeekRange}
           dateUtils={dateUtils}
-        />
-      </TutorialPopover>
-      <TutorialPopover stage={9} position="top" disabled={index !== 0}>
-        <PR
-          team={team}
-          teamData={teamData}
-          selectedWeekRange={selectedWeekRange}
-          dateUtils={dateUtils}
-          profileGetter={profileGetter}
         />
       </TutorialPopover>
 

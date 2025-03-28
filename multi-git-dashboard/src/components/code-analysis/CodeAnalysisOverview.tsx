@@ -14,6 +14,7 @@ import {
   Spoiler,
 } from '@mantine/core';
 import { IconHelpCircle, IconChartDots } from '@tabler/icons-react';
+import ordinal from 'ordinal';
 
 interface CodeAnalysisOverviewProps {
   latestData: {
@@ -92,6 +93,10 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
   const [hoveredMetricValue, setHoveredMetricValue] = useState<string | null>(
     null
   );
+
+  const overview_rank_index = latestData.metrics.indexOf('overview_rank');
+  const overview_rank =
+    overview_rank_index === -1 ? '-' : latestData.values[overview_rank_index];
 
   const security_rating_index = latestData.metrics.indexOf('security_rating');
   const security_rating =
@@ -185,7 +190,8 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
     title: string,
     value: string,
     metricKey: string,
-    colorFn?: (s: string) => string
+    colorFn?: (s: string) => string,
+    enableStats = true
   ) => {
     const color =
       value === '-' ? '#666' : colorFn ? colorFn(value) : 'lightgray';
@@ -202,12 +208,14 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
         </Title>
         <Text size="xl" fw={700} c={color}>
           {value}
-          <IconChartDots
-            size={18}
-            onMouseEnter={() => handleMouseEnterMetricValue(metricKey)}
-            onMouseLeave={handleMouseLeaveMetricValue}
-            style={{ cursor: 'pointer', color: 'gray', marginLeft: '6px' }}
-          />
+          {enableStats && (
+            <IconChartDots
+              size={18}
+              onMouseEnter={() => handleMouseEnterMetricValue(metricKey)}
+              onMouseLeave={handleMouseLeaveMetricValue}
+              style={{ cursor: 'pointer', color: 'gray', marginLeft: '6px' }}
+            />
+          )}
         </Text>
       </Card>
     );
@@ -262,6 +270,15 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
   return (
     <Container>
       <Grid gutter="lg">
+        <Grid.Col span={12}>
+          {metricCard(
+            'Predicted Ranking',
+            overview_rank === '-' ? '-' : ordinal(parseInt(overview_rank)),
+            'overview_rank',
+            () => 'blue',
+            false
+          )}
+        </Grid.Col>
         <Grid.Col span={4}>
           {metricCard(
             'Security',

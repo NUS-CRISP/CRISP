@@ -225,10 +225,15 @@ const fetchJiraBoardConfiguration = async (
 export const fetchAndSaveJiraData = async () => {
   const courses: Course[] = await CourseModel.find();
 
+  const currDate = new Date();
+
   for (const course of courses) {
     const { isRegistered, cloudIds, refreshToken } = course.jira;
 
-    if (!isRegistered) {
+    const endDate = new Date(course.startDate);
+    endDate.setDate(endDate.getDate() + course.durationWeeks * 7);
+
+    if (!isRegistered || currDate < course.startDate || currDate > endDate) {
       continue;
     }
 
