@@ -29,9 +29,19 @@ const fetchAndSaveCodeAnalysisData = async () => {
     installationId: { $in: installationIds },
   });
 
+  const currDate = new Date();
+
   await Promise.all(
     courses.map(async course => {
-      if (course && course.installationId) {
+      // Only scan courses that are currently running
+      const endDate = new Date(course.startDate);
+      endDate.setDate(endDate.getDate() + course.durationWeeks * 7);
+      if (
+        course &&
+        course.installationId &&
+        currDate >= course.startDate &&
+        currDate <= endDate
+      ) {
         const installationOctokit = await app.getInstallationOctokit(
           course.installationId
         );

@@ -51,14 +51,21 @@ const queryAndSaveAIInsights = async () => {
     installationId: { $in: installationIds },
   });
 
+  const currDate = new Date();
+
   await Promise.all(
     courses.map(async course => {
+      // Only scan courses that are currently running
+      const endDate = new Date(course.startDate);
+      endDate.setDate(endDate.getDate() + course.durationWeeks * 7);
       // Query only if course has CRISP installed and AI insights enabled
       if (
         course &&
         course.installationId &&
         course.aiInsights &&
         course.aiInsights.isOn &&
+        currDate >= course.startDate &&
+        currDate <= endDate &&
         checkQueryDate(course) // Check if needed to check today
       ) {
         await getAIInsights(course);

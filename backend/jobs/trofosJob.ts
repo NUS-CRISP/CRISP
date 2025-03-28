@@ -16,12 +16,19 @@ import {
 const fetchAndSaveTrofosData = async () => {
   const courses: Course[] = await CourseModel.find();
 
+  const currDate = new Date();
+
   for (const course of courses) {
     const {
       trofos: { isRegistered, apiKey, courseId },
+      startDate,
+      durationWeeks,
     } = course;
 
-    if (!isRegistered) {
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + durationWeeks * 7);
+
+    if (!isRegistered || currDate < startDate || currDate > endDate) {
       continue;
     }
 
