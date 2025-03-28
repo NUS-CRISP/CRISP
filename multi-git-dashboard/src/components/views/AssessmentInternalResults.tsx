@@ -46,24 +46,21 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
   assessmentReleaseNumber,
   assessmentId,
 }) => {
-  // Modal state for download results and download comments already exist.
+  // Modal state for download results and comments
   const [isResultFormOpen, setIsResultFormOpen] = useState<boolean>(false);
   const [isCommentsModalOpen, setIsCommentsModalOpen] = useState<boolean>(false);
   // NEW: State for the new mapping modal.
   const [isMapModalOpen, setIsMapModalOpen] = useState<boolean>(false);
-  // Comments CSV inputs (already existing)
+
+  // Comments CSV inputs (unchanged)
   const [studentIdHeader, setStudentIdHeader] = useState<string>('SIS User ID');
-  const [commentHeader, setCommentHeader] = useState<string>(
-    'Assignment Title'
-  );
-  const [selectedCommentType, setSelectedCommentType] = useState<
-    'short' | 'long' | 'both'
-  >('both');
+  const [commentHeader, setCommentHeader] = useState<string>('Assignment Title');
+  const [selectedCommentType, setSelectedCommentType] = useState<'short' | 'long' | 'both'>('both');
+
   // Results CSV configurable headers
   const [resultStudentHeader, setResultStudentHeader] = useState<string>('Student');
   const [resultIdHeader, setResultIdHeader] = useState<string>('SIS User ID');
   const [resultMarksHeader, setResultMarksHeader] = useState<string>('Average Marks');
-  // New mapping modal state: file input and mapping headers
   const [mapFile, setMapFile] = useState<File | null>(null);
   const [mapIdHeader, setMapIdHeader] = useState<string>('SIS User ID');
   const [mapResultHeader, setMapResultHeader] = useState<string>('Result');
@@ -72,8 +69,7 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
   const [markedFilter, setMarkedFilter] = useState<string>('All');
   const [sortCriterion, setSortCriterion] = useState<string>('name');
   const [studentResults, setStudentResults] = useState<StudentResult[]>([]);
-  const [filteredAndSortedStudentResults, setFilteredAndSortedStudentResults] =
-    useState<StudentResult[]>([]);
+  const [filteredAndSortedStudentResults, setFilteredAndSortedStudentResults] = useState<StudentResult[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const toggleResultForm = () => {
@@ -103,9 +99,7 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
             student: assignedUser.user,
             assignedTAIds: assignedUser.tas.map((ta) => ta._id),
             team: null,
-            result: results.find(
-              (r) => r.student?._id === assignedUser.user._id
-            ),
+            result: results.find((r) => r.student?._id === assignedUser.user._id),
           });
         });
       } else if (assignedTeams?.length) {
@@ -128,17 +122,13 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
 
   useEffect(() => {
     let filtered = [...studentResults];
-
     if (markerFilter !== 'All') {
       if (markerFilter === 'Unassigned') {
         filtered = filtered.filter((sr) => sr.assignedTAIds.length === 0);
       } else {
-        filtered = filtered.filter((sr) =>
-          sr.assignedTAIds.includes(markerFilter)
-        );
+        filtered = filtered.filter((sr) => sr.assignedTAIds.includes(markerFilter));
       }
     }
-
     if (markedFilter !== 'All') {
       if (markedFilter === 'Complete') {
         filtered = filtered.filter((sr) => {
@@ -154,17 +144,12 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
         });
       }
     }
-
     switch (sortCriterion) {
       case 'name':
-        filtered.sort((a, b) =>
-          a.student.name.localeCompare(b.student.name)
-        );
+        filtered.sort((a, b) => a.student.name.localeCompare(b.student.name));
         break;
       case 'studentID':
-        filtered.sort((a, b) =>
-          a.student.identifier.localeCompare(b.student.identifier)
-        );
+        filtered.sort((a, b) => a.student.identifier.localeCompare(b.student.identifier));
         break;
       case 'marks':
         filtered.sort((a, b) => {
@@ -183,30 +168,29 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
       default:
         break;
     }
-
     setFilteredAndSortedStudentResults(filtered);
   }, [studentResults, markerFilter, markedFilter, sortCriterion]);
 
   // Generate CSV for Results using user-configurable headers
   const generateCSV = () => {
-    const headers = [
-      resultStudentHeader,
-      resultIdHeader,
-      resultMarksHeader,
-    ];
+    const headers = [resultStudentHeader, resultIdHeader, resultMarksHeader];
     const rows = filteredAndSortedStudentResults.map((sr) => [
       sr.student.name,
       sr.student.identifier,
       sr.result ? sr.result.averageScore.toString() : 'N/A',
     ]);
-    return [headers, ...rows].map((line) => line.join(',')).join('\n');
+    // Wrap each field with quotes (escaping inner quotes) to handle commas.
+    const escapeCSV = (value: string) =>
+      `"${value.replace(/"/g, '""')}"`;
+    return [headers, ...rows]
+      .map((line) => line.map(escapeCSV).join(','))
+      .join('\n');
   };
 
   const downloadCSV = () => {
     const csv = generateCSV();
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
-
     const link = document.createElement('a');
     link.href = url;
     link.setAttribute('download', 'assessment_results.csv');
@@ -215,16 +199,14 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
     document.body.removeChild(link);
   };
 
-  // Function to download comments as CSV (unchanged from previous version)
+  // Function to download comments as CSV (unchanged except for CSV field escaping)
   const handleDownloadComments = async () => {
     try {
       const response = await fetch(
         `/api/internal-assessments/${assessmentId}/comments/${selectedCommentType}`,
         {
           method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
         }
       );
       if (!response.ok) {
@@ -235,16 +217,15 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
         alert(data.message);
         return;
       }
-      const commentsByStudent: { [studentId: string]: string[] } =
-        data.commentsByStudent;
-      let csvContent = `"${studentIdHeader}","${commentHeader}"\n`;
+      const commentsByStudent: { [studentId: string]: string[] } = data.commentsByStudent;
+      const escapeCSV = (value: string) =>
+        `"${value.replace(/"/g, '""')}"`;
+      let csvContent = `${escapeCSV(studentIdHeader)},${escapeCSV(commentHeader)}\n`;
       Object.entries(commentsByStudent).forEach(([studentId, comments]) => {
         const aggregatedComments = comments.join('\n');
-        csvContent += `"${studentId}","${aggregatedComments}"\n`;
+        csvContent += `${escapeCSV(studentId)},${escapeCSV(aggregatedComments)}\n`;
       });
-      const blob = new Blob([csvContent], {
-        type: 'text/csv;charset=utf-8;',
-      });
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -258,7 +239,32 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
     }
   };
 
-  // New function to map results from an uploaded CSV file
+  // --- CSV parsing helper ---
+  const parseCSVLine = (line: string): string[] => {
+    const result: string[] = [];
+    let current = '';
+    let insideQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') {
+        if (insideQuotes && line[i + 1] === '"') {
+          current += '"';
+          i++; // Skip escaped quote.
+        } else {
+          insideQuotes = !insideQuotes;
+        }
+      } else if (char === ',' && !insideQuotes) {
+        result.push(current);
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current);
+    return result;
+  };
+
+  // NEW: Function to map results from an uploaded CSV file with robust CSV parsing.
   const handleMapCSV = () => {
     if (!mapFile) {
       alert('Please select a CSV file.');
@@ -266,21 +272,17 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
     }
     const reader = new FileReader();
     reader.onload = (e) => {
-      console.log(mapIdHeader)
       const text = e.target?.result as string;
       const lines = text.split('\n').filter((line) => line.trim() !== '');
       if (lines.length === 0) {
         alert('CSV file is empty.');
         return;
       }
-      // Assume first line is header
-      const headers = lines[0]
-        .split(',')
-        .map((h) => h.trim().replace(/^"|"$/g, ''));
+      // Use robust CSV parsing for the header.
+      const headers = parseCSVLine(lines[0]).map((h) => h.trim());
       const idIndex = headers.findIndex(
         (h) => h.toLowerCase() === mapIdHeader.toLowerCase()
       );
-      console.log(idIndex);
       if (idIndex === -1) {
         alert(`ID header "${mapIdHeader}" not found in CSV file.`);
         return;
@@ -293,19 +295,20 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
         headers.push(mapResultHeader);
         resultIndex = headers.length - 1;
       }
-      const newLines = [headers.join(',')];
+      // Escape headers for CSV output.
+      const escapeCSV = (value: string) =>
+        `"${value.replace(/"/g, '""')}"`;
+      const newLines = [headers.map(escapeCSV).join(',')];
       // Process each subsequent line.
       for (let i = 1; i < lines.length; i++) {
-        const cols = lines[i]
-          .split(',')
-          .map((col) => col.trim().replace(/^"|"$/g, ''));
-        // If the ID cell is empty, skip processing this row and leave it intact.
-        if (!cols[idIndex]) {
+        const cols = parseCSVLine(lines[i]);
+        // If the ID cell is empty, leave the row intact.
+        if (!cols[idIndex] || cols[idIndex].trim() === '') {
           newLines.push(lines[i]);
           continue;
         }
-        const studentId = cols[idIndex];
-        // Find the corresponding student in studentResults based on student.identifier.
+        const studentId = cols[idIndex].trim();
+        // Find the corresponding student by identifier.
         const studentEntry = studentResults.find(
           (sr) =>
             sr.student.identifier.toLowerCase() === studentId.toLowerCase()
@@ -319,13 +322,14 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
           studentEntry && studentEntry.result
             ? studentEntry.result.averageScore.toString()
             : 'N/A';
-        // Insert or update the result column.
+        // Update or append the result column.
         if (cols.length > resultIndex) {
           cols[resultIndex] = resultText;
         } else {
           cols.push(resultText);
         }
-        newLines.push(cols.join(','));
+        // Reconstruct the CSV line with proper escaping.
+        newLines.push(cols.map(escapeCSV).join(','));
       }
       const newCSV = newLines.join('\n');
       const blob = new Blob([newCSV], { type: 'text/csv;charset=utf-8;' });
@@ -344,7 +348,6 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
   // Build a new data array if grouping by team
   const groupedTeams = useMemo(() => {
     if (sortCriterion !== 'teamNumber') return [];
-
     const groupsMap: Record<string, StudentResult[]> = {};
     for (const sr of filteredAndSortedStudentResults) {
       const teamId = sr.team?._id ?? 'No Team';
@@ -354,25 +357,14 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
       groupsMap[teamId].push(sr);
     }
     const visitedIds = new Set<string>();
-    const grouped: Array<{
-      teamId: string;
-      label: string;
-      students: StudentResult[];
-    }> = [];
+    const grouped: Array<{ teamId: string; label: string; students: StudentResult[] }> = [];
     for (const sr of filteredAndSortedStudentResults) {
       const teamId = sr.team?._id ?? 'No Team';
       if (!visitedIds.has(teamId)) {
         visitedIds.add(teamId);
         const studentsInTeam = groupsMap[teamId];
-        const label =
-          teamId === 'No Team'
-            ? 'No Team'
-            : `Team ${studentsInTeam[0].team?.number}`;
-        grouped.push({
-          teamId,
-          label,
-          students: studentsInTeam,
-        });
+        const label = teamId === 'No Team' ? 'No Team' : `Team ${studentsInTeam[0].team?.number}`;
+        grouped.push({ teamId, label, students: studentsInTeam });
       }
     }
     return grouped;
@@ -510,7 +502,7 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
         centered
       >
         <Text size="sm">
-          Enter the desired column headers for the results CSV. Columns for student name, ID, and average marks will be created.
+          Provide the column headers for the results CSV. The CSV will include columns for student name, ID, and average marks.
         </Text>
         <Group gap="md" mt="md">
           <TextInput
@@ -545,7 +537,7 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
         centered
       >
         <Text size="sm">
-          Enter the headers for the comments CSV. The CSV will list student IDs and their aggregated comments (from short and/or long responses).
+          Provide headers for the comments CSV. The CSV will include student IDs and their aggregated comments (from short and/or long responses).
         </Text>
         <Group gap="md" mt="md">
           <TextInput
@@ -587,7 +579,7 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
         centered
       >
         <Text size="sm">
-          Upload a CSV file that contains a column with student IDs. Specify the column header for student IDs and the header for the new result column. Rows with an empty ID cell or an unrecognized ID will remain unchanged (a warning will be displayed for unrecognized IDs).
+          Upload a CSV file that includes a column with student IDs. Specify the column header (e.g., "SIS User ID") and the header for the new results column (e.g., "Result"). Rows with an empty ID cell will be left unchanged. If a row’s ID is not found in our records, a warning will be shown and that row will remain unchanged.
         </Text>
         <Group gap="md" mt="md">
           <TextInput
