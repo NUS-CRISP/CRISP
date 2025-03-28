@@ -1138,7 +1138,7 @@ describe('internalAssessmentController', () => {
     it('should return comments filtered by short responses when type is "short"', async () => {
       req.params = { assessmentId: 'assessment1', type: 'short' };
 
-      // Mock an authorized account (Faculty or Admin)
+      // Mock an authorized account (Faculty)
       const mockAccount = { _id: 'account1', crispRole: CrispRole.Faculty };
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account1');
       jest
@@ -1146,8 +1146,6 @@ describe('internalAssessmentController', () => {
         .mockResolvedValue(mockAccount as any);
 
       // Create two submissions with answers.
-      // Each submission includes a Team Member Selection Answer that assigns comments to a student.
-      // One submission contains both short and long responses; only short responses should be returned.
       const submissions = [
         {
           answers: [
@@ -1158,17 +1156,15 @@ describe('internalAssessmentController', () => {
             {
               type: 'Short Response Answer',
               value: 'short comment 1',
-              isRequired: false,
             },
             {
               type: 'Long Response Answer',
               value: 'long comment 1',
-              isRequired: false,
             },
             {
               type: 'Short Response Answer',
-              value: 'short comment ignored',
-              isRequired: true, // should be filtered out
+              value: 'required short comment',
+              isRequired: true,
             },
           ],
         },
@@ -1181,7 +1177,6 @@ describe('internalAssessmentController', () => {
             {
               type: 'Short Response Answer',
               value: 'short comment 2',
-              isRequired: false,
             },
           ],
         },
@@ -1197,9 +1192,9 @@ describe('internalAssessmentController', () => {
 
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
-        message: 'Adjusted score submitted successfully.',
+        message: 'Comments gathered.',
         commentsByStudent: {
-          student1: ['short comment 1'],
+          student1: ['short comment 1', 'required short comment'],
           student2: ['short comment 2'],
         },
       });
@@ -1224,12 +1219,10 @@ describe('internalAssessmentController', () => {
             {
               type: 'Long Response Answer',
               value: 'long comment only',
-              isRequired: false,
             },
             {
               type: 'Short Response Answer',
               value: 'short comment should be ignored',
-              isRequired: false,
             },
           ],
         },
@@ -1245,14 +1238,14 @@ describe('internalAssessmentController', () => {
 
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
-        message: 'Adjusted score submitted successfully.',
+        message: 'Comments gathered.',
         commentsByStudent: {
           student1: ['long comment only'],
         },
       });
     });
 
-    it('should return both short and long comments when no type filter is provided', async () => {
+    it('should return both short and long comments when type is not provided', async () => {
       req.params = { assessmentId: 'assessment1' };
 
       const mockAccount = { _id: 'account1', crispRole: CrispRole.Faculty };
@@ -1271,12 +1264,10 @@ describe('internalAssessmentController', () => {
             {
               type: 'Short Response Answer',
               value: 'short comment',
-              isRequired: false,
             },
             {
               type: 'Long Response Answer',
               value: 'long comment',
-              isRequired: false,
             },
           ],
         },
@@ -1292,17 +1283,79 @@ describe('internalAssessmentController', () => {
 
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
-        message: 'Adjusted score submitted successfully.',
+        message: 'Comments gathered.',
         commentsByStudent: {
           student1: ['short comment', 'long comment'],
         },
       });
     });
 
+    it('should return 200 with "No submissions yet." when no submissions are found', async () => {
+      req.params = { assessmentId: 'assessment1' };
+
+      const mockAccount = { _id: 'account1', crispRole: CrispRole.Faculty };
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account1');
+      jest
+        .spyOn(AccountModel, 'findById')
+        .mockResolvedValue(mockAccount as any);
+
+      jest
+        .spyOn(
+          require('../../services/submissionService'),
+          'getSubmissionsByAssessment'
+        )
+        .mockResolvedValue([] as any);
+
+      await gatherComments(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'No submissions yet.',
+      });
+    });
+
+    it('should return 200 with "No comments found." when no comments are collected', async () => {
+      req.params = { assessmentId: 'assessment1', type: 'short' };
+
+      const mockAccount = { _id: 'account1', crispRole: CrispRole.Faculty };
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account1');
+      jest
+        .spyOn(AccountModel, 'findById')
+        .mockResolvedValue(mockAccount as any);
+
+      // Submissions exist but none of the answers (besides TMS) have a value.
+      const submissions = [
+        {
+          answers: [
+            {
+              type: 'Team Member Selection Answer',
+              selectedUserIds: ['student1'],
+            },
+            {
+              type: 'Short Response Answer',
+              value: '',
+            },
+          ],
+        },
+      ];
+      jest
+        .spyOn(
+          require('../../services/submissionService'),
+          'getSubmissionsByAssessment'
+        )
+        .mockResolvedValue(submissions as any);
+
+      await gatherComments(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'No comments found.',
+      });
+    });
+
     it('should return 403 if the user is not authorized', async () => {
       req.params = { assessmentId: 'assessment1' };
 
-      // Simulate an unauthorized account (e.g. role "Normal")
       const mockAccount = { _id: 'account1', crispRole: 'Normal' };
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account1');
       jest
@@ -1326,7 +1379,6 @@ describe('internalAssessmentController', () => {
         .spyOn(AccountModel, 'findById')
         .mockResolvedValue(mockAccount as any);
 
-      // Force getSubmissionsByAssessment to throw an unexpected error.
       jest
         .spyOn(
           require('../../services/submissionService'),

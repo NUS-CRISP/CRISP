@@ -467,19 +467,18 @@ export const reorderQuestionsInInternalAssessment = async (
  * Controller to gather all assessment comments.
  *
  * @param {Request} req - Express request object
- *  - req.params.submissionId: The ID of the submission to adjust.
- *  - req.body.adjustedScore: The new adjusted score.
+ *  - req.params.assessmentId: The ID of the assessment.
+ *  - req.params.type: 'short', 'long', or 'both'
  * @param {Response} res - Express response object
  *
  * @returns {Promise<void>}
- *  - 200 OK: Returns a success message and an array of (id, [comments]).
+ *  - 200 OK: Returns a success message and an object mapping student IDs to comment arrays.
  *  - 403 Forbidden: If the user lacks permission to gather comments.
- *  - 500 Internal Server Error: For unknown runtime or server errors (500).
+ *  - 500 Internal Server Error: For unknown runtime or server errors.
  *
  * @throws {NotFoundError} If the submission is not found.
  * @throws {BadRequestError} If the adjusted score is invalid.
  * @throws {MissingAuthorizationError} If the user is unauthorized.
- * @throws {Error} For unknown runtime or server errors (500).
  */
 export const gatherComments = async (req: Request, res: Response) => {
   try {
@@ -500,9 +499,7 @@ export const gatherComments = async (req: Request, res: Response) => {
     const submissions = await getSubmissionsByAssessment(assessmentId);
 
     if (!submissions || submissions.length === 0) {
-      res.status(200).json({
-        message: 'No submissions yet.',
-      });
+      res.status(200).json({ message: 'No submissions yet.' });
       return;
     }
 
@@ -518,29 +515,17 @@ export const gatherComments = async (req: Request, res: Response) => {
     const commentsByStudent: { [studentId: string]: string[] } = {};
 
     submissions.forEach(submission => {
-      // Find the Team Member Selection Answer in this submission.
-      // It contains the target student IDs.
       const tmsAnswer = submission.answers.find(
         (a: AnswerUnion) => a.type === 'Team Member Selection Answer'
-      ) as TeamMemberSelectionAnswer; // Assume these are all valid.
+      ) as TeamMemberSelectionAnswer; // Assumed valid
 
-      // Find all answers that match the filter.
-      const commentAnswers = submission.answers.filter(commentFilter);
-
-      if (commentAnswers.length === 0) {
-        res.status(200).json({
-          message: 'No comments yet.',
-        });
-        return;
-      }
-      // Extract the comment text from each answer.
-      const texts = commentAnswers
+      const texts = submission.answers
+        .filter(commentFilter)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .map((a: any) => a.value)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .filter((v: any) => v); // filter out any falsy values
+        .filter((v: any) => v);
 
-      // For each student ID in the TMS answer, add these comment texts.
       tmsAnswer.selectedUserIds.forEach((studentId: string) => {
         if (!commentsByStudent[studentId]) {
           commentsByStudent[studentId] = [];
@@ -548,6 +533,14 @@ export const gatherComments = async (req: Request, res: Response) => {
         commentsByStudent[studentId].push(...texts);
       });
     });
+
+    const anyComments = Object.values(commentsByStudent).some(
+      arr => arr.length > 0
+    );
+    if (!anyComments) {
+      res.status(200).json({ message: 'No comments found.' });
+      return;
+    }
 
     res.status(200).json({
       message: 'Comments gathered.',
