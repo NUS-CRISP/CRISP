@@ -172,4 +172,7 @@ export const metricExplanations: MetricExplanations = {
     'AI-generated insights on Code Quality, Project Management, SWE principles and Agile practices based on code analysis of the team and the mean/median of the course. \
   These insights are generated using the provider, model and at the frequency selected during course creation.\n\
   *These insights should be used as supplementary guidance; always review them in accordance to the course/project context.',
+  overview_rank:
+    "Predicted ranking of the team based on the weighted sum of various metrics. According to the CRISP team's research, this is a statistically significant indicator of the team's grade. The metrics and their weights have been pre-determined based on research by the CRISP team. \n\
+  *This is a prediction and should be used as supplementary guidance; always review it in accordance to the course/project context.",
 };
