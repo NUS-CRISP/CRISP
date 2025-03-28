@@ -46,11 +46,12 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
   assessmentReleaseNumber,
   assessmentId,
 }) => {
-  // State for the existing results list and filters
+  // Modal state for download results and download comments already exist.
   const [isResultFormOpen, setIsResultFormOpen] = useState<boolean>(false);
   const [isCommentsModalOpen, setIsCommentsModalOpen] = useState<boolean>(false);
-
-  // New state for configurable headers for Comments CSV (already existing)
+  // NEW: State for the new mapping modal.
+  const [isMapModalOpen, setIsMapModalOpen] = useState<boolean>(false);
+  // Comments CSV inputs (already existing)
   const [studentIdHeader, setStudentIdHeader] = useState<string>('SIS User ID');
   const [commentHeader, setCommentHeader] = useState<string>(
     'Assignment title (<Paste your Assignment ID here>)'
@@ -58,13 +59,14 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
   const [selectedCommentType, setSelectedCommentType] = useState<
     'short' | 'long' | 'both'
   >('both');
-
-  // NEW: State for configurable headers for Results CSV
-  const [resultStudentHeader, setResultStudentHeader] = useState<string>(
-    'Student'
-  );
+  // Results CSV configurable headers
+  const [resultStudentHeader, setResultStudentHeader] = useState<string>('Student');
   const [resultIdHeader, setResultIdHeader] = useState<string>('SIS User ID');
   const [resultMarksHeader, setResultMarksHeader] = useState<string>('New Assignment');
+  // New mapping modal state: file input and mapping headers
+  const [mapFile, setMapFile] = useState<File | null>(null);
+  const [mapIdHeader, setMapIdHeader] = useState<string>('SIS User ID');
+  const [mapResultHeader, setMapResultHeader] = useState<string>('Result');
 
   const [markerFilter, setMarkerFilter] = useState<string>('All');
   const [markedFilter, setMarkedFilter] = useState<string>('All');
@@ -80,6 +82,10 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
 
   const toggleCommentsModal = () => {
     setIsCommentsModalOpen((prev) => !prev);
+  };
+
+  const toggleMapModal = () => {
+    setIsMapModalOpen((prev) => !prev);
   };
 
   // Prepare TA filter options
@@ -181,7 +187,7 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
     setFilteredAndSortedStudentResults(filtered);
   }, [studentResults, markerFilter, markedFilter, sortCriterion]);
 
-  // Modified generateCSV to use configurable headers
+  // Generate CSV for Results using user-configurable headers
   const generateCSV = () => {
     const headers = [
       resultStudentHeader,
@@ -209,7 +215,7 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
     document.body.removeChild(link);
   };
 
-  // New function to download comments as CSV (unchanged from previous version)
+  // Function to download comments as CSV (same as before)
   const handleDownloadComments = async () => {
     try {
       const response = await fetch(
@@ -249,15 +255,79 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
       setIsCommentsModalOpen(false);
     } catch (error) {
       console.error('Error downloading comments:', error);
-      // Optionally, display an error notification here.
     }
+  };
+
+  // New function to map results from an uploaded CSV file
+  const handleMapCSV = () => {
+    if (!mapFile) {
+      alert('Please select a CSV file.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      const lines = text.split('\n').filter((line) => line.trim() !== '');
+      if (lines.length === 0) {
+        alert('CSV file is empty.');
+        return;
+      }
+      // Assume first line is header
+      const headers = lines[0].split(',').map((h) => h.trim().replace(/^"|"$/g, ''));
+      const idIndex = headers.findIndex(
+        (h) => h.toLowerCase() === mapIdHeader.toLowerCase()
+      );
+      if (idIndex === -1) {
+        alert(`ID header "${mapIdHeader}" not found in CSV file.`);
+        return;
+      }
+      // Check if result header already exists; if not, add it.
+      let resultIndex = headers.findIndex(
+        (h) => h.toLowerCase() === mapResultHeader.toLowerCase()
+      );
+      if (resultIndex === -1) {
+        headers.push(mapResultHeader);
+        resultIndex = headers.length - 1;
+      }
+      const newLines = [headers.join(',')];
+      // For each subsequent line, split the CSV, find the student and add result.
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(',').map((col) => col.trim().replace(/^"|"$/g, ''));
+        const studentId = cols[idIndex];
+        // Find the corresponding student in studentResults based on student.identifier
+        const studentEntry = studentResults.find(
+          (sr) => sr.student.identifier.toLowerCase() === studentId.toLowerCase()
+        );
+        const resultText =
+          studentEntry && studentEntry.result
+            ? studentEntry.result.averageScore.toString()
+            : 'N/A';
+        // If the row already has a value at resultIndex, override it; else, push.
+        if (cols.length > resultIndex) {
+          cols[resultIndex] = resultText;
+        } else {
+          cols.push(resultText);
+        }
+        newLines.push(cols.join(','));
+      }
+      const newCSV = newLines.join('\n');
+      const blob = new Blob([newCSV], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'mapped_results.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setIsMapModalOpen(false);
+    };
+    reader.readAsText(mapFile);
   };
 
   // Build a new data array if grouping by team
   const groupedTeams = useMemo(() => {
     if (sortCriterion !== 'teamNumber') return [];
 
-    // Build a map from teamId -> StudentResult[]
     const groupsMap: Record<string, StudentResult[]> = {};
     for (const sr of filteredAndSortedStudentResults) {
       const teamId = sr.team?._id ?? 'No Team';
@@ -266,15 +336,12 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
       }
       groupsMap[teamId].push(sr);
     }
-
-    // Convert that map to an array in the order the items appear
     const visitedIds = new Set<string>();
     const grouped: Array<{
       teamId: string;
       label: string;
       students: StudentResult[];
     }> = [];
-
     for (const sr of filteredAndSortedStudentResults) {
       const teamId = sr.team?._id ?? 'No Team';
       if (!visitedIds.has(teamId)) {
@@ -395,6 +462,17 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
           </Button>
 
           <Button
+            onClick={toggleMapModal}
+            style={{
+              marginBottom: '10px',
+              alignSelf: 'flex-end',
+              marginLeft: '10px',
+            }}
+          >
+            Map Results to ID
+          </Button>
+
+          <Button
             onClick={toggleCommentsModal}
             style={{
               marginBottom: '10px',
@@ -411,51 +489,61 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
       <Modal
         opened={isResultFormOpen}
         onClose={toggleResultForm}
-        title="Download Results"
+        title="Download Results CSV"
         centered
       >
-        <Group gap="md">
+        <Text size="sm">
+          Specify the column headers you would like to use in the results CSV.
+          The CSV will include columns for the student name, student ID, and
+          average marks.
+        </Text>
+        <Group gap="md" mt="md">
           <TextInput
             label="Student Header"
-            placeholder="Student"
+            placeholder="e.g., Student"
             value={resultStudentHeader}
             onChange={(e) => setResultStudentHeader(e.currentTarget.value)}
           />
           <TextInput
             label="ID Header"
-            placeholder="ID"
+            placeholder="e.g., SIS User ID"
             value={resultIdHeader}
             onChange={(e) => setResultIdHeader(e.currentTarget.value)}
           />
           <TextInput
             label="Marks Header"
-            placeholder="Marks"
+            placeholder="e.g., New Assignment"
             value={resultMarksHeader}
             onChange={(e) => setResultMarksHeader(e.currentTarget.value)}
           />
-          <Button onClick={downloadCSV} color="blue">
-            Download CSV
-          </Button>
         </Group>
+        <Button onClick={downloadCSV} color="blue" mt="md">
+          Download CSV
+        </Button>
       </Modal>
 
       {/* Modal for Download Comments */}
       <Modal
         opened={isCommentsModalOpen}
         onClose={toggleCommentsModal}
-        title="Download Comments"
+        title="Download Comments CSV"
         centered
       >
-        <Group gap="md">
+        <Text size="sm">
+          Specify the headers to be used in the comments CSV. The CSV will include
+          the student IDs and the aggregated comments (from short and/or long
+          responses) separated by newline characters.
+        </Text>
+        <Group gap="md" mt="md">
           <TextInput
             label="Student ID Header"
-            placeholder="Student ID"
+            placeholder="e.g., SIS User ID"
             value={studentIdHeader}
             onChange={(e) => setStudentIdHeader(e.currentTarget.value)}
           />
           <TextInput
             label="Comment Header"
-            placeholder="Comments"
+            placeholder="e.g., Assignment title"
             value={commentHeader}
             onChange={(e) => setCommentHeader(e.currentTarget.value)}
           />
@@ -472,10 +560,55 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
               setSelectedCommentType(value as 'short' | 'long' | 'both')
             }
           />
-          <Button onClick={handleDownloadComments} color="blue">
-            Download CSV
-          </Button>
         </Group>
+        <Button onClick={handleDownloadComments} color="blue" mt="md">
+          Download CSV
+        </Button>
+      </Modal>
+
+      {/* Modal for Map Results to ID */}
+      <Modal
+        opened={isMapModalOpen}
+        onClose={toggleMapModal}
+        title="Map Results to ID"
+        centered
+      >
+        <Text size="sm">
+          Upload a CSV file that contains an ID column. Specify the column header
+          in the CSV which represents the student ID (e.g., "SIS User ID"). Also
+          specify the header for the new results column (e.g., "Result"). The CSV
+          will be parsed, and for each row the corresponding student’s average
+          score will be inserted in a new column. The updated CSV will then be
+          downloaded.
+        </Text>
+        <Group gap="md" mt="md">
+          <TextInput
+            label="ID Header in CSV"
+            placeholder="e.g., SIS User ID"
+            value={mapIdHeader}
+            onChange={(e) => setMapIdHeader(e.currentTarget.value)}
+          />
+          <TextInput
+            label="New Results Header"
+            placeholder="e.g., Result"
+            value={mapResultHeader}
+            onChange={(e) => setMapResultHeader(e.currentTarget.value)}
+          />
+          <TextInput
+            type="file"
+            label="Upload CSV File"
+            placeholder="Choose CSV file"
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            onChange={(e: any) => {
+              if (e.target.files.length > 0) {
+                setMapFile(e.target.files[0]);
+              }
+            }}
+          />
+        </Group>
+        <Button onClick={handleMapCSV} color="blue" mt="md" justify='flex-end'>
+          Map CSV
+        </Button>
       </Modal>
 
       <div style={{ flex: 0.95, marginTop: '20px' }}>
