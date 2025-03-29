@@ -692,7 +692,6 @@ export const updateSubmission = async (
 
   if (savedAssignment) {
     for (const memberId of assignment.selectedUserIds) {
-      console.log(memberId, savedAssignment.toObject().selectedUserIds)
       if (
         !savedAssignment
           .toObject()
