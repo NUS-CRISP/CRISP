@@ -540,12 +540,6 @@ export const gatherComments = async (req: Request, res: Response) => {
       });
     });
 
-    const noComments = Object.values(commentsByStudent).length === 0;
-    if (noComments) {
-      res.status(200).json({ message: 'No comments found.' });
-      return;
-    }
-
     res.status(200).json({
       message: 'Comments gathered.',
       commentsByStudent,

@@ -1137,6 +1137,11 @@ describe('internalAssessmentController', () => {
       jest.clearAllMocks();
     });
 
+    const wrapWithToObject = (obj: any) => ({
+      ...obj,
+      toObject: () => ({ ...obj }),
+    });
+
     it('should return comments filtered by short responses when type is "short"', async () => {
       req.params = { assessmentId: 'assessment1', type: 'short' };
 
@@ -1151,35 +1156,35 @@ describe('internalAssessmentController', () => {
       const submissions = [
         {
           answers: [
-            {
+            wrapWithToObject({
               type: 'Team Member Selection Answer',
               selectedUserIds: ['student1'],
-            },
-            {
+            }),
+            wrapWithToObject({
               type: 'Short Response Answer',
               value: 'short comment 1',
-            },
-            {
+            }),
+            wrapWithToObject({
               type: 'Long Response Answer',
               value: 'long comment 1',
-            },
-            {
+            }),
+            wrapWithToObject({
               type: 'Short Response Answer',
               value: 'required short comment',
               isRequired: true,
-            },
+            }),
           ],
         },
         {
           answers: [
-            {
+            wrapWithToObject({
               type: 'Team Member Selection Answer',
               selectedUserIds: ['student2'],
-            },
-            {
+            }),
+            wrapWithToObject({
               type: 'Short Response Answer',
               value: 'short comment 2',
-            },
+            }),
           ],
         },
       ];
@@ -1214,18 +1219,18 @@ describe('internalAssessmentController', () => {
       const submissions = [
         {
           answers: [
-            {
+            wrapWithToObject({
               type: 'Team Member Selection Answer',
               selectedUserIds: ['student1'],
-            },
-            {
+            }),
+            wrapWithToObject({
               type: 'Long Response Answer',
               value: 'long comment only',
-            },
-            {
+            }),
+            wrapWithToObject({
               type: 'Short Response Answer',
               value: 'short comment should be ignored',
-            },
+            }),
           ],
         },
       ];
@@ -1259,18 +1264,18 @@ describe('internalAssessmentController', () => {
       const submissions = [
         {
           answers: [
-            {
+            wrapWithToObject({
               type: 'Team Member Selection Answer',
               selectedUserIds: ['student1'],
-            },
-            {
+            }),
+            wrapWithToObject({
               type: 'Short Response Answer',
               value: 'short comment',
-            },
-            {
+            }),
+            wrapWithToObject({
               type: 'Long Response Answer',
               value: 'long comment',
-            },
+            }),
           ],
         },
       ];
@@ -1313,45 +1318,6 @@ describe('internalAssessmentController', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'No submissions yet.',
-      });
-    });
-
-    it('should return 200 with "No comments found." when no comments are collected', async () => {
-      req.params = { assessmentId: 'assessment1', type: 'short' };
-
-      const mockAccount = { _id: 'account1', crispRole: CrispRole.Faculty };
-      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account1');
-      jest
-        .spyOn(AccountModel, 'findById')
-        .mockResolvedValue(mockAccount as any);
-
-      // Submissions exist but none of the answers (besides TMS) have a value.
-      const submissions = [
-        {
-          answers: [
-            {
-              type: 'Team Member Selection Answer',
-              selectedUserIds: ['student1'],
-            },
-            {
-              type: 'Short Response Answer',
-              value: '',
-            },
-          ],
-        },
-      ];
-      jest
-        .spyOn(
-          require('../../services/submissionService'),
-          'getSubmissionsByAssessment'
-        )
-        .mockResolvedValue(submissions as any);
-
-      await gatherComments(req as Request, res as Response);
-
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({
-        message: 'No comments found.',
       });
     });
 
