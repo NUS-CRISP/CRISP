@@ -161,7 +161,7 @@ describe('googleService', () => {
 
       await expect(
         getAssessmentSheetData(assessmentId, account._id)
-      ).rejects.toThrow(NotFoundError);
+      ).rejects.toThrow('Sheets data not found');
     });
 
     it('should throw error for invalid assessment', async () => {

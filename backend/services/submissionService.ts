@@ -665,10 +665,9 @@ export const updateSubmission = async (
 
   let bypass = false;
   const account = await AccountModel.findById(accountId);
-  const course = await CourseModel.findById(assessment.course);
-  if (!course) throw new BadRequestError('Assessment course id invalid');
+  const course = await CourseModel.findById(assessment.course); // Assume valid
   const isCourseFaculty =
-    course.faculty.filter(f => f === account!.user).length !== 0;
+    course!.faculty.filter(f => f === account!.user).length !== 0;
   if (account && (isCourseFaculty || account.crispRole === CrispRole.Admin)) {
     bypass = true;
   }
