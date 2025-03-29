@@ -74,7 +74,7 @@ const NavbarLink = forwardRef<HTMLButtonElement, NavbarLinkProps>(
 );
 
 const Navbar: React.FC = () => {
-  const { curTutorialStage } = useTutorialContext();
+  const { curTutorialStage, nextTutorialStage } = useTutorialContext();
 
   const router = useRouter();
   const { pathname } = router;
@@ -282,6 +282,9 @@ const Navbar: React.FC = () => {
             logSessionTime(item.label, false);
             setActiveCourseTab(item.label);
             router.push(item.link);
+            if ([10, 12, 14, 21, 23].includes(curTutorialStage) && curTutorialStage === stage) {
+              nextTutorialStage();
+            }
           } else {
             setAlertOpened(true); // Show alert if people are not added
           }
@@ -319,16 +322,16 @@ const Navbar: React.FC = () => {
     renderNavLink(courseLinksData[1], 6, 'top-start', 'Team Review')
   );
   courseLinks.push(
-    renderNavLink(courseLinksData[0], 12, 'top-start', 'Class Overview')
+    renderNavLink(courseLinksData[0], 12, 'top-start', 'Class Overview', true)
   );
   courseLinks.push(
-    renderNavLink(courseLinksData[2], 10, 'top-start', 'PR Review')
+    renderNavLink(courseLinksData[2], 10, 'top-start', 'PR Review', true)
   );
   courseLinks.push(
-    renderNavLink(courseLinksData[3], 14, 'top-start', 'Code Analysis')
+    renderNavLink(courseLinksData[3], 14, 'top-start', 'Code Analysis', true)
   );
   courseLinks.push(
-    renderNavLink(courseLinksData[8], 21, 'top-start', 'Project Management')
+    renderNavLink(courseLinksData[8], 21, 'top-start', 'Project Management', true)
   );
 
   courseLinks.push(
@@ -363,7 +366,7 @@ const Navbar: React.FC = () => {
 
   // Third section: Assessment
   courseLinks.push(
-    renderNavLink(courseLinksData[9], 23, 'top-start', 'Assessments')
+    renderNavLink(courseLinksData[9], 23, 'top-start', 'Assessments', true)
   );
 
   useEffect(() => {

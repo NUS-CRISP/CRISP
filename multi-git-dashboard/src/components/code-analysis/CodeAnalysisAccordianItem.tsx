@@ -4,6 +4,7 @@ import { forwardRef, useState } from 'react';
 import CodeAnalysisOverview from './CodeAnalysisOverview';
 import CodeAnalysisTimeline from './CodeAnalysisTimeline';
 import TutorialPopover from '../tutorial/TutorialPopover';
+import { useTutorialContext } from '../tutorial/TutorialContext';
 
 interface CodeAnalysisAccordionItemProps {
   codeData: {
@@ -27,6 +28,8 @@ const CodeAnalysisAccordionItem = forwardRef<
   HTMLDivElement,
   CodeAnalysisAccordionItemProps
 >(({ codeData, teamNumber, aiInsights, renderTutorialPopover = false }, ref) => {
+  const { curTutorialStage, nextTutorialStage } = useTutorialContext();
+
   const [viewMode, setViewMode] = useState<'overview' | 'timeline'>('overview');
 
   const sortedDates = Object.keys(codeData)
@@ -51,8 +54,8 @@ const CodeAnalysisAccordionItem = forwardRef<
               Overview
             </Tabs.Tab>
             {renderTutorialPopover ? (
-              <TutorialPopover stage={18} position="right">
-                <Tabs.Tab value="timeline" style={{ fontSize: '16px' }}>
+              <TutorialPopover stage={18} position="right" hideButton={true} >
+                <Tabs.Tab value="timeline" style={{ fontSize: '16px' }} onClick={() => {curTutorialStage === 18 ? nextTutorialStage() : null} }>
                   Timeline
                 </Tabs.Tab>
               </TutorialPopover>
