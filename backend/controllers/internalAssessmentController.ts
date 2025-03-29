@@ -195,7 +195,11 @@ export const addQuestionsToAssessmentController = async (
 
     const questions = [];
     for (const questionData of questionDatas) {
-      const question = await addQuestionToAssessment(assessmentId, questionData, accountId);
+      const question = await addQuestionToAssessment(
+        assessmentId,
+        questionData,
+        accountId
+      );
       questions.push(question);
     }
 
