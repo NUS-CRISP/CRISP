@@ -193,12 +193,11 @@ export const addQuestionsToAssessmentController = async (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const questionDatas: any[] = req.body.items;
 
-    const questionPromises = questionDatas.map(questionData => {
-      return addQuestionToAssessment(assessmentId, questionData, accountId);
-    });
-
-    // Wait for all of them in parallel:
-    const questions = await Promise.all(questionPromises);
+    const questions = [];
+    for (const questionData of questionDatas) {
+      const question = await addQuestionToAssessment(assessmentId, questionData, accountId);
+      questions.push(question);
+    }
 
     res.status(201).json(questions);
   } catch (error) {
@@ -517,7 +516,6 @@ export const gatherComments = async (req: Request, res: Response) => {
               a.type === 'Long Response Answer';
 
     const commentsByStudent: { [studentId: string]: string[] } = {};
-
     submissions.forEach(submission => {
       const tmsAnswer = submission.answers.find(
         (a: AnswerUnion) => a.type === 'Team Member Selection Answer'
@@ -526,11 +524,11 @@ export const gatherComments = async (req: Request, res: Response) => {
       const texts = submission.answers
         .filter(commentFilter)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .map((a: any) => a.value)
+        .map((a: any) => a.toObject().value)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .filter((v: any) => v);
 
-      tmsAnswer.selectedUserIds.forEach((studentId: string) => {
+      tmsAnswer.toObject().selectedUserIds.forEach((studentId: string) => {
         if (!commentsByStudent[studentId]) {
           commentsByStudent[studentId] = [];
         }
@@ -538,10 +536,8 @@ export const gatherComments = async (req: Request, res: Response) => {
       });
     });
 
-    const anyComments = Object.values(commentsByStudent).some(
-      arr => arr.length > 0
-    );
-    if (!anyComments) {
+    const noComments = Object.values(commentsByStudent).length === 0;
+    if (noComments) {
       res.status(200).json({ message: 'No comments found.' });
       return;
     }
