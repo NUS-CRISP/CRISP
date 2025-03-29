@@ -692,11 +692,12 @@ export const updateSubmission = async (
 
   if (savedAssignment) {
     for (const memberId of assignment.selectedUserIds) {
+      console.log(memberId, savedAssignment.toObject().selectedUserIds)
       if (
-        savedAssignment
+        !savedAssignment
           .toObject()
           .selectedUserIds.some(
-            (uid: string) => uid.toString() !== memberId.toString()
+            (uid: string) => uid.toString() === memberId.toString()
           )
       ) {
         throw new BadRequestError('Selected team/users should not change');
