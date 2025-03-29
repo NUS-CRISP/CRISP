@@ -1,3 +1,4 @@
+import CourseRole from '@shared/types/auth/CourseRole';
 import AccountModel from '../models/Account';
 import CourseModel from '../models/Course';
 import TeamModel, { Team } from '../models/Team';
@@ -68,13 +69,17 @@ export const addStudentsToTeam = async (courseId: string, students: any[]) => {
     const account = await AccountModel.findOne({ user: student._id });
     if (
       !account ||
-      account.role !== 'Student' ||
+      account.courseRoles.filter(r => r.course === courseId).length === 0 ||
+      account.courseRoles.filter(r => r.course === courseId)[0].courseRole !==
+        CourseRole.Student ||
       !student.enrolledCourses.includes(course._id) ||
       !course.students.some(s => s._id.equals(student._id)) ||
       !studentData.teamSet ||
       !studentData.teamNumber
     ) {
-      throw new BadRequestError('Invalid Student');
+      throw new BadRequestError(
+        'Invalid Student' + account + student + studentData
+      );
     }
     const teamSet = await TeamSetModel.findOne({
       course: course._id,
@@ -118,7 +123,9 @@ export const addTAsToTeam = async (courseId: string, tas: any[]) => {
     const account = await AccountModel.findOne({ user: ta._id });
     if (
       !account ||
-      account.role !== 'Teaching assistant' ||
+      account.courseRoles.filter(r => r.course === courseId).length === 0 ||
+      account.courseRoles.filter(r => r.course === courseId)[0].courseRole !==
+        CourseRole.TA ||
       !ta.enrolledCourses.includes(course._id) ||
       !course.TAs.some(t => t._id.equals(ta._id)) ||
       !taData.teamSet ||

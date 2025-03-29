@@ -31,6 +31,10 @@ export const createAccount = async (req: Request, res: Response) => {
 export const getPendingAccounts = async (req: Request, res: Response) => {
   try {
     const accounts = await getAllPendingAccounts();
+    res.setHeader(
+      'Cache-Control',
+      'no-store, no-cache, must-revalidate, proxy-revalidate'
+    );
     res.status(200).send(accounts);
   } catch (error) {
     console.error('Error getting pending accounts:', error);
@@ -63,6 +67,10 @@ export const rejectAccounts = async (req: Request, res: Response) => {
 };
 
 export const getAccountStatuses = async (req: Request, res: Response) => {
+  res.setHeader(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate'
+  );
   const ids = req.query?.ids;
   if (!ids || typeof ids !== 'string') {
     return res.status(400).send({ error: 'Invalid or missing IDs' });
@@ -190,6 +198,10 @@ export const changeTelegramNotificationSettings = async (
 // Because the trial user's ID in prod and dev was lost.
 export const retrieveTrialAccounts = async (req: Request, res: Response) => {
   try {
+    res.setHeader(
+      'Cache-Control',
+      'no-store, no-cache, must-revalidate, proxy-revalidate'
+    );
     const accounts = await getAllTrialAccounts();
     res.status(200).send(accounts);
   } catch (error) {

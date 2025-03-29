@@ -16,6 +16,8 @@ import {
   uploadAssessmentResultsById,
 } from '../../services/assessmentService';
 import { BadRequestError, NotFoundError } from '../../services/errors';
+import CrispRole from '@shared/types/auth/CrispRole';
+import CourseRole from '@shared/types/auth/CourseRole';
 
 let mongo: MongoMemoryServer;
 
@@ -81,13 +83,13 @@ async function createStudentUser(userData: any) {
   const account = new AccountModel({
     email: `${userData.identifier}@example.com`,
     password: 'hashedpassword',
-    role: 'Student',
+    crispRole: CrispRole.Normal,
     user: user._id,
     isApproved: true,
   });
   await account.save();
 
-  return user;
+  return { user, account };
 }
 
 async function createTAUser(userData: any) {
@@ -100,7 +102,7 @@ async function createTAUser(userData: any) {
   const account = new AccountModel({
     email: `${userData.identifier}@example.com`,
     password: 'hashedpassword',
-    role: 'Teaching assistant',
+    crispRole: CrispRole.Normal,
     user: user._id,
     isApproved: true,
   });
@@ -119,7 +121,7 @@ async function createFacultyUser(userData: any) {
   const account = new AccountModel({
     email: `${userData.identifier}@example.com`,
     password: 'hashedpassword',
-    role: 'Faculty member',
+    crispRole: CrispRole.Faculty,
     user: user._id,
     isApproved: true,
   });
@@ -161,29 +163,52 @@ describe('assessmentService', () => {
     teamSet.teams.push(team._id);
     await teamSet.save();
 
-    const student = await createStudentUser(commonStudentDetails);
+    const { user: student, account: studentAccount } =
+      await createStudentUser(commonStudentDetails);
     studentId = student._id.toHexString();
     student.enrolledCourses.push(course._id);
     await student.save();
     course.students.push(student._id);
-    const student2 = await createStudentUser({
-      identifier: 'uniqueuserid2',
-      name: 'Jane Doe',
-      gitHandle: 'janedoe',
-      enrolledCourses: [course._id],
+    studentAccount.courseRoles.push({
+      course: courseId,
+      courseRole: CourseRole.Student,
     });
+    await studentAccount.save();
+    const { user: student2, account: studentAccount2 } =
+      await createStudentUser({
+        identifier: 'uniqueuserid2',
+        name: 'Jane Doe',
+        gitHandle: 'janedoe',
+        enrolledCourses: [course._id],
+      });
     course.students.push(student2._id);
     await student2.save();
+    studentAccount2.courseRoles.push({
+      course: courseId,
+      courseRole: CourseRole.Student,
+    });
+    await studentAccount2.save();
     await course.save();
 
     const pair = await createTAUser(commonTADetails);
     const ta = pair.user;
-    const account = pair.account;
+    const taAccount = pair.account;
     taId = ta._id.toHexString();
-    taAccountId = account._id;
+    taAccountId = taAccount._id;
+    taAccount.courseRoles.push({
+      course: course._id.toString(),
+      courseRole: CourseRole.TA,
+    });
+    await taAccount.save();
 
     const faculty_pair = await createFacultyUser(commonFacultyDetails);
     facultyAccountId = faculty_pair.account._id;
+    const facultyAccount = faculty_pair.account;
+    facultyAccount.courseRoles.push({
+      course: course._id.toString(),
+      courseRole: CourseRole.Faculty,
+    });
+    await facultyAccount.save();
 
     const assessment = new AssessmentModel({
       course: course._id,

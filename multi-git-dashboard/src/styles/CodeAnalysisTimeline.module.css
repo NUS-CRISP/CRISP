@@ -1,38 +1,37 @@
 .tooltip-container {
-    padding: 10px;
-    background-color: rgba(0, 0, 0, 0.7);
-    border-radius: 5px;
-  }
-  
-  .tooltip-date {
-    color: white;
-    margin-bottom: 5px;
-    margin-top: 2px;
-  }
-  
-  .tooltip-metric {
-    margin-bottom: 5px;
-  }
-  
-  .tooltip-metric-title {
-    color: yellow;
-    margin: 2px 0;
-    line-height: 1.2;
-  }
-  
-  .tooltip-metric-value {
-    font-size: 0.8rem;
-    margin: 2px 0;
-    line-height: 1.2;
-  }
-  
-  .hovered-metric-explanation {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    padding: 10px;
-    background-color: rgba(0, 0, 0, 0.7);
-    color: white;
-    border-radius: 5px;
-  }
-  
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 5px;
+}
+
+.tooltip-date {
+  color: white;
+  margin-bottom: 5px;
+  margin-top: 2px;
+}
+
+.tooltip-metric {
+  margin-bottom: 5px;
+}
+
+.tooltip-metric-title {
+  color: yellow;
+  margin: 2px 0;
+  line-height: 1.2;
+}
+
+.tooltip-metric-value {
+  font-size: 0.8rem;
+  margin: 2px 0;
+  line-height: 1.2;
+}
+
+.hovered-metric-explanation {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  border-radius: 5px;
+}

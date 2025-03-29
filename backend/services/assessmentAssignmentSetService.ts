@@ -13,6 +13,8 @@ import { NotFoundError, BadRequestError } from './errors';
 import { getSubmissionsByAssessmentAndUser } from './submissionService';
 import { TeamMemberSelectionAnswer } from '@models/Answer';
 import { getInternalAssessmentById } from './internalAssessmentService';
+import AccountModel from '@models/Account';
+import CourseRole from '@shared/types/auth/CourseRole';
 
 /**
  * Utility function: Assign a random TA from a given pool to a team or user without TAs.
@@ -381,6 +383,21 @@ export const getUnmarkedAssignmentsByTAId = async (
   taId: string,
   assessmentId: string
 ): Promise<Team[] | User[]> => {
+  const account = await AccountModel.findOne({
+    user: taId,
+  });
+  if (!account) throw new NotFoundError('TA account not found');
+  const assessment = await InternalAssessmentModel.findById(assessmentId);
+  if (!assessment) throw new NotFoundError('Assessment not found');
+  if (
+    account.courseRoles.filter(r => r.course === assessment.course.toString())
+      .length !== 0 &&
+    account.courseRoles.filter(
+      r => r.course === assessment.course.toString()
+    )[0].courseRole === CourseRole.Student
+  ) {
+    return []; // For the sake of notifications, this returns an empty array.
+  }
   const assignmentSet = await AssessmentAssignmentSetModel.findOne({
     assessment: assessmentId,
   })

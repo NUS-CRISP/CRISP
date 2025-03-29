@@ -16,19 +16,26 @@ import {
 const fetchAndSaveTrofosData = async () => {
   const courses: Course[] = await CourseModel.find();
 
+  const currDate = new Date();
+
   for (const course of courses) {
     const {
       trofos: { isRegistered, apiKey, courseId },
+      startDate,
+      durationWeeks,
     } = course;
 
-    if (!isRegistered) {
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + durationWeeks * 7);
+
+    if (!isRegistered || currDate < startDate || currDate > endDate) {
       continue;
     }
 
     const trofosCourseUri = `${process.env.TROFOS_URI}${TROFOS_COURSE_PATH}`;
     try {
       const trofosCourseResponse = await fetch(trofosCourseUri, {
-        method: 'GET',
+        method: 'POST',
         headers: {
           'x-api-key': apiKey,
           Accept: 'application/json',
@@ -49,7 +56,7 @@ const fetchAndSaveTrofosData = async () => {
     const trofosProjectUri = `${process.env.TROFOS_URI}${TROFOS_PROJECT_PATH}`;
     try {
       const trofosProjectResponse = await fetch(trofosProjectUri, {
-        method: 'GET',
+        method: 'POST',
         headers: {
           'x-api-key': apiKey,
           Accept: 'application/json',

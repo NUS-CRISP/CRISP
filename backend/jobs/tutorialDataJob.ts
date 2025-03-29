@@ -22,9 +22,12 @@ import TeamModel from '@models/Team';
 import TeamDataModel from '@models/TeamData';
 import TeamSetModel from '@models/TeamSet';
 import UserModel, { User } from '@models/User';
-import Role from '@shared/types/auth/Role';
 import { JiraBoard } from '@shared/types/JiraData';
 import { MultipleChoiceOption } from '@shared/types/Question';
+import CrispRole from '@shared/types/auth/CrispRole';
+import CourseRole from '@shared/types/auth/CourseRole';
+
+const START_DATE_STRING = '2024-10-10T20:13:24Z';
 
 export const setupTutorialDataJob = async () => {
   let trialUser = await UserModel.findOne({ identifier: 'trial' });
@@ -49,7 +52,7 @@ export const setupTutorialDataJob = async () => {
     const trialAccountDoc = new AccountModel({
       email: 'trial@example.com',
       password: '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
-      role: 'Trial User',
+      role: CrispRole.TrialUser,
       isApproved: true,
       wantsEmailNotifications: false,
       wantsTelegramNotifications: false,
@@ -59,7 +62,7 @@ export const setupTutorialDataJob = async () => {
   }
 
   const adminAccount = await AccountModel.findOne({
-    role: Role.Admin,
+    crispRole: CrispRole.Admin,
   }).populate('user');
   if (!adminAccount || !adminAccount.user) {
     throw new Error(
@@ -70,6 +73,10 @@ export const setupTutorialDataJob = async () => {
 
   const existingTrialCourse = await CourseModel.findOne({ code: 'TRIAL' });
   if (existingTrialCourse) {
+    adminAccount.courseRoles = adminAccount.courseRoles.filter(
+      r => r.course !== existingTrialCourse._id.toString()
+    );
+    await adminAccount.save();
     const trialCourseId = existingTrialCourse._id;
     const teamSets = await TeamSetModel.find({ course: trialCourseId });
     const teamSetIds = teamSets.map(ts => ts._id);
@@ -135,7 +142,7 @@ export const setupTutorialDataJob = async () => {
     name: 'Trial',
     code: 'TRIAL',
     semester: 'AY2323 S2',
-    startDate: new Date(),
+    startDate: new Date(START_DATE_STRING),
     durationWeeks: 13,
     courseType: 'Normal',
     sprints: [],
@@ -147,6 +154,18 @@ export const setupTutorialDataJob = async () => {
   trialCourse.faculty.push(trialUser._id);
   trialCourse.faculty.push(adminUser._id);
   await trialCourse.save();
+
+  trialAccount.courseRoles.push({
+    course: trialCourse._id.toString(),
+    courseRole: CourseRole.Faculty,
+  });
+  await trialAccount.save();
+
+  adminAccount.courseRoles.push({
+    course: trialCourse._id.toString(),
+    courseRole: CourseRole.Faculty,
+  });
+  await adminAccount.save();
 
   if (!trialUser.enrolledCourses.includes(trialCourse._id)) {
     trialUser.enrolledCourses.push(trialCourse._id);
@@ -174,16 +193,38 @@ export const setupTutorialDataJob = async () => {
         email: `${identifier}@example.com`,
         password:
           '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
-        role: Role.Student,
+        crispRole: CrispRole.Normal,
         isApproved: true,
         wantsEmailNotifications: false,
         wantsTelegramNotifications: false,
         user: studentUser._id,
+        courseRoles: [],
       });
     } else {
       if (!studentUser.enrolledCourses.includes(trialCourse._id)) {
         studentUser.enrolledCourses.push(trialCourse._id);
+        let studentAccount = await AccountModel.findOne({
+          user: studentUser._id,
+        });
+        if (!studentAccount) {
+          studentAccount = await AccountModel.create({
+            email: `${identifier}@example.com`,
+            password:
+              '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
+            crispRole: CrispRole.Normal,
+            isApproved: true,
+            wantsEmailNotifications: false,
+            wantsTelegramNotifications: false,
+            user: studentUser._id,
+            courseRoles: [],
+          });
+        }
+        studentAccount.courseRoles.push({
+          course: trialCourse._id.toString(),
+          courseRole: CourseRole.Student,
+        });
         await studentUser.save();
+        await studentAccount.save();
       }
     }
     if (!trialCourse.students.includes(studentUser._id)) {
@@ -268,103 +309,799 @@ export const setupTutorialDataJob = async () => {
         comments: 8,
       },
     },
+    //   {
+    //     id: 2171165196,
+    //     title: 'feat: update test plan to use 600 threads',
+    //     user: 'John Doe',
+    //     url: 'https://github.com/cs4218/cs4218-project-2024-team01/pull/29',
+    //     state: 'closed',
+    //     createdAt: new Date('2024-11-09T20:13:24Z'),
+    //     updatedAt: new Date('2024-11-09T20:13:33Z'),
+    //     reviews: [
+    //       {
+    //         id: 9991,
+    //         user: 'Johnny Smith',
+    //         body: 'Looks good, but can we handle bigger load?',
+    //         state: 'COMMENTED',
+    //         submittedAt: new Date('2024-11-09T21:10:00Z'),
+    //         comments: [
+    //           {
+    //             id: 501,
+    //             user: 'Johnny Smith',
+    //             body: 'One more detail: rename variable X to Y?',
+    //             createdAt: new Date('2024-11-09T21:12:00Z'),
+    //           },
+    //         ],
+    //       },
+    //       {
+    //         id: 9992,
+    //         user: 'Hoshimachi Suisei',
+    //         body: 'Tested locally, it works well!',
+    //         state: 'APPROVED',
+    //         submittedAt: new Date('2024-11-09T21:30:00Z'),
+    //         comments: [],
+    //       },
+    //       {
+    //         id: 9993,
+    //         user: 'Johnny Smith',
+    //         body: 'Ok, I added more concurrency tests. Approving now.',
+    //         state: 'APPROVED',
+    //         submittedAt: new Date('2024-11-09T21:45:00Z'),
+    //         comments: [
+    //           {
+    //             id: 502,
+    //             user: 'Johnny Smith',
+    //             body: 'Awesome! Merging this PR now.',
+    //             createdAt: new Date('2024-11-09T21:50:00Z'),
+    //           },
+    //         ],
+    //       },
+    //     ],
+    //   },
+    //   {
+    //     id: 2170847039,
+    //     title: 'feat: add volume testing for create-product',
+    //     user: 'John Doe',
+    //     url: 'https://github.com/cs4218/cs4218-project-2024-team01/pull/28',
+    //     state: 'closed',
+    //     createdAt: new Date('2024-11-09T09:06:15Z'),
+    //     updatedAt: new Date('2024-11-09T09:07:04Z'),
+    //     reviews: [
+    //       {
+    //         id: 8881,
+    //         user: 'Hoshimachi Suisei',
+    //         body: 'Volume tests are fine. Let’s ensure logs are rotated properly.',
+    //         state: 'COMMENTED',
+    //         submittedAt: new Date('2024-11-09T09:10:00Z'),
+    //         comments: [],
+    //       },
+    //     ],
+    //   },
+    //   {
+    //     id: 2170212614,
+    //     title: 'Add endurance test for search product',
+    //     user: 'John Doe',
+    //     url: 'https://github.com/cs4218/cs4218-project-2024-team01/pull/27',
+    //     state: 'closed',
+    //     createdAt: new Date('2024-11-08T18:04:56Z'),
+    //     updatedAt: new Date('2024-11-08T18:05:21Z'),
+    //     reviews: [
+    //       {
+    //         id: 10001,
+    //         user: 'Johnny Smith',
+    //         body: 'LGTM, thanks for adding the search tests!',
+    //         state: 'APPROVED',
+    //         submittedAt: new Date('2024-11-08T19:00:00Z'),
+    //         comments: [],
+    //       },
+    //       {
+    //         id: 10002,
+    //         user: 'Hoshimachi Suisei',
+    //         body: 'Maybe add logs for slow queries? Otherwise it looks good!',
+    //         state: 'COMMENTED',
+    //         submittedAt: new Date('2024-11-08T19:05:00Z'),
+    //         comments: [],
+    //       },
+    //     ],
+    //   },
+    // ],
+    // Enhanced PR dataset with 6 students and more interaction types
     teamPRs: [
       {
         id: 2171165196,
-        title: 'feat: update test plan to use 600 threads',
-        user: 'John Doe',
-        url: 'https://github.com/cs4218/cs4218-project-2024-team01/pull/29',
+        title: 'feat: Implement user authentication module',
+        user: 'Student 1',
+        url: 'https://github.com/cs4218/cs4218-project-2024-team01/pull/30',
         state: 'closed',
-        createdAt: new Date('2024-11-09T20:13:24Z'),
-        updatedAt: new Date('2024-11-09T20:13:33Z'),
+        createdAt: new Date('2024-11-15T09:10:24Z'),
+        updatedAt: new Date('2024-11-17T14:35:33Z'),
         reviews: [
           {
-            id: 9991,
-            user: 'Johnny Smith',
-            body: 'Looks good, but can we handle bigger load?',
-            state: 'COMMENTED',
-            submittedAt: new Date('2024-11-09T21:10:00Z'),
+            id: 9001,
+            user: 'Student 2',
+            body: 'I found several security issues with the authentication flow. Please address them before merging.',
+            state: 'CHANGES_REQUESTED',
+            submittedAt: new Date('2024-11-15T11:23:00Z'),
             comments: [
               {
-                id: 501,
-                user: 'Johnny Smith',
-                body: 'One more detail: rename variable X to Y?',
-                createdAt: new Date('2024-11-09T21:12:00Z'),
+                id: 601,
+                user: 'Student 2',
+                body: 'The password hashing algorithm needs to be updated to use bcrypt with a higher work factor.',
+                createdAt: new Date('2024-11-15T11:25:00Z'),
+              },
+              {
+                id: 602,
+                user: 'Student 2',
+                body: 'Please add rate limiting to prevent brute force attacks.',
+                createdAt: new Date('2024-11-15T11:27:00Z'),
               },
             ],
           },
           {
-            id: 9992,
-            user: 'Hoshimachi Suisei',
-            body: 'Tested locally, it works well!',
-            state: 'APPROVED',
-            submittedAt: new Date('2024-11-09T21:30:00Z'),
-            comments: [],
-          },
-          {
-            id: 9993,
-            user: 'Johnny Smith',
-            body: 'Ok, I added more concurrency tests. Approving now.',
-            state: 'APPROVED',
-            submittedAt: new Date('2024-11-09T21:45:00Z'),
+            id: 9002,
+            user: 'Student 3',
+            body: "The authentication module looks good overall, but I agree with Student 2's security concerns.",
+            state: 'COMMENTED',
+            submittedAt: new Date('2024-11-15T13:45:00Z'),
             comments: [
               {
-                id: 502,
-                user: 'Johnny Smith',
-                body: 'Awesome! Merging this PR now.',
-                createdAt: new Date('2024-11-09T21:50:00Z'),
+                id: 603,
+                user: 'Student 3',
+                body: 'Also, consider adding JWT expiration times for better security.',
+                createdAt: new Date('2024-11-15T13:47:00Z'),
               },
             ],
           },
-        ],
-      },
-      {
-        id: 2170847039,
-        title: 'feat: add volume testing for create-product',
-        user: 'John Doe',
-        url: 'https://github.com/cs4218/cs4218-project-2024-team01/pull/28',
-        state: 'closed',
-        createdAt: new Date('2024-11-09T09:06:15Z'),
-        updatedAt: new Date('2024-11-09T09:07:04Z'),
-        reviews: [
           {
-            id: 8881,
-            user: 'Hoshimachi Suisei',
-            body: 'Volume tests are fine. Let’s ensure logs are rotated properly.',
+            id: 9003,
+            user: 'Student 1',
+            body: "I've addressed all the security concerns raised. Updated the hashing, added rate limiting, and implemented JWT expiration.",
             state: 'COMMENTED',
-            submittedAt: new Date('2024-11-09T09:10:00Z'),
+            submittedAt: new Date('2024-11-16T10:30:00Z'),
             comments: [],
           },
-        ],
-      },
-      {
-        id: 2170212614,
-        title: 'Add endurance test for search product',
-        user: 'John Doe',
-        url: 'https://github.com/cs4218/cs4218-project-2024-team01/pull/27',
-        state: 'closed',
-        createdAt: new Date('2024-11-08T18:04:56Z'),
-        updatedAt: new Date('2024-11-08T18:05:21Z'),
-        reviews: [
           {
-            id: 10001,
-            user: 'Johnny Smith',
-            body: 'LGTM, thanks for adding the search tests!',
+            id: 9004,
+            user: 'Student 2',
+            body: 'Changes look good. Approving now.',
             state: 'APPROVED',
-            submittedAt: new Date('2024-11-08T19:00:00Z'),
+            submittedAt: new Date('2024-11-16T14:20:00Z'),
             comments: [],
           },
           {
-            id: 10002,
-            user: 'Hoshimachi Suisei',
-            body: 'Maybe add logs for slow queries? Otherwise it looks good!',
+            id: 9005,
+            user: 'Student 4',
+            body: 'Great implementation! This will significantly improve our security posture.',
+            state: 'APPROVED',
+            submittedAt: new Date('2024-11-16T16:15:00Z'),
+            comments: [],
+          },
+        ],
+      },
+      {
+        id: 2171165197,
+        title: 'feat: Add data visualization dashboard',
+        user: 'Student 5',
+        url: 'https://github.com/cs4218/cs4218-project-2024-team01/pull/31',
+        state: 'closed',
+        createdAt: new Date('2024-11-18T08:30:15Z'),
+        updatedAt: new Date('2024-11-20T17:45:33Z'),
+        reviews: [
+          {
+            id: 9006,
+            user: 'Student 6',
+            body: 'The dashboard looks amazing! I have a few suggestions for usability improvements.',
             state: 'COMMENTED',
-            submittedAt: new Date('2024-11-08T19:05:00Z'),
+            submittedAt: new Date('2024-11-18T10:15:00Z'),
+            comments: [
+              {
+                id: 604,
+                user: 'Student 6',
+                body: 'Consider adding tooltips to the chart elements for better user experience.',
+                createdAt: new Date('2024-11-18T10:17:00Z'),
+              },
+              {
+                id: 605,
+                user: 'Student 6',
+                body: 'The color scheme might be difficult for colorblind users. Could we use a more accessible palette?',
+                createdAt: new Date('2024-11-18T10:20:00Z'),
+              },
+            ],
+          },
+          {
+            id: 9007,
+            user: 'Student 3',
+            body: "I'm concerned about the performance with large datasets. Did you test with 10k+ records?",
+            state: 'CHANGES_REQUESTED',
+            submittedAt: new Date('2024-11-18T11:30:00Z'),
+            comments: [
+              {
+                id: 606,
+                user: 'Student 3',
+                body: 'Suggest implementing data pagination or virtualized lists to handle larger data sets more efficiently.',
+                createdAt: new Date('2024-11-18T11:32:00Z'),
+              },
+            ],
+          },
+          {
+            id: 9008,
+            user: 'Student 5',
+            body: "I've added tooltips, updated the color scheme to be colorblind-friendly, and implemented virtualized lists for better performance with large datasets.",
+            state: 'COMMENTED',
+            submittedAt: new Date('2024-11-19T09:45:00Z'),
+            comments: [],
+          },
+          {
+            id: 9009,
+            user: 'Student 3',
+            body: "I've tested the performance improvements and they work well. Approving now.",
+            state: 'APPROVED',
+            submittedAt: new Date('2024-11-19T14:10:00Z'),
+            comments: [],
+          },
+          {
+            id: 9010,
+            user: 'Student 1',
+            body: 'Excellent work on the visualizations and the performance optimizations!',
+            state: 'APPROVED',
+            submittedAt: new Date('2024-11-19T16:20:00Z'),
+            comments: [],
+          },
+        ],
+      },
+      {
+        id: 2171165198,
+        title: 'refactor: Optimize database queries for better performance',
+        user: 'Student 4',
+        url: 'https://github.com/cs4218/cs4218-project-2024-team01/pull/32',
+        state: 'closed',
+        createdAt: new Date('2024-11-22T11:15:24Z'),
+        updatedAt: new Date('2024-11-24T18:20:33Z'),
+        reviews: [
+          {
+            id: 9011,
+            user: 'Student 2',
+            body: 'Great optimization work. The query execution time improvements are significant.',
+            state: 'APPROVED',
+            submittedAt: new Date('2024-11-22T13:40:00Z'),
+            comments: [
+              {
+                id: 607,
+                user: 'Student 2',
+                body: 'Did you consider adding indexes for the frequently queried fields?',
+                createdAt: new Date('2024-11-22T13:42:00Z'),
+              },
+            ],
+          },
+          {
+            id: 9012,
+            user: 'Student 4',
+            body: "Good point about indexes. I've added them for the most frequently queried fields.",
+            state: 'COMMENTED',
+            submittedAt: new Date('2024-11-22T15:30:00Z'),
+            comments: [],
+          },
+          {
+            id: 9013,
+            user: 'Student 6',
+            body: "I'm not convinced by the approach in the repository layer. Let's discuss this further.",
+            state: 'CHANGES_REQUESTED',
+            submittedAt: new Date('2024-11-22T16:45:00Z'),
+            comments: [
+              {
+                id: 608,
+                user: 'Student 6',
+                body: 'The repository pattern implementation seems overly complex for our needs.',
+                createdAt: new Date('2024-11-22T16:47:00Z'),
+              },
+              {
+                id: 609,
+                user: 'Student 6',
+                body: 'I suggest simplifying it to improve maintainability without sacrificing performance.',
+                createdAt: new Date('2024-11-22T16:50:00Z'),
+              },
+            ],
+          },
+          {
+            id: 9014,
+            user: 'Student 4',
+            body: "After our offline discussion, I've simplified the repository implementation while maintaining the performance improvements.",
+            state: 'COMMENTED',
+            submittedAt: new Date('2024-11-23T10:15:00Z'),
+            comments: [],
+          },
+          {
+            id: 9015,
+            user: 'Student 6',
+            body: 'The simplified approach looks much better. Approving now.',
+            state: 'APPROVED',
+            submittedAt: new Date('2024-11-23T11:30:00Z'),
+            comments: [],
+          },
+          {
+            id: 9016,
+            user: 'Student 1',
+            body: 'The performance improvements are impressive. The query time is reduced by 70%!',
+            state: 'APPROVED',
+            submittedAt: new Date('2024-11-23T14:20:00Z'),
+            comments: [],
+          },
+        ],
+      },
+      {
+        id: 2171165199,
+        title:
+          'fix: Resolve concurrent modification issues in shared data structures',
+        user: 'Student 3',
+        url: 'https://github.com/cs4218/cs4218-project-2024-team01/pull/33',
+        state: 'closed',
+        createdAt: new Date('2024-11-25T13:45:24Z'),
+        updatedAt: new Date('2024-11-27T09:30:33Z'),
+        reviews: [
+          {
+            id: 9017,
+            user: 'Student 5',
+            body: "I'm concerned that the thread synchronization approach might lead to deadlocks.",
+            state: 'CHANGES_REQUESTED',
+            submittedAt: new Date('2024-11-25T15:10:00Z'),
+            comments: [
+              {
+                id: 610,
+                user: 'Student 5',
+                body: 'Consider using the read-write lock pattern instead of full synchronization to reduce contention.',
+                createdAt: new Date('2024-11-25T15:12:00Z'),
+              },
+            ],
+          },
+          {
+            id: 9018,
+            user: 'Student 3',
+            body: "Good suggestion. I've updated the implementation to use read-write locks where appropriate.",
+            state: 'COMMENTED',
+            submittedAt: new Date('2024-11-25T17:30:00Z'),
+            comments: [],
+          },
+          {
+            id: 9019,
+            user: 'Student 1',
+            body: "I've reviewed the changes and I'm still seeing a potential race condition in the cache update logic.",
+            state: 'CHANGES_REQUESTED',
+            submittedAt: new Date('2024-11-26T09:15:00Z'),
+            comments: [
+              {
+                id: 611,
+                user: 'Student 1',
+                body: 'Check line 157 - the cache invalidation and update needs to be atomic.',
+                createdAt: new Date('2024-11-26T09:17:00Z'),
+              },
+            ],
+          },
+          {
+            id: 9020,
+            user: 'Student 3',
+            body: 'Fixed the race condition by making the cache operations atomic. Good catch!',
+            state: 'COMMENTED',
+            submittedAt: new Date('2024-11-26T11:45:00Z'),
+            comments: [],
+          },
+          {
+            id: 9021,
+            user: 'Student 5',
+            body: 'The read-write lock implementation looks good, and the race condition is fixed. Approving now.',
+            state: 'APPROVED',
+            submittedAt: new Date('2024-11-26T14:20:00Z'),
+            comments: [],
+          },
+          {
+            id: 9022,
+            user: 'Student 1',
+            body: 'All concerns addressed. This should fix our concurrency issues. Approving.',
+            state: 'APPROVED',
+            submittedAt: new Date('2024-11-26T16:30:00Z'),
+            comments: [],
+          },
+        ],
+      },
+      {
+        id: 2171165200,
+        title: 'feat: Add end-to-end testing framework with Cypress',
+        user: 'Student 2',
+        url: 'https://github.com/cs4218/cs4218-project-2024-team01/pull/34',
+        state: 'open',
+        createdAt: new Date('2024-11-28T10:30:24Z'),
+        updatedAt: new Date('2024-11-29T16:45:33Z'),
+        reviews: [
+          {
+            id: 9023,
+            user: 'Student 4',
+            body: 'This is a comprehensive test framework setup. I like the approach with custom commands.',
+            state: 'COMMENTED',
+            submittedAt: new Date('2024-11-28T13:15:00Z'),
+            comments: [
+              {
+                id: 612,
+                user: 'Student 4',
+                body: 'Consider adding screenshots on test failures for better debugging.',
+                createdAt: new Date('2024-11-28T13:17:00Z'),
+              },
+            ],
+          },
+          {
+            id: 9024,
+            user: 'Student 2',
+            body: 'Added screenshot and video capture on test failures as suggested.',
+            state: 'COMMENTED',
+            submittedAt: new Date('2024-11-28T15:30:00Z'),
+            comments: [],
+          },
+          {
+            id: 9025,
+            user: 'Student 6',
+            body: "I'm dismissing my review because I realized I don't have enough context on Cypress to provide a meaningful review.",
+            state: 'DISMISSED',
+            submittedAt: new Date('2024-11-28T16:45:00Z'),
+            comments: [
+              {
+                id: 613,
+                user: 'Student 6',
+                body: 'I initially had concerns about the test structure but after reading the docs, I see this is the recommended approach.',
+                createdAt: new Date('2024-11-28T16:47:00Z'),
+              },
+            ],
+          },
+          {
+            id: 9026,
+            user: 'Student 5',
+            body: 'The CI integration for the tests is missing. We need to update our GitHub Actions workflow.',
+            state: 'CHANGES_REQUESTED',
+            submittedAt: new Date('2024-11-29T09:10:00Z'),
+            comments: [
+              {
+                id: 614,
+                user: 'Student 5',
+                body: 'Please add a GitHub Actions workflow file that runs the Cypress tests on PRs.',
+                createdAt: new Date('2024-11-29T09:12:00Z'),
+              },
+            ],
+          },
+          {
+            id: 9027,
+            user: 'Student 2',
+            body: 'Added GitHub Actions workflow for running Cypress tests on PRs and main branch.',
+            state: 'COMMENTED',
+            submittedAt: new Date('2024-11-29T11:30:00Z'),
+            comments: [],
+          },
+          {
+            id: 9028,
+            user: 'Student 5',
+            body: 'The GitHub Actions workflow looks good. Approving the PR.',
+            state: 'APPROVED',
+            submittedAt: new Date('2024-11-29T13:45:00Z'),
+            comments: [],
+          },
+          {
+            id: 9029,
+            user: 'Student 4',
+            body: 'Great work! This will significantly improve our testing process.',
+            state: 'APPROVED',
+            submittedAt: new Date('2024-11-29T15:20:00Z'),
+            comments: [],
+          },
+        ],
+      },
+      {
+        id: 2171165201,
+        title: 'feat: Implement real-time collaboration with WebSockets',
+        user: 'Student 6',
+        url: 'https://github.com/cs4218/cs4218-project-2024-team01/pull/35',
+        state: 'open',
+        createdAt: new Date('2024-12-01T09:20:24Z'),
+        updatedAt: new Date('2024-12-02T14:15:33Z'),
+        reviews: [
+          {
+            id: 9030,
+            user: 'Student 3',
+            body: 'The WebSocket implementation is robust, but I have concerns about scaling.',
+            state: 'CHANGES_REQUESTED',
+            submittedAt: new Date('2024-12-01T11:30:00Z'),
+            comments: [
+              {
+                id: 615,
+                user: 'Student 3',
+                body: 'For horizontal scaling, we need to add Redis for pub/sub across multiple instances.',
+                createdAt: new Date('2024-12-01T11:32:00Z'),
+              },
+              {
+                id: 616,
+                user: 'Student 3',
+                body: 'Also, the reconnection strategy could be improved with exponential backoff.',
+                createdAt: new Date('2024-12-01T11:35:00Z'),
+              },
+            ],
+          },
+          {
+            id: 9031,
+            user: 'Student 1',
+            body: "Great work on implementing the WebSockets! I second Student 3's concerns about scaling.",
+            state: 'COMMENTED',
+            submittedAt: new Date('2024-12-01T13:45:00Z'),
+            comments: [
+              {
+                id: 617,
+                user: 'Student 1',
+                body: 'We should also consider adding message compression for bandwidth efficiency.',
+                createdAt: new Date('2024-12-01T13:47:00Z'),
+              },
+            ],
+          },
+          {
+            id: 9032,
+            user: 'Student 6',
+            body: "I've added Redis for pub/sub, implemented exponential backoff for reconnection, and added message compression.",
+            state: 'COMMENTED',
+            submittedAt: new Date('2024-12-02T09:15:00Z'),
+            comments: [],
+          },
+          {
+            id: 9033,
+            user: 'Student 3',
+            body: "The Redis integration looks good, but there's an issue with the error handling in the reconnection logic.",
+            state: 'CHANGES_REQUESTED',
+            submittedAt: new Date('2024-12-02T10:30:00Z'),
+            comments: [
+              {
+                id: 618,
+                user: 'Student 3',
+                body: "The error callback in the reconnection attempt doesn't propagate the error correctly.",
+                createdAt: new Date('2024-12-02T10:32:00Z'),
+              },
+            ],
+          },
+          {
+            id: 9034,
+            user: 'Student 6',
+            body: 'Fixed the error handling in the reconnection logic.',
+            state: 'COMMENTED',
+            submittedAt: new Date('2024-12-02T11:45:00Z'),
+            comments: [],
+          },
+          {
+            id: 9035,
+            user: 'Student 3',
+            body: 'All issues are addressed now. This is a great addition to our platform!',
+            state: 'APPROVED',
+            submittedAt: new Date('2024-12-02T12:30:00Z'),
+            comments: [],
+          },
+        ],
+      },
+      {
+        id: 2171165202,
+        title: 'fix: Security vulnerabilities in file upload system',
+        user: 'Student 1',
+        url: 'https://github.com/cs4218/cs4218-project-2024-team01/pull/36',
+        state: 'closed',
+        createdAt: new Date('2024-12-03T08:45:24Z'),
+        updatedAt: new Date('2024-12-04T16:20:33Z'),
+        reviews: [
+          {
+            id: 9036,
+            user: 'Student 4',
+            body: "Great security improvements! I've tested the fixes and they work well.",
+            state: 'APPROVED',
+            submittedAt: new Date('2024-12-03T10:15:00Z'),
+            comments: [
+              {
+                id: 619,
+                user: 'Student 4',
+                body: 'I appreciate the thorough approach to fixing these vulnerabilities.',
+                createdAt: new Date('2024-12-03T10:17:00Z'),
+              },
+            ],
+          },
+          {
+            id: 9037,
+            user: 'Student 2',
+            body: 'This is a critical security fix. I found one more issue that needs to be addressed.',
+            state: 'CHANGES_REQUESTED',
+            submittedAt: new Date('2024-12-03T11:30:00Z'),
+            comments: [
+              {
+                id: 620,
+                user: 'Student 2',
+                body: "There's still a path traversal vulnerability in the file name validation.",
+                createdAt: new Date('2024-12-03T11:32:00Z'),
+              },
+            ],
+          },
+          {
+            id: 9038,
+            user: 'Student 1',
+            body: "Good catch! I've fixed the path traversal vulnerability and added tests for it.",
+            state: 'COMMENTED',
+            submittedAt: new Date('2024-12-03T13:45:00Z'),
+            comments: [],
+          },
+          {
+            id: 9039,
+            user: 'Student 2',
+            body: 'The path traversal fix looks good. Approving now.',
+            state: 'APPROVED',
+            submittedAt: new Date('2024-12-03T15:10:00Z'),
+            comments: [],
+          },
+          {
+            id: 9040,
+            user: 'Student 5',
+            body: "I've reviewed the security fixes and they're solid. Let's merge this ASAP.",
+            state: 'APPROVED',
+            submittedAt: new Date('2024-12-03T16:30:00Z'),
+            comments: [],
+          },
+        ],
+      },
+      {
+        id: 2171165203,
+        title: 'feat: Implement analytics dashboard with custom metrics',
+        user: 'Student 5',
+        url: 'https://github.com/cs4218/cs4218-project-2024-team01/pull/37',
+        state: 'closed',
+        createdAt: new Date('2024-12-05T09:30:24Z'),
+        updatedAt: new Date('2024-12-07T15:45:33Z'),
+        reviews: [
+          {
+            id: 9041,
+            user: 'Student 3',
+            body: 'The analytics dashboard looks amazing! However, I have performance concerns with the data aggregation.',
+            state: 'CHANGES_REQUESTED',
+            submittedAt: new Date('2024-12-05T11:15:00Z'),
+            comments: [
+              {
+                id: 621,
+                user: 'Student 3',
+                body: 'The aggregation should be done in the database, not in the application layer.',
+                createdAt: new Date('2024-12-05T11:17:00Z'),
+              },
+              {
+                id: 622,
+                user: 'Student 3',
+                body: "Also, let's add caching for these expensive aggregation queries.",
+                createdAt: new Date('2024-12-05T11:20:00Z'),
+              },
+            ],
+          },
+          {
+            id: 9042,
+            user: 'Student 6',
+            body: 'I love the UI design of the dashboard! The filters and time period selection are intuitive.',
+            state: 'COMMENTED',
+            submittedAt: new Date('2024-12-05T13:30:00Z'),
+            comments: [
+              {
+                id: 623,
+                user: 'Student 6',
+                body: 'Could we add the ability to export the analytics data to CSV?',
+                createdAt: new Date('2024-12-05T13:32:00Z'),
+              },
+            ],
+          },
+          {
+            id: 9043,
+            user: 'Student 5',
+            body: "I've moved the aggregation to the database layer, added caching, and implemented CSV export functionality.",
+            state: 'COMMENTED',
+            submittedAt: new Date('2024-12-06T10:45:00Z'),
+            comments: [],
+          },
+          {
+            id: 9044,
+            user: 'Student 3',
+            body: 'The performance improvements are significant. The dashboard loads much faster now.',
+            state: 'APPROVED',
+            submittedAt: new Date('2024-12-06T14:15:00Z'),
+            comments: [],
+          },
+          {
+            id: 9045,
+            user: 'Student 6',
+            body: 'The CSV export works perfectly. This dashboard will be extremely useful for our stakeholders.',
+            state: 'APPROVED',
+            submittedAt: new Date('2024-12-06T16:30:00Z'),
+            comments: [],
+          },
+          {
+            id: 9046,
+            user: 'Student 4',
+            body: 'A truly outstanding feature that brings a lot of value to our platform. Well done!',
+            state: 'APPROVED',
+            submittedAt: new Date('2024-12-06T17:45:00Z'),
+            comments: [],
+          },
+        ],
+      },
+      {
+        id: 2171165204,
+        title:
+          'refactor: Modularize codebase with better separation of concerns',
+        user: 'Student 3',
+        url: 'https://github.com/cs4218/cs4218-project-2024-team01/pull/38',
+        state: 'closed',
+        createdAt: new Date('2024-12-08T10:45:24Z'),
+        updatedAt: new Date('2024-12-10T17:30:33Z'),
+        reviews: [
+          {
+            id: 9047,
+            user: 'Student 2',
+            body: 'This is a major refactoring that significantly improves our code organization!',
+            state: 'APPROVED',
+            submittedAt: new Date('2024-12-08T13:15:00Z'),
+            comments: [
+              {
+                id: 624,
+                user: 'Student 2',
+                body: 'I especially like the new service layer that separates business logic from the controllers.',
+                createdAt: new Date('2024-12-08T13:17:00Z'),
+              },
+            ],
+          },
+          {
+            id: 9048,
+            user: 'Student 1',
+            body: "While I appreciate the improved organization, I'm concerned about some circular dependencies.",
+            state: 'CHANGES_REQUESTED',
+            submittedAt: new Date('2024-12-08T15:30:00Z'),
+            comments: [
+              {
+                id: 625,
+                user: 'Student 1',
+                body: "There's a circular import between the user service and the auth service.",
+                createdAt: new Date('2024-12-08T15:32:00Z'),
+              },
+              {
+                id: 626,
+                user: 'Student 1',
+                body: 'Also, the naming convention for services is inconsistent in some places.',
+                createdAt: new Date('2024-12-08T15:35:00Z'),
+              },
+            ],
+          },
+          {
+            id: 9049,
+            user: 'Student 3',
+            body: "I've fixed the circular dependencies by creating a shared types module and standardized the naming conventions.",
+            state: 'COMMENTED',
+            submittedAt: new Date('2024-12-09T09:45:00Z'),
+            comments: [],
+          },
+          {
+            id: 9050,
+            user: 'Student 1',
+            body: 'The circular dependency issues are resolved, and the naming is now consistent. Approving!',
+            state: 'APPROVED',
+            submittedAt: new Date('2024-12-09T11:20:00Z'),
+            comments: [],
+          },
+          {
+            id: 9051,
+            user: 'Student 6',
+            body: 'I love how this refactoring makes the code more maintainable. It will be much easier to onboard new team members now.',
+            state: 'APPROVED',
+            submittedAt: new Date('2024-12-09T14:15:00Z'),
+            comments: [],
+          },
+          {
+            id: 9052,
+            user: 'Student 4',
+            body: 'The increased test coverage for the refactored modules is impressive. This is how refactoring should be done!',
+            state: 'APPROVED',
+            submittedAt: new Date('2024-12-09T16:30:00Z'),
             comments: [],
           },
         ],
       },
     ],
+
     milestones: [
       {
         title: 'M1: Project Setup',
@@ -388,6 +1125,10 @@ export const setupTutorialDataJob = async () => {
         due_on: new Date('2024-12-01T00:00:00Z'),
       },
     ],
+    aiInsights: {
+      text: "Code Quality:\n  - The project has a high number of code smells, above the average, indicating potential maintainability issues and a need for code cleanup.\n  - Duplicated lines density is above the median, suggesting some code duplication which could be improved.\n  - The project has a low coverage, indicating a lack of testing. This raises concerns about the code's reliability and potential for undiscovered bugs. \n\n\nProject Management:\n  - Lines per commit are higher than the median, implying potentially infrequent commits which is generally a bad practice. However, the relatively low bugs per commit compared to the average may indicate sufficient testing before committing or integrating code.\n\nAgile Principles and Practices:\n -  While the frequency of commits appears reasonable, the high number of bugs and code smells per commit and PR indicate a deviation from agile best practices. The team may not be adequately prioritizing code quality and testing throughout the development process.\n\nSoftware Development Best Practices:\n  - The low line coverage reveals a critical gap in testing practices.  Comprehensive testing is fundamental to ensuring software quality and reliability.\n  - The high number of code smells indicates potential deviations from established coding standards and best practices.\n  -  The project exhibits some code duplication, indicating potential areas for code refactoring and consolidation.\n\nRecommendations:\n1. **Prioritize implementing comprehensive testing.** The low line coverage signify a critical need for more rigorous testing practices. Implement unit, integration, and system tests to improve code reliability and catch bugs early. Aim to achieve a higher level of test coverage gradually.\n2. **Address code quality issues.** The high number of code smells and duplicated code suggest opportunities for improvement. Introduce regular code reviews and static analysis tools to identify and address these issues promptly.  Encourage refactoring to eliminate duplicated code and improve maintainability.\n3. **Reinforce agile principles, particularly regarding quality.**  While the project appears to have reasonably sized commits and PRs, the high number of associated bugs and code smells indicates a need to integrate quality checks more effectively into the agile workflow. Consider implementing quality gates or checklists at different stages of the development process to prevent quality issues from accumulating.\n",
+      date: new Date('2024-11-11T00:00:00Z'),
+    },
   });
   team.teamData = teamData._id;
   await team.save();
@@ -558,6 +1299,7 @@ export const setupTutorialDataJob = async () => {
     'lines_per_pr',
     'code_smells_per_pr',
     'lines_per_story_point',
+    'overview_rank',
   ];
   const types = [
     'INT',
@@ -599,6 +1341,7 @@ export const setupTutorialDataJob = async () => {
     'FLOAT',
     'FLOAT',
     'FLOAT',
+    'INT',
   ];
   const domains = [
     'Complexity',
@@ -640,6 +1383,7 @@ export const setupTutorialDataJob = async () => {
     'Composite',
     'Composite',
     'Composite',
+    'Overview',
   ];
   const metricStats = [
     {
@@ -1431,6 +2175,7 @@ export const setupTutorialDataJob = async () => {
         '315.500',
         '9.000',
         '267.92',
+        '1',
       ],
       metricStats: metricStats[0],
       lines_per_story_point: {
@@ -1494,6 +2239,7 @@ export const setupTutorialDataJob = async () => {
         '316.000',
         '9.100',
         '254.50',
+        '1',
       ],
       metricStats: metricStats[1],
     },
@@ -1545,6 +2291,7 @@ export const setupTutorialDataJob = async () => {
         '317.000',
         '9.300',
         '241.25',
+        '1',
       ],
       metricStats: metricStats[2],
     },
@@ -1596,6 +2343,7 @@ export const setupTutorialDataJob = async () => {
         '318.000',
         '8.900',
         '302.47',
+        '1',
       ],
       metricStats: metricStats[3],
     },
@@ -1647,6 +2395,7 @@ export const setupTutorialDataJob = async () => {
         '319.000',
         '8.500',
         '294.59',
+        '1',
       ],
       metricStats: metricStats[4],
     },
@@ -1692,8 +2441,8 @@ export const setupTutorialDataJob = async () => {
   });
   await mcAnswer.save();
 
-  const startDate = new Date();
-  startDate.setUTCFullYear(new Date().getUTCFullYear() - 1);
+  const startDate = new Date(START_DATE_STRING);
+  startDate.setUTCFullYear(new Date(START_DATE_STRING).getUTCFullYear() - 1);
 
   const assessment = await InternalAssessmentModel.create({
     course: trialCourse._id,
@@ -1730,15 +2479,37 @@ export const setupTutorialDataJob = async () => {
           email: `${spec.identifier}@example.com`,
           password:
             '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
-          role: Role.Student,
+          crispRole: CrispRole.Normal,
           isApproved: true,
           wantsEmailNotifications: false,
           wantsTelegramNotifications: false,
           user: newStudent._id,
+          courseRoles: [],
         });
       } else {
         if (!newStudent.enrolledCourses.includes(trialCourse._id)) {
           newStudent.enrolledCourses.push(trialCourse._id);
+          let studentAccount = await AccountModel.findOne({
+            user: newStudent._id,
+          });
+          if (!studentAccount) {
+            studentAccount = await AccountModel.create({
+              email: `${spec.identifier}@example.com`,
+              password:
+                '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
+              crispRole: CrispRole.Normal,
+              isApproved: true,
+              wantsEmailNotifications: false,
+              wantsTelegramNotifications: false,
+              user: newStudent._id,
+              courseRoles: [],
+            });
+          }
+          studentAccount.courseRoles.push({
+            course: trialCourse._id.toString(),
+            courseRole: CourseRole.Student,
+          });
+          await studentAccount.save();
           await newStudent.save();
         }
       }
@@ -1850,6 +2621,10 @@ export const setupTutorialDataJob = async () => {
           closed_at: new Date('2024-11-04T00:00:00Z'),
         },
       ],
+      aiInsights: {
+        text: 'Code Quality:\n  - The project has a low number of code smells, significantly above the average, indicating good maintainability and code quality.\n  - The project has a high coverage (0.0%), indicating a strong testing framework. \n\nProject Management:\n  - Lines per commit are lower than the average, implying potentially frequent commits which is generally a good practice. However, the relatively high bugs per commit may indicate insufficient testing before committing or integrating code. \n\n\nAgile Principles and Practices:\n -  The team has a good frequency of commits, and sufficient testing as shown by the low bugs per commit and low code smells per commit.\n  - The low number of code smells indicates low deviations from established coding standards and best practices.\n  -  The project exhibits some code duplication, indicating potential areas for code refactoring and consolidation.\n\nRecommendations:\n1. **Continue implementing comprehensive testing.** The  high line coverage signify rigorous testing practices. Continue mplementing unit, integration, and system tests to improve code reliability and catch bugs early.\n2. **Address code quality issues.** The number of code smells and duplicated code suggest there still exists some opportunities for improvement. Introduce regular code reviews and static analysis tools to identify and address these issues promptly.  Encourage refactoring to eliminate duplicated code and improve maintainability.\n3. **Reinforce agile principles, particularly regarding quality.**  While the project appears to have reasonably sized commits and PRs, the moderate number of associated bugs and code smells indicates a need to integrate quality checks more effectively into the agile workflow. Consider implementing quality gates or checklists at different stages of the development process to prevent quality issues from accumulating.\n',
+        date: new Date('2024-11-05T00:00:00Z'),
+      },
     });
     newTeam.teamData = newTeamData._id;
     await newTeam.save();
@@ -1962,6 +2737,7 @@ export const setupTutorialDataJob = async () => {
           '50.000',
           '2.500',
           '100.00',
+          (teamNumber - 99).toString(),
         ],
         metricStats: metricStats[i],
       });

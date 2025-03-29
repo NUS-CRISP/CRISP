@@ -627,6 +627,10 @@ export const addInternalAssessments = async (req: Request, res: Response) => {
 export const getInternalAssessments = async (req: Request, res: Response) => {
   const courseId = req.params.id;
   try {
+    res.setHeader(
+      'Cache-Control',
+      'no-store, no-cache, must-revalidate, proxy-revalidate'
+    );
     const assessments = await getInternalAssessmentsFromCourse(courseId);
     res.status(200).json(assessments);
   } catch (error) {

@@ -1,12 +1,10 @@
-// pages/courses/[id]/internal-assessments/[assessmentId]/submission/[submissionId].tsx
-
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { Submission } from '@shared/types/Submission';
 import { showNotification } from '@mantine/notifications';
 import { InternalAssessment } from '@shared/types/InternalAssessment';
-import TakeAssessment from '../take';
 import { hasFacultyPermission } from '@/lib/auth/utils';
+import EditAssessment from '@/components/views/EditAssessment';
 
 const ViewSubmissionPage: React.FC = () => {
   const router = useRouter();
@@ -63,7 +61,7 @@ const ViewSubmissionPage: React.FC = () => {
   return (
     <>
       {submission && (
-        <TakeAssessment
+        <EditAssessment
           inputAssessment={assessment}
           existingSubmission={submission}
           canEdit={canEdit}

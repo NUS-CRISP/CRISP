@@ -11,6 +11,7 @@ import {
   releaseInternalAssessment,
   addQuestionsToAssessmentController,
   reorderQuestionsInInternalAssessment,
+  gatherComments,
 } from '../controllers/internalAssessmentController';
 import {
   submitAssessment,
@@ -45,6 +46,7 @@ router.patch('/:assessmentId/recall', recallInternalAssessment);
 router.post('/:assessmentId/submit', submitAssessment);
 router.get('/:assessmentId/submissions', getUserSubmissions);
 router.get('/:assessmentId/all-submissions', getAllSubmissions);
+router.get('/:assessmentId/comments/:type', gatherComments);
 router.post('/:assessmentId/assignment-sets', createAssignmentSetController);
 router.get('/:assessmentId/assignment-sets', getAssignmentSetController);
 router.patch('/:assessmentId/assignment-sets', updateAssignmentSetController);
