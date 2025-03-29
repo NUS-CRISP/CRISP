@@ -9,45 +9,56 @@ import {
 } from '@mantine/core';
 import { useEffect, useRef, useState } from 'react';
 import classes from '@styles/FeatureCard.module.css';
+import Image, { StaticImageData } from 'next/image';
+import ss1 from '@public/ss-1.png';
+import ss2 from '@public/ss-2.png';
+import ss3 from '@public/ss-3.png';
+import ss4 from '@public/ss-4.png';
+import ss5 from '@public/ss-5.png';
+import viz1 from '@public/viz-1.png';
+import viz2 from '@public/viz-2.png';
+import viz3 from '@public/viz-3.png';
+import viz4 from '@public/viz-4.png';
+import viz5 from '@public/viz-5.png';
+import ca1 from '@public/ca-1.jpg';
+import ca2 from '@public/ca-2.jpg';
+import assess1 from '@public/assess-1.png';
+import assess2 from '@public/assess-2.png';
+import assess3 from '@public/assess-3.png';
+import assess4 from '@public/assess-4.png';
+import pm1 from '@public/pm-1.png';
+import pm2 from '@public/pm-2.png';
+import pm3 from '@public/pm-3.png';
+import pm4 from '@public/pm-4.png';
+import pm5 from '@public/pm-5.png';
 
 const data = [
   {
-    images: ['/ss-1.png', '/ss-2.png', '/ss-3.png', '/ss-4.png', '/ss-5.png'],
+    images: [ss1, ss2, ss3, ss4, ss5],
     title: 'Prioritized',
     description:
       'Analyze and rank team contributions with metrics, giving educators clear insight into students productivity and early prevention.',
   },
   {
-    images: [
-      '/viz-1.png',
-      '/viz-2.png',
-      '/viz-3.png',
-      '/viz-4.png',
-      '/viz-5.png',
-    ],
+    images: [viz1, viz2, viz3, viz4, viz5],
     title: 'Visualized',
     description:
       'Transform data into visual dashboards that reveal team dynamics, knowledge transfer patterns, and bottlenecks in real-time.',
   },
   {
-    images: ['/ca-1.jpg', '/ca-2.jpg'],
+    images: [ca1, ca2],
     title: 'AI Diagnosed',
     description:
       'Pinpoint critical quality issues with SonarCube diagnostics that combine test coverage metrics, static analysis, and technical debt indicators into actionable insights.',
   },
   {
-    images: [
-      '/assess-1.png',
-      '/assess-2.png',
-      '/assess-3.png',
-      '/assess-4.png',
-    ],
+    images: [assess1, assess2, assess3, assess4],
     title: 'Graded',
     description:
       'Evaluate students performance through customizable assessment frameworks for fair and transparent skill evaluation.',
   },
   {
-    images: ['/pm-3.png', '/pm-1.png', '/pm-2.png', '/pm-4.png', '/pm-5.png'],
+    images: [pm3, pm1, pm2, pm4, pm5],
     title: 'Managed',
     description:
       'Seamlessly bridge development workflows with Jira and Trofos integration, allowing synchronization of tickets, sprints, and milestone tracking across platforms.',
@@ -55,7 +66,7 @@ const data = [
 ];
 
 interface ImageCarouselProps {
-  images: string[];
+  images: StaticImageData[];
 }
 
 const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
@@ -109,14 +120,24 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
         p="xl"
         radius="md"
         style={{
-          backgroundImage: `url(${images[currentIndex]})`,
           width: '100%',
           height: '100%',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
           border: '5px solid #fff',
+          position: 'relative',
+          overflow: 'hidden',
         }}
-      />
+      >
+        <Image
+          src={images[currentIndex]}
+          alt={`Feature slide ${currentIndex + 1}`}
+          fill
+          style={{
+            objectFit: 'cover',
+            objectPosition: 'center',
+          }}
+          priority={currentIndex === 0}
+        />
+      </Paper>
 
       {images.length > 1 && (
         <>

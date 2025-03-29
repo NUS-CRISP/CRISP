@@ -1,8 +1,10 @@
-import { Button, Group, Container, Image } from '@mantine/core';
+import { Button, Group, Container } from '@mantine/core';
 import Role from '@shared/types/auth/CrispRole';
 import classes from '@styles/Home.module.css';
 import { IconArrowRight, IconBrandGithub } from '@tabler/icons-react';
 import { signIn } from 'next-auth/react';
+import NextImage from 'next/image';
+import diagramImage from '@public/diagram.png';
 
 const Hero = () => {
   return (
@@ -20,16 +22,25 @@ const Hero = () => {
             marginBottom: '60px',
           }}
         >
-          <Image
-            src="/CRISP_diagram.png"
-            alt="CRISP Platform Diagram"
+          <div
             style={{
+              position: 'relative',
               width: '700px',
               maxWidth: '95%',
+              height: '400px', // Set an appropriate height for your image
               borderRadius: '10px',
+              overflow: 'hidden',
               boxShadow: '0 5px 15px rgba(0, 0, 0, 0.3)',
             }}
-          />
+          >
+            <NextImage
+              src={diagramImage}
+              alt="CRISP Platform Diagram"
+              layout="fill"
+              objectFit="contain"
+              priority
+            />
+          </div>
         </div>
 
         <Group justify="center" className={classes.heroControls}>
