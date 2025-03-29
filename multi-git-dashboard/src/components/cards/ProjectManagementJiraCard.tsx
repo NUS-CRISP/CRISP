@@ -14,7 +14,6 @@ import { JiraBoard, JiraIssue, JiraSprint } from '@shared/types/JiraData';
 import { User } from '@shared/types/User';
 import { useState } from 'react';
 import TutorialPopover from '../tutorial/TutorialPopover';
-import { useTutorialContext } from '../tutorial/TutorialContext';
 
 interface ProjectManagementJiraCardProps {
   TA: User | null;
@@ -48,7 +47,6 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
   jiraBoard,
   renderTutorialPopover = false,
 }) => {
-  const { curTutorialStage } = useTutorialContext();
   const [embla, setEmbla] = useState<Embla | null>(null);
 
   const [selectedVelocityChart, setSelectedVelocityChart] =
