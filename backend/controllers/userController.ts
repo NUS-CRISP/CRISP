@@ -31,6 +31,10 @@ export const updateUser = async (req: Request, res: Response) => {
 
 export const getUserByHandle = async (req: Request, res: Response) => {
   try {
+    res.setHeader(
+      'Cache-Control',
+      'no-store, no-cache, must-revalidate, proxy-revalidate'
+    );
     const { gitHandle } = req.query;
     if (typeof gitHandle !== 'string') {
       res.status(400).json({ error: 'Invalid git handle' });

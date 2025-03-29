@@ -31,6 +31,10 @@ export const getOrCreateAssessmentResultsController = async (
   req: Request,
   res: Response
 ) => {
+  res.setHeader(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate'
+  );
   const { assessmentId } = req.params;
   const accountId = await getAccountId(req);
 
