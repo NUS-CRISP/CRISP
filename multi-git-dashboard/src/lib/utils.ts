@@ -99,7 +99,7 @@ export const tutorialContents = [
   'This is the Class Overview page. Here you can see the PRs, commits and issues by each team. You can also customise the view as needed using the filters.',
   'Access the Code Analysis page here.',
   'This is the Code Analysis overview view. Here you can see the code quality metrics for each team.',
-  'This is the predicted rank of the team based on the weighted sum of various metrics. According to the CRISP team\'s research, this is a statistically significant indicator of the team\'s grade.',
+  "This is the predicted rank of the team based on the weighted sum of various metrics. According to the CRISP team's research, this is a statistically significant indicator of the team's grade.",
   'This is the AI Insights section. Here you can see AI-generated insights on Code Quality, Project Management, SWE principles and Agile practices based on code analysis of the team and the mean/median of the course.',
   'Access the timeline view',
   'This is the timeline view, where you can see the temporal change of various metrics for each team over the course.',

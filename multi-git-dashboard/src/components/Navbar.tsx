@@ -269,7 +269,7 @@ const Navbar: React.FC = () => {
     stage?: number,
     position?: string,
     label?: string,
-    hideButton: boolean = false,
+    hideButton: boolean = false
   ) => {
     const navLinkContent = (
       <a
@@ -282,7 +282,10 @@ const Navbar: React.FC = () => {
             logSessionTime(item.label, false);
             setActiveCourseTab(item.label);
             router.push(item.link);
-            if ([10, 12, 14, 21, 23].includes(curTutorialStage) && curTutorialStage === stage) {
+            if (
+              [10, 12, 14, 21, 23].includes(curTutorialStage) &&
+              curTutorialStage === stage
+            ) {
               nextTutorialStage();
             }
           } else {
@@ -331,7 +334,13 @@ const Navbar: React.FC = () => {
     renderNavLink(courseLinksData[3], 14, 'top-start', 'Code Analysis', true)
   );
   courseLinks.push(
-    renderNavLink(courseLinksData[8], 21, 'top-start', 'Project Management', true)
+    renderNavLink(
+      courseLinksData[8],
+      21,
+      'top-start',
+      'Project Management',
+      true
+    )
   );
 
   courseLinks.push(

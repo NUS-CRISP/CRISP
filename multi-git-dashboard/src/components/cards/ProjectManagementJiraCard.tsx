@@ -501,10 +501,7 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
   return (
     <div>
       {renderTutorialPopover ? (
-        <TutorialPopover
-          stage={22}
-          position="left"
-        >
+        <TutorialPopover stage={22} position="left">
           {jiraCard}
         </TutorialPopover>
       ) : (
