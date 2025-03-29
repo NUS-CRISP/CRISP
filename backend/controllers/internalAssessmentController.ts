@@ -18,6 +18,10 @@ import {
   recaluculateSubmissionsForAssessment,
   reorderQuestions,
 } from '../services/internalAssessmentService';
+import AccountModel from '@models/Account';
+import CrispRole from '@shared/types/auth/CrispRole';
+import { getSubmissionsByAssessment } from '../services/submissionService';
+import { AnswerUnion, TeamMemberSelectionAnswer } from '@models/Answer';
 
 /**
  * Controller method to get an internal assessment by its ID.
@@ -455,6 +459,99 @@ export const reorderQuestionsInInternalAssessment = async (
     } else {
       console.error('Error reordering assessment questions:', error);
       res.status(500).json({ error: 'Failed to reorder questions' });
+    }
+  }
+};
+
+/**
+ * Controller to gather all assessment comments.
+ *
+ * @param {Request} req - Express request object
+ *  - req.params.assessmentId: The ID of the assessment.
+ *  - req.params.type: 'short', 'long', or 'both'
+ * @param {Response} res - Express response object
+ *
+ * @returns {Promise<void>}
+ *  - 200 OK: Returns a success message and an object mapping student IDs to comment arrays.
+ *  - 403 Forbidden: If the user lacks permission to gather comments.
+ *  - 500 Internal Server Error: For unknown runtime or server errors.
+ *
+ * @throws {NotFoundError} If the submission is not found.
+ * @throws {BadRequestError} If the adjusted score is invalid.
+ * @throws {MissingAuthorizationError} If the user is unauthorized.
+ */
+export const gatherComments = async (req: Request, res: Response) => {
+  try {
+    const accountId = await getAccountId(req);
+    const account = await AccountModel.findById(accountId);
+
+    if (
+      !account ||
+      (account.crispRole !== CrispRole.Faculty &&
+        account.crispRole !== CrispRole.Admin)
+    ) {
+      throw new MissingAuthorizationError(
+        'You do not have permission to gather comments.'
+      );
+    }
+    const { assessmentId, type } = req.params;
+
+    const submissions = await getSubmissionsByAssessment(assessmentId);
+
+    if (!submissions || submissions.length === 0) {
+      res.status(200).json({ message: 'No submissions yet.' });
+      return;
+    }
+
+    const commentFilter =
+      type === 'short'
+        ? (a: AnswerUnion) => a.type === 'Short Response Answer'
+        : type === 'long'
+          ? (a: AnswerUnion) => a.type === 'Long Response Answer'
+          : (a: AnswerUnion) =>
+              a.type === 'Short Response Answer' ||
+              a.type === 'Long Response Answer';
+
+    const commentsByStudent: { [studentId: string]: string[] } = {};
+
+    submissions.forEach(submission => {
+      const tmsAnswer = submission.answers.find(
+        (a: AnswerUnion) => a.type === 'Team Member Selection Answer'
+      ) as TeamMemberSelectionAnswer; // Assumed valid
+
+      const texts = submission.answers
+        .filter(commentFilter)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((a: any) => a.value)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .filter((v: any) => v);
+
+      tmsAnswer.selectedUserIds.forEach((studentId: string) => {
+        if (!commentsByStudent[studentId]) {
+          commentsByStudent[studentId] = [];
+        }
+        commentsByStudent[studentId].push(...texts);
+      });
+    });
+
+    const anyComments = Object.values(commentsByStudent).some(
+      arr => arr.length > 0
+    );
+    if (!anyComments) {
+      res.status(200).json({ message: 'No comments found.' });
+      return;
+    }
+
+    res.status(200).json({
+      message: 'Comments gathered.',
+      commentsByStudent,
+    });
+  } catch (error) {
+    if (error instanceof MissingAuthorizationError) {
+      res.status(403).json({ error: error.message });
+    } else {
+      console.error('Error gathering comments:', error);
+      res.status(500).json({ error: 'Failed to gather comments.' });
     }
   }
 };

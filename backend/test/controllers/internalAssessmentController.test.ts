@@ -12,6 +12,7 @@ import {
   releaseInternalAssessment,
   recallInternalAssessment,
   reorderQuestionsInInternalAssessment,
+  gatherComments,
 } from '../../controllers/internalAssessmentController';
 import * as internalAssessmentService from '../../services/internalAssessmentService';
 import * as authUtils from '../../utils/auth';
@@ -20,6 +21,8 @@ import {
   NotFoundError,
   MissingAuthorizationError,
 } from '../../services/errors';
+import AccountModel from '@models/Account';
+import CrispRole from '@shared/types/auth/CrispRole';
 
 jest.mock('../../services/internalAssessmentService');
 jest.mock('../../utils/auth');
@@ -1118,6 +1121,276 @@ describe('internalAssessmentController', () => {
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
         error: 'Failed to reorder questions',
+      });
+    });
+  });
+
+  describe('gatherComments controller', () => {
+    let req: Partial<Request>;
+    let res: Partial<Response>;
+
+    beforeEach(() => {
+      req = mockRequest();
+      res = mockResponse();
+      jest.clearAllMocks();
+    });
+
+    it('should return comments filtered by short responses when type is "short"', async () => {
+      req.params = { assessmentId: 'assessment1', type: 'short' };
+
+      // Mock an authorized account (Faculty)
+      const mockAccount = { _id: 'account1', crispRole: CrispRole.Faculty };
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account1');
+      jest
+        .spyOn(AccountModel, 'findById')
+        .mockResolvedValue(mockAccount as any);
+
+      // Create two submissions with answers.
+      const submissions = [
+        {
+          answers: [
+            {
+              type: 'Team Member Selection Answer',
+              selectedUserIds: ['student1'],
+            },
+            {
+              type: 'Short Response Answer',
+              value: 'short comment 1',
+            },
+            {
+              type: 'Long Response Answer',
+              value: 'long comment 1',
+            },
+            {
+              type: 'Short Response Answer',
+              value: 'required short comment',
+              isRequired: true,
+            },
+          ],
+        },
+        {
+          answers: [
+            {
+              type: 'Team Member Selection Answer',
+              selectedUserIds: ['student2'],
+            },
+            {
+              type: 'Short Response Answer',
+              value: 'short comment 2',
+            },
+          ],
+        },
+      ];
+      jest
+        .spyOn(
+          require('../../services/submissionService'),
+          'getSubmissionsByAssessment'
+        )
+        .mockResolvedValue(submissions as any);
+
+      await gatherComments(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Comments gathered.',
+        commentsByStudent: {
+          student1: ['short comment 1', 'required short comment'],
+          student2: ['short comment 2'],
+        },
+      });
+    });
+
+    it('should return comments filtered by long responses when type is "long"', async () => {
+      req.params = { assessmentId: 'assessment1', type: 'long' };
+
+      const mockAccount = { _id: 'account1', crispRole: CrispRole.Admin };
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account1');
+      jest
+        .spyOn(AccountModel, 'findById')
+        .mockResolvedValue(mockAccount as any);
+
+      const submissions = [
+        {
+          answers: [
+            {
+              type: 'Team Member Selection Answer',
+              selectedUserIds: ['student1'],
+            },
+            {
+              type: 'Long Response Answer',
+              value: 'long comment only',
+            },
+            {
+              type: 'Short Response Answer',
+              value: 'short comment should be ignored',
+            },
+          ],
+        },
+      ];
+      jest
+        .spyOn(
+          require('../../services/submissionService'),
+          'getSubmissionsByAssessment'
+        )
+        .mockResolvedValue(submissions as any);
+
+      await gatherComments(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Comments gathered.',
+        commentsByStudent: {
+          student1: ['long comment only'],
+        },
+      });
+    });
+
+    it('should return both short and long comments when type is not provided', async () => {
+      req.params = { assessmentId: 'assessment1' };
+
+      const mockAccount = { _id: 'account1', crispRole: CrispRole.Faculty };
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account1');
+      jest
+        .spyOn(AccountModel, 'findById')
+        .mockResolvedValue(mockAccount as any);
+
+      const submissions = [
+        {
+          answers: [
+            {
+              type: 'Team Member Selection Answer',
+              selectedUserIds: ['student1'],
+            },
+            {
+              type: 'Short Response Answer',
+              value: 'short comment',
+            },
+            {
+              type: 'Long Response Answer',
+              value: 'long comment',
+            },
+          ],
+        },
+      ];
+      jest
+        .spyOn(
+          require('../../services/submissionService'),
+          'getSubmissionsByAssessment'
+        )
+        .mockResolvedValue(submissions as any);
+
+      await gatherComments(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Comments gathered.',
+        commentsByStudent: {
+          student1: ['short comment', 'long comment'],
+        },
+      });
+    });
+
+    it('should return 200 with "No submissions yet." when no submissions are found', async () => {
+      req.params = { assessmentId: 'assessment1' };
+
+      const mockAccount = { _id: 'account1', crispRole: CrispRole.Faculty };
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account1');
+      jest
+        .spyOn(AccountModel, 'findById')
+        .mockResolvedValue(mockAccount as any);
+
+      jest
+        .spyOn(
+          require('../../services/submissionService'),
+          'getSubmissionsByAssessment'
+        )
+        .mockResolvedValue([] as any);
+
+      await gatherComments(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'No submissions yet.',
+      });
+    });
+
+    it('should return 200 with "No comments found." when no comments are collected', async () => {
+      req.params = { assessmentId: 'assessment1', type: 'short' };
+
+      const mockAccount = { _id: 'account1', crispRole: CrispRole.Faculty };
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account1');
+      jest
+        .spyOn(AccountModel, 'findById')
+        .mockResolvedValue(mockAccount as any);
+
+      // Submissions exist but none of the answers (besides TMS) have a value.
+      const submissions = [
+        {
+          answers: [
+            {
+              type: 'Team Member Selection Answer',
+              selectedUserIds: ['student1'],
+            },
+            {
+              type: 'Short Response Answer',
+              value: '',
+            },
+          ],
+        },
+      ];
+      jest
+        .spyOn(
+          require('../../services/submissionService'),
+          'getSubmissionsByAssessment'
+        )
+        .mockResolvedValue(submissions as any);
+
+      await gatherComments(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'No comments found.',
+      });
+    });
+
+    it('should return 403 if the user is not authorized', async () => {
+      req.params = { assessmentId: 'assessment1' };
+
+      const mockAccount = { _id: 'account1', crispRole: 'Normal' };
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account1');
+      jest
+        .spyOn(AccountModel, 'findById')
+        .mockResolvedValue(mockAccount as any);
+
+      await gatherComments(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'You do not have permission to gather comments.',
+      });
+    });
+
+    it('should return 500 if an unexpected error occurs', async () => {
+      req.params = { assessmentId: 'assessment1' };
+
+      const mockAccount = { _id: 'account1', crispRole: CrispRole.Faculty };
+      jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account1');
+      jest
+        .spyOn(AccountModel, 'findById')
+        .mockResolvedValue(mockAccount as any);
+
+      jest
+        .spyOn(
+          require('../../services/submissionService'),
+          'getSubmissionsByAssessment'
+        )
+        .mockRejectedValue(new Error('Unexpected error'));
+
+      await gatherComments(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to gather comments.',
       });
     });
   });
