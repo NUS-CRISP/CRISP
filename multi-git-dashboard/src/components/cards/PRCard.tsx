@@ -285,7 +285,7 @@ export const PRCard: React.FC<OverviewProps> = ({
         onUseDailyRangeChange={handleUseDailyRangeChange}
       />
 
-      <TutorialPopover stage={9} position="top" disabled={index !== 0}>
+      <TutorialPopover stage={11} position="top" disabled={index !== 0}>
         <div ref={prRef}>
           <PR
             team={team}

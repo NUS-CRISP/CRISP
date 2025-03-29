@@ -2,6 +2,7 @@ import { getTutorialHighlightColor } from '@/lib/utils';
 import {
   Alert,
   Center,
+  FloatingPosition,
   Stack,
   Title,
   Tooltip,
@@ -263,13 +264,14 @@ const Navbar: React.FC = () => {
     },
   ];
 
-  const renderNavLink = (item: CourseLink) => (
-    <TutorialPopover
-      stage={6}
-      position="right"
-      key={item.label}
-      disabled={item.label !== 'Class Overview' || curTutorialStage !== 6}
-    >
+  const renderNavLink = (
+    item: CourseLink,
+    stage?: number,
+    position?: string,
+    label?: string,
+    hideButton: boolean = false,
+  ) => {
+    const navLinkContent = (
       <a
         className={classes.courseLink}
         data-active={item.label === activeCourseTab || undefined}
@@ -293,16 +295,42 @@ const Navbar: React.FC = () => {
           <span style={{ marginLeft: '5px' }}>{item.label}</span>
         </div>
       </a>
-    </TutorialPopover>
-  );
+    );
+
+    return stage && position && label ? (
+      <TutorialPopover
+        stage={stage}
+        position={position as FloatingPosition}
+        key={item.label}
+        disabled={item.label !== label || curTutorialStage !== stage}
+        hideButton={hideButton}
+      >
+        {navLinkContent}
+      </TutorialPopover>
+    ) : (
+      navLinkContent
+    );
+  };
 
   const courseLinks = [];
 
-  courseLinksData.slice(0, 4).forEach(item => {
-    courseLinks.push(renderNavLink(item));
-  });
+  // First section: Class Overview, Team Review, PR Review, Code Analysis, Project Management
+  courseLinks.push(
+    renderNavLink(courseLinksData[1], 6, 'top-start', 'Team Review')
+  );
+  courseLinks.push(
+    renderNavLink(courseLinksData[0], 12, 'top-start', 'Class Overview')
+  );
+  courseLinks.push(
+    renderNavLink(courseLinksData[2], 10, 'top-start', 'PR Review')
+  );
+  courseLinks.push(
+    renderNavLink(courseLinksData[3], 14, 'top-start', 'Code Analysis')
+  );
+  courseLinks.push(
+    renderNavLink(courseLinksData[8], 21, 'top-start', 'Project Management')
+  );
 
-  // First section: Class Overview, Team Review, PR Review, Code Analysis
   courseLinks.push(
     <div
       key="divider-1"
@@ -316,7 +344,7 @@ const Navbar: React.FC = () => {
   );
 
   // Second section: People, Repositories, Teams, Timeline
-  courseLinksData.slice(4, 9).forEach(item => {
+  courseLinksData.slice(4, 8).forEach(item => {
     courseLinks.push(renderNavLink(item));
   });
 
@@ -334,7 +362,9 @@ const Navbar: React.FC = () => {
   );
 
   // Third section: Assessment
-  courseLinks.push(renderNavLink(courseLinksData[9]));
+  courseLinks.push(
+    renderNavLink(courseLinksData[9], 23, 'top-start', 'Assessments')
+  );
 
   useEffect(() => {
     const path = router.pathname;
@@ -377,7 +407,7 @@ const Navbar: React.FC = () => {
 
   return (
     <div className={classes.navbarsContainer}>
-      <TutorialPopover stage={1}>
+      <TutorialPopover stage={1} position="right">
         <nav
           className={classes.navbar}
           style={{
@@ -444,7 +474,7 @@ const Navbar: React.FC = () => {
                 popoverOpened={questionPopoverOpened}
               />
 
-              <TutorialPopover stage={11} position="right-end" w={250} finish>
+              <TutorialPopover stage={25} position="right-end" w={250} finish>
                 <NavbarLink
                   onClick={() =>
                     window.open('https://forms.gle/41KcH8gFh3uDfzQGA', '_blank')

@@ -3,6 +3,7 @@ import { Accordion, Tabs, Title } from '@mantine/core';
 import { forwardRef, useState } from 'react';
 import CodeAnalysisOverview from './CodeAnalysisOverview';
 import CodeAnalysisTimeline from './CodeAnalysisTimeline';
+import TutorialPopover from '../tutorial/TutorialPopover';
 
 interface CodeAnalysisAccordionItemProps {
   codeData: {
@@ -18,12 +19,14 @@ interface CodeAnalysisAccordionItemProps {
   teamNumber: number;
 
   aiInsights?: { text: string; date: Date };
+
+  renderTutorialPopover?: boolean;
 }
 
 const CodeAnalysisAccordionItem = forwardRef<
   HTMLDivElement,
   CodeAnalysisAccordionItemProps
->(({ codeData, teamNumber, aiInsights }, ref) => {
+>(({ codeData, teamNumber, aiInsights, renderTutorialPopover = false }, ref) => {
   const [viewMode, setViewMode] = useState<'overview' | 'timeline'>('overview');
 
   const sortedDates = Object.keys(codeData)
@@ -47,20 +50,31 @@ const CodeAnalysisAccordionItem = forwardRef<
             <Tabs.Tab value="overview" style={{ fontSize: '16px' }}>
               Overview
             </Tabs.Tab>
-            <Tabs.Tab value="timeline" style={{ fontSize: '16px' }}>
-              Timeline
-            </Tabs.Tab>
+            {renderTutorialPopover ? (
+              <TutorialPopover stage={18} position="right">
+                <Tabs.Tab value="timeline" style={{ fontSize: '16px' }}>
+                  Timeline
+                </Tabs.Tab>
+              </TutorialPopover>
+            ) : (
+              <Tabs.Tab value="timeline" style={{ fontSize: '16px' }}>
+                Timeline
+              </Tabs.Tab>
+            )}
           </Tabs.List>
-
           <Tabs.Panel value="overview" pt="xs">
             <CodeAnalysisOverview
               latestData={latestData}
               executedDate={latestExecutionDate}
               aiInsights={aiInsights}
+              renderTutorialPopover={renderTutorialPopover && viewMode === 'overview'}
             />
           </Tabs.Panel>
           <Tabs.Panel value="timeline" pt="xs">
-            <CodeAnalysisTimeline codeData={codeData} />
+            <CodeAnalysisTimeline
+              codeData={codeData}
+              renderTutorialPopover={renderTutorialPopover && viewMode === 'timeline'}
+            />
           </Tabs.Panel>
         </Tabs>
       </Accordion.Panel>

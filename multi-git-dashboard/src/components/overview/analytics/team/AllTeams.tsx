@@ -12,6 +12,7 @@ import {
 } from '@mantine/core';
 import { AreaChart, BarChart } from '@mantine/charts';
 import { TeamData } from '@shared/types/TeamData';
+import TutorialPopover from '@/components/tutorial/TutorialPopover';
 
 interface AllTeamsProps {
   teamDatas: TeamData[];
@@ -139,54 +140,54 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
               <Title order={5}>All Teams Overview</Title>
             </Center>
 
-            <Group justify="center">
-              <Popover width={900} position="bottom" withArrow shadow="md">
-                <Popover.Target>
-                  <Button style={{ width: '250px' }}>
-                    Select team(s) to display
-                  </Button>
-                </Popover.Target>
-                <Popover.Dropdown>
-                  <MultiSelect
-                    label="Select Teams"
-                    placeholder="Select teams to display"
-                    value={selectedTeams}
-                    onChange={setSelectedTeams}
-                    data={teamNames}
-                    withScrollArea={true}
-                    searchable
-                    clearable
-                    maxDropdownHeight={200}
-                    styles={{
-                      input: { minHeight: '36px' },
-                    }}
-                    comboboxProps={{ withinPortal: false }}
-                  />
-                </Popover.Dropdown>
-              </Popover>
-            </Group>
+              <Group justify="center">
+                <Popover width={900} position="bottom" withArrow shadow="md">
+                  <Popover.Target>
+                    <Button style={{ width: '250px' }}>
+                      Select team(s) to display
+                    </Button>
+                  </Popover.Target>
+                  <Popover.Dropdown>
+                    <MultiSelect
+                      label="Select Teams"
+                      placeholder="Select teams to display"
+                      value={selectedTeams}
+                      onChange={setSelectedTeams}
+                      data={teamNames}
+                      withScrollArea={true}
+                      searchable
+                      clearable
+                      maxDropdownHeight={200}
+                      styles={{
+                        input: { minHeight: '36px' },
+                      }}
+                      comboboxProps={{ withinPortal: false }}
+                    />
+                  </Popover.Dropdown>
+                </Popover>
+              </Group>
 
-            <Group grow>
-              <Select
-                label="Chart Type"
-                placeholder="Select chart type"
-                value={chartType}
-                onChange={(value: string | null) => {
-                  if (value) setChartType(value);
-                }}
-                data={[
-                  { value: 'BarChart', label: 'Bar Chart' },
-                  { value: 'AreaChart', label: 'Area Chart' },
-                ]}
-              />
+              <Group grow>
+                <Select
+                  label="Chart Type"
+                  placeholder="Select chart type"
+                  value={chartType}
+                  onChange={(value: string | null) => {
+                    if (value) setChartType(value);
+                  }}
+                  data={[
+                    { value: 'BarChart', label: 'Bar Chart' },
+                    { value: 'AreaChart', label: 'Area Chart' },
+                  ]}
+                />
 
-              <MultiSelect
-                label="Metrics"
-                value={selectedMetrics}
-                onChange={setSelectedMetrics}
-                data={availableMetrics}
-              />
-            </Group>
+                <MultiSelect
+                  label="Metrics"
+                  value={selectedMetrics}
+                  onChange={setSelectedMetrics}
+                  data={availableMetrics}
+                />
+              </Group>
 
             <Group grow>
               <Select
