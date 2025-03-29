@@ -482,6 +482,10 @@ export const reorderQuestionsInInternalAssessment = async (
  */
 export const gatherComments = async (req: Request, res: Response) => {
   try {
+    res.setHeader(
+      'Cache-Control',
+      'no-store, no-cache, must-revalidate, proxy-revalidate'
+    );
     const accountId = await getAccountId(req);
     const account = await AccountModel.findById(accountId);
 
