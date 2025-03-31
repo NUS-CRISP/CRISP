@@ -21,7 +21,7 @@ const Hero = () => {
           }}
         >
           <Image
-            src="./crisp_diagram.png"
+            src="/CRISP_diagram.png"
             alt="CRISP Platform Diagram"
             style={{
               width: '700px',
