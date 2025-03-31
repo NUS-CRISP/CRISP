@@ -24,6 +24,7 @@ interface SubmissionCardProps {
   assessmentReleaseNumber?: number;
   questions: QuestionUnion[];
   userIdToNameMap: { [key: string]: string };
+  assessmentGranularity: string;
 }
 
 const SubmissionCard: React.FC<SubmissionCardProps> = ({
@@ -35,6 +36,7 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({
   assessmentReleaseNumber,
   questions,
   userIdToNameMap,
+  assessmentGranularity,
 }) => {
   const [opened, setOpened] = useState(false);
   const router = useRouter();
@@ -81,7 +83,11 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({
 
             {teamMemberSelectionAnswer && (
               <Text size="sm">
-                <strong>Selected Team Member(s):</strong>{' '}
+                <strong>
+                  {assessmentGranularity === 'individual'
+                    ? 'Student(s):'
+                    : 'Selected Team Member(s):'}
+                </strong>{' '}
                 {formatAnswer(teamMemberSelectionAnswer, userIdToNameMap)}
               </Text>
             )}

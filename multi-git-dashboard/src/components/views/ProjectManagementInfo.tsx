@@ -74,7 +74,7 @@ const ProjectManagementInfo: React.FC<ProjectManagementProps> = ({
         multiple
         variant="separated"
       >
-        {teamSet.teams.map(team => (
+        {teamSet.teams.map((team, index) => (
           <Accordion.Item key={team._id} value={team._id}>
             <Accordion.Control>Team {team.number.toString()}</Accordion.Control>
             <Accordion.Panel>
@@ -83,6 +83,7 @@ const ProjectManagementInfo: React.FC<ProjectManagementProps> = ({
                   key={team._id}
                   TA={team.TA}
                   jiraBoard={team.board}
+                  renderTutorialPopover={index === 0}
                 />
               )}
             </Accordion.Panel>

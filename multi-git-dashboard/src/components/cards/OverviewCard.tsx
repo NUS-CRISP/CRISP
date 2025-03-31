@@ -70,7 +70,12 @@ export const OverviewCard: React.FC<OverviewProps> = ({
 
   return (
     <Stack>
-      <TutorialPopover stage={10} offset={30} disabled={index !== 0}>
+      <TutorialPopover
+        stage={9}
+        position="top"
+        offset={30}
+        disabled={index !== 0}
+      >
         <RangeSlider
           value={selectedWeekRange}
           max={totalWeeks - 1}

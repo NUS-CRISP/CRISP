@@ -115,6 +115,7 @@ const PRReview: React.FC<OverviewProps> = ({
         setTeams(fetchedTeams);
         const fetchedTeamDatas = await getTeamDatas();
         setTeamDatas(fetchedTeamDatas);
+        if (teamDatas.length > 0) setActiveTabAndSave(teamSets[0].name);
         setStatus(Status.Idle);
       } catch (error) {
         setStatus(Status.Error);

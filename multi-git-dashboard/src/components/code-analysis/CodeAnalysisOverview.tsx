@@ -15,6 +15,7 @@ import {
 } from '@mantine/core';
 import { IconHelpCircle, IconChartDots } from '@tabler/icons-react';
 import ordinal from 'ordinal';
+import TutorialPopover from '../tutorial/TutorialPopover';
 
 interface CodeAnalysisOverviewProps {
   latestData: {
@@ -26,6 +27,7 @@ interface CodeAnalysisOverviewProps {
   };
   executedDate: Date;
   aiInsights?: { text: string; date: Date };
+  renderTutorialPopover?: boolean;
 }
 
 const getColorForRating = (rating: string) => {
@@ -86,6 +88,7 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
   latestData,
   executedDate,
   aiInsights,
+  renderTutorialPopover = false,
 }) => {
   const metricStatsMap = new Map(Object.entries(latestData.metricStats));
 
@@ -155,6 +158,21 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
     lines_per_commit_index === -1
       ? '-'
       : latestData.values[lines_per_commit_index];
+
+  const bugs_per_pr_index = latestData.metrics.indexOf('bugs_per_pr');
+  const bugs_per_pr =
+    bugs_per_pr_index === -1 ? '-' : latestData.values[bugs_per_pr_index];
+
+  const code_smells_per_pr_index =
+    latestData.metrics.indexOf('code_smells_per_pr');
+  const code_smells_per_pr =
+    code_smells_per_pr_index === -1
+      ? '-'
+      : latestData.values[code_smells_per_pr_index];
+
+  const lines_per_pr_index = latestData.metrics.indexOf('lines_per_pr');
+  const lines_per_pr =
+    lines_per_pr_index === -1 ? '-' : latestData.values[lines_per_pr_index];
 
   const lines_per_story_point_index = latestData.metrics.indexOf(
     'lines_per_story_point'
@@ -271,12 +289,24 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
     <Container>
       <Grid gutter="lg">
         <Grid.Col span={12}>
-          {metricCard(
-            'Predicted Ranking',
-            overview_rank === '-' ? '-' : ordinal(parseInt(overview_rank)),
-            'overview_rank',
-            () => 'blue',
-            false
+          {renderTutorialPopover ? (
+            <TutorialPopover stage={16} position="top-start" offset={-5}>
+              {metricCard(
+                'Predicted Ranking',
+                overview_rank === '-' ? '-' : ordinal(parseInt(overview_rank)),
+                'overview_rank',
+                () => 'blue',
+                false
+              )}
+            </TutorialPopover>
+          ) : (
+            metricCard(
+              'Predicted Ranking',
+              overview_rank === '-' ? '-' : ordinal(parseInt(overview_rank)),
+              'overview_rank',
+              () => 'blue',
+              false
+            )
           )}
         </Grid.Col>
         <Grid.Col span={4}>
@@ -303,9 +333,22 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
             getColorForRating
           )}
         </Grid.Col>
-        <Grid.Col span={4}>
-          {metricCard('Coverage', coverage, 'coverage', getColorForCoverage)}
-        </Grid.Col>
+        {renderTutorialPopover ? (
+          <TutorialPopover stage={15} position="left">
+            <Grid.Col span={4}>
+              {metricCard(
+                'Coverage',
+                coverage,
+                'coverage',
+                getColorForCoverage
+              )}
+            </Grid.Col>
+          </TutorialPopover>
+        ) : (
+          <Grid.Col span={4}>
+            {metricCard('Coverage', coverage, 'coverage', getColorForCoverage)}
+          </Grid.Col>
+        )}
         <Grid.Col span={4}>
           {metricCard(
             'Duplication',
@@ -317,27 +360,40 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
         <Grid.Col span={4}>
           {metricCard('Complexity', complexity, 'complexity')}
         </Grid.Col>
-        <Grid.Col span={3}>
+        <Grid.Col span={4}>
           {metricCard('Bugs / Commit', bugs_per_commit, 'bugs_per_commit')}
         </Grid.Col>
-        <Grid.Col span={3}>
+        <Grid.Col span={4}>
           {metricCard(
             'Code Smells / Commit',
             code_smells_per_commit,
             'code_smells_per_commit'
           )}
         </Grid.Col>
-        <Grid.Col span={3}>
+        <Grid.Col span={4}>
           {metricCard('Lines / Commit', lines_per_commit, 'lines_per_commit')}
         </Grid.Col>
-        <Grid.Col span={3}>
+        <Grid.Col span={4}>
+          {metricCard('Bugs / PR', bugs_per_pr, 'bugs_per_pr')}
+        </Grid.Col>
+        <Grid.Col span={4}>
+          {metricCard(
+            'Code Smells / PR',
+            code_smells_per_pr,
+            'code_smells_per_pr'
+          )}
+        </Grid.Col>
+        <Grid.Col span={4}>
+          {metricCard('Lines / PR', lines_per_pr, 'lines_per_pr')}
+        </Grid.Col>
+        <Grid.Col span={4}>
           {metricCard(
             'Lines / Story Point',
             lines_per_story_point,
             'lines_per_story_point'
           )}
         </Grid.Col>
-        <Grid.Col span={12}>
+        <Grid.Col span={8}>
           <Card padding="lg" shadow="sm" radius="md">
             <Title order={5}>
               Quality Gate
@@ -345,7 +401,11 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
                 size={16}
                 onMouseEnter={() => handleMouseEnterMetric('alert_status')}
                 onMouseLeave={handleMouseLeaveMetric}
-                style={{ cursor: 'pointer', marginLeft: '4px', color: 'gray' }}
+                style={{
+                  cursor: 'pointer',
+                  marginLeft: '4px',
+                  color: 'gray',
+                }}
               />
             </Title>
             <Text
@@ -368,30 +428,63 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
         </Grid.Col>
         {aiInsights?.text && (
           <Grid.Col span={12}>
-            <Card padding="lg" shadow="sm" radius="md">
-              <Title order={5}>
-                AI Insights
-                <IconHelpCircle
-                  size={16}
-                  onMouseEnter={() => handleMouseEnterMetric('AI Insights')}
-                  onMouseLeave={handleMouseLeaveMetric}
-                  style={{
-                    cursor: 'pointer',
-                    marginLeft: '4px',
-                    color: 'gray',
-                  }}
-                />
-              </Title>
-              <Spoiler maxHeight={120} showLabel="Show more" hideLabel="Hide">
-                {formatTextWithSections(aiInsights.text)}
-                <Text size="xs" mt="xs" ta={'right'} c="dimmed">
-                  Generated On{' '}
-                  {aiInsights.date
-                    ? new Date(aiInsights.date).toLocaleString()
-                    : 'N/A'}
-                </Text>
-              </Spoiler>
-            </Card>
+            {renderTutorialPopover ? (
+              <TutorialPopover stage={17} position="top" offset={-5}>
+                <Card padding="lg" shadow="sm" radius="md">
+                  <Title order={5}>
+                    AI Insights
+                    <IconHelpCircle
+                      size={16}
+                      onMouseEnter={() => handleMouseEnterMetric('AI Insights')}
+                      onMouseLeave={handleMouseLeaveMetric}
+                      style={{
+                        cursor: 'pointer',
+                        marginLeft: '4px',
+                        color: 'gray',
+                      }}
+                    />
+                  </Title>
+                  <Spoiler
+                    maxHeight={120}
+                    showLabel="Show more"
+                    hideLabel="Hide"
+                  >
+                    {formatTextWithSections(aiInsights.text)}
+                    <Text size="xs" mt="xs" ta={'right'} c="dimmed">
+                      Generated On{' '}
+                      {aiInsights.date
+                        ? new Date(aiInsights.date).toLocaleString()
+                        : 'N/A'}
+                    </Text>
+                  </Spoiler>
+                </Card>
+              </TutorialPopover>
+            ) : (
+              <Card padding="lg" shadow="sm" radius="md">
+                <Title order={5}>
+                  AI Insights
+                  <IconHelpCircle
+                    size={16}
+                    onMouseEnter={() => handleMouseEnterMetric('AI Insights')}
+                    onMouseLeave={handleMouseLeaveMetric}
+                    style={{
+                      cursor: 'pointer',
+                      marginLeft: '4px',
+                      color: 'gray',
+                    }}
+                  />
+                </Title>
+                <Spoiler maxHeight={120} showLabel="Show more" hideLabel="Hide">
+                  {formatTextWithSections(aiInsights.text)}
+                  <Text size="xs" mt="xs" ta={'right'} c="dimmed">
+                    Generated On{' '}
+                    {aiInsights.date
+                      ? new Date(aiInsights.date).toLocaleString()
+                      : 'N/A'}
+                  </Text>
+                </Spoiler>
+              </Card>
+            )}
           </Grid.Col>
         )}
       </Grid>
