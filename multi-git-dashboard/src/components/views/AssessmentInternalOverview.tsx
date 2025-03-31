@@ -523,6 +523,7 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
               assessmentReleaseNumber={assessment.releaseNumber}
               questions={questions}
               userIdToNameMap={userIdToNameMap}
+              assessmentGranularity={assessment.granularity}
             />
           ))
         )}
