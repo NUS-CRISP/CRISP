@@ -15,6 +15,7 @@ import { useState } from 'react';
 import AssessmentCard from '../cards/AssessmentCard';
 import CreateAssessmentForm from '../forms/CreateAssessmentForm';
 import InternalAssessmentCard from '../cards/InternalAssessmentCard';
+import TutorialPopover from '../tutorial/TutorialPopover';
 
 interface AssessmentInfoProps {
   courseId: string;
@@ -124,17 +125,23 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
 
         {/* Tab Panel for Internal Assessments */}
         <Tabs.Panel value="internalAssessments" pt="xs">
-          {internalAssessmentCards.length > 0 ? (
-            <div
-              style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
-            >
-              {internalAssessmentCards}
-            </div>
-          ) : (
-            <Center>
-              <Text>No Internal Assessments</Text>
-            </Center>
-          )}
+          <TutorialPopover stage={24} position="bottom">
+            {internalAssessmentCards.length > 0 ? (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '12px',
+                }}
+              >
+                {internalAssessmentCards}
+              </div>
+            ) : (
+              <Center>
+                <Text>No Internal Assessments</Text>
+              </Center>
+            )}
+          </TutorialPopover>
         </Tabs.Panel>
       </Tabs>
     </Container>

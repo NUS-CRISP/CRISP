@@ -14,6 +14,7 @@ import {
 } from 'recharts';
 import styles from '../../styles/CodeAnalysisTimeline.module.css';
 import { IconHelpCircle } from '@tabler/icons-react';
+import TutorialPopover from '../tutorial/TutorialPopover';
 
 interface CodeAnalysisTimelineProps {
   codeData: {
@@ -25,6 +26,8 @@ interface CodeAnalysisTimelineProps {
       metricStats: Map<string, { median: number; mean: number }>;
     };
   };
+
+  renderTutorialPopover?: boolean;
 }
 
 const CustomToolTip: React.FC<TooltipProps<number, string>> = ({
@@ -73,6 +76,7 @@ const CustomToolTip: React.FC<TooltipProps<number, string>> = ({
 
 const CodeAnalysisTimeline: React.FC<CodeAnalysisTimelineProps> = ({
   codeData,
+  renderTutorialPopover = false,
 }) => {
   const domains = [
     'Complexity',
@@ -230,7 +234,13 @@ const CodeAnalysisTimeline: React.FC<CodeAnalysisTimelineProps> = ({
 
   return (
     <div>
-      <label htmlFor="domain-select">Select Domain:</label>
+      {renderTutorialPopover ? (
+        <TutorialPopover stage={20} position="right" offset={150}>
+          <label htmlFor="domain-select">Select Domain:</label>
+        </TutorialPopover>
+      ) : (
+        <label htmlFor="domain-select">Select Domain:</label>
+      )}
       <select
         id="domain-select"
         onChange={e => setDomain(e.target.value)}
@@ -243,31 +253,61 @@ const CodeAnalysisTimeline: React.FC<CodeAnalysisTimelineProps> = ({
         ))}
       </select>
 
-      <ResponsiveContainer width="100%" height={400}>
-        <LineChart data={domainData}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis
-            dataKey="executionDate"
-            ticks={xTicks}
-            tickFormatter={date => new Date(date).toLocaleDateString()}
-          />
-          <YAxis />
-          <Tooltip content={<CustomToolTip />} />
-          <Legend content={<CustomLegend />} />
-          {Object.keys(domainData[0] || {})
-            .filter(key => key !== 'executionDate')
-            .map(metric => (
-              <Line
-                key={metric}
-                type="monotone"
-                dataKey={`${metric}.value`}
-                name={metric}
-                stroke={`#${Math.floor(Math.random() * 16777215).toString(16)}`}
-                strokeWidth={1.5}
+      {renderTutorialPopover ? (
+        <TutorialPopover stage={19} position="left">
+          <ResponsiveContainer width="100%" height={400}>
+            <LineChart data={domainData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis
+                dataKey="executionDate"
+                ticks={xTicks}
+                tickFormatter={date => new Date(date).toLocaleDateString()}
               />
-            ))}
-        </LineChart>
-      </ResponsiveContainer>
+              <YAxis />
+              <Tooltip content={<CustomToolTip />} />
+              <Legend content={<CustomLegend />} />
+              {Object.keys(domainData[0] || {})
+                .filter(key => key !== 'executionDate')
+                .map(metric => (
+                  <Line
+                    key={metric}
+                    type="monotone"
+                    dataKey={`${metric}.value`}
+                    name={metric}
+                    stroke={`#${Math.floor(Math.random() * 16777215).toString(16)}`}
+                    strokeWidth={1.5}
+                  />
+                ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </TutorialPopover>
+      ) : (
+        <ResponsiveContainer width="100%" height={400}>
+          <LineChart data={domainData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis
+              dataKey="executionDate"
+              ticks={xTicks}
+              tickFormatter={date => new Date(date).toLocaleDateString()}
+            />
+            <YAxis />
+            <Tooltip content={<CustomToolTip />} />
+            <Legend content={<CustomLegend />} />
+            {Object.keys(domainData[0] || {})
+              .filter(key => key !== 'executionDate')
+              .map(metric => (
+                <Line
+                  key={metric}
+                  type="monotone"
+                  dataKey={`${metric}.value`}
+                  name={metric}
+                  stroke={`#${Math.floor(Math.random() * 16777215).toString(16)}`}
+                  strokeWidth={1.5}
+                />
+              ))}
+          </LineChart>
+        </ResponsiveContainer>
+      )}
 
       {hoveredMetric && metricExplanations[hoveredMetric] && (
         <div className={styles['hovered-metric-explanation']}>
