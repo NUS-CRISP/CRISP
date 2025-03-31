@@ -159,15 +159,12 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
       ? '-'
       : latestData.values[lines_per_commit_index];
 
-      const bugs_per_pr_index = latestData.metrics.indexOf('bugs_per_pr');
+  const bugs_per_pr_index = latestData.metrics.indexOf('bugs_per_pr');
   const bugs_per_pr =
-    bugs_per_pr_index === -1
-      ? '-'
-      : latestData.values[bugs_per_pr_index];
+    bugs_per_pr_index === -1 ? '-' : latestData.values[bugs_per_pr_index];
 
-  const code_smells_per_pr_index = latestData.metrics.indexOf(
-    'code_smells_per_pr'
-  );
+  const code_smells_per_pr_index =
+    latestData.metrics.indexOf('code_smells_per_pr');
   const code_smells_per_pr =
     code_smells_per_pr_index === -1
       ? '-'
@@ -175,9 +172,7 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
 
   const lines_per_pr_index = latestData.metrics.indexOf('lines_per_pr');
   const lines_per_pr =
-    lines_per_pr_index === -1
-      ? '-'
-      : latestData.values[lines_per_pr_index];
+    lines_per_pr_index === -1 ? '-' : latestData.values[lines_per_pr_index];
 
   const lines_per_story_point_index = latestData.metrics.indexOf(
     'lines_per_story_point'
