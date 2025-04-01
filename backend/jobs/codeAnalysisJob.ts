@@ -229,7 +229,7 @@ const getLatestCommit = async (
       await execShellCommand(`git clone ${cloneUrl} ${repoPath}`);
     } else {
       console.log(`Pulling repository ${repo.name}`);
-      await execShellCommand(`git -C ${repoPath} --hard`); // reset any changes
+      await execShellCommand(`git -C ${repoPath} reset --hard`); // reset any changes
       await execShellCommand(`git -C ${repoPath} pull ${cloneUrl}`);
     }
 
