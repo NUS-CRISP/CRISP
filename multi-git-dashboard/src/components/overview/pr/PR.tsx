@@ -175,21 +175,21 @@ function filterAndRenameTop6(graphData: PRGraphData): PRGraphData {
     renameMap[node.id] = `Student ${i + 1}`;
   });
 
-  // const renamedNodes = top6.map(node => ({
-  //   id: renameMap[node.id],
-  // }));
+  const renamedNodes = top6.map(node => ({
+    id: renameMap[node.id],
+  }));
 
-  // const renamedEdges = filteredEdges.map(edge => ({
-  //   ...edge,
-  //   source: renameMap[edge.source],
-  //   target: renameMap[edge.target],
-  // }));
+  const renamedEdges = filteredEdges.map(edge => ({
+    ...edge,
+    source: renameMap[edge.source],
+    target: renameMap[edge.target],
+  }));
 
   return {
     // sortedNodes,
     // filteredEdges
-    nodes: sortedNodes, // renamedNodes, for anoynmized version
-    edges: filteredEdges, // renamedEdges, for anoynmized version
+    nodes: renamedNodes, // renamedNodes, for anoynmized version
+    edges: renamedEdges, // renamedEdges, for anoynmized version
   };
 }
 

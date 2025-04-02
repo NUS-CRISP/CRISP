@@ -31,9 +31,12 @@ interface Centroid {
   col: number;
   weight: number;
 }
+
 interface StudentSubgroup {
   students: Set<number>;
   cells: DataPoint[];
+  totalWeight: number; // Added for subgroup evaluation
+  significance: number; // Significance score (totalWeight / number of students)
 }
 
 const calculateDistance = (point1: DataPoint, point2: DataPoint): number => {
@@ -90,12 +93,18 @@ const calculateCentroids = (
   return centroids;
 };
 
-// Find optimal k using the elbow method
-const findOptimalKElbow = (data: DataPoint[], maxK = 6): number => {
+// Find optimal k using the elbow method, but strictly limit to maxClusters
+const findOptimalKElbow = (
+  data: DataPoint[],
+  maxK = 8,
+  maxClusters = 3
+): number => {
   if (data.length < 3) return 1;
 
+  // Strict enforcement: Never return more than maxClusters
+  maxK = Math.min(maxK, data.length - 1, maxClusters);
+
   const wcssValues: number[] = [];
-  maxK = Math.min(maxK, data.length - 1);
 
   for (let k = 1; k <= maxK; k++) {
     const clusters = kMeansClustering(data, k);
@@ -104,7 +113,7 @@ const findOptimalKElbow = (data: DataPoint[], maxK = 6): number => {
     wcssValues.push(wcss);
   }
 
-  // Find the "elbow point" - where adding more clusters gives diminishing returns
+  // Find the "elbow point"
   let maxCurvature = 0;
   let optimalK = 1;
 
@@ -120,7 +129,17 @@ const findOptimalKElbow = (data: DataPoint[], maxK = 6): number => {
     }
   }
 
-  return optimalK;
+  // Force a minimum of at least 2 clusters if data points warrant it
+  if (optimalK === 1 && data.length >= 4) {
+    // Check if there are meaningful patterns to detect
+    const density = data.length / (maxK * 2);
+    if (density >= 1) {
+      optimalK = Math.min(Math.ceil(data.length / 4), maxClusters);
+    }
+  }
+
+  // Final check to ensure we never exceed maxClusters
+  return Math.min(optimalK, maxClusters);
 };
 
 // k-means clustering
@@ -199,12 +218,14 @@ const kMeansClustering = (
   return clusters;
 };
 
-// identify student subgroups from cell clusters
+// Identify student subgroups from cell clusters, strictly limited to MAX_SUBGROUPS
 const identifyStudentSubgroups = (
   cells: DataPoint[],
   clusters: number[],
-  numClusters: number
+  numClusters: number,
+  MAX_SUBGROUPS: number = 3
 ): StudentSubgroup[] => {
+  // Group cells by their assigned cluster
   const cellsByCluster: DataPoint[][] = Array.from(
     { length: numClusters },
     () => []
@@ -217,35 +238,94 @@ const identifyStudentSubgroups = (
   });
 
   // For each cluster, identify the distinct students involved
-  const subgroups: StudentSubgroup[] = cellsByCluster.map(clusterCells => {
+  let subgroups: StudentSubgroup[] = cellsByCluster.map(clusterCells => {
     const students = new Set<number>();
+    let totalWeight = 0;
 
     clusterCells.forEach(cell => {
       students.add(cell.row); // reviewer
       students.add(cell.col); // author
+      totalWeight += cell.weight;
     });
 
     return {
       students,
       cells: clusterCells,
+      totalWeight,
+      significance: totalWeight / students.size,
     };
   });
 
-  return subgroups.filter(
+  // Filter to keep only reasonable sized groups (2-5 students)
+  subgroups = subgroups.filter(
     subgroup => subgroup.students.size >= 2 && subgroup.students.size <= 5
   );
-};
 
-const cellBelongsToSubgroup = (
-  cell: DataPoint,
-  subgroup: StudentSubgroup
-): boolean => {
-  return subgroup.students.has(cell.row) && subgroup.students.has(cell.col);
+  // Add an additional analysis to catch pairs with significant interaction
+  const allPairs = new Map<
+    string,
+    { weight: number; cells: DataPoint[]; students: Set<number> }
+  >();
+
+  cells.forEach(cell => {
+    // Only consider cases where the interaction is between different students
+    if (cell.row !== cell.col) {
+      const pairKey = [
+        Math.min(cell.row, cell.col),
+        Math.max(cell.row, cell.col),
+      ].join('-');
+
+      if (!allPairs.has(pairKey)) {
+        allPairs.set(pairKey, {
+          weight: 0,
+          cells: [],
+          students: new Set([cell.row, cell.col]),
+        });
+      }
+
+      const pair = allPairs.get(pairKey)!;
+      pair.weight += cell.weight;
+      pair.cells.push(cell);
+    }
+  });
+
+  // Find pairs with significant interaction weight
+  // Convert to array and sort by weight
+  const significantPairs = Array.from(allPairs.values())
+    .filter(pair => pair.weight >= 3) // Threshold for significant interaction
+    .sort((a, b) => b.weight - a.weight);
+
+  // Add these significant pairs to subgroups if they're not already captured
+  significantPairs.forEach(pair => {
+    // Check if this pair is already covered in an existing subgroup
+    const alreadyCovered = subgroups.some(subgroup => {
+      // Check if all students in the pair are in this subgroup
+      return Array.from(pair.students).every(student =>
+        subgroup.students.has(student)
+      );
+    });
+
+    if (!alreadyCovered) {
+      subgroups.push({
+        students: pair.students,
+        cells: pair.cells,
+        totalWeight: pair.weight,
+        significance: pair.weight / pair.students.size,
+      });
+    }
+  });
+
+  // STRICT ENFORCEMENT: Sort by significance and only keep top MAX_SUBGROUPS
+  subgroups.sort((a, b) => b.significance - a.significance);
+
+  // Strictly limit to MAX_SUBGROUPS
+  return subgroups.slice(0, MAX_SUBGROUPS);
 };
 
 const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
+  const MAX_SUBGROUPS = 3; // Maximum number of subgroups to display
 
   useEffect(() => {
     if (!graphData.nodes.length) return;
@@ -309,7 +389,7 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
       .attr('text-anchor', 'middle')
       .attr('font-size', '16px')
       .attr('font-weight', 'bold')
-      .text('Heatmap with K-means Clustering');
+      .text('Heatmap with K-means Clustering (Max 3 Subgroups)');
 
     const svg = rootSvg
       .append('g')
@@ -385,31 +465,41 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
       .enter()
       .append('rect')
       .attr('class', 'cell')
-      .attr('x', d => xScale(String(d.row))!) // Use row (reviewer) for x-axis
-      .attr('y', d => yScale(String(d.col))!) // Use col (author) for y-axis
+      .attr('x', d => xScale(String(d.col))!)
+      .attr('y', d => yScale(String(d.row))!)
       .attr('width', xScale.bandwidth())
       .attr('height', yScale.bandwidth())
       .attr('fill', d => (d.weight > 0 ? colorScale(d.weight) : '#eee'))
       .attr('stroke', '#fff')
       .on('mouseover', (event, d) => {
+        // Calculate position relative to the heatmap
+        const rectX = parseFloat(d3.select(event.currentTarget).attr('x'));
+        const rectY = parseFloat(d3.select(event.currentTarget).attr('y'));
+        const rectWidth = parseFloat(
+          d3.select(event.currentTarget).attr('width')
+        );
+
+        // Position tooltip near the cell
+        const tooltipX = margin.left + rectX + rectWidth + 5;
+        const tooltipY = margin.top + rectY + 10;
+
         tooltip
           .style('opacity', 1)
           .html(
             `<strong>${topUsers[d.row]} → ${topUsers[d.col]}</strong><br/>Weight: ${d.weight}`
           )
-          .style('left', `${event.offsetX + 10}px`)
-          .style('top', `${event.offsetY + 10}px`);
+          .style('left', `${tooltipX}px`)
+          .style('top', `${tooltipY}px`);
       })
       .on('mousemove', event => {
-        tooltip
-          .style('left', `${event.offsetX + 10}px`)
-          .style('top', `${event.offsetY + 10}px`);
+        // Keep tooltip fixed relative to cell rather than following mouse
+        // This prevents the tooltip from moving far to the right
       })
       .on('mouseout', () => {
         tooltip.style('opacity', 0);
       });
 
-    // X-axis labels (Reviewer)
+    // X-axis labels (Author)
     svg
       .selectAll('.colLabel')
       .data(topUsers)
@@ -427,7 +517,7 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
       })
       .text(d => d);
 
-    // Y-axis labels (PR Author)
+    // Y-axis labels (Reviewer)
     svg
       .selectAll('.rowLabel')
       .data(topUsers)
@@ -443,7 +533,7 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
       .append('text')
       .attr('transform', `translate(${width / 2}, ${height + 140})`)
       .style('text-anchor', 'middle')
-      .text('PR Reviewer');
+      .text('PR Author');
 
     svg
       .append('text')
@@ -451,89 +541,74 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
       .attr('y', -150)
       .attr('x', -height / 2)
       .style('text-anchor', 'middle')
-      .text('PR Author');
+      .text('PR Reviewer');
 
     if (cells.length >= 3) {
-      const numClusters = findOptimalKElbow(cells);
+      // First identify subgroups using k-means clustering with a strict limit of MAX_SUBGROUPS
+      const numClusters = findOptimalKElbow(cells, 8, MAX_SUBGROUPS);
       const clusters = kMeansClustering(cells, numClusters);
 
+      // This function is now strictly limited to MAX_SUBGROUPS
       const studentSubgroups = identifyStudentSubgroups(
         cells,
         clusters,
-        numClusters
+        numClusters,
+        MAX_SUBGROUPS
       );
 
+      // We can use only 3 colors since we're limited to 3 subgroups
       const subgroupColors = d3
-        .scaleOrdinal(['red', 'orange', ...d3.schemeCategory10.slice(2)])
-        .domain(studentSubgroups.map((_, i) => String(i)));
+        .scaleOrdinal(['red', 'orange', 'green'])
+        .domain(['0', '1', '2']);
 
+      // Draw cluster boundaries as squares for each subgroup
       studentSubgroups.forEach((subgroup, subgroupIndex) => {
         if (subgroup.cells.length < 2) return;
 
         const color = subgroupColors(String(subgroupIndex));
+        const students = Array.from(subgroup.students).sort((a, b) => a - b);
 
+        // First, highlight all cells that belong to this subgroup
         svg
           .selectAll('rect.cell')
-          .filter((d: unknown) =>
-            cellBelongsToSubgroup(d as DataPoint, subgroup)
-          )
+          .filter((d: any) => {
+            return subgroup.students.has(d.row) && subgroup.students.has(d.col);
+          })
           .attr('stroke', color)
-          .attr('stroke-width', 2);
+          .attr('stroke-width', 4);
 
-        const students = Array.from(subgroup.students);
+        // Create a label for the group
+        const studentsLabel = students.map(idx => topUsers[idx]).join(', ');
 
-        const hullPoints: [number, number][] = [];
+        // Find the min and max indices for the square boundary
+        const minIndex = Math.min(...students);
+        const maxIndex = Math.max(...students);
 
-        students.forEach(student => {
-          const x = (xScale(String(student)) || 0) + xScale.bandwidth() / 2;
-          const yTop = height + 50;
-          hullPoints.push([x, yTop]);
+        // Calculate the positions for the square
+        const squareStartX = xScale(String(minIndex)) || 0;
+        const squareStartY = yScale(String(maxIndex)) || 0; // Remember, y-scale is inverted
+        const squareWidth =
+          (xScale(String(maxIndex)) || 0) + xScale.bandwidth() - squareStartX;
+        const squareHeight =
+          (yScale(String(minIndex)) || 0) + yScale.bandwidth() - squareStartY;
 
-          const y = (yScale(String(student)) || 0) + yScale.bandwidth() / 2;
-          const xLeft = -50;
-
-          hullPoints.push([xLeft, y]);
-        });
-
-        const studentsLabel = Array.from(subgroup.students)
-          .map(idx => topUsers[idx])
-          .sort()
-          .join(', ');
-
-        const cellPositions = subgroup.cells.map(cell => ({
-          x: (xScale(String(cell.row)) || 0) + xScale.bandwidth() / 2,
-          y: (yScale(String(cell.col)) || 0) + yScale.bandwidth() / 2,
-        }));
-
-        const centerX = d3.mean(cellPositions, d => d.x) || 0;
-        const centerY = d3.mean(cellPositions, d => d.y) || 0;
-
-        const maxDistanceX = Math.max(
-          ...cellPositions.map(pos => Math.abs(pos.x - centerX))
-        );
-        const maxDistanceY = Math.max(
-          ...cellPositions.map(pos => Math.abs(pos.y - centerY))
-        );
-
-        const rxPadding = xScale.bandwidth() * 0.6;
-        const ryPadding = yScale.bandwidth() * 0.6;
-
+        // Draw the square boundary (as a rectangle)
         svg
-          .append('ellipse')
-          .attr('cx', centerX)
-          .attr('cy', centerY)
-          .attr('rx', maxDistanceX + rxPadding)
-          .attr('ry', maxDistanceY + ryPadding)
+          .append('rect')
+          .attr('x', squareStartX)
+          .attr('y', squareStartY)
+          .attr('width', squareWidth)
+          .attr('height', squareHeight)
           .attr('fill', 'none')
           .attr('stroke', color)
           .attr('stroke-dasharray', '5,5')
-          .attr('stroke-width', 2);
+          .attr('stroke-width', 3);
 
-        // group label
+        // Add group label above the square
         svg
           .append('text')
-          .attr('x', centerX)
-          .attr('y', centerY - maxDistanceY - ryPadding - 10)
+          .attr('x', squareStartX + squareWidth / 2)
+          .attr('y', squareStartY - 10)
           .attr('text-anchor', 'middle')
           .attr('font-size', '12px')
           .attr('font-weight', 'bold')
