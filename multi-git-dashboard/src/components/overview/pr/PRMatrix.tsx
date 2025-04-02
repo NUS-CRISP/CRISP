@@ -571,8 +571,15 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
         // First, highlight all cells that belong to this subgroup
         svg
           .selectAll('rect.cell')
-          .filter(function (this: any, d: any) {
-            return subgroup.students.has(d.row) && subgroup.students.has(d.col);
+          .filter((d) => {
+            // safe type checking before accessing properties
+            const dataPoint = d as { row: number; col: number };
+            return (
+              typeof dataPoint.row === 'number' &&
+              typeof dataPoint.col === 'number' &&
+              subgroup.students.has(dataPoint.row) &&
+              subgroup.students.has(dataPoint.col)
+            );
           })
           .attr('stroke', color)
           .attr('stroke-width', 4);
