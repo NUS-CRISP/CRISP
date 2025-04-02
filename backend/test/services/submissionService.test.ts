@@ -794,42 +794,6 @@ describe('submissionService', () => {
       );
     });
 
-    it('should throw BadRequestError if Team Member Selection Answer selects multiple users in individual granularity', async () => {
-      // Step 1: Modify assessment granularity to 'individual'
-      assessment.granularity = 'individual';
-      await assessment.save();
-
-      // Step 2: Build a valid set of answers
-      const validAnswers = buildAllAnswers(assessment, student._id.toString());
-
-      // Step 3: Find the Team Member Selection Answer and modify selectedUserIds to have multiple IDs
-      const tmsAnswer = validAnswers.find(
-        ans => ans.type === 'Team Member Selection Answer'
-      ) as TeamMemberSelectionAnswer;
-      expect(tmsAnswer).toBeDefined();
-
-      // Assuming you have another student user
-      const anotherStudent = await UserModel.create({
-        name: 'Another Student',
-        email: 'another@student.edu',
-        // ... other required fields
-      });
-
-      tmsAnswer.selectedUserIds.push(anotherStudent._id.toString());
-
-      // Step 4: Attempt to create the submission and expect a BadRequestError
-      await expect(
-        createSubmission(
-          assessment._id.toString(),
-          ta._id.toString(),
-          validAnswers,
-          false
-        )
-      ).rejects.toThrow(
-        `Only one team member can be selected for question ${tmsAnswer.question}`
-      );
-    });
-
     it('should throw BadRequestError if Multiple Choice Answer selects an invalid option', async () => {
       // Step 1: Build a valid set of answers
       const validAnswers = buildAllAnswers(assessment, student._id.toString());

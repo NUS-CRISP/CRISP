@@ -240,17 +240,6 @@ async function validateAnswers(
         break;
 
       case 'Team Member Selection':
-        if (isTeamMemberSelectionAnswer(answer)) {
-          if (
-            assessment.granularity === 'individual' &&
-            answer.selectedUserIds.length > 1
-          ) {
-            throw new BadRequestError(
-              `Only one team member can be selected for question ${questionId}`
-            );
-          }
-        } // Else block not needed, guard statement is mostly just for type verification.
-        // Q and A match already determined by guard before switch block.
         break;
 
       case 'Multiple Choice':
