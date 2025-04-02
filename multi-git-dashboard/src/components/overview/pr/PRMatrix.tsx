@@ -491,7 +491,7 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
           .style('left', `${tooltipX}px`)
           .style('top', `${tooltipY}px`);
       })
-      .on('mousemove', event => {
+      .on('mousemove', () => {
         // Keep tooltip fixed relative to cell rather than following mouse
         // This prevents the tooltip from moving far to the right
       })
@@ -571,7 +571,7 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
         // First, highlight all cells that belong to this subgroup
         svg
           .selectAll('rect.cell')
-          .filter((d: any) => {
+          .filter(function (this: any, d: any) {
             return subgroup.students.has(d.row) && subgroup.students.has(d.col);
           })
           .attr('stroke', color)
