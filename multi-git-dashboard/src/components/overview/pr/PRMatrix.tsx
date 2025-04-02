@@ -571,7 +571,7 @@ const PRMatrix: React.FC<PRGraphProps> = ({ graphData }) => {
         // First, highlight all cells that belong to this subgroup
         svg
           .selectAll('rect.cell')
-          .filter((d) => {
+          .filter(d => {
             // safe type checking before accessing properties
             const dataPoint = d as { row: number; col: number };
             return (
