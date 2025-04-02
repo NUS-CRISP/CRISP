@@ -13,10 +13,12 @@ import {
 import { JiraBoard, JiraIssue, JiraSprint } from '@shared/types/JiraData';
 import { User } from '@shared/types/User';
 import { useState } from 'react';
+import TutorialPopover from '../tutorial/TutorialPopover';
 
 interface ProjectManagementJiraCardProps {
   TA: User | null;
   jiraBoard: JiraBoard | null;
+  renderTutorialPopover?: boolean;
 }
 
 interface SprintSummary {
@@ -43,6 +45,7 @@ enum VelocityChartType {
 const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
   TA,
   jiraBoard,
+  renderTutorialPopover = false,
 }) => {
   const [embla, setEmbla] = useState<Embla | null>(null);
 
@@ -439,7 +442,7 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
     );
   };
 
-  return (
+  const jiraCard = (
     <Stack>
       <Group style={{ alignItems: 'center' }}>
         <Text>Teaching Assistant:</Text>
@@ -493,6 +496,18 @@ const ProjectManagementJiraCard: React.FC<ProjectManagementJiraCardProps> = ({
         </div>
       )}
     </Stack>
+  );
+
+  return (
+    <div>
+      {renderTutorialPopover ? (
+        <TutorialPopover stage={22} position="left">
+          {jiraCard}
+        </TutorialPopover>
+      ) : (
+        jiraCard
+      )}
+    </div>
   );
 };
 

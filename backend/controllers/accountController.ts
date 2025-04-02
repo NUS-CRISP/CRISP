@@ -198,6 +198,10 @@ export const changeTelegramNotificationSettings = async (
 // Because the trial user's ID in prod and dev was lost.
 export const retrieveTrialAccounts = async (req: Request, res: Response) => {
   try {
+    res.setHeader(
+      'Cache-Control',
+      'no-store, no-cache, must-revalidate, proxy-revalidate'
+    );
     const accounts = await getAllTrialAccounts();
     res.status(200).send(accounts);
   } catch (error) {

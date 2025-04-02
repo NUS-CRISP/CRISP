@@ -168,13 +168,22 @@ const CodeAnalysis: React.FC<CodeAnalysisProps> = ({ courseId }) => {
           closeModal={close}
         />
       </Modal>
-      <Accordion multiple variant="separated" mx={20}>
-        {Object.keys(data).map(teamNumber => (
+      <Accordion
+        key={Object.keys(data).join(',')}
+        multiple
+        variant="separated"
+        mx={20}
+        defaultValue={
+          Object.keys(data).length > 0 ? [Object.keys(data)[0].toString()] : []
+        }
+      >
+        {Object.keys(data).map((teamNumber, index) => (
           <CodeAnalysisAccordianItem
             key={teamNumber}
             codeData={data[Number(teamNumber)]}
             teamNumber={Number(teamNumber)}
             aiInsights={aiInsights.get(Number(teamNumber))}
+            renderTutorialPopover={index === 0}
           />
         ))}
       </Accordion>

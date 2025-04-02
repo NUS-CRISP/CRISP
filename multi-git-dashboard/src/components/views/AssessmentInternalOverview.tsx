@@ -33,6 +33,7 @@ interface AssessmentInternalOverviewProps {
   initialAssignedTeams?: AssignedTeam[];
   initialAssignedUsers?: AssignedUser[];
   teachingStaff: User[];
+  onTakeAssessmentClicked: () => void;
 }
 
 const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
@@ -45,6 +46,7 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
   initialAssignedTeams = [],
   initialAssignedUsers = [],
   teachingStaff,
+  onTakeAssessmentClicked,
 }) => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [assignedTeams, setAssignedTeams] =
@@ -73,6 +75,11 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
 
   const router = useRouter();
   const deleteInternalAssessmentApiRoute = `/api/internal-assessments/${assessment?._id}`;
+
+  const hasDraftSubmissions = useMemo(
+    () => submissions.some(sub => sub.isDraft),
+    [submissions]
+  );
 
   const formatDate = (date: Date | string | undefined) => {
     if (!date) return 'N/A';
@@ -118,12 +125,7 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
         return;
       }
 
-      let data: Submission[] = await response.json();
-
-      // For faculty, filter out drafts
-      if (hasFacultyPermission) {
-        data = data.filter(submission => !submission.isDraft);
-      }
+      const data: Submission[] = await response.json();
 
       setSubmissions(data);
     } catch (error) {
@@ -372,8 +374,6 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
         );
         return;
       }
-      const data = await response.json();
-      console.log('TA assignments saved successfully:', data);
       toggleTeamAssignmentModal();
     } catch (error) {
       console.error('Error saving TA assignments:', error);
@@ -485,18 +485,17 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
             <strong>End Date:</strong> {formatDate(assessment?.endDate)}
           </Text>
         </Group>
-        {assessment?.isReleased && (
+        {assessment && assessment.isReleased && (
           <Group justify="center" mt="md">
             {assignedEntitiesAvailable ? (
-              <Button
-                onClick={() =>
-                  router.push(
-                    `/courses/${courseId}/internal-assessments/${assessment?._id}/take`
-                  )
-                }
-              >
+              <Button onClick={() => onTakeAssessmentClicked()}>
                 Submit Assessment
               </Button>
+            ) : hasDraftSubmissions ? (
+              <Text c="dimmed">
+                Pending submission drafts only; no remaining teams or users
+                await new submissions.
+              </Text>
             ) : (
               <Text c="dimmed">All assigned teams/users have been graded</Text>
             )}
@@ -524,6 +523,7 @@ const AssessmentInternalOverview: React.FC<AssessmentInternalOverviewProps> = ({
               assessmentReleaseNumber={assessment.releaseNumber}
               questions={questions}
               userIdToNameMap={userIdToNameMap}
+              assessmentGranularity={assessment.granularity}
             />
           ))
         )}

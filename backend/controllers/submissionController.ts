@@ -111,6 +111,10 @@ export const submitAssessment = async (req: Request, res: Response) => {
  */
 export const getUserSubmissions = async (req: Request, res: Response) => {
   try {
+    res.setHeader(
+      'Cache-Control',
+      'no-store, no-cache, must-revalidate, proxy-revalidate'
+    );
     const accountId = await getAccountId(req);
     const account = await AccountModel.findById(accountId);
     if (!account) {
@@ -166,6 +170,10 @@ export const getUserSubmissions = async (req: Request, res: Response) => {
  */
 export const getAllSubmissions = async (req: Request, res: Response) => {
   try {
+    res.setHeader(
+      'Cache-Control',
+      'no-store, no-cache, must-revalidate, proxy-revalidate'
+    );
     const accountId = await getAccountId(req);
     const account = await AccountModel.findById(accountId);
 
@@ -331,6 +339,10 @@ export const getSubmissionByIdController = async (
   res: Response
 ) => {
   try {
+    res.setHeader(
+      'Cache-Control',
+      'no-store, no-cache, must-revalidate, proxy-revalidate'
+    );
     const accountId = await getAccountId(req);
     const userId = await getUserIdByAccountId(accountId);
     const { submissionId } = req.params;

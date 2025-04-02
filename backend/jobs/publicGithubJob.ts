@@ -8,9 +8,19 @@ import { getGitHubApp } from 'utils/github';
 const fetchPublicRepoData = async () => {
   const courses = await CourseModel.find();
 
+  const currDate = new Date();
+
   await Promise.all(
     courses.map(async course => {
-      if (course && course.gitHubRepoLinks.length > 0) {
+      // Only scan courses that are currently running
+      const endDate = new Date(course.startDate);
+      endDate.setDate(endDate.getDate() + course.durationWeeks * 7);
+      if (
+        course &&
+        course.gitHubRepoLinks.length > 0 &&
+        currDate >= course.startDate &&
+        currDate <= endDate
+      ) {
         try {
           // Call getPublicCourseData to process the course and repo data
           await getPublicCourseData(course);

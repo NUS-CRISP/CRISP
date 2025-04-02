@@ -18,7 +18,7 @@ export const getAssessmentSheetData = async (
 
   const assessment =
     await AssessmentModel.findById(assessmentId).populate('sheetData');
-  if (!assessment || !assessment.sheetData) {
+  if (!assessment) {
     throw new NotFoundError('Assessment not found');
   }
 

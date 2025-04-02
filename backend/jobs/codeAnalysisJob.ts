@@ -10,6 +10,11 @@ import TeamDataModel from '@models/TeamData';
 import TeamModel from '@models/Team';
 import { Types } from 'mongoose';
 import { glob } from 'glob';
+import {
+  getRatingsMapping,
+  OVERVIEW_METRICS,
+  OVERVIEW_WEIGHTS,
+} from '../utils/overviewMetrics';
 
 const { exec } = require('child_process');
 
@@ -24,14 +29,25 @@ const fetchAndSaveCodeAnalysisData = async () => {
     installationId: { $in: installationIds },
   });
 
+  const currDate = new Date();
+
   await Promise.all(
     courses.map(async course => {
-      if (course && course.installationId) {
+      // Only scan courses that are currently running
+      const endDate = new Date(course.startDate);
+      endDate.setDate(endDate.getDate() + course.durationWeeks * 7);
+      if (
+        course &&
+        course.installationId &&
+        currDate >= course.startDate &&
+        currDate <= endDate
+      ) {
         const installationOctokit = await app.getInstallationOctokit(
           course.installationId
         );
         await getCourseCodeData(installationOctokit, course);
         await getMedianAndMeanCodeData(course);
+        await getOverviewRankings(course);
       }
     })
   );
@@ -213,7 +229,7 @@ const getLatestCommit = async (
       await execShellCommand(`git clone ${cloneUrl} ${repoPath}`);
     } else {
       console.log(`Pulling repository ${repo.name}`);
-      await execShellCommand(`git -C ${repoPath} --hard`); // reset any changes
+      await execShellCommand(`git -C ${repoPath} reset --hard`); // reset any changes
       await execShellCommand(`git -C ${repoPath} pull ${cloneUrl}`);
     }
 
@@ -578,6 +594,197 @@ const getMedianAndMeanCodeData = async (course: any) => {
       await data.save();
     })
   );
+};
+
+const getOverviewRankings = async (course: any) => {
+  // Get distinct teamIds for the course
+  const teamIds = await TeamDataModel.find({
+    course: course._id,
+  }).distinct('teamId');
+
+  console.log(
+    `Getting overview rankings for course: ${course.name}. Teams: ${teamIds.length}`
+  );
+
+  // Get the latest code analysis data for each team
+  const courseAnalysisDocs = await codeAnalysisDataModel.aggregate([
+    {
+      $match: {
+        teamId: { $in: teamIds },
+      },
+    },
+    {
+      $sort: {
+        teamIds: 1,
+        executionTime: -1,
+      },
+    },
+    {
+      $group: {
+        _id: '$teamId',
+        latestDoc: { $first: '$$ROOT' },
+      },
+    },
+    {
+      $replaceRoot: {
+        newRoot: '$latestDoc',
+      },
+    },
+  ]);
+
+  // Calculate weighted sum of metrics for each team
+  const overviewScores = getOverviewScores(courseAnalysisDocs);
+
+  // Filter off teams with missing metrics and get rankings
+  const scores = [...overviewScores.entries()]
+    .filter(([_, score]) => score >= 0)
+    .sort((a, b) => b[1] - a[1]);
+
+  for (let i = 0; i < scores.length; i++) {
+    const [_id, score] = scores[i];
+
+    const doc = await codeAnalysisDataModel.findById(_id);
+    if (!doc) continue;
+
+    if (doc.metrics.includes('overview_score')) {
+      const index = doc.metrics.indexOf('overview_score');
+      doc.values[index] = score.toString();
+    } else {
+      doc.metrics.push('overview_score');
+      doc.values.push(score.toString());
+      doc.types.push('FLOAT');
+      doc.domains.push('Overview');
+    }
+
+    if (doc.metrics.includes('overview_rank')) {
+      const index = doc.metrics.indexOf('overview_rank');
+      doc.values[index] = (i + 1).toString();
+    } else {
+      doc.metrics.push('overview_rank');
+      doc.values.push((i + 1).toString());
+      doc.types.push('INT');
+      doc.domains.push('Overview');
+    }
+
+    await doc.save();
+  }
+};
+
+interface OverviewMetrics {
+  complexity?: number;
+  duplicated_lines_density?: number;
+  coverage?: number;
+  security_rating?: number;
+  reliability_rating?: number;
+  sqale_rating?: number;
+  alert_status?: number;
+  bugs_per_commit?: number;
+  lines_per_commit?: number;
+  code_smells_per_commit?: number;
+  bugs_per_pr?: number;
+  lines_per_pr?: number;
+  code_smells_per_pr?: number;
+}
+
+const getOverviewScores = (courseAnalysisDocs: any) => {
+  const overviewMetricsMap = new Map<string, OverviewMetrics>();
+  const complexityScores: number[] = [];
+
+  for (const doc of courseAnalysisDocs) {
+    const _id = doc._id;
+    const teamMetrics: OverviewMetrics = {};
+
+    for (const metric of OVERVIEW_METRICS) {
+      const index = doc.metrics.indexOf(metric);
+      if (index === -1) continue;
+      if (metric === 'alert_status') {
+        teamMetrics[metric] = doc.values[index] === 'ERROR' ? 0 : 1;
+      } else {
+        teamMetrics[metric as keyof OverviewMetrics] = parseFloat(
+          doc.values[index]
+        );
+        if (metric === 'complexity') {
+          complexityScores.push(parseFloat(doc.values[index]));
+        }
+      }
+    }
+
+    overviewMetricsMap.set(_id, teamMetrics);
+  }
+
+  const minComplexity = Math.min(...complexityScores);
+  const maxComplexity = Math.max(...complexityScores);
+  const minMaxComplexityDiff = maxComplexity - minComplexity;
+
+  const overviewScores = new Map<string, number>();
+
+  for (const [_id, metrics] of overviewMetricsMap.entries()) {
+    // if any metric is missing, give negative score and skip
+    if (Object.keys(metrics).length !== 13) {
+      overviewScores.set(_id, -1);
+      continue;
+    }
+
+    // Calculate total weighted sum of metrics
+    let score = 0;
+    for (const [metric, value] of Object.entries(metrics)) {
+      switch (metric) {
+        case 'complexity':
+          score +=
+            OVERVIEW_WEIGHTS.COMPLEXITY *
+            (1 - (value - minComplexity) / minMaxComplexityDiff);
+          break;
+        case 'duplicated_lines_density':
+          score +=
+            OVERVIEW_WEIGHTS.DUPLICATED_LINES_DENSITY * (1 - value / 100);
+          break;
+        case 'coverage':
+          score += (OVERVIEW_WEIGHTS.COVERAGE * value) / 100;
+          break;
+        case 'security_rating':
+          score += OVERVIEW_WEIGHTS.SECURITY_RATING * getRatingsMapping(value);
+          break;
+        case 'reliability_rating':
+          score +=
+            OVERVIEW_WEIGHTS.RELIABILITY_RATING * getRatingsMapping(value);
+          break;
+        case 'sqale_rating':
+          score += OVERVIEW_WEIGHTS.SQALE_RATING * getRatingsMapping(value);
+          break;
+        case 'alert_status':
+          score += OVERVIEW_WEIGHTS.ALERT_STATUS * value;
+          break;
+        case 'bugs_per_commit':
+          score += OVERVIEW_WEIGHTS.BUGS_PER_COMMIT * (1 / (1 + value));
+          break;
+        case 'lines_per_commit':
+          score +=
+            OVERVIEW_WEIGHTS.LINES_PER_COMMIT *
+            (value > 50 ? Math.max(0, 1 - (value - 50) / 150) : 1.0);
+          break;
+        case 'code_smells_per_commit':
+          score +=
+            OVERVIEW_WEIGHTS.CODE_SMELLS_PER_COMMIT * (1 / (1 + 0.2 * value));
+          break;
+        case 'bugs_per_pr':
+          score += OVERVIEW_WEIGHTS.BUGS_PER_PR * (1 / (1 + value));
+          break;
+        case 'lines_per_pr':
+          score +=
+            OVERVIEW_WEIGHTS.LINES_PER_PR *
+            (value > 400 ? Math.max(0, 1 - (value - 400) / 600) : 1.0);
+          break;
+        case 'code_smells_per_pr':
+          score +=
+            OVERVIEW_WEIGHTS.CODE_SMELLS_PER_PR * (1 / (1 + 0.05 * value));
+          break;
+        default:
+      }
+    }
+    overviewScores.set(_id, score);
+  }
+
+  return overviewScores;
 };
 
 export const setupCodeAnalysisJob = () => {

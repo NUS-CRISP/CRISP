@@ -14,6 +14,7 @@ import {
 } from '@shared/types/AssessmentAssignmentSet';
 import { Team } from '@shared/types/Team';
 import { AssessmentResult } from '@shared/types/AssessmentResults';
+import TakeAssessmentInline from '@/components/views/TakeAssessmentInline';
 
 const InternalAssessmentDetail: React.FC = () => {
   const router = useRouter();
@@ -25,6 +26,7 @@ const InternalAssessmentDetail: React.FC = () => {
   const questionsApiRoute = `/api/internal-assessments/${assessmentId}/questions`;
   const teachingTeamApiRoute = `/api/courses/${id}/teachingteam`;
 
+  const [showTakeAssessment, setShowTakeAssessment] = useState(false);
   const [userIdToNameMap, setUserIdToNameMap] = useState<{
     [key: string]: string;
   }>({});
@@ -263,7 +265,7 @@ const InternalAssessmentDetail: React.FC = () => {
     permission,
   ]);
 
-  const addQuestion = (qNo: number) => {
+  const addQuestion = (qNo: number): Question => {
     const newQuestion: Question = {
       _id: `temp-${Date.now()}`,
       text: '',
@@ -274,6 +276,7 @@ const InternalAssessmentDetail: React.FC = () => {
       customInstruction: '',
     };
     setQuestions([...questions, newQuestion]);
+    return newQuestion;
   };
 
   const handleSaveQuestion = async (id: string, updatedQuestion: Question) => {
@@ -350,88 +353,100 @@ const InternalAssessmentDetail: React.FC = () => {
 
   return (
     <Container>
-      <Tabs value={activeTab}>
-        <Tabs.List>
-          <Tabs.Tab
-            value="Overview"
-            onClick={() => setActiveTabAndSave('Overview')}
-          >
-            Overview
-          </Tabs.Tab>
-
-          {permission && (
+      {showTakeAssessment ? (
+        <TakeAssessmentInline
+          courseId={id}
+          assessmentId={assessmentId}
+          onReturnToOverview={() => setShowTakeAssessment(false)}
+        />
+      ) : (
+        <Tabs value={activeTab}>
+          <Tabs.List>
             <Tabs.Tab
-              value="Questions"
-              onClick={() => setActiveTabAndSave('Questions')}
+              value="Overview"
+              onClick={() => setActiveTabAndSave('Overview')}
             >
-              Questions
+              Overview
             </Tabs.Tab>
-          )}
 
-          {permission && (
-            <Tabs.Tab
-              value="Internal Results"
-              onClick={() => setActiveTabAndSave('Internal Results')}
-            >
-              Results
-            </Tabs.Tab>
-          )}
-        </Tabs.List>
-
-        <Tabs.Panel value="Overview">
-          {id &&
-            assessment &&
-            ((assignedTeams && assignedTeams.length > 0) ||
-              (assignedUsers && assignedUsers.length > 0)) && (
-              <AssessmentInternalOverview
-                courseId={id}
-                assessment={assessment}
-                hasFacultyPermission={permission}
-                onUpdateAssessment={fetchAssessment}
-                questions={questions}
-                userIdToNameMap={userIdToNameMap}
-                teachingStaff={teachingTeam}
-                initialAssignedTeams={
-                  assessment.granularity === 'team' ? assignedTeams : undefined
-                }
-                initialAssignedUsers={
-                  assessment.granularity === 'individual'
-                    ? assignedUsers
-                    : undefined
-                }
-              />
+            {permission && (
+              <Tabs.Tab
+                value="Questions"
+                onClick={() => setActiveTabAndSave('Questions')}
+              >
+                Questions
+              </Tabs.Tab>
             )}
-        </Tabs.Panel>
 
-        {permission && (
-          <Tabs.Panel value="Questions">
-            <AssessmentInternalForm
-              assessment={assessment}
-              questions={questions}
-              addQuestion={addQuestion}
-              handleSaveQuestion={handleSaveQuestion}
-              handleDeleteQuestion={handleDeleteQuestion}
-              onAssessmentUpdated={fetchAssessment}
-            />
+            {permission && (
+              <Tabs.Tab
+                value="Internal Results"
+                onClick={() => setActiveTabAndSave('Internal Results')}
+              >
+                Results
+              </Tabs.Tab>
+            )}
+          </Tabs.List>
+
+          <Tabs.Panel value="Overview">
+            {id &&
+              assessment &&
+              ((assignedTeams && assignedTeams.length > 0) ||
+                (assignedUsers && assignedUsers.length > 0)) && (
+                <AssessmentInternalOverview
+                  courseId={id}
+                  assessment={assessment}
+                  hasFacultyPermission={permission}
+                  onUpdateAssessment={fetchAssessment}
+                  questions={questions}
+                  userIdToNameMap={userIdToNameMap}
+                  teachingStaff={teachingTeam}
+                  initialAssignedTeams={
+                    assessment.granularity === 'team'
+                      ? assignedTeams
+                      : undefined
+                  }
+                  initialAssignedUsers={
+                    assessment.granularity === 'individual'
+                      ? assignedUsers
+                      : undefined
+                  }
+                  onTakeAssessmentClicked={() => setShowTakeAssessment(true)}
+                />
+              )}
           </Tabs.Panel>
-        )}
 
-        {permission &&
-          assessmentResults &&
-          assessmentResults.length > 0 &&
-          assessment && (
-            <Tabs.Panel value="Internal Results">
-              <AssessmentInternalResults
-                teachingTeam={teachingTeam}
-                results={assessmentResults}
-                assignedTeams={assignedTeams}
-                assignedUsers={assignedUsers}
-                maxScore={assessment.maxMarks}
-                assessmentReleaseNumber={assessment.releaseNumber}
+          {permission && (
+            <Tabs.Panel value="Questions">
+              <AssessmentInternalForm
+                assessment={assessment}
+                questions={questions}
+                addQuestion={addQuestion}
+                handleSaveQuestion={handleSaveQuestion}
+                handleDeleteQuestion={handleDeleteQuestion}
+                onAssessmentUpdated={fetchAssessment}
               />
             </Tabs.Panel>
           )}
-      </Tabs>
+
+          {permission &&
+            assessmentResults &&
+            assessmentResults.length > 0 &&
+            assessment && (
+              <Tabs.Panel value="Internal Results">
+                <AssessmentInternalResults
+                  teachingTeam={teachingTeam}
+                  results={assessmentResults}
+                  assignedTeams={assignedTeams}
+                  assignedUsers={assignedUsers}
+                  maxScore={assessment.maxMarks}
+                  assessmentReleaseNumber={assessment.releaseNumber}
+                  assessmentId={assessmentId}
+                />
+              </Tabs.Panel>
+            )}
+        </Tabs>
+      )}
     </Container>
   );
 };

@@ -6,6 +6,7 @@ import { TeamData } from '@shared/types/TeamData';
 import { Status } from '@shared/types/util/Status';
 import { useEffect, useState } from 'react';
 import AllTeams from '../overview/analytics/team/AllTeams';
+import TutorialPopover from '../tutorial/TutorialPopover';
 
 interface OverviewProps {
   courseId: string;
@@ -75,7 +76,9 @@ const ClassOverview: React.FC<OverviewProps> = ({ courseId }) => {
         scrollbarWidth: 'thin',
       }}
     >
-      <AllTeams teamDatas={teamDatas} />
+      <TutorialPopover stage={13} position="left">
+        <AllTeams teamDatas={teamDatas} />
+      </TutorialPopover>
     </ScrollArea>
   );
 };

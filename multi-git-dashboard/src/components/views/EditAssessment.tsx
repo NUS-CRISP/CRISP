@@ -30,15 +30,16 @@ import { Submission } from '@shared/types/Submission';
 import TakeAssessmentCard from '@/components/cards/TakeAssessmentCard';
 import { Team } from '@shared/types/Team';
 import { User } from '@shared/types/User';
+import { isTrial } from '@/lib/auth/utils';
 
-interface TakeAssessmentProps {
+interface EditAssessmentProps {
   inputAssessment: InternalAssessment;
   existingSubmission?: Submission;
   canEdit?: boolean;
   isFaculty?: boolean;
 }
 
-const TakeAssessment: React.FC<TakeAssessmentProps> = ({
+const EditAssessment: React.FC<EditAssessmentProps> = ({
   inputAssessment,
   existingSubmission,
   canEdit = true,
@@ -91,7 +92,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
   const [newAdjustedScore, setNewAdjustedScore] = useState<number | undefined>(
     undefined
   );
-  const [isTrial, setIsTrial] = useState<boolean>(false);
+  const isTrialVar = isTrial();
 
   const isScoredQuestion = (
     question: QuestionUnion
@@ -221,9 +222,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
           })),
         }));
         setTeamOptions(options);
-        if (teams[0].TA.identifier === process.env.TRIAL_USER_ID)
-          setIsTrial(true);
-        console.log(teams, isTrial);
       } else if (assessment.granularity === 'individual') {
         const users = data as User[];
         const options = users.map(user => ({
@@ -231,9 +229,6 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
           label: user.name,
         }));
         setTeamMembersOptions(options);
-        // There is no equivalent method for users for checking trial since
-        // Users don't have TA info. If you want that, you need to add
-        // a new method just to check if current user is a trial user.
       }
     } catch (error) {
       console.error('Error fetching assigned entities:', error);
@@ -630,7 +625,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         message: 'Your draft submission has been deleted.',
         color: 'red',
       });
-      router.back();
+      router.push(`/courses/${id}/internal-assessments/${assessmentId}`);
     } catch (error) {
       console.error('Error deleting draft submission:', error);
       showNotification({
@@ -812,7 +807,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
                 Delete Draft
               </Button>
             )}
-            {(!submission || submission.isDraft) && false && (
+            {(!submission || submission.isDraft) && (
               <Button variant="default" onClick={handleSaveDraft}>
                 Save Draft
               </Button>
@@ -821,7 +816,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
               onClick={handleSubmitClick}
               loading={isSubmitting}
               disabled={
-                (!canEdit && !(submission && submission.isDraft)) || isTrial
+                (!canEdit && !(submission && submission.isDraft)) || isTrialVar
               }
               variant={
                 canEdit || (submission && submission.isDraft)
@@ -835,7 +830,7 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
         </Group>
       )}
 
-      {isFaculty && submission && (
+      {isFaculty && submission && !submission.isDraft && (
         <Paper shadow="sm" p="md" mt="xl" withBorder>
           <Group justify="flex-end" align="center" mb="md">
             <Text size="lg">Submission Score</Text>
@@ -1026,4 +1021,4 @@ const TakeAssessment: React.FC<TakeAssessmentProps> = ({
   );
 };
 
-export default TakeAssessment;
+export default EditAssessment;

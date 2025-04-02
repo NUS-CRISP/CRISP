@@ -34,6 +34,10 @@ export const createAssignmentSetController = async (
   req: Request,
   res: Response
 ) => {
+  res.setHeader(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate'
+  );
   const { assessmentId } = req.params;
   const { originalTeamSetId } = req.body;
 
@@ -82,6 +86,10 @@ export const getAssignmentSetController = async (
   req: Request,
   res: Response
 ) => {
+  res.setHeader(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate'
+  );
   const { assessmentId } = req.params;
 
   try {
@@ -190,6 +198,10 @@ export const getAssignmentsByGraderIdController = async (
   req: Request,
   res: Response
 ) => {
+  res.setHeader(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate'
+  );
   const { assessmentId } = req.params;
   const accountId = await getAccountId(req);
   const userId = await getUserIdByAccountId(accountId);
@@ -231,6 +243,10 @@ export const getUnmarkedAssignmentsByGraderIdController = async (
   req: Request,
   res: Response
 ) => {
+  res.setHeader(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate'
+  );
   const { assessmentId } = req.params;
   const accountId = await getAccountId(req);
   const userId = await getUserIdByAccountId(accountId);
