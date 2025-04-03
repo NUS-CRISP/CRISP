@@ -156,7 +156,8 @@ async function notifyOnStartup() {
 }
 
 export async function setupDataIntegrityJob() {
-  cron.schedule('0 3 * * *', async () => {
+  // Run daily at 12:00 AM
+  cron.schedule('0 0 * * *', async () => {
     try {
       await runDataIntegrityCheck();
     } catch (err) {

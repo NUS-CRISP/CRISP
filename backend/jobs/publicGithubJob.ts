@@ -398,8 +398,8 @@ const getFourMonthsAgo = (): string => {
 };
 
 export const setupPublicGitHubJob = () => {
-  // Schedule the job to run every day at 05:00
-  cron.schedule('0 5 * * *', async () => {
+  // Schedule the job to run every day at 03:00
+  cron.schedule('0 3 * * *', async () => {
     console.log('Running fetchPublicRepoData job:', new Date().toString());
     try {
       await fetchPublicRepoData();
