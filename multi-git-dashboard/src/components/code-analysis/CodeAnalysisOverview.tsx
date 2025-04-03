@@ -310,7 +310,7 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
           ) : (
             metricCard(
               'Predicted Ranking',
-              overview_rank === '-' ? '-' : ordinal(parseInt(overview_rank)),
+              overview_rank === '-' ? '-' : parseRank(overview_rank),
               'overview_rank',
               () => 'blue',
               false
