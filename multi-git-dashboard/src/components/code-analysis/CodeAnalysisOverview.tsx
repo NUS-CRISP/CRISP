@@ -309,7 +309,7 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
             </TutorialPopover>
           ) : (
             metricCard(
-              'Predicted Ranking',
+              'Ranking',
               overview_rank === '-' ? '-' : parseRank(overview_rank),
               'overview_rank',
               () => 'blue',
