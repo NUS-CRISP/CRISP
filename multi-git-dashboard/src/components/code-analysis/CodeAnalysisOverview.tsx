@@ -300,7 +300,7 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
           {renderTutorialPopover ? (
             <TutorialPopover stage={16} position="top-start" offset={-5}>
               {metricCard(
-                'Predicted Ranking',
+                'Ranking',
                 overview_rank === '-' ? '-' : parseRank(overview_rank),
                 'overview_rank',
                 () => 'blue',
