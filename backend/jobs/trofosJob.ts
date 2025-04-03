@@ -289,8 +289,8 @@ const saveBacklogToDatabase = async (trofosSprintData: any) => {
 };
 
 const setupTrofosJob = () => {
-  // Schedule the job to run every day at 03:00 hours
-  cron.schedule('0 3 * * *', async () => {
+  // Schedule the job to run every day at 05:00 hours
+  cron.schedule('0 5 * * *', async () => {
     console.log('Running fetchAndSaveTrofosData job:', new Date().toString());
     try {
       await fetchAndSaveTrofosData();

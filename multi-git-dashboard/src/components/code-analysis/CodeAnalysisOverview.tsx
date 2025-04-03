@@ -45,12 +45,12 @@ const getColorForRating = (rating: string) => {
     case 'F':
       return '#D72229';
     default:
-      return '#666';
+      return '#999';
   }
 };
 
 const getColorForDuplication = (duplication: string) => {
-  if (duplication === '-') return '#666';
+  if (duplication === '-') return '#999';
   const percentage = parseFloat(duplication);
   if (percentage < 10) return '#5BB751';
   if (percentage < 20) return '#92CA87';
@@ -61,7 +61,7 @@ const getColorForDuplication = (duplication: string) => {
 };
 
 const getColorForCoverage = (coverage: string) => {
-  if (coverage === '-') return '#666';
+  if (coverage === '-') return '#999';
   const percentage = parseFloat(coverage);
   if (percentage > 80) return '#5BB751';
   if (percentage > 60) return '#92CA87';
@@ -80,7 +80,7 @@ const getColorForQualityGate = (qualityGate: string) => {
     case 'ERROR':
       return '#D72229';
     default:
-      return '#666';
+      return '#999';
   }
 };
 
@@ -204,6 +204,14 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
     setHoveredMetricValue(null);
   };
 
+  const parseRank = (rank: string) => {
+    if (rank.includes('/')) {
+      const [current, total] = rank.split('/');
+      return `${ordinal(parseInt(current))} of ${total}`;
+    }
+    return ordinal(parseInt(rank));
+  };
+
   const metricCard = (
     title: string,
     value: string,
@@ -211,8 +219,7 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
     colorFn?: (s: string) => string,
     enableStats = true
   ) => {
-    const color =
-      value === '-' ? '#666' : colorFn ? colorFn(value) : 'lightgray';
+    const color = value === '-' ? '#999' : colorFn ? colorFn(value) : '#999';
     return (
       <Card padding="lg" shadow="sm" radius="md" style={{ height: '100%' }}>
         <Title order={5}>
@@ -292,8 +299,8 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
           {renderTutorialPopover ? (
             <TutorialPopover stage={16} position="top-start" offset={-5}>
               {metricCard(
-                'Predicted Ranking',
-                overview_rank === '-' ? '-' : ordinal(parseInt(overview_rank)),
+                'Ranking',
+                overview_rank === '-' ? '-' : parseRank(overview_rank),
                 'overview_rank',
                 () => 'blue',
                 false
@@ -301,8 +308,8 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
             </TutorialPopover>
           ) : (
             metricCard(
-              'Predicted Ranking',
-              overview_rank === '-' ? '-' : ordinal(parseInt(overview_rank)),
+              'Ranking',
+              overview_rank === '-' ? '-' : parseRank(overview_rank),
               'overview_rank',
               () => 'blue',
               false
