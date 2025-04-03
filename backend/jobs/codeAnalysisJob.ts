@@ -790,8 +790,8 @@ const getOverviewScores = (courseAnalysisDocs: any) => {
 };
 
 export const setupCodeAnalysisJob = () => {
-  // Schedule the job to run every day at midnight
-  cron.schedule('0 2 * * *', async () => {
+  // Schedule the job to run every day at 6am
+  cron.schedule('0 6 * * *', async () => {
     console.log(
       'Running fetchAndSaveCodeAnalysisData job:',
       new Date().toString()
