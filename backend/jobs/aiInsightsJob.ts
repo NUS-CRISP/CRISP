@@ -328,8 +328,8 @@ CRISP`.trim(),
 };
 
 export const setupAIInsightsJob = () => {
-  // Schedule the job to run every day at midnight
-  cron.schedule('0 3 * * *', async () => {
+  // Schedule the job to run every day at 7am
+  cron.schedule('0 7 * * *', async () => {
     console.log('Running queryAndSaveAIInsights job:', new Date().toString());
     try {
       await queryAndSaveAIInsights();
