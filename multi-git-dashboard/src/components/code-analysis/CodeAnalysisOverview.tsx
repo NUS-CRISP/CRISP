@@ -210,7 +210,7 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
       return `${ordinal(parseInt(current))} of ${total}`;
     }
     return ordinal(parseInt(rank));
-  }
+  };
 
   const metricCard = (
     title: string,
@@ -219,8 +219,7 @@ const CodeAnalysisOverview: React.FC<CodeAnalysisOverviewProps> = ({
     colorFn?: (s: string) => string,
     enableStats = true
   ) => {
-    const color =
-      value === '-' ? '#999' : colorFn ? colorFn(value) : '#999';
+    const color = value === '-' ? '#999' : colorFn ? colorFn(value) : '#999';
     return (
       <Card padding="lg" shadow="sm" radius="md" style={{ height: '100%' }}>
         <Title order={5}>
