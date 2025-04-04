@@ -112,9 +112,15 @@ const TakeAssessmentCard: React.FC<TakeAssessmentCardProps> = ({
       </Text>
 
       {/* Display per-question score for faculty */}
-      {perQuestionScore !== null && (
+      {perQuestionScore !== null && perQuestionScore !== 0 && (
         <Badge color="green" variant="light" mb="sm">
           Score: {perQuestionScore}
+        </Badge>
+      )}
+
+      {perQuestionScore !== null && perQuestionScore === 0 && (
+        <Badge color="green" variant="light" mb="sm">
+          No score
         </Badge>
       )}
 

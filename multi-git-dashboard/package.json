@@ -46,6 +46,7 @@
     "d3": "^7.9.0",
     "d3-sankey": "^0.12.3",
     "dayjs": "^1.11.10",
+    "dotenv": "^16.4.7",
     "embla-carousel-autoplay": "^7.1.0",
     "embla-carousel-react": "^7.1.0",
     "file-saver": "^2.0.5",
