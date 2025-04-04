@@ -778,13 +778,6 @@ const TakeAssessmentInline: React.FC<TakeAssessmentInlineProps> = ({
               <Text>
                 Answer: {formatAnswer(answers[question._id], question.type)}
               </Text>
-              {isScoredQuestion(question) && (
-                <Text>
-                  Score:{' '}
-                  {submission?.answers.find(a => a.question === question._id)
-                    ?.score || 0}
-                </Text>
-              )}
             </div>
           ))}
         </ScrollArea>

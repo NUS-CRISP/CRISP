@@ -937,14 +937,6 @@ const EditAssessment: React.FC<EditAssessmentProps> = ({
               <Text>
                 Answer: {formatAnswer(answers[question._id], question.type)}
               </Text>
-              {isFaculty && isScoredQuestion(question) && (
-                <Text>
-                  Score:{' '}
-                  {submission?.answers.find(
-                    a => a.question.toString() === question._id.toString()
-                  )?.score || 0}
-                </Text>
-              )}
             </div>
           ))}
         </ScrollArea>
