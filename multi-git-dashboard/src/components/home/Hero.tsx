@@ -3,6 +3,7 @@ import Role from '@shared/types/auth/CrispRole';
 import classes from '@styles/Home.module.css';
 import { IconArrowRight, IconBrandGithub } from '@tabler/icons-react';
 import { signIn } from 'next-auth/react';
+import diagram from '@public/diagram.png';
 
 const Hero = () => {
   return (
@@ -21,7 +22,7 @@ const Hero = () => {
           }}
         >
           <Image
-            src="/CRISP_diagram.png"
+            src={diagram.src}
             alt="CRISP Platform Diagram"
             style={{
               width: '700px',
