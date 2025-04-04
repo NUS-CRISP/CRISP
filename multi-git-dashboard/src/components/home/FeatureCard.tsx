@@ -39,13 +39,7 @@ const data = [
       'Analyze and rank team contributions with metrics, giving educators clear insight into students productivity and early prevention.',
   },
   {
-    images: [
-      viz1.src,
-      viz2.src,
-      viz3.src,
-      viz4.src,
-      viz5.src,
-    ],
+    images: [viz1.src, viz2.src, viz3.src, viz4.src, viz5.src],
     title: 'Visualized',
     description:
       'Transform data into visual dashboards that reveal team dynamics, knowledge transfer patterns, and bottlenecks in real-time.',
@@ -57,12 +51,7 @@ const data = [
       'Pinpoint critical quality issues with SonarCube diagnostics that combine test coverage metrics, static analysis, and technical debt indicators into actionable insights.',
   },
   {
-    images: [
-      assess1.src,
-      assess2.src,
-      assess3.src,
-      assess4.src,
-    ],
+    images: [assess1.src, assess2.src, assess3.src, assess4.src],
     title: 'Graded',
     description:
       'Evaluate students performance through customizable assessment frameworks for fair and transparent skill evaluation.',
