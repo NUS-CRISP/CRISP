@@ -9,45 +9,56 @@ import {
 } from '@mantine/core';
 import { useEffect, useRef, useState } from 'react';
 import classes from '@styles/FeatureCard.module.css';
+import ss1 from '@public/ss-1.png';
+import ss2 from '@public/ss-2.png';
+import ss3 from '@public/ss-3.png';
+import ss4 from '@public/ss-4.png';
+import ss5 from '@public/ss-5.png';
+import viz1 from '@public/viz-1.png';
+import viz2 from '@public/viz-2.png';
+import viz3 from '@public/viz-3.png';
+import viz4 from '@public/viz-4.png';
+import viz5 from '@public/viz-5.png';
+import ca1 from '@public/ca-1.png';
+import ca2 from '@public/ca-2.png';
+import ca3 from '@public/ca-3.png';
+import assess1 from '@public/assess-1.png';
+import assess2 from '@public/assess-2.png';
+import assess3 from '@public/assess-3.png';
+import assess4 from '@public/assess-4.png';
+import pm1 from '@public/pm-1.png';
+import pm2 from '@public/pm-2.png';
+import pm3 from '@public/pm-3.png';
+import pm4 from '@public/pm-4.png';
+import pm5 from '@public/pm-5.png';
 
 const data = [
   {
-    images: ['/ss-1.png', '/ss-2.png', '/ss-3.png', '/ss-4.png', '/ss-5.png'],
+    images: [ss1.src, ss2.src, ss3.src, ss4.src, ss5.src],
     title: 'Prioritized',
     description:
       'Analyze and rank team contributions with metrics, giving educators clear insight into students productivity and early prevention.',
   },
   {
-    images: [
-      '/viz-1.png',
-      '/viz-2.png',
-      '/viz-3.png',
-      '/viz-4.png',
-      '/viz-5.png',
-    ],
+    images: [viz1.src, viz2.src, viz3.src, viz4.src, viz5.src],
     title: 'Visualized',
     description:
       'Transform data into visual dashboards that reveal team dynamics, knowledge transfer patterns, and bottlenecks in real-time.',
   },
   {
-    images: ['/ca-1.jpg', '/ca-2.jpg'],
+    images: [ca1.src, ca2.src, ca3.src],
     title: 'AI Diagnosed',
     description:
       'Pinpoint critical quality issues with SonarCube diagnostics that combine test coverage metrics, static analysis, and technical debt indicators into actionable insights.',
   },
   {
-    images: [
-      '/assess-1.png',
-      '/assess-2.png',
-      '/assess-3.png',
-      '/assess-4.png',
-    ],
+    images: [assess1.src, assess2.src, assess3.src, assess4.src],
     title: 'Graded',
     description:
       'Evaluate students performance through customizable assessment frameworks for fair and transparent skill evaluation.',
   },
   {
-    images: ['/pm-3.png', '/pm-1.png', '/pm-2.png', '/pm-4.png', '/pm-5.png'],
+    images: [pm3.src, pm1.src, pm2.src, pm4.src, pm5.src],
     title: 'Managed',
     description:
       'Seamlessly bridge development workflows with Jira and Trofos integration, allowing synchronization of tickets, sprints, and milestone tracking across platforms.',

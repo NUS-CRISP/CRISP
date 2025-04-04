@@ -137,7 +137,7 @@ const UpdateAssessmentInternalForm: React.FC<
           }}
         >
           <Checkbox
-            label="Scale final scores up to max marks"
+            label="Scale final scores to max marks"
             checked={form.values.scaleToMaxMarks}
             onChange={event =>
               form.setFieldValue('scaleToMaxMarks', event.currentTarget.checked)
@@ -146,7 +146,8 @@ const UpdateAssessmentInternalForm: React.FC<
           <Tooltip
             label="If checked, the final submission scores will be scaled so that a perfect score
 is equal to the indicated max marks. For example, if questions total 10 marks
-but max marks is 20, then scored submissions will double in score."
+but max marks is 20, then scored submissions will double in score. Scaling up and
+down are both possible."
             position="right"
             withArrow
             w={260}

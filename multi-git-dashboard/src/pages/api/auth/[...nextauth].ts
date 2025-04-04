@@ -38,7 +38,7 @@ export const authOptions: AuthOptions = {
             crispRole: CrispRole.TrialUser,
           });
           return {
-            id: process.env.TRIAL_USER_ID || '',
+            id: process.env.NEXT_PUBLIC_TRIAL_USER_ID || '',
             name: CrispRole.TrialUser,
             crispRole: CrispRole.TrialUser,
             courseRoles: trialAccount!.courseRoles,
