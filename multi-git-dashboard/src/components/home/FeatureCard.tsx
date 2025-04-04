@@ -30,7 +30,7 @@ const data = [
       'Transform data into visual dashboards that reveal team dynamics, knowledge transfer patterns, and bottlenecks in real-time.',
   },
   {
-    images: ['/ca-1.jpg', '/ca-2.jpg'],
+    images: ['/ca-1.png', '/ca-2.png', '/ca-3.png'],
     title: 'AI Diagnosed',
     description:
       'Pinpoint critical quality issues with SonarCube diagnostics that combine test coverage metrics, static analysis, and technical debt indicators into actionable insights.',
