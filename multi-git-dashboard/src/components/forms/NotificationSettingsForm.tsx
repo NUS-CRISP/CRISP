@@ -11,6 +11,10 @@ import {
   Alert,
 } from '@mantine/core';
 import { IconHelp } from '@tabler/icons-react';
+import { config } from 'dotenv';
+
+const env = process.env.NODE_ENV ?? 'development';
+config({ path: `.env.${env}` });
 
 interface NotificationSettingsFormProps {
   opened: boolean;
@@ -31,15 +35,17 @@ interface AccountData {
   wantsTelegramNotifications: boolean;
 }
 
-const TELEGRAM_BOT_HANDLE =
-  process.env.NEXT_PUBLIC_TELEGRAM_BOT_HANDLE || '@crisp_notif_bot';
-const TELEGRAM_BOT_NAME =
-  process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME || 'NUSCRISPNotifications';
-
 const NotificationSettingsForm: React.FC<NotificationSettingsFormProps> = ({
   opened,
   onClose,
 }) => {
+  // const TELEGRAM_BOT_HANDLE =
+  //   process.env.REACT_APP_TELEGRAM_BOT_HANDLE || '@crisp_notif_bot';
+  // const TELEGRAM_BOT_NAME =
+  //   process.env.REACT_APP_TELEGRAM_BOT_NAME || 'NUSCRISPNotifications';
+  // console.log(TELEGRAM_BOT_HANDLE, TELEGRAM_BOT_NAME)
+  const [telegramBotHandle, setTelegramBotHandle] = useState<string>(process.env.NEXT_PUBLIC_TELEGRAM_BOT_HANDLE || '@crisp_notif_bot');
+  const [telegramBotName, setTelegramBotName] = useState<string>(process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME || 'NUSCRISPNotifications');
   const [accountData, setAccountData] = useState<AccountData | null>(null);
 
   // EMAIL STATES
@@ -81,6 +87,16 @@ const NotificationSettingsForm: React.FC<NotificationSettingsFormProps> = ({
       setTestTelegramFeedback(null);
     }
   }, [opened]);
+
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_TELEGRAM_BOT_HANDLE) {
+      setTelegramBotHandle(process.env.NEXT_PUBLIC_TELEGRAM_BOT_HANDLE);
+    }
+    if (process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME) {
+      setTelegramBotName(process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME);
+    }
+    console.log(telegramBotHandle, telegramBotName);
+  }, [process.env.NEXT_PUBLIC_TELEGRAM_BOT_HANDLE, process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME]);
 
   // Fetch account data on open
   useEffect(() => {
@@ -496,8 +512,8 @@ const NotificationSettingsForm: React.FC<NotificationSettingsFormProps> = ({
           Step 1: Open Telegram. Sign up if you have not done so. Link:
           https://web.telegram.org/
           <br />
-          Step 2: Talk to {TELEGRAM_BOT_HANDLE} by searching in the search bar
-          for {TELEGRAM_BOT_HANDLE}, and click on the {TELEGRAM_BOT_NAME} bot.
+          Step 2: Talk to {telegramBotHandle} by searching in the search bar
+          for {telegramBotName}, and click on the {telegramBotName} bot.
           <br />
           Step 3: Use the command /register 'your CRISP account email'.
           <br />
