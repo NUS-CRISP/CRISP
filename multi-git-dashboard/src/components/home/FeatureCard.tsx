@@ -21,6 +21,7 @@ import viz4 from '@public/viz-4.png';
 import viz5 from '@public/viz-5.png';
 import ca1 from '@public/ca-1.jpg';
 import ca2 from '@public/ca-2.jpg';
+import ca3 from '@public/ca-3.jpg';
 import assess1 from '@public/assess-1.png';
 import assess2 from '@public/assess-2.png';
 import assess3 from '@public/assess-3.png';
@@ -45,7 +46,7 @@ const data = [
       'Transform data into visual dashboards that reveal team dynamics, knowledge transfer patterns, and bottlenecks in real-time.',
   },
   {
-    images: [ca1.src, ca2.src],
+    images: [ca1.src, ca2.src, ca3.src],
     title: 'AI Diagnosed',
     description:
       'Pinpoint critical quality issues with SonarCube diagnostics that combine test coverage metrics, static analysis, and technical debt indicators into actionable insights.',
