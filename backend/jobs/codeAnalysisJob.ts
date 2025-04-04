@@ -229,7 +229,7 @@ const getLatestCommit = async (
       await execShellCommand(`git clone ${cloneUrl} ${repoPath}`);
     } else {
       console.log(`Pulling repository ${repo.name}`);
-      await execShellCommand(`git -C ${repoPath} --hard`); // reset any changes
+      await execShellCommand(`git -C ${repoPath} reset --hard`); // reset any changes
       await execShellCommand(`git -C ${repoPath} pull ${cloneUrl}`);
     }
 
@@ -640,6 +640,8 @@ const getOverviewRankings = async (course: any) => {
     .filter(([_, score]) => score >= 0)
     .sort((a, b) => b[1] - a[1]);
 
+  const totalScores = scores.length;
+
   for (let i = 0; i < scores.length; i++) {
     const [_id, score] = scores[i];
 
@@ -661,8 +663,8 @@ const getOverviewRankings = async (course: any) => {
       doc.values[index] = (i + 1).toString();
     } else {
       doc.metrics.push('overview_rank');
-      doc.values.push((i + 1).toString());
-      doc.types.push('INT');
+      doc.values.push(`${i + 1}/${totalScores}`);
+      doc.types.push('RANK');
       doc.domains.push('Overview');
     }
 
@@ -788,8 +790,8 @@ const getOverviewScores = (courseAnalysisDocs: any) => {
 };
 
 export const setupCodeAnalysisJob = () => {
-  // Schedule the job to run every day at midnight
-  cron.schedule('0 2 * * *', async () => {
+  // Schedule the job to run every day at 6am
+  cron.schedule('0 6 * * *', async () => {
     console.log(
       'Running fetchAndSaveCodeAnalysisData job:',
       new Date().toString()

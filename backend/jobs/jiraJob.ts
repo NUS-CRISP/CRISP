@@ -309,8 +309,8 @@ export const fetchAndSaveJiraData = async () => {
 };
 
 const setupJiraJob = () => {
-  // Schedule the job to run every day at 01:00 hours
-  cron.schedule('0 1 * * *', async () => {
+  // Schedule the job to run every day at 04:00 hours
+  cron.schedule('0 4 * * *', async () => {
     console.log('Running fetchAndSaveJiraData job:', new Date().toString());
     try {
       await fetchAndSaveJiraData();

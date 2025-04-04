@@ -2,6 +2,12 @@ FROM node:alpine
 
 WORKDIR /app
 
+# Specify Timezone
+ENV TZ=Asia/Singapore
+RUN apk add --no-cache tzdata && \
+    ln -sf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo $TZ > /etc/timezone
+
 # Install dependencies for Gradle, Maven, and your app
 RUN apk add --no-cache \
     git \
