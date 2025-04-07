@@ -12,6 +12,9 @@ import {
   sendTestNotification,
 } from '../clients/notificationFacadeClient';
 
+const MAX_TEAM = 7;
+const MAX_STUDENT = 7;
+
 export function isNotificationTime(
   type: string | undefined,
   hour: number | undefined,
@@ -168,14 +171,26 @@ CRISP
 function convertAssignedTeamsToString(teams: Team[], asmt: InternalAssessment) {
   if (!teams.length) return '';
   let s = `Assessment: ${asmt.assessmentName}\n`;
-  teams.forEach(t => (s += `Team #${t.number}\n`));
+
+  if (teams.length > MAX_TEAM) {
+    s += `There are ${teams.length} ungraded teams.\n`;
+  } else {
+    teams.forEach(t => (s += `Team #${t.number}\n`));
+  }
+
   return s.trim();
 }
 
 function convertAssignedUsersToString(users: User[], asmt: InternalAssessment) {
   if (!users.length) return '';
   let s = `Assessment: ${asmt.assessmentName}\n`;
-  users.forEach(u => (s += `${u.name}\n`));
+
+  if (users.length > MAX_STUDENT) {
+    s += `There are ${users.length} ungraded students.\n`;
+  } else {
+    users.forEach(u => (s += `${u.name}\n`));
+  }
+
   return s.trim();
 }
 
@@ -204,6 +219,7 @@ async function sendTelegramNotification(account: any) {
 export async function runNotificationCheck() {
   const now = new Date();
   const hour = now.getHours();
+  // Sunday (getDay() === 0) mapped to "7" for consistency in "weekly"
   const weekday = now.getDay() === 0 ? 7 : now.getDay();
 
   const accounts = await AccountModel.find({
