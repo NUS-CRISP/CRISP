@@ -22,6 +22,7 @@ import AccountModel from '@models/Account';
 import CrispRole from '@shared/types/auth/CrispRole';
 import { getSubmissionsByAssessment } from '../services/submissionService';
 import { AnswerUnion, TeamMemberSelectionAnswer } from '@models/Answer';
+import UserModel from '@models/User';
 
 /**
  * Controller method to get an internal assessment by its ID.
@@ -501,8 +502,8 @@ export const gatherComments = async (req: Request, res: Response) => {
         'You do not have permission to gather comments.'
       );
     }
-    const { assessmentId, type } = req.params;
 
+    const { assessmentId, type } = req.params;
     const submissions = await getSubmissionsByAssessment(assessmentId);
 
     if (!submissions || submissions.length === 0) {
@@ -519,11 +520,14 @@ export const gatherComments = async (req: Request, res: Response) => {
               a.type === 'Short Response Answer' ||
               a.type === 'Long Response Answer';
 
-    const commentsByStudent: { [studentId: string]: string[] } = {};
-    submissions.forEach(submission => {
+    const commentsByStudent: {
+      [studentId: string]: { identifier: string; comments: string[] };
+    } = {};
+
+    for (const submission of submissions) {
       const tmsAnswer = submission.answers.find(
         (a: AnswerUnion) => a.type === 'Team Member Selection Answer'
-      ) as TeamMemberSelectionAnswer; // Assumed valid
+      ) as TeamMemberSelectionAnswer;
 
       const texts = submission.answers
         .filter(commentFilter)
@@ -532,13 +536,15 @@ export const gatherComments = async (req: Request, res: Response) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .filter((v: any) => v);
 
-      tmsAnswer.toObject().selectedUserIds.forEach((studentId: string) => {
-        if (!commentsByStudent[studentId]) {
-          commentsByStudent[studentId] = [];
-        }
-        commentsByStudent[studentId].push(...texts);
-      });
-    });
+      for (const studentId of tmsAnswer.toObject().selectedUserIds) {
+        const student = await UserModel.findById(studentId);
+
+        commentsByStudent[studentId] = {
+          identifier: student!.identifier,
+          comments: texts,
+        };
+      }
+    }
 
     res.status(200).json({
       message: 'Comments gathered.',
