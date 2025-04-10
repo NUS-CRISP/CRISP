@@ -515,12 +515,14 @@ export const gatherComments = async (req: Request, res: Response) => {
       type === 'short'
         ? (a: AnswerUnion) => a.type === 'Short Response Answer'
         : type === 'long'
-        ? (a: AnswerUnion) => a.type === 'Long Response Answer'
-        : (a: AnswerUnion) =>
-            a.type === 'Short Response Answer' ||
-            a.type === 'Long Response Answer';
+          ? (a: AnswerUnion) => a.type === 'Long Response Answer'
+          : (a: AnswerUnion) =>
+              a.type === 'Short Response Answer' ||
+              a.type === 'Long Response Answer';
 
-    const commentsByStudent: { [studentId: string]: { identifier: string, comments: string[] } } = {};
+    const commentsByStudent: {
+      [studentId: string]: { identifier: string; comments: string[] };
+    } = {};
 
     for (const submission of submissions) {
       const tmsAnswer = submission.answers.find(
@@ -537,7 +539,10 @@ export const gatherComments = async (req: Request, res: Response) => {
       for (const studentId of tmsAnswer.toObject().selectedUserIds) {
         const student = await UserModel.findById(studentId);
 
-        commentsByStudent[studentId] = {identifier: student!.identifier, comments: texts};
+        commentsByStudent[studentId] = {
+          identifier: student!.identifier,
+          comments: texts,
+        };
       }
     }
 

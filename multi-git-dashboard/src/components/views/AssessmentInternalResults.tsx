@@ -227,8 +227,9 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
         alert(data.message);
         return;
       }
-      const commentsByStudent: { [studentId: string]: {identifier: string, comments: string[]} } =
-        data.commentsByStudent;
+      const commentsByStudent: {
+        [studentId: string]: { identifier: string; comments: string[] };
+      } = data.commentsByStudent;
       const escapeCSV = (value: string) => `"${value.replace(/"/g, '""')}"`;
       let csvContent = `${escapeCSV(studentIdHeader)},${escapeCSV(commentHeader)}\n`;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars

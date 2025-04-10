@@ -1159,7 +1159,9 @@ describe('internalAssessmentController', () => {
       // Mock an authorized account (Faculty)
       const mockAccount = { _id: 'account1', crispRole: CrispRole.Faculty };
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account1');
-      jest.spyOn(AccountModel, 'findById').mockResolvedValue(mockAccount as any);
+      jest
+        .spyOn(AccountModel, 'findById')
+        .mockResolvedValue(mockAccount as any);
 
       // Mock user find calls
       mockFindById();
@@ -1230,7 +1232,9 @@ describe('internalAssessmentController', () => {
 
       const mockAccount = { _id: 'account1', crispRole: CrispRole.Admin };
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account1');
-      jest.spyOn(AccountModel, 'findById').mockResolvedValue(mockAccount as any);
+      jest
+        .spyOn(AccountModel, 'findById')
+        .mockResolvedValue(mockAccount as any);
 
       // Mock user find calls
       mockFindById();
@@ -1279,7 +1283,9 @@ describe('internalAssessmentController', () => {
 
       const mockAccount = { _id: 'account1', crispRole: CrispRole.Faculty };
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account1');
-      jest.spyOn(AccountModel, 'findById').mockResolvedValue(mockAccount as any);
+      jest
+        .spyOn(AccountModel, 'findById')
+        .mockResolvedValue(mockAccount as any);
 
       // Mock user find calls
       mockFindById();
