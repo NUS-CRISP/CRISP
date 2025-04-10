@@ -23,6 +23,8 @@ import {
 } from '../../services/errors';
 import AccountModel from '@models/Account';
 import CrispRole from '@shared/types/auth/CrispRole';
+import { getSubmissionsByAssessment } from '../../services/submissionService';
+import UserModel from '@models/User';
 
 jest.mock('../../services/internalAssessmentService');
 jest.mock('../../utils/auth');
@@ -1142,6 +1144,15 @@ describe('internalAssessmentController', () => {
       toObject: () => ({ ...obj }),
     });
 
+    // -- This helper ensures each time we call UserModel.findById,
+    // -- we get an object with the matching student ID as 'identifier'.
+    const mockFindById = () => {
+      jest.spyOn(UserModel, 'findById').mockImplementation((id: string) => {
+        // Return a mock user doc with matching identifier
+        return { _id: id, identifier: id } as any;
+      });
+    };
+
     it('should return comments filtered by short responses when type is "short"', async () => {
       req.params = { assessmentId: 'assessment1', type: 'short' };
 
@@ -1152,7 +1163,10 @@ describe('internalAssessmentController', () => {
         .spyOn(AccountModel, 'findById')
         .mockResolvedValue(mockAccount as any);
 
-      // Create two submissions with answers.
+      // Mock user find calls
+      mockFindById();
+
+      // Create two submissions with answers
       const submissions = [
         {
           answers: [
@@ -1201,8 +1215,14 @@ describe('internalAssessmentController', () => {
       expect(res.json).toHaveBeenCalledWith({
         message: 'Comments gathered.',
         commentsByStudent: {
-          student1: ['short comment 1', 'required short comment'],
-          student2: ['short comment 2'],
+          student1: {
+            identifier: 'student1',
+            comments: ['short comment 1', 'required short comment'],
+          },
+          student2: {
+            identifier: 'student2',
+            comments: ['short comment 2'],
+          },
         },
       });
     });
@@ -1215,6 +1235,9 @@ describe('internalAssessmentController', () => {
       jest
         .spyOn(AccountModel, 'findById')
         .mockResolvedValue(mockAccount as any);
+
+      // Mock user find calls
+      mockFindById();
 
       const submissions = [
         {
@@ -1247,7 +1270,10 @@ describe('internalAssessmentController', () => {
       expect(res.json).toHaveBeenCalledWith({
         message: 'Comments gathered.',
         commentsByStudent: {
-          student1: ['long comment only'],
+          student1: {
+            identifier: 'student1',
+            comments: ['long comment only'],
+          },
         },
       });
     });
@@ -1260,6 +1286,9 @@ describe('internalAssessmentController', () => {
       jest
         .spyOn(AccountModel, 'findById')
         .mockResolvedValue(mockAccount as any);
+
+      // Mock user find calls
+      mockFindById();
 
       const submissions = [
         {
@@ -1292,7 +1321,10 @@ describe('internalAssessmentController', () => {
       expect(res.json).toHaveBeenCalledWith({
         message: 'Comments gathered.',
         commentsByStudent: {
-          student1: ['short comment', 'long comment'],
+          student1: {
+            identifier: 'student1',
+            comments: ['short comment', 'long comment'],
+          },
         },
       });
     });
