@@ -227,13 +227,14 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
         alert(data.message);
         return;
       }
-      const commentsByStudent: { [studentId: string]: string[] } =
+      const commentsByStudent: { [studentId: string]: {identifier: string, comments: string[]} } =
         data.commentsByStudent;
       const escapeCSV = (value: string) => `"${value.replace(/"/g, '""')}"`;
       let csvContent = `${escapeCSV(studentIdHeader)},${escapeCSV(commentHeader)}\n`;
-      Object.entries(commentsByStudent).forEach(([studentId, comments]) => {
-        const aggregatedComments = comments.join('\n');
-        csvContent += `${escapeCSV(studentId)},${escapeCSV(aggregatedComments)}\n`;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      Object.entries(commentsByStudent).forEach(([studentId, dataRow]) => {
+        const aggregatedComments = dataRow.comments.join('\n');
+        csvContent += `${escapeCSV(dataRow.identifier)},${escapeCSV(aggregatedComments)}\n`;
       });
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
