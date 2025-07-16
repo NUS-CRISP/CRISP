@@ -1,4 +1,4 @@
-FROM mongo
+FROM mongo:4.4.29
 
 ENV MONGO_INITDB_ROOT_USERNAME admin
 
