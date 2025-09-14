@@ -13,7 +13,7 @@ interface StudentAndTeamFormUser {
   name: string;
   gitHandle: string;
   email: string;
-  teamNumber: number;
+  teamNumber: number | string;
 }
 
 const StudentAndTeamForm: React.FC<StudentAndTeamFormProps> = ({
@@ -29,23 +29,34 @@ const StudentAndTeamForm: React.FC<StudentAndTeamFormProps> = ({
       name: '',
       gitHandle: '',
       email: '',
-      teamNumber: 0,
+      teamNumber: '',
     },
   });
   const [error, setError] = useState<string | null>(null);
 
   const transformStudentData = (data: unknown[]) => {
     const students = data as StudentAndTeamFormUser[];
-    return students.map((student: StudentAndTeamFormUser) => ({
-      identifier: student.identifier,
-      name: student.name,
-      gitHandle: student.gitHandle || '',
-      email: student.email,
-      teamNumber: student.teamNumber,
-    }));
+    return students.map((student) => {
+      const tn = student.teamNumber === undefined ? '' : String(student.teamNumber);
+      const teamNumber = tn.trim() === '' ? undefined : parseInt(tn, 10);
+      const row: any = {
+        identifier: student.identifier,
+        name: student.name,
+        gitHandle: student.gitHandle || '',
+        email: student.email,
+      };
+      if (teamNumber !== undefined) row.teamNumber = teamNumber;
+      return row;
+    });
   };
 
   const handleSubmitForm = async () => {
+    const tnStr = String(form.values.teamNumber ?? '').trim();
+    const tn = tnStr === '' ? undefined : Number(tnStr);
+    if (tn !== undefined && !Number.isInteger(tn)) {
+      setError('Team Number must be an integer');
+      return;
+    }
     const response = await fetch(apiRoute, {
       method: 'POST',
       headers: {
@@ -58,7 +69,7 @@ const StudentAndTeamForm: React.FC<StudentAndTeamFormProps> = ({
             name: form.values.name,
             gitHandle: form.values.gitHandle,
             email: form.values.email,
-            teamNumber: form.values.teamNumber,
+            ...(tn !== undefined ? { teamNumber: tn } : {}),
           },
         ],
       }),
@@ -114,11 +125,16 @@ const StudentAndTeamForm: React.FC<StudentAndTeamFormProps> = ({
         />
         <TextInput
           label="Team Number"
-          {...form.getInputProps('team')}
+          {...form.getInputProps('teamNumber')}
           value={form.values.teamNumber}
-          onChange={event => {
-            form.setFieldValue('teamNumber', +event.currentTarget.value);
+          onChange={(event) => {
+            const v = event.currentTarget.value;
+            if (/^\d*$/.test(v)) {
+              form.setFieldValue('teamNumber', v);
+            }
           }}
+          inputMode="numeric"
+          pattern="\d*"
         />
         <Button type="submit" style={{ marginTop: '16px' }}>
           Create Student
