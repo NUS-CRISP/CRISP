@@ -16,7 +16,10 @@ interface TAAndTeamFormUser {
   teamNumber?: number | string;
 }
 
-const TAAndTeamForm: React.FC<TAAndTeamFormProps> = ({ courseId, onTACreated }) => {
+const TAAndTeamForm: React.FC<TAAndTeamFormProps> = ({
+  courseId,
+  onTACreated,
+}) => {
   const apiRoute = `/api/courses/${courseId}/tas/teams`;
   const csvTemplateHeaders = [
     'name',
@@ -69,8 +72,7 @@ const TAAndTeamForm: React.FC<TAAndTeamFormProps> = ({ courseId, onTACreated }) 
   const transformTAData = (rows: unknown[]) => {
     const tas = rows as TAAndTeamFormUser[];
     return tas.map(ta => {
-      const tn =
-        ta.teamNumber === undefined ? '' : String(ta.teamNumber);
+      const tn = ta.teamNumber === undefined ? '' : String(ta.teamNumber);
       const teamNumber = /^\d+$/.test(tn.trim()) ? Number(tn) : undefined;
       const row: TAAndTeamFormUser = {
         identifier: ta.identifier,

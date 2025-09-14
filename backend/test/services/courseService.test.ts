@@ -1700,46 +1700,44 @@ describe('courseService', () => {
       return ts;
     }
 
-    it('adds an existing student to the specified team, creating the team if absent', async () => {
+    it('adds an existing (not yet enrolled) student to the specified team, creating the team if absent', async () => {
       await ensureDefaultTeamSet();
+
+      // Create a DB user+account that is NOT enrolled in this course yet
+      const { user } = await createStudentUser({
+        identifier: 'stud-exists',
+        name: 'Stud Exists',
+        gitHandle: null,
+      });
 
       const rows = [
         {
-          identifier: commonStudentDetails.identifier,
-          name: commonStudentDetails.name,
-          email: emailFor(commonStudentDetails.identifier),
+          identifier: 'stud-exists',
+          name: 'Stud Exists',
+          email: 'stud-exists@example.com',
           teamNumber: 7,
         },
       ];
 
       await addStudentsToCourseAndTeam(courseId, rows);
 
-      const teamSet = await TeamSetModel.findOne({
-        course: courseId,
-        name: DEFAULT_TEAMSET_NAME,
-      });
+      const teamSet = await TeamSetModel.findOne({ course: courseId, name: DEFAULT_TEAMSET_NAME });
       expect(teamSet).toBeTruthy();
 
-      const team = await TeamModel.findOne({
-        number: 7,
-        teamSet: teamSet?._id,
-      });
+      const team = await TeamModel.findOne({ number: 7, teamSet: teamSet?._id });
       expect(team).toBeTruthy();
 
-      // Student stays enrolled and appears once as a team member
-      const student = await UserModel.findOne({
-        identifier: commonStudentDetails.identifier,
-      });
-      expect(student).toBeTruthy();
+      const reloadedStudent = await UserModel.findOne({ identifier: 'stud-exists' });
       expect(
-        team?.members?.map(m => String(m)).includes(String(student?._id))
+        team?.members?.map(m => String(m)).includes(String(reloadedStudent?._id))
       ).toBe(true);
 
       const course = await CourseModel.findById(courseId).populate('students');
       expect(
-        course?.students.some((s: any) => String(s._id) === String(student?._id))
+        course?.students.some((s: any) => String(s._id) === String(reloadedStudent?._id))
       ).toBe(true);
     });
+
 
     it('creates a NEW student + account, enrolls them, and assigns to a NEW team', async () => {
       await ensureDefaultTeamSet();
@@ -1797,35 +1795,29 @@ describe('courseService', () => {
     it('is idempotent: adding the same student to the same team twice does not duplicate membership', async () => {
       await ensureDefaultTeamSet();
 
+      // Fresh, not-enrolled user
+      await createStudentUser({
+        identifier: 'stud-idem',
+        name: 'Stud Idem',
+        gitHandle: null,
+      });
+
       const rows = [
-        {
-          identifier: commonStudentDetails.identifier,
-          name: commonStudentDetails.name,
-          email: emailFor(commonStudentDetails.identifier),
-          teamNumber: 9,
-        },
+        { identifier: 'stud-idem', name: 'Stud Idem', email: 'stud-idem@example.com', teamNumber: 9 },
       ];
 
       await addStudentsToCourseAndTeam(courseId, rows);
       await addStudentsToCourseAndTeam(courseId, rows);
 
-      const teamSet = await TeamSetModel.findOne({
-        course: courseId,
-        name: DEFAULT_TEAMSET_NAME,
-      });
-      const team = await TeamModel.findOne({
-        number: 9,
-        teamSet: teamSet?._id,
-      });
+      const teamSet = await TeamSetModel.findOne({ course: courseId, name: DEFAULT_TEAMSET_NAME });
+      const team = await TeamModel.findOne({ number: 9, teamSet: teamSet?._id });
 
-      const student = await UserModel.findOne({
-        identifier: commonStudentDetails.identifier,
-      });
+      const student = await UserModel.findOne({ identifier: 'stud-idem' });
       const occurrences =
-        team?.members?.map(String).filter(id => id === String(student?._id))
-          .length ?? 0;
+        team?.members?.map(String).filter(id => id === String(student?._id)).length ?? 0;
       expect(occurrences).toBe(1);
     });
+
 
     it('skips when an existing student has mismatched name/email (non-trial) leading to `continue`', async () => {
       // Create a student + account that *already exists* but with different name/email
@@ -1929,42 +1921,40 @@ describe('courseService', () => {
       return ts;
     }
 
-    it('assigns an existing TA to the specified team, creating the team if absent', async () => {
+    it('assigns an existing (not yet enrolled) TA to the specified team, creating the team if absent', async () => {
       await ensureDefaultTeamSet();
+
+      // TA exists in DB but not enrolled in this course yet
+      await createTAUser({
+        identifier: 'ta-exists',
+        name: 'TA Exists',
+        gitHandle: null,
+      });
 
       const rows = [
         {
-          identifier: commonTADetails.identifier,
-          name: commonTADetails.name,
-          email: emailFor(commonTADetails.identifier),
+          identifier: 'ta-exists',
+          name: 'TA Exists',
+          email: 'ta-exists@example.com',
           teamNumber: 4,
         },
       ];
 
       await addTAAndTeamToCourse(courseId, rows);
 
-      const teamSet = await TeamSetModel.findOne({
-        course: courseId,
-        name: DEFAULT_TEAMSET_NAME,
-      });
-      const team = await TeamModel.findOne({
-        number: 4,
-        teamSet: teamSet?._id,
-      });
+      const teamSet = await TeamSetModel.findOne({ course: courseId, name: DEFAULT_TEAMSET_NAME });
+      const team = await TeamModel.findOne({ number: 4, teamSet: teamSet?._id });
       expect(team).toBeTruthy();
 
-      const ta = await UserModel.findOne({
-        identifier: commonTADetails.identifier,
-      });
+      const ta = await UserModel.findOne({ identifier: 'ta-exists' });
       expect(String(team?.TA)).toBe(String(ta?._id));
 
-      // Course TA list has no duplicate
       const course = await CourseModel.findById(courseId).populate('TAs');
       const countSameTA =
-        course?.TAs.filter((t: any) => String(t._id) === String(ta?._id)).length ??
-        0;
+        course?.TAs.filter((t: any) => String(t._id) === String(ta?._id)).length ?? 0;
       expect(countSameTA).toBe(1);
     });
+
 
     it('creates a NEW TA + account, enrolls them as TA, and assigns to a NEW team', async () => {
       await ensureDefaultTeamSet();
@@ -2020,40 +2010,36 @@ describe('courseService', () => {
     it('reassigns TA on an existing team (overwrites previous TA)', async () => {
       await ensureDefaultTeamSet();
 
-      // Create a team & assign some placeholder TA first
+      // placeholder TA already on team 6
       const placeholder = await createTAUser({
         identifier: 'placeholder-ta',
         name: 'Placeholder TA',
         gitHandle: null,
       });
+
       const course = await CourseModel.findById(courseId);
-      const ts = await TeamSetModel.findOne({
-        course: course?._id,
-        name: DEFAULT_TEAMSET_NAME,
-      });
+      const ts = await TeamSetModel.findOne({ course: course?._id, name: DEFAULT_TEAMSET_NAME });
+
       const team = new TeamModel({ number: 6, teamSet: ts?._id, members: [], TA: placeholder.user._id });
       await team.save();
-      await TeamSetModel.updateOne(
-        { _id: ts?._id },
-        { $addToSet: { teams: team._id } }
-      );
+      await TeamSetModel.updateOne({ _id: ts?._id }, { $addToSet: { teams: team._id } });
 
-      // Now assign the real TA (commonTADetails) to the same team
+      // real TA exists but is NOT enrolled yet
+      await createTAUser({
+        identifier: 'real-ta',
+        name: 'Real TA',
+        gitHandle: null,
+      });
+
       await addTAAndTeamToCourse(courseId, [
-        {
-          identifier: commonTADetails.identifier,
-          name: commonTADetails.name,
-          email: emailFor(commonTADetails.identifier),
-          teamNumber: 6,
-        },
+        { identifier: 'real-ta', name: 'Real TA', email: 'real-ta@example.com', teamNumber: 6 },
       ]);
 
       const reloadedTeam = await TeamModel.findById(team._id);
-      const realTA = await UserModel.findOne({
-        identifier: commonTADetails.identifier,
-      });
+      const realTA = await UserModel.findOne({ identifier: 'real-ta' });
       expect(String(reloadedTeam?.TA)).toBe(String(realTA?._id));
     });
+
 
     it('skips when an existing TA has mismatched name/email (non-trial), leaving no team created', async () => {
       const { user, account } = await createTAUser({
