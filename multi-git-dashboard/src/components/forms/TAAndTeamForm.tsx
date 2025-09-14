@@ -3,12 +3,20 @@ import { useForm } from '@mantine/form';
 import { useState } from 'react';
 import CSVUpload from '../csv/CSVUpload';
 
-interface TAFormProps {
+interface TAAndTeamFormProps {
   courseId: string | string[] | undefined;
   onTACreated: () => void;
 }
 
-const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
+interface TAAndTeamFormUser {
+  identifier: string;
+  name: string;
+  gitHandle: string;
+  email: string;
+  teamNumber?: number | string;
+}
+
+const TAAndTeamForm: React.FC<TAAndTeamFormProps> = ({ courseId, onTACreated }) => {
   const apiRoute = `/api/courses/${courseId}/tas/teams`;
   const csvTemplateHeaders = [
     'name',
@@ -58,18 +66,22 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
     onTACreated();
   };
 
-  const transformTAData = (rows: any[]) =>
-    rows.map(r => {
-      const raw = (r.teamNumber ?? '').toString().trim();
-      const out: any = {
-        identifier: r.identifier,
-        name: r.name,
-        email: (r.email ?? '').trim(),
-        gitHandle: r.gitHandle || '',
+  const transformTAData = (rows: unknown[]) => {
+    const tas = rows as TAAndTeamFormUser[];
+    return tas.map(ta => {
+      const tn =
+        ta.teamNumber === undefined ? '' : String(ta.teamNumber);
+      const teamNumber = /^\d+$/.test(tn.trim()) ? Number(tn) : undefined;
+      const row: TAAndTeamFormUser = {
+        identifier: ta.identifier,
+        name: ta.name,
+        email: (ta.email ?? '').trim(),
+        gitHandle: ta.gitHandle || '',
       };
-      if (/^\d+$/.test(raw)) out.teamNumber = parseInt(raw, 10);
-      return out;
+      if (teamNumber !== undefined) row.teamNumber = teamNumber;
+      return row;
     });
+  };
 
   return (
     <Box maw={300} mx="auto">
@@ -146,4 +158,4 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
   );
 };
 
-export default TAForm;
+export default TAAndTeamForm;

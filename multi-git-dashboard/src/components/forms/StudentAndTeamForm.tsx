@@ -13,7 +13,7 @@ interface StudentAndTeamFormUser {
   name: string;
   gitHandle: string;
   email: string;
-  teamNumber: number | string;
+  teamNumber?: number | string;
 }
 
 const StudentAndTeamForm: React.FC<StudentAndTeamFormProps> = ({
@@ -46,7 +46,7 @@ const StudentAndTeamForm: React.FC<StudentAndTeamFormProps> = ({
       const tn =
         student.teamNumber === undefined ? '' : String(student.teamNumber);
       const teamNumber = /^\d+$/.test(tn.trim()) ? Number(tn) : undefined;
-      const row: any = {
+      const row: StudentAndTeamFormUser = {
         identifier: student.identifier,
         name: student.name,
         gitHandle: student.gitHandle || '',
