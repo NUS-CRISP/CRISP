@@ -1,4 +1,3 @@
-// CURRENTLY DEPRECATED, USING TAAndTeamForm so that TAs can be directly assigned to teams
 import { Box, Button, Divider, Notification, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
@@ -10,8 +9,8 @@ interface TAFormProps {
 }
 
 const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
-  const apiRoute = `/api/courses/${courseId}/tas`;
-  const csvTemplateHeaders = ['name', 'identifier', 'email', 'gitHandle'];
+  const apiRoute = `/api/courses/${courseId}/tas/teams`;
+  const csvTemplateHeaders = ['name', 'identifier', 'email', 'gitHandle', 'teamNumber'];
 
   const form = useForm({
     initialValues: {
@@ -19,11 +18,18 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
       name: '',
       gitHandle: '',
       email: '',
+      teamNumber: '',
     },
   });
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmitForm = async () => {
+    const tnStr = String(form.values.teamNumber ?? '').trim();
+    const tn = tnStr === '' ? undefined : Number(tnStr);
+    if (tn !== undefined && !Number.isInteger(tn)) {
+      setError('Team Number must be an integer');
+      return;
+    }
     const response = await fetch(apiRoute, {
       method: 'POST',
       headers: {
@@ -36,6 +42,7 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
             name: form.values.name,
             gitHandle: form.values.gitHandle,
             email: form.values.email,
+            ...(tn !== undefined ? { teamNumber: tn } : {}),
           },
         ],
       }),
@@ -44,6 +51,19 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
     await response.json();
     onTACreated();
   };
+
+  const transformTAData = (rows: any[]) =>
+    rows.map((r) => {
+      const raw = (r.teamNumber ?? '').toString().trim();
+      const out: any = {
+        identifier: r.identifier,
+        name: r.name,
+        email: (r.email ?? '').trim(),
+        gitHandle: r.gitHandle || '',
+      };
+      if (/^\d+$/.test(raw)) out.teamNumber = parseInt(raw, 10);
+      return out;
+    });
 
   return (
     <Box maw={300} mx="auto">
@@ -89,6 +109,19 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
             form.setFieldValue('gitHandle', event.currentTarget.value);
           }}
         />
+        <TextInput
+          label="Team Number"
+          {...form.getInputProps('teamNumber')}
+          value={form.values.teamNumber}
+          onChange={(event) => {
+            const v = event.currentTarget.value;
+            if (/^\d*$/.test(v)) {
+              form.setFieldValue('teamNumber', v);
+            }
+          }}
+          inputMode="numeric"
+          pattern="\d*"
+        />
         <Button type="submit" style={{ marginTop: '16px' }}>
           Create TA
         </Button>
@@ -101,6 +134,7 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
         filename="tas_template.csv"
         uploadButtonString="Upload TAs"
         urlString={apiRoute}
+        transformFunction={transformTAData}
       />
     </Box>
   );
