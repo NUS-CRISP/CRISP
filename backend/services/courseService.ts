@@ -444,6 +444,111 @@ export const addTAsToCourse = async (courseId: string, TADataList: any[]) => {
   await course.save();
 };
 
+export const addTAAndTeamToCourse = async (
+  courseId: string,
+  TADataList: any[]
+) => {const course = await CourseModel.findById(courseId)
+    .populate<{ TAs: User[] }>('TAs');
+  if (!course) throw new NotFoundError('Course not found');
+
+  for (const TAData of TADataList) {
+    const taId = TAData.identifier;
+
+    // 1) Upsert TA 
+    let ta = await UserModel.findOne({ identifier: taId });
+    let taAccount: any = null;
+
+    if (!ta) {
+      ta = new UserModel({
+        identifier: taId,
+        name: (TAData.name ?? taId).toUpperCase(),
+        enrolledCourses: [],
+        gitHandle: TAData.gitHandle ?? null,
+      });
+      await ta.save();
+
+      const newAccount = new AccountModel({
+        email: TAData.email,
+        crispRole: CrispRole.Normal,
+        isApproved: false,
+        user: ta._id,
+      });
+      await newAccount.save();
+      taAccount = newAccount;
+    } else {
+      taAccount = await AccountModel.findOne({ user: ta._id });
+      if (!taAccount) continue;
+
+      const courseRoleTuple = taAccount.courseRoles.filter(
+        (cr: { course: string }) => cr.course === courseId
+      );
+      if (
+        (courseRoleTuple.length !== 0 &&
+          taAccount.crispRole !== CrispRole.TrialUser) ||
+        (TAData.name && TAData.name.toUpperCase() !== ta.name.toUpperCase()) ||
+        (TAData.email && TAData.email.toLowerCase() !== taAccount.email.toLowerCase())
+      ) {
+        continue;
+      } else {
+        ta.gitHandle = TAData.gitHandle ?? ta.gitHandle;
+      }
+    }
+
+    if (!ta.enrolledCourses.some((id: any) => id?.equals ? id.equals(course._id) : String(id) === String(course._id))) {
+      ta.enrolledCourses.push(course._id);
+      taAccount.courseRoles.push({
+        course: course._id.toString(),
+        courseRole: CourseRole.TA,
+      });
+    }
+
+    await ta.save();
+    await taAccount.save();
+
+    if (!course.TAs.some(t => t.identifier === ta.identifier)) {
+      (course.TAs as any).push(ta);
+    }
+
+    // 2) Allocate team if specified
+    if (TAData.teamNumber !== undefined && TAData.teamNumber !== null) {
+      const teamSetName = DEFAULT_TEAMSET_NAME;
+
+      const teamSet = await TeamSetModel.findOne({
+        course: course._id,
+        name: teamSetName,
+      });
+      if (!teamSet) throw new NotFoundError('TeamSet not found');
+
+      let team = await TeamModel.findOne({
+        number: TAData.teamNumber,
+        teamSet: teamSet._id,
+      });
+
+      if (!team) {
+        team = new TeamModel({
+          number: TAData.teamNumber,
+          teamSet: teamSet._id,
+          members: [],
+          TA: null,
+        });
+        await team.save();
+
+        await TeamSetModel.updateOne(
+          { _id: teamSet._id },
+          { $addToSet: { teams: team._id } }
+        );
+      }
+
+      // Assign TA
+      team.TA = ta._id;
+      await team.save();
+    }
+  }
+
+  await course.save();
+  return { ok: true };
+};
+
 export const updateTAsInCourse = async (
   courseId: string,
   TADataList: any[]

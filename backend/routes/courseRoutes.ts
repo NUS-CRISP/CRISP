@@ -36,6 +36,7 @@ import {
   addRepositories,
   removeRepository,
   updateRepository,
+  addTAsAndTeams,
 } from '../controllers/courseController';
 
 import { noCache } from '../middleware/noCache';
@@ -57,6 +58,7 @@ router.post('/:id/students/teams', addStudentsToCourseAndTeams);
 router.patch('/:id/students', updateStudents);
 router.delete('/:id/students/:userId', removeStudents);
 router.post('/:id/tas', addTAs);
+router.post('/:id/tas/teams', addTAsAndTeams);
 router.patch('/:id/tas', updateTAs);
 router.delete('/:id/tas/:userId', removeTAs);
 router.get('/:id/people', getPeople);

@@ -7,6 +7,7 @@ import {
   addSprintToCourse,
   addStudentsToCourse,
   addStudentsToCourseAndTeam,
+  addTAAndTeamToCourse,
   addTAsToCourse,
   createNewCourse,
   deleteCourseById,
@@ -235,6 +236,22 @@ export const addTAs = async (req: Request, res: Response) => {
   try {
     await addTAsToCourse(courseId, TAs);
     res.status(200).json({ message: 'TAs added to the course successfully' });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error adding TAs:', error);
+      res.status(500).json({ error: 'Failed to add TAs' });
+    }
+  }
+};
+
+export const addTAsAndTeams = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  const TAs = req.body.items;
+  try {
+    await addTAAndTeamToCourse(courseId, TAs);
+    res.status(200).json({ message: 'TAs added to the course with teams successfully' });
   } catch (error) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
