@@ -8,6 +8,7 @@ import {
   addSprint,
   addStudents,
   addStudentsToTeams,
+  addStudentsToCourseAndTeams,
   addTAs,
   addTAsToTeams,
   addTeamSet,
@@ -52,6 +53,7 @@ router.post('/:id/faculty', addFaculty);
 router.patch('/:id/faculty', updateFaculty);
 router.delete('/:id/faculty/:userId', removeFaculty);
 router.post('/:id/students', addStudents);
+router.post('/:id/students/teams', addStudentsToCourseAndTeams);
 router.patch('/:id/students', updateStudents);
 router.delete('/:id/students/:userId', removeStudents);
 router.post('/:id/tas', addTAs);

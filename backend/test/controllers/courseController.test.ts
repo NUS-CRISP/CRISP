@@ -153,6 +153,19 @@ describe('courseController', () => {
         error: 'Failed to create course',
       });
     });
+
+    // it('should create a default team set when creating a course', async () => {
+    //   const req = mockRequest({}, {}, { authorization: 'accountId' });
+    //   const res = mockResponse();
+
+    //   jest.spyOn(courseService, 'createNewCourse').mockResolvedValue({
+    //     _id: 'courseId',
+    //   } as any);
+
+    //   await createCourse(req, res);
+
+      
+    // });
   });
 
   describe('getCourses', () => {

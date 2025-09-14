@@ -6,6 +6,7 @@ import {
   addRepositoriesToCourse,
   addSprintToCourse,
   addStudentsToCourse,
+  addStudentsToCourseAndTeam,
   addTAsToCourse,
   createNewCourse,
   deleteCourseById,
@@ -166,6 +167,24 @@ export const addStudents = async (req: Request, res: Response) => {
     res
       .status(200)
       .json({ message: 'Students added to the course successfully' });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else {
+      console.error('Error adding students:', error);
+      res.status(500).json({ error: 'Failed to add students' });
+    }
+  }
+};
+
+export const addStudentsToCourseAndTeams = async (req: Request, res: Response) => {
+  const courseId = req.params.id;
+  const students = req.body.items;
+  try {
+    await addStudentsToCourseAndTeam(courseId, students);
+    res
+      .status(200)
+      .json({ message: 'Students added to the course and teams successfully' });
   } catch (error) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });

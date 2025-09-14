@@ -5,10 +5,12 @@ import TeamModel, { Team } from '@models/Team';
 import TeamSetModel, { TeamSet } from '@models/TeamSet';
 import UserModel, { User } from '@models/User';
 import CrispRole from '@shared/types/auth/CrispRole';
-import { Types } from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import { BadRequestError, NotFoundError } from './errors';
 import { InternalAssessment } from '@shared/types/InternalAssessment';
 import CourseRole from '@shared/types/auth/CourseRole';
+
+const DEFAULT_TEAMSET_NAME = 'Project Teams';
 
 /*----------------------------------------Course----------------------------------------*/
 export const createNewCourse = async (courseData: any, accountId: string) => {
@@ -77,10 +79,8 @@ export const createNewCourse = async (courseData: any, accountId: string) => {
   }
   await course.save();
   // add default team set
-  const DEFAULT_TEAMSET_NAME = 'Project Teams';
   const ts = await TeamSetModel.create({ course: course._id, name: DEFAULT_TEAMSET_NAME });
   await CourseModel.updateOne({ _id: course._id }, { $addToSet: { teamSets: ts._id } });
-  
   return course;
 };
 
@@ -210,6 +210,122 @@ export const addStudentsToCourse = async (
   }
   await course.save();
 };
+
+type Row = {
+  identifier: string;
+  name?: string;
+  email?: string;
+  gitHandle?: string;
+  teamNumber?: number;
+};
+
+export const addStudentsToCourseAndTeam = async (
+  courseId: string,
+  rows: Row[]
+) => {
+
+  const course = await CourseModel.findById(courseId)
+    .populate<{ students: User[] }>('students')
+  if (!course) throw new NotFoundError('Course not found');
+
+  for (const r of rows) {
+    // 1) Add students to course
+    const studentId = r.identifier;
+    let student = await UserModel.findOne({ identifier: studentId });
+    let studentAccount = null as any;
+
+    if (!student) {
+      student = new UserModel({
+        identifier: studentId,
+        name: (r.name ?? studentId).toUpperCase(),
+        enrolledCourses: [],
+        gitHandle: r.gitHandle ?? null,
+      });
+      await student.save();
+
+      const newAccount = new AccountModel({
+        email: r.email,
+        crispRole: CrispRole.Normal,
+        isApproved: false,
+        user: student._id,
+      });
+      await newAccount.save();
+      studentAccount = newAccount;
+    } else {
+      studentAccount = await AccountModel.findOne({ user: student._id });
+      if (!studentAccount) continue;
+
+      const courseRoleTuple = studentAccount.courseRoles.filter((cr: { course: string; }) => cr.course === courseId);
+      if (
+        (courseRoleTuple.length !== 0 && studentAccount.crispRole !== CrispRole.TrialUser) ||
+        (r.name && r.name.toUpperCase() !== student.name.toUpperCase()) ||
+        (r.email && r.email.toLowerCase() !== studentAccount.email.toLowerCase())
+      ) {
+        continue;
+      } else {
+        student.gitHandle = r.gitHandle ?? student.gitHandle;
+      }
+    }
+
+    if (!student.enrolledCourses.some(id => id.equals(course._id))) {
+      student.enrolledCourses.push(course._id);
+      studentAccount.courseRoles.push({
+        course: course._id.toString(),
+        courseRole: CourseRole.Student,
+      });
+    }
+
+    await student.save();
+    await studentAccount.save();
+
+    if (!course.students.some(s => s.identifier === student?.identifier)) {
+      (course.students as any).push(student);
+    }
+
+    if (r.teamNumber !== undefined && r.teamNumber !== null) {
+      const teamSetName = DEFAULT_TEAMSET_NAME;
+      let teamSet = await TeamSetModel.findOne({
+        course: course._id,
+        name: teamSetName,
+      });
+      console.log(teamSet)
+
+      if (!teamSet) throw new NotFoundError('TeamSet not found');
+
+      console.log('create team')
+      let team = await TeamModel.findOne({
+        number: r.teamNumber,
+        teamSet: teamSet._id,
+      });
+
+      if (!team) {
+        team = new TeamModel({
+          number: r.teamNumber,
+          teamSet: teamSet._id,
+          members: [],
+        });
+        await team.save();
+       console.log('created team')
+
+        await TeamSetModel.updateOne(
+          { _id: teamSet._id },
+          { $addToSet: { teams: team._id } }
+        );
+      }
+
+      console.log('add member to team')
+      // Add member to team
+      await TeamModel.updateOne(
+        { _id: team._id },
+        { $addToSet: { members: student._id } }
+      );
+    }
+  }
+
+  await course.save();
+  return { ok: true };
+};
+
 
 export const updateStudentsInCourse = async (
   courseId: string,
@@ -663,9 +779,9 @@ export const getTeamSetsFromCourse = async (
     const userId = account.user;
     course.teamSets.forEach(
       teamSet =>
-        (teamSet.teams = teamSet.teams.filter(team =>
-          (team as unknown as Team).TA?.equals(userId)
-        ))
+      (teamSet.teams = teamSet.teams.filter(team =>
+        (team as unknown as Team).TA?.equals(userId)
+      ))
     );
   }
   course.teamSets.forEach((teamSet: TeamSet) => {
@@ -830,9 +946,9 @@ export const getProjectManagementBoardFromCourse = async (
     const userId = account.user;
     course.teamSets.forEach(
       teamSet =>
-        (teamSet.teams = teamSet.teams.filter(team =>
-          (team as unknown as Team).TA?.equals(userId)
-        ))
+      (teamSet.teams = teamSet.teams.filter(team =>
+        (team as unknown as Team).TA?.equals(userId)
+      ))
     );
   }
   course.teamSets.forEach((teamSet: TeamSet) => {
