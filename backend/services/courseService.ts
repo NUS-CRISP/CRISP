@@ -76,6 +76,11 @@ export const createNewCourse = async (courseData: any, accountId: string) => {
     }
   }
   await course.save();
+  // add default team set
+  const DEFAULT_TEAMSET_NAME = 'Project Teams';
+  const ts = await TeamSetModel.create({ course: course._id, name: DEFAULT_TEAMSET_NAME });
+  await CourseModel.updateOne({ _id: course._id }, { $addToSet: { teamSets: ts._id } });
+  
   return course;
 };
 
