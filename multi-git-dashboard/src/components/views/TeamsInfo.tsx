@@ -94,7 +94,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({
     if (!selected) selected = teamSets[0];
     if (!selected) return;
     setActiveTab(selected.name);
-    setTeamSetId(selected._id); 
+    setTeamSetId(selected._id);
   }, [teamSets]);
 
   const handleDeleteTeamSet = async () => {
@@ -184,7 +184,6 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({
         {hasFacultyPermission && (
           <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
             <Group>
-              <Button onClick={toggleTeamSetForm}>Create TeamSet</Button>
               {activeTab && (
                 <Button onClick={toggleAddStudentsForm}>Assign Students</Button>
               )}
@@ -197,6 +196,13 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({
                 </Button>
               )}
             </Group>
+            <Button
+              onClick={toggleTeamSetForm}
+              color="green"
+              style={{ marginLeft: 'auto' }}
+            >
+              Create New TeamSet
+            </Button>
 
             {teamSetId && isEditing && (
               <Button color="red" onClick={handleDeleteTeamSet}>
