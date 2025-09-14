@@ -288,11 +288,9 @@ export const addStudentsToCourseAndTeam = async (
         course: course._id,
         name: teamSetName,
       });
-      console.log(teamSet)
 
       if (!teamSet) throw new NotFoundError('TeamSet not found');
 
-      console.log('create team')
       let team = await TeamModel.findOne({
         number: r.teamNumber,
         teamSet: teamSet._id,
@@ -305,7 +303,6 @@ export const addStudentsToCourseAndTeam = async (
           members: [],
         });
         await team.save();
-       console.log('created team')
 
         await TeamSetModel.updateOne(
           { _id: teamSet._id },
@@ -313,7 +310,6 @@ export const addStudentsToCourseAndTeam = async (
         );
       }
 
-      console.log('add member to team')
       // Add member to team
       await TeamModel.updateOne(
         { _id: team._id },
