@@ -16,8 +16,7 @@ import TeamSetForm from '../forms/TeamSetForm';
 import { User } from '@shared/types/User';
 import { TeamData } from '@shared/types/TeamData';
 import { JiraBoard } from '@shared/types/JiraData';
-
-const DEFAULT_TEAMSET_NAME = 'Project Teams';
+import { DEFAULT_TEAMSET_NAME } from '@shared/types/TeamSet';
 
 interface TeamsInfoProps {
   courseId: string;

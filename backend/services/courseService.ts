@@ -9,8 +9,7 @@ import mongoose, { Types } from 'mongoose';
 import { BadRequestError, NotFoundError } from './errors';
 import { InternalAssessment } from '@shared/types/InternalAssessment';
 import CourseRole from '@shared/types/auth/CourseRole';
-
-const DEFAULT_TEAMSET_NAME = 'Project Teams';
+import { DEFAULT_TEAMSET_NAME } from '@shared/types/TeamSet';
 
 /*----------------------------------------Course----------------------------------------*/
 export const createNewCourse = async (courseData: any, accountId: string) => {
