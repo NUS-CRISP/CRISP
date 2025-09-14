@@ -5,6 +5,7 @@ import {
   Notification,
   ScrollArea,
   Tabs,
+  Tooltip,
 } from '@mantine/core';
 import { TeamSet } from '@shared/types/TeamSet';
 import { useEffect, useState } from 'react';
@@ -115,6 +116,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({
       setActiveTab(null);
       setTeamSetId(null);
       onUpdate();
+      setIsEditing(false);
     } catch (error) {
       console.error('Error deleting TeamSet:', error);
       setError('Error deleting TeamSet. Please try again.');
@@ -159,6 +161,12 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({
     </Tabs.Panel>
   ));
 
+  const selectedTeamSet =
+    teamSets.find(ts => ts._id === teamSetId) ??
+    teamSets.find(ts => ts.name === activeTab) ??
+    null;
+
+  const isDefaultSelected = selectedTeamSet?.name === DEFAULT_TEAMSET_NAME;
   return (
     <ScrollArea
       style={{
@@ -205,9 +213,22 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({
             </Button>
 
             {teamSetId && isEditing && (
-              <Button color="red" onClick={handleDeleteTeamSet}>
-                Delete TeamSet
-              </Button>
+              <Tooltip
+                label="The default TeamSet cannot be deleted."
+                withArrow
+                disabled={!isDefaultSelected}
+                withinPortal
+              >
+                <span>
+                  <Button
+                    color="red"
+                    onClick={handleDeleteTeamSet}
+                    disabled={isDefaultSelected}
+                  >
+                    Delete TeamSet
+                  </Button>
+                </span>
+              </Tooltip>
             )}
           </Group>
         )}
