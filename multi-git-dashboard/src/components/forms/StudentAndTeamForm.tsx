@@ -38,7 +38,7 @@ const StudentAndTeamForm: React.FC<StudentAndTeamFormProps> = ({
     const students = data as StudentAndTeamFormUser[];
     return students.map((student) => {
       const tn = student.teamNumber === undefined ? '' : String(student.teamNumber);
-      const teamNumber = tn.trim() === '' ? undefined : parseInt(tn, 10);
+      const teamNumber = /^\d+$/.test(tn.trim()) ? Number(tn) : undefined;
       const row: any = {
         identifier: student.identifier,
         name: student.name,
