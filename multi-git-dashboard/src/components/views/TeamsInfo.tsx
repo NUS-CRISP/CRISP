@@ -16,6 +16,8 @@ import { User } from '@shared/types/User';
 import { TeamData } from '@shared/types/TeamData';
 import { JiraBoard } from '@shared/types/JiraData';
 
+const DEFAULT_TEAMSET_NAME = 'Project Teams';
+
 interface TeamsInfoProps {
   courseId: string;
   teamSets: TeamSet[];
@@ -82,10 +84,17 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({
   };
 
   useEffect(() => {
+    if (!teamSets.length) return;
     const savedTab = localStorage.getItem(`activeTeamSetTab_${courseId}`);
-    if (savedTab && teamSets.some(teamSet => teamSet.name === savedTab)) {
-      setActiveTab(savedTab);
-    }
+    // 1) if saved tab exists, select it
+    // 2) otherwise use the default created team set (if it still exists)
+    // 3) otherwise just select the first team set
+    let selected = teamSets.find(ts => ts.name === savedTab);
+    if (!selected) selected = teamSets.find(ts => ts.name === DEFAULT_TEAMSET_NAME);
+    if (!selected) selected = teamSets[0];
+    if (!selected) return;
+    setActiveTab(selected.name);
+    setTeamSetId(selected._id); 
   }, [teamSets]);
 
   const handleDeleteTeamSet = async () => {
