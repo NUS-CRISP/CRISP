@@ -165,7 +165,10 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
         onClose={toggleAddStudent}
         title="Add Student"
       >
-        <StudentAndTeamForm courseId={courseId} onStudentCreated={handleUpdate} />
+        <StudentAndTeamForm
+          courseId={courseId}
+          onStudentCreated={handleUpdate}
+        />
       </Modal>
       <Modal
         opened={isExportingData}

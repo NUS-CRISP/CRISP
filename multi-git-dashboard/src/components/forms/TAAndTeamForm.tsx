@@ -10,7 +10,13 @@ interface TAFormProps {
 
 const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
   const apiRoute = `/api/courses/${courseId}/tas/teams`;
-  const csvTemplateHeaders = ['name', 'identifier', 'email', 'gitHandle', 'teamNumber'];
+  const csvTemplateHeaders = [
+    'name',
+    'identifier',
+    'email',
+    'gitHandle',
+    'teamNumber',
+  ];
 
   const form = useForm({
     initialValues: {
@@ -53,7 +59,7 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
   };
 
   const transformTAData = (rows: any[]) =>
-    rows.map((r) => {
+    rows.map(r => {
       const raw = (r.teamNumber ?? '').toString().trim();
       const out: any = {
         identifier: r.identifier,
@@ -113,7 +119,7 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
           label="Team Number"
           {...form.getInputProps('teamNumber')}
           value={form.values.teamNumber}
-          onChange={(event) => {
+          onChange={event => {
             const v = event.currentTarget.value;
             if (/^\d*$/.test(v)) {
               form.setFieldValue('teamNumber', v);

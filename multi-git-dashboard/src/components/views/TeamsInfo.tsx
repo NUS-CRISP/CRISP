@@ -91,7 +91,8 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({
     // 2) otherwise use the default created team set (if it still exists)
     // 3) otherwise just select the first team set
     let selected = teamSets.find(ts => ts.name === savedTab);
-    if (!selected) selected = teamSets.find(ts => ts.name === DEFAULT_TEAMSET_NAME);
+    if (!selected)
+      selected = teamSets.find(ts => ts.name === DEFAULT_TEAMSET_NAME);
     if (!selected) selected = teamSets[0];
     if (!selected) return;
     setActiveTab(selected.name);

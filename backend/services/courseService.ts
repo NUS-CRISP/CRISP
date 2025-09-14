@@ -79,8 +79,14 @@ export const createNewCourse = async (courseData: any, accountId: string) => {
   }
   await course.save();
   // add default team set
-  const ts = await TeamSetModel.create({ course: course._id, name: DEFAULT_TEAMSET_NAME });
-  await CourseModel.updateOne({ _id: course._id }, { $addToSet: { teamSets: ts._id } });
+  const ts = await TeamSetModel.create({
+    course: course._id,
+    name: DEFAULT_TEAMSET_NAME,
+  });
+  await CourseModel.updateOne(
+    { _id: course._id },
+    { $addToSet: { teamSets: ts._id } }
+  );
   return course;
 };
 
@@ -223,9 +229,9 @@ export const addStudentsToCourseAndTeam = async (
   courseId: string,
   rows: Row[]
 ) => {
-
-  const course = await CourseModel.findById(courseId)
-    .populate<{ students: User[] }>('students')
+  const course = await CourseModel.findById(courseId).populate<{
+    students: User[];
+  }>('students');
   if (!course) throw new NotFoundError('Course not found');
 
   for (const r of rows) {
@@ -255,11 +261,15 @@ export const addStudentsToCourseAndTeam = async (
       studentAccount = await AccountModel.findOne({ user: student._id });
       if (!studentAccount) continue;
 
-      const courseRoleTuple = studentAccount.courseRoles.filter((cr: { course: string; }) => cr.course === courseId);
+      const courseRoleTuple = studentAccount.courseRoles.filter(
+        (cr: { course: string }) => cr.course === courseId
+      );
       if (
-        (courseRoleTuple.length !== 0 && studentAccount.crispRole !== CrispRole.TrialUser) ||
+        (courseRoleTuple.length !== 0 &&
+          studentAccount.crispRole !== CrispRole.TrialUser) ||
         (r.name && r.name.toUpperCase() !== student.name.toUpperCase()) ||
-        (r.email && r.email.toLowerCase() !== studentAccount.email.toLowerCase())
+        (r.email &&
+          r.email.toLowerCase() !== studentAccount.email.toLowerCase())
       ) {
         continue;
       } else {
@@ -321,7 +331,6 @@ export const addStudentsToCourseAndTeam = async (
   await course.save();
   return { ok: true };
 };
-
 
 export const updateStudentsInCourse = async (
   courseId: string,
@@ -447,14 +456,16 @@ export const addTAsToCourse = async (courseId: string, TADataList: any[]) => {
 export const addTAAndTeamToCourse = async (
   courseId: string,
   TADataList: any[]
-) => {const course = await CourseModel.findById(courseId)
-    .populate<{ TAs: User[] }>('TAs');
+) => {
+  const course = await CourseModel.findById(courseId).populate<{ TAs: User[] }>(
+    'TAs'
+  );
   if (!course) throw new NotFoundError('Course not found');
 
   for (const TAData of TADataList) {
     const taId = TAData.identifier;
 
-    // 1) Upsert TA 
+    // 1) Upsert TA
     let ta = await UserModel.findOne({ identifier: taId });
     let taAccount: any = null;
 
@@ -486,7 +497,8 @@ export const addTAAndTeamToCourse = async (
         (courseRoleTuple.length !== 0 &&
           taAccount.crispRole !== CrispRole.TrialUser) ||
         (TAData.name && TAData.name.toUpperCase() !== ta.name.toUpperCase()) ||
-        (TAData.email && TAData.email.toLowerCase() !== taAccount.email.toLowerCase())
+        (TAData.email &&
+          TAData.email.toLowerCase() !== taAccount.email.toLowerCase())
       ) {
         continue;
       } else {
@@ -494,7 +506,11 @@ export const addTAAndTeamToCourse = async (
       }
     }
 
-    if (!ta.enrolledCourses.some((id: any) => id?.equals ? id.equals(course._id) : String(id) === String(course._id))) {
+    if (
+      !ta.enrolledCourses.some((id: any) =>
+        id?.equals ? id.equals(course._id) : String(id) === String(course._id)
+      )
+    ) {
       ta.enrolledCourses.push(course._id);
       taAccount.courseRoles.push({
         course: course._id.toString(),
@@ -880,9 +896,9 @@ export const getTeamSetsFromCourse = async (
     const userId = account.user;
     course.teamSets.forEach(
       teamSet =>
-      (teamSet.teams = teamSet.teams.filter(team =>
-        (team as unknown as Team).TA?.equals(userId)
-      ))
+        (teamSet.teams = teamSet.teams.filter(team =>
+          (team as unknown as Team).TA?.equals(userId)
+        ))
     );
   }
   course.teamSets.forEach((teamSet: TeamSet) => {
@@ -1047,9 +1063,9 @@ export const getProjectManagementBoardFromCourse = async (
     const userId = account.user;
     course.teamSets.forEach(
       teamSet =>
-      (teamSet.teams = teamSet.teams.filter(team =>
-        (team as unknown as Team).TA?.equals(userId)
-      ))
+        (teamSet.teams = teamSet.teams.filter(team =>
+          (team as unknown as Team).TA?.equals(userId)
+        ))
     );
   }
   course.teamSets.forEach((teamSet: TeamSet) => {

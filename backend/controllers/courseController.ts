@@ -178,7 +178,10 @@ export const addStudents = async (req: Request, res: Response) => {
   }
 };
 
-export const addStudentsToCourseAndTeams = async (req: Request, res: Response) => {
+export const addStudentsToCourseAndTeams = async (
+  req: Request,
+  res: Response
+) => {
   const courseId = req.params.id;
   const students = req.body.items;
   try {
@@ -251,7 +254,9 @@ export const addTAsAndTeams = async (req: Request, res: Response) => {
   const TAs = req.body.items;
   try {
     await addTAAndTeamToCourse(courseId, TAs);
-    res.status(200).json({ message: 'TAs added to the course with teams successfully' });
+    res
+      .status(200)
+      .json({ message: 'TAs added to the course with teams successfully' });
   } catch (error) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });

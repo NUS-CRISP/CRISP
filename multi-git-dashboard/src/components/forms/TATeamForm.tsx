@@ -92,7 +92,7 @@ const TATeamForm: React.FC<TATeamFormProps> = ({
           label="Team Number"
           {...form.getInputProps('teamNumber')}
           value={form.values.teamNumber}
-          onChange={(event) => {
+          onChange={event => {
             const v = event.currentTarget.value;
             if (/^\d*$/.test(v)) {
               form.setFieldValue('teamNumber', v);

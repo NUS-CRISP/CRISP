@@ -21,7 +21,13 @@ const StudentAndTeamForm: React.FC<StudentAndTeamFormProps> = ({
   onStudentCreated,
 }) => {
   const apiRoute = `/api/courses/${courseId}/students/teams`;
-  const csvTemplateHeaders = ['name', 'identifier', 'email', 'gitHandle', 'teamNumber'];
+  const csvTemplateHeaders = [
+    'name',
+    'identifier',
+    'email',
+    'gitHandle',
+    'teamNumber',
+  ];
 
   const form = useForm({
     initialValues: {
@@ -36,8 +42,9 @@ const StudentAndTeamForm: React.FC<StudentAndTeamFormProps> = ({
 
   const transformStudentData = (data: unknown[]) => {
     const students = data as StudentAndTeamFormUser[];
-    return students.map((student) => {
-      const tn = student.teamNumber === undefined ? '' : String(student.teamNumber);
+    return students.map(student => {
+      const tn =
+        student.teamNumber === undefined ? '' : String(student.teamNumber);
       const teamNumber = /^\d+$/.test(tn.trim()) ? Number(tn) : undefined;
       const row: any = {
         identifier: student.identifier,
@@ -127,7 +134,7 @@ const StudentAndTeamForm: React.FC<StudentAndTeamFormProps> = ({
           label="Team Number"
           {...form.getInputProps('teamNumber')}
           value={form.values.teamNumber}
-          onChange={(event) => {
+          onChange={event => {
             const v = event.currentTarget.value;
             if (/^\d*$/.test(v)) {
               form.setFieldValue('teamNumber', v);
