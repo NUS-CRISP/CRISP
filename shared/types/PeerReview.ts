@@ -18,7 +18,7 @@ export interface PeerReviewSettings {
   _id: string;
   peerReviewId: string;
   reviewerType: "Individual" | "Team";
-  revieweeType: "Individual" | "Team";
+  TaAssignments: boolean;
   minReviewsPerReviewer: number;
   maxReviewsPerReviewer: number;
   assignmentMode: "Random" | "Manual" | "Hybrid";
@@ -30,9 +30,8 @@ export interface PeerReviewAssignment {
   repoName: string;
   repoUrl: string;
   reviewerUser: User | null;
-  revieweeUser: User | null;
   reviewerTeam: Team | null;
-  revieweeTeam: Team| null;
+  reviewee: Team | null;
   assignedBy: User | null;
   assignedAt: Date;
   deadline: Date | null;

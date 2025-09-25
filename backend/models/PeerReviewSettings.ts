@@ -14,12 +14,7 @@ const peerReviewSettingsSchema = new Schema<PeerReviewSettings>({
     required: true,
     default: 'Individual',
   },
-  revieweeType: {
-    type: String,
-    enum: ['Individual', 'Team'],
-    required: true,
-    default: 'Individual',
-  },
+  TaAssignments: { type: Boolean, required: true, default: false },
   minReviewsPerReviewer: { type: Number, required: true, min: 1 },
   maxReviewsPerReviewer: { type: Number, required: true, min: 1, validate: {
     validator: function (this: PeerReviewSettings, v: number) {

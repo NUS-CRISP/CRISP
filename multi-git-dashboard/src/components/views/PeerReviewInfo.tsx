@@ -6,7 +6,11 @@ import {
   Loader,
   ScrollArea,
   Tabs,
+  Group,
+  Button,
+  Modal,
 } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
 import { Profile } from '@shared/types/Profile';
 import { Team as SharedTeam } from '@shared/types/Team';
 import { TeamData } from '@shared/types/TeamData';
@@ -16,11 +20,15 @@ import PeerReviewAccordionItem from '../peer-review/PeerReviewAccordianItem';
 import { useTutorialContext } from '../tutorial/TutorialContext';
 import TutorialPopover from '../tutorial/TutorialPopover';
 import { TeamSet } from '@shared/types/TeamSet';
+import { PeerReview } from '@shared/types/PeerReview';
+import PeerReviewSettingsForm from '../forms/PeerReviewSettingsForm';
 
 interface PeerReviewInfoProps {
   courseId: string;
   dateUtils: DateUtils;
   teamSets: TeamSet[];
+  peerReview: PeerReview;
+  hasFacultyPermission: boolean;
   onUpdate: () => void;
 }
 
@@ -34,6 +42,8 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
   courseId,
   dateUtils,
   teamSets,
+  peerReview,
+  hasFacultyPermission,
   onUpdate,
 }) => {
   const { curTutorialStage } = useTutorialContext();
@@ -41,7 +51,9 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamDatas, setTeamDatas] = useState<TeamData[]>([]);
   const [status, setStatus] = useState<Status>(Status.Idle);
-
+  const [openedSettingsForm, { open: openSettingsForm, close: closeSettingsForm }] = useDisclosure(false);
+  const [openedDeleteModal, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false);
+  
   const [studentMap, setStudentMap] = useState<Record<string, Profile>>({});
 
   const [activeTab, setActiveTab] = useState<string | null>(
@@ -128,7 +140,6 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
         defaultValue={teamDatas.length > 0 ? [teamDatas[0]._id] : []}
         multiple
         variant="separated"
-        mx={20}
       >
         {data.map(({ team, teamData }, idx) => (
           <PeerReviewAccordionItem
@@ -142,8 +153,66 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
   };
 
   return (
-    <ScrollArea.Autosize mt={20} mah={750} scrollbarSize={8}>
-      <Tabs value={activeTab} mx={20} style={{ paddingBottom: '20px' }}>
+    <ScrollArea.Autosize mah={750} scrollbarSize={8}>
+      <Tabs value={activeTab} style={{ paddingBottom: '20px' }}>
+        {hasFacultyPermission && (
+          <Group mb={16} mt={8}>
+            <Button 
+              onClick={openSettingsForm}
+              disabled={peerReview.status === "Completed"}
+            >
+              Update Peer Review Settings
+            </Button>
+            <Button 
+              color='red'
+              variant="outline"
+              onClick={openDeleteModal}
+              disabled={peerReview.status !== "Upcoming"}
+            >
+              Delete Peer Review
+            </Button>
+          </Group>
+        )}
+        {hasFacultyPermission && (
+          <Modal
+            opened={openedSettingsForm}
+            onClose={closeSettingsForm}
+            title="Update Peer Review Settings"
+          >
+            <PeerReviewSettingsForm
+              courseId={courseId} 
+              peerReviewId={peerReview._id}
+              onSetUpConfirmed={() => {
+                onUpdate();
+                closeSettingsForm();
+              }}
+            />
+          </Modal>
+        )}
+        {hasFacultyPermission ? (
+          <Modal
+            opened={openedDeleteModal}
+            onClose={closeDeleteModal}
+            title="Delete Peer Review?"
+          >
+            Are you sure you want to delete this peer review? This action cannot be undone.
+            <Group mt="md" style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <Button
+                color='red'
+                onClick={() => {
+                  // TO DO: Implement delete functionality
+                  onUpdate();
+                  closeDeleteModal();
+                }}
+              >
+                Delete
+              </Button>
+              <Button variant="outline" onClick={closeDeleteModal}>
+                Cancel
+              </Button>
+            </Group>
+          </Modal>
+        ) : null}
         {teamSets.map(teamSet => (
           <Tabs.Panel key={teamSet._id} value={teamSet.name}>
             {renderOverviewAccordion()}

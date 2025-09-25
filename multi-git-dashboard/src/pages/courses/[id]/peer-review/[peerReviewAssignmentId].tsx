@@ -14,7 +14,7 @@ import {
   Textarea,
 } from '@mantine/core';
 import { createPortal } from "react-dom";
-import { IconListDetails } from '@tabler/icons-react';
+import { IconListDetails, IconArrowLeft } from '@tabler/icons-react';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 import { PeerReview, PeerReviewAssignment, PeerReviewComment, RepoNode } from '@shared/types/PeerReview';
@@ -115,9 +115,8 @@ const apiFetchPeerReviewAssignment = async (peerReviewAssignmentId: string): Pro
     repoName: 'Sample Peer Review',
     repoUrl: 'https://github.com/gongg21/AddSubtract.git',
     reviewerUser: null,
-    revieweeUser: null,
     reviewerTeam: null,
-    revieweeTeam: null,
+    reviewee: null,
     assignedBy: null,
     assignedAt: new Date(),
     deadline: null,
@@ -193,8 +192,8 @@ const getLanguageForFile = (filename: string) => {
 
 const PeerReviewDetail: React.FC = () => {
   const router = useRouter();
-  const { courseId, peerReviewAssignmentId } = router.query as {
-    courseId: string;
+  const { id, peerReviewAssignmentId } = router.query as {
+    id: string;
     peerReviewAssignmentId: string;
   };
   
@@ -205,7 +204,6 @@ const PeerReviewDetail: React.FC = () => {
   const [repoTree, setRepoTree] = useState<RepoNode | null>(null);
   const [currFile, setCurrFile] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState<Record<string, string>>({});
-  const [openDirs, setOpenDirs] = useState<Record<string, boolean>>({});
   
   // Comments
   const [allComments, setAllComments] = useState<PeerReviewComment[]>([]);
@@ -433,6 +431,7 @@ const PeerReviewDetail: React.FC = () => {
   return (
     <Container fluid className={classes.wrapper} style={{ padding: 20, maxWidth: '100%' }}>
       <Group style={{ paddingBottom:"5px", marginBottom: '5px', display: 'flex', alignContent: 'flex-start', maxHeight: '90%', }} >
+        <IconArrowLeft onClick={() => router.push(`/courses/${id}/peer-review`)} className={classes.returnButton} />
         <IconListDetails />
         <Title order={4}>Peer Review:</Title>
         <Anchor href={peerReviewAssignment.repoUrl} target="_blank" rel="noreferrer">

@@ -15,6 +15,19 @@
   padding-top: 10px;
 }
 
+.returnButton {
+  cursor: pointer;
+  border: solid 1px #505050;
+  border-radius: 6px;
+  width: 50px;
+  height: 24px;
+  transition: background-color 0.2s ease;
+}
+
+.returnButton:hover {
+  background-color: #707070;
+}
+
 .repositoryScrollArea {
   width: 200px;
   height: 73.7vh;

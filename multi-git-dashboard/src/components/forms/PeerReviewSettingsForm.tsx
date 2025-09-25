@@ -1,4 +1,3 @@
-
 import {
   Button,
   TextInput,
@@ -9,13 +8,15 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 
-interface PeerReviewSetUpFormProps {
+interface PeerReviewSettingsFormProps {
   courseId: string | string[] | undefined;
+  peerReviewId: string | null;
   onSetUpConfirmed: () => void;
 }
 
-const PeerReviewSetUpForm: React.FC<PeerReviewSetUpFormProps> = ({
+const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
   courseId,
+  peerReviewId,
   onSetUpConfirmed,
 }) => {
   
@@ -26,7 +27,7 @@ const PeerReviewSetUpForm: React.FC<PeerReviewSetUpFormProps> = ({
         startDate: '',
         endDate: '',
         reviewerType: 'individual',
-        revieweeType: 'individual',
+        TaAssignments: false,
         minReviews: '0',
         maxReviews: '1',
         manualAssign: true,
@@ -64,7 +65,7 @@ const PeerReviewSetUpForm: React.FC<PeerReviewSetUpFormProps> = ({
     <form onSubmit={form.onSubmit(handleSubmit)}>
       <TextInput
         withAsterisk
-        label="Assessment Name"
+        label="Peer Review Title"
         {...form.getInputProps('assessmentName')}
       />
 
@@ -93,7 +94,7 @@ const PeerReviewSetUpForm: React.FC<PeerReviewSetUpFormProps> = ({
       <Text
         style={{ fontWeight: 'bold', marginTop: '16px', marginBottom: '8px' }}
       >
-        Assignment Mode
+        Mode of Assiging Peer Reviews
       </Text>
       <div style={{ marginBottom: '16px', display: 'flex', flexDirection: "row", gap: '15px' }}>
         <Checkbox
@@ -134,19 +135,20 @@ const PeerReviewSetUpForm: React.FC<PeerReviewSetUpFormProps> = ({
       <Text
         style={{ fontWeight: 'bold', marginTop: '16px', marginBottom: '8px' }}
       >
-        Reviewee Type
+        Assign Peer Reviews to Teaching Assistants?
       </Text>
       <div style={{ marginBottom: '16px', display: 'flex', flexDirection: "row", gap: '15px' }}>
         <Radio.Group
-          value={form.values.revieweeType}
-          onChange={value => form.setFieldValue('revieweeType', value)}
+          value={form.values.TaAssignments ? "yes" : "no"}
+          onChange={(val) => form.setFieldValue("TaAssignments", val === "yes")}
         >
-          <div style={{ display: 'flex', gap: '20px' }}>
-            <Radio label="Team" value="team" />
-            <Radio label="Individual" value="individual" />
+          <div style={{ display: 'flex', gap: '32px' }}>
+            <Radio label="Yes" value="yes" styles={{ radio: { cursor: "pointer" } }} />
+            <Radio label="No" value="no" styles={{ radio: { cursor: "pointer" } }} />
           </div>
         </Radio.Group>
       </div>
+      
 
       <TextInput
         label="Minimum Reviews per Reviewer"
@@ -163,10 +165,10 @@ const PeerReviewSetUpForm: React.FC<PeerReviewSetUpFormProps> = ({
       />
 
       <Button type="submit" mt="sm">
-        Confirm Settings
+        {peerReviewId ? "Update Settings" : "Create Peer Review"}
       </Button>
     </form>
   );
 };
 
-export default PeerReviewSetUpForm;
+export default PeerReviewSettingsForm;
