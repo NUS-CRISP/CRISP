@@ -22,7 +22,7 @@ const PeerReviewListPage: React.FC = () => {
   
   const courseApiRoute = `/api/courses/${id}`;
   const teamSetsApiRoute = `/api/courses/${id}/teamsets`;
-  const peerReviewSettingsApiRoute = `/api/courses/${id}/peer-reviews`;
+  const peerReviewsApiRoute = `/api/peer-review/${id}/peer-reviews`;
   
   const [teamSets, setTeamSets] = useState<TeamSet[]>([]);
   const [course, setCourse] = useState<Course>();
@@ -31,43 +31,43 @@ const PeerReviewListPage: React.FC = () => {
   const permission = hasFacultyPermission();
   
   const examplePeerReviews: PeerReview[] = [
-  {
-    _id: "pr1",
-    courseId: id,
-    title: "Example Upcoming Peer Review",
-    description: "This is a sample upcoming peer review.",
-    peerReviewSettingsId: "settings1",
-    peerReviewAssignmentIds: [],
-    createdAt: new Date("2023-09-20T12:00:00Z"),
-    startDate: new Date("2023-09-25T12:00:00Z"),
-    endDate: new Date("2023-10-25T12:00:00Z"),
-    status: "Upcoming",
-  },
-  {
-    _id: "pr2",
-    courseId: id,
-    title: "Example Ongoing Peer Review",
-    description: "This is a sample ongoing peer review.",
-    peerReviewSettingsId: "settings2",
-    peerReviewAssignmentIds: [],
-    createdAt: new Date("2023-09-20T12:00:00Z"),
-    startDate: new Date("2023-09-25T12:00:00Z"),
-    endDate: new Date("2023-10-25T12:00:00Z"),
-    status: "Ongoing",
-  },
-  {
-    _id: "pr3",
-    courseId: id,
-    title: "Example Completed Peer Review",
-    description: "This is a sample completed peer review.",
-    peerReviewSettingsId: "settings3",
-    peerReviewAssignmentIds: [],
-    createdAt: new Date("2023-09-20T12:00:00Z"),
-    startDate: new Date("2023-09-25T12:00:00Z"),
-    endDate: new Date("2023-10-25T12:00:00Z"),
-    status: "Completed",
-  }
-];
+    {
+      _id: "pr1",
+      courseId: id,
+      title: "Example Upcoming Peer Review",
+      description: "This is a sample upcoming peer review.",
+      peerReviewSettingsId: "settings1",
+      peerReviewAssignmentIds: [],
+      createdAt: new Date("2023-09-20T12:00:00Z"),
+      startDate: new Date("2023-09-25T12:00:00Z"),
+      endDate: new Date("2023-10-25T12:00:00Z"),
+      status: "Upcoming",
+    },
+    {
+      _id: "pr2",
+      courseId: id,
+      title: "Example Ongoing Peer Review",
+      description: "This is a sample ongoing peer review.",
+      peerReviewSettingsId: "settings2",
+      peerReviewAssignmentIds: [],
+      createdAt: new Date("2023-09-20T12:00:00Z"),
+      startDate: new Date("2023-09-25T12:00:00Z"),
+      endDate: new Date("2023-10-25T12:00:00Z"),
+      status: "Ongoing",
+    },
+    {
+      _id: "pr3",
+      courseId: id,
+      title: "Example Completed Peer Review",
+      description: "This is a sample completed peer review.",
+      peerReviewSettingsId: "settings3",
+      peerReviewAssignmentIds: [],
+      createdAt: new Date("2023-09-20T12:00:00Z"),
+      startDate: new Date("2023-09-25T12:00:00Z"),
+      endDate: new Date("2023-10-25T12:00:00Z"),
+      status: "Completed",
+    }
+  ];
 
   const onUpdate = () => {
     fetchTeamSets();
@@ -77,13 +77,18 @@ const PeerReviewListPage: React.FC = () => {
   
   const fetchPeerReviews = async () => {
     try {
-      // const response = await fetch(peerReviewSettingsApiRoute);
-      // if (!response.ok) {
-      //   console.error('Error fetching peer reviews:', response.statusText);
-      //   return;
-      // }
-      // const data = await response.json();
-      setPeerReviews(examplePeerReviews);
+      const response = await fetch(peerReviewsApiRoute, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        console.error('Error fetching peer reviews:', response.statusText);
+        return;
+      }
+      const peerReviews = await response.json();
+      setPeerReviews(peerReviews);
     } catch (error) {
       console.error('Error fetching peer reviews:', error);
     }
@@ -154,7 +159,6 @@ const PeerReviewListPage: React.FC = () => {
         courseId={id}
         teamSets={teamSets}
         peerReviews={peerReviews}
-        dateUtils={dateUtils}
         hasFacultyPermission={permission}
         onUpdate={onUpdate}
       />
