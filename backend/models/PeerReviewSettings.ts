@@ -15,7 +15,7 @@ const peerReviewSettingsSchema = new Schema<PeerReviewSettings>({
     default: 'Individual',
   },
   TaAssignments: { type: Boolean, required: true, default: false },
-  minReviewsPerReviewer: { type: Number, required: true, min: 1 },
+  minReviewsPerReviewer: { type: Number, required: true, min: 0 },
   maxReviewsPerReviewer: { type: Number, required: true, min: 1, validate: {
     validator: function (this: PeerReviewSettings, v: number) {
       return v >= this.minReviewsPerReviewer;
