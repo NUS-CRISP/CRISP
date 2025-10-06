@@ -158,7 +158,7 @@ const Navbar: React.FC = () => {
       return 'Assessments';
     } else if (path.startsWith('/courses/[id]/project-management')) {
       return 'Project Management';
-    } else if (path.startsWith('/courses/[id]/class-overview')) {
+    } else if (path.startsWith('/courses/[id]/course-overview')) {
       return 'Class Overview';
     } else if (path.startsWith('/courses/[id]/code-analysis')) {
       return 'Code Analysis';
@@ -205,10 +205,10 @@ const Navbar: React.FC = () => {
 
   const courseLinksData = [
     {
-      link: `/courses/${courseId}/class-overview`,
-      label: 'Class Overview',
+      link: `/courses/${courseId}/course-overview`,
+      label: 'Course Overview',
       disabled: !peopleAdded,
-      pngSrc: '/class-overview.png',
+      pngSrc: '/course-overview.png',
     },
     {
       link: `/courses/${courseId}`,
