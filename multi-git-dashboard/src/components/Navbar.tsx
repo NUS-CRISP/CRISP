@@ -320,12 +320,12 @@ const Navbar: React.FC = () => {
 
   const courseLinks = [];
 
-  // First section: Class Overview, Team Review, PR Review, Code Analysis, Project Management
+  // Navbar Order: Course Overview, Team Review, PR Review, Code Analysis, Project Management
   courseLinks.push(
-    renderNavLink(courseLinksData[1], 6, 'top-start', 'Team Review')
+    renderNavLink(courseLinksData[0], 6, 'top-start', 'Course Overview', true)
   );
   courseLinks.push(
-    renderNavLink(courseLinksData[0], 12, 'top-start', 'Class Overview', true)
+    renderNavLink(courseLinksData[1], 12, 'top-start', 'Team Review')
   );
   courseLinks.push(
     renderNavLink(courseLinksData[2], 10, 'top-start', 'PR Review', true)
