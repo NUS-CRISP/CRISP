@@ -96,14 +96,14 @@ const CreateCourse: React.FC = () => {
       // field should be valid only if courseType is Normal, or if courseType is GitHubOrg and installation check is successful
       gitHubOrgName: (value: string, values: CreateCourseFormValues) =>
         values.courseType === CourseType.Normal ||
-        (values.courseType === CourseType.GitHubOrg &&
-          appInstallationStatus === InstallationStatus.SUCCESS)
+          (values.courseType === CourseType.GitHubOrg &&
+            appInstallationStatus === InstallationStatus.SUCCESS)
           ? null
           : 'GitHub Org name is required',
       repoNameFilter: (value: string, values: CreateCourseFormValues) =>
         values.courseType === CourseType.Normal ||
-        (values.courseType === CourseType.GitHubOrg &&
-          appInstallationStatus === InstallationStatus.SUCCESS)
+          (values.courseType === CourseType.GitHubOrg &&
+            appInstallationStatus === InstallationStatus.SUCCESS)
           ? null
           : 'Repo name filter is required',
       provider: (value: string, values: CreateCourseFormValues) =>
@@ -114,19 +114,19 @@ const CreateCourse: React.FC = () => {
           : null,
       model: (value: string, values: CreateCourseFormValues) =>
         values.isOn &&
-        values.customisedAI &&
-        values.provider &&
-        modelOptions[values.provider]?.includes(value)
+          values.customisedAI &&
+          values.provider &&
+          modelOptions[values.provider]?.includes(value)
           ? null
           : values.customisedAI
             ? 'Model is missing / invalid'
             : null, // Only validate if 'customisedAI' is ON
       apiKey: (value: string, values: CreateCourseFormValues) =>
         values.isOn &&
-        values.customisedAI &&
-        values.provider &&
-        values.model &&
-        value.trim().length > 0
+          values.customisedAI &&
+          values.provider &&
+          values.model &&
+          value.trim().length > 0
           ? null
           : values.customisedAI
             ? 'Model is missing / invalid'
@@ -239,24 +239,16 @@ const CreateCourse: React.FC = () => {
             form.setFieldValue('code', event.currentTarget.value)
           }
         />
-        <Select
-          required
+        <TextInput
+          withAsterisk
           mt="md"
-          comboboxProps={{ withinPortal: true }}
-          data={[
-            'Ay2023/24 Sem 1',
-            'Ay2023/24 Sem 2',
-            'Ay2024/25 Sem 1',
-            'Ay2024/25 Sem 2',
-            'Ay2024/25 Special Term',
-            'AY2025/26 Sem 1',
-            'AY2025/26 Sem 2',
-          ]}
-          placeholder="Choose current semester"
-          label="Semester"
+          label="Academic Term"
+          placeholder="AY2025/2026 Semester 1"
           {...form.getInputProps('semester')}
           value={form.values.semester}
-          onChange={value => form.setFieldValue('semester', value ?? '')}
+          onChange={event =>
+            form.setFieldValue('semester', event.currentTarget.value)
+          }
         />
         <DatePickerInput
           withAsterisk
@@ -364,7 +356,7 @@ const CreateCourse: React.FC = () => {
                         }
                         rightSection={
                           appInstallationStatus ===
-                          InstallationStatus.SUCCESS ? (
+                            InstallationStatus.SUCCESS ? (
                             <IconCheck size={14} />
                           ) : null
                         }
