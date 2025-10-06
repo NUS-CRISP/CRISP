@@ -1,10 +1,12 @@
 import {
+  ActionIcon,
   Badge,
   Box,
   Button,
   Card,
   CloseButton,
   Collapse,
+  Group,
   List,
   SegmentedControl,
   Select,
@@ -18,7 +20,7 @@ import {
 import { DatePickerInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { CourseType } from '@shared/types/Course';
-import { IconBrandGithub, IconCheck } from '@tabler/icons-react';
+import { IconBrandGithub, IconCheck, IconHelpCircle } from '@tabler/icons-react';
 import { getSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
@@ -218,6 +220,9 @@ const CreateCourse: React.FC = () => {
   return (
     <Box maw={300} mx="auto">
       <form onSubmit={form.onSubmit(handleSubmit)}>
+        <Title order={4} my={15}>
+          Course Details
+        </Title>
         <TextInput
           withAsterisk
           label="Course Name"
@@ -275,22 +280,37 @@ const CreateCourse: React.FC = () => {
           }
         />
         <Space h="md" />
+        <Title order={4} my={15}>
+          Course Repository Setup
+        </Title>
         <Box>
-          <Text size="sm" fw={500} mb={3}>
-            Course Type
-          </Text>
-          <SegmentedControl
-            data={[
-              { value: CourseType.Normal, label: 'Normal' },
-              { value: CourseType.GitHubOrg, label: 'GitHub Organisation' },
-            ]}
-            {...form.getInputProps('courseType')}
-          />
+          <Group gap={6}>
+            <Title order={6} my={5}>
+              Repository Source
+            </Title>
+            <Tooltip
+              label="Choose how course repositories are synced: Manual Setup via public GitHub links, or automatically through GitHub Organisation."
+              withinPortal
+              multiline
+              w={300}
+            >
+              <ActionIcon variant="subtle" color="gray" size="sm" aria-label="Setup Repositories help">
+                <IconHelpCircle size={16} />
+              </ActionIcon>
+            </Tooltip>
+            <SegmentedControl
+              data={[
+                { value: CourseType.Normal, label: 'Manual Setup' },
+                { value: CourseType.GitHubOrg, label: 'GitHub Organisation' },
+              ]}
+              {...form.getInputProps('courseType')}
+            />
+          </Group>
 
           <Collapse in={form.values.courseType === CourseType.GitHubOrg}>
             <Box>
-              <Title order={4} my={15}>
-                GitHub Org Integration Setup:
+              <Title order={6} my={10}>
+                Github Organisation Setup
               </Title>
               <Card withBorder>
                 <List>
