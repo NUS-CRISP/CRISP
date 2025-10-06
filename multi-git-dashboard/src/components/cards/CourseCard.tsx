@@ -20,7 +20,7 @@ const CourseCard = forwardRef<HTMLAnchorElement, CourseCardProps>(
         radius="md"
         withBorder
         component={Link}
-        href={`/courses/${course._id}`}
+        href={`/courses/${course._id}/course-overview`}
         onClick={() => isTutorial && nextTutorialStage()}
         style={{
           width: '350px',

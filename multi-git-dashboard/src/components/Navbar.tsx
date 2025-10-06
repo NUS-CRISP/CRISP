@@ -159,7 +159,7 @@ const Navbar: React.FC = () => {
     } else if (path.startsWith('/courses/[id]/project-management')) {
       return 'Project Management';
     } else if (path.startsWith('/courses/[id]/course-overview')) {
-      return 'Class Overview';
+      return 'Course Overview';
     } else if (path.startsWith('/courses/[id]/code-analysis')) {
       return 'Code Analysis';
     } else if (path.startsWith('/courses/[id]/pr-review')) {
