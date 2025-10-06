@@ -1,11 +1,7 @@
 import PeerReviewModel from '@models/PeerReview';
 import PeerReviewSettingsModel from '@models/PeerReviewSettings';
-import PeerReviewAssignmentModel from '@models/PeerReviewAssignment';
-import PeerReviewCommentModel from '@models/PeerReviewComment';
 import CourseModel from '@models/Course';
-import mongoose from 'mongoose';
-import { NotFoundError, MissingAuthorizationError } from './errors';
-import CourseRole from '@shared/types/auth/CourseRole';
+import { NotFoundError } from './errors';
 
 export const getAllPeerReviewsyId = async (courseId: string) => {
   const peerReviews = await PeerReviewModel.find({ course: courseId });
@@ -50,7 +46,7 @@ export const createPeerReviewById = async (courseId: string, peerReviewData: {
   } = peerReviewData;
   
   // Basic validation
-  const newPeerReview = await PeerReviewModel.create({
+  const newPeerReview = new PeerReviewModel({
     course: course._id,
     title,
     description,
@@ -60,7 +56,7 @@ export const createPeerReviewById = async (courseId: string, peerReviewData: {
   });
   
   // Create with settings
-  const newSettings = await PeerReviewSettingsModel.create({
+  const newSettings = new PeerReviewSettingsModel({
     peerReviewId: newPeerReview._id,
     reviewerType,
     TaAssignments,

@@ -76,10 +76,9 @@ export const getPeerReviewAssignment = async (req: Request, res: Response) => {
     throw new MissingAuthorizationError('Access denied');
   }
   const userId = await getUserIdByAccountId(accountId);
-  const assignmentId = req.params.assignmentId;
   
   try {
-    const assignment = await getPeerReviewAssignmentById(userCourseRole, userId, assignmentId);
+    const assignment = await getPeerReviewAssignmentById(userCourseRole, userId, req.params.peerReviewAssignmentId);
     res.status(200).json(assignment);
   } catch (error) {
     if (error instanceof NotFoundError) {

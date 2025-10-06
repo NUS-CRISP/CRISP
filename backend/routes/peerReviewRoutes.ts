@@ -30,16 +30,16 @@ router.get('/:courseId/:peerReviewId/settings', getPeerReviewSettings);
 router.put('/:courseId/:peerReviewId/settings', updatePeerReviewSettings);
 
 // Peer Review Assignment Routes
-router.get('/:peerReviewId/assignments', getPeerReviewAssignmentsByPeerReview);
-router.get('/:peerReviewId/:teamId', getPeerReviewAssignmentsByTeam);
-router.get('/:peerReviewId/:peerReviewAssignmentId', getPeerReviewAssignment);
-router.post('/:peerReviewId/assignments/assign', assignPeerReview);
-router.post('/:peerReviewId/assignments/random', randomAssignPeerReviews);
+router.get('/:courseId/:peerReviewId/assignments', getPeerReviewAssignmentsByPeerReview);
+router.get('/:courseId/:peerReviewId/assignments/:teamId', getPeerReviewAssignmentsByTeam);
+router.post('/:courseId/:peerReviewId/assign-assignments', assignPeerReview);
+router.post('/:courseId/:peerReviewId/random-assignments', randomAssignPeerReviews);
+router.get('/:courseId/:peerReviewAssignmentId', getPeerReviewAssignment);
 
 // Peer Review Comment Routes
-router.get('/:peerReviewAssignmentId/comments', getPeerReviewCommentsById);
-router.post('/:peerReviewAssignmentId/comments', addPeerReviewComment);
-router.put('/:peerReviewAssignmentId/:commentId', updatePeerReviewComment);
-router.delete('/:peerReviewAssignmentId/:commentId', deletePeerReviewComment);
+router.get('/:courseId/:peerReviewAssignmentId/comments', getPeerReviewCommentsById);
+router.post('/:courseId/:peerReviewAssignmentId/comments', addPeerReviewComment);
+router.put('/:courseId/:peerReviewAssignmentId/comments/:commentId', updatePeerReviewComment);
+router.delete('/:courseId/:peerReviewAssignmentId/comments/:commentId', deletePeerReviewComment);
 
 export default router;

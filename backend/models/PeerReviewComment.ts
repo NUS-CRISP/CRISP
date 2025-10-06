@@ -20,6 +20,7 @@ const peerReviewCommentSchema = new Schema<PeerReviewComment>({
   comment: { type: String, required: true },
   author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   createdAt: { type: Date, required: true, default: Date.now },
+  updatedAt: { type: Date },
   isOverallComment: { type: Boolean, default: false },
 });
 
