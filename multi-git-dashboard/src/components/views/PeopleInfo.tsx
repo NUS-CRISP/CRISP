@@ -10,13 +10,13 @@ import {
   Text,
 } from '@mantine/core';
 import FacultyForm from '../forms/FacultyForm';
-import TAForm from '../forms/TAForm';
-import StudentForm from '../forms/StudentForm';
+import StudentAndTeamForm from '../forms/StudentAndTeamForm';
 import CSVExport from '../csv/CSVExport';
 import UpdateUserForm from '../forms/UpdateUserForm';
 import Role from '@shared/types/auth/CourseRole';
 import { User } from '@shared/types/User';
 import UpdateUserCSVForm from '../forms/UpdateUserCSVForm';
+import TAAndTeamForm from '../forms/TAAndTeamForm';
 
 interface PeopleInfoProps {
   courseId: string;
@@ -156,14 +156,17 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
         <FacultyForm courseId={courseId} onFacultyCreated={handleUpdate} />
       </Modal>
       <Modal opened={isAddingTA} onClose={toggleAddTA} title="Add TA">
-        <TAForm courseId={courseId} onTACreated={handleUpdate} />
+        <TAAndTeamForm courseId={courseId} onTACreated={handleUpdate} />
       </Modal>
       <Modal
         opened={isAddingStudent}
         onClose={toggleAddStudent}
         title="Add Student"
       >
-        <StudentForm courseId={courseId} onStudentCreated={handleUpdate} />
+        <StudentAndTeamForm
+          courseId={courseId}
+          onStudentCreated={handleUpdate}
+        />
       </Modal>
       <Modal
         opened={isExportingData}

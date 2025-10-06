@@ -18,7 +18,9 @@ import {
   addRepositoriesToCourse,
   addSprintToCourse,
   addStudentsToCourse,
+  addStudentsToCourseAndTeam,
   addTAsToCourse,
+  addTAAndTeamToCourse,
   createNewCourse,
   deleteCourseById,
   editRepository,
@@ -48,8 +50,10 @@ import { NotFoundError } from '../../services/errors';
 import InternalAssessmentModel from '@models/InternalAssessment';
 import CrispRole from '@shared/types/auth/CrispRole';
 import CourseRole from '@shared/types/auth/CourseRole';
+import { DEFAULT_TEAMSET_NAME } from '@shared/types/TeamSet';
 
 let mongo: MongoMemoryServer;
+
 
 beforeAll(async () => {
   mongo = await MongoMemoryServer.create();
@@ -1678,4 +1682,443 @@ describe('courseService', () => {
       ).rejects.toThrow(NotFoundError);
     });
   });
+
+  describe('addStudentsToCourseAndTeam', () => {
+    const emailFor = (id: string) => `${id}@example.com`;
+
+    async function ensureDefaultTeamSet() {
+      const course = await CourseModel.findById(courseId);
+      if (!course) throw new Error('Course not found in ensureDefaultTeamSet');
+      const ts = new TeamSetModel({
+        course: course._id,
+        name: DEFAULT_TEAMSET_NAME,
+        teams: [],
+      });
+      await ts.save();
+      course.teamSets.push(ts._id);
+      await course.save();
+      return ts;
+    }
+
+    it('adds an existing (not yet enrolled) student to the specified team, creating the team if absent', async () => {
+      await ensureDefaultTeamSet();
+
+      // Create a DB user+account that is NOT enrolled in this course yet
+      const { user } = await createStudentUser({
+        identifier: 'stud-exists',
+        name: 'Stud Exists',
+        gitHandle: null,
+      });
+
+      const rows = [
+        {
+          identifier: 'stud-exists',
+          name: 'Stud Exists',
+          email: 'stud-exists@example.com',
+          teamNumber: 7,
+        },
+      ];
+
+      await addStudentsToCourseAndTeam(courseId, rows);
+
+      const teamSet = await TeamSetModel.findOne({ course: courseId, name: DEFAULT_TEAMSET_NAME });
+      expect(teamSet).toBeTruthy();
+
+      const team = await TeamModel.findOne({ number: 7, teamSet: teamSet?._id });
+      expect(team).toBeTruthy();
+
+      const reloadedStudent = await UserModel.findOne({ identifier: 'stud-exists' });
+      expect(
+        team?.members?.map(m => String(m)).includes(String(reloadedStudent?._id))
+      ).toBe(true);
+
+      const course = await CourseModel.findById(courseId).populate('students');
+      expect(
+        course?.students.some((s: any) => String(s._id) === String(reloadedStudent?._id))
+      ).toBe(true);
+    });
+
+
+    it('creates a NEW student + account, enrolls them, and assigns to a NEW team', async () => {
+      await ensureDefaultTeamSet();
+
+      const newId = 'stud2';
+      const rows = [
+        {
+          identifier: newId,
+          name: 'Stud Two',
+          email: emailFor(newId),
+          gitHandle: 'studtwo',
+          teamNumber: 2,
+        },
+      ];
+
+      await addStudentsToCourseAndTeam(courseId, rows);
+
+      const created = await UserModel.findOne({ identifier: newId });
+      expect(created).toBeTruthy();
+      expect(
+        created?.enrolledCourses.map(String).includes(String(courseId))
+      ).toBe(true);
+
+      const acct = await AccountModel.findOne({ user: created?._id });
+      expect(acct).toBeTruthy();
+      expect(acct?.email).toBe(emailFor(newId));
+      expect(
+        acct?.courseRoles.some(
+          (cr: any) =>
+            String(cr.course) === String(courseId) &&
+            cr.courseRole === CourseRole.Student
+        )
+      ).toBe(true);
+
+      const teamSet = await TeamSetModel.findOne({
+        course: courseId,
+        name: DEFAULT_TEAMSET_NAME,
+      });
+      const team = await TeamModel.findOne({
+        number: 2,
+        teamSet: teamSet?._id,
+      });
+      expect(team).toBeTruthy();
+      expect(
+        team?.members?.map(m => String(m)).includes(String(created?._id))
+      ).toBe(true);
+
+      // TeamSet.teams updated via $addToSet
+      const reloadedTs = await TeamSetModel.findById(teamSet?._id);
+      expect(
+        reloadedTs?.teams.map(String).includes(String(team?._id))
+      ).toBe(true);
+    });
+
+    it('is idempotent: adding the same student to the same team twice does not duplicate membership', async () => {
+      await ensureDefaultTeamSet();
+
+      // Fresh, not-enrolled user
+      await createStudentUser({
+        identifier: 'stud-idem',
+        name: 'Stud Idem',
+        gitHandle: null,
+      });
+
+      const rows = [
+        { identifier: 'stud-idem', name: 'Stud Idem', email: 'stud-idem@example.com', teamNumber: 9 },
+      ];
+
+      await addStudentsToCourseAndTeam(courseId, rows);
+      await addStudentsToCourseAndTeam(courseId, rows);
+
+      const teamSet = await TeamSetModel.findOne({ course: courseId, name: DEFAULT_TEAMSET_NAME });
+      const team = await TeamModel.findOne({ number: 9, teamSet: teamSet?._id });
+
+      const student = await UserModel.findOne({ identifier: 'stud-idem' });
+      const occurrences =
+        team?.members?.map(String).filter(id => id === String(student?._id)).length ?? 0;
+      expect(occurrences).toBe(1);
+    });
+
+
+    it('skips when an existing student has mismatched name/email (non-trial) leading to `continue`', async () => {
+      // Create a student + account that *already exists* but with different name/email
+      const { user, account } = await createStudentUser({
+        identifier: 'skipguy',
+        name: 'Alice',
+        gitHandle: null,
+      });
+      // No courseRoles for this course and a conflicting email/name will still trigger the continue via the OR conditions
+      account.email = 'alice@example.com';
+      await account.save();
+
+      await ensureDefaultTeamSet();
+      const rows = [
+        {
+          identifier: 'skipguy',
+          name: 'Bob', // mismatch
+          email: 'bob@example.com', // mismatch
+          teamNumber: 3,
+        },
+      ];
+      await addStudentsToCourseAndTeam(courseId, rows);
+
+      const refreshed = await UserModel.findById(user._id);
+      expect(
+        refreshed?.enrolledCourses.map(String).includes(String(courseId))
+      ).toBe(false); // not enrolled
+      const teamSet = await TeamSetModel.findOne({
+        course: courseId,
+        name: DEFAULT_TEAMSET_NAME,
+      });
+      const team = await TeamModel.findOne({
+        number: 3,
+        teamSet: teamSet?._id,
+      });
+      expect(team).toBeNull(); // team not even created due to continue
+    });
+
+    it('adds a student to the course without team when teamNumber is undefined', async () => {
+      const rows = [
+        {
+          identifier: 'stud-noteam',
+          name: 'No Team',
+          email: 'noteam@example.com',
+          // teamNumber omitted
+        },
+      ];
+      await addStudentsToCourseAndTeam(courseId, rows);
+
+      const u = await UserModel.findOne({ identifier: 'stud-noteam' });
+      expect(u).toBeTruthy();
+      expect(u?.enrolledCourses.map(String).includes(String(courseId))).toBe(true);
+
+      const anyTeam = await TeamModel.findOne({ members: u?._id });
+      expect(anyTeam).toBeNull();
+    });
+
+    it('throws NotFoundError when course does not exist', async () => {
+      const badCourseId = new mongoose.Types.ObjectId().toString();
+      await expect(
+        addStudentsToCourseAndTeam(badCourseId, [
+          {
+            identifier: 'x',
+            name: 'X',
+            email: 'x@example.com',
+            teamNumber: 1,
+          },
+        ])
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('throws NotFoundError when teamNumber is provided but the default TeamSet is missing', async () => {
+      // Intentionally DO NOT create the default TeamSet
+      await expect(
+        addStudentsToCourseAndTeam(courseId, [
+          {
+            identifier: 'y',
+            name: 'Y',
+            email: 'y@example.com',
+            teamNumber: 11,
+          },
+        ])
+      ).rejects.toThrow(NotFoundError);
+    });
+  });
+
+  describe('addTAAndTeamToCourse', () => {
+    const emailFor = (id: string) => `${id}@example.com`;
+
+    async function ensureDefaultTeamSet() {
+      const course = await CourseModel.findById(courseId);
+      if (!course) throw new Error('Course not found in ensureDefaultTeamSet');
+      const ts = new TeamSetModel({
+        course: course._id,
+        name: DEFAULT_TEAMSET_NAME,
+        teams: [],
+      });
+      await ts.save();
+      course.teamSets.push(ts._id);
+      await course.save();
+      return ts;
+    }
+
+    it('assigns an existing (not yet enrolled) TA to the specified team, creating the team if absent', async () => {
+      await ensureDefaultTeamSet();
+
+      // TA exists in DB but not enrolled in this course yet
+      await createTAUser({
+        identifier: 'ta-exists',
+        name: 'TA Exists',
+        gitHandle: null,
+      });
+
+      const rows = [
+        {
+          identifier: 'ta-exists',
+          name: 'TA Exists',
+          email: 'ta-exists@example.com',
+          teamNumber: 4,
+        },
+      ];
+
+      await addTAAndTeamToCourse(courseId, rows);
+
+      const teamSet = await TeamSetModel.findOne({ course: courseId, name: DEFAULT_TEAMSET_NAME });
+      const team = await TeamModel.findOne({ number: 4, teamSet: teamSet?._id });
+      expect(team).toBeTruthy();
+
+      const ta = await UserModel.findOne({ identifier: 'ta-exists' });
+      expect(String(team?.TA)).toBe(String(ta?._id));
+
+      const course = await CourseModel.findById(courseId).populate('TAs');
+      const countSameTA =
+        course?.TAs.filter((t: any) => String(t._id) === String(ta?._id)).length ?? 0;
+      expect(countSameTA).toBe(1);
+    });
+
+
+    it('creates a NEW TA + account, enrolls them as TA, and assigns to a NEW team', async () => {
+      await ensureDefaultTeamSet();
+
+      const newId = 'ta2';
+      const rows = [
+        {
+          identifier: newId,
+          name: 'TA Two',
+          email: emailFor(newId),
+          gitHandle: 'tatoo',
+          teamNumber: 5,
+        },
+      ];
+
+      await addTAAndTeamToCourse(courseId, rows);
+
+      const ta = await UserModel.findOne({ identifier: newId });
+      expect(ta).toBeTruthy();
+      expect(
+        ta?.enrolledCourses.map(String).includes(String(courseId))
+      ).toBe(true);
+
+      const acct = await AccountModel.findOne({ user: ta?._id });
+      expect(acct).toBeTruthy();
+      expect(acct?.email).toBe(emailFor(newId));
+      expect(
+        acct?.courseRoles.some(
+          (cr: any) =>
+            String(cr.course) === String(courseId) &&
+            cr.courseRole === CourseRole.TA
+        )
+      ).toBe(true);
+
+      const teamSet = await TeamSetModel.findOne({
+        course: courseId,
+        name: DEFAULT_TEAMSET_NAME,
+      });
+      const team = await TeamModel.findOne({
+        number: 5,
+        teamSet: teamSet?._id,
+      });
+      expect(team).toBeTruthy();
+      expect(String(team?.TA)).toBe(String(ta?._id));
+
+      // TeamSet.teams updated via $addToSet
+      const reloadedTs = await TeamSetModel.findById(teamSet?._id);
+      expect(
+        reloadedTs?.teams.map(String).includes(String(team?._id))
+      ).toBe(true);
+    });
+
+    it('reassigns TA on an existing team (overwrites previous TA)', async () => {
+      await ensureDefaultTeamSet();
+
+      // placeholder TA already on team 6
+      const placeholder = await createTAUser({
+        identifier: 'placeholder-ta',
+        name: 'Placeholder TA',
+        gitHandle: null,
+      });
+
+      const course = await CourseModel.findById(courseId);
+      const ts = await TeamSetModel.findOne({ course: course?._id, name: DEFAULT_TEAMSET_NAME });
+
+      const team = new TeamModel({ number: 6, teamSet: ts?._id, members: [], TA: placeholder.user._id });
+      await team.save();
+      await TeamSetModel.updateOne({ _id: ts?._id }, { $addToSet: { teams: team._id } });
+
+      // real TA exists but is NOT enrolled yet
+      await createTAUser({
+        identifier: 'real-ta',
+        name: 'Real TA',
+        gitHandle: null,
+      });
+
+      await addTAAndTeamToCourse(courseId, [
+        { identifier: 'real-ta', name: 'Real TA', email: 'real-ta@example.com', teamNumber: 6 },
+      ]);
+
+      const reloadedTeam = await TeamModel.findById(team._id);
+      const realTA = await UserModel.findOne({ identifier: 'real-ta' });
+      expect(String(reloadedTeam?.TA)).toBe(String(realTA?._id));
+    });
+
+
+    it('skips when an existing TA has mismatched name/email (non-trial), leaving no team created', async () => {
+      const { user, account } = await createTAUser({
+        identifier: 'tacontinue',
+        name: 'Alice TA',
+        gitHandle: null,
+      });
+      account.email = 'alice.ta@example.com';
+      await account.save();
+
+      await ensureDefaultTeamSet();
+      await addTAAndTeamToCourse(courseId, [
+        {
+          identifier: 'tacontinue',
+          name: 'Bob TA', // mismatch
+          email: 'bob.ta@example.com', // mismatch
+          teamNumber: 8,
+        },
+      ]);
+
+      // Not enrolled, no team created/assigned
+      const refreshed = await UserModel.findById(user._id);
+      expect(
+        refreshed?.enrolledCourses.map(String).includes(String(courseId))
+      ).toBe(false);
+
+      const ts = await TeamSetModel.findOne({
+        course: courseId,
+        name: DEFAULT_TEAMSET_NAME,
+      });
+      const team = await TeamModel.findOne({ number: 8, teamSet: ts?._id });
+      expect(team).toBeNull();
+    });
+
+    it('enrolls TA without team when teamNumber is undefined', async () => {
+      await addTAAndTeamToCourse(courseId, [
+        {
+          identifier: 'tanoteam',
+          name: 'TA No Team',
+          email: 'tanoteam@example.com',
+        },
+      ]);
+
+      const ta = await UserModel.findOne({ identifier: 'tanoteam' });
+      expect(ta).toBeTruthy();
+      expect(
+        ta?.enrolledCourses.map(String).includes(String(courseId))
+      ).toBe(true);
+
+      const anyTeam = await TeamModel.findOne({ TA: ta?._id });
+      expect(anyTeam).toBeNull();
+    });
+
+    it('throws NotFoundError when course does not exist', async () => {
+      const badCourseId = new mongoose.Types.ObjectId().toString();
+      await expect(
+        addTAAndTeamToCourse(badCourseId, [
+          {
+            identifier: 'taX',
+            name: 'TA X',
+            email: 'tax@example.com',
+            teamNumber: 1,
+          },
+        ])
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('throws NotFoundError when teamNumber is provided but the default TeamSet is missing', async () => {
+      await expect(
+        addTAAndTeamToCourse(courseId, [
+          {
+            identifier: 'taY',
+            name: 'TA Y',
+            email: 'tay@example.com',
+            teamNumber: 12,
+          },
+        ])
+      ).rejects.toThrow(NotFoundError);
+    });
+  });
+
 });

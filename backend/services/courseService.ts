@@ -5,10 +5,11 @@ import TeamModel, { Team } from '@models/Team';
 import TeamSetModel, { TeamSet } from '@models/TeamSet';
 import UserModel, { User } from '@models/User';
 import CrispRole from '@shared/types/auth/CrispRole';
-import { Types } from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import { BadRequestError, NotFoundError } from './errors';
 import { InternalAssessment } from '@shared/types/InternalAssessment';
 import CourseRole from '@shared/types/auth/CourseRole';
+import { DEFAULT_TEAMSET_NAME } from '@shared/types/TeamSet';
 
 /*----------------------------------------Course----------------------------------------*/
 export const createNewCourse = async (courseData: any, accountId: string) => {
@@ -76,6 +77,15 @@ export const createNewCourse = async (courseData: any, accountId: string) => {
     }
   }
   await course.save();
+  // add default team set
+  const ts = await TeamSetModel.create({
+    course: course._id,
+    name: DEFAULT_TEAMSET_NAME,
+  });
+  await CourseModel.updateOne(
+    { _id: course._id },
+    { $addToSet: { teamSets: ts._id } }
+  );
   return course;
 };
 
@@ -206,6 +216,121 @@ export const addStudentsToCourse = async (
   await course.save();
 };
 
+type Row = {
+  identifier: string;
+  name?: string;
+  email?: string;
+  gitHandle?: string;
+  teamNumber?: number;
+};
+
+export const addStudentsToCourseAndTeam = async (
+  courseId: string,
+  rows: Row[]
+) => {
+  const course = await CourseModel.findById(courseId).populate<{
+    students: User[];
+  }>('students');
+  if (!course) throw new NotFoundError('Course not found');
+
+  for (const r of rows) {
+    // 1) Add students to course
+    const studentId = r.identifier;
+    let student = await UserModel.findOne({ identifier: studentId });
+    let studentAccount = null as any;
+
+    if (!student) {
+      student = new UserModel({
+        identifier: studentId,
+        name: (r.name ?? studentId).toUpperCase(),
+        enrolledCourses: [],
+        gitHandle: r.gitHandle ?? null,
+      });
+      await student.save();
+
+      const newAccount = new AccountModel({
+        email: r.email,
+        crispRole: CrispRole.Normal,
+        isApproved: false,
+        user: student._id,
+      });
+      await newAccount.save();
+      studentAccount = newAccount;
+    } else {
+      studentAccount = await AccountModel.findOne({ user: student._id });
+      if (!studentAccount) continue;
+
+      const courseRoleTuple = studentAccount.courseRoles.filter(
+        (cr: { course: string }) => cr.course === courseId
+      );
+      if (
+        (courseRoleTuple.length !== 0 &&
+          studentAccount.crispRole !== CrispRole.TrialUser) ||
+        (r.name && r.name.toUpperCase() !== student.name.toUpperCase()) ||
+        (r.email &&
+          r.email.toLowerCase() !== studentAccount.email.toLowerCase())
+      ) {
+        continue;
+      } else {
+        student.gitHandle = r.gitHandle ?? student.gitHandle;
+      }
+    }
+
+    if (!student.enrolledCourses.some(id => id.equals(course._id))) {
+      student.enrolledCourses.push(course._id);
+      studentAccount.courseRoles.push({
+        course: course._id.toString(),
+        courseRole: CourseRole.Student,
+      });
+    }
+
+    await student.save();
+    await studentAccount.save();
+
+    if (!course.students.some(s => s.identifier === student?.identifier)) {
+      (course.students as any).push(student);
+    }
+
+    if (r.teamNumber !== undefined && r.teamNumber !== null) {
+      const teamSetName = DEFAULT_TEAMSET_NAME;
+      let teamSet = await TeamSetModel.findOne({
+        course: course._id,
+        name: teamSetName,
+      });
+
+      if (!teamSet) throw new NotFoundError('TeamSet not found');
+
+      let team = await TeamModel.findOne({
+        number: r.teamNumber,
+        teamSet: teamSet._id,
+      });
+
+      if (!team) {
+        team = new TeamModel({
+          number: r.teamNumber,
+          teamSet: teamSet._id,
+          members: [],
+        });
+        await team.save();
+
+        await TeamSetModel.updateOne(
+          { _id: teamSet._id },
+          { $addToSet: { teams: team._id } }
+        );
+      }
+
+      // Add member to team
+      await TeamModel.updateOne(
+        { _id: team._id },
+        { $addToSet: { members: student._id } }
+      );
+    }
+  }
+
+  await course.save();
+  return { ok: true };
+};
+
 export const updateStudentsInCourse = async (
   courseId: string,
   studentDataList: any[]
@@ -325,6 +450,118 @@ export const addTAsToCourse = async (courseId: string, TADataList: any[]) => {
     }
   }
   await course.save();
+};
+
+export const addTAAndTeamToCourse = async (
+  courseId: string,
+  TADataList: any[]
+) => {
+  const course = await CourseModel.findById(courseId).populate<{ TAs: User[] }>(
+    'TAs'
+  );
+  if (!course) throw new NotFoundError('Course not found');
+
+  for (const TAData of TADataList) {
+    const taId = TAData.identifier;
+
+    // 1) Upsert TA
+    let ta = await UserModel.findOne({ identifier: taId });
+    let taAccount: any = null;
+
+    if (!ta) {
+      ta = new UserModel({
+        identifier: taId,
+        name: (TAData.name ?? taId).toUpperCase(),
+        enrolledCourses: [],
+        gitHandle: TAData.gitHandle ?? null,
+      });
+      await ta.save();
+
+      const newAccount = new AccountModel({
+        email: TAData.email,
+        crispRole: CrispRole.Normal,
+        isApproved: false,
+        user: ta._id,
+      });
+      await newAccount.save();
+      taAccount = newAccount;
+    } else {
+      taAccount = await AccountModel.findOne({ user: ta._id });
+      if (!taAccount) continue;
+
+      const courseRoleTuple = taAccount.courseRoles.filter(
+        (cr: { course: string }) => cr.course === courseId
+      );
+      if (
+        (courseRoleTuple.length !== 0 &&
+          taAccount.crispRole !== CrispRole.TrialUser) ||
+        (TAData.name && TAData.name.toUpperCase() !== ta.name.toUpperCase()) ||
+        (TAData.email &&
+          TAData.email.toLowerCase() !== taAccount.email.toLowerCase())
+      ) {
+        continue;
+      } else {
+        ta.gitHandle = TAData.gitHandle ?? ta.gitHandle;
+      }
+    }
+
+    if (
+      !ta.enrolledCourses.some((id: any) =>
+        id?.equals ? id.equals(course._id) : String(id) === String(course._id)
+      )
+    ) {
+      ta.enrolledCourses.push(course._id);
+      taAccount.courseRoles.push({
+        course: course._id.toString(),
+        courseRole: CourseRole.TA,
+      });
+    }
+
+    await ta.save();
+    await taAccount.save();
+
+    if (!course.TAs.some(t => t.identifier === ta.identifier)) {
+      (course.TAs as any).push(ta);
+    }
+
+    // 2) Allocate team if specified
+    if (TAData.teamNumber !== undefined && TAData.teamNumber !== null) {
+      const teamSetName = DEFAULT_TEAMSET_NAME;
+
+      const teamSet = await TeamSetModel.findOne({
+        course: course._id,
+        name: teamSetName,
+      });
+      if (!teamSet) throw new NotFoundError('TeamSet not found');
+
+      let team = await TeamModel.findOne({
+        number: TAData.teamNumber,
+        teamSet: teamSet._id,
+      });
+
+      if (!team) {
+        team = new TeamModel({
+          number: TAData.teamNumber,
+          teamSet: teamSet._id,
+          members: [],
+          TA: null,
+        });
+        await team.save();
+
+        await TeamSetModel.updateOne(
+          { _id: teamSet._id },
+          { $addToSet: { teams: team._id } }
+        );
+      }
+
+      // Assign TA
+      team.TA = ta._id;
+      await team.save();
+    }
+  }
+
+  await course.save();
+  return { ok: true };
 };
 
 export const updateTAsInCourse = async (

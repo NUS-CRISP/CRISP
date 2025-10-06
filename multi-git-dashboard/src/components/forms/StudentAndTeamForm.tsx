@@ -1,17 +1,33 @@
-// CURRENTLY DEPRECATED, USING TAAndTeamForm so that TAs can be directly assigned to teams
 import { Box, Button, Divider, Notification, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
 import CSVUpload from '../csv/CSVUpload';
 
-interface TAFormProps {
+interface StudentAndTeamFormProps {
   courseId: string | string[] | undefined;
-  onTACreated: () => void;
+  onStudentCreated: () => void;
 }
 
-const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
-  const apiRoute = `/api/courses/${courseId}/tas`;
-  const csvTemplateHeaders = ['name', 'identifier', 'email', 'gitHandle'];
+interface StudentAndTeamFormUser {
+  identifier: string;
+  name: string;
+  gitHandle: string;
+  email: string;
+  teamNumber?: number | string;
+}
+
+const StudentAndTeamForm: React.FC<StudentAndTeamFormProps> = ({
+  courseId,
+  onStudentCreated,
+}) => {
+  const apiRoute = `/api/courses/${courseId}/students/teams`;
+  const csvTemplateHeaders = [
+    'name',
+    'identifier',
+    'email',
+    'gitHandle',
+    'teamNumber',
+  ];
 
   const form = useForm({
     initialValues: {
@@ -19,11 +35,35 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
       name: '',
       gitHandle: '',
       email: '',
+      teamNumber: '',
     },
   });
   const [error, setError] = useState<string | null>(null);
 
+  const transformStudentData = (data: unknown[]) => {
+    const students = data as StudentAndTeamFormUser[];
+    return students.map(student => {
+      const tn =
+        student.teamNumber === undefined ? '' : String(student.teamNumber);
+      const teamNumber = /^\d+$/.test(tn.trim()) ? Number(tn) : undefined;
+      const row: StudentAndTeamFormUser = {
+        identifier: student.identifier,
+        name: student.name,
+        gitHandle: student.gitHandle || '',
+        email: student.email,
+      };
+      if (teamNumber !== undefined) row.teamNumber = teamNumber;
+      return row;
+    });
+  };
+
   const handleSubmitForm = async () => {
+    const tnStr = String(form.values.teamNumber ?? '').trim();
+    const tn = tnStr === '' ? undefined : Number(tnStr);
+    if (tn !== undefined && !Number.isInteger(tn)) {
+      setError('Team Number must be an integer');
+      return;
+    }
     const response = await fetch(apiRoute, {
       method: 'POST',
       headers: {
@@ -36,13 +76,14 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
             name: form.values.name,
             gitHandle: form.values.gitHandle,
             email: form.values.email,
+            ...(tn !== undefined ? { teamNumber: tn } : {}),
           },
         ],
       }),
     });
 
     await response.json();
-    onTACreated();
+    onStudentCreated();
   };
 
   return (
@@ -56,7 +97,7 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
       <form onSubmit={form.onSubmit(handleSubmitForm)}>
         <TextInput
           withAsterisk
-          label="TA Name"
+          label="Student Name"
           {...form.getInputProps('name')}
           value={form.values.name}
           onChange={event => {
@@ -65,7 +106,7 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
         />
         <TextInput
           withAsterisk
-          label="TA ID (NUS Net)"
+          label="Student ID (NUS Net)"
           {...form.getInputProps('identifier')}
           value={form.values.identifier}
           onChange={event => {
@@ -89,21 +130,35 @@ const TAForm: React.FC<TAFormProps> = ({ courseId, onTACreated }) => {
             form.setFieldValue('gitHandle', event.currentTarget.value);
           }}
         />
+        <TextInput
+          label="Team Number"
+          {...form.getInputProps('teamNumber')}
+          value={form.values.teamNumber}
+          onChange={event => {
+            const v = event.currentTarget.value;
+            if (/^\d*$/.test(v)) {
+              form.setFieldValue('teamNumber', v);
+            }
+          }}
+          inputMode="numeric"
+          pattern="\d*"
+        />
         <Button type="submit" style={{ marginTop: '16px' }}>
-          Create TA
+          Create Student
         </Button>
       </form>
       <Divider label="or Upload CSV" size="lg" />
       <CSVUpload
         headers={csvTemplateHeaders}
-        onProcessComplete={onTACreated}
+        onProcessComplete={onStudentCreated}
         onError={setError}
-        filename="tas_template.csv"
-        uploadButtonString="Upload TAs"
+        filename="students_template.csv"
+        uploadButtonString="Upload Students"
         urlString={apiRoute}
+        transformFunction={transformStudentData}
       />
     </Box>
   );
 };
 
-export default TAForm;
+export default StudentAndTeamForm;

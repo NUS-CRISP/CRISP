@@ -5,6 +5,7 @@ import {
   Notification,
   ScrollArea,
   Tabs,
+  Tooltip,
 } from '@mantine/core';
 import { TeamSet } from '@shared/types/TeamSet';
 import { useEffect, useState } from 'react';
@@ -15,6 +16,7 @@ import TeamSetForm from '../forms/TeamSetForm';
 import { User } from '@shared/types/User';
 import { TeamData } from '@shared/types/TeamData';
 import { JiraBoard } from '@shared/types/JiraData';
+import { DEFAULT_TEAMSET_NAME } from '@shared/types/TeamSet';
 
 interface TeamsInfoProps {
   courseId: string;
@@ -82,10 +84,18 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({
   };
 
   useEffect(() => {
+    if (!teamSets.length) return;
     const savedTab = localStorage.getItem(`activeTeamSetTab_${courseId}`);
-    if (savedTab && teamSets.some(teamSet => teamSet.name === savedTab)) {
-      setActiveTab(savedTab);
-    }
+    // 1) if saved tab exists, select it
+    // 2) otherwise use the default created team set (if it still exists)
+    // 3) otherwise just select the first team set
+    let selected = teamSets.find(ts => ts.name === savedTab);
+    if (!selected)
+      selected = teamSets.find(ts => ts.name === DEFAULT_TEAMSET_NAME);
+    if (!selected) selected = teamSets[0];
+    if (!selected) return;
+    setActiveTab(selected.name);
+    setTeamSetId(selected._id);
   }, [teamSets]);
 
   const handleDeleteTeamSet = async () => {
@@ -106,6 +116,7 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({
       setActiveTab(null);
       setTeamSetId(null);
       onUpdate();
+      setIsEditing(false);
     } catch (error) {
       console.error('Error deleting TeamSet:', error);
       setError('Error deleting TeamSet. Please try again.');
@@ -150,6 +161,12 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({
     </Tabs.Panel>
   ));
 
+  const selectedTeamSet =
+    teamSets.find(ts => ts._id === teamSetId) ??
+    teamSets.find(ts => ts.name === activeTab) ??
+    null;
+
+  const isDefaultSelected = selectedTeamSet?.name === DEFAULT_TEAMSET_NAME;
   return (
     <ScrollArea
       style={{
@@ -175,7 +192,6 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({
         {hasFacultyPermission && (
           <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
             <Group>
-              <Button onClick={toggleTeamSetForm}>Create TeamSet</Button>
               {activeTab && (
                 <Button onClick={toggleAddStudentsForm}>Assign Students</Button>
               )}
@@ -188,11 +204,31 @@ const TeamsInfo: React.FC<TeamsInfoProps> = ({
                 </Button>
               )}
             </Group>
+            <Button
+              onClick={toggleTeamSetForm}
+              color="green"
+              style={{ marginLeft: 'auto' }}
+            >
+              Create New TeamSet
+            </Button>
 
             {teamSetId && isEditing && (
-              <Button color="red" onClick={handleDeleteTeamSet}>
-                Delete TeamSet
-              </Button>
+              <Tooltip
+                label="The default TeamSet cannot be deleted."
+                withArrow
+                disabled={!isDefaultSelected}
+                withinPortal
+              >
+                <span>
+                  <Button
+                    color="red"
+                    onClick={handleDeleteTeamSet}
+                    disabled={isDefaultSelected}
+                  >
+                    Delete TeamSet
+                  </Button>
+                </span>
+              </Tooltip>
             )}
           </Group>
         )}

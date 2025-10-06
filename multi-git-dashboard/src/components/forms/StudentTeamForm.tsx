@@ -11,7 +11,7 @@ interface StudentTeamFormProps {
 
 interface StudentTeamFormUser {
   identifier: string;
-  teamNumber: number;
+  teamNumber: string | number;
 }
 
 const StudentTeamForm: React.FC<StudentTeamFormProps> = ({
@@ -25,7 +25,7 @@ const StudentTeamForm: React.FC<StudentTeamFormProps> = ({
   const form = useForm({
     initialValues: {
       identifier: '',
-      teamNumber: 0,
+      teamNumber: '',
     },
   });
   const [error, setError] = useState<string | null>(null);
@@ -93,8 +93,13 @@ const StudentTeamForm: React.FC<StudentTeamFormProps> = ({
           {...form.getInputProps('teamNumber')}
           value={form.values.teamNumber}
           onChange={event => {
-            form.setFieldValue('teamNumber', +event.currentTarget.value);
+            const v = event.currentTarget.value;
+            if (/^\d*$/.test(v)) {
+              form.setFieldValue('teamNumber', v);
+            }
           }}
+          inputMode="numeric"
+          pattern="\d*"
         />
         <Button type="submit" style={{ marginTop: '16px' }}>
           Upload Student
