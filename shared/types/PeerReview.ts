@@ -47,6 +47,7 @@ export interface PeerReviewComment {
   author: User;
   comment: string;
   createdAt: Date;
+  updatedAt?: Date;
   isOverallComment?: boolean;
 }
 
