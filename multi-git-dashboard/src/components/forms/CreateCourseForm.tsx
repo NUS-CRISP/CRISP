@@ -26,9 +26,7 @@ import { useRouter } from 'next/router';
 import { useState } from 'react';
 
 const CARD_W = '210px';
-// TODO: Setup webhook receiver to automatically get the org name where user installed GH app
-const gitHubNewInstallationUrl =
-  'https://github.com/apps/NUS-CRISP/installations/new';
+const gitHubNewInstallationUrl = 'https://github.com/apps/NUS-CRISP/installations/new';
 
 enum InstallationStatus {
   IDLE = 'idle',
@@ -101,7 +99,7 @@ const CreateCourse: React.FC = () => {
           (values.courseType === CourseType.GitHubOrg &&
             appInstallationStatus === InstallationStatus.SUCCESS)
           ? null
-          : 'GitHub Org name is required',
+          : 'GitHub Organisation name is required',
       repoNameFilter: (value: string, values: CreateCourseFormValues) =>
         values.courseType === CourseType.Normal ||
           (values.courseType === CourseType.GitHubOrg &&
@@ -310,9 +308,13 @@ const CreateCourse: React.FC = () => {
           <Collapse in={form.values.courseType === CourseType.GitHubOrg}>
             <Box>
               <Title order={6} my={10}>
-                Github Organisation Setup
+                GitHub Organisation Setup
               </Title>
-              <Card withBorder>
+              <Card withBorder p="md">
+                <Text size="sm" c="dimmed" maw={520} mb="sm">
+                  Install the CRISP GitHub App in your GitHub organisation to enable automatic syncing
+                  of repositories from your organisation.
+                </Text>
                 <List>
                   <List.Item>
                     <Button
@@ -323,7 +325,7 @@ const CreateCourse: React.FC = () => {
                       href={gitHubNewInstallationUrl}
                       target="_blank"
                     >
-                      Install our GitHub App
+                      Install CRISP GitHub
                     </Button>
                   </List.Item>
                   <Collapse
@@ -333,7 +335,7 @@ const CreateCourse: React.FC = () => {
                     <List.Item>
                       <TextInput
                         withAsterisk
-                        label="GitHub Org Name"
+                        label="GitHub Organisation Name"
                         placeholder="e.g. nus-crisp"
                         {...form.getInputProps('gitHubOrgName')}
                         onChange={event => {
@@ -348,45 +350,23 @@ const CreateCourse: React.FC = () => {
                       />
                       <Space h="sm" />
                       {errorMessage && (
-                        <Text
-                          style={{
-                            maxWidth: CARD_W,
-                          }}
-                          c="red"
-                        >
+                        <Text style={{ maxWidth: CARD_W, }} c="red">
                           {errorMessage}
                         </Text>
                       )}
                       <Button
                         type="button"
-                        loading={
-                          appInstallationStatus === InstallationStatus.LOADING
-                        }
-                        variant={
-                          appInstallationStatus === InstallationStatus.SUCCESS
-                            ? 'filled'
-                            : 'outline'
-                        }
-                        color={
-                          appInstallationStatus === InstallationStatus.SUCCESS
-                            ? 'green'
-                            : appInstallationStatus === InstallationStatus.ERROR
-                              ? 'red'
-                              : 'blue'
+                        loading={appInstallationStatus === InstallationStatus.LOADING}
+                        variant={appInstallationStatus === InstallationStatus.SUCCESS ? 'filled' : 'outline'}
+                        color={appInstallationStatus === InstallationStatus.SUCCESS ? 'green'
+                          : appInstallationStatus === InstallationStatus.ERROR ? 'red' : 'blue'
                         }
                         rightSection={
-                          appInstallationStatus ===
-                            InstallationStatus.SUCCESS ? (
-                            <IconCheck size={14} />
-                          ) : null
+                          appInstallationStatus === InstallationStatus.SUCCESS ? (<IconCheck size={14} />) : null
                         }
-                        onClick={() =>
-                          checkAppInstallation(form.values.gitHubOrgName)
-                        }
+                        onClick={() => checkAppInstallation(form.values.gitHubOrgName)}
                       >
-                        {appInstallationStatus === InstallationStatus.ERROR
-                          ? 'Try Again'
-                          : 'Check Installation'}
+                        {appInstallationStatus === InstallationStatus.ERROR ? 'Try Again' : 'Verify CRISP Installation'}
                       </Button>
                     </List.Item>
                   </Collapse>
@@ -444,22 +424,30 @@ const CreateCourse: React.FC = () => {
           </Collapse>
         </Box>
         <Space h="md" />
-        <Box>
+        <Group gap={6}>
+          <Title order={4} my={15}>
+            AI Insights
+          </Title>
           <Tooltip
-            label="Enable using AI to generate insights for each group based on their code analysis metrics."
-            refProp="rootRef"
+            label="Enable using AI to generate insights for each group based on their code analysis metrics"
+            withinPortal
+            multiline
+            w={300}
           >
-            <Switch
-              defaultChecked
-              label="AI Insights"
-              size="lg"
-              {...form.getInputProps('isOn', { type: 'checkbox' })}
-            />
+            <ActionIcon variant="subtle" color="gray" size="sm" aria-label="AI Insights help">
+              <IconHelpCircle size={16} />
+            </ActionIcon>
           </Tooltip>
+        </Group>
+        <Box>
+          <Switch
+            defaultChecked
+            label="Enable AI Insights"
+            size="md"
+            mb={15}
+            {...form.getInputProps('isOn', { type: 'checkbox' })}
+          />
           <Collapse in={form.values.isOn}>
-            <Title order={4} my={15}>
-              AI Insights Setup:
-            </Title>
             <Card withBorder>
               <Switch
                 onLabel="Input your own model and API key"
