@@ -69,7 +69,7 @@ const CreateCourse: React.FC = () => {
       semester: '',
       startDate: null,
       duration: 13,
-      courseType: CourseType.Normal,
+      courseType: CourseType.GitHubOrg,
       gitHubOrgName: '',
       repoNameFilter: '',
       installationId: '',
@@ -298,8 +298,8 @@ const CreateCourse: React.FC = () => {
             </Tooltip>
             <SegmentedControl
               data={[
-                { value: CourseType.Normal, label: 'Manual Setup' },
                 { value: CourseType.GitHubOrg, label: 'GitHub Organisation' },
+                { value: CourseType.Normal, label: 'Manual Setup' },
               ]}
               {...form.getInputProps('courseType')}
             />
@@ -421,7 +421,7 @@ const CreateCourse: React.FC = () => {
         <Space h="md" />
         <Group gap={6}>
           <Title order={4} my={15}>
-            AI Insights
+            AI Insights Setup
           </Title>
           <Tooltip
             label="Enable using AI to generate insights for each group based on their code analysis metrics"
