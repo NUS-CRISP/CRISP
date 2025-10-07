@@ -315,85 +315,82 @@ const CreateCourse: React.FC = () => {
                   Install the CRISP GitHub App in your GitHub organisation to enable automatic syncing
                   of repositories from your organisation.
                 </Text>
-                <List>
-                  <List.Item>
-                    <Button
-                      w={CARD_W}
-                      leftSection={<IconBrandGithub size={14} />}
-                      variant="default"
-                      component="a"
-                      href={gitHubNewInstallationUrl}
-                      target="_blank"
-                    >
-                      Install CRISP GitHub
-                    </Button>
-                  </List.Item>
-                  <Collapse
-                    in={appInstallationStatus !== InstallationStatus.SUCCESS}
-                    mt="md"
+                <Button
+                  w={CARD_W}
+                  leftSection={<IconBrandGithub size={14} />}
+                  variant="default"
+                  component="a"
+                  href={gitHubNewInstallationUrl}
+                  target="_blank"
+                >
+                  Install CRISP GitHub
+                </Button>
+                <Title order={6} my={10}>
+                  GitHub Organisation Name
+                </Title>
+                <Collapse
+                  in={appInstallationStatus !== InstallationStatus.SUCCESS}
+                >
+                  <TextInput
+                    withAsterisk
+                    placeholder="e.g. nus-crisp"
+                    label="GitHub Organisation Name"
+                    {...form.getInputProps('gitHubOrgName')}
+                    onChange={event => {
+                      form.setFieldValue(
+                        'gitHubOrgName',
+                        event.currentTarget.value
+                      );
+                      form.setFieldValue('installationId', '');
+                      setAppInstallationStatus(InstallationStatus.IDLE);
+                      setErrorMessage('');
+                    }}
+                  />
+                  <Space h="sm" />
+                  {errorMessage && (
+                    <Text style={{ maxWidth: CARD_W, }} c="red">
+                      {errorMessage}
+                    </Text>
+                  )}
+                  <Button
+                    type="button"
+                    loading={appInstallationStatus === InstallationStatus.LOADING}
+                    variant={appInstallationStatus === InstallationStatus.SUCCESS ? 'filled' : 'outline'}
+                    color={appInstallationStatus === InstallationStatus.SUCCESS ? 'green'
+                      : appInstallationStatus === InstallationStatus.ERROR ? 'red' : 'blue'
+                    }
+                    rightSection={
+                      appInstallationStatus === InstallationStatus.SUCCESS ? (<IconCheck size={14} />) : null
+                    }
+                    onClick={() => checkAppInstallation(form.values.gitHubOrgName)}
                   >
-                    <List.Item>
-                      <TextInput
-                        withAsterisk
-                        label="GitHub Organisation Name"
-                        placeholder="e.g. nus-crisp"
-                        {...form.getInputProps('gitHubOrgName')}
-                        onChange={event => {
-                          form.setFieldValue(
-                            'gitHubOrgName',
-                            event.currentTarget.value
-                          );
-                          form.setFieldValue('installationId', '');
+                    {appInstallationStatus === InstallationStatus.ERROR ? 'Try Again' : 'Verify CRISP Installation'}
+                  </Button>
+                </Collapse>
+
+                <Collapse
+                  in={appInstallationStatus === InstallationStatus.SUCCESS}
+                  mt="md"
+                >
+                  <Badge
+                    variant="outline"
+                    color="green"
+                    size="lg"
+                    rightSection={
+                      <CloseButton
+                        style={{ color: '#40c057' }} // open-color, green 6
+                        onClick={() => {
                           setAppInstallationStatus(InstallationStatus.IDLE);
                           setErrorMessage('');
+                          form.setFieldValue('gitHubOrgName', '');
                         }}
+                        size={14}
                       />
-                      <Space h="sm" />
-                      {errorMessage && (
-                        <Text style={{ maxWidth: CARD_W, }} c="red">
-                          {errorMessage}
-                        </Text>
-                      )}
-                      <Button
-                        type="button"
-                        loading={appInstallationStatus === InstallationStatus.LOADING}
-                        variant={appInstallationStatus === InstallationStatus.SUCCESS ? 'filled' : 'outline'}
-                        color={appInstallationStatus === InstallationStatus.SUCCESS ? 'green'
-                          : appInstallationStatus === InstallationStatus.ERROR ? 'red' : 'blue'
-                        }
-                        rightSection={
-                          appInstallationStatus === InstallationStatus.SUCCESS ? (<IconCheck size={14} />) : null
-                        }
-                        onClick={() => checkAppInstallation(form.values.gitHubOrgName)}
-                      >
-                        {appInstallationStatus === InstallationStatus.ERROR ? 'Try Again' : 'Verify CRISP Installation'}
-                      </Button>
-                    </List.Item>
-                  </Collapse>
-                  <Collapse
-                    in={appInstallationStatus === InstallationStatus.SUCCESS}
-                    mt="md"
+                    }
                   >
-                    <List.Item>
-                      <Badge
-                        variant="outline"
-                        color="green"
-                        size="lg"
-                        rightSection={
-                          <CloseButton
-                            style={{ color: '#40c057' }} // open-color, green 6
-                            onClick={() => {
-                              setAppInstallationStatus(InstallationStatus.IDLE);
-                              setErrorMessage('');
-                              form.setFieldValue('gitHubOrgName', '');
-                            }}
-                            size={14}
-                          />
-                        }
-                      >
-                        {form.values.gitHubOrgName}
-                      </Badge>
-                      {/* <MultiSelect
+                    {form.values.gitHubOrgName}
+                  </Badge>
+                  {/* <MultiSelect
                         disabled
                         mt="sm"
                         label="Repositories"
@@ -404,21 +401,19 @@ const CreateCourse: React.FC = () => {
                         clearable
                         leftSectionWidth={100}
                       /> */}
-                      <TextInput
-                        withAsterisk
-                        label="Repo Name Filter"
-                        placeholder="e.g. 23s2"
-                        {...form.getInputProps('repoNameFilter')}
-                        onChange={event =>
-                          form.setFieldValue(
-                            'repoNameFilter',
-                            event.currentTarget.value
-                          )
-                        }
-                      />
-                    </List.Item>
-                  </Collapse>
-                </List>
+                  <TextInput
+                    withAsterisk
+                    label="Repo Name Filter"
+                    placeholder="e.g. 23s2"
+                    {...form.getInputProps('repoNameFilter')}
+                    onChange={event =>
+                      form.setFieldValue(
+                        'repoNameFilter',
+                        event.currentTarget.value
+                      )
+                    }
+                  />
+                </Collapse>
               </Card>
             </Box>
           </Collapse>
