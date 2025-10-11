@@ -61,51 +61,48 @@ const PeerReviewDetail: React.FC = () => {
   /* ===== Refs and States for Editor and Interaction Logic ===== */
   const editorRef = useRef<any>(null);
   const monacoRef = useRef<any>(null);
-  
   const listenerDisposablesRef = useRef<any[]>([]);
+  
   const hoverDecoRef = useRef<string[]>([]);
   const iconDecoRef = useRef<string[]>([]);
   const dragDecosRef = useRef<string[]>([]);
   const focusedDecosRef = useRef<string[]>([]);
   const staticDecosRef = useRef<string[]>([]);
   
-  const [editorReady, setEditorReady] = useState(false);
   const [focusedCommentIds, setFocusedCommentIds] = useState<string[]>([]);
   const [submittingComment, setSubmittingComment] = useState(false);
   const [updatingCommentId, setUpdatingCommentId] = useState<string | null>(null);
   const [deleteCommentId, setDeleteCommentId] = useState<string | null>(null);
+  const [activeWidget, setActiveWidget] = useState<{ start: number; end: number; top: number; } | null>(null);
   const [overallComment, setOverallComment] = useState<string>(''); // To be implemented
     
-  // Active widget state (for adding new comment)
-  const [activeWidget, setActiveWidget] = useState<{ start: number; end: number; top: number; } | null>(null);
+  // Refs to keep track of latest comments, currFile, and active widget in callbacks
   const activeWidgetRef = useRef<typeof activeWidget>(null);
-  useEffect(() => {
-    activeWidgetRef.current = activeWidget;
-  }, [activeWidget]);
-  
-  // Refs to keep track of latest comments and currFile in callbacks
   const commentsRef = useRef<PeerReviewComment[]>([]);
   const currFileRef = useRef<string | null>(null);
+  useEffect(() => { activeWidgetRef.current = activeWidget; }, [activeWidget]);
   useEffect(() => { commentsRef.current = comments; }, [comments]);
   useEffect(() => { currFileRef.current = currFile; }, [currFile]);
   
   /* ===== Helper Functions ===== */
-  const renderFocusedAndStaticDecos = useCallback((ids: string[], fileForRender: string | null, commentsForRender: PeerReviewComment[]) => {
+  const renderFocusedAndStaticDecos = useCallback((focusedIds: string[]) => {
     const editor = editorRef.current;
     const monaco = monacoRef.current;
-    if (!editor || !monaco || !fileForRender) return;
+    const file = currFileRef.current;
+    if (!editor || !monaco || !file) return;
     
-    setFocusedCommentIds(ids);
-    const focusedSet = new Set(ids);
-    const focusDecos = commentsForRender
-      .filter(c => c.filePath === fileForRender && focusedSet.has(c._id))
+    setFocusedCommentIds(focusedIds);
+    const focusedSet = new Set(focusedIds);
+    const fileComments = commentsRef.current.filter(c => c.filePath === file);
+    const focusDecos = fileComments
+      .filter(c => focusedSet.has(c._id))
       .map(c => ({
         range: new monaco.Range(c.startLine, 1, c.endLine, 1),
         options: { isWholeLine: true, className: classes.focusedCommentHighlight },
       }));
       
-    const staticDecos = commentsForRender
-      .filter(c => c.filePath === fileForRender && !focusedSet.has(c._id))
+    const staticDecos = fileComments
+      .filter(c => !focusedSet.has(c._id))
       .map(c => ({
         range: new monaco.Range(c.startLine, 1, c.endLine, 1),
         options: { isWholeLine: true, className: classes.commentedLineHint },
@@ -117,21 +114,20 @@ const PeerReviewDetail: React.FC = () => {
   
   // Clear focused lines and render static hints when switching files
   useEffect(() => {
-    if (!editorReady || !editorRef.current || !currFile || !currentCode) return;
+    if (!editorRef.current || !currFile || !currentCode) return;
     focusedDecosRef.current = editorRef.current.deltaDecorations(focusedDecosRef.current, []);
     staticDecosRef.current = editorRef.current.deltaDecorations(staticDecosRef.current, []);
-    requestAnimationFrame(() => renderFocusedAndStaticDecos(focusedCommentIds, currFile, comments));
-  }, [editorReady, currFile, currentCode, comments, focusedCommentIds, renderFocusedAndStaticDecos]);
+    renderFocusedAndStaticDecos([]);
+  }, [currFile, currentCode, comments, renderFocusedAndStaticDecos]);
   
   /* ===== Editor Interaction Logic ===== */
-  const handleEditorMount = (editor: any, monaco: any) => {
+  const handleEditorMount = useCallback((editor: any, monaco: any) => {
     editorRef.current = editor;
     monacoRef.current = monaco;
     
     focusedDecosRef.current = [];
     staticDecosRef.current = [];
-    setEditorReady(true);
-    requestAnimationFrame(() => renderFocusedAndStaticDecos([], currFileRef.current, commentsRef.current));
+    renderFocusedAndStaticDecos([]);
     
     // Dispose old listeners
     listenerDisposablesRef.current.forEach(d => d?.dispose?.());
@@ -145,7 +141,7 @@ const PeerReviewDetail: React.FC = () => {
         startLine = e.target.position.lineNumber;
 
         // Clear previous decorations
-        renderFocusedAndStaticDecos([], currFileRef.current, commentsRef.current);
+        renderFocusedAndStaticDecos([]);
         hoverDecoRef.current = editor.deltaDecorations(hoverDecoRef.current, []);
         dragDecosRef.current = editor.deltaDecorations(dragDecosRef.current, []);
         iconDecoRef.current = editor.deltaDecorations([], [{
@@ -159,15 +155,14 @@ const PeerReviewDetail: React.FC = () => {
       if (e.target.type === monaco.editor.MouseTargetType.CONTENT_TEXT && e.target.position) {
         const line = e.target.position.lineNumber;
         const file = currFileRef.current;
-        const fileComments = commentsRef.current;
-
-        const clicked = fileComments.filter(c => c.filePath === file && c.startLine <= line && c.endLine >= line);
-        renderFocusedAndStaticDecos(clicked.map(c => c._id), file, fileComments);
+        const fileComments = commentsRef.current.filter(c => c.filePath === file);
+        const clicked = fileComments.filter(c => c.startLine <= line && c.endLine >= line);
+        renderFocusedAndStaticDecos(clicked.map(c => c._id));
         return;
       }
 
       // 3) Click outside text or glyph margin: clear all
-      renderFocusedAndStaticDecos([], currFileRef.current, commentsRef.current);
+      renderFocusedAndStaticDecos([]);
     });
     
     const onMouseUp = editor.onMouseUp((e: any) => {
@@ -257,7 +252,7 @@ const PeerReviewDetail: React.FC = () => {
     };
 
     listenerDisposablesRef.current.push(onMouseDown, onMouseUp, onMouseMove);
-  }
+  }, [renderFocusedAndStaticDecos]);
   
   // Cleanup on unmount
   useEffect(() => {
@@ -335,7 +330,7 @@ const PeerReviewDetail: React.FC = () => {
       await deleteComment(deleteCommentId);
       if (focusedCommentIds.includes(deleteCommentId)) {
         const remainingIds = focusedCommentIds.filter(id => id !== deleteCommentId);
-        renderFocusedAndStaticDecos(remainingIds, currFile, comments);
+        renderFocusedAndStaticDecos(remainingIds);
       }
     } catch (error: any) {
       notifications.show({
@@ -350,7 +345,7 @@ const PeerReviewDetail: React.FC = () => {
   
   // Focus comment handler
   const handleFocusComment = useCallback((comment: PeerReviewComment) => {
-    renderFocusedAndStaticDecos([comment._id], currFile, comments);
+    renderFocusedAndStaticDecos([comment._id]);
     editorRef.current?.revealLineInCenter?.(comment.startLine);
   }, [renderFocusedAndStaticDecos]);
 
