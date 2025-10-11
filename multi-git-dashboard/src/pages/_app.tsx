@@ -34,9 +34,6 @@ export default function App({
         <RootLayout>
           <Component {...pageProps} />
         </RootLayout>
-
-        {/*Portal target for Monaco widgets, particularly in Peer Review page*/}
-        <div id="monaco-widgets-root" />
       </MantineProvider>
     </SessionProvider>
   );

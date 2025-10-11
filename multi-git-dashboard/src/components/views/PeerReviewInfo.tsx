@@ -16,8 +16,7 @@ import { TeamData } from '@shared/types/TeamData';
 import { Status } from '@shared/types/util/Status';
 import { useEffect, useState } from 'react';
 import PeerReviewAccordionItem from '../peer-review/PeerReviewAccordianItem';
-import { useTutorialContext } from '../tutorial/TutorialContext';
-import TutorialPopover from '../tutorial/TutorialPopover';
+import DeleteConfirmationModal from '../cards/Modals/DeleteConfirmationModal';
 import { TeamSet } from '@shared/types/TeamSet';
 import { PeerReview } from '@shared/types/PeerReview';
 import PeerReviewSettingsForm from '../forms/PeerReviewSettingsForm';
@@ -43,7 +42,6 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
   hasFacultyPermission,
   onUpdate,
 }) => {
-  const { curTutorialStage } = useTutorialContext();
   
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamDatas, setTeamDatas] = useState<TeamData[]>([]);
@@ -191,28 +189,18 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
           </>
         )}
         {hasFacultyPermission ? (
-          <Modal
+          <DeleteConfirmationModal
             opened={openedDeleteModal}
             onClose={closeDeleteModal}
+            onCancel={closeDeleteModal}
+            onConfirm={() => {
+              handleDelete();
+              onUpdate();
+              closeDeleteModal();
+            }}
             title="Delete Peer Review?"
-          >
-            Are you sure you want to delete this peer review? This action cannot be undone.
-            <Group mt="md" style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <Button
-                color='red'
-                onClick={() => {
-                  handleDelete();
-                  onUpdate();
-                  closeDeleteModal();
-                }}
-              >
-                Delete
-              </Button>
-              <Button variant="outline" onClick={closeDeleteModal}>
-                Cancel
-              </Button>
-            </Group>
-          </Modal>
+            message="Are you sure you want to delete this peer review?"
+          />
         ) : null}
         {teamSets.map(teamSet => (
           <Tabs.Panel key={teamSet._id} value={teamSet.name}>

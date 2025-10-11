@@ -147,11 +147,7 @@ const PeerReviewListPage: React.FC = () => {
   }, [router.isReady, id, fetchCourse]);
 
   return (
-    <Container
-      style={{
-        marginTop: '40px',
-      }}
-    >
+    <Container style={{ marginTop: '40px', }} >
       <PeerReviewOverview
         course={course}
         courseId={id}
