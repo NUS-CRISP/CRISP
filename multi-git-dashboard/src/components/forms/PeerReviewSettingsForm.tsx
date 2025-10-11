@@ -52,9 +52,8 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
       assessmentName: (value) => (value ? null : 'Assessment name is required'),
       description: (value) => (value ? null : 'Description is required'),
       startDate: (value) => {
-        if (!value) {
-          return 'Start date is required';
-        }
+        if (isOngoing) return;
+        if (!value) return 'Start date is required';
         if (form.values.endDate && new Date(value) >= new Date(form.values.endDate)) {
           return 'Start date must be before end date';
         }
@@ -67,9 +66,8 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
         return null;
       },
       endDate: (value) => {
-        if (!value) {
-          return 'End date is required';
-        }
+        if (isOngoing) return;
+        if (!value) return 'End date is required';
         if (form.values.startDate && new Date(value) <= new Date(form.values.startDate)) {
           return 'End date must be after start date';
         }
@@ -138,11 +136,13 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
   const handleSubmit = async () => {
     setError(null);
     try {
-      console.log("Submitting to:", isEditing ? updateSettingsApiRoute : createApiRoute);
       const response = await fetch(isEditing ? updateSettingsApiRoute : createApiRoute, {
         method: isEditing ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form.values),
+        body: JSON.stringify(isOngoing ? {
+          assessmentName: form.values.assessmentName,
+          description: form.values.description,
+        } : form.values),
       });
 
       await response.json();

@@ -12,7 +12,9 @@ export default function RootLayout({
 }) {
   const router = useRouter();
   const showSidebar =
-    router.pathname !== '/' && EXCLUDE_AUTH_REGEX.test(router.pathname) && EXCLUDE_PEER_REVIEW_REGEX.test(router.pathname);
+    router.pathname !== '/' &&
+    EXCLUDE_AUTH_REGEX.test(router.pathname) &&
+    EXCLUDE_PEER_REVIEW_REGEX.test(router.pathname);
 
   const initTutorialStage = -1; // default to -1 to disable tutorial
 

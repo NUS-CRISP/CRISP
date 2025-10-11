@@ -26,7 +26,6 @@ const PeerReviewListPage: React.FC = () => {
   
   const [teamSets, setTeamSets] = useState<TeamSet[]>([]);
   const [course, setCourse] = useState<Course>();
-  const [dateUtils, setDateUtils] = useState<DateUtils>();
   const [peerReviews, setPeerReviews] = useState<PeerReview[]>([]);
   const permission = hasFacultyPermission();
   
@@ -132,7 +131,6 @@ const PeerReviewListPage: React.FC = () => {
       };
 
       setCourse(course);
-      setDateUtils(dateUtils);
     } catch (error) {
       console.error('Error fetching course:', error);
     }

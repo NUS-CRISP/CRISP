@@ -2,18 +2,30 @@ import mongoose, { Schema, Types } from 'mongoose';
 import { PeerReviewAssignment as SharedPeerReviewAssignment } from '@shared/types/PeerReview';
 
 export interface PeerReviewAssignment
-  extends Omit<SharedPeerReviewAssignment, '_id' | 'peerReviewId' | 'reviewerUser' | 'reviewerTeam' | 'reviewee' | 'assignedBy'>,
-  Document {
-    _id: Types.ObjectId;
-    peerReviewId: Types.ObjectId;
-    reviewerUser: Types.ObjectId | null;
-    reviewerTeam: Types.ObjectId | null;
-    reviewee: Types.ObjectId | null;
-    assignedBy: Types.ObjectId | null;
+  extends Omit<
+      SharedPeerReviewAssignment,
+      | '_id'
+      | 'peerReviewId'
+      | 'reviewerUser'
+      | 'reviewerTeam'
+      | 'reviewee'
+      | 'assignedBy'
+    >,
+    Document {
+  _id: Types.ObjectId;
+  peerReviewId: Types.ObjectId;
+  reviewerUser: Types.ObjectId | null;
+  reviewerTeam: Types.ObjectId | null;
+  reviewee: Types.ObjectId | null;
+  assignedBy: Types.ObjectId | null;
 }
 
 const peerReviewAssignmentSchema = new Schema<PeerReviewAssignment>({
-  peerReviewId: { type: Schema.Types.ObjectId, ref: 'PeerReview', required: true },
+  peerReviewId: {
+    type: Schema.Types.ObjectId,
+    ref: 'PeerReview',
+    required: true,
+  },
   repoName: { type: String, required: true },
   repoUrl: { type: String, required: true },
   reviewerUser: { type: Schema.Types.ObjectId, ref: 'User' },
@@ -29,6 +41,9 @@ const peerReviewAssignmentSchema = new Schema<PeerReviewAssignment>({
   },
 });
 
-const PeerReviewAssignmentModel = mongoose.model<PeerReviewAssignment>('PeerReviewAssignment', peerReviewAssignmentSchema);
+const PeerReviewAssignmentModel = mongoose.model<PeerReviewAssignment>(
+  'PeerReviewAssignment',
+  peerReviewAssignmentSchema
+);
 
 export default PeerReviewAssignmentModel;
