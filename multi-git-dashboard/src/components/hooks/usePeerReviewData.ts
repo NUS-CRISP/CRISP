@@ -20,7 +20,7 @@ type UsePeerReviewDataArgs = {
 
 export default function usePeerReviewData({ courseId, assignmentId }: UsePeerReviewDataArgs) {
   const [loading, setLoading] = useState(true);
-  const [assignment, setAssignment] = useState<PeerReviewAssignment | null>(null);
+  const [peerReviewAssignment, setpeerReviewAssignment] = useState<PeerReviewAssignment | null>(null);
   const [repoTree, setRepoTree] = useState<RepoNode | null>(null);
   const [currFile, setCurrFile] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState<Record<string, string>>({});
@@ -33,21 +33,21 @@ export default function usePeerReviewData({ courseId, assignmentId }: UsePeerRev
     const initialLoad = async () => {
       try {
         setLoading(true);
-        const a = await apiFetchPeerReviewAssignment(courseId, assignmentId);
+        const prAssignment = await apiFetchPeerReviewAssignment(courseId, assignmentId);
         if (cancelled) return;
-        const tree = await fetchGithubRepoStructure(a.repoUrl);
+        const tree = await fetchGithubRepoStructure(prAssignment.repoUrl);
         if (cancelled) return;
-        const cs = await apiFetchComments(courseId, assignmentId);
+        const comments = await apiFetchComments(courseId, assignmentId);
         if (cancelled) return;
 
-        setAssignment(a);
+        setpeerReviewAssignment(prAssignment);
         setRepoTree(tree);
-        setComments(cs);
+        setComments(comments);
 
         const files = flattenTree(tree);
         if (files[0]) {
           setCurrFile(files[0]);
-          const content = await fetchFileContent(a.repoUrl, files[0]);
+          const content = await fetchFileContent(prAssignment.repoUrl, files[0]);
           if (!cancelled) setFileContent(prev => ({ ...prev, [files[0]]: content }));
         }
       } finally {
@@ -59,13 +59,13 @@ export default function usePeerReviewData({ courseId, assignmentId }: UsePeerRev
   }, [courseId, assignmentId]);
 
   const openFile = useCallback(async (filePath: string) => {
-    if (!assignment) return;
+    if (!peerReviewAssignment) return;
     setCurrFile(filePath);
     if (!fileContent[filePath]) {
-      const content = await fetchFileContent(assignment.repoUrl, filePath);
+      const content = await fetchFileContent(peerReviewAssignment.repoUrl, filePath);
       setFileContent(prev => ({ ...prev, [filePath]: content }));
     }
-  }, [assignment, fileContent]);
+  }, [peerReviewAssignment, fileContent]);
 
   // Comments CRUD
   const refreshComments = useCallback(async () => {
@@ -95,7 +95,7 @@ export default function usePeerReviewData({ courseId, assignmentId }: UsePeerRev
 
   return {
     loading,
-    assignment,
+    peerReviewAssignment,
     repoTree,
     currFile,
     comments,    

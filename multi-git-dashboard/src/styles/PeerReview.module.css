@@ -189,8 +189,12 @@
 }
 
 .focusedCommentHighlight {
-  background-color: rgba(102, 204, 255, 0.2);
+  background-color: rgba(66, 192, 255, 0.194);
   border-left: 2px solid #66ccff;
+}
+
+.commentedLineHint {
+  background: rgba(66, 59, 21, 0.182);
 }
 
 .commentEditButton {
