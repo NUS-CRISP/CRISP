@@ -1,6 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/router';
-import { createPortal } from 'react-dom';
+import { useState } from 'react';
 import { RepoNode } from '@shared/types/PeerReview';
 import { NavLink } from '@mantine/core';
 import { IconFileText, IconFolder, IconFolderOpen } from '@tabler/icons-react';

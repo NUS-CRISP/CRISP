@@ -33,7 +33,7 @@ export const fetchGithubRepoStructure = async (
   };
   const lookup: Record<string, RepoNode> = { '': root };
 
-  data.tree.forEach((item: any) => {
+  data.tree.forEach((item: { path: string; type: 'blob' | 'tree' }) => {
     const parts = item.path.split('/');
     let current = root;
     let fullPath = '';

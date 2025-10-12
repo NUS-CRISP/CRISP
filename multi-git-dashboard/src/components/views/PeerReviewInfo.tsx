@@ -15,7 +15,7 @@ import { Team as SharedTeam } from '@shared/types/Team';
 import { TeamData } from '@shared/types/TeamData';
 import { Status } from '@shared/types/util/Status';
 import { useEffect, useState } from 'react';
-import PeerReviewAccordionItem from '../peer-review/PeerReviewAccordianItem';
+// import PeerReviewAccordionItem from '../peer-review/PeerReviewAccordianItem';
 import DeleteConfirmationModal from '../cards/Modals/DeleteConfirmationModal';
 import { TeamSet } from '@shared/types/TeamSet';
 import { PeerReview } from '@shared/types/PeerReview';
@@ -54,7 +54,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
     { open: openDeleteModal, close: closeDeleteModal },
   ] = useDisclosure(false);
 
-  const [studentMap, setStudentMap] = useState<Record<string, Profile>>({});
+  // const [studentMap, setStudentMap] = useState<Record<string, Profile>>({});
 
   const [activeTab, setActiveTab] = useState<string | null>(
     teamSets ? teamSets[0]?.name : null
@@ -89,10 +89,10 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
     }
   }, [teamSets]);
 
-  const data = teamDatas.map(teamData => {
-    const team = teams.find(team => team.teamData === teamData._id);
-    return { team, teamData };
-  });
+  // const data = teamDatas.map(teamData => {
+  //   const team = teams.find(team => team.teamData === teamData._id);
+  //   return { team, teamData };
+  // });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -144,13 +144,13 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
         multiple
         variant="separated"
       >
-        {data.map(({ team, teamData }, idx) => (
+        {/* {data.map(({ team, teamData }, idx) => (
           <PeerReviewAccordionItem
             key={teamData._id}
             team={team}
             teamData={teamData}
           />
-        ))}
+        ))} */}
       </Accordion>
     );
   };

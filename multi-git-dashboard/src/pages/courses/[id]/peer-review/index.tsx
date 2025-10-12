@@ -22,44 +22,44 @@ const PeerReviewListPage: React.FC = () => {
   const [peerReviews, setPeerReviews] = useState<PeerReview[]>([]);
   const hasPermission = hasFacultyPermission();
 
-  const examplePeerReviews: PeerReview[] = [
-    {
-      _id: 'pr1',
-      courseId: id,
-      title: 'Example Upcoming Peer Review',
-      description: 'This is a sample upcoming peer review.',
-      peerReviewSettingsId: 'settings1',
-      peerReviewAssignmentIds: [],
-      createdAt: new Date('2023-09-20T12:00:00Z'),
-      startDate: new Date('2023-09-25T12:00:00Z'),
-      endDate: new Date('2023-10-25T12:00:00Z'),
-      status: 'Upcoming',
-    },
-    {
-      _id: 'pr2',
-      courseId: id,
-      title: 'Example Ongoing Peer Review',
-      description: 'This is a sample ongoing peer review.',
-      peerReviewSettingsId: 'settings2',
-      peerReviewAssignmentIds: [],
-      createdAt: new Date('2023-09-20T12:00:00Z'),
-      startDate: new Date('2023-09-25T12:00:00Z'),
-      endDate: new Date('2023-10-25T12:00:00Z'),
-      status: 'Ongoing',
-    },
-    {
-      _id: 'pr3',
-      courseId: id,
-      title: 'Example Completed Peer Review',
-      description: 'This is a sample completed peer review.',
-      peerReviewSettingsId: 'settings3',
-      peerReviewAssignmentIds: [],
-      createdAt: new Date('2023-09-20T12:00:00Z'),
-      startDate: new Date('2023-09-25T12:00:00Z'),
-      endDate: new Date('2023-10-25T12:00:00Z'),
-      status: 'Completed',
-    },
-  ];
+  // const examplePeerReviews: PeerReview[] = [
+  //   {
+  //     _id: 'pr1',
+  //     courseId: id,
+  //     title: 'Example Upcoming Peer Review',
+  //     description: 'This is a sample upcoming peer review.',
+  //     peerReviewSettingsId: 'settings1',
+  //     peerReviewAssignmentIds: [],
+  //     createdAt: new Date('2023-09-20T12:00:00Z'),
+  //     startDate: new Date('2023-09-25T12:00:00Z'),
+  //     endDate: new Date('2023-10-25T12:00:00Z'),
+  //     status: 'Upcoming',
+  //   },
+  //   {
+  //     _id: 'pr2',
+  //     courseId: id,
+  //     title: 'Example Ongoing Peer Review',
+  //     description: 'This is a sample ongoing peer review.',
+  //     peerReviewSettingsId: 'settings2',
+  //     peerReviewAssignmentIds: [],
+  //     createdAt: new Date('2023-09-20T12:00:00Z'),
+  //     startDate: new Date('2023-09-25T12:00:00Z'),
+  //     endDate: new Date('2023-10-25T12:00:00Z'),
+  //     status: 'Ongoing',
+  //   },
+  //   {
+  //     _id: 'pr3',
+  //     courseId: id,
+  //     title: 'Example Completed Peer Review',
+  //     description: 'This is a sample completed peer review.',
+  //     peerReviewSettingsId: 'settings3',
+  //     peerReviewAssignmentIds: [],
+  //     createdAt: new Date('2023-09-20T12:00:00Z'),
+  //     startDate: new Date('2023-09-25T12:00:00Z'),
+  //     endDate: new Date('2023-10-25T12:00:00Z'),
+  //     status: 'Completed',
+  //   },
+  // ];
 
   const onUpdate = () => {
     fetchTeamSets();

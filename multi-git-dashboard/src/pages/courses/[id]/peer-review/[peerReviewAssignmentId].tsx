@@ -13,16 +13,16 @@ import { notifications } from '@mantine/notifications';
 import DeleteConfirmationModal from '@/components/cards/Modals/DeleteConfirmationModal';
 import { IconListDetails, IconArrowLeft } from '@tabler/icons-react';
 import { useRouter } from 'next/router';
-import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { PeerReviewComment } from '@shared/types/PeerReview';
 import PeerReviewFileTree from '@/components/peer-review/PeerReviewFileTree';
 import PeerReviewCommentSidebar from '@/components/peer-review/PeerReviewCommentSidebar';
-import { User } from '@shared/types/User';
 import dynamic from 'next/dynamic';
-import { useSession } from 'next-auth/react';
 import classes from '@styles/PeerReview.module.css';
 import usePeerReviewData from '@/components/hooks/usePeerReviewData';
 import { getLanguageForFile } from '@/lib/peer-review/utils';
+import type { editor as MEditor, IDisposable } from 'monaco-editor';
+import type { OnMount, Monaco } from '@monaco-editor/react';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -60,13 +60,13 @@ const PeerReviewDetail: React.FC = () => {
   });
 
   // Current User
-  const { data: session } = useSession();
-  const currentUser: User = session?.user as User;
+  // const { data: session } = useSession();
+  // const currentUser: User = session?.user as User;
 
   /* ===== Refs and States for Editor and Interaction Logic ===== */
-  const editorRef = useRef<any>(null);
-  const monacoRef = useRef<any>(null);
-  const listenerDisposablesRef = useRef<any[]>([]);
+  const editorRef = useRef<MEditor.IStandaloneCodeEditor | null>(null);
+  const monacoRef = useRef<Monaco | null>(null);
+  const listenerDisposablesRef = useRef<IDisposable[]>([]);
 
   const hoverDecoRef = useRef<string[]>([]);
   const iconDecoRef = useRef<string[]>([]);
@@ -80,15 +80,13 @@ const PeerReviewDetail: React.FC = () => {
     null
   );
   const [deleteCommentId, setDeleteCommentId] = useState<string | null>(null);
-  const [activeWidget, setActiveWidget] = useState<{
-    start: number;
-    end: number;
-    top: number;
-  } | null>(null);
-  const [overallComment, setOverallComment] = useState<string>(''); // To be implemented
+
+  type ActiveWidget = { start: number; end: number; top: number } | null;
+  const [activeWidget, setActiveWidget] = useState<ActiveWidget>(null);
+  // const [overallComment, setOverallComment] = useState<string>(''); // To be implemented
 
   // Refs to keep track of latest comments, currFile, and active widget in callbacks
-  const activeWidgetRef = useRef<typeof activeWidget>(null);
+  const activeWidgetRef = useRef<ActiveWidget>(null);
   const commentsRef = useRef<PeerReviewComment[]>([]);
   const currFileRef = useRef<string | null>(null);
   useEffect(() => {
@@ -155,100 +153,142 @@ const PeerReviewDetail: React.FC = () => {
     renderFocusedAndStaticDecos([]);
   }, [currFile, currentCode, comments, renderFocusedAndStaticDecos]);
 
+  const clearCommentDecorations = () => {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    hoverDecoRef.current = editor.deltaDecorations(hoverDecoRef.current, []);
+    dragDecosRef.current = editor.deltaDecorations(dragDecosRef.current, []);
+    iconDecoRef.current = editor.deltaDecorations(iconDecoRef.current, []);
+    setActiveWidget(null);
+  };
+
   /* ===== Editor Interaction Logic ===== */
-  const handleEditorMount = useCallback(
-    (editor: any, monaco: any) => {
-      editorRef.current = editor;
-      monacoRef.current = monaco;
+  const handleEditorMount: OnMount = (editor, monaco) => {
+    editorRef.current = editor;
+    monacoRef.current = monaco;
 
-      focusedDecosRef.current = [];
-      staticDecosRef.current = [];
-      renderFocusedAndStaticDecos([]);
+    focusedDecosRef.current = [];
+    staticDecosRef.current = [];
+    renderFocusedAndStaticDecos([]);
 
-      // Dispose old listeners
-      listenerDisposablesRef.current.forEach(d => d?.dispose?.());
-      listenerDisposablesRef.current = [];
+    // Dispose old listeners
+    listenerDisposablesRef.current.forEach(d => d?.dispose?.());
+    listenerDisposablesRef.current = [];
 
-      let startLine: number | null = null;
+    let startLine: number | null = null;
 
-      const onMouseDown = editor.onMouseDown((e: any) => {
-        // 1) Click on glyph margin: start selection
-        if (
-          e.target.type === monaco.editor.MouseTargetType.GUTTER_GLYPH_MARGIN &&
-          e.target.position
-        ) {
-          startLine = e.target.position.lineNumber;
+    const onMouseDown = editor.onMouseDown((e: MEditor.IEditorMouseEvent) => {
+      // 1) Click on glyph margin: start selection
+      if (
+        e.target.type === monaco.editor.MouseTargetType.GUTTER_GLYPH_MARGIN &&
+        e.target.position
+      ) {
+        startLine = e.target.position.lineNumber;
 
-          // Clear previous decorations
-          renderFocusedAndStaticDecos([]);
-          hoverDecoRef.current = editor.deltaDecorations(
-            hoverDecoRef.current,
-            []
-          );
-          dragDecosRef.current = editor.deltaDecorations(
-            dragDecosRef.current,
-            []
-          );
-          iconDecoRef.current = editor.deltaDecorations(
-            [],
-            [
-              {
-                range: new monaco.Range(startLine, 1, startLine, 1),
-                options: {
-                  isWholeLine: true,
-                  glyphMarginClassName: classes.reviewLineIcon,
-                },
-              },
-            ]
-          );
-          return;
-        }
-
-        // 2) Click on text: focus comment if any
-        if (
-          e.target.type === monaco.editor.MouseTargetType.CONTENT_TEXT &&
-          e.target.position
-        ) {
-          const line = e.target.position.lineNumber;
-          const file = currFileRef.current;
-          const fileComments = commentsRef.current.filter(
-            c => c.filePath === file
-          );
-          const clicked = fileComments.filter(
-            c => c.startLine <= line && c.endLine >= line
-          );
-          renderFocusedAndStaticDecos(clicked.map(c => c._id));
-          return;
-        }
-
-        // 3) Click outside text or glyph margin: clear all
+        // Clear previous decorations
         renderFocusedAndStaticDecos([]);
-      });
+        hoverDecoRef.current = editor.deltaDecorations(
+          hoverDecoRef.current,
+          []
+        );
+        dragDecosRef.current = editor.deltaDecorations(
+          dragDecosRef.current,
+          []
+        );
+        iconDecoRef.current = editor.deltaDecorations(
+          [],
+          [
+            {
+              range: new monaco.Range(startLine, 1, startLine, 1),
+              options: {
+                isWholeLine: true,
+                glyphMarginClassName: classes.reviewLineIcon,
+              },
+            },
+          ]
+        );
+        return;
+      }
 
-      const onMouseUp = editor.onMouseUp((e: any) => {
-        if (startLine === null) return;
+      // 2) Click on text: focus comment if any
+      if (
+        e.target.type === monaco.editor.MouseTargetType.CONTENT_TEXT &&
+        e.target.position
+      ) {
+        const line = e.target.position.lineNumber;
+        const file = currFileRef.current;
+        const fileComments = commentsRef.current.filter(
+          c => c.filePath === file
+        );
+        const clicked = fileComments.filter(
+          c => c.startLine <= line && c.endLine >= line
+        );
+        renderFocusedAndStaticDecos(clicked.map(c => c._id));
+        return;
+      }
 
-        // Cancel if not released on a line number
-        if (!e.target?.position) {
-          dragDecosRef.current = editor.deltaDecorations(
-            dragDecosRef.current,
-            []
-          );
-          iconDecoRef.current = editor.deltaDecorations(
-            iconDecoRef.current,
-            []
-          );
-          startLine = null;
-          return;
-        }
+      // 3) Click outside text or glyph margin: clear all
+      renderFocusedAndStaticDecos([]);
+    });
 
-        // Finalize selection
-        const endLine = e.target.position.lineNumber;
-        const start = Math.min(startLine, endLine);
-        const finish = Math.max(startLine, endLine);
+    const onMouseUp = editor.onMouseUp((e: MEditor.IEditorMouseEvent) => {
+      if (startLine === null) return;
 
-        // Add final decorations
-        const decos: any[] = [];
+      // Cancel if not released on a line number
+      if (!e.target?.position) {
+        dragDecosRef.current = editor.deltaDecorations(
+          dragDecosRef.current,
+          []
+        );
+        iconDecoRef.current = editor.deltaDecorations(iconDecoRef.current, []);
+        startLine = null;
+        return;
+      }
+
+      // Finalize selection
+      const endLine = e.target.position.lineNumber;
+      const start = Math.min(startLine, endLine);
+      const finish = Math.max(startLine, endLine);
+
+      // Add final decorations
+      const decos = [];
+      for (let l = start; l <= finish; l++) {
+        decos.push({
+          range: new monaco.Range(l, 1, l, 1),
+          options: {
+            isWholeLine: true,
+            className: classes.reviewLineHighlight,
+            linesDecorationsClassName: classes.reviewLineMargin,
+          },
+        });
+      }
+      dragDecosRef.current = editor.deltaDecorations(
+        dragDecosRef.current,
+        decos
+      );
+
+      const top = editor.getTopForLineNumber(finish);
+      setActiveWidget({ start, end: finish, top });
+      startLine = null;
+    });
+
+    const onMouseMove = editor.onMouseMove((e: MEditor.IEditorMouseEvent) => {
+      // Don't do anything if dragging a selection
+      if (activeWidgetRef.current) {
+        hoverDecoRef.current = editor.deltaDecorations(
+          hoverDecoRef.current,
+          []
+        );
+        return;
+      }
+
+      // If dragging to select lines
+      if (startLine !== null && e.target?.position) {
+        const line = e.target.position.lineNumber;
+        const start = Math.min(startLine, line);
+        const finish = Math.max(startLine, line);
+        const decos = [];
         for (let l = start; l <= finish; l++) {
           decos.push({
             range: new monaco.Range(l, 1, l, 1),
@@ -263,84 +303,31 @@ const PeerReviewDetail: React.FC = () => {
           dragDecosRef.current,
           decos
         );
+        return;
+      }
 
-        const top = editor.getTopForLineNumber(finish);
-        setActiveWidget({ start, end: finish, top });
-        startLine = null;
-      });
-
-      const onMouseMove = editor.onMouseMove((e: any) => {
-        // Don't do anything if dragging a selection
-        if (activeWidgetRef.current) {
-          hoverDecoRef.current = editor.deltaDecorations(
-            hoverDecoRef.current,
-            []
-          );
-          return;
-        }
-
-        // If dragging to select lines
-        if (startLine !== null && e.target?.position) {
-          const line = e.target.position.lineNumber;
-          const start = Math.min(startLine, line);
-          const finish = Math.max(startLine, line);
-          const decos: any[] = [];
-          for (let l = start; l <= finish; l++) {
-            decos.push({
-              range: new monaco.Range(l, 1, l, 1),
-              options: {
-                isWholeLine: true,
-                className: classes.reviewLineHighlight,
-                linesDecorationsClassName: classes.reviewLineMargin,
-              },
-            });
-          }
-          dragDecosRef.current = editor.deltaDecorations(
-            dragDecosRef.current,
-            decos
-          );
-          return;
-        }
-
-        // If hovering over a line
-        if (e.target?.position) {
-          const line = e.target.position.lineNumber;
-          hoverDecoRef.current = editor.deltaDecorations(hoverDecoRef.current, [
-            {
-              range: new monaco.Range(line, 1, line, 1),
-              options: {
-                isWholeLine: true,
-                className: classes.reviewLineHighlight,
-                glyphMarginClassName: classes.reviewLineIcon,
-              },
+      // If hovering over a line
+      if (e.target?.position) {
+        const line = e.target.position.lineNumber;
+        hoverDecoRef.current = editor.deltaDecorations(hoverDecoRef.current, [
+          {
+            range: new monaco.Range(line, 1, line, 1),
+            options: {
+              isWholeLine: true,
+              className: classes.reviewLineHighlight,
+              glyphMarginClassName: classes.reviewLineIcon,
             },
-          ]);
-        } else {
-          hoverDecoRef.current = editor.deltaDecorations(
-            hoverDecoRef.current,
-            []
-          );
-        }
-      });
-
-      // Method to clear all comment-related decorations, expose for cancelling a comment
-      editor.clearCommentDecorations = () => {
+          },
+        ]);
+      } else {
         hoverDecoRef.current = editor.deltaDecorations(
           hoverDecoRef.current,
           []
         );
-        dragDecosRef.current = editor.deltaDecorations(
-          dragDecosRef.current,
-          []
-        );
-        iconDecoRef.current = editor.deltaDecorations(iconDecoRef.current, []);
-        setActiveWidget(null);
-      };
-
-      listenerDisposablesRef.current.push(onMouseDown, onMouseUp, onMouseMove);
-    },
-    [renderFocusedAndStaticDecos]
-  );
+      }
+    });
+    listenerDisposablesRef.current.push(onMouseDown, onMouseUp, onMouseMove);
+  };
 
   // Cleanup on unmount
   useEffect(() => {
@@ -364,15 +351,15 @@ const PeerReviewDetail: React.FC = () => {
           isOverallComment: false,
         });
 
-        editorRef.current?.clearCommentDecorations?.();
+        clearCommentDecorations();
         setActiveWidget(null);
 
         return true;
-      } catch (error: any) {
+      } catch (error) {
         notifications.show({
           color: 'red',
           title: 'Failed to add comment',
-          message: error?.message || 'Please try again.',
+          message: (error as Error).message || 'Please try again.',
         });
         return false;
       } finally {
@@ -395,14 +382,14 @@ const PeerReviewDetail: React.FC = () => {
       try {
         setUpdatingCommentId(commentId);
         await updateComment(commentId, newComment);
-        editorRef.current?.clearCommentDecorations?.();
+        clearCommentDecorations();
         setActiveWidget(null);
         return true;
-      } catch (error: any) {
+      } catch (error) {
         notifications.show({
           color: 'red',
           title: 'Failed to update comment',
-          message: error?.message || 'Please try again.',
+          message: (error as Error).message || 'Please try again.',
         });
         return false;
       } finally {
@@ -428,11 +415,11 @@ const PeerReviewDetail: React.FC = () => {
         );
         renderFocusedAndStaticDecos(remainingIds);
       }
-    } catch (error: any) {
+    } catch (error) {
       notifications.show({
         color: 'red',
         title: 'Failed to delete comment',
-        message: error?.message || 'Please try again.',
+        message: (error as Error).message || 'Please try again.',
       });
     } finally {
       setDeleteCommentId(null);
@@ -530,7 +517,7 @@ const PeerReviewDetail: React.FC = () => {
           onAddComment={handleAddComment}
           onUpdateComment={handleUpdateComment}
           onDeleteComment={requestDeleteComment}
-          onCancelComment={() => editorRef.current.clearCommentDecorations()}
+          onCancelComment={clearCommentDecorations}
           selectedLines={
             activeWidget
               ? { start: activeWidget.start, end: activeWidget.end }

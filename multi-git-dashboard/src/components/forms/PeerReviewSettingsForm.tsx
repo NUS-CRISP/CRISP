@@ -4,7 +4,6 @@ import {
   Textarea,
   Text,
   Radio,
-  Checkbox,
   Notification,
   Center,
   Loader,
@@ -33,8 +32,12 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
 
   // API Routes
   const createApiRoute = `/api/peer-review/${courseId}/peer-reviews`;
-  const getSettingsApiRoute = `/api/peer-review/${courseId}/${peerReview?._id!}/settings`;
-  const updateSettingsApiRoute = `/api/peer-review/${courseId}/${peerReview?._id!}/settings`;
+  const getSettingsApiRoute = peerReview
+    ? `/api/peer-review/${courseId}/${peerReview._id}/settings`
+    : '';
+  const updateSettingsApiRoute = peerReview
+    ? `/api/peer-review/${courseId}/${peerReview._id}/settings`
+    : '';
 
   // Check if editing existing peer review or creating new [change to get status]
   const isEditing = Boolean(peerReview);
@@ -204,10 +207,7 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
   const confirmSubmit = async () => {
     if (!isEditing) return handleSubmit();
     const originalValues = originalValuesRef.current;
-    if (
-      !originalValues ||
-      !checkIdentical(originalValues as any, form.values)
-    ) {
+    if (!originalValues || !checkIdentical(originalValues, form.values)) {
       setOpenConfirmModal(true);
     } else {
       showNotification({
