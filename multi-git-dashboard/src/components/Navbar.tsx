@@ -428,7 +428,7 @@ const Navbar: React.FC = () => {
         >
           <Center
             className={classes.logo}
-            onClick={() => router.push('/')}
+            onClick={() => router.push('/courses')}
             style={{ cursor: 'pointer' }}
           >
             <IconGitBranch size={30} />
@@ -436,7 +436,7 @@ const Navbar: React.FC = () => {
 
           <div className={classes.navbarMain}>
             <TutorialPopover
-              stage={2}
+              stage={2}    
               position="right"
               onOpen={() => setMainLinkPopoverOpened(true)}
               onClose={() => setMainLinkPopoverOpened(false)}
