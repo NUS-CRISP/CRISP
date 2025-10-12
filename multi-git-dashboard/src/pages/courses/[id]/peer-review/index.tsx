@@ -5,14 +5,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { hasFacultyPermission } from '@/lib/auth/utils';
 import { TeamSet } from '@shared/types/TeamSet';
 import { PeerReview } from '@shared/types/PeerReview';
-import {
-  DateUtils,
-  getCurrentWeekGenerator,
-  getEndOfWeek,
-  weekToDateGenerator,
-} from '@/lib/utils';
 import { Course } from '@shared/types/Course';
-import dayjs from 'dayjs';
 
 const PeerReviewListPage: React.FC = () => {
   const router = useRouter();
@@ -27,7 +20,7 @@ const PeerReviewListPage: React.FC = () => {
   const [teamSets, setTeamSets] = useState<TeamSet[]>([]);
   const [course, setCourse] = useState<Course>();
   const [peerReviews, setPeerReviews] = useState<PeerReview[]>([]);
-  const permission = hasFacultyPermission();
+  const hasPermission = hasFacultyPermission();
   
   const examplePeerReviews: PeerReview[] = [
     {
@@ -123,13 +116,6 @@ const PeerReviewListPage: React.FC = () => {
       }
       const course: Course = await response.json();
 
-      const courseStartDate = dayjs(course.startDate);
-      const dateUtils = {
-        weekToDate: weekToDateGenerator(courseStartDate),
-        getCurrentWeek: getCurrentWeekGenerator(courseStartDate),
-        getEndOfWeek: getEndOfWeek,
-      };
-
       setCourse(course);
     } catch (error) {
       console.error('Error fetching course:', error);
@@ -153,7 +139,7 @@ const PeerReviewListPage: React.FC = () => {
         courseId={id}
         teamSets={teamSets}
         peerReviews={peerReviews}
-        hasFacultyPermission={permission}
+        hasFacultyPermission={hasPermission}
         onUpdate={onUpdate}
       />
     </Container>

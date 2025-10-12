@@ -156,9 +156,11 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
       <Tabs value={activeTab} style={{ paddingBottom: '20px' }}>
         {hasFacultyPermission && (
           <>
-            <Group mb={16} mt={8}>
+            <Group mb={16} mt={8} style={{ display: 'flex', flex: '1', justifyContent: 'flex-end' }} >
               <Button 
                 onClick={openSettingsForm}
+                color="blue"
+                variant="outline"
                 disabled={peerReview.status === "Completed"}
               >
                 Update Peer Review Settings
@@ -167,7 +169,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
                 color='red'
                 variant="outline"
                 onClick={openDeleteModal}
-                disabled={peerReview.status !== "Upcoming"}
+                disabled={peerReview.status === "Completed"}
               >
                 Delete Peer Review
               </Button>
@@ -199,7 +201,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
               closeDeleteModal();
             }}
             title="Delete Peer Review?"
-            message="Are you sure you want to delete this peer review?"
+            message={`Are you sure you want to delete this ${peerReview.status} Peer Review?`}
           />
         ) : null}
         {teamSets.map(teamSet => (

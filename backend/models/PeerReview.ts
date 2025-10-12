@@ -26,16 +26,7 @@ const peerReviewSchema = new Schema<PeerReview>({
   peerReviewAssignmentIds: [
     { type: Schema.Types.ObjectId, ref: 'PeerReviewAssignment' },
   ],
-  startDate: {
-    type: Date,
-    required: true,
-    validate: {
-      validator: function (this: PeerReview, date: Date) {
-        return date.getTime() >= Date.now();
-      },
-      message: `start date cannot be in the past`,
-    },
-  },
+  startDate: { type: Date, required: true },
   endDate: {
     type: Date,
     required: true,

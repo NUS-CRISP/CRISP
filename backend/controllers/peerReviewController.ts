@@ -79,12 +79,12 @@ export const deletePeerReview = async (req: Request, res: Response) => {
   }
 
   try {
-    const deletedPeerReview = await deletePeerReviewById(
-      req.params.peerReviewId
-    );
+    const deletedRes = await deletePeerReviewById(req.params.peerReviewId);
     res
       .status(200)
-      .json({ message: `${deletedPeerReview.title} deleted successfully` });
+      .json({
+        message: `${deletedRes.deletedPeerReviewTitle} deleted successfully`,
+      });
   } catch (error) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ message: error.message });

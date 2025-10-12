@@ -34,12 +34,6 @@ const peerReviewSettingsSchema = new Schema<PeerReviewSettings>({
       message: `maxReviewsPerReviewer must be greater than or equal to minReviewsPerReviewer`,
     },
   },
-  assignmentMode: {
-    type: String,
-    enum: ['Random', 'Manual', 'Hybrid'],
-    required: true,
-    default: 'Random',
-  },
 });
 
 const PeerReviewCommentModel = mongoose.model<PeerReviewSettings>(

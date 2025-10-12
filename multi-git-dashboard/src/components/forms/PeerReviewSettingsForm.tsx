@@ -8,10 +8,13 @@ import {
   Notification,
   Center,
   Loader,
+  Modal,
+  Group,
 } from '@mantine/core';
 import { PeerReview, PeerReviewSettings } from '@shared/types/PeerReview';
 import { useForm } from '@mantine/form';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { showNotification } from '@mantine/notifications';
 
 interface PeerReviewSettingsFormProps {
   courseId: string | string[] | undefined;
@@ -26,13 +29,15 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
 }) => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [openConfirmModal, setOpenConfirmModal] = useState(false);
+  
+  // API Routes
   const createApiRoute = `/api/peer-review/${courseId}/peer-reviews`;
   const getSettingsApiRoute = `/api/peer-review/${courseId}/${peerReview?._id!}/settings`;
   const updateSettingsApiRoute = `/api/peer-review/${courseId}/${peerReview?._id!}/settings`;
   
   // Check if editing existing peer review or creating new [change to get status]
   const isEditing = Boolean(peerReview);
-  const isOngoing = peerReview?.status === "Ongoing";
   
   // Create form with initial values and validation rules
   const form = useForm({
@@ -45,31 +50,26 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
       TaAssignments: false,
       minReviews: 0,
       maxReviews: 1,
-      manualAssign: true,
-      randomAssign: false,
     },
     validate: {
       assessmentName: (value) => (value ? null : 'Assessment name is required'),
       description: (value) => (value ? null : 'Description is required'),
       startDate: (value) => {
-        if (isOngoing) return;
         if (!value) return 'Start date is required';
         if (form.values.endDate && new Date(value) >= new Date(form.values.endDate)) {
           return 'Start date must be before end date';
         }
-        // Add check to ensure start date is not in the past
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Set to start of today
-        if (new Date(value) < today) {
-          return 'Start date cannot be in the past';
-        }
-        return null;
       },
       endDate: (value) => {
-        if (isOngoing) return;
         if (!value) return 'End date is required';
         if (form.values.startDate && new Date(value) <= new Date(form.values.startDate)) {
           return 'End date must be after start date';
+        }
+        // Add check to ensure end date is not in the past
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Set to start of today
+        if (new Date(value) < today) {
+          return 'End date cannot be in the past';
         }
         return null;
       },
@@ -94,6 +94,25 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
     }
   });
   
+  // Helper Functions
+  const normalize = (values: typeof form.values) => ({
+    assessmentName: values.assessmentName.trim() ?? '',
+    description: values.description.trim() ?? '',
+    startDate: values.startDate || '',
+    endDate: values.endDate || '',
+    reviewerType: values.reviewerType,
+    TaAssignments: Boolean(values.TaAssignments),
+    minReviews: Number(values.minReviews ?? 0),
+    maxReviews: Number(values.maxReviews ?? 1),
+  });
+  
+  const checkIdentical = (obj1: typeof form.values, obj2: typeof form.values) => {
+    return JSON.stringify(normalize(obj1)) === JSON.stringify(normalize(obj2));
+  }
+  
+  type Normalized = ReturnType<typeof normalize>;
+  const originalValuesRef = useRef<null | Normalized>(null);
+  
   useEffect(() => {
     if (!isEditing || !peerReview?._id) return;
 
@@ -107,7 +126,7 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
         if (!response.ok) throw new Error('Failed to fetch peer review settings: ' + response.statusText);
         const data: PeerReviewSettings = await response.json();
 
-        form.setValues({
+        const loaded = {
           assessmentName: peerReview.title || '',
           description: peerReview.description || '',
           startDate: peerReview.startDate
@@ -120,9 +139,9 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
           TaAssignments: data.TaAssignments,
           minReviews: data.minReviewsPerReviewer ?? 0,
           maxReviews: data.maxReviewsPerReviewer ?? 1,
-          manualAssign: (data.assignmentMode === "Manual" || data.assignmentMode === "Hybrid"),
-          randomAssign: (data.assignmentMode === "Random" || data.assignmentMode === "Hybrid"),
-        });
+        };
+        form.setValues(loaded);
+        originalValuesRef.current = normalize(loaded);
       } catch (err) {
         console.error('Error fetching peer review settings:', err);
         setError('Failed to load existing peer review settings: ' + (err as Error).message);
@@ -131,7 +150,7 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
       }
     };
     fetchSettings();
-  }, [isEditing, peerReview, courseId]);
+  }, [isEditing, peerReview?._id]);
   
   const handleSubmit = async () => {
     setError(null);
@@ -139,23 +158,36 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
       const response = await fetch(isEditing ? updateSettingsApiRoute : createApiRoute, {
         method: isEditing ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(isOngoing ? {
-          assessmentName: form.values.assessmentName,
-          description: form.values.description,
-        } : form.values),
+        body: JSON.stringify(form.values),
       });
 
-      await response.json();
+      const body = await response.json();
       if (!response.ok) {
-        throw new Error(response.statusText);
+        throw new Error(body?.message || response.statusText);
       }
-      if (!isEditing) form.reset()
+      if (!isEditing) form.reset();
+      originalValuesRef.current = normalize(form.values);
+      setOpenConfirmModal(false);
       onSetUpConfirmed();
     } catch (error) {
       console.error('Error submitting peer review settings:', error);
       setError('Failed to submit peer review settings: ' + (error as Error).message);
     }
   };
+  
+  const confirmSubmit = async () => {
+    if (!isEditing) return handleSubmit();
+    const originalValues = originalValuesRef.current;
+    if (!originalValues || !checkIdentical(originalValues as any, form.values)) {
+      setOpenConfirmModal(true);
+    } else {
+      showNotification({
+        title: 'No Changes Detected',
+        message: 'No changes were made to the peer review settings.',
+        color: 'yellow',
+      });
+    }
+  }
   
   if (loading) {
     return (
@@ -172,7 +204,7 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
           {error}
         </Notification>
       )}
-      <form onSubmit={form.onSubmit(handleSubmit)}>
+      <form onSubmit={form.onSubmit(confirmSubmit)}>
         <TextInput
           withAsterisk
           label="Peer Review Title"
@@ -186,8 +218,7 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
         />
 
         <TextInput
-          withAsterisk={!isOngoing}
-          disabled={isOngoing}
+          withAsterisk
           label="Start Date"
           {...form.getInputProps('startDate')}
           placeholder="YYYY-MM-DD"
@@ -195,39 +226,12 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
         />
 
         <TextInput
-          withAsterisk={!isOngoing}
-          disabled={isOngoing}
+          withAsterisk
           label="End Date"
           {...form.getInputProps('endDate')}
           placeholder="YYYY-MM-DD"
           type="date"
         />
-
-        <Text
-          style={{ fontWeight: 'bold', marginTop: '16px', marginBottom: '8px' }}
-        >
-          Mode of Assiging Peer Reviews
-        </Text>
-        <div style={{ marginBottom: '16px', display: 'flex', flexDirection: "row", gap: '15px' }}>
-          <Checkbox
-            disabled={isOngoing}
-            label="Manual"
-            checked={form.values.manualAssign}
-            onChange={event =>
-              form.setFieldValue('manualAssign', event.currentTarget.checked)
-            }
-            styles={{ input: { cursor: "pointer" } }}
-          />
-          <Checkbox
-            disabled={isOngoing}
-            label="Random"
-            checked={form.values.randomAssign}
-            onChange={event =>
-              form.setFieldValue('randomAssign', event.currentTarget.checked)
-            }
-            styles={{ input: { cursor: "pointer" } }}
-          />
-        </div>
         
         <Text
           style={{ fontWeight: 'bold', marginTop: '16px', marginBottom: '8px' }}
@@ -244,13 +248,11 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
                 label="Team"
                 value="Team"
                 styles={{ radio: { cursor: "pointer" } }}
-                disabled={isOngoing}
               />
               <Radio
                 label="Individual"
                 value="Individual"
                 styles={{ radio: { cursor: "pointer" } }}
-                disabled={isOngoing}
               />
             </div>
           </Radio.Group>
@@ -265,16 +267,15 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
             onChange={(val) => form.setFieldValue("TaAssignments", val === "yes")}
           >
             <div style={{ display: 'flex', gap: '32px' }}>
-              <Radio label="Yes" value="yes" disabled={isOngoing} styles={{ radio: { cursor: "pointer" } }} />
-              <Radio label="No" value="no" disabled={isOngoing} styles={{ radio: { cursor: "pointer" } }} />
+              <Radio label="Yes" value="yes" styles={{ radio: { cursor: "pointer" } }} />
+              <Radio label="No" value="no" styles={{ radio: { cursor: "pointer" } }} />
             </div>
           </Radio.Group>
         </div>
         
 
         <TextInput
-          withAsterisk={!isOngoing}
-          disabled={isOngoing}
+          withAsterisk
           label="Minimum Reviews per Reviewer"
           {...form.getInputProps('minReviews')}
           placeholder="Enter min reviews"
@@ -282,8 +283,7 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
         />
         
         <TextInput
-          withAsterisk={!isOngoing}
-          disabled={isOngoing}
+          withAsterisk
           label="Maximum Reviews per Reviewer"
           {...form.getInputProps('maxReviews')}
           placeholder="Enter max reviews"
@@ -293,6 +293,22 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
         <Button type="submit" mt="sm">
           {isEditing ? "Update Settings" : "Create Peer Review"}
         </Button>
+        
+        <Modal
+          opened={openConfirmModal}
+          onClose={() => setOpenConfirmModal(false)}
+          title="Confirm Update?"
+          centered
+        >
+          <Text size="sm" c="dimmed" mb="md">
+            Are you sure you want to update the peer review settings? <br />
+            There will be implications to the current peer review assignments.
+          </Text>
+          <Group justify="flex-end">
+            <Button color="blue" onClick={handleSubmit}>Confirm Update</Button>
+            <Button variant="default" onClick={() => setOpenConfirmModal(false)}>Cancel</Button>
+          </Group>
+        </Modal>
       </form>
     </>
   );

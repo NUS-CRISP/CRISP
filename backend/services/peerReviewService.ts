@@ -2,6 +2,9 @@ import PeerReviewModel from '@models/PeerReview';
 import PeerReviewSettingsModel from '@models/PeerReviewSettings';
 import CourseModel from '@models/Course';
 import { NotFoundError } from './errors';
+import mongoose from 'mongoose';
+import PeerReviewAssignmentModel from '@models/PeerReviewAssignment';
+import PeerReviewCommentModel from '@models/PeerReviewComment';
 
 export const getAllPeerReviewsyId = async (courseId: string) => {
   const peerReviews = await PeerReviewModel.find({ course: courseId });
@@ -27,8 +30,6 @@ export const createPeerReviewById = async (
     TaAssignments: boolean;
     minReviews: number;
     maxReviews: number;
-    manualAssign: boolean;
-    randomAssign: boolean;
   }
 ) => {
   const course = await CourseModel.findById(courseId);
@@ -45,8 +46,6 @@ export const createPeerReviewById = async (
     TaAssignments,
     minReviews: minReviewsPerReviewer,
     maxReviews: maxReviewsPerReviewer,
-    manualAssign,
-    randomAssign,
   } = peerReviewData;
 
   // Basic validation
@@ -66,11 +65,6 @@ export const createPeerReviewById = async (
     TaAssignments,
     minReviewsPerReviewer,
     maxReviewsPerReviewer,
-    assignmentMode: manualAssign
-      ? randomAssign
-        ? 'Hybrid'
-        : 'Manual'
-      : 'Random',
   });
   await newSettings.save();
 
@@ -81,20 +75,57 @@ export const createPeerReviewById = async (
 };
 
 export const deletePeerReviewById = async (peerReviewId: string) => {
-  const peerReview = await PeerReviewModel.findById(peerReviewId);
-  if (!peerReview) throw new NotFoundError('Peer review not found');
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const peerReview = await PeerReviewModel.findById(peerReviewId);
+    if (!peerReview) throw new NotFoundError('Peer review not found');
 
-  const deletedSettings = await PeerReviewSettingsModel.deleteOne({
-    peerReviewId,
-  });
-  if (!deletedSettings)
-    throw new NotFoundError('Peer review settings not found for deletion');
-  const deletedPeerReview =
-    await PeerReviewModel.findByIdAndDelete(peerReviewId);
-  if (!deletedPeerReview)
-    throw new NotFoundError('Peer review not found for deletion');
+    const prAssignments = await PeerReviewAssignmentModel.find({
+      peerReviewId,
+    });
+    const assignmentIds = prAssignments.map(assignment => assignment._id);
 
-  return deletedPeerReview;
+    // Delete associated comments
+    const delCommentsRes = await PeerReviewCommentModel.deleteMany({
+      peerReviewAssignmentId: { $in: assignmentIds },
+    });
+
+    // Delete peer review assignments
+    const delAssignmentsRes = await PeerReviewAssignmentModel.deleteMany({
+      peerReviewId,
+    });
+
+    // Delete peer review settings
+    const delSettingsRes = await PeerReviewSettingsModel.deleteOne({
+      peerReviewId,
+    });
+    if (!delSettingsRes)
+      throw new NotFoundError('Peer review settings not found for deletion');
+
+    const delPeerReviewRes =
+      await PeerReviewModel.findByIdAndDelete(peerReviewId);
+    if (!delPeerReviewRes)
+      throw new NotFoundError('Peer review not found for deletion');
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return {
+      deletedPeerReviewId: peerReviewId,
+      deletedPeerReviewTitle: peerReview.title,
+      deleted: {
+        comments: delCommentsRes.deletedCount || 0,
+        assignments: delAssignmentsRes.deletedCount || 0,
+        settings: delSettingsRes.deletedCount || 0,
+        peerReview: delPeerReviewRes ? 1 : 0,
+      },
+    };
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
 };
 
 export const getPeerReviewSettingsById = async (peerReviewId: string) => {
@@ -120,8 +151,6 @@ export const updatePeerReviewSettingsById = async (
     TaAssignments,
     minReviews: minReviewsPerReviewer,
     maxReviews: maxReviewsPerReviewer,
-    manualAssign,
-    randomAssign,
   } = settingsData;
 
   const peerReviewData = {
@@ -130,15 +159,8 @@ export const updatePeerReviewSettingsById = async (
     ...(startDate && { startDate }),
     ...(endDate && { endDate }),
   };
-
-  const assignmentMode = manualAssign
-    ? randomAssign
-      ? 'Hybrid'
-      : 'Manual'
-    : 'Random';
   const settingsOnlyData = {
     ...(reviewerType && { reviewerType }),
-    ...(assignmentMode && { assignmentMode }),
     ...(TaAssignments !== undefined && { TaAssignments }),
     ...(minReviewsPerReviewer !== undefined && { minReviewsPerReviewer }),
     ...(maxReviewsPerReviewer !== undefined && { maxReviewsPerReviewer }),

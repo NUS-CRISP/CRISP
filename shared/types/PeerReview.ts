@@ -21,7 +21,6 @@ export interface PeerReviewSettings {
   TaAssignments: boolean;
   minReviewsPerReviewer: number;
   maxReviewsPerReviewer: number;
-  assignmentMode: "Random" | "Manual" | "Hybrid";
 }
 
 export interface PeerReviewAssignment {
