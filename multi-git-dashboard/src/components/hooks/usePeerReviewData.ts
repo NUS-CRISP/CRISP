@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { PeerReviewAssignment, PeerReviewComment, RepoNode } from '@shared/types/PeerReview';
+import {
+  PeerReviewAssignment,
+  PeerReviewComment,
+  RepoNode,
+} from '@shared/types/PeerReview';
 import {
   apiFetchPeerReviewAssignment,
   apiFetchComments,
@@ -18,9 +22,13 @@ type UsePeerReviewDataArgs = {
   assignmentId: string;
 };
 
-export default function usePeerReviewData({ courseId, assignmentId }: UsePeerReviewDataArgs) {
+export default function usePeerReviewData({
+  courseId,
+  assignmentId,
+}: UsePeerReviewDataArgs) {
   const [loading, setLoading] = useState(true);
-  const [peerReviewAssignment, setpeerReviewAssignment] = useState<PeerReviewAssignment | null>(null);
+  const [peerReviewAssignment, setpeerReviewAssignment] =
+    useState<PeerReviewAssignment | null>(null);
   const [repoTree, setRepoTree] = useState<RepoNode | null>(null);
   const [currFile, setCurrFile] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState<Record<string, string>>({});
@@ -28,12 +36,18 @@ export default function usePeerReviewData({ courseId, assignmentId }: UsePeerRev
 
   // Initial load of data
   useEffect(() => {
-    if (!courseId || !assignmentId) { setLoading(false); return; }
+    if (!courseId || !assignmentId) {
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
     const initialLoad = async () => {
       try {
         setLoading(true);
-        const prAssignment = await apiFetchPeerReviewAssignment(courseId, assignmentId);
+        const prAssignment = await apiFetchPeerReviewAssignment(
+          courseId,
+          assignmentId
+        );
         if (cancelled) return;
         const tree = await fetchGithubRepoStructure(prAssignment.repoUrl);
         if (cancelled) return;
@@ -47,25 +61,37 @@ export default function usePeerReviewData({ courseId, assignmentId }: UsePeerRev
         const files = flattenTree(tree);
         if (files[0]) {
           setCurrFile(files[0]);
-          const content = await fetchFileContent(prAssignment.repoUrl, files[0]);
-          if (!cancelled) setFileContent(prev => ({ ...prev, [files[0]]: content }));
+          const content = await fetchFileContent(
+            prAssignment.repoUrl,
+            files[0]
+          );
+          if (!cancelled)
+            setFileContent(prev => ({ ...prev, [files[0]]: content }));
         }
       } finally {
         if (!cancelled) setLoading(false);
       }
     };
     initialLoad();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [courseId, assignmentId]);
 
-  const openFile = useCallback(async (filePath: string) => {
-    if (!peerReviewAssignment) return;
-    setCurrFile(filePath);
-    if (!fileContent[filePath]) {
-      const content = await fetchFileContent(peerReviewAssignment.repoUrl, filePath);
-      setFileContent(prev => ({ ...prev, [filePath]: content }));
-    }
-  }, [peerReviewAssignment, fileContent]);
+  const openFile = useCallback(
+    async (filePath: string) => {
+      if (!peerReviewAssignment) return;
+      setCurrFile(filePath);
+      if (!fileContent[filePath]) {
+        const content = await fetchFileContent(
+          peerReviewAssignment.repoUrl,
+          filePath
+        );
+        setFileContent(prev => ({ ...prev, [filePath]: content }));
+      }
+    },
+    [peerReviewAssignment, fileContent]
+  );
 
   // Comments CRUD
   const refreshComments = useCallback(async () => {
@@ -73,20 +99,34 @@ export default function usePeerReviewData({ courseId, assignmentId }: UsePeerRev
     setComments(cs);
   }, [courseId, assignmentId]);
 
-  const addComment = useCallback(async (partial: Omit<PeerReviewComment, '_id' | 'peerReviewAssignmentId' | 'author' | 'createdAt' | 'updatedAt'>) => {
-    await apiAddComment(courseId, assignmentId, partial);
-    await refreshComments();
-  }, [courseId, assignmentId, refreshComments]);
+  const addComment = useCallback(
+    async (
+      partial: Omit<
+        PeerReviewComment,
+        '_id' | 'peerReviewAssignmentId' | 'author' | 'createdAt' | 'updatedAt'
+      >
+    ) => {
+      await apiAddComment(courseId, assignmentId, partial);
+      await refreshComments();
+    },
+    [courseId, assignmentId, refreshComments]
+  );
 
-  const updateComment = useCallback(async (commentId: string, updated: string) => {
-    await apiUpdateComment(courseId, assignmentId, commentId, updated);
-    await refreshComments();
-  }, [courseId, assignmentId, refreshComments]);
+  const updateComment = useCallback(
+    async (commentId: string, updated: string) => {
+      await apiUpdateComment(courseId, assignmentId, commentId, updated);
+      await refreshComments();
+    },
+    [courseId, assignmentId, refreshComments]
+  );
 
-  const deleteComment = useCallback(async (commentId: string) => {
-    await apiDeleteComment(courseId, assignmentId, commentId);
-    setComments(prev => prev.filter(c => c._id !== commentId));
-  }, [courseId, assignmentId]);
+  const deleteComment = useCallback(
+    async (commentId: string) => {
+      await apiDeleteComment(courseId, assignmentId, commentId);
+      setComments(prev => prev.filter(c => c._id !== commentId));
+    },
+    [courseId, assignmentId]
+  );
 
   const currentCode = useMemo(() => {
     if (!currFile) return '// No file selected';
@@ -98,7 +138,7 @@ export default function usePeerReviewData({ courseId, assignmentId }: UsePeerRev
     peerReviewAssignment,
     repoTree,
     currFile,
-    comments,    
+    comments,
     currentCode,
     setCurrFile,
     openFile,

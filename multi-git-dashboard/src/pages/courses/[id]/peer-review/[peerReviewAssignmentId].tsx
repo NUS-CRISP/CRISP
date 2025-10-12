@@ -24,7 +24,9 @@ import classes from '@styles/PeerReview.module.css';
 import usePeerReviewData from '@/components/hooks/usePeerReviewData';
 import { getLanguageForFile } from '@/lib/peer-review/utils';
 
-const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false, });
+const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
+  ssr: false,
+});
 
 const PeerReviewDetail: React.FC = () => {
   const router = useRouter();
@@ -32,11 +34,14 @@ const PeerReviewDetail: React.FC = () => {
     id: string;
     peerReviewAssignmentId: string;
   };
-  
+
   // Ensure router is ready and params are valid
-  const ready = router.isReady && typeof id === 'string' && typeof peerReviewAssignmentId === 'string';
+  const ready =
+    router.isReady &&
+    typeof id === 'string' &&
+    typeof peerReviewAssignmentId === 'string';
   if (!ready) return <Center>Loading...</Center>;
-  
+
   // Fetch peer review assignment data
   const {
     loading,
@@ -53,165 +58,196 @@ const PeerReviewDetail: React.FC = () => {
     courseId: id,
     assignmentId: peerReviewAssignmentId,
   });
-  
+
   // Current User
   const { data: session } = useSession();
-  const currentUser: User = session?.user as User
-  
+  const currentUser: User = session?.user as User;
+
   /* ===== Refs and States for Editor and Interaction Logic ===== */
   const editorRef = useRef<any>(null);
   const monacoRef = useRef<any>(null);
   const listenerDisposablesRef = useRef<any[]>([]);
-  
+
   const hoverDecoRef = useRef<string[]>([]);
   const iconDecoRef = useRef<string[]>([]);
   const dragDecosRef = useRef<string[]>([]);
   const focusedDecosRef = useRef<string[]>([]);
   const staticDecosRef = useRef<string[]>([]);
-  
+
   const [focusedCommentIds, setFocusedCommentIds] = useState<string[]>([]);
   const [submittingComment, setSubmittingComment] = useState(false);
-  const [updatingCommentId, setUpdatingCommentId] = useState<string | null>(null);
+  const [updatingCommentId, setUpdatingCommentId] = useState<string | null>(
+    null
+  );
   const [deleteCommentId, setDeleteCommentId] = useState<string | null>(null);
-  const [activeWidget, setActiveWidget] = useState<{ start: number; end: number; top: number; } | null>(null);
+  const [activeWidget, setActiveWidget] = useState<{
+    start: number;
+    end: number;
+    top: number;
+  } | null>(null);
   const [overallComment, setOverallComment] = useState<string>(''); // To be implemented
-    
+
   // Refs to keep track of latest comments, currFile, and active widget in callbacks
   const activeWidgetRef = useRef<typeof activeWidget>(null);
   const commentsRef = useRef<PeerReviewComment[]>([]);
   const currFileRef = useRef<string | null>(null);
-  useEffect(() => { activeWidgetRef.current = activeWidget; }, [activeWidget]);
-  useEffect(() => { commentsRef.current = comments; }, [comments]);
-  useEffect(() => { currFileRef.current = currFile; }, [currFile]);
-  
+  useEffect(() => {
+    activeWidgetRef.current = activeWidget;
+  }, [activeWidget]);
+  useEffect(() => {
+    commentsRef.current = comments;
+  }, [comments]);
+  useEffect(() => {
+    currFileRef.current = currFile;
+  }, [currFile]);
+
   /* ===== Helper Functions ===== */
-  const renderFocusedAndStaticDecos = useCallback((focusedIds: string[]) => {
-    const editor = editorRef.current;
-    const monaco = monacoRef.current;
-    const file = currFileRef.current;
-    if (!editor || !monaco || !file) return;
-    
-    setFocusedCommentIds(focusedIds);
-    const focusedSet = new Set(focusedIds);
-    const fileComments = commentsRef.current.filter(c => c.filePath === file);
-    const focusDecos = fileComments
-      .filter(c => focusedSet.has(c._id))
-      .map(c => ({
-        range: new monaco.Range(c.startLine, 1, c.endLine, 1),
-        options: { isWholeLine: true, className: classes.focusedCommentHighlight },
-      }));
-      
-    const staticDecos = fileComments
-      .filter(c => !focusedSet.has(c._id))
-      .map(c => ({
-        range: new monaco.Range(c.startLine, 1, c.endLine, 1),
-        options: { isWholeLine: true, className: classes.commentedLineHint },
-      }));
-    
-    focusedDecosRef.current = editor.deltaDecorations(focusedDecosRef.current, focusDecos);
-    staticDecosRef.current = editor.deltaDecorations(staticDecosRef.current, staticDecos);
-  }, [classes.focusedCommentHighlight, classes.commentedLineHint]);
-  
+  const renderFocusedAndStaticDecos = useCallback(
+    (focusedIds: string[]) => {
+      const editor = editorRef.current;
+      const monaco = monacoRef.current;
+      const file = currFileRef.current;
+      if (!editor || !monaco || !file) return;
+
+      setFocusedCommentIds(focusedIds);
+      const focusedSet = new Set(focusedIds);
+      const fileComments = commentsRef.current.filter(c => c.filePath === file);
+      const focusDecos = fileComments
+        .filter(c => focusedSet.has(c._id))
+        .map(c => ({
+          range: new monaco.Range(c.startLine, 1, c.endLine, 1),
+          options: {
+            isWholeLine: true,
+            className: classes.focusedCommentHighlight,
+          },
+        }));
+
+      const staticDecos = fileComments
+        .filter(c => !focusedSet.has(c._id))
+        .map(c => ({
+          range: new monaco.Range(c.startLine, 1, c.endLine, 1),
+          options: { isWholeLine: true, className: classes.commentedLineHint },
+        }));
+
+      focusedDecosRef.current = editor.deltaDecorations(
+        focusedDecosRef.current,
+        focusDecos
+      );
+      staticDecosRef.current = editor.deltaDecorations(
+        staticDecosRef.current,
+        staticDecos
+      );
+    },
+    [classes.focusedCommentHighlight, classes.commentedLineHint]
+  );
+
   // Clear focused lines and render static hints when switching files
   useEffect(() => {
     if (!editorRef.current || !currFile || !currentCode) return;
-    focusedDecosRef.current = editorRef.current.deltaDecorations(focusedDecosRef.current, []);
-    staticDecosRef.current = editorRef.current.deltaDecorations(staticDecosRef.current, []);
+    focusedDecosRef.current = editorRef.current.deltaDecorations(
+      focusedDecosRef.current,
+      []
+    );
+    staticDecosRef.current = editorRef.current.deltaDecorations(
+      staticDecosRef.current,
+      []
+    );
     renderFocusedAndStaticDecos([]);
   }, [currFile, currentCode, comments, renderFocusedAndStaticDecos]);
-  
+
   /* ===== Editor Interaction Logic ===== */
-  const handleEditorMount = useCallback((editor: any, monaco: any) => {
-    editorRef.current = editor;
-    monacoRef.current = monaco;
-    
-    focusedDecosRef.current = [];
-    staticDecosRef.current = [];
-    renderFocusedAndStaticDecos([]);
-    
-    // Dispose old listeners
-    listenerDisposablesRef.current.forEach(d => d?.dispose?.());
-    listenerDisposablesRef.current = [];
-    
-    let startLine: number | null = null;
-    
-    const onMouseDown = editor.onMouseDown((e: any) => {
-      // 1) Click on glyph margin: start selection
-      if (e.target.type === monaco.editor.MouseTargetType.GUTTER_GLYPH_MARGIN && e.target.position) {
-        startLine = e.target.position.lineNumber;
+  const handleEditorMount = useCallback(
+    (editor: any, monaco: any) => {
+      editorRef.current = editor;
+      monacoRef.current = monaco;
 
-        // Clear previous decorations
-        renderFocusedAndStaticDecos([]);
-        hoverDecoRef.current = editor.deltaDecorations(hoverDecoRef.current, []);
-        dragDecosRef.current = editor.deltaDecorations(dragDecosRef.current, []);
-        iconDecoRef.current = editor.deltaDecorations([], [{
-          range: new monaco.Range(startLine, 1, startLine, 1),
-          options: { isWholeLine: true, glyphMarginClassName: classes.reviewLineIcon },
-        }]);
-        return;
-      }
-
-      // 2) Click on text: focus comment if any
-      if (e.target.type === monaco.editor.MouseTargetType.CONTENT_TEXT && e.target.position) {
-        const line = e.target.position.lineNumber;
-        const file = currFileRef.current;
-        const fileComments = commentsRef.current.filter(c => c.filePath === file);
-        const clicked = fileComments.filter(c => c.startLine <= line && c.endLine >= line);
-        renderFocusedAndStaticDecos(clicked.map(c => c._id));
-        return;
-      }
-
-      // 3) Click outside text or glyph margin: clear all
+      focusedDecosRef.current = [];
+      staticDecosRef.current = [];
       renderFocusedAndStaticDecos([]);
-    });
-    
-    const onMouseUp = editor.onMouseUp((e: any) => {
-      if (startLine === null) return;
-      
-      // Cancel if not released on a line number
-      if (!e.target?.position) {
-        dragDecosRef.current = editor.deltaDecorations(dragDecosRef.current, []);
-        iconDecoRef.current = editor.deltaDecorations(iconDecoRef.current, []);
-        startLine = null;
-        return;
-      }
-      
-      // Finalize selection
-      const endLine = e.target.position.lineNumber;
-      const start = Math.min(startLine, endLine);
-      const finish = Math.max(startLine, endLine);
 
-      // Add final decorations
-      const decos: any[] = [];
-      for (let l = start; l <= finish; l++) {
-        decos.push({
-          range: new monaco.Range(l, 1, l, 1),
-          options: {
-            isWholeLine: true,
-            className: classes.reviewLineHighlight,
-            linesDecorationsClassName: classes.reviewLineMargin,
-          },
-        });
-      }
-      dragDecosRef.current = editor.deltaDecorations(dragDecosRef.current, decos);
+      // Dispose old listeners
+      listenerDisposablesRef.current.forEach(d => d?.dispose?.());
+      listenerDisposablesRef.current = [];
 
-      const top = editor.getTopForLineNumber(finish);
-      setActiveWidget({ start, end: finish, top });
-      startLine = null;
-    });
-    
-    const onMouseMove = editor.onMouseMove((e: any) => {
-      // Don't do anything if dragging a selection
-      if (activeWidgetRef.current) {
-        hoverDecoRef.current = editor.deltaDecorations(hoverDecoRef.current, []);
-        return;
-      }
-      
-      // If dragging to select lines
-      if (startLine !== null && e.target?.position) {
-        const line = e.target.position.lineNumber;
-        const start = Math.min(startLine, line);
-        const finish = Math.max(startLine, line);
+      let startLine: number | null = null;
+
+      const onMouseDown = editor.onMouseDown((e: any) => {
+        // 1) Click on glyph margin: start selection
+        if (
+          e.target.type === monaco.editor.MouseTargetType.GUTTER_GLYPH_MARGIN &&
+          e.target.position
+        ) {
+          startLine = e.target.position.lineNumber;
+
+          // Clear previous decorations
+          renderFocusedAndStaticDecos([]);
+          hoverDecoRef.current = editor.deltaDecorations(
+            hoverDecoRef.current,
+            []
+          );
+          dragDecosRef.current = editor.deltaDecorations(
+            dragDecosRef.current,
+            []
+          );
+          iconDecoRef.current = editor.deltaDecorations(
+            [],
+            [
+              {
+                range: new monaco.Range(startLine, 1, startLine, 1),
+                options: {
+                  isWholeLine: true,
+                  glyphMarginClassName: classes.reviewLineIcon,
+                },
+              },
+            ]
+          );
+          return;
+        }
+
+        // 2) Click on text: focus comment if any
+        if (
+          e.target.type === monaco.editor.MouseTargetType.CONTENT_TEXT &&
+          e.target.position
+        ) {
+          const line = e.target.position.lineNumber;
+          const file = currFileRef.current;
+          const fileComments = commentsRef.current.filter(
+            c => c.filePath === file
+          );
+          const clicked = fileComments.filter(
+            c => c.startLine <= line && c.endLine >= line
+          );
+          renderFocusedAndStaticDecos(clicked.map(c => c._id));
+          return;
+        }
+
+        // 3) Click outside text or glyph margin: clear all
+        renderFocusedAndStaticDecos([]);
+      });
+
+      const onMouseUp = editor.onMouseUp((e: any) => {
+        if (startLine === null) return;
+
+        // Cancel if not released on a line number
+        if (!e.target?.position) {
+          dragDecosRef.current = editor.deltaDecorations(
+            dragDecosRef.current,
+            []
+          );
+          iconDecoRef.current = editor.deltaDecorations(
+            iconDecoRef.current,
+            []
+          );
+          startLine = null;
+          return;
+        }
+
+        // Finalize selection
+        const endLine = e.target.position.lineNumber;
+        const start = Math.min(startLine, endLine);
+        const finish = Math.max(startLine, endLine);
+
+        // Add final decorations
         const decos: any[] = [];
         for (let l = start; l <= finish; l++) {
           decos.push({
@@ -223,113 +259,173 @@ const PeerReviewDetail: React.FC = () => {
             },
           });
         }
-        dragDecosRef.current = editor.deltaDecorations(dragDecosRef.current, decos);
-        return;
-      }
-      
-      // If hovering over a line
-      if (e.target?.position) {
-        const line = e.target.position.lineNumber;
-        hoverDecoRef.current = editor.deltaDecorations(hoverDecoRef.current, [{
-          range: new monaco.Range(line, 1, line, 1),
-          options: {
-            isWholeLine: true,
-            className: classes.reviewLineHighlight,
-            glyphMarginClassName: classes.reviewLineIcon,
-          },
-        }]);
-      } else {
-        hoverDecoRef.current = editor.deltaDecorations(hoverDecoRef.current, []);
-      }
-    });
-    
-    // Method to clear all comment-related decorations, expose for cancelling a comment
-    editor.clearCommentDecorations = () => {
-      hoverDecoRef.current = editor.deltaDecorations(hoverDecoRef.current, []);
-      dragDecosRef.current = editor.deltaDecorations(dragDecosRef.current, []);
-      iconDecoRef.current = editor.deltaDecorations(iconDecoRef.current, []);
-      setActiveWidget(null);
-    };
+        dragDecosRef.current = editor.deltaDecorations(
+          dragDecosRef.current,
+          decos
+        );
 
-    listenerDisposablesRef.current.push(onMouseDown, onMouseUp, onMouseMove);
-  }, [renderFocusedAndStaticDecos]);
-  
+        const top = editor.getTopForLineNumber(finish);
+        setActiveWidget({ start, end: finish, top });
+        startLine = null;
+      });
+
+      const onMouseMove = editor.onMouseMove((e: any) => {
+        // Don't do anything if dragging a selection
+        if (activeWidgetRef.current) {
+          hoverDecoRef.current = editor.deltaDecorations(
+            hoverDecoRef.current,
+            []
+          );
+          return;
+        }
+
+        // If dragging to select lines
+        if (startLine !== null && e.target?.position) {
+          const line = e.target.position.lineNumber;
+          const start = Math.min(startLine, line);
+          const finish = Math.max(startLine, line);
+          const decos: any[] = [];
+          for (let l = start; l <= finish; l++) {
+            decos.push({
+              range: new monaco.Range(l, 1, l, 1),
+              options: {
+                isWholeLine: true,
+                className: classes.reviewLineHighlight,
+                linesDecorationsClassName: classes.reviewLineMargin,
+              },
+            });
+          }
+          dragDecosRef.current = editor.deltaDecorations(
+            dragDecosRef.current,
+            decos
+          );
+          return;
+        }
+
+        // If hovering over a line
+        if (e.target?.position) {
+          const line = e.target.position.lineNumber;
+          hoverDecoRef.current = editor.deltaDecorations(hoverDecoRef.current, [
+            {
+              range: new monaco.Range(line, 1, line, 1),
+              options: {
+                isWholeLine: true,
+                className: classes.reviewLineHighlight,
+                glyphMarginClassName: classes.reviewLineIcon,
+              },
+            },
+          ]);
+        } else {
+          hoverDecoRef.current = editor.deltaDecorations(
+            hoverDecoRef.current,
+            []
+          );
+        }
+      });
+
+      // Method to clear all comment-related decorations, expose for cancelling a comment
+      editor.clearCommentDecorations = () => {
+        hoverDecoRef.current = editor.deltaDecorations(
+          hoverDecoRef.current,
+          []
+        );
+        dragDecosRef.current = editor.deltaDecorations(
+          dragDecosRef.current,
+          []
+        );
+        iconDecoRef.current = editor.deltaDecorations(iconDecoRef.current, []);
+        setActiveWidget(null);
+      };
+
+      listenerDisposablesRef.current.push(onMouseDown, onMouseUp, onMouseMove);
+    },
+    [renderFocusedAndStaticDecos]
+  );
+
   // Cleanup on unmount
   useEffect(() => {
     return () => listenerDisposablesRef.current.forEach(d => d?.dispose?.());
   }, []);
-  
+
   // Add comment handler
-  const handleAddComment = useCallback(async (text: string) => {
-    if (submittingComment) return false;
-    if (!text.trim()) return false;
-    if (!activeWidget || !currFile) return false;
+  const handleAddComment = useCallback(
+    async (text: string) => {
+      if (submittingComment) return false;
+      if (!text.trim()) return false;
+      if (!activeWidget || !currFile) return false;
 
-    try {
-      setSubmittingComment(true);
-      await addComment({
-        filePath: currFile,
-        startLine: activeWidget.start,
-        endLine: activeWidget.end,
-        comment: text,
-        isOverallComment: false,
-      });
+      try {
+        setSubmittingComment(true);
+        await addComment({
+          filePath: currFile,
+          startLine: activeWidget.start,
+          endLine: activeWidget.end,
+          comment: text,
+          isOverallComment: false,
+        });
 
-      editorRef.current?.clearCommentDecorations?.();
-      setActiveWidget(null);
+        editorRef.current?.clearCommentDecorations?.();
+        setActiveWidget(null);
 
-      return true;
-    } catch (error: any) {
-      notifications.show({
-        color: 'red',
-        title: 'Failed to add comment',
-        message: error?.message || 'Please try again.',
-      });
-      return false;
-    } finally {
-      setSubmittingComment(false);
-    }
-  },[submittingComment, activeWidget, currFile, addComment]);
-  
+        return true;
+      } catch (error: any) {
+        notifications.show({
+          color: 'red',
+          title: 'Failed to add comment',
+          message: error?.message || 'Please try again.',
+        });
+        return false;
+      } finally {
+        setSubmittingComment(false);
+      }
+    },
+    [submittingComment, activeWidget, currFile, addComment]
+  );
+
   // Update comment handler
-  const handleUpdateComment = useCallback(async (commentId: string, newComment: string) => {
-    if (updatingCommentId) return false;
-    if (!newComment.trim()) return false;
-    
-    const currComment = comments.find(c => c._id === commentId);
-    if (!currComment) return false;
-    if (currComment.comment === newComment) return true;
-    
-    try {
-      setUpdatingCommentId(commentId);
-      await updateComment(commentId, newComment);
-      editorRef.current?.clearCommentDecorations?.();
-      setActiveWidget(null);
-      return true;
-    } catch (error: any) {
-      notifications.show({
-        color: 'red',
-        title: 'Failed to update comment',
-        message: error?.message || 'Please try again.',
-      });
-      return false;
-    } finally {
-      setUpdatingCommentId(null);
-    }
-  }, [updatingCommentId, updateComment]);
-  
+  const handleUpdateComment = useCallback(
+    async (commentId: string, newComment: string) => {
+      if (updatingCommentId) return false;
+      if (!newComment.trim()) return false;
+
+      const currComment = comments.find(c => c._id === commentId);
+      if (!currComment) return false;
+      if (currComment.comment === newComment) return true;
+
+      try {
+        setUpdatingCommentId(commentId);
+        await updateComment(commentId, newComment);
+        editorRef.current?.clearCommentDecorations?.();
+        setActiveWidget(null);
+        return true;
+      } catch (error: any) {
+        notifications.show({
+          color: 'red',
+          title: 'Failed to update comment',
+          message: error?.message || 'Please try again.',
+        });
+        return false;
+      } finally {
+        setUpdatingCommentId(null);
+      }
+    },
+    [updatingCommentId, updateComment]
+  );
+
   // Delete comment handler
   const requestDeleteComment = useCallback((commentId: string) => {
     setDeleteCommentId(commentId);
   }, []);
-  
+
   const handleDeleteComment = useCallback(async () => {
     if (!deleteCommentId) return;
-    
+
     try {
       await deleteComment(deleteCommentId);
       if (focusedCommentIds.includes(deleteCommentId)) {
-        const remainingIds = focusedCommentIds.filter(id => id !== deleteCommentId);
+        const remainingIds = focusedCommentIds.filter(
+          id => id !== deleteCommentId
+        );
         renderFocusedAndStaticDecos(remainingIds);
       }
     } catch (error: any) {
@@ -341,44 +437,58 @@ const PeerReviewDetail: React.FC = () => {
     } finally {
       setDeleteCommentId(null);
     }
-  }, [deleteCommentId, deleteComment, focusedCommentIds, renderFocusedAndStaticDecos]);
-  
+  }, [
+    deleteCommentId,
+    deleteComment,
+    focusedCommentIds,
+    renderFocusedAndStaticDecos,
+  ]);
+
   // Focus comment handler
-  const handleFocusComment = useCallback((comment: PeerReviewComment) => {
-    renderFocusedAndStaticDecos([comment._id]);
-    editorRef.current?.revealLineInCenter?.(comment.startLine);
-  }, [renderFocusedAndStaticDecos]);
+  const handleFocusComment = useCallback(
+    (comment: PeerReviewComment) => {
+      renderFocusedAndStaticDecos([comment._id]);
+      editorRef.current?.revealLineInCenter?.(comment.startLine);
+    },
+    [renderFocusedAndStaticDecos]
+  );
 
   if (loading) return <Center>Loading…</Center>;
   if (!peerReviewAssignment) return <Center>Unable to load assignment.</Center>;
   if (!repoTree) return <Center>No repository tree found.</Center>;
-  
+
   return (
     <Container fluid className={classes.wrapper}>
-      <Group className={classes.header} >
-        <IconArrowLeft onClick={() => router.push(`/courses/${id}/peer-review`)} className={classes.returnButton} />
+      <Group className={classes.header}>
+        <IconArrowLeft
+          onClick={() => router.push(`/courses/${id}/peer-review`)}
+          className={classes.returnButton}
+        />
         <IconListDetails />
         <Title order={4}>Peer Review:</Title>
-        <Anchor href={peerReviewAssignment.repoUrl} target="_blank" rel="noreferrer">
-          <Title order={4}>
-            {peerReviewAssignment.repoName}
-          </Title>
+        <Anchor
+          href={peerReviewAssignment.repoUrl}
+          target="_blank"
+          rel="noreferrer"
+        >
+          <Title order={4}>{peerReviewAssignment.repoName}</Title>
         </Anchor>
       </Group>
 
       <Group className={classes.body}>
         <Box className={classes.repositoryBox}>
-          <Text className={classes.repositoryTitle}>
-            Repository
-          </Text>
-          <ScrollArea className={classes.repositoryScrollArea} scrollbarSize={4}>
-            { repoTree && 
-              <PeerReviewFileTree 
+          <Text className={classes.repositoryTitle}>Repository</Text>
+          <ScrollArea
+            className={classes.repositoryScrollArea}
+            scrollbarSize={4}
+          >
+            {repoTree && (
+              <PeerReviewFileTree
                 repoNode={repoTree}
                 currFile={currFile!}
                 openFile={openFile}
               />
-            }
+            )}
           </ScrollArea>
         </Box>
         {currFile ? (
@@ -395,10 +505,10 @@ const PeerReviewDetail: React.FC = () => {
                   readOnly: true,
                   domReadOnly: true,
                   lineHeight: 20,
-                  lineNumbers: "on",
+                  lineNumbers: 'on',
                   selectionHighlight: false,
-                  occurrencesHighlight: "off",
-                  renderLineHighlight: "none",
+                  occurrencesHighlight: 'off',
+                  renderLineHighlight: 'none',
                   glyphMargin: true,
                   minimap: { enabled: true },
                   scrollBeyondLastLine: false,
@@ -409,7 +519,7 @@ const PeerReviewDetail: React.FC = () => {
             </Card>
           </Box>
         ) : (
-          <Center >
+          <Center>
             <Text>Select a file to view</Text>
           </Center>
         )}
@@ -421,9 +531,13 @@ const PeerReviewDetail: React.FC = () => {
           onUpdateComment={handleUpdateComment}
           onDeleteComment={requestDeleteComment}
           onCancelComment={() => editorRef.current.clearCommentDecorations()}
-          selectedLines={activeWidget ? { start: activeWidget.start, end: activeWidget.end } : null}
+          selectedLines={
+            activeWidget
+              ? { start: activeWidget.start, end: activeWidget.end }
+              : null
+          }
         />
-        <DeleteConfirmationModal 
+        <DeleteConfirmationModal
           opened={!!deleteCommentId}
           onClose={() => setDeleteCommentId(null)}
           onConfirm={handleDeleteComment}

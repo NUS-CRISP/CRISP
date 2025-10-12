@@ -46,12 +46,12 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
   const [newComment, setNewComment] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editComment, setEditComment] = useState('');
-  
+
   const handleAddComment = () => {
     onAddComment(newComment);
     setNewComment('');
   };
-  
+
   const handleEditStart = (commentId: string, currentText: string) => {
     setEditingId(commentId);
     setEditComment(currentText);
@@ -68,7 +68,7 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
     setEditingId(null);
     setEditComment('');
   };
-  
+
   useEffect(() => {
     if (focusedComments.length === 0) return;
     const el = document.getElementById(`comment-${focusedComments[0]}`);
@@ -87,9 +87,13 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
         color="gray"
         onClick={() => setOpened(!opened)}
         className={classes.commentSidebarToggleButton}
-        style={{ left: opened ? 225 : 5, }}
+        style={{ left: opened ? 225 : 5 }}
       >
-        {opened ? <IconChevronRight size={18} /> : <IconChevronLeft size={18} />}
+        {opened ? (
+          <IconChevronRight size={18} />
+        ) : (
+          <IconChevronLeft size={18} />
+        )}
       </ActionIcon>
 
       <div
@@ -103,7 +107,11 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
         <Text className={classes.commentSidebarTitle}>
           Comments ({comments.length})
         </Text>
-        <ScrollArea className={classes.commentSidebarScrollarea} type="auto" scrollbarSize={1}>
+        <ScrollArea
+          className={classes.commentSidebarScrollarea}
+          type="auto"
+          scrollbarSize={1}
+        >
           {selectedLines && (
             <Box mr="8px">
               <Textarea
@@ -113,7 +121,7 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
                 minRows={4}
                 maxRows={6}
                 value={newComment}
-                onChange={(e) => setNewComment(e.currentTarget.value)}
+                onChange={e => setNewComment(e.currentTarget.value)}
               />
               <Group my="xs" gap="8px" justify="flex-start">
                 <Button
@@ -123,17 +131,21 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
                 >
                   Add
                 </Button>
-                <Button size="xs" variant="outline" onClick={onCancelComment}>Cancel</Button>
+                <Button size="xs" variant="outline" onClick={onCancelComment}>
+                  Cancel
+                </Button>
               </Group>
             </Box>
           )}
-          { comments.map((c) => (
+          {comments.map(c => (
             <Card
               id={`comment-${c._id}`}
               key={c._id}
               onClick={() => onFocusComment?.(c)}
               className={`${classes.commentCard} ${
-                focusedComments.includes(c._id) ? classes.commentCardFocused : ''
+                focusedComments.includes(c._id)
+                  ? classes.commentCardFocused
+                  : ''
               }`}
             >
               <Group justify="space-between">
@@ -141,10 +153,18 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
                 <Group gap={4}>
                   {editingId === c._id ? (
                     <>
-                      <ActionIcon size={24} disabled={!editComment.trim()} onClick={() => handleEditSave(c._id)}>
+                      <ActionIcon
+                        size={24}
+                        disabled={!editComment.trim()}
+                        onClick={() => handleEditSave(c._id)}
+                      >
                         <IconCheck size={14} />
                       </ActionIcon>
-                      <ActionIcon size={24} color="gray" onClick={handleEditCancel}>
+                      <ActionIcon
+                        size={24}
+                        color="gray"
+                        onClick={handleEditCancel}
+                      >
                         <IconX size={14} />
                       </ActionIcon>
                     </>
@@ -170,18 +190,24 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
                 </Group>
               </Group>
               <Text size="xs" c="dimmed" mb={4}>
-                {c.updatedAt ? `(updated on ${new Date(c.updatedAt).toLocaleDateString()})` : c.createdAt ? new Date(c.createdAt).toLocaleDateString() : ''}
+                {c.updatedAt
+                  ? `(updated on ${new Date(c.updatedAt).toLocaleDateString()})`
+                  : c.createdAt
+                    ? new Date(c.createdAt).toLocaleDateString()
+                    : ''}
               </Text>
               {editingId === c._id ? (
                 <Textarea
                   value={editComment}
-                  onChange={(e) => setEditComment(e.currentTarget.value)}
+                  onChange={e => setEditComment(e.currentTarget.value)}
                   autosize
                   minRows={3}
                   maxRows={4}
                 />
               ) : (
-                <Text className={classes.commentText} size="sm">{c.comment}</Text>
+                <Text className={classes.commentText} size="sm">
+                  {c.comment}
+                </Text>
               )}
             </Card>
           ))}

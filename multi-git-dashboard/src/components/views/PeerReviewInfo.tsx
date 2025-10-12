@@ -42,19 +42,24 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
   hasFacultyPermission,
   onUpdate,
 }) => {
-  
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamDatas, setTeamDatas] = useState<TeamData[]>([]);
   const [status, setStatus] = useState<Status>(Status.Idle);
-  const [openedSettingsForm, { open: openSettingsForm, close: closeSettingsForm }] = useDisclosure(false);
-  const [openedDeleteModal, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false);
-  
+  const [
+    openedSettingsForm,
+    { open: openSettingsForm, close: closeSettingsForm },
+  ] = useDisclosure(false);
+  const [
+    openedDeleteModal,
+    { open: openDeleteModal, close: closeDeleteModal },
+  ] = useDisclosure(false);
+
   const [studentMap, setStudentMap] = useState<Record<string, Profile>>({});
 
   const [activeTab, setActiveTab] = useState<string | null>(
     teamSets ? teamSets[0]?.name : null
   );
-  
+
   const deleteApiRoute = `/api/peer-review/${courseId}/${peerReview._id}`;
 
   const getTeams = async () => {
@@ -106,7 +111,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
     };
     fetchData();
   }, [courseId]);
-  
+
   const handleDelete = async () => {
     try {
       const response = await fetch(deleteApiRoute, {
@@ -119,7 +124,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
     } catch (error) {
       console.error('Error deleting peer review:', error);
     }
-  };    
+  };
 
   if (status === Status.Loading)
     return (
@@ -130,8 +135,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
       </Center>
     );
 
-  if (!teams.length)
-    return <Center>No teams found.</Center>;
+  if (!teams.length) return <Center>No teams found.</Center>;
 
   const renderOverviewAccordion = () => {
     return (
@@ -148,7 +152,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
           />
         ))}
       </Accordion>
-    )
+    );
   };
 
   return (
@@ -156,20 +160,24 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
       <Tabs value={activeTab} style={{ paddingBottom: '20px' }}>
         {hasFacultyPermission && (
           <>
-            <Group mb={16} mt={8} style={{ display: 'flex', flex: '1', justifyContent: 'flex-end' }} >
-              <Button 
+            <Group
+              mb={16}
+              mt={8}
+              style={{ display: 'flex', flex: '1', justifyContent: 'flex-end' }}
+            >
+              <Button
                 onClick={openSettingsForm}
                 color="blue"
                 variant="outline"
-                disabled={peerReview.status === "Completed"}
+                disabled={peerReview.status === 'Completed'}
               >
                 Update Peer Review Settings
               </Button>
-              <Button 
-                color='red'
+              <Button
+                color="red"
                 variant="outline"
                 onClick={openDeleteModal}
-                disabled={peerReview.status === "Completed"}
+                disabled={peerReview.status === 'Completed'}
               >
                 Delete Peer Review
               </Button>
@@ -180,7 +188,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
               title="Update Peer Review Settings"
             >
               <PeerReviewSettingsForm
-                courseId={courseId} 
+                courseId={courseId}
                 peerReview={peerReview}
                 onSetUpConfirmed={() => {
                   onUpdate();

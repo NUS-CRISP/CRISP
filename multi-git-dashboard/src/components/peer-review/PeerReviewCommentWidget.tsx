@@ -9,7 +9,10 @@ interface PeerReviewCommentWidgetProps {
   currFile: string;
   peerReviewAssignmentId: string;
   currUser: User;
-  onSave: (c: Omit<PeerReviewComment, '_id' | 'createdAt' | 'updatedAt'>, cleanup: () => void) => void;
+  onSave: (
+    c: Omit<PeerReviewComment, '_id' | 'createdAt' | 'updatedAt'>,
+    cleanup: () => void
+  ) => void;
   onCancel: () => void;
 }
 
@@ -22,8 +25,8 @@ const PeerReviewCommentWidget: React.FC<PeerReviewCommentWidgetProps> = ({
   onSave,
   onCancel,
 }) => {
-  const [commentText, setCommentText] = useState<string>("");
-  
+  const [commentText, setCommentText] = useState<string>('');
+
   return (
     <Card withBorder shadow="sm" p="xs">
       <Textarea
@@ -31,13 +34,14 @@ const PeerReviewCommentWidget: React.FC<PeerReviewCommentWidgetProps> = ({
         autosize
         minRows={3}
         value={commentText}
-        onChange={(e) => setCommentText(e.currentTarget.value)}
+        onChange={e => setCommentText(e.currentTarget.value)}
       />
       <Group mt="xs">
         <Button
           size="xs"
           onClick={() => {
-            onSave({
+            onSave(
+              {
                 peerReviewAssignmentId,
                 filePath: currFile,
                 startLine,
@@ -60,5 +64,3 @@ const PeerReviewCommentWidget: React.FC<PeerReviewCommentWidgetProps> = ({
 };
 
 export default PeerReviewCommentWidget;
-
-

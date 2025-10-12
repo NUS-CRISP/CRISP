@@ -12,53 +12,53 @@ const PeerReviewListPage: React.FC = () => {
   const { id } = router.query as {
     id: string;
   };
-  
+
   const courseApiRoute = `/api/courses/${id}`;
   const teamSetsApiRoute = `/api/courses/${id}/teamsets`;
   const peerReviewsApiRoute = `/api/peer-review/${id}/peer-reviews`;
-  
+
   const [teamSets, setTeamSets] = useState<TeamSet[]>([]);
   const [course, setCourse] = useState<Course>();
   const [peerReviews, setPeerReviews] = useState<PeerReview[]>([]);
   const hasPermission = hasFacultyPermission();
-  
+
   const examplePeerReviews: PeerReview[] = [
     {
-      _id: "pr1",
+      _id: 'pr1',
       courseId: id,
-      title: "Example Upcoming Peer Review",
-      description: "This is a sample upcoming peer review.",
-      peerReviewSettingsId: "settings1",
+      title: 'Example Upcoming Peer Review',
+      description: 'This is a sample upcoming peer review.',
+      peerReviewSettingsId: 'settings1',
       peerReviewAssignmentIds: [],
-      createdAt: new Date("2023-09-20T12:00:00Z"),
-      startDate: new Date("2023-09-25T12:00:00Z"),
-      endDate: new Date("2023-10-25T12:00:00Z"),
-      status: "Upcoming",
+      createdAt: new Date('2023-09-20T12:00:00Z'),
+      startDate: new Date('2023-09-25T12:00:00Z'),
+      endDate: new Date('2023-10-25T12:00:00Z'),
+      status: 'Upcoming',
     },
     {
-      _id: "pr2",
+      _id: 'pr2',
       courseId: id,
-      title: "Example Ongoing Peer Review",
-      description: "This is a sample ongoing peer review.",
-      peerReviewSettingsId: "settings2",
+      title: 'Example Ongoing Peer Review',
+      description: 'This is a sample ongoing peer review.',
+      peerReviewSettingsId: 'settings2',
       peerReviewAssignmentIds: [],
-      createdAt: new Date("2023-09-20T12:00:00Z"),
-      startDate: new Date("2023-09-25T12:00:00Z"),
-      endDate: new Date("2023-10-25T12:00:00Z"),
-      status: "Ongoing",
+      createdAt: new Date('2023-09-20T12:00:00Z'),
+      startDate: new Date('2023-09-25T12:00:00Z'),
+      endDate: new Date('2023-10-25T12:00:00Z'),
+      status: 'Ongoing',
     },
     {
-      _id: "pr3",
+      _id: 'pr3',
       courseId: id,
-      title: "Example Completed Peer Review",
-      description: "This is a sample completed peer review.",
-      peerReviewSettingsId: "settings3",
+      title: 'Example Completed Peer Review',
+      description: 'This is a sample completed peer review.',
+      peerReviewSettingsId: 'settings3',
       peerReviewAssignmentIds: [],
-      createdAt: new Date("2023-09-20T12:00:00Z"),
-      startDate: new Date("2023-09-25T12:00:00Z"),
-      endDate: new Date("2023-10-25T12:00:00Z"),
-      status: "Completed",
-    }
+      createdAt: new Date('2023-09-20T12:00:00Z'),
+      startDate: new Date('2023-09-25T12:00:00Z'),
+      endDate: new Date('2023-10-25T12:00:00Z'),
+      status: 'Completed',
+    },
   ];
 
   const onUpdate = () => {
@@ -66,7 +66,7 @@ const PeerReviewListPage: React.FC = () => {
     fetchPeerReviews();
     fetchCourse();
   };
-  
+
   const fetchPeerReviews = async () => {
     try {
       const response = await fetch(peerReviewsApiRoute, {
@@ -106,7 +106,7 @@ const PeerReviewListPage: React.FC = () => {
       console.error('Error fetching team set names:', error);
     }
   };
-  
+
   const fetchCourse = useCallback(async () => {
     try {
       const response = await fetch(courseApiRoute);
@@ -133,7 +133,7 @@ const PeerReviewListPage: React.FC = () => {
   }, [router.isReady, id, fetchCourse]);
 
   return (
-    <Container style={{ marginTop: '40px', }} >
+    <Container style={{ marginTop: '40px' }}>
       <PeerReviewOverview
         course={course}
         courseId={id}

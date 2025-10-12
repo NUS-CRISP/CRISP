@@ -1,9 +1,15 @@
-import { PeerReviewAssignment, PeerReviewComment } from "@shared/types/PeerReview";
+import {
+  PeerReviewAssignment,
+  PeerReviewComment,
+} from '@shared/types/PeerReview';
 
 // API Calls for Peer Review Feature
 
 /* ----- Peer Review Assignment API Calls ----- */
-export const apiFetchPeerReviewAssignment = async (courseId: string, peerReviewAssignmentId: string): Promise<PeerReviewAssignment> => {
+export const apiFetchPeerReviewAssignment = async (
+  courseId: string,
+  peerReviewAssignmentId: string
+): Promise<PeerReviewAssignment> => {
   const peerReviewAssignmentApiRoute = `/api/peer-review/${courseId}/${peerReviewAssignmentId}`;
   try {
     const response = await fetch(peerReviewAssignmentApiRoute, {
@@ -28,14 +34,17 @@ export const apiFetchPeerReviewAssignment = async (courseId: string, peerReviewA
       assignedBy: null,
       assignedAt: new Date(),
       deadline: null,
-      status: "Pending",
+      status: 'Pending',
     };
   }
 };
 
 /* ----- Peer Review Comments API Calls ----- */
 
-export const apiFetchComments = async (courseId: string, peerReviewAssignmentId: string): Promise<PeerReviewComment[] | []> => {
+export const apiFetchComments = async (
+  courseId: string,
+  peerReviewAssignmentId: string
+): Promise<PeerReviewComment[] | []> => {
   const getCommentsApiRoute = `/api/peer-review/${courseId}/${peerReviewAssignmentId}/comments`;
   try {
     const response = await fetch(getCommentsApiRoute, {
@@ -54,8 +63,13 @@ export const apiFetchComments = async (courseId: string, peerReviewAssignmentId:
   }
 };
 
-export const apiAddComment = async (courseId: string, peerReviewAssignmentId: string,
-  comment: Omit<PeerReviewComment, '_id' | 'peerReviewAssignmentId' | 'author' | 'createdAt' | 'updatedAt'>
+export const apiAddComment = async (
+  courseId: string,
+  peerReviewAssignmentId: string,
+  comment: Omit<
+    PeerReviewComment,
+    '_id' | 'peerReviewAssignmentId' | 'author' | 'createdAt' | 'updatedAt'
+  >
 ): Promise<PeerReviewComment> => {
   const addCommentApiRoute = `/api/peer-review/${courseId}/${peerReviewAssignmentId}/comments`;
   try {
@@ -75,13 +89,18 @@ export const apiAddComment = async (courseId: string, peerReviewAssignmentId: st
   }
 };
 
-export const apiUpdateComment = async (courseId: string, peerReviewAssignmentId: string, commentId: string, updatedComment: string): Promise<void> => {
+export const apiUpdateComment = async (
+  courseId: string,
+  peerReviewAssignmentId: string,
+  commentId: string,
+  updatedComment: string
+): Promise<void> => {
   const updateCommentApiRoute = `/api/peer-review/${courseId}/${peerReviewAssignmentId}/comments/${commentId}`;
   try {
     const response = await fetch(updateCommentApiRoute, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify( { comment: updatedComment } ),
+      body: JSON.stringify({ comment: updatedComment }),
     });
     if (!response.ok) {
       throw new Error('Failed to update comment');
@@ -93,7 +112,11 @@ export const apiUpdateComment = async (courseId: string, peerReviewAssignmentId:
   }
 };
 
-export const apiDeleteComment = async (courseId: string, peerReviewAssignmentId: string, commentId: string): Promise<void> => {
+export const apiDeleteComment = async (
+  courseId: string,
+  peerReviewAssignmentId: string,
+  commentId: string
+): Promise<void> => {
   const deleteCommentApiRoute = `/api/peer-review/${courseId}/${peerReviewAssignmentId}/comments/${commentId}`;
   try {
     const response = await fetch(deleteCommentApiRoute, {

@@ -1,10 +1,4 @@
-import {
-  Tabs,
-  Container,
-  Button,
-  Modal,
-  Group,
-} from '@mantine/core';
+import { Tabs, Container, Button, Modal, Group } from '@mantine/core';
 import PeerReviewSettingsForm from '../forms/PeerReviewSettingsForm';
 import { useDisclosure } from '@mantine/hooks';
 import { TeamSet } from '@shared/types/TeamSet';
@@ -29,15 +23,14 @@ const PeerReviewOverview: React.FC<PeerReviewOverviewProps> = ({
   hasFacultyPermission,
   onUpdate,
 }) => {
-  const [openedCreateForm, { open: openCreateForm, close: closeCreateForm }] = useDisclosure(false);
-  
+  const [openedCreateForm, { open: openCreateForm, close: closeCreateForm }] =
+    useDisclosure(false);
+
   return (
     <Container>
-      { hasFacultyPermission && 
+      {hasFacultyPermission && (
         <Group>
-          <Button onClick={openCreateForm}>
-            Create Peer Review
-          </Button>
+          <Button onClick={openCreateForm}>Create Peer Review</Button>
           <Modal
             opened={openedCreateForm}
             onClose={closeCreateForm}
@@ -53,23 +46,26 @@ const PeerReviewOverview: React.FC<PeerReviewOverviewProps> = ({
             />
           </Modal>
         </Group>
-      }
-      <Tabs defaultValue={ peerReviews.length > 0 ? peerReviews[0]._id : undefined } mt="md">
+      )}
+      <Tabs
+        defaultValue={peerReviews.length > 0 ? peerReviews[0]._id : undefined}
+        mt="md"
+      >
         <Tabs.List
           style={{
             justifyContent: 'center',
           }}
         >
-          {course && peerReviews.length > 0? (
-              peerReviews.map((pr) => (
-              <Tabs.Tab key={pr._id} value={pr._id}>
-                {pr.title}
-              </Tabs.Tab>
-            ))) : null
-          }
+          {course && peerReviews.length > 0
+            ? peerReviews.map(pr => (
+                <Tabs.Tab key={pr._id} value={pr._id}>
+                  {pr.title}
+                </Tabs.Tab>
+              ))
+            : null}
         </Tabs.List>
-        
-        { peerReviews.map((pr) => (
+
+        {peerReviews.map(pr => (
           <Tabs.Panel key={pr._id} value={pr._id} pt="xs">
             <PeerReviewInfo
               courseId={courseId}
