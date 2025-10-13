@@ -4,13 +4,18 @@ import { PeerReview as SharedPeerReview } from '@shared/types/PeerReview';
 export interface PeerReview
   extends Omit<
       SharedPeerReview,
-      '_id' | 'courseId' | 'peerReviewSettingsId' | 'peerReviewAssignmentIds'
+      | '_id'
+      | 'courseId'
+      | 'peerReviewSettingsId'
+      | 'peerReviewAssignmentIds'
+      | 'teamSetId'
     >,
     Document {
   _id: Types.ObjectId;
   course: Types.ObjectId;
   peerReviewSettingsId: Types.ObjectId;
   peerReviewAssignmentIds: Types.ObjectId[];
+  teamSetId: Types.ObjectId;
   computedStatus?: 'Upcoming' | 'Ongoing' | 'Completed';
 }
 
@@ -26,6 +31,7 @@ const peerReviewSchema = new Schema<PeerReview>({
   peerReviewAssignmentIds: [
     { type: Schema.Types.ObjectId, ref: 'PeerReviewAssignment' },
   ],
+  teamSetId: { type: Schema.Types.ObjectId, ref: 'TeamSet', required: true },
   startDate: { type: Date, required: true },
   endDate: {
     type: Date,

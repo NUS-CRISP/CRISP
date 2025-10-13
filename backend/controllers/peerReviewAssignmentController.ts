@@ -4,6 +4,7 @@ import AccountModel from '@models/Account';
 import { getUserIdByAccountId } from 'services/accountService';
 import { NotFoundError, MissingAuthorizationError } from '../services/errors';
 import {
+  getPeerReviewInfoById,
   getPeerReviewAssignmentsByPeerReviewId,
   getPeerReviewAssignmentsByTeamId,
   getPeerReviewAssignmentById,
@@ -11,7 +12,43 @@ import {
   randomAssignPeerReviewsById,
 } from '../services/peerReviewAssignmentService';
 
+export const getPeerReviewInfo = async (req: Request, res: Response) => {
+  const accountId = await getAccountId(req);
+  const account = await AccountModel.findById(accountId);
+  if (!account) {
+    throw new MissingAuthorizationError('Access denied');
+  }
+  const userCourseRole = account.courseRoles.find(
+    cr => cr.course.toString() === req.params.courseId
+  )?.courseRole;
+  if (!userCourseRole) {
+    throw new MissingAuthorizationError('Access denied');
+  }
+  const userId = await getUserIdByAccountId(accountId);
+
+  try {
+    const peerReviewInfo = await getPeerReviewInfoById(
+      userId,
+      userCourseRole,
+      req.params.peerReviewId,
+      req.query.includeReviewersForTeams === 'true'
+    );
+
+    res.status(200).json(peerReviewInfo);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ message: error.message });
+    } else {
+      console.error('Error fetching peer review assignments:', error);
+      res
+        .status(500)
+        .json({ message: 'Failed to get peer review assignments' });
+    }
+  }
+};
+
 export const getPeerReviewAssignmentsByPeerReview = async (
+  // massive updates needed
   req: Request,
   res: Response
 ) => {
@@ -27,13 +64,12 @@ export const getPeerReviewAssignmentsByPeerReview = async (
     throw new MissingAuthorizationError('Access denied');
   }
   const userId = await getUserIdByAccountId(accountId);
-  const peerReviewId = req.params.peerReviewId;
 
   try {
     const peerReviewAssignments = await getPeerReviewAssignmentsByPeerReviewId(
       userId,
       userCourseRole,
-      peerReviewId
+      req.params.peerReviewId
     );
     res.status(200).json(peerReviewAssignments);
   } catch (error) {

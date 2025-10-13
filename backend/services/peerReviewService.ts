@@ -26,6 +26,7 @@ export const createPeerReviewById = async (
     description: string;
     startDate: Date;
     endDate: Date;
+    teamSetId: string;
     reviewerType: 'Individual' | 'Team';
     TaAssignments: boolean;
     minReviews: number;
@@ -42,6 +43,7 @@ export const createPeerReviewById = async (
     description,
     startDate,
     endDate,
+    teamSetId,
     reviewerType,
     TaAssignments,
     minReviews: minReviewsPerReviewer,
@@ -56,6 +58,7 @@ export const createPeerReviewById = async (
     createdAt: Date.now(),
     startDate,
     endDate,
+    teamSetId,
   });
 
   // Create with settings
@@ -147,6 +150,7 @@ export const updatePeerReviewSettingsById = async (
     description,
     startDate,
     endDate,
+    teamSetId,
     reviewerType,
     TaAssignments,
     minReviews: minReviewsPerReviewer,
@@ -158,6 +162,7 @@ export const updatePeerReviewSettingsById = async (
     ...(description && { description }),
     ...(startDate && { startDate }),
     ...(endDate && { endDate }),
+    ...(teamSetId && { teamSetId }),
   };
   const settingsOnlyData = {
     ...(reviewerType && { reviewerType }),

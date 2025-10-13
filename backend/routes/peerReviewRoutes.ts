@@ -7,6 +7,7 @@ import {
   updatePeerReviewSettings,
 } from '../controllers/peerReviewController';
 import {
+  getPeerReviewInfo,
   getPeerReviewAssignmentsByPeerReview,
   getPeerReviewAssignmentsByTeam,
   getPeerReviewAssignment,
@@ -30,6 +31,7 @@ router.get('/:courseId/:peerReviewId/settings', getPeerReviewSettings);
 router.put('/:courseId/:peerReviewId/settings', updatePeerReviewSettings);
 
 // Peer Review Assignment Routes
+router.get('/:courseId/:peerReviewId', getPeerReviewInfo);
 router.get(
   '/:courseId/:peerReviewId/assignments',
   getPeerReviewAssignmentsByPeerReview

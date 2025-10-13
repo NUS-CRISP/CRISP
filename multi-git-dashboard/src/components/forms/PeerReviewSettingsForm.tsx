@@ -9,8 +9,10 @@ import {
   Loader,
   Modal,
   Group,
+  Select,
 } from '@mantine/core';
 import { PeerReview, PeerReviewSettings } from '@shared/types/PeerReview';
+import { TeamSet } from '@shared/types/TeamSet';
 import { useForm } from '@mantine/form';
 import { useState, useEffect, useRef } from 'react';
 import { showNotification } from '@mantine/notifications';
@@ -18,12 +20,14 @@ import { showNotification } from '@mantine/notifications';
 interface PeerReviewSettingsFormProps {
   courseId: string | string[] | undefined;
   peerReview: PeerReview | null;
+  teamSets: TeamSet[];
   onSetUpConfirmed: () => void;
 }
 
 const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
   courseId,
   peerReview,
+  teamSets,
   onSetUpConfirmed,
 }) => {
   const [error, setError] = useState<string | null>(null);
@@ -53,6 +57,7 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
       TaAssignments: false,
       minReviews: 0,
       maxReviews: 1,
+      teamSetId: '',
     },
     validate: {
       assessmentName: value => (value ? null : 'Assessment name is required'),
@@ -106,6 +111,7 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
         }
         return null;
       },
+      teamSetId: value => !value ? 'Please select a Team Set' : null,
     },
   });
 
@@ -119,6 +125,7 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
     TaAssignments: Boolean(values.TaAssignments),
     minReviews: Number(values.minReviews ?? 0),
     maxReviews: Number(values.maxReviews ?? 1),
+    teamSetId: values.teamSetId || '',
   });
 
   const checkIdentical = (
@@ -156,6 +163,7 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
           endDate: peerReview.endDate
             ? new Date(peerReview.endDate).toISOString().slice(0, 10)
             : '',
+          teamSetId: peerReview.teamSetId || '',
           reviewerType: data.reviewerType,
           TaAssignments: data.TaAssignments,
           minReviews: data.minReviewsPerReviewer ?? 0,
@@ -261,9 +269,21 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
           placeholder="YYYY-MM-DD"
           type="date"
         />
+        
+        <Text style={{ fontWeight: '600', fontSize: "14px", marginTop: 16, marginBottom: 8 }}>
+          Team Set for this Peer Review
+        </Text>
+        <Select
+          placeholder="Select a Team Set"
+          data={teamSets.map(ts => ({ value: ts._id, label: ts.name }))}
+          value={form.values.teamSetId}
+          onChange={(val) => form.setFieldValue('teamSetId', val || '')}
+          searchable
+          nothingFoundMessage="No results found"
+        />
 
         <Text
-          style={{ fontWeight: 'bold', marginTop: '16px', marginBottom: '8px' }}
+          style={{ fontWeight: '600', fontSize: "14px", marginTop: 16, marginBottom: 8 }}
         >
           Reviewer Type
         </Text>
@@ -295,7 +315,7 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
         </div>
 
         <Text
-          style={{ fontWeight: 'bold', marginTop: '16px', marginBottom: '8px' }}
+          style={{ fontWeight: '600', fontSize: "14px", marginTop: 16, marginBottom: 8 }}
         >
           Assign Peer Reviews to Teaching Assistants?
         </Text>
@@ -354,7 +374,7 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
         >
           <Text size="sm" c="dimmed" mb="md">
             Are you sure you want to update the peer review settings? <br />
-            There will be implications to the current peer review assignments.
+            Existing assignments and configurations may be affected.
           </Text>
           <Group justify="flex-end">
             <Button color="blue" onClick={handleSubmit}>
