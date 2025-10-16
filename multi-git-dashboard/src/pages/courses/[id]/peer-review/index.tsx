@@ -13,60 +13,19 @@ const PeerReviewListPage: React.FC = () => {
     id: string;
   };
 
-  const courseApiRoute = `/api/courses/${id}`;
   const teamSetsApiRoute = `/api/courses/${id}/teamsets`;
   const peerReviewsApiRoute = `/api/peer-review/${id}/peer-reviews`;
 
   const [teamSets, setTeamSets] = useState<TeamSet[]>([]);
-  const [course, setCourse] = useState<Course>();
   const [peerReviews, setPeerReviews] = useState<PeerReview[]>([]);
   const hasPermission = hasFacultyPermission();
 
-  // const examplePeerReviews: PeerReview[] = [
-  //   {
-  //     _id: 'pr1',
-  //     courseId: id,
-  //     title: 'Example Upcoming Peer Review',
-  //     description: 'This is a sample upcoming peer review.',
-  //     peerReviewSettingsId: 'settings1',
-  //     peerReviewAssignmentIds: [],
-  //     createdAt: new Date('2023-09-20T12:00:00Z'),
-  //     startDate: new Date('2023-09-25T12:00:00Z'),
-  //     endDate: new Date('2023-10-25T12:00:00Z'),
-  //     status: 'Upcoming',
-  //   },
-  //   {
-  //     _id: 'pr2',
-  //     courseId: id,
-  //     title: 'Example Ongoing Peer Review',
-  //     description: 'This is a sample ongoing peer review.',
-  //     peerReviewSettingsId: 'settings2',
-  //     peerReviewAssignmentIds: [],
-  //     createdAt: new Date('2023-09-20T12:00:00Z'),
-  //     startDate: new Date('2023-09-25T12:00:00Z'),
-  //     endDate: new Date('2023-10-25T12:00:00Z'),
-  //     status: 'Ongoing',
-  //   },
-  //   {
-  //     _id: 'pr3',
-  //     courseId: id,
-  //     title: 'Example Completed Peer Review',
-  //     description: 'This is a sample completed peer review.',
-  //     peerReviewSettingsId: 'settings3',
-  //     peerReviewAssignmentIds: [],
-  //     createdAt: new Date('2023-09-20T12:00:00Z'),
-  //     startDate: new Date('2023-09-25T12:00:00Z'),
-  //     endDate: new Date('2023-10-25T12:00:00Z'),
-  //     status: 'Completed',
-  //   },
-  // ];
-
+  // Callback to refresh peer reviews after creating, updating, or deleting
   const onUpdate = () => {
-    fetchTeamSets();
     fetchPeerReviews();
-    fetchCourse();
   };
-
+  
+  // Fetch peer reviews for the course to populate tabs and future uses
   const fetchPeerReviews = async () => {
     try {
       const response = await fetch(peerReviewsApiRoute, {
@@ -85,7 +44,8 @@ const PeerReviewListPage: React.FC = () => {
       console.error('Error fetching peer reviews:', error);
     }
   };
-
+  
+  // Fetch team sets for the course to populate dropdown in settings form and future uses
   const fetchTeamSets = async () => {
     try {
       const response = await fetch(teamSetsApiRoute, {
@@ -107,35 +67,17 @@ const PeerReviewListPage: React.FC = () => {
     }
   };
 
-  const fetchCourse = useCallback(async () => {
-    try {
-      const response = await fetch(courseApiRoute);
-      if (!response.ok) {
-        console.error('Error fetching course:', response.statusText);
-        return;
-      }
-      const course: Course = await response.json();
-
-      setCourse(course);
-    } catch (error) {
-      console.error('Error fetching course:', error);
-    }
-  }, [id]);
-
+  // Fetch data when the component mounts or when the course ID changes
   useEffect(() => {
     if (router.isReady) {
       fetchTeamSets();
       fetchPeerReviews();
-      if (id) {
-        fetchCourse();
-      }
     }
-  }, [router.isReady, id, fetchCourse]);
+  }, [router.isReady, id]);
 
   return (
     <Container style={{ marginTop: '40px' }}>
       <PeerReviewOverview
-        course={course}
         courseId={id}
         teamSets={teamSets}
         peerReviews={peerReviews}

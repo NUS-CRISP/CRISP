@@ -8,13 +8,13 @@ import {
   getAllPeerReviewsyId,
   createPeerReviewById,
   deletePeerReviewById,
-  getPeerReviewSettingsById,
-  updatePeerReviewSettingsById,
+  updatePeerReviewById,
 } from '../services/peerReviewService';
 import { getAccountId } from '../utils/auth';
 import AccountModel from '@models/Account';
 import CrispRole from '@shared/types/auth/CrispRole';
 import CourseRole from '@shared/types/auth/CourseRole';
+import { verifyRequestUser, verifyRequestPermission } from '../utils/auth';
 
 export const getAllPeerReviews = async (req: Request, res: Response) => {
   try {
@@ -31,21 +31,8 @@ export const getAllPeerReviews = async (req: Request, res: Response) => {
 };
 
 export const createPeerReview = async (req: Request, res: Response) => {
-  const accountId = await getAccountId(req);
-  const account = await AccountModel.findById(accountId);
-  if (!account) {
-    throw new MissingAuthorizationError('Access denied, invalid account');
-  }
-  const userCourseRole = account.courseRoles.find(
-    cr => cr.course.toString() === req.params.courseId
-  )?.courseRole;
-  if (!userCourseRole || userCourseRole !== CourseRole.Faculty) {
-    // Only course coordinators can create peer reviews
-    throw new MissingAuthorizationError(
-      'Access denied for user role: ' +
-        [account.courseRoles, account.email, account.crispRole]
-    );
-  }
+  const { account, userCourseRole } = await verifyRequestUser(req);
+  await verifyRequestPermission(account._id, userCourseRole, [CourseRole.Faculty]);
 
   try {
     const newPeerReview = await createPeerReviewById(
@@ -66,17 +53,8 @@ export const createPeerReview = async (req: Request, res: Response) => {
 };
 
 export const deletePeerReview = async (req: Request, res: Response) => {
-  const accountId = await getAccountId(req);
-  const account = await AccountModel.findById(accountId);
-  if (!account) {
-    throw new MissingAuthorizationError('Access denied');
-  }
-  const userCourseRole = account.courseRoles.find(
-    cr => cr.course.toString() === req.params.courseId
-  )?.courseRole;
-  if (!userCourseRole || userCourseRole !== CourseRole.Faculty) {
-    throw new MissingAuthorizationError('Access denied');
-  }
+  const { account, userCourseRole } = await verifyRequestUser(req);
+  await verifyRequestPermission(account._id, userCourseRole, [CourseRole.Faculty]);
 
   try {
     const deletedRes = await deletePeerReviewById(req.params.peerReviewId);
@@ -95,47 +73,12 @@ export const deletePeerReview = async (req: Request, res: Response) => {
   }
 };
 
-export const getPeerReviewSettings = async (req: Request, res: Response) => {
-  const accountId = await getAccountId(req);
-  const account = await AccountModel.findById(accountId);
-  if (!account) {
-    throw new MissingAuthorizationError('Access denied');
-  }
-  const userCourseRole = account.courseRoles.find(
-    cr => cr.course.toString() === req.params.courseId
-  )?.courseRole;
-  if (!userCourseRole || userCourseRole !== CourseRole.Faculty) {
-    throw new MissingAuthorizationError('Access denied');
-  }
+export const updatePeerReview = async (req: Request, res: Response) => {
+  const { account, userCourseRole } = await verifyRequestUser(req);
+  await verifyRequestPermission(account._id, userCourseRole, [CourseRole.Faculty]);
 
   try {
-    const settings = await getPeerReviewSettingsById(req.params.peerReviewId);
-    res.status(200).json(settings);
-  } catch (error) {
-    if (error instanceof NotFoundError) {
-      res.status(404).json({ message: error.message });
-    } else {
-      console.error('Error fetching peer review settings:', error);
-      res.status(500).json({ message: 'Failed to get peer review settings' });
-    }
-  }
-};
-
-export const updatePeerReviewSettings = async (req: Request, res: Response) => {
-  const accountId = await getAccountId(req);
-  const account = await AccountModel.findById(accountId);
-  if (!account) {
-    throw new MissingAuthorizationError('Access denied');
-  }
-  const userCourseRole = account.courseRoles.find(
-    cr => cr.course.toString() === req.params.courseId
-  )?.courseRole;
-  if (!userCourseRole || userCourseRole !== CourseRole.Faculty) {
-    throw new MissingAuthorizationError('Access denied');
-  }
-
-  try {
-    await updatePeerReviewSettingsById(req.params.peerReviewId, req.body);
+    await updatePeerReviewById(req.params.peerReviewId, req.body);
     res
       .status(200)
       .json({ message: 'Peer review settings updated successfully' });

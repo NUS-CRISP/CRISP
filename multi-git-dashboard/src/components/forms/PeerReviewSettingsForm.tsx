@@ -11,10 +11,10 @@ import {
   Group,
   Select,
 } from '@mantine/core';
-import { PeerReview, PeerReviewSettings } from '@shared/types/PeerReview';
+import { PeerReview, ReviewerType } from '@shared/types/PeerReview';
 import { TeamSet } from '@shared/types/TeamSet';
 import { useForm } from '@mantine/form';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { showNotification } from '@mantine/notifications';
 
 interface PeerReviewSettingsFormProps {
@@ -22,6 +22,18 @@ interface PeerReviewSettingsFormProps {
   peerReview: PeerReview | null;
   teamSets: TeamSet[];
   onSetUpConfirmed: () => void;
+}
+
+interface FormValues {
+  assessmentName: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  reviewerType: ReviewerType;
+  TaAssignments: boolean;
+  minReviews: number;
+  maxReviews: number;
+  teamSetId: string;
 }
 
 const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
@@ -36,29 +48,27 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
 
   // API Routes
   const createApiRoute = `/api/peer-review/${courseId}/peer-reviews`;
-  const getSettingsApiRoute = peerReview
-    ? `/api/peer-review/${courseId}/${peerReview._id}/settings`
-    : '';
-  const updateSettingsApiRoute = peerReview
-    ? `/api/peer-review/${courseId}/${peerReview._id}/settings`
-    : '';
+  const updatePeerReviewRoute = peerReview ? `/api/peer-review/${courseId}/${peerReview._id}` : '';
 
   // Check if editing existing peer review or creating new [change to get status]
   const isEditing = Boolean(peerReview);
+  const toFormValues = (pr: PeerReview | null) => ({
+    assessmentName: pr?.title ?? '',
+    description: pr?.description ?? '',
+    startDate: pr?.startDate ? new Date(pr.startDate).toISOString().slice(0, 10) : '',
+    endDate: pr?.endDate ? new Date(pr.endDate).toISOString().slice(0, 10) : '',
+    reviewerType: pr?.reviewerType ?? 'Individual',
+    TaAssignments: Boolean(pr?.TaAssignments ?? false),
+    minReviews: pr?.minReviewsPerReviewer ?? 0,
+    maxReviews: pr?.maxReviewsPerReviewer ?? 1,
+    teamSetId: pr?.teamSetId ?? '',
+  });
+  
+  const initial = useMemo(() => toFormValues(peerReview), [peerReview]);
 
   // Create form with initial values and validation rules
-  const form = useForm({
-    initialValues: {
-      assessmentName: '',
-      description: '',
-      startDate: '',
-      endDate: '',
-      reviewerType: 'Individual',
-      TaAssignments: false,
-      minReviews: 0,
-      maxReviews: 1,
-      teamSetId: '',
-    },
+  const form = useForm<FormValues>({
+    initialValues: initial,
     validate: {
       assessmentName: value => (value ? null : 'Assessment name is required'),
       description: value => (value ? null : 'Description is required'),
@@ -137,58 +147,18 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
 
   type Normalized = ReturnType<typeof normalize>;
   const originalValuesRef = useRef<null | Normalized>(null);
-
+  
   useEffect(() => {
-    if (!isEditing || !peerReview?._id) return;
-
-    const fetchSettings = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(getSettingsApiRoute, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        });
-        if (!response.ok)
-          throw new Error(
-            'Failed to fetch peer review settings: ' + response.statusText
-          );
-        const data: PeerReviewSettings = await response.json();
-
-        const loaded = {
-          assessmentName: peerReview.title || '',
-          description: peerReview.description || '',
-          startDate: peerReview.startDate
-            ? new Date(peerReview.startDate).toISOString().slice(0, 10)
-            : '',
-          endDate: peerReview.endDate
-            ? new Date(peerReview.endDate).toISOString().slice(0, 10)
-            : '',
-          teamSetId: peerReview.teamSetId || '',
-          reviewerType: data.reviewerType,
-          TaAssignments: data.TaAssignments,
-          minReviews: data.minReviewsPerReviewer ?? 0,
-          maxReviews: data.maxReviewsPerReviewer ?? 1,
-        };
-        form.setValues(loaded);
-        originalValuesRef.current = normalize(loaded);
-      } catch (err) {
-        console.error('Error fetching peer review settings:', err);
-        setError(
-          'Failed to load existing peer review settings: ' +
-            (err as Error).message
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchSettings();
-  }, [isEditing, peerReview?._id]);
+    const next = toFormValues(peerReview);
+    form.setValues(next);
+    originalValuesRef.current = normalize(next);
+  }, [peerReview]);
 
   const handleSubmit = async () => {
     setError(null);
     try {
       const response = await fetch(
-        isEditing ? updateSettingsApiRoute : createApiRoute,
+        isEditing ? updatePeerReviewRoute : createApiRoute,
         {
           method: isEditing ? 'PUT' : 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -297,7 +267,7 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
         >
           <Radio.Group
             value={form.values.reviewerType}
-            onChange={value => form.setFieldValue('reviewerType', value)}
+            onChange={value => form.setFieldValue('reviewerType', value as ReviewerType)}
           >
             <div style={{ display: 'flex', gap: '20px' }}>
               <Radio

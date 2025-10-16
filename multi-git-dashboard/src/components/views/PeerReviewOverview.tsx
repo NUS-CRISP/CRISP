@@ -2,12 +2,10 @@ import { Tabs, Container, Button, Modal, Group } from '@mantine/core';
 import PeerReviewSettingsForm from '../forms/PeerReviewSettingsForm';
 import { useDisclosure } from '@mantine/hooks';
 import { TeamSet } from '@shared/types/TeamSet';
-import { Course } from '@shared/types/Course';
 import { PeerReview } from '@shared/types/PeerReview';
 import PeerReviewInfo from './PeerReviewInfo';
 
 interface PeerReviewOverviewProps {
-  course: Course | undefined;
   courseId: string;
   teamSets: TeamSet[];
   peerReviews: PeerReview[];
@@ -16,7 +14,6 @@ interface PeerReviewOverviewProps {
 }
 
 const PeerReviewOverview: React.FC<PeerReviewOverviewProps> = ({
-  course,
   courseId,
   teamSets,
   peerReviews,
@@ -39,6 +36,7 @@ const PeerReviewOverview: React.FC<PeerReviewOverviewProps> = ({
             <PeerReviewSettingsForm
               courseId={courseId}
               peerReview={null}
+              teamSets={teamSets}
               onSetUpConfirmed={() => {
                 onUpdate();
                 closeCreateForm();
@@ -48,7 +46,7 @@ const PeerReviewOverview: React.FC<PeerReviewOverviewProps> = ({
         </Group>
       )}
       <Tabs
-        defaultValue={peerReviews.length > 0 ? peerReviews[0]._id : undefined}
+        defaultValue={peerReviews.length > 0 ? peerReviews[0]._id : "default"}
         mt="md"
       >
         <Tabs.List
@@ -56,13 +54,16 @@ const PeerReviewOverview: React.FC<PeerReviewOverviewProps> = ({
             justifyContent: 'center',
           }}
         >
-          {course && peerReviews.length > 0
+          {courseId && peerReviews.length > 0
             ? peerReviews.map(pr => (
                 <Tabs.Tab key={pr._id} value={pr._id}>
                   {pr.title}
                 </Tabs.Tab>
               ))
-            : null}
+            : <Tabs.Tab key={"default"} value={"default"}>
+                No Peer Reviews Available
+              </Tabs.Tab>
+            }
         </Tabs.List>
 
         {peerReviews.map(pr => (

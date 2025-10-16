@@ -33,7 +33,7 @@ export const getPeerReviewCommentsByAssignmentId = async (
   // Students can only view their own comments in their own assignments and own team repository
   if (userCourseRole === CourseRole.Student) {
     const isReviewee = revieweeTeam.members?.map(String).includes(userId);
-    const isReviewer = assignment.reviewerUser?.toString() === userId;
+    const isReviewer = assignment.studentReviewers.map(String).includes(userId)
 
     // Check if student is viewing own team's repository
     if (isReviewee)
@@ -51,7 +51,7 @@ export const getPeerReviewCommentsByAssignmentId = async (
 
   // TAs can only view comments on teams they are supervising or their own assignments
   if (userCourseRole === CourseRole.TA) {
-    const isReviewer = assignment.reviewerUser?.toString() === userId;
+    const isReviewer = assignment.taReviewers.map(String).includes(userId)
     const isSupervisingTA = revieweeTeam.TA?.toString() === userId;
 
     if (isSupervisingTA)
@@ -87,14 +87,10 @@ export const addPeerReviewCommentByAssignmentId = async (
   if (!assignment) throw new NotFoundError(ASSIGNMENT_NOT_FOUND);
 
   // If student is not the reviewer user nor part of the reviewer team, they cannot comment
-  if (
-    userCourseRole === CourseRole.Student &&
-    assignment.reviewerUser?.toString() !== userId
-  ) {
-    const isReviewerUser = assignment.reviewerUser?.toString() === userId;
-    const reviewerTeam = await TeamModel.findById(assignment.reviewerTeam);
-    const isReviewerTeam =
-      reviewerTeam && reviewerTeam.members?.map(String).includes(userId);
+  if (userCourseRole === CourseRole.Student) {
+    const isReviewerUser = assignment.studentReviewers.map(String).includes(userId)
+    const reviewingTeams = await TeamModel.find({_id: {$in: assignment.teamReviewers}});
+    const isReviewerTeam = reviewingTeams.some(reviewerTeam => reviewerTeam.members?.map(String).includes(userId));
 
     if (!isReviewerUser && !isReviewerTeam) {
       throw new MissingAuthorizationError(UNAUTHORIZED_TO_ADD_COMMENTS);
@@ -102,11 +98,8 @@ export const addPeerReviewCommentByAssignmentId = async (
   }
 
   // If TA is not the reviewer user nor supervising the reviewee team, they cannot comment
-  if (
-    userCourseRole === CourseRole.TA &&
-    assignment.reviewerUser?.toString() !== userId
-  ) {
-    const isReviewerUser = assignment.reviewerUser?.toString() === userId;
+  if (userCourseRole === CourseRole.TA) {
+    const isReviewerUser = assignment.taReviewers.map(String).includes(userId)
     const revieweeTeam = await TeamModel.findById(assignment.reviewee);
     const isSupervisingTA =
       revieweeTeam && revieweeTeam.TA!.toString() === userId;
@@ -198,7 +191,7 @@ export const deletePeerReviewCommentById = async (
 
   // If TA, can only delete own comments or comments on teams they are supervising
   if (userCourseRole === CourseRole.TA) {
-    const isReviewer = assignment.reviewerUser?.toString() === userId;
+    const isReviewer = assignment.taReviewers.map(String).includes(userId)
 
     const revieweeTeam = await TeamModel.findById(assignment.reviewee);
     const isSupervisingTA =

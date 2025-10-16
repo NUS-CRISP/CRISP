@@ -1,5 +1,4 @@
 import PeerReviewModel from '@models/PeerReview';
-import PeerReviewSettingsModel from '@models/PeerReviewSettings';
 import CourseModel from '@models/Course';
 import { NotFoundError } from './errors';
 import mongoose from 'mongoose';
@@ -17,6 +16,12 @@ export const getAllPeerReviewsyId = async (courseId: string) => {
     return obj;
   });
   return result;
+};
+
+export const getPeerReviewById = async (peerReviewId: string) => {
+  const peerReview = await PeerReviewModel.findById(peerReviewId);
+  if (!peerReview) throw new NotFoundError('Peer review not found');
+  return peerReview;
 };
 
 export const createPeerReviewById = async (
@@ -53,26 +58,17 @@ export const createPeerReviewById = async (
   // Basic validation
   const newPeerReview = new PeerReviewModel({
     course: course._id,
+    createdAt: Date.now(),
     title,
     description,
-    createdAt: Date.now(),
     startDate,
     endDate,
     teamSetId,
-  });
-
-  // Create with settings
-  const newSettings = new PeerReviewSettingsModel({
-    peerReviewId: newPeerReview._id,
-    reviewerType,
     TaAssignments,
+    reviewerType,
     minReviewsPerReviewer,
     maxReviewsPerReviewer,
   });
-  await newSettings.save();
-
-  // Update peer review with settings ID
-  newPeerReview.peerReviewSettingsId = newSettings._id;
   await newPeerReview.save();
   return newPeerReview;
 };
@@ -98,14 +94,7 @@ export const deletePeerReviewById = async (peerReviewId: string) => {
     const delAssignmentsRes = await PeerReviewAssignmentModel.deleteMany({
       peerReviewId,
     });
-
-    // Delete peer review settings
-    const delSettingsRes = await PeerReviewSettingsModel.deleteOne({
-      peerReviewId,
-    });
-    if (!delSettingsRes)
-      throw new NotFoundError('Peer review settings not found for deletion');
-
+    
     const delPeerReviewRes =
       await PeerReviewModel.findByIdAndDelete(peerReviewId);
     if (!delPeerReviewRes)
@@ -120,7 +109,6 @@ export const deletePeerReviewById = async (peerReviewId: string) => {
       deleted: {
         comments: delCommentsRes.deletedCount || 0,
         assignments: delAssignmentsRes.deletedCount || 0,
-        settings: delSettingsRes.deletedCount || 0,
         peerReview: delPeerReviewRes ? 1 : 0,
       },
     };
@@ -131,17 +119,7 @@ export const deletePeerReviewById = async (peerReviewId: string) => {
   }
 };
 
-export const getPeerReviewSettingsById = async (peerReviewId: string) => {
-  const settings = await PeerReviewSettingsModel.findOne({
-    peerReviewId: peerReviewId,
-  });
-  if (!settings) {
-    throw new NotFoundError('Peer review settings not found');
-  }
-  return settings;
-};
-
-export const updatePeerReviewSettingsById = async (
+export const updatePeerReviewById = async (
   peerReviewId: string,
   settingsData: any
 ) => {
@@ -157,14 +135,12 @@ export const updatePeerReviewSettingsById = async (
     maxReviews: maxReviewsPerReviewer,
   } = settingsData;
 
-  const peerReviewData = {
+  const updatedPeerReviewData = {
     ...(title && { title }),
     ...(description && { description }),
     ...(startDate && { startDate }),
     ...(endDate && { endDate }),
     ...(teamSetId && { teamSetId }),
-  };
-  const settingsOnlyData = {
     ...(reviewerType && { reviewerType }),
     ...(TaAssignments !== undefined && { TaAssignments }),
     ...(minReviewsPerReviewer !== undefined && { minReviewsPerReviewer }),
@@ -172,20 +148,11 @@ export const updatePeerReviewSettingsById = async (
   };
 
   // Update Peer Review
-  const peerReview = await PeerReviewModel.findByIdAndUpdate(
+  const updatedPeerReview = await PeerReviewModel.findByIdAndUpdate(
     peerReviewId,
-    peerReviewData,
+    updatedPeerReviewData,
     { new: true }
   );
-  if (!peerReview) throw new NotFoundError('Peer review not found');
-
-  // Update Settings
-  const updatedSettings = await PeerReviewSettingsModel.findOneAndUpdate(
-    { peerReviewId },
-    settingsOnlyData,
-    { new: true }
-  );
-  if (!updatedSettings)
-    throw new NotFoundError('Peer review settings not found for update');
-  return updatedSettings;
+  if (!updatedPeerReview) throw new NotFoundError('Peer review not found');
+  return updatedPeerReview;
 };
