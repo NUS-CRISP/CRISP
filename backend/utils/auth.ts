@@ -53,11 +53,17 @@ export const verifyRequestUser = async (req: Request) => {
     throw new MissingAuthorizationError('Access denied, invalid course role');
   }
   return { account, userCourseRole };
-}
+};
 
-export const verifyRequestPermission = async (accountId: string, userCourseRole: CourseRole, authorisedRoles: CourseRole[]) => {
+export const verifyRequestPermission = async (
+  accountId: string,
+  userCourseRole: CourseRole,
+  authorisedRoles: CourseRole[]
+) => {
   if (authorisedRoles.length > 0 && !authorisedRoles.includes(userCourseRole)) {
-    throw new MissingAuthorizationError('Access denied, insufficient permissions');
+    throw new MissingAuthorizationError(
+      'Access denied, insufficient permissions'
+    );
   }
   return await getUserIdByAccountId(accountId);
-}
+};

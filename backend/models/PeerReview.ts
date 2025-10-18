@@ -29,7 +29,7 @@ const peerReviewSchema = new Schema<PeerReview>({
     required: true,
     default: 'Upcoming',
   },
-  
+
   // Settings
   title: { type: String, required: true },
   description: { type: String },
@@ -64,7 +64,7 @@ const peerReviewSchema = new Schema<PeerReview>({
       message: `maxReviewsPerReviewer must be greater than or equal to minReviewsPerReviewer`,
     },
   },
-  
+
   // Assignments
   peerReviewAssignmentIds: [
     { type: Schema.Types.ObjectId, ref: 'PeerReviewAssignment' },

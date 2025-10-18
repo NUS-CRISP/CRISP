@@ -94,7 +94,7 @@ export const deletePeerReviewById = async (peerReviewId: string) => {
     const delAssignmentsRes = await PeerReviewAssignmentModel.deleteMany({
       peerReviewId,
     });
-    
+
     const delPeerReviewRes =
       await PeerReviewModel.findByIdAndDelete(peerReviewId);
     if (!delPeerReviewRes)

@@ -32,7 +32,9 @@ export const getAllPeerReviews = async (req: Request, res: Response) => {
 
 export const createPeerReview = async (req: Request, res: Response) => {
   const { account, userCourseRole } = await verifyRequestUser(req);
-  await verifyRequestPermission(account._id, userCourseRole, [CourseRole.Faculty]);
+  await verifyRequestPermission(account._id, userCourseRole, [
+    CourseRole.Faculty,
+  ]);
 
   try {
     const newPeerReview = await createPeerReviewById(
@@ -54,7 +56,9 @@ export const createPeerReview = async (req: Request, res: Response) => {
 
 export const deletePeerReview = async (req: Request, res: Response) => {
   const { account, userCourseRole } = await verifyRequestUser(req);
-  await verifyRequestPermission(account._id, userCourseRole, [CourseRole.Faculty]);
+  await verifyRequestPermission(account._id, userCourseRole, [
+    CourseRole.Faculty,
+  ]);
 
   try {
     const deletedRes = await deletePeerReviewById(req.params.peerReviewId);
@@ -75,7 +79,9 @@ export const deletePeerReview = async (req: Request, res: Response) => {
 
 export const updatePeerReview = async (req: Request, res: Response) => {
   const { account, userCourseRole } = await verifyRequestUser(req);
-  await verifyRequestPermission(account._id, userCourseRole, [CourseRole.Faculty]);
+  await verifyRequestPermission(account._id, userCourseRole, [
+    CourseRole.Faculty,
+  ]);
 
   try {
     await updatePeerReviewById(req.params.peerReviewId, req.body);

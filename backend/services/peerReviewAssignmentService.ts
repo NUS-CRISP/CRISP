@@ -1,86 +1,434 @@
-import PeerReviewModel, { PeerReview } from '@models/PeerReview';
-import PeerReviewSettingsModel from '@models/PeerReviewSettings';
+import PeerReviewModel from '@models/PeerReview';
 import PeerReviewAssignmentModel from '@models/PeerReviewAssignment';
 import TeamModel from '@models/Team';
 import UserModel from '@models/User';
 import {
   PeerReviewAssignment,
   TAToAssignmentsMap,
-  TeamToReviewersMap,
 } from '@shared/types/PeerReview';
-import {
-  BadRequestError,
-  NotFoundError,
-  MissingAuthorizationError,
-} from './errors';
+import { BadRequestError, NotFoundError } from './errors';
 import CourseRole from '@shared/types/auth/CourseRole';
 import {
   PeerReviewTeamMemberDTO,
-  PeerReviewTeamDTO,
   PeerReviewInfoDTO,
 } from '@shared/types/PeerReview';
-import TeamSetModel from '@models/TeamSet';
 import TeamDataModel from '@models/TeamData';
-import { Types } from 'mongoose';
+import { Types, startSession } from 'mongoose';
+import { getPeerReviewById } from './peerReviewService';
 
+export interface NormalizedTeam {
+  id: string;
+  number: number;
+  memberIds: string[];
+  taId: string | null;
+}
+
+// Get peer review info by ID, scoped to the user's role and permissions
 export const getPeerReviewInfoById = async (
   userId: string,
   userCourseRole: string,
-  peerReviewId: string,
-  includeReviewersForTeams: boolean = false
+  courseId: string,
+  peerReviewId: string
 ): Promise<PeerReviewInfoDTO> => {
-  const peerReview = await PeerReviewModel.findById(peerReviewId);
-  if (!peerReview) {
-    throw new NotFoundError('Peer review not found');
-  }
+  const peerReview = await getPeerReviewById(peerReviewId);
+  const reviewerType = peerReview.reviewerType;
+  const taAssignmentsEnabled = peerReview.TaAssignments;
+  const teamSetId = peerReview.teamSetId.toString();
 
-  const peerReviewSettings = await PeerReviewSettingsModel.findOne({
+  const { teamIds, filterByTA } = await getScopedTeamIds(
+    userId,
+    userCourseRole,
+    teamSetId
+  );
+  const scopedTeams = await getScopedTeams(teamSetId, teamIds, filterByTA);
+  if (scopedTeams.length === 0)
+    return emptyPeerReviewInfo(peerReviewId, reviewerType);
+
+  const prTeamIds = scopedTeams.map(t => t.id);
+  const teamDataById = await getTeamDataById(
+    courseId,
+    scopedTeams.map(t => t.number)
+  );
+  const usersById = await getUsersByIdForTeams(scopedTeams);
+
+  const prAssignments = await getAssignmentsForTeams(
     peerReviewId,
-  });
-  if (!peerReviewSettings) {
-    throw new NotFoundError('Peer review settings not found');
+    reviewerType,
+    scopedTeams,
+    taAssignmentsEnabled
+  );
+
+  const { memberAssignmentsByUserId, teamAssignmentsByTeamId } =
+    buildAssignmentMaps(reviewerType, scopedTeams, prAssignments);
+
+  const assignmentsOfTeam = buildTeamToReviewersMap(scopedTeams, prAssignments);
+  const assignmentsForTAs = buildTAToAssignmentsMap(
+    taAssignmentsEnabled,
+    userCourseRole,
+    userId,
+    usersById,
+    scopedTeams,
+    prAssignments
+  );
+
+  const teams = buildTeamDTOs(
+    reviewerType,
+    scopedTeams,
+    teamDataById,
+    usersById,
+    memberAssignmentsByUserId,
+    teamAssignmentsByTeamId
+  );
+
+  return {
+    _id: peerReviewId,
+    reviewerType,
+    teams,
+    assignmentsOfTeam,
+    ...(assignmentsForTAs ? { assignmentsForTAs } : {}),
+    capabilities: { assignmentPageTeamIds: prTeamIds },
+  };
+};
+
+// Assign peer reviews for a given peer review ID
+export const assignPeerReviews = async (
+  courseId: string,
+  peerReviewId: string,
+  userId: string,
+  reviewsPerReviewer: number,
+  allowSameTA: boolean
+) => {
+  if (!Number.isInteger(reviewsPerReviewer) || reviewsPerReviewer <= 0) {
+    throw new BadRequestError('reviewsPerReviewer must be a positive integer');
   }
 
-  const reviewerType = peerReviewSettings.reviewerType;
-  const taAssignmentsEnabled = peerReviewSettings.TaAssignments;
+  const peerReview = await getPeerReviewById(peerReviewId);
+  const reviewerType = peerReview.reviewerType;
+  const taAssignmentsEnabled = peerReview.TaAssignments;
   const teamSetId = peerReview.teamSetId;
 
-  // Prepare teams query based on user role
-  const teamQuery = {
-    _id: null as string | null,
-    teamSetId,
-    taId: null as string | null,
+  // Prepare data structures
+  const {
+    teams: prTeams,
+    prTeamIds,
+    teamIdToTeamMap,
+    teamIdToTAMap,
+    teamIdToRepoMap,
+  } = await prepareData(courseId, teamSetId.toString());
+
+  // Helper to get repo info for a team
+  const getTeamRepo = (teamId: string) => {
+    const num = teamIdToTeamMap.get(teamId)!.number;
+    return (
+      teamIdToRepoMap.get(num.toString()) || {
+        repoUrl: '',
+        repoName: '',
+        gitHubOrgName: '',
+      }
+    );
   };
+
+  // Build Reviewer Pools
+  const {
+    studentReviewers,
+    studentHomeTeam,
+    teamReviewers,
+    taReviewers,
+    taHomeTeams,
+  } = buildReviewerPools(prTeams, prTeamIds, taAssignmentsEnabled);
+
+  // Get Eligible Reviewwes
+  const {
+    studentToEligibleRevieweesMap,
+    teamToEligibleRevieweesMap,
+    taToEligibleRevieweesMap,
+  } = buildEligibleRevieweeMaps(
+    reviewerType,
+    studentReviewers,
+    studentHomeTeam,
+    teamReviewers,
+    taReviewers,
+    taHomeTeams,
+    teamIdToTeamMap,
+    teamIdToTAMap,
+    prTeamIds,
+    allowSameTA,
+    reviewsPerReviewer,
+    taAssignmentsEnabled
+  );
+
+  // Perform assignments
+  const { assignedStudentsForTeam, assignedTeamsForTeam, assignedTAsForTeam } =
+    performAssignments(
+      reviewerType,
+      prTeamIds,
+      studentReviewers,
+      teamReviewers,
+      taReviewers,
+      studentToEligibleRevieweesMap,
+      teamToEligibleRevieweesMap,
+      taToEligibleRevieweesMap,
+      reviewsPerReviewer,
+      taAssignmentsEnabled
+    );
+
+  // Update database in one session; remove old assignments and add new ones
+  await updateDBAssignments(
+    peerReviewId,
+    userId,
+    reviewerType,
+    taAssignmentsEnabled,
+    prTeamIds,
+    getTeamRepo,
+    assignedStudentsForTeam,
+    assignedTeamsForTeam,
+    assignedTAsForTeam
+  );
+};
+
+// Assign a particular reviewer to a particular assignment
+export const addManualAssignment = async (
+  courseId: string,
+  peerReviewId: string,
+  revieweeId: string,
+  reviewerId: string,
+  userId: string
+) => {
+  const peerReview = await getPeerReviewById(peerReviewId);
+  const reviewerType = peerReview.reviewerType;
+  const maxReviewsPerReviewer = peerReview.maxReviewsPerReviewer;
+  const teamSetId = peerReview.teamSetId;
+
+  const reviewee = await TeamModel.findOne({
+    _id: revieweeId,
+    teamSet: teamSetId,
+  })
+    .select('_id number members TA')
+    .lean();
+  if (!reviewee) {
+    throw new NotFoundError(
+      'Reviewee team not found in the peer review team set'
+    );
+  }
+
+  if (reviewerType === 'Individual') {
+    // Reviewer must be a member of a team in the team set
+    const reviewerTeam = await TeamModel.findOne({
+      teamSet: teamSetId,
+      members: reviewerId,
+    })
+      .select('_id members')
+      .lean();
+    if (!reviewerTeam) {
+      throw new NotFoundError(
+        'Reviewer not found as a member of any team in the peer review team set'
+      );
+    }
+
+    if (reviewerTeam._id.toString() === revieweeId) {
+      throw new BadRequestError('Reviewer cannot review their own team');
+    }
+  } else {
+    // Reviewer must be a team in the team set
+    const reviewerTeam = await TeamModel.findOne({
+      teamSet: teamSetId,
+      _id: reviewerId,
+    })
+      .select('_id')
+      .lean();
+    if (!reviewerTeam) {
+      throw new NotFoundError(
+        'Reviewer team not found in the peer review team set'
+      );
+    }
+    if (reviewerId === revieweeId) {
+      throw new BadRequestError('Team cannot review itself');
+    }
+  }
+
+  // Check if reviewer has exceeded maxReviewsPerReviewer
+  if (reviewerType === 'Individual') {
+    const currentAssignmentsCount =
+      await PeerReviewAssignmentModel.countDocuments({
+        peerReviewId,
+        studentReviewers: reviewerId,
+      });
+    if (currentAssignmentsCount >= maxReviewsPerReviewer) {
+      throw new BadRequestError(
+        'Reviewer has reached the maximum number of assigned reviews'
+      );
+    }
+  } else {
+    const currentAssignmentsCount =
+      await PeerReviewAssignmentModel.countDocuments({
+        peerReviewId,
+        teamReviewers: reviewerId,
+      });
+    if (currentAssignmentsCount >= maxReviewsPerReviewer) {
+      throw new BadRequestError(
+        'Reviewer team has reached the maximum number of assigned reviews'
+      );
+    }
+  }
+
+  // Check if duplicate assignment
+  const existingAssignment = await PeerReviewAssignmentModel.findOne({
+    peerReviewId,
+    reviewee: revieweeId,
+    ...(reviewerType === 'Individual'
+      ? { studentReviewers: reviewerId }
+      : { teamReviewers: reviewerId }),
+  }).lean();
+  if (existingAssignment) {
+    throw new BadRequestError(
+      'This reviewer is already assigned to this reviewee'
+    );
+  }
+
+  // Get repo URL for the reviewee team
+  const teamData = await TeamDataModel.findOne({
+    course: courseId,
+    teamId: reviewee.number,
+  })
+    .select('gitHubOrgName repoName')
+    .lean();
+
+  // TODO: Derive repo URL for this team, for now fix example
+
+  // Add reviewer to assignment (create new assignment if none exists)
+  const session = await startSession();
+  try {
+    await session.withTransaction(async () => {
+      const add =
+        reviewerType === 'Individual'
+          ? { $addToSet: { studentReviewers: new Types.ObjectId(reviewerId) } }
+          : { $addToSet: { teamReviewers: new Types.ObjectId(reviewerId) } };
+
+      await PeerReviewAssignmentModel.updateOne(
+        { peerReviewId, reviewee: revieweeId },
+        {
+          ...add,
+          $setOnInsert: {
+            peerReviewId,
+            reviewee: new Types.ObjectId(revieweeId),
+            repoName: teamData ? teamData.repoName || '' : '',
+            repoUrl: 'https://github.com/gongg21/AddSubtract.git',
+            taReviewers: [],
+            assignedBy: new Types.ObjectId(userId),
+            assignedAt: new Date(),
+            status: 'Pending' as const,
+          },
+        },
+        { upsert: true, session }
+      );
+    });
+  } finally {
+    await session.endSession();
+  }
+};
+
+// Remove a particular reviewer from a particular assignment
+export const removeManualAssignment = async (
+  peerReviewId: string,
+  revieweeId: string,
+  reviewerId: string
+) => {
+  const peerReview = await getPeerReviewById(peerReviewId);
+  const reviewerType = peerReview.reviewerType;
+
+  const existingAssignment = await PeerReviewAssignmentModel.findOne({
+    peerReviewId,
+    reviewee: revieweeId,
+    ...(reviewerType === 'Individual'
+      ? { studentReviewers: reviewerId }
+      : { teamReviewers: reviewerId }),
+  })
+    .select('_id studentReviewers teamReviewers taReviewers')
+    .lean();
+  if (!existingAssignment) {
+    return; // Nothing to remove
+  }
+
+  const pull =
+    reviewerType === 'Individual'
+      ? { $pull: { studentReviewers: reviewerId } }
+      : { $pull: { teamReviewers: reviewerId } };
+
+  await PeerReviewAssignmentModel.updateOne(
+    { _id: existingAssignment._id },
+    pull
+  );
+};
+
+/* ----- Sub Functions for GetPeerReviewInfo ----- */
+const emptyPeerReviewInfo = (
+  peerReviewId: string,
+  reviewerType: 'Individual' | 'Team'
+) => {
+  return {
+    _id: peerReviewId,
+    teams: [],
+    reviewerType: reviewerType,
+    assignmentsOfTeam: {},
+    capabilities: { assignmentPageTeamIds: [] },
+  };
+};
+
+const getScopedTeamIds = async (
+  userId: string,
+  userCourseRole: string,
+  teamSetId: string
+) => {
   if (userCourseRole === CourseRole.Student) {
     const myTeam = await TeamModel.findOne({
-      ...teamQuery,
+      teamSet: teamSetId,
       members: userId,
     })
       .select('_id')
       .lean();
-    if (!myTeam) emptyPeerReviewDto(peerReviewId);
-    teamQuery._id = myTeam!._id.toString();
-  } else if (userCourseRole === CourseRole.TA) {
-    teamQuery.taId = userId;
+    if (!myTeam) return { teamIds: [] };
+    return { teamIds: [myTeam._id.toString()] };
   }
 
-  // Get teams in the peer review's team set
+  if (userCourseRole === CourseRole.TA) {
+    return { teamIds: [], filterByTA: userId };
+  }
+
+  return { teamIds: [] };
+};
+
+const getScopedTeams = async (
+  teamSetId: string,
+  teamIds: string[],
+  filterByTA?: string
+): Promise<NormalizedTeam[]> => {
+  const teamQuery: any = { teamSet: teamSetId };
+  if (teamIds.length > 0) {
+    teamQuery._id = { $in: teamIds };
+  }
+  if (filterByTA) {
+    teamQuery.TA = filterByTA;
+  }
+
   const prTeams = await TeamModel.find(teamQuery)
     .select('_id number members TA')
     .lean();
-  if (prTeams.length === 0) return emptyPeerReviewDto(peerReviewId);
 
-  const prTeamIds = prTeams.map(t => t._id.toString());
-  const scopedTeams = prTeams.map(t => ({
+  if (prTeams.length === 0) return [];
+  return prTeams.map(t => ({
     id: t._id.toString(),
     number: t.number,
     taId: t.TA ? t.TA.toString() : null,
     memberIds: t.members ? t.members.map(m => m.toString()) : [],
   }));
+};
 
-  // TODO: Derive repo URL for these teams, for now fix example
-  const prTeamDatas = await TeamDataModel.find({ teamId: { $in: prTeamIds } })
-    .select('gitHubOrgName repoName')
+const getTeamDataById = async (courseId: string, teamNumbers: number[]) => {
+  const prTeamDatas = await TeamDataModel.find({
+    course: courseId,
+    teamId: { $in: teamNumbers },
+  })
+    .select('teamId gitHubOrgName repoName')
     .lean();
   const teamDataById = new Map(
     prTeamDatas.map(td => [
@@ -93,170 +441,172 @@ export const getPeerReviewInfoById = async (
     ])
   );
 
-  // Prepare to get user data for all involved users
+  // DUMMY DATA FOR TESTING
+  teamDataById.set('1', {
+    gitHubOrgName: 'gongg21',
+    repoName: 'AddSubtract',
+    repoUrl: 'https://github.com/gongg21/AddSubtract.git',
+  });
+
+  return teamDataById;
+};
+
+const getUsersByIdForTeams = async (scopedTeams: NormalizedTeam[]) => {
   const userIds = new Set<string>();
   for (const team of scopedTeams) {
     if (team.taId) userIds.add(team.taId.toString());
-    (team.memberIds ?? []).forEach(m => userIds.add(m.toString()));
+    team.memberIds.forEach(mid => userIds.add(mid));
   }
 
-  const users =
-    userIds.size > 0
-      ? await UserModel.find({ _id: { $in: [...userIds] } })
-          .select('_id name')
-          .lean()
-      : [];
-  const usersById = new Map(
-    users.map(u => [
-      u._id.toString(),
-      {
-        id: u._id.toString(),
-        name: u.name,
-      },
-    ])
-  );
+  if (userIds.size === 0) return new Map<string, string>();
+  const users = await UserModel.find({ _id: { $in: [...userIds] } })
+    .select('_id name')
+    .lean();
+  return new Map(users.map(u => [u._id.toString(), u.name]));
+};
 
-  // Retrieve peer review assignments
-  let prAssignments: PeerReviewAssignment[] = [];
+const getAssignmentsForTeams = async (
+  peerReviewId: string,
+  reviewerType: 'Individual' | 'Team',
+  scopedTeams: NormalizedTeam[],
+  taAssignmentsEnabled: boolean
+): Promise<PeerReviewAssignment[]> => {
+  const prTeamIds = scopedTeams.map(t => t.id);
   if (reviewerType === 'Individual') {
-    // Retrieve assignments assigned to individual reviewers
-    // + retrieve assignments to teams where user is a member (only if includeReviewersForTeams is true)
     const allMemberIds = scopedTeams.flatMap(t => t.memberIds);
-    const allTaIds = scopedTeams
-      .map(t => t.taId)
-      .filter((id): id is string => id !== null);
-    prAssignments = await PeerReviewAssignmentModel.find({
-      peerReviewId,
-      $or: [
-        {
-          reviewerUser: { $in: allMemberIds.map(id => new Types.ObjectId(id)) },
+    const allTaIds = scopedTeams.map(t => t.taId).filter(Boolean) as string[];
+
+    const orConditions = [
+      {
+        studentReviewers: {
+          $in: allMemberIds.map(id => new Types.ObjectId(id)),
         },
-        { reviewee: { $in: prTeamIds.map(id => new Types.ObjectId(id)) } },
-        ...(taAssignmentsEnabled
-          ? [
-              {
-                reviewerUser: {
-                  $in: allTaIds.map(id => new Types.ObjectId(id)),
-                },
-              },
-            ]
-          : []),
-      ],
-    }).lean();
-  } else {
-    // Retrieve assignments assigned to teams
-    // + retrieve assignments to teams where user is a member (only if includeReviewersForTeams is true)
-    prAssignments = await PeerReviewAssignmentModel.find({
+      },
+      { reviewee: { $in: prTeamIds.map(id => new Types.ObjectId(id)) } },
+      ...(taAssignmentsEnabled
+        ? [{ taReviewers: { $in: allTaIds.map(id => new Types.ObjectId(id)) } }]
+        : []),
+    ];
+
+    return await PeerReviewAssignmentModel.find({
       peerReviewId,
-      $or: [
-        { reviewerTeam: { $in: prTeamIds.map(id => new Types.ObjectId(id)) } },
-        { reviewee: { $in: prTeamIds.map(id => new Types.ObjectId(id)) } },
-      ],
+      $or: orConditions,
     }).lean();
   }
 
-  if (
-    reviewerType === 'Individual' &&
-    (includeReviewersForTeams || taAssignmentsEnabled)
-  ) {
-    prAssignments.forEach(a => {
-      if (a.reviewerUser) userIds.add(a.reviewerUser._id);
-    });
-  }
+  return await PeerReviewAssignmentModel.find({
+    peerReviewId,
+    $or: [
+      { teamReviewers: { $in: prTeamIds.map(id => new Types.ObjectId(id)) } },
+      { reviewee: { $in: prTeamIds.map(id => new Types.ObjectId(id)) } },
+    ],
+  }).lean();
+};
 
-  // Build assignment maps
+const buildAssignmentMaps = (
+  reviewerType: 'Individual' | 'Team',
+  scopedTeams: NormalizedTeam[],
+  prAssignments: PeerReviewAssignment[]
+) => {
   const memberAssignmentsByUserId = new Map<string, PeerReviewAssignment[]>();
   const teamAssignmentsByTeamId = new Map<string, PeerReviewAssignment[]>();
 
   if (reviewerType === 'Individual') {
-    const memberIds = new Set(scopedTeams.flatMap(t => t.memberIds));
+    const memberSet = new Set(scopedTeams.flatMap(t => t.memberIds));
     for (const a of prAssignments) {
-      if (a.reviewerUser && memberIds.has(a.reviewerUser._id)) {
-        const key = a.reviewerUser._id;
-        const val = memberAssignmentsByUserId.get(key) || [];
+      const userReviewerIds = a.studentReviewers.map(u => u._id.toString());
+      for (const reviewerId of userReviewerIds) {
+        if (!memberSet.has(reviewerId)) continue;
+        const val = memberAssignmentsByUserId.get(reviewerId) ?? [];
         val.push(a);
-        memberAssignmentsByUserId.set(a.reviewerUser._id, val);
+        memberAssignmentsByUserId.set(reviewerId, val);
       }
     }
   } else {
-    const reviewerTeamIds = new Set(prTeamIds);
+    const teamSet = new Set(scopedTeams.map(t => t.id));
     for (const a of prAssignments) {
-      if (a.reviewerTeam && reviewerTeamIds.has(a.reviewerTeam._id)) {
-        const key = a.reviewerTeam._id;
-        const val = teamAssignmentsByTeamId.get(key) || [];
+      const teamReviewerIds = a.teamReviewers.map(t => t._id.toString());
+      for (const reviewerId of teamReviewerIds) {
+        if (!teamSet.has(reviewerId)) continue;
+        const val = teamAssignmentsByTeamId.get(reviewerId) ?? [];
         val.push(a);
-        teamAssignmentsByTeamId.set(a.reviewerTeam._id, val);
+        teamAssignmentsByTeamId.set(reviewerId, val);
+      }
+    }
+  }
+  return { memberAssignmentsByUserId, teamAssignmentsByTeamId };
+};
+
+const buildTeamToReviewersMap = (
+  scopedTeams: NormalizedTeam[],
+  prAssignments: PeerReviewAssignment[]
+) => {
+  const teamIdSet = new Set(scopedTeams.map(t => t.id));
+  const assignmentsOfTeam: Record<string, PeerReviewAssignment> = {};
+  for (const a of prAssignments) {
+    if (!teamIdSet.has(a.reviewee._id)) continue;
+    assignmentsOfTeam[a.reviewee._id] = a;
+  }
+  return assignmentsOfTeam;
+};
+
+const buildTAToAssignmentsMap = (
+  taAssignmentsEnabled: boolean,
+  userCourseRole: string,
+  userId: string,
+  usersById: Map<string, string>,
+  scopedTeams: NormalizedTeam[],
+  prAssignments: PeerReviewAssignment[]
+) => {
+  if (!taAssignmentsEnabled) return;
+  const taIdsWanted =
+    userCourseRole === CourseRole.Faculty
+      ? (scopedTeams.map(t => t.taId).filter(Boolean) as string[])
+      : userCourseRole === CourseRole.TA
+        ? [userId]
+        : [];
+
+  if (taIdsWanted.length === 0) return;
+
+  const assignmentsForTAs: TAToAssignmentsMap = {};
+  const taIdsWantedSet = new Set(taIdsWanted);
+
+  for (const a of prAssignments) {
+    for (const reviewer of a.studentReviewers) {
+      if (taIdsWantedSet.has(reviewer._id)) {
+        const val = assignmentsForTAs[reviewer._id] ?? {
+          taName: usersById.get(reviewer._id) ?? 'Unknown',
+          assignedReviews: [] as PeerReviewAssignment[],
+        };
+        val.assignedReviews.push(a);
+        assignmentsForTAs[reviewer._id] = val;
       }
     }
   }
 
-  // Build ReviewersToTeams map if requested
-  let reviewersForTeams: TeamToReviewersMap | undefined;
-  if (
-    includeReviewersForTeams &&
-    (userCourseRole === CourseRole.Faculty || userCourseRole === CourseRole.TA)
-  ) {
-    reviewersForTeams = {};
-    for (const a of prAssignments) {
-      const reviewee = a.reviewee;
-      if (!reviewee || !prTeamIds.includes(reviewee._id)) continue;
-      const val = reviewersForTeams[reviewee._id] || [];
-      if (reviewerType === 'Individual' && a.reviewerUser) {
-        val.push({
-          kind: 'User',
-          userId: a.reviewerUser._id,
-          name: usersById.get(a.reviewerUser._id)?.name || 'Unknown',
-        });
-      } else if (reviewerType === 'Team' && a.reviewerTeam) {
-        const team = scopedTeams.find(t => t.id === a.reviewerTeam!._id);
-        if (team)
-          val.push({
-            kind: 'Team',
-            teamId: team.id,
-            teamNumber: team.number,
-          });
-      }
-      reviewersForTeams[reviewee._id] = val;
-    }
-  }
+  return assignmentsForTAs;
+};
 
-  // Build TAToAssignments map if TA assignments enabled
-  let assignmentsForTAs: TAToAssignmentsMap | undefined;
-  if (taAssignmentsEnabled) {
-    const taIdsWanted =
-      userCourseRole === CourseRole.Faculty
-        ? scopedTeams.map(t => t.taId).filter((id): id is string => id !== null)
-        : userCourseRole === CourseRole.TA
-          ? [userId]
-          : [];
+const buildTeamDTOs = (
+  reviewerType: 'Individual' | 'Team',
+  scopedTeams: NormalizedTeam[],
+  teamDataById: Map<
+    string,
+    { repoUrl: string; repoName: string; gitHubOrgName: string }
+  >,
+  usersById: Map<string, string>,
+  memberAssignmentsByUserId: Map<string, PeerReviewAssignment[]>,
+  teamAssignmentsByTeamId: Map<string, PeerReviewAssignment[]>
+) => {
+  return scopedTeams.map(team => {
+    const teamData = teamDataById.get(team.number.toString());
+    const TA = team.taId ? usersById.get(team.taId) ?? '' : '';
 
-    if (taIdsWanted.length > 0) {
-      assignmentsForTAs = {};
-      for (const taId of taIdsWanted) {
-        const taAssignments = prAssignments.filter(
-          a => a.reviewerUser?._id === taId
-        );
-        if (taAssignments.length > 0) {
-          assignmentsForTAs[taId] = {
-            taName: usersById.get(taId)?.name || 'Unknown',
-            assignedReviews: taAssignments,
-          };
-        }
-      }
-    }
-  }
-
-  // Build Response DTO
-  const teams: PeerReviewTeamDTO[] = scopedTeams.map(team => {
-    const teamData = teamDataById.get(team.id);
-    const TA = team.taId ? usersById.get(team.taId)?.name || '' : '';
-    const members = team.memberIds.map(
-      (memberId): PeerReviewTeamMemberDTO => ({
-        userId: memberId,
-        name: usersById.get(memberId)?.name || 'Unknown',
-        assignedReviews: memberAssignmentsByUserId.get(memberId) || [],
-      })
-    );
+    const members: PeerReviewTeamMemberDTO[] = team.memberIds.map(memberId => ({
+      userId: memberId,
+      name: usersById.get(memberId) ?? 'Unknown',
+      assignedReviews: memberAssignmentsByUserId.get(memberId) || [],
+    }));
 
     const assignedReviewsToTeam =
       reviewerType === 'Team' ? teamAssignmentsByTeamId.get(team.id) || [] : [];
@@ -271,131 +621,349 @@ export const getPeerReviewInfoById = async (
       assignedReviewsToTeam,
     };
   });
+};
 
-  const assignmentPageTeamIds = prTeamIds;
+/* ------ Sub Functions for AssignPeerReviews ------ */
+
+const prepareData = async (courseId: string, teamSetId: string) => {
+  const prTeams = await TeamModel.find({ teamSet: teamSetId })
+    .select('_id number members TA')
+    .lean();
+
+  if (prTeams.length < 2) {
+    throw new BadRequestError('Not enough teams to assign reviews');
+  }
+
+  const teams = prTeams.map(t => ({
+    id: t._id.toString(),
+    number: t.number,
+    taId: t.TA ? t.TA.toString() : null,
+    memberIds: t.members ? t.members.map(m => m.toString()) : [],
+  }));
+
+  // Prepare data structures
+  const prTeamIds = teams.map(t => t.id);
+  const prTeamNumbers = teams.map(t => t.number);
+  const teamIdToTeamMap = new Map(teams.map(t => [t.id, t]));
+  const teamIdToTAMap = new Map(teams.map(t => [t.id, t.taId]));
+
+  const prTeamDatas = await TeamDataModel.find({
+    course: courseId,
+    teamId: { $in: prTeamNumbers },
+  })
+    .select('teamId gitHubOrgName repoName')
+    .lean();
+
+  const teamIdToRepoMap = new Map(
+    prTeamDatas.map(td => [
+      td.teamId.toString(),
+      {
+        gitHubOrgName: td.gitHubOrgName || '',
+        repoName: td.repoName || '',
+        repoUrl: 'https://github.com/gongg21/AddSubtract.git',
+      },
+    ])
+  );
+
   return {
-    _id: peerReviewId,
     teams,
-    ...(reviewersForTeams ? { reviewersForTeams } : {}),
-    ...(assignmentsForTAs ? { assignmentsForTAs } : {}),
-    capabilities: { assignmentPageTeamIds },
+    prTeamIds,
+    teamIdToTeamMap,
+    teamIdToTAMap,
+    teamIdToRepoMap,
   };
 };
 
-function emptyPeerReviewDto(peerReviewId: string): PeerReviewInfoDTO {
+const buildReviewerPools = (
+  prTeams: NormalizedTeam[],
+  prTeamIds: string[],
+  taAssignmentsEnabled: boolean
+) => {
+  // Students Reviewers Pool
+  const studentReviewers: string[] = [];
+  const studentHomeTeam = new Map<string, string>(); // userId -> teamId
+  for (const team of prTeams) {
+    const tid = team.id;
+    for (const memberId of team.memberIds ?? []) {
+      const mid = memberId;
+      studentReviewers.push(mid);
+      studentHomeTeam.set(mid, tid);
+    }
+  }
+
+  // Team Reviewers Pool
+  const teamReviewers: string[] = [...prTeamIds];
+
+  // TA Reviewers Pool (when taAssignmentsEnabled)
+  const taReviewers = Array.from(
+    new Set(prTeams.map(t => t.taId).filter((x): x is string => Boolean(x)))
+  );
+  const taHomeTeams = new Map<string, string[]>(); // taId -> teamIds
+  if (taAssignmentsEnabled) {
+    for (const team of prTeams) {
+      const ta = team.taId;
+      if (ta) {
+        const val = taHomeTeams.get(ta) ?? [];
+        val.push(team.id);
+        taHomeTeams.set(ta, val);
+      }
+    }
+  }
+
   return {
-    _id: peerReviewId,
-    teams: [],
-    capabilities: { assignmentPageTeamIds: [] },
+    studentReviewers,
+    studentHomeTeam,
+    teamReviewers,
+    taReviewers,
+    taHomeTeams,
   };
-}
-
-export const getPeerReviewAssignmentsByPeerReviewId = async (
-  userId: string,
-  userCourseRole: string,
-  peerReviewId: string
-) => {
-  // Validate peer review exists
-  const peerReview = await PeerReviewModel.findById(peerReviewId);
-  if (!peerReview) {
-    throw new NotFoundError('Peer review not found');
-  }
-
-  // Students can only view their own assignments
-  if (userCourseRole === CourseRole.Student) {
-    const studentAssignments = await PeerReviewAssignmentModel.find({
-      peerReviewId,
-      reviewerUser: userId,
-    });
-    return studentAssignments;
-  }
-
-  const allAssignments = await PeerReviewAssignmentModel.find({ peerReviewId });
-
-  // TAs can view their own assignments (if any) and all assignments they are supervising
-  if (userCourseRole === CourseRole.TA) {
-    const taAssignments = allAssignments
-      .filter(async a => {
-        const reviewerTeam = await TeamModel.findById(a.reviewerTeam);
-        if (reviewerTeam && reviewerTeam.TA!.toString() === userId) return true;
-        return false;
-      })
-      .concat(
-        allAssignments.filter(a => a.reviewerUser?.toString() === userId)
-      );
-    return taAssignments;
-  }
-
-  // Course coordinators can view all assignments
-  return allAssignments;
 };
 
-export const getPeerReviewAssignmentsByTeamId = async (
-  userCourseRole: string,
-  teamId: string
+const buildEligibleRevieweeMaps = (
+  reviewerType: string,
+  studentReviewers: string[],
+  studentHomeTeam: Map<string, string>,
+  teamReviewers: string[],
+  taReviewers: string[],
+  taHomeTeams: Map<string, string[]>,
+  teamIdToTeamMap: Map<string, NormalizedTeam>,
+  teamIdToTAMap: Map<string, string | null>,
+  prTeamIds: string[],
+  allowSameTA: boolean,
+  reviewsPerReviewer: number,
+  taAssignmentsEnabled: boolean
 ) => {
-  // Only course coordinators and TAs can view assignments by team
-  if (
-    userCourseRole !== CourseRole.Faculty &&
-    userCourseRole !== CourseRole.TA
-  ) {
-    throw new MissingAuthorizationError(
-      'Only course coordinators and TAs can view peer review assignments by team'
+  const studentToEligibleRevieweesMap = new Map<string, string[]>();
+  if (reviewerType === 'Individual') {
+    for (const studentId of studentReviewers) {
+      const homeTeamId = studentHomeTeam.get(studentId)!;
+      const eligibleReviewees = makeEligibleReviewees(
+        teamIdToTAMap,
+        prTeamIds,
+        allowSameTA,
+        homeTeamId
+      );
+      if (eligibleReviewees.length < reviewsPerReviewer) {
+        throw new BadRequestError(
+          `Not enough eligible reviewees for students in team ${teamIdToTeamMap.get(homeTeamId)?.number}. ` +
+            'Consider allowing reviews of teams with same TA or reducing the number of reviews per reviewer.'
+        );
+      }
+      studentToEligibleRevieweesMap.set(studentId, eligibleReviewees);
+    }
+  }
+
+  // Get Eligible Reviewees for Teams [cannot review own team, and (if !allowSameTA) cannot review teams with same TA]
+  const teamToEligibleRevieweesMap = new Map<string, string[]>();
+  if (reviewerType === 'Team') {
+    for (const teamId of teamReviewers) {
+      const eligibleReviewees = makeEligibleReviewees(
+        teamIdToTAMap,
+        prTeamIds,
+        allowSameTA,
+        teamId
+      );
+      if (eligibleReviewees.length < reviewsPerReviewer) {
+        throw new BadRequestError(
+          `Not enough eligible reviewees for team ${teamIdToTeamMap.get(teamId)?.number}. ` +
+            'Consider allowing reviews of teams with same TA or reducing the number of reviews per reviewer.'
+        );
+      }
+      teamToEligibleRevieweesMap.set(teamId, eligibleReviewees);
+    }
+  }
+
+  // Get Eligible Reviewees for TAs [cannot review teams they supervise]
+  const taToEligibleRevieweesMap = new Map<string, string[]>();
+  if (taAssignmentsEnabled) {
+    for (const taId of taReviewers) {
+      const supervisedTeams = new Set(taHomeTeams.get(taId) ?? []);
+      const eligibleReviewees = prTeamIds.filter(
+        tid => !supervisedTeams.has(tid)
+      ); // cannot review own team
+      if (eligibleReviewees.length < reviewsPerReviewer) {
+        throw new BadRequestError(
+          `Not enough eligible reviewees for TAs. ` +
+            'Consider reducing the number of reviews per reviewer.'
+        );
+      }
+      taToEligibleRevieweesMap.set(taId, eligibleReviewees);
+    }
+  }
+
+  return {
+    studentToEligibleRevieweesMap,
+    teamToEligibleRevieweesMap,
+    taToEligibleRevieweesMap,
+  };
+};
+
+const performAssignments = (
+  reviewerType: string,
+  prTeamIds: string[],
+  studentReviewers: string[],
+  teamReviewers: string[],
+  taReviewers: string[],
+  studentToEligibleRevieweesMap: Map<string, string[]>,
+  teamToEligibleRevieweesMap: Map<string, string[]>,
+  taToEligibleRevieweesMap: Map<string, string[]>,
+  reviewsPerReviewer: number,
+  taAssignmentsEnabled: boolean
+) => {
+  const assignedStudentsForTeam = new Map<string, Set<string>>(); // revieweeId -> set of studentReviewerIds
+  const assignedTeamsForTeam = new Map<string, Set<string>>(); // revieweeId -> set of teamReviewerIds
+  const assignedTAsForTeam = new Map<string, Set<string>>(); // revieweeId -> set of taReviewerIds
+
+  for (const teamId of prTeamIds) {
+    assignedStudentsForTeam.set(teamId, new Set());
+    assignedTeamsForTeam.set(teamId, new Set());
+    assignedTAsForTeam.set(teamId, new Set());
+  }
+
+  if (reviewerType === 'Individual') {
+    randomAndEqualAssign(
+      studentReviewers,
+      reviewsPerReviewer,
+      studentToEligibleRevieweesMap,
+      assignedStudentsForTeam,
+      'student'
+    );
+  } else {
+    randomAndEqualAssign(
+      teamReviewers,
+      reviewsPerReviewer,
+      teamToEligibleRevieweesMap,
+      assignedTeamsForTeam,
+      'team'
     );
   }
 
-  const assignments = await PeerReviewAssignmentModel.find({
-    reviewee: teamId,
-  });
-  if (!assignments) {
-    throw new NotFoundError('No peer review assignments found for this team');
+  if (taAssignmentsEnabled && taReviewers.length > 0) {
+    randomAndEqualAssign(
+      taReviewers,
+      reviewsPerReviewer,
+      taToEligibleRevieweesMap,
+      assignedTAsForTeam,
+      'TA'
+    );
   }
-  return assignments;
+
+  return { assignedStudentsForTeam, assignedTeamsForTeam, assignedTAsForTeam };
 };
 
-export const getPeerReviewAssignmentById = async (
-  userCourseRole: string,
-  userId: string,
-  assignmentId: string
-) => {
-  const assignment = await PeerReviewAssignmentModel.findById(assignmentId);
-  if (!assignment) throw new NotFoundError('Peer review assignment not found');
-
-  // Check if user is the reviewer user
-  const isReviewerUser = assignment.reviewerUser?.toString() === userId;
-  if (isReviewerUser) return assignment;
-
-  if (userCourseRole === CourseRole.Student) {
-    // Check if student is part of the reviewer team
-    const reviewerTeam = await TeamModel.findById(assignment.reviewerTeam);
-    if (reviewerTeam && reviewerTeam.members?.map(String).includes(userId))
-      return assignment;
-
-    // Check if student is part of the reviewee team
-    const revieweeTeam = await TeamModel.findById(assignment.reviewee);
-    if (revieweeTeam && revieweeTeam.members?.map(String).includes(userId))
-      return assignment;
-  }
-
-  if (userCourseRole === CourseRole.TA) {
-    // Check if TA is supervising the reviewee team
-    const revieweeTeam = await TeamModel.findById(assignment.reviewee);
-    if (revieweeTeam && revieweeTeam.TA!.toString() === userId)
-      return assignment;
-  }
-
-  // Course coordinators can view all assignments
-  console.log(userCourseRole);
-  if (userCourseRole === CourseRole.Faculty) return assignment;
-
-  throw new MissingAuthorizationError(
-    'You are not authorized to view this assignment'
-  );
-};
-
-export const assignPeerReviewById = async (
+const updateDBAssignments = async (
   peerReviewId: string,
-  assignmentData: any
-) => {};
+  userId: string,
+  reviewerType: string,
+  taAssignmentsEnabled: boolean,
+  prTeamIds: string[],
+  getTeamRepo: (teamId: string) => {
+    repoUrl: string;
+    repoName: string;
+    gitHubOrgName: string;
+  },
+  assignedStudentsForTeam: Map<string, Set<string>>,
+  assignedTeamsForTeam: Map<string, Set<string>>,
+  assignedTAsForTeam: Map<string, Set<string>>
+) => {
+  const session = await startSession();
+  try {
+    await session.withTransaction(async () => {
+      await PeerReviewAssignmentModel.deleteMany({ peerReviewId }, { session });
+      const newAssignments = prTeamIds.map(revieweeId => {
+        const { repoUrl, repoName, gitHubOrgName } = getTeamRepo(revieweeId);
+        const studentSet = assignedStudentsForTeam.get(revieweeId)!;
+        const teamSet = assignedTeamsForTeam.get(revieweeId)!;
+        const taSet = assignedTAsForTeam.get(revieweeId)!;
 
-export const randomAssignPeerReviewsById = async (peerReviewId: string) => {};
+        return {
+          peerReviewId,
+          repoName,
+          repoUrl,
+          studentReviewers:
+            reviewerType === 'Individual'
+              ? Array.from(studentSet).map(id => new Types.ObjectId(id))
+              : [],
+          teamReviewers: reviewerType === 'Team' ? Array.from(teamSet) : [],
+          taReviewers: taAssignmentsEnabled ? Array.from(taSet) : [],
+          reviewee: new Types.ObjectId(revieweeId),
+          assignedBy: new Types.ObjectId(userId),
+          assignedAt: new Date(),
+          status: 'Pending' as const,
+        };
+      });
+
+      if (newAssignments.length > 0) {
+        await PeerReviewAssignmentModel.insertMany(newAssignments, {
+          session,
+          ordered: true,
+        });
+      }
+    });
+  } finally {
+    await session.endSession();
+  }
+};
+
+// Shuffle array in place using Fisher-Yates algorithm
+const shuffleInPlace = <T>(arr: T[]) => {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+};
+
+// Get eligible reviewees for a reviewer, considering TA constraints
+const makeEligibleReviewees = (
+  teamIdToTAMap: Map<string, string | null>,
+  prTeamIds: string[],
+  allowSameTA: boolean,
+  homeTeamId: string
+) => {
+  const homeTA = teamIdToTAMap.get(homeTeamId);
+  return prTeamIds.filter(tid => {
+    if (tid === homeTeamId) return false; // cannot review own team
+    if (!allowSameTA) {
+      const targetTA = teamIdToTAMap.get(tid);
+      if (homeTA && targetTA && homeTA === targetTA) return false; // cannot review teams with same TA
+    }
+    return true;
+  });
+};
+
+// Randomly and equally assign reviewees to reviewers
+const randomAndEqualAssign = (
+  reviewerIds: string[],
+  reviewsPerReviewer: number,
+  eligibleRevieweesMap: Map<string, string[]>,
+  assignedForTeamMap: Map<string, Set<string>>,
+  label: 'student' | 'team' | 'TA'
+) => {
+  const randomisedReviewers = shuffleInPlace([...reviewerIds]);
+  for (const reviewerId of randomisedReviewers) {
+    const numReviewersNeeded = reviewsPerReviewer;
+    const candidates = [...(eligibleRevieweesMap.get(reviewerId) ?? [])];
+    shuffleInPlace(candidates);
+
+    const chosen = new Set<string>();
+    while (chosen.size < numReviewersNeeded) {
+      candidates.sort(
+        (a, b) =>
+          (assignedForTeamMap.get(a)?.size ?? 0) -
+          (assignedForTeamMap.get(b)?.size ?? 0)
+      );
+      const next = candidates.find(t => !chosen.has(t));
+      if (!next) {
+        throw new BadRequestError(
+          `Unable to assign enough reviews for ${label} reviewer ${reviewerId}.` +
+            'Consider allowing reviews of teams with same TA or reducing reviewsPerReviewer.'
+        );
+      }
+      if (!assignedForTeamMap.has(next))
+        assignedForTeamMap.set(next, new Set());
+      assignedForTeamMap.get(next)!.add(reviewerId);
+      chosen.add(next);
+    }
+  }
+};
