@@ -11,17 +11,23 @@ import {
   Center,
   ScrollArea,
 } from '@mantine/core';
-import { IconTrash, IconPlus } from '@tabler/icons-react';
+import { IconTrash } from '@tabler/icons-react';
 import { forwardRef, useState, useMemo } from 'react';
 import {
   PeerReviewAssignment,
   TAToAssignmentsMap,
 } from '@shared/types/PeerReview';
+import { Team } from '@shared/types/Team';
+import AddManualAssignmentBox from './AddManualAssignmentBox';
+import DeleteConfirmationModal from '../cards/Modals/DeleteConfirmationModal';
+import PeerReviewAssignments from './PeerReviewAssignments';
+import { useDisclosure } from '@mantine/hooks';
 
 interface PeerReviewTAAccordionItemProps {
-  teams: { value: string; label: string }[];
+  teams: { value: string; TA: string; label: string }[];
   TAToAssignments: TAToAssignmentsMap;
   maxReviewsPerReviewer: number;
+  hasFacultyPermission: boolean;
   addManualAssignment: (revieweeId: string, reviewerId: string) => void;
   deleteManualAssignment: (revieweeId: string, reviewerId: string) => void;
 }
@@ -35,14 +41,21 @@ const PeerReviewAccordionItem = forwardRef<
       teams,
       TAToAssignments,
       maxReviewsPerReviewer,
+      hasFacultyPermission,
       addManualAssignment,
       deleteManualAssignment,
     },
     ref
   ) => {
-    const [taAddChoice, setTaAddChoice] = useState<
-      Record<string, string | null>
-    >({});
+    const [toBeDeletedReviewer, setToBeDeletedReviewer] = useState<{
+      reviewee: Team;
+      reviewer: { taId: string; taName: string };
+    } | null>(null);
+
+    const [
+      openedDeleteModal,
+      { open: openDeleteModal, close: closeDeleteModal },
+    ] = useDisclosure(false);
 
     // Convert TAToAssignments object to array for mapping
     const taEntries = useMemo(
@@ -53,7 +66,7 @@ const PeerReviewAccordionItem = forwardRef<
       [TAToAssignments]
     );
 
-    // Get dropdown options for TAs excluding own supervising teams and already assigned reviewees
+    // Get dropdown options for TAs excluding already assigned reviewees
     const taAssignedCount = useMemo(() => {
       const counts: Record<string, number> = {};
       for (const [taId, info] of taEntries) {
@@ -66,40 +79,12 @@ const PeerReviewAccordionItem = forwardRef<
       const assigned = new Set(
         TAToAssignments[taId]?.assignedReviews.map(a => a.reviewee._id) || []
       );
-      return teams.filter(t => !assigned.has(t.value));
-    };
-
-    const renderAssignmentRows = (
-      assignments: PeerReviewAssignment[],
-      taId: string
-    ) => {
-      if (assignments.length === 0)
-        return (
-          <Text c="dimmed" size="xs" mb="xs">
-            (no assignments found)
-          </Text>
-        );
-      return (
-        <Stack mb="xs">
-          {assignments.map(a => {
-            return (
-              <Group key={a._id} gap="xs" justify="space-between" wrap="nowrap">
-                <Group gap="xs" wrap="nowrap">
-                  <Badge variant="light">#{a._id}</Badge>
-                  <Text size="sm">Team: {a.reviewee?.number}</Text>
-                </Group>
-                <ActionIcon
-                  color="red"
-                  variant="light"
-                  onClick={() => deleteManualAssignment(a.reviewee._id, taId)}
-                >
-                  <IconTrash size={12} />
-                </ActionIcon>
-              </Group>
-            );
-          })}
-        </Stack>
-      );
+      return teams
+        .filter(t => !assigned.has(t.value))
+        .map(t => ({
+          value: t.value,
+          label: t.TA === taId ? `(Same TA) ${t.label}` : t.label,
+        }));
     };
 
     return (
@@ -109,74 +94,39 @@ const PeerReviewAccordionItem = forwardRef<
         </Accordion.Control>
         <Accordion.Panel>
           <Group display="flex" align="flex-start">
-            <Stack
-              gap="sm"
-              style={{
-                borderRight: '1px solid #e0e0e0',
-                paddingRight: '16px',
-                flex: 1,
-              }}
-            >
+            <Stack gap="sm" display="flex" flex="1">
               <Stack gap={8}>
                 <Text fw={600}>TA Assignments</Text>
                 <Divider />
                 {taEntries.length > 0 ? (
-                  taEntries.map(([taId, info]) => {
-                    const atCap =
-                      (taAssignedCount[taId] ?? 0) >= maxReviewsPerReviewer;
-                    const taOptions = getTaOptions(taId); // exclude own supervising teams + already assigned
-                    const choice = taAddChoice[taId] ?? null;
-
-                    return (
-                      <ScrollArea key={taId}>
-                        <Group justify="space-between" mt={4}>
-                          <Text>
-                            {info.taName} ({taAssignedCount[taId]})
-                          </Text>
-                          <Group>
-                            <Select
-                              placeholder="Select team to review"
-                              data={taOptions}
-                              value={choice}
-                              onChange={val =>
-                                setTaAddChoice(prev => ({
-                                  ...prev,
-                                  [taId]: val,
-                                }))
-                              }
-                              searchable
-                              clearable
-                              nothingFoundMessage="No teams available"
-                              w={200}
-                              size="xs"
-                            />
-                            <Button
-                              leftSection={<IconPlus size={12} />}
-                              disabled={!choice || atCap}
-                              onClick={() => {
-                                if (!choice) return;
-                                addManualAssignment(choice, taId);
-                                setTaAddChoice(prev => ({
-                                  ...prev,
-                                  [taId]: null,
-                                }));
-                              }}
-                              size="xs"
-                            >
-                              Add
-                            </Button>
-                            {atCap && (
-                              <Text size="xs" c="dimmed">
-                                Max reviews reached
-                              </Text>
-                            )}
-                          </Group>
-                        </Group>
-                        {renderAssignmentRows(info.assignedReviews, taId)}
-                        <Divider />
-                      </ScrollArea>
-                    );
-                  })
+                  taEntries.map(([taId, info]) => (
+                    <ScrollArea key={taId}>
+                      <Group justify="space-between" mt={4}>
+                        <Text>
+                          {info.taName} ({taAssignedCount[taId]})
+                        </Text>
+                        <AddManualAssignmentBox
+                          assignedCount={taAssignedCount[taId] ?? 0}
+                          dropdownOptions={getTaOptions(taId)}
+                          maxReviewsPerReviewer={maxReviewsPerReviewer}
+                          reviewerId={taId}
+                          addManualAssignment={addManualAssignment}
+                        />
+                      </Group>
+                      <PeerReviewAssignments
+                        assignments={info.assignedReviews}
+                        hasFacultyPermission={hasFacultyPermission}
+                        onDelete={(reviewee: Team) => {
+                          setToBeDeletedReviewer({
+                            reviewee,
+                            reviewer: { taId, taName: info.taName },
+                          });
+                          openDeleteModal();
+                        }}
+                      />
+                      <Divider />
+                    </ScrollArea>
+                  ))
                 ) : (
                   <Text c="dimmed" size="xs">
                     (no TA assignments found)
@@ -185,6 +135,22 @@ const PeerReviewAccordionItem = forwardRef<
               </Stack>
             </Stack>
           </Group>
+          {toBeDeletedReviewer && (
+            <DeleteConfirmationModal
+              opened={openedDeleteModal}
+              onClose={closeDeleteModal}
+              onCancel={closeDeleteModal}
+              onConfirm={() => {
+                deleteManualAssignment(
+                  toBeDeletedReviewer!.reviewee._id,
+                  toBeDeletedReviewer!.reviewer.taId
+                );
+                closeDeleteModal();
+              }}
+              title={`Remove Reviewer of Team ${toBeDeletedReviewer?.reviewee.number}`}
+              message={`Confirm remove TA ${toBeDeletedReviewer?.reviewer.taName} as a reviewer?`}
+            />
+          )}
         </Accordion.Panel>
       </Accordion.Item>
     );

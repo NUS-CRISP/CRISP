@@ -98,6 +98,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
 
   useEffect(() => {
     fetchPeerReviewInfo();
+    setNotification(null);
   }, [courseId, peerReview._id]);
 
   const handleDeletePeerReview = async () => {
@@ -136,16 +137,18 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
         }),
       });
 
-      const data = await response.json();
       if (!response.ok) {
-        console.error('Failed to assign peer reviews: ', data.message);
-        setNotification({ type: NotificationType.Error, value: data.message });
+        console.error('Failed to assign peer reviews: ', response.statusText);
+        setNotification({
+          type: NotificationType.Error,
+          value: response.statusText,
+        });
         return;
       }
       fetchPeerReviewInfo(); // Refresh the peer review info to reflect new assignments
       setNotification({
         type: NotificationType.Success,
-        value: data.message,
+        value: 'Peer reviews assigned successfully.',
       });
     } catch (error) {
       console.error('Error assigning peer reviews: ', error);
@@ -173,11 +176,19 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
       });
       if (!response.ok) {
         console.error('Error adding manual assignment:', response.statusText);
+        setNotification({
+          type: NotificationType.Error,
+          value: 'Error adding manual assignment: ' + response.statusText,
+        });
         return;
       }
       fetchPeerReviewInfo(); // Refresh the peer review info to reflect new assignments
     } catch (error) {
       console.error('Error adding manual assignment:', error);
+      setNotification({
+        type: NotificationType.Error,
+        value: 'Error adding manual assignment: ' + (error as Error).message,
+      });
     } finally {
       setStatus(Status.Idle);
     }
@@ -256,6 +267,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
             opened={openedSettingsForm}
             onClose={closeSettingsForm}
             title="Update Peer Review Settings"
+            centered
           >
             <PeerReviewSettingsForm
               courseId={courseId}
@@ -285,6 +297,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
             opened={openedAssignmentModal}
             onClose={closeAssignmentModal}
             title="Assign Peer Reviews"
+            centered
           >
             <PeerReviewAssignmentForm
               minReviewsPerReviewer={peerReview.minReviewsPerReviewer}
@@ -314,10 +327,12 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
               <PeerReviewTAAccordianItem
                 teams={peerReviewInfo.teams.map(t => ({
                   value: t.teamId,
+                  TA: t.TA,
                   label: `Team ${t.teamNumber}`,
                 }))}
                 TAToAssignments={peerReviewInfo.TAAssignments}
                 maxReviewsPerReviewer={peerReview.maxReviewsPerReviewer}
+                hasFacultyPermission={hasFacultyPermission}
                 addManualAssignment={addManualAssignment}
                 deleteManualAssignment={deleteManualAssignment}
               />
@@ -328,6 +343,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
                 currentTeam={team}
                 teams={peerReviewInfo.teams.map(t => ({
                   value: t.teamId,
+                  TA: t.TA,
                   label: `Team ${t.teamNumber}`,
                 }))}
                 reviewerType={peerReviewInfo.reviewerType}

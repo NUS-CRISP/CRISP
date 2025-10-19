@@ -6,22 +6,25 @@ import {
   Stack,
   Text,
   Button,
-  ActionIcon,
-  Select,
   Divider,
-  Center,
   ScrollArea,
 } from '@mantine/core';
-import { IconTrash, IconPlus } from '@tabler/icons-react';
 import { forwardRef, useState, useMemo } from 'react';
 import {
   PeerReviewAssignment,
   PeerReviewTeamDTO,
+  PeerReviewTeamMemberDTO,
 } from '@shared/types/PeerReview';
+import { Team } from '@shared/types/Team';
+import { useRouter } from 'next/router';
+import { useDisclosure } from '@mantine/hooks';
+import DeleteConfirmationModal from '../cards/Modals/DeleteConfirmationModal';
+import PeerReviewAssignments from './PeerReviewAssignments';
+import AddManualAssignmentBox from './AddManualAssignmentBox';
 
 interface PeerReviewAccordionItemProps {
   currentTeam: PeerReviewTeamDTO;
-  teams: { value: string; label: string }[];
+  teams: { value: string; TA: string; label: string }[];
   assignmentOfTeam: PeerReviewAssignment | null;
   reviewerType: 'Individual' | 'Team';
   maxReviewsPerReviewer: number;
@@ -41,35 +44,49 @@ const PeerReviewAccordionItem = forwardRef<
       assignmentOfTeam,
       reviewerType,
       hasFacultyPermission,
+      maxReviewsPerReviewer,
       addManualAssignment,
       deleteManualAssignment,
     },
     ref
   ) => {
-    const [teamAddChoice, setTeamAddChoice] = useState<string | null>(null);
-    const [memberAddChoice, setMemberAddChoice] = useState<
-      Record<string, string | null>
-    >({});
+    const router = useRouter();
 
-    // Get dropdown options for teams excluding current team and already assigned teams
+    const [
+      openedDeleteModal,
+      { open: openDeleteModal, close: closeDeleteModal },
+    ] = useDisclosure(false);
+
+    const [toBeDeletedReviewer, setToBeDeletedReviewer] = useState<{
+      reviewee: Team;
+      reviewer: PeerReviewTeamDTO | PeerReviewTeamMemberDTO;
+    } | null>(null);
+
+    // Get dropdown options for teams excluding own team and already assigned teams
     const teamAssignedReviewees = useMemo(
       () =>
         new Set(
           currentTeam.assignedReviewsToTeam
-            ? currentTeam.assignedReviewsToTeam.map(tr => tr._id)
+            ? currentTeam.assignedReviewsToTeam.map(tr => tr.reviewee._id)
             : []
         ),
       [currentTeam.assignedReviewsToTeam]
     );
     const teamAssignedCount = currentTeam.assignedReviewsToTeam.length;
     const teamOptions = useMemo(() => {
-      return teams.filter(
-        t =>
-          t.value !== currentTeam.teamId && !teamAssignedReviewees.has(t.value)
-      );
+      return teams
+        .filter(
+          t =>
+            t.value !== currentTeam.teamId &&
+            !teamAssignedReviewees.has(t.value)
+        )
+        .map(t => ({
+          value: t.value,
+          label: t.TA === currentTeam.TA ? `(Same TA) ${t.label}` : t.label,
+        }));
     }, [teams, currentTeam.teamId, teamAssignedReviewees]);
 
-    // Get dropdown options for members excluding already assigned members
+    // Get dropdown options for members excluding own team and already assigned teams
     const memberAssignedCount = useMemo(() => {
       const m: Record<string, number> = {};
       currentTeam.members.forEach(
@@ -81,54 +98,34 @@ const PeerReviewAccordionItem = forwardRef<
       const m: Record<string, Set<string>> = {};
       currentTeam.members.forEach(member => {
         m[member.userId] = new Set(
-          member.assignedReviews ? member.assignedReviews.map(ar => ar._id) : []
+          member.assignedReviews
+            ? member.assignedReviews.map(ar => ar.reviewee._id)
+            : []
         );
       });
       return m;
     }, [currentTeam.members]);
     const getMemberOptions = (memberId: string) =>
-      teams.filter(
-        t =>
-          t.value !== currentTeam.teamId &&
-          !memberAssignedReviewees[memberId]?.has(t.value)
-      );
+      teams
+        .filter(
+          t =>
+            t.value !== currentTeam.teamId &&
+            !memberAssignedReviewees[memberId]?.has(t.value)
+        )
+        .map(t => ({
+          value: t.value,
+          label: t.TA === currentTeam.TA ? `(Same TA) ${t.label}` : t.label,
+        }));
 
-    const renderAssignmentRows = (
-      assignments: PeerReviewAssignment[],
-      reviewerId: string
+    const handleDelete = (
+      reviewee: Team,
+      reviewer: PeerReviewTeamDTO | PeerReviewTeamMemberDTO
     ) => {
-      if (assignments.length === 0)
-        return (
-          <Text c="dimmed" size="xs" mb="xs">
-            (no assignments found)
-          </Text>
-        );
-      return (
-        <Stack mb="xs">
-          {assignments.map(a => {
-            const revieweeId = a.reviewee._id;
-            return (
-              <Group key={a._id} gap="xs" justify="space-between" wrap="nowrap">
-                <Group gap="xs" wrap="nowrap">
-                  <Badge variant="light">Assignment </Badge>
-                  <Text size="sm">Team: {a.reviewee.number}</Text>
-                </Group>
-                {hasFacultyPermission && (
-                  <ActionIcon
-                    color="red"
-                    variant="light"
-                    onClick={() =>
-                      deleteManualAssignment(revieweeId, reviewerId)
-                    }
-                  >
-                    <IconTrash size={12} />
-                  </ActionIcon>
-                )}
-              </Group>
-            );
-          })}
-        </Stack>
-      );
+      setToBeDeletedReviewer({
+        reviewee: reviewee,
+        reviewer: reviewer,
+      });
+      openDeleteModal();
     };
 
     return (
@@ -155,8 +152,9 @@ const PeerReviewAccordionItem = forwardRef<
             <Stack
               gap="sm"
               style={{
-                borderRight: '1px solid #e0e0e0',
-                paddingRight: '16px',
+                border: '0.5px solid gray',
+                borderRadius: '4px',
+                padding: '16px',
                 flex: 1,
               }}
             >
@@ -168,114 +166,59 @@ const PeerReviewAccordionItem = forwardRef<
                       {currentTeam.assignedReviewsToTeam.length})
                     </Text>
                     {hasFacultyPermission && (
-                      <Group align="end">
-                        <Select
-                          placeholder="Select team to review"
-                          data={teamOptions}
-                          value={teamAddChoice}
-                          onChange={setTeamAddChoice}
-                          searchable
-                          clearable
-                          nothingFoundMessage="No teams"
-                          w={200}
-                          size="xs"
-                        />
-                        <Button
-                          leftSection={<IconPlus size={12} />}
-                          disabled={!teamAddChoice || teamAssignedCount >= 5}
-                          onClick={() => {
-                            if (!teamAddChoice) return;
-                            // reviewer = current team; reviewee = selected team
-                            addManualAssignment(
-                              teamAddChoice,
-                              currentTeam.teamId
-                            );
-                            setTeamAddChoice(null);
-                          }}
-                          size="xs"
-                        >
-                          Add
-                        </Button>
-                        {teamAssignedCount >= 5 && (
-                          <Text size="xs" c="dimmed">
-                            Max reviews reached
-                          </Text>
-                        )}
-                      </Group>
+                      <AddManualAssignmentBox
+                        assignedCount={teamAssignedCount}
+                        dropdownOptions={teamOptions}
+                        maxReviewsPerReviewer={maxReviewsPerReviewer}
+                        reviewerId={currentTeam.teamId}
+                        addManualAssignment={addManualAssignment}
+                      />
                     )}
                   </Group>
                   <Divider />
-                  {renderAssignmentRows(
-                    currentTeam.assignedReviewsToTeam,
-                    currentTeam.teamId
-                  )}
+                  <PeerReviewAssignments
+                    assignments={currentTeam.assignedReviewsToTeam}
+                    hasFacultyPermission={hasFacultyPermission}
+                    onDelete={(reviewee: Team) =>
+                      handleDelete(reviewee, currentTeam)
+                    }
+                  />
                 </>
               )}
               <Stack gap={4}>
                 <Text fw={600}>Members ({currentTeam.members.length})</Text>
                 <Divider />
-                {currentTeam.members.map(m => {
-                  const atCap = (memberAssignedCount[m.userId] ?? 0) >= 5;
-                  const memberOptions = getMemberOptions(m.userId); // exclude own team + already assigned
-                  const choice = memberAddChoice[m.userId] ?? null;
+                {currentTeam.members.map(m => (
+                  <ScrollArea key={m.userId}>
+                    <Group justify="space-between" mt={4}>
+                      <Text>{m.name}</Text>
 
-                  return (
-                    <ScrollArea key={m.userId}>
-                      <Group justify="space-between" mt={4}>
-                        <Text>{m.name}</Text>
+                      {reviewerType === 'Individual' &&
+                        hasFacultyPermission && (
+                          <AddManualAssignmentBox
+                            assignedCount={memberAssignedCount[m.userId] ?? 0}
+                            dropdownOptions={getMemberOptions(m.userId)}
+                            maxReviewsPerReviewer={maxReviewsPerReviewer}
+                            reviewerId={m.userId}
+                            addManualAssignment={addManualAssignment}
+                          />
+                        )}
+                    </Group>
 
-                        {reviewerType === 'Individual' &&
-                          hasFacultyPermission && (
-                            <Group>
-                              <Select
-                                placeholder="Select team to review"
-                                data={memberOptions}
-                                value={choice}
-                                onChange={val =>
-                                  setMemberAddChoice(prev => ({
-                                    ...prev,
-                                    [m.userId]: val,
-                                  }))
-                                }
-                                searchable
-                                clearable
-                                nothingFoundMessage="No teams available"
-                                w={200}
-                                size="xs"
-                              />
-                              <Button
-                                leftSection={<IconPlus size={12} />}
-                                disabled={!choice || atCap}
-                                onClick={() => {
-                                  if (!choice) return;
-                                  addManualAssignment(choice, m.userId);
-                                  setMemberAddChoice(prev => ({
-                                    ...prev,
-                                    [m.userId]: null,
-                                  }));
-                                }}
-                                size="xs"
-                              >
-                                Add
-                              </Button>
-                              {atCap && (
-                                <Text size="xs" c="dimmed">
-                                  Max reviews reached
-                                </Text>
-                              )}
-                            </Group>
-                          )}
-                      </Group>
-
-                      {reviewerType === 'Individual' && (
-                        <>
-                          {renderAssignmentRows(m.assignedReviews, m.userId)}
-                          <Divider />
-                        </>
-                      )}
-                    </ScrollArea>
-                  );
-                })}
+                    {reviewerType === 'Individual' && (
+                      <>
+                        <PeerReviewAssignments
+                          assignments={m.assignedReviews}
+                          hasFacultyPermission={hasFacultyPermission}
+                          onDelete={(reviewee: Team) =>
+                            handleDelete(reviewee, m)
+                          }
+                        />
+                        <Divider />
+                      </>
+                    )}
+                  </ScrollArea>
+                ))}
               </Stack>
             </Stack>
             <Stack>
@@ -295,7 +238,11 @@ const PeerReviewAccordionItem = forwardRef<
                   {hasFacultyPermission && (
                     <Button
                       component="a"
-                      href={assignmentOfTeam ? `/${assignmentOfTeam._id}` : ''}
+                      onClick={() =>
+                        router.push(
+                          `${router.asPath.replace(/\/$/, '')}/${assignmentOfTeam?._id}`
+                        )
+                      }
                       size="xs"
                       rel="noreferrer"
                       target="_blank"
@@ -321,28 +268,34 @@ const PeerReviewAccordionItem = forwardRef<
                   <Divider />
 
                   {assignmentOfTeam ? (
-                    <Group gap="xs" wrap="wrap">
-                      {reviewerType === 'Individual'
-                        ? assignmentOfTeam.studentReviewers.map(reviewer => (
-                            <Badge key={`user-${reviewer._id}`}>
-                              {reviewer.name}
-                            </Badge>
-                          ))
-                        : assignmentOfTeam.teamReviewers.map(reviewer => (
-                            <Badge key={`team-${reviewer._id}`}>
-                              Team {reviewer.number}
-                            </Badge>
-                          ))}
-                      {assignmentOfTeam.taReviewers.map(reviewer => (
-                        <Badge
-                          key={`ta-${reviewer._id}`}
-                          color="gray"
-                          variant="light"
-                        >
-                          TA: {reviewer.name}
-                        </Badge>
-                      ))}
-                    </Group>
+                    <ScrollArea style={{ height: 150 }} scrollbarSize={4}>
+                      <Stack gap="xs" mt="xs">
+                        {reviewerType === 'Individual'
+                          ? assignmentOfTeam.studentReviewers.map(reviewer => (
+                              <Badge
+                                size="sm"
+                                variant="light"
+                                key={`user-${reviewer._id}`}
+                              >
+                                {reviewer.name}
+                              </Badge>
+                            ))
+                          : assignmentOfTeam.teamReviewers.map(reviewer => (
+                              <Badge size="sm" key={`team-${reviewer._id}`}>
+                                Team {reviewer.number}
+                              </Badge>
+                            ))}
+                        {assignmentOfTeam.taReviewers.map(reviewer => (
+                          <Badge
+                            key={`ta-${reviewer._id}`}
+                            color="yellow"
+                            variant="light"
+                          >
+                            TA: {reviewer.name}
+                          </Badge>
+                        ))}
+                      </Stack>
+                    </ScrollArea>
                   ) : (
                     <Text c="dimmed" my="xs" size="xs">
                       (no reviewers assigned)
@@ -352,6 +305,28 @@ const PeerReviewAccordionItem = forwardRef<
               )}
             </Stack>
           </Group>
+          {toBeDeletedReviewer && (
+            <DeleteConfirmationModal
+              opened={openedDeleteModal}
+              onClose={closeDeleteModal}
+              onCancel={closeDeleteModal}
+              onConfirm={() => {
+                deleteManualAssignment(
+                  toBeDeletedReviewer!.reviewee._id,
+                  'teamId' in toBeDeletedReviewer!.reviewer
+                    ? toBeDeletedReviewer!.reviewer.teamId
+                    : toBeDeletedReviewer!.reviewer.userId
+                );
+                closeDeleteModal();
+              }}
+              title={`Remove Reviewer of Team ${toBeDeletedReviewer?.reviewee.number}`}
+              message={`Confirm remove ${
+                'name' in toBeDeletedReviewer.reviewer
+                  ? toBeDeletedReviewer.reviewer.name
+                  : `Team ${toBeDeletedReviewer.reviewer.teamNumber}`
+              } as a reviewer?`}
+            />
+          )}
         </Accordion.Panel>
       </Accordion.Item>
     );

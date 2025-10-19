@@ -32,6 +32,7 @@ const PeerReviewOverview: React.FC<PeerReviewOverviewProps> = ({
             opened={openedCreateForm}
             onClose={closeCreateForm}
             title="Create Peer Review"
+            centered
           >
             <PeerReviewSettingsForm
               courseId={courseId}
@@ -46,10 +47,7 @@ const PeerReviewOverview: React.FC<PeerReviewOverviewProps> = ({
           </Modal>
         </Group>
       )}
-      <Tabs
-        defaultValue={peerReviews.length > 0 ? peerReviews[0]._id : 'default'}
-        mt="md"
-      >
+      <Tabs mt="md">
         <Tabs.List
           style={{
             justifyContent: 'center',
