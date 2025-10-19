@@ -1,4 +1,3 @@
-import PeerReviewModel from '@models/PeerReview';
 import PeerReviewAssignmentModel from '@models/PeerReviewAssignment';
 import TeamModel from '@models/Team';
 import UserModel from '@models/User';
@@ -13,7 +12,7 @@ import {
   PeerReviewInfoDTO,
 } from '@shared/types/PeerReview';
 import TeamDataModel from '@models/TeamData';
-import { Types, startSession } from 'mongoose';
+import { Types } from 'mongoose';
 import { getPeerReviewById } from './peerReviewService';
 import type { AnyBulkWriteOperation } from 'mongodb';
 
@@ -23,6 +22,8 @@ export interface NormalizedTeam {
   memberIds: string[];
   taId: string | null;
 }
+
+const oid = (s: string) => new Types.ObjectId(s);
 
 // Get peer review info by ID, scoped to the user's role and permissions
 export const getPeerReviewInfoById = async (
@@ -62,7 +63,7 @@ export const getPeerReviewInfoById = async (
   const { memberAssignmentsByUserId, teamAssignmentsByTeamId } =
     buildAssignmentMaps(reviewerType, scopedTeams, prAssignments);
 
-  const assignmentsOfTeam = buildTeamToReviewersMap(scopedTeams, prAssignments);
+  const assignmentsOfTeam = buildTeamToReviewersMap(prAssignments);
   const assignmentsForTAs = buildTAToAssignmentsMap(
     taAssignmentsEnabled,
     userCourseRole,
@@ -219,7 +220,7 @@ export const addManualAssignment = async (
     _id: revieweeId,
     teamSet: teamSetId,
   })
-    .select('_id number members TA')
+    .select('number')
     .lean();
   if (!reviewee) {
     throw new NotFoundError(
@@ -227,79 +228,29 @@ export const addManualAssignment = async (
     );
   }
 
-  if (reviewerType === 'Individual') {
-    // Reviewer must be a member of a team in the team set
-    const reviewerTeam = await TeamModel.findOne({
-      teamSet: teamSetId,
-      members: reviewerId,
-    })
-      .select('_id members')
-      .lean();
-    if (!reviewerTeam) {
-      throw new NotFoundError(
-        'Reviewer not found as a member of any team in the peer review team set'
-      );
-    }
+  // Check if reviewer is eligible to review the reviewee
+  await checkReviewerIsEligible(
+    reviewerType,
+    teamSetId.toString(),
+    reviewerId,
+    revieweeId
+  );
 
-    if (reviewerTeam._id.toString() === revieweeId) {
-      throw new BadRequestError('Reviewer cannot review their own team');
-    }
-  } else {
-    // Reviewer must be a team in the team set
-    const reviewerTeam = await TeamModel.findOne({
-      teamSet: teamSetId,
-      _id: reviewerId,
-    })
-      .select('_id')
-      .lean();
-    if (!reviewerTeam) {
-      throw new NotFoundError(
-        'Reviewer team not found in the peer review team set'
-      );
-    }
-    if (reviewerId === revieweeId) {
-      throw new BadRequestError('Team cannot review itself');
-    }
-  }
-
-  // Check if reviewer has exceeded maxReviewsPerReviewer
-  if (reviewerType === 'Individual') {
-    const currentAssignmentsCount =
-      await PeerReviewAssignmentModel.countDocuments({
-        peerReviewId,
-        studentReviewers: reviewerId,
-      });
-    if (currentAssignmentsCount >= maxReviewsPerReviewer) {
-      throw new BadRequestError(
-        'Reviewer has reached the maximum number of assigned reviews'
-      );
-    }
-  } else {
-    const currentAssignmentsCount =
-      await PeerReviewAssignmentModel.countDocuments({
-        peerReviewId,
-        teamReviewers: reviewerId,
-      });
-    if (currentAssignmentsCount >= maxReviewsPerReviewer) {
-      throw new BadRequestError(
-        'Reviewer team has reached the maximum number of assigned reviews'
-      );
-    }
-  }
+  // Check if reviewer has exceeded max reviews
+  await checkMaxReviewsNotExceeded(
+    reviewerType,
+    peerReviewId,
+    reviewerId,
+    maxReviewsPerReviewer
+  );
 
   // Check if duplicate assignment
-  const existingAssignment = await PeerReviewAssignmentModel.findOne({
+  await checkIsNotDuplicateAssignment(
     peerReviewId,
-    reviewee: revieweeId,
-    ...(reviewerType === 'Individual'
-      ? { studentReviewers: reviewerId }
-      : { teamReviewers: reviewerId }),
-  }).lean();
-  if (existingAssignment) {
-    throw new BadRequestError(
-      'This reviewer is already assigned to this reviewee'
-    );
-  }
+    revieweeId,
+    reviewerId,
+    reviewerType
+  );
 
   // Get repo URL for the reviewee team
   const teamData = await TeamDataModel.findOne({
@@ -309,38 +260,17 @@ export const addManualAssignment = async (
     .select('gitHubOrgName repoName')
     .lean();
 
-  // TODO: Derive repo URL for this team, for now fix example
+  // TODO: Derive repo URL for this team, for now fix example in upsert function
 
   // Add reviewer to assignment (create new assignment if none exists)
-  const session = await startSession();
-  try {
-    await session.withTransaction(async () => {
-      const add =
-        reviewerType === 'Individual'
-          ? { $addToSet: { studentReviewers: new Types.ObjectId(reviewerId) } }
-          : { $addToSet: { teamReviewers: new Types.ObjectId(reviewerId) } };
-
-      await PeerReviewAssignmentModel.updateOne(
-        { peerReviewId, reviewee: revieweeId },
-        {
-          ...add,
-          $setOnInsert: {
-            peerReviewId,
-            reviewee: new Types.ObjectId(revieweeId),
-            repoName: teamData ? teamData.repoName || '' : '',
-            repoUrl: 'https://github.com/gongg21/AddSubtract.git',
-            taReviewers: [],
-            assignedBy: new Types.ObjectId(userId),
-            assignedAt: new Date(),
-            status: 'Pending' as const,
-          },
-        },
-        { upsert: true, session }
-      );
-    });
-  } finally {
-    await session.endSession();
-  }
+  await upsertAssignment(
+    peerReviewId,
+    revieweeId,
+    reviewerId,
+    reviewerType,
+    userId,
+    teamData
+  );
 };
 
 // Remove a particular reviewer from a particular assignment
@@ -489,6 +419,7 @@ const getAssignmentsForTeams = async (
   taAssignmentsEnabled: boolean
 ): Promise<PeerReviewAssignment[]> => {
   const prTeamIds = scopedTeams.map(t => t.id);
+  const baseFilter = { peerReviewId: oid(peerReviewId) };
   if (reviewerType === 'Individual') {
     const allMemberIds = scopedTeams.flatMap(t => t.memberIds);
     const allTaIds = scopedTeams.map(t => t.taId).filter(Boolean) as string[];
@@ -496,28 +427,58 @@ const getAssignmentsForTeams = async (
     const orConditions = [
       {
         studentReviewers: {
-          $in: allMemberIds.map(id => new Types.ObjectId(id)),
+          $in: allMemberIds.map(id => oid(id)),
         },
       },
-      { reviewee: { $in: prTeamIds.map(id => new Types.ObjectId(id)) } },
+      { reviewee: { $in: prTeamIds.map(id => oid(id)) } },
       ...(taAssignmentsEnabled
-        ? [{ taReviewers: { $in: allTaIds.map(id => new Types.ObjectId(id)) } }]
+        ? [{ taReviewers: { $in: allTaIds.map(id => oid(id)) } }]
         : []),
     ];
 
     return await PeerReviewAssignmentModel.find({
-      peerReviewId,
+      ...baseFilter,
       $or: orConditions,
-    }).lean();
+    })
+      .populate([
+        {
+          path: 'reviewee',
+          select: 'number TA',
+          populate: {
+            path: 'TA',
+            select: 'name',
+          },
+        },
+        { path: 'studentReviewers', select: 'name' },
+        { path: 'taReviewers', select: 'name' },
+      ])
+      .lean();
   }
 
-  return await PeerReviewAssignmentModel.find({
-    peerReviewId,
-    $or: [
-      { teamReviewers: { $in: prTeamIds.map(id => new Types.ObjectId(id)) } },
-      { reviewee: { $in: prTeamIds.map(id => new Types.ObjectId(id)) } },
-    ],
-  }).lean();
+  const prAssignments: PeerReviewAssignment[] =
+    await PeerReviewAssignmentModel.find({
+      peerReviewId,
+      $or: [
+        { teamReviewers: { $in: prTeamIds.map(id => oid(id)) } },
+        { reviewee: { $in: prTeamIds.map(id => oid(id)) } },
+      ],
+    })
+      .populate([
+        {
+          path: 'reviewee',
+          select: 'number TA',
+          populate: {
+            path: 'TA',
+            select: 'name',
+          },
+        },
+        { path: 'teamReviewers', select: 'number' },
+        { path: 'taReviewers', select: 'name' },
+      ])
+      .lean();
+
+  console.log('Fetched Peer Review Assignments:', prAssignments);
+  return prAssignments;
 };
 
 const buildAssignmentMaps = (
@@ -554,16 +515,14 @@ const buildAssignmentMaps = (
   return { memberAssignmentsByUserId, teamAssignmentsByTeamId };
 };
 
-const buildTeamToReviewersMap = (
-  scopedTeams: NormalizedTeam[],
-  prAssignments: PeerReviewAssignment[]
-) => {
-  const teamIdSet = new Set(scopedTeams.map(t => t.id));
+const buildTeamToReviewersMap = (prAssignments: PeerReviewAssignment[]) => {
+  console.log('Building assignmentsOfTeam map...');
   const assignmentsOfTeam: Record<string, PeerReviewAssignment> = {};
   for (const a of prAssignments) {
-    if (!teamIdSet.has(a.reviewee._id)) continue;
     assignmentsOfTeam[a.reviewee._id] = a;
   }
+  console.log('prAssignments:', prAssignments);
+  console.log('assignmentsOfTeam:', assignmentsOfTeam);
   return assignmentsOfTeam;
 };
 
@@ -938,7 +897,7 @@ const updateDBAssignments = async (
 
   await PeerReviewAssignmentModel.deleteMany({
     peerReviewId: peerReviewId,
-    reviewee: { $nin: prTeamIds.map(id => new Types.ObjectId(id)) },
+    reviewee: { $nin: prTeamIds.map(id => oid(id)) },
   });
 
   if (newAssignments.length > 0) {
@@ -1011,4 +970,131 @@ const randomAndEqualAssign = (
       chosen.add(next);
     }
   }
+};
+
+/* ------ Sub Functions for AddManualAssignment ------ */
+
+const checkReviewerIsEligible = async (
+  reviewerType: 'Individual' | 'Team',
+  teamSetId: string,
+  reviewerId: string,
+  revieweeId: string
+) => {
+  if (reviewerType === 'Individual') {
+    // Reviewer must be a member of a team in the team set
+    const reviewerTeam = await TeamModel.findOne({
+      teamSet: teamSetId,
+      members: reviewerId,
+    })
+      .select('_id members')
+      .lean();
+    if (!reviewerTeam) {
+      throw new NotFoundError(
+        'Reviewer not found as a member of any team in the peer review team set'
+      );
+    }
+
+    if (reviewerTeam._id.toString() === revieweeId) {
+      throw new BadRequestError('Reviewer cannot review their own team');
+    }
+  } else {
+    // Reviewer must be a team in the team set
+    const reviewerTeam = await TeamModel.findOne({
+      teamSet: teamSetId,
+      _id: reviewerId,
+    })
+      .select('_id')
+      .lean();
+    if (!reviewerTeam) {
+      throw new NotFoundError(
+        'Reviewer team not found in the peer review team set'
+      );
+    }
+    if (reviewerId === revieweeId) {
+      throw new BadRequestError('Team cannot review itself');
+    }
+  }
+};
+
+const checkMaxReviewsNotExceeded = async (
+  reviewerType: 'Individual' | 'Team',
+  peerReviewId: string,
+  reviewerId: string,
+  maxPerReviewer: number
+) => {
+  if (reviewerType === 'Individual') {
+    const currentAssignmentsCount =
+      await PeerReviewAssignmentModel.countDocuments({
+        peerReviewId,
+        studentReviewers: reviewerId,
+      });
+    if (currentAssignmentsCount >= maxPerReviewer) {
+      throw new BadRequestError(
+        'Reviewer has reached the maximum number of assigned reviews'
+      );
+    }
+  } else {
+    const currentAssignmentsCount =
+      await PeerReviewAssignmentModel.countDocuments({
+        peerReviewId,
+        teamReviewers: reviewerId,
+      });
+    if (currentAssignmentsCount >= maxPerReviewer) {
+      throw new BadRequestError(
+        'Reviewer team has reached the maximum number of assigned reviews'
+      );
+    }
+  }
+};
+
+const checkIsNotDuplicateAssignment = async (
+  peerReviewId: string,
+  revieweeId: string,
+  reviewerId: string,
+  reviewerType: 'Individual' | 'Team'
+) => {
+  const existingAssignment = await PeerReviewAssignmentModel.findOne({
+    peerReviewId,
+    reviewee: revieweeId,
+    ...(reviewerType === 'Individual'
+      ? { studentReviewers: reviewerId }
+      : { teamReviewers: reviewerId }),
+  }).lean();
+  if (existingAssignment) {
+    throw new BadRequestError(
+      'This reviewer is already assigned to this reviewee'
+    );
+  }
+};
+
+const upsertAssignment = async (
+  peerReviewId: string,
+  revieweeId: string,
+  reviewerId: string,
+  reviewerType: 'Individual' | 'Team',
+  userId: string,
+  teamData: { repoName: string } | null
+) => {
+  const add =
+    reviewerType === 'Individual'
+      ? { $addToSet: { studentReviewers: oid(reviewerId) } }
+      : { $addToSet: { teamReviewers: oid(reviewerId) } };
+
+  await PeerReviewAssignmentModel.updateOne(
+    { peerReviewId, reviewee: oid(revieweeId) },
+    {
+      ...add,
+      $setOnInsert: {
+        peerReviewId,
+        reviewee: oid(revieweeId),
+        repoName: teamData ? teamData.repoName || '' : '',
+        repoUrl: 'https://github.com/gongg21/AddSubtract.git',
+        taReviewers: [],
+        assignedBy: oid(userId),
+        assignedAt: new Date(),
+        status: 'Pending' as const,
+      },
+    },
+    { upsert: true }
+  );
 };

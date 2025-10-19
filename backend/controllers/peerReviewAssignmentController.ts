@@ -50,7 +50,7 @@ export const postAssignPeerReviews = async (req: Request, res: Response) => {
       reviewsPerReviewer,
       allowSameTA
     );
-    res.status(204).json('Successfully assigned peer reviews');
+    res.status(204).end();
   } catch (error) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ message: error.message });
