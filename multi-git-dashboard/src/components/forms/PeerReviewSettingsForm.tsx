@@ -22,6 +22,7 @@ interface PeerReviewSettingsFormProps {
   peerReview: PeerReview | null;
   teamSets: TeamSet[];
   onSetUpConfirmed: () => void;
+  onClose: () => void;
 }
 
 interface FormValues {
@@ -41,6 +42,7 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
   peerReview,
   teamSets,
   onSetUpConfirmed,
+  onClose,
 }) => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -48,14 +50,18 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
 
   // API Routes
   const createApiRoute = `/api/peer-review/${courseId}/peer-reviews`;
-  const updatePeerReviewRoute = peerReview ? `/api/peer-review/${courseId}/${peerReview._id}` : '';
+  const updatePeerReviewRoute = peerReview
+    ? `/api/peer-review/${courseId}/${peerReview._id}`
+    : '';
 
   // Check if editing existing peer review or creating new [change to get status]
   const isEditing = Boolean(peerReview);
   const toFormValues = (pr: PeerReview | null) => ({
     assessmentName: pr?.title ?? '',
     description: pr?.description ?? '',
-    startDate: pr?.startDate ? new Date(pr.startDate).toISOString().slice(0, 10) : '',
+    startDate: pr?.startDate
+      ? new Date(pr.startDate).toISOString().slice(0, 10)
+      : '',
     endDate: pr?.endDate ? new Date(pr.endDate).toISOString().slice(0, 10) : '',
     reviewerType: pr?.reviewerType ?? 'Individual',
     TaAssignments: Boolean(pr?.TaAssignments ?? false),
@@ -63,7 +69,7 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
     maxReviews: pr?.maxReviewsPerReviewer ?? 1,
     teamSetId: pr?.teamSetId ?? '',
   });
-  
+
   const initial = useMemo(() => toFormValues(peerReview), [peerReview]);
 
   // Create form with initial values and validation rules
@@ -121,7 +127,7 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
         }
         return null;
       },
-      teamSetId: value => !value ? 'Please select a Team Set' : null,
+      teamSetId: value => (!value ? 'Please select a Team Set' : null),
     },
   });
 
@@ -147,7 +153,7 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
 
   type Normalized = ReturnType<typeof normalize>;
   const originalValuesRef = useRef<null | Normalized>(null);
-  
+
   useEffect(() => {
     const next = toFormValues(peerReview);
     form.setValues(next);
@@ -156,6 +162,7 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
 
   const handleSubmit = async () => {
     setError(null);
+    setLoading(true);
     try {
       const response = await fetch(
         isEditing ? updatePeerReviewRoute : createApiRoute,
@@ -179,6 +186,8 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
       setError(
         'Failed to submit peer review settings: ' + (error as Error).message
       );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -239,21 +248,34 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
           placeholder="YYYY-MM-DD"
           type="date"
         />
-        
-        <Text style={{ fontWeight: '600', fontSize: "14px", marginTop: 16, marginBottom: 8 }}>
+
+        <Text
+          style={{
+            fontWeight: '600',
+            fontSize: '14px',
+            marginTop: 16,
+            marginBottom: 8,
+          }}
+        >
           Team Set for this Peer Review
         </Text>
         <Select
           placeholder="Select a Team Set"
           data={teamSets.map(ts => ({ value: ts._id, label: ts.name }))}
           value={form.values.teamSetId}
-          onChange={(val) => form.setFieldValue('teamSetId', val || '')}
+          onChange={val => form.setFieldValue('teamSetId', val || '')}
           searchable
           nothingFoundMessage="No results found"
+          error={form.errors.teamSetId}
         />
 
         <Text
-          style={{ fontWeight: '600', fontSize: "14px", marginTop: 16, marginBottom: 8 }}
+          style={{
+            fontWeight: '600',
+            fontSize: '14px',
+            marginTop: 16,
+            marginBottom: 8,
+          }}
         >
           Reviewer Type
         </Text>
@@ -267,7 +289,9 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
         >
           <Radio.Group
             value={form.values.reviewerType}
-            onChange={value => form.setFieldValue('reviewerType', value as ReviewerType)}
+            onChange={value =>
+              form.setFieldValue('reviewerType', value as ReviewerType)
+            }
           >
             <div style={{ display: 'flex', gap: '20px' }}>
               <Radio
@@ -285,7 +309,12 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
         </div>
 
         <Text
-          style={{ fontWeight: '600', fontSize: "14px", marginTop: 16, marginBottom: 8 }}
+          style={{
+            fontWeight: '600',
+            fontSize: '14px',
+            marginTop: 16,
+            marginBottom: 8,
+          }}
         >
           Assign Peer Reviews to Teaching Assistants?
         </Text>
@@ -332,9 +361,18 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
           type="number"
         />
 
-        <Button type="submit" mt="sm">
-          {isEditing ? 'Update Settings' : 'Create Peer Review'}
-        </Button>
+        <Group justify="flex-start" mt="sm" gap="xs">
+          <Button
+            type="submit"
+            color={isEditing ? 'green' : 'blue'}
+            variant={isEditing ? '' : ''}
+          >
+            {isEditing ? 'Update Settings' : 'Create Peer Review'}
+          </Button>
+          <Button variant="default" onClick={onClose}>
+            Cancel
+          </Button>
+        </Group>
 
         <Modal
           opened={openConfirmModal}

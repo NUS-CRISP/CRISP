@@ -41,12 +41,13 @@ const PeerReviewOverview: React.FC<PeerReviewOverviewProps> = ({
                 onUpdate();
                 closeCreateForm();
               }}
+              onClose={closeCreateForm}
             />
           </Modal>
         </Group>
       )}
       <Tabs
-        defaultValue={peerReviews.length > 0 ? peerReviews[0]._id : "default"}
+        defaultValue={peerReviews.length > 0 ? peerReviews[0]._id : 'default'}
         mt="md"
       >
         <Tabs.List
@@ -54,16 +55,17 @@ const PeerReviewOverview: React.FC<PeerReviewOverviewProps> = ({
             justifyContent: 'center',
           }}
         >
-          {courseId && peerReviews.length > 0
-            ? peerReviews.map(pr => (
-                <Tabs.Tab key={pr._id} value={pr._id}>
-                  {pr.title}
-                </Tabs.Tab>
-              ))
-            : <Tabs.Tab key={"default"} value={"default"}>
-                No Peer Reviews Available
+          {courseId && peerReviews.length > 0 ? (
+            peerReviews.map(pr => (
+              <Tabs.Tab key={pr._id} value={pr._id}>
+                {pr.title}
               </Tabs.Tab>
-            }
+            ))
+          ) : (
+            <Tabs.Tab key={'default'} value={'default'}>
+              No Peer Reviews Available
+            </Tabs.Tab>
+          )}
         </Tabs.List>
 
         {peerReviews.map(pr => (

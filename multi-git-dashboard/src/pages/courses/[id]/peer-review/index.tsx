@@ -24,7 +24,7 @@ const PeerReviewListPage: React.FC = () => {
   const onUpdate = () => {
     fetchPeerReviews();
   };
-  
+
   // Fetch peer reviews for the course to populate tabs and future uses
   const fetchPeerReviews = async () => {
     try {
@@ -44,7 +44,7 @@ const PeerReviewListPage: React.FC = () => {
       console.error('Error fetching peer reviews:', error);
     }
   };
-  
+
   // Fetch team sets for the course to populate dropdown in settings form and future uses
   const fetchTeamSets = async () => {
     try {

@@ -93,7 +93,7 @@ export interface PeerReviewInfoDTO {
   teams: PeerReviewTeamDTO[];
   reviewerType: ReviewerType;
   assignmentsOfTeam: { [teamId: string]: PeerReviewAssignment };
-  TAAssignments?: TAToAssignmentsMap;
+  TAAssignments: TAToAssignmentsMap;
   capabilities: {
     assignmentPageTeamIds: string[];
   };

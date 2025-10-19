@@ -33,7 +33,7 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
         )}
         This action cannot be undone.
       </Text>
-      <Group justify="flex-end">
+      <Group justify="flex-end" gap="xs">
         <Button color="red" onClick={onConfirm}>
           Delete
         </Button>
