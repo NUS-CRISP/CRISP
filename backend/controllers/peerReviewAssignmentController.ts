@@ -21,7 +21,6 @@ export const getPeerReviewInfo = async (req: Request, res: Response) => {
       courseId,
       peerReviewId
     );
-    console.log('Peer Review Info:', peerReviewInfo);
     res.status(200).json(peerReviewInfo);
   } catch (error) {
     if (error instanceof NotFoundError) {
