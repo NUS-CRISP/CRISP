@@ -4,6 +4,10 @@ import { NotFoundError } from './errors';
 import mongoose from 'mongoose';
 import PeerReviewAssignmentModel from '@models/PeerReviewAssignment';
 import PeerReviewCommentModel from '@models/PeerReviewComment';
+import {
+  initialiseAssignments,
+  deleteAssignmentsByPeerReviewId,
+} from './peerReviewAssignmentService';
 
 export const getAllPeerReviewsyId = async (courseId: string) => {
   const peerReviews = await PeerReviewModel.find({ course: courseId });
@@ -26,6 +30,7 @@ export const getPeerReviewById = async (peerReviewId: string) => {
 
 export const createPeerReviewById = async (
   courseId: string,
+  userId: string,
   peerReviewData: {
     assessmentName: string;
     description: string;
@@ -70,6 +75,15 @@ export const createPeerReviewById = async (
     maxReviewsPerReviewer,
   });
   await newPeerReview.save();
+
+  // Initialise assignments
+  await initialiseAssignments(
+    courseId,
+    newPeerReview._id.toString(),
+    teamSetId,
+    userId
+  );
+
   return newPeerReview;
 };
 
@@ -91,9 +105,8 @@ export const deletePeerReviewById = async (peerReviewId: string) => {
     });
 
     // Delete peer review assignments
-    const delAssignmentsRes = await PeerReviewAssignmentModel.deleteMany({
-      peerReviewId,
-    });
+    const delAssignmentsRes =
+      await deleteAssignmentsByPeerReviewId(peerReviewId);
 
     const delPeerReviewRes =
       await PeerReviewModel.findByIdAndDelete(peerReviewId);
@@ -121,6 +134,7 @@ export const deletePeerReviewById = async (peerReviewId: string) => {
 
 export const updatePeerReviewById = async (
   peerReviewId: string,
+  userId: string,
   settingsData: any
 ) => {
   const {
@@ -154,5 +168,17 @@ export const updatePeerReviewById = async (
     { new: true }
   );
   if (!updatedPeerReview) throw new NotFoundError('Peer review not found');
+
+  // Delete existing assignments and re-initialize
+  await deleteAssignmentsByPeerReviewId(peerReviewId);
+  if (teamSetId) {
+    await initialiseAssignments(
+      updatedPeerReview.course.toString(),
+      peerReviewId,
+      teamSetId,
+      userId
+    );
+  }
+
   return updatedPeerReview;
 };

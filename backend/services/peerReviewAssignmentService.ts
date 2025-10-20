@@ -306,6 +306,49 @@ export const removeManualAssignment = async (
   );
 };
 
+// Initialise empty assignments for new peer reviews
+export const initialiseAssignments = async (
+  courseId: string,
+  peerReviewId: string,
+  teamSetId: string,
+  userId: string
+) => {
+  const prTeams = await TeamModel.find({
+    teamSet: teamSetId,
+  });
+
+  const prTeamDataById = await getTeamDataById(
+    courseId,
+    prTeams.map(t => t.number)
+  );
+
+  for (const team of prTeams) {
+    console.log('Creating assignment for team:', team.number);
+    const newAssignment = new PeerReviewAssignmentModel({
+      peerReviewId: peerReviewId,
+      repoName: prTeamDataById.get(team.number.toString())?.repoName || '',
+      repoUrl: 'https://github.com/gongg21/AddSubtract.git', // DEFAULT URL FOR NOW
+      reviewee: team._id,
+      studentReviewers: [],
+      teamReviewers: [],
+      taReviewers: [],
+      assignedBy: userId,
+      assignedAt: new Date(),
+      status: 'Pending',
+    });
+    await newAssignment.save();
+  }
+  console.log('Initialised assignments for team set:', teamSetId);
+  return;
+};
+
+// Delete all assignments for a given peer review ID
+export const deleteAssignmentsByPeerReviewId = async (peerReviewId: string) => {
+  return await PeerReviewAssignmentModel.deleteMany({
+    peerReviewId,
+  });
+};
+
 /* ----- Sub Functions for GetPeerReviewInfo ----- */
 const emptyPeerReviewInfo = (
   peerReviewId: string,
