@@ -39,8 +39,8 @@ const PeerReviewAssignments: React.FC<PeerReviewAssignmentsProps> = ({
               )
             }
           >
-            Assignment: Team {assignment.reviewee.number} (
-            {assignment.reviewee.TA.name})
+            Assignment: Team {assignment.reviewee.number}
+            {hasFacultyPermission && ` (TA: ${assignment.reviewee.TA.name})`}
           </Button>
           {hasFacultyPermission && (
             <>

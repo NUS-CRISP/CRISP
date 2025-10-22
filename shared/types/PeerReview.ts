@@ -72,7 +72,10 @@ export interface PeerReviewTeamDTO {
   teamNumber: number;
   repoUrl: string;
   repoName: string;
-  TA: string;
+  TA: {
+    id: string;
+    name: string;
+  };
   members: PeerReviewTeamMemberDTO[];
   assignedReviewsToTeam: PeerReviewAssignment[]; // for team mode
 }

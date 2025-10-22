@@ -38,9 +38,9 @@ const PeerReviewOverview: React.FC<PeerReviewOverviewProps> = ({
               courseId={courseId}
               peerReview={null}
               teamSets={teamSets}
-              onSetUpConfirmed={() => {
-                onUpdate();
+              onSubmit={() => {
                 closeCreateForm();
+                onUpdate();
               }}
               onClose={closeCreateForm}
             />

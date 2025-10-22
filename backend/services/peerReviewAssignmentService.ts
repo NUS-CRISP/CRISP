@@ -209,13 +209,15 @@ export const addManualAssignment = async (
   peerReviewId: string,
   revieweeId: string,
   reviewerId: string,
-  userId: string
+  userId: string,
+  isTA: boolean
 ) => {
   const peerReview = await getPeerReviewById(peerReviewId);
   const reviewerType = peerReview.reviewerType;
   const maxReviewsPerReviewer = peerReview.maxReviewsPerReviewer;
   const teamSetId = peerReview.teamSetId;
 
+  console.log('isTA: ', isTA);
   const reviewee = await TeamModel.findOne({
     _id: revieweeId,
     teamSet: teamSetId,
@@ -228,28 +230,35 @@ export const addManualAssignment = async (
     );
   }
 
+  console.log('checking manual assignment eligibility...');
   // Check if reviewer is eligible to review the reviewee
   await checkReviewerIsEligible(
     reviewerType,
     teamSetId.toString(),
     reviewerId,
-    revieweeId
+    revieweeId,
+    isTA
   );
 
-  // Check if reviewer has exceeded max reviews
-  await checkMaxReviewsNotExceeded(
-    reviewerType,
-    peerReviewId,
-    reviewerId,
-    maxReviewsPerReviewer
-  );
+  console.log('checking manual assignment limits...');
+  // Check if reviewer has exceeded max reviews, TAs have no limit
+  if (!isTA) {
+    await checkMaxReviewsNotExceeded(
+      reviewerType,
+      peerReviewId,
+      reviewerId,
+      maxReviewsPerReviewer
+    );
+  }
 
+  console.log('checking manual assignment duplicates...');
   // Check if duplicate assignment
   await checkIsNotDuplicateAssignment(
     peerReviewId,
     revieweeId,
     reviewerId,
-    reviewerType
+    reviewerType,
+    isTA
   );
 
   // Get repo URL for the reviewee team
@@ -262,6 +271,7 @@ export const addManualAssignment = async (
 
   // TODO: Derive repo URL for this team, for now fix example in upsert function
 
+  console.log('upserting manual assignment...');
   // Add reviewer to assignment (create new assignment if none exists)
   await upsertAssignment(
     peerReviewId,
@@ -269,7 +279,8 @@ export const addManualAssignment = async (
     reviewerId,
     reviewerType,
     userId,
-    teamData
+    teamData,
+    isTA
   );
 };
 
@@ -277,7 +288,8 @@ export const addManualAssignment = async (
 export const removeManualAssignment = async (
   peerReviewId: string,
   revieweeId: string,
-  reviewerId: string
+  reviewerId: string,
+  isTA: boolean
 ) => {
   const peerReview = await getPeerReviewById(peerReviewId);
   const reviewerType = peerReview.reviewerType;
@@ -285,9 +297,11 @@ export const removeManualAssignment = async (
   const existingAssignment = await PeerReviewAssignmentModel.findOne({
     peerReviewId,
     reviewee: revieweeId,
-    ...(reviewerType === 'Individual'
-      ? { studentReviewers: reviewerId }
-      : { teamReviewers: reviewerId }),
+    ...(isTA
+      ? { taReviewers: reviewerId }
+      : reviewerType === 'Individual'
+        ? { studentReviewers: reviewerId }
+        : { teamReviewers: reviewerId }),
   })
     .select('_id studentReviewers teamReviewers taReviewers')
     .lean();
@@ -295,8 +309,9 @@ export const removeManualAssignment = async (
     return; // Nothing to remove
   }
 
-  const pull =
-    reviewerType === 'Individual'
+  const pull = isTA
+    ? { $pull: { taReviewers: reviewerId } }
+    : reviewerType === 'Individual'
       ? { $pull: { studentReviewers: reviewerId } }
       : { $pull: { teamReviewers: reviewerId } };
 
@@ -493,7 +508,7 @@ const getAssignmentsForTeams = async (
           },
         },
         { path: 'studentReviewers', select: 'name' },
-        { path: 'taReviewers', select: 'name' },
+        { path: 'taReviewers', select: '_id name' },
       ])
       .lean();
   }
@@ -564,8 +579,6 @@ const buildTeamToReviewersMap = (prAssignments: PeerReviewAssignment[]) => {
   for (const a of prAssignments) {
     assignmentsOfTeam[a.reviewee._id] = a;
   }
-  console.log('prAssignments:', prAssignments);
-  console.log('assignmentsOfTeam:', assignmentsOfTeam);
   return assignmentsOfTeam;
 };
 
@@ -585,6 +598,7 @@ const buildTAToAssignmentsMap = (
         ? [userId]
         : [];
 
+  console.log('TA IDs wanted for TAToAssignmentsMap:', taIdsWanted);
   if (taIdsWanted.length === 0) return {};
 
   const assignmentsForTAs: TAToAssignmentsMap = {};
@@ -596,17 +610,26 @@ const buildTAToAssignmentsMap = (
   }
 
   const taIdsWantedSet = new Set(taIdsWanted);
+  console.log('Building TAToAssignmentsMap for TAs:', taIdsWantedSet);
 
   for (const a of prAssignments) {
-    for (const reviewer of a.studentReviewers) {
-      if (taIdsWantedSet.has(reviewer._id)) {
+    for (const reviewer of a.taReviewers) {
+      console.log('Checking TA reviewer:', reviewer._id);
+      console.log('TA is in wanted set:', taIdsWantedSet.has(reviewer._id));
+      if (taIdsWantedSet.has(reviewer._id.toString())) {
         const val = assignmentsForTAs[reviewer._id];
+        console.log('current val for TA', reviewer._id, ':', val);
         val.assignedReviews.push(a);
-        assignmentsForTAs[reviewer._id] = val;
+        assignmentsForTAs[reviewer._id.toString()] = val;
+        console.log(
+          `Added assignment for TA ${reviewer._id} on reviewee team ${a.reviewee.number}`
+        );
+        console.log('Current assignments:', val.assignedReviews);
       }
     }
   }
 
+  console.log('Built TAToAssignmentsMap:', assignmentsForTAs);
   return assignmentsForTAs;
 };
 
@@ -623,7 +646,7 @@ const buildTeamDTOs = (
 ) => {
   return scopedTeams.map(team => {
     const teamData = teamDataById.get(team.number.toString());
-    const TA = team.taId ? usersById.get(team.taId) ?? '' : '';
+    const taName = team.taId ? usersById.get(team.taId) ?? '' : '';
 
     const members: PeerReviewTeamMemberDTO[] = team.memberIds.map(memberId => ({
       userId: memberId,
@@ -639,7 +662,7 @@ const buildTeamDTOs = (
       teamNumber: team.number,
       repoUrl: teamData ? teamData.repoUrl : '',
       repoName: teamData ? teamData.repoName : '',
-      TA,
+      TA: { id: team.taId ?? '', name: taName },
       members,
       assignedReviewsToTeam,
     };
@@ -810,10 +833,11 @@ const buildEligibleRevieweeMaps = (
   const taToEligibleRevieweesMap = new Map<string, string[]>();
   if (taAssignmentsEnabled) {
     for (const taId of taReviewers) {
-      const supervisedTeams = new Set(taHomeTeams.get(taId) ?? []);
-      const eligibleReviewees = prTeamIds.filter(
-        tid => !supervisedTeams.has(tid)
-      ); // cannot review own team
+      let eligibleReviewees = prTeamIds;
+      if (!allowSameTA) {
+        const supervisedTeams = new Set(taHomeTeams.get(taId) ?? []);
+        eligibleReviewees = prTeamIds.filter(tid => !supervisedTeams.has(tid));
+      }
       if (eligibleReviewees.length < reviewsPerReviewer) {
         throw new BadRequestError(
           `Not enough eligible reviewees for TAs. ` +
@@ -903,20 +927,19 @@ const updateDBAssignments = async (
 
   const newAssignments: AnyBulkWriteOperation[] = prTeamIds.map(revieweeId => {
     const { repoUrl, repoName } = getTeamRepo(revieweeId);
-    const convertToObjectId = (id: string) => new Types.ObjectId(id);
 
     const studentIds = Array.from(
       assignedStudentsForTeam.get(revieweeId) ?? []
-    ).map(sid => convertToObjectId(sid));
+    ).map(sid => oid(sid));
     const teamIds = Array.from(assignedTeamsForTeam.get(revieweeId) ?? []).map(
-      tid => convertToObjectId(tid)
+      tid => oid(tid)
     );
     const taIds = Array.from(assignedTAsForTeam.get(revieweeId) ?? []).map(
-      taId => convertToObjectId(taId)
+      taId => oid(taId)
     );
 
-    const peerReviewIdObj = convertToObjectId(peerReviewId);
-    const revieweeIdObj = convertToObjectId(revieweeId);
+    const peerReviewIdObj = oid(peerReviewId);
+    const revieweeIdObj = oid(revieweeId);
 
     return {
       replaceOne: {
@@ -929,7 +952,7 @@ const updateDBAssignments = async (
           teamReviewers: reviewerType === 'Team' ? teamIds : [],
           taReviewers: taAssignmentsEnabled ? taIds : [],
           reviewee: revieweeIdObj,
-          assignedBy: convertToObjectId(userId),
+          assignedBy: oid(userId),
           assignedAt: new Date(),
           status: 'Pending' as const,
         },
@@ -1021,8 +1044,25 @@ const checkReviewerIsEligible = async (
   reviewerType: 'Individual' | 'Team',
   teamSetId: string,
   reviewerId: string,
-  revieweeId: string
+  revieweeId: string,
+  isTA: boolean
 ) => {
+  if (isTA) {
+    // Reviewer must be a TA of a team in the team set
+    const taTeam = await TeamModel.findOne({
+      teamSet: teamSetId,
+      TA: reviewerId,
+    })
+      .select('_id TA')
+      .lean();
+    if (!taTeam) {
+      throw new NotFoundError(
+        'Reviewer not found as a TA of any team in the peer review team set'
+      );
+    }
+    return;
+  }
+
   if (reviewerType === 'Individual') {
     // Reviewer must be a member of a team in the team set
     const reviewerTeam = await TeamModel.findOne({
@@ -1094,14 +1134,17 @@ const checkIsNotDuplicateAssignment = async (
   peerReviewId: string,
   revieweeId: string,
   reviewerId: string,
-  reviewerType: 'Individual' | 'Team'
+  reviewerType: 'Individual' | 'Team',
+  isTA: boolean
 ) => {
   const existingAssignment = await PeerReviewAssignmentModel.findOne({
     peerReviewId,
     reviewee: revieweeId,
-    ...(reviewerType === 'Individual'
-      ? { studentReviewers: reviewerId }
-      : { teamReviewers: reviewerId }),
+    ...(isTA
+      ? { taReviewers: reviewerId }
+      : reviewerType === 'Individual'
+        ? { studentReviewers: reviewerId }
+        : { teamReviewers: reviewerId }),
   }).lean();
   if (existingAssignment) {
     throw new BadRequestError(
@@ -1116,10 +1159,12 @@ const upsertAssignment = async (
   reviewerId: string,
   reviewerType: 'Individual' | 'Team',
   userId: string,
-  teamData: { repoName: string } | null
+  teamData: { repoName: string } | null,
+  isTa: boolean
 ) => {
-  const add =
-    reviewerType === 'Individual'
+  const add = isTa
+    ? { $addToSet: { taReviewers: oid(reviewerId) } }
+    : reviewerType === 'Individual'
       ? { $addToSet: { studentReviewers: oid(reviewerId) } }
       : { $addToSet: { teamReviewers: oid(reviewerId) } };
 
@@ -1132,7 +1177,6 @@ const upsertAssignment = async (
         reviewee: oid(revieweeId),
         repoName: teamData ? teamData.repoName || '' : '',
         repoUrl: 'https://github.com/gongg21/AddSubtract.git',
-        taReviewers: [],
         assignedBy: oid(userId),
         assignedAt: new Date(),
         status: 'Pending' as const,

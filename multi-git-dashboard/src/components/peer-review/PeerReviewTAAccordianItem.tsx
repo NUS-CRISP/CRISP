@@ -1,17 +1,11 @@
 import {
   Accordion,
-  Badge,
   Group,
   Stack,
   Text,
-  Button,
-  ActionIcon,
-  Select,
   Divider,
-  Center,
   ScrollArea,
 } from '@mantine/core';
-import { IconTrash } from '@tabler/icons-react';
 import { forwardRef, useState, useMemo } from 'react';
 import {
   PeerReviewAssignment,
@@ -24,15 +18,29 @@ import PeerReviewAssignments from './PeerReviewAssignments';
 import { useDisclosure } from '@mantine/hooks';
 
 interface PeerReviewTAAccordionItemProps {
-  teams: { value: string; TA: string; label: string }[];
+  teams: {
+    value: string;
+    TA: {
+      id: string;
+      name: string;
+    };
+    label: string;
+  }[];
   TAToAssignments: TAToAssignmentsMap;
-  maxReviewsPerReviewer: number;
   hasFacultyPermission: boolean;
-  addManualAssignment: (revieweeId: string, reviewerId: string) => void;
-  deleteManualAssignment: (revieweeId: string, reviewerId: string) => void;
+  addManualAssignment: (
+    revieweeId: string,
+    reviewerId: string,
+    isTA: boolean
+  ) => void;
+  deleteManualAssignment: (
+    revieweeId: string,
+    reviewerId: string,
+    isTA: boolean
+  ) => void;
 }
 
-const PeerReviewAccordionItem = forwardRef<
+const PeerReviewTAAccordionItem = forwardRef<
   HTMLDivElement,
   PeerReviewTAAccordionItemProps
 >(
@@ -40,7 +48,6 @@ const PeerReviewAccordionItem = forwardRef<
     {
       teams,
       TAToAssignments,
-      maxReviewsPerReviewer,
       hasFacultyPermission,
       addManualAssignment,
       deleteManualAssignment,
@@ -83,7 +90,7 @@ const PeerReviewAccordionItem = forwardRef<
         .filter(t => !assigned.has(t.value))
         .map(t => ({
           value: t.value,
-          label: t.TA === taId ? `(Same TA) ${t.label}` : t.label,
+          label: t.TA.id === taId ? `(Is Supervising) ${t.label}` : t.label,
         }));
     };
 
@@ -108,9 +115,11 @@ const PeerReviewAccordionItem = forwardRef<
                         <AddManualAssignmentBox
                           assignedCount={taAssignedCount[taId] ?? 0}
                           dropdownOptions={getTaOptions(taId)}
-                          maxReviewsPerReviewer={maxReviewsPerReviewer}
+                          maxReviewsPerReviewer={teams.length} // TAs have no limit
                           reviewerId={taId}
-                          addManualAssignment={addManualAssignment}
+                          addManualAssignment={(reviewee, reviewer) =>
+                            addManualAssignment(reviewee, reviewer, true)
+                          }
                         />
                       </Group>
                       <PeerReviewAssignments
@@ -143,7 +152,8 @@ const PeerReviewAccordionItem = forwardRef<
               onConfirm={() => {
                 deleteManualAssignment(
                   toBeDeletedReviewer!.reviewee._id,
-                  toBeDeletedReviewer!.reviewer.taId
+                  toBeDeletedReviewer!.reviewer.taId,
+                  true
                 );
                 closeDeleteModal();
               }}
@@ -157,4 +167,4 @@ const PeerReviewAccordionItem = forwardRef<
   }
 );
 
-export default PeerReviewAccordionItem;
+export default PeerReviewTAAccordionItem;

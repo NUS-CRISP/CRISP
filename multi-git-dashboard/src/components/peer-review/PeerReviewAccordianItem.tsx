@@ -24,13 +24,28 @@ import AddManualAssignmentBox from './AddManualAssignmentBox';
 
 interface PeerReviewAccordionItemProps {
   currentTeam: PeerReviewTeamDTO;
-  teams: { value: string; TA: string; label: string }[];
+  teams: {
+    value: string;
+    TA: {
+      id: string;
+      name: string;
+    };
+    label: string;
+  }[];
   assignmentOfTeam: PeerReviewAssignment | null;
   reviewerType: 'Individual' | 'Team';
   maxReviewsPerReviewer: number;
   hasFacultyPermission: boolean;
-  addManualAssignment: (revieweeId: string, reviewerId: string) => void;
-  deleteManualAssignment: (revieweeId: string, reviewerId: string) => void;
+  addManualAssignment: (
+    revieweeId: string,
+    reviewerId: string,
+    isTA: boolean
+  ) => void;
+  deleteManualAssignment: (
+    revieweeId: string,
+    reviewerId: string,
+    isTA: boolean
+  ) => void;
 }
 
 const PeerReviewAccordionItem = forwardRef<
@@ -82,7 +97,8 @@ const PeerReviewAccordionItem = forwardRef<
         )
         .map(t => ({
           value: t.value,
-          label: t.TA === currentTeam.TA ? `(Same TA) ${t.label}` : t.label,
+          label:
+            t.TA.id === currentTeam.TA.id ? `(Same TA) ${t.label}` : t.label,
         }));
     }, [teams, currentTeam.teamId, teamAssignedReviewees]);
 
@@ -141,7 +157,7 @@ const PeerReviewAccordionItem = forwardRef<
             <Group gap="sm">
               {currentTeam.TA && (
                 <Badge mr="sm" color="gray" variant="light">
-                  TA: {currentTeam.TA}
+                  TA: {currentTeam.TA.name}
                 </Badge>
               )}
             </Group>
@@ -171,7 +187,9 @@ const PeerReviewAccordionItem = forwardRef<
                         dropdownOptions={teamOptions}
                         maxReviewsPerReviewer={maxReviewsPerReviewer}
                         reviewerId={currentTeam.teamId}
-                        addManualAssignment={addManualAssignment}
+                        addManualAssignment={(reviewee, reviewer) =>
+                          addManualAssignment(reviewee, reviewer, false)
+                        }
                       />
                     )}
                   </Group>
@@ -200,7 +218,9 @@ const PeerReviewAccordionItem = forwardRef<
                             dropdownOptions={getMemberOptions(m.userId)}
                             maxReviewsPerReviewer={maxReviewsPerReviewer}
                             reviewerId={m.userId}
-                            addManualAssignment={addManualAssignment}
+                            addManualAssignment={(reviewee, reviewer) =>
+                              addManualAssignment(reviewee, reviewer, false)
+                            }
                           />
                         )}
                     </Group>
@@ -290,6 +310,7 @@ const PeerReviewAccordionItem = forwardRef<
                             key={`ta-${reviewer._id}`}
                             color="yellow"
                             variant="light"
+                            size="sm"
                           >
                             TA: {reviewer.name}
                           </Badge>
@@ -315,7 +336,8 @@ const PeerReviewAccordionItem = forwardRef<
                   toBeDeletedReviewer!.reviewee._id,
                   'teamId' in toBeDeletedReviewer!.reviewer
                     ? toBeDeletedReviewer!.reviewer.teamId
-                    : toBeDeletedReviewer!.reviewer.userId
+                    : toBeDeletedReviewer!.reviewer.userId,
+                  false
                 );
                 closeDeleteModal();
               }}

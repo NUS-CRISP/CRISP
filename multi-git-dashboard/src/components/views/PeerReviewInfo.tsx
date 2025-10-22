@@ -12,7 +12,7 @@ import {
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Status } from '@shared/types/util/Status';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import PeerReviewAccordionItem from '../peer-review/PeerReviewAccordianItem';
 import PeerReviewTAAccordianItem from '../peer-review/PeerReviewTAAccordianItem';
 import DeleteConfirmationModal from '../cards/Modals/DeleteConfirmationModal';
@@ -42,6 +42,29 @@ const NotificationTypeToColorMap: Record<NotificationType, string> = {
   [NotificationType.Success]: 'green',
   [NotificationType.Info]: 'blue',
   [NotificationType.Warning]: 'yellow',
+};
+
+const usePersistedAccordion = (key: string, validValues: string[]) => {
+  const [opened, setOpened] = useState<string[]>(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(key) || '[]');
+      return Array.isArray(saved)
+        ? saved.filter(v => validValues.includes(v))
+        : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem(key, JSON.stringify(opened));
+  }, [key, opened]);
+
+  useEffect(() => {
+    setOpened(prev => prev.filter(v => validValues.includes(v)));
+  }, [validValues]);
+
+  return [opened, setOpened] as const;
 };
 
 const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
@@ -76,6 +99,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
     { open: openAssignmentModal, close: closeAssignmentModal },
   ] = useDisclosure(false);
 
+  // Fetch Peer Review Info
   const fetchPeerReviewInfo = async () => {
     try {
       setStatus(Status.Loading);
@@ -101,6 +125,18 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
     setNotification(null);
   }, [courseId, peerReview._id]);
 
+  // Persist Accordion State
+  const values = useMemo(() => {
+    const items = peerReviewInfo?.teams.map(t => t.teamId) || [];
+    if (peerReview.TaAssignments) items.push('teaching-assistants');
+    return items;
+  }, [peerReviewInfo]);
+  const [opened, setOpened] = usePersistedAccordion(
+    'peer-review-accordion',
+    values
+  );
+
+  // Handlers
   const handleDeletePeerReview = async () => {
     try {
       const response = await fetch(baseApiRoute, {
@@ -163,16 +199,17 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
 
   const addManualAssignment = async (
     revieweeId: string,
-    reviewerId: string
+    reviewerId: string,
+    isTA: boolean = false
   ) => {
     try {
       setStatus(Status.Loading);
-      const response = await fetch(`${baseManualAssignApiRoute}`, {
+      const response = await fetch(baseManualAssignApiRoute, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ revieweeId, reviewerId }),
+        body: JSON.stringify({ revieweeId, reviewerId, isTA }),
       });
       if (!response.ok) {
         console.error('Error adding manual assignment:', response.statusText);
@@ -196,12 +233,14 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
 
   const deleteManualAssignment = async (
     revieweeId: string,
-    reviewerId: string
+    reviewerId: string,
+    isTA: boolean = false
   ) => {
     try {
       setStatus(Status.Loading);
       const response = await fetch(
-        `${baseManualAssignApiRoute}/${revieweeId}/${reviewerId}`,
+        `${baseManualAssignApiRoute}/${revieweeId}/${reviewerId}` +
+          `?isTA=${isTA}`,
         {
           method: 'DELETE',
         }
@@ -273,7 +312,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
               courseId={courseId}
               peerReview={peerReview}
               teamSets={teamSets}
-              onSetUpConfirmed={() => {
+              onSubmit={() => {
                 onUpdate();
                 fetchPeerReviewInfo();
                 closeSettingsForm();
@@ -317,9 +356,9 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
       ) : (
         <ScrollArea.Autosize mah={750} scrollbarSize={8}>
           <Accordion
-            defaultValue={
-              peerReviewInfo.teams ? [peerReviewInfo.teams[0].teamId] : []
-            }
+            defaultValue={['teaching-assistants']}
+            value={opened}
+            onChange={setOpened}
             multiple
             variant="separated"
           >
@@ -331,7 +370,6 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
                   label: `Team ${t.teamNumber}`,
                 }))}
                 TAToAssignments={peerReviewInfo.TAAssignments}
-                maxReviewsPerReviewer={peerReview.maxReviewsPerReviewer}
                 hasFacultyPermission={hasFacultyPermission}
                 addManualAssignment={addManualAssignment}
                 deleteManualAssignment={deleteManualAssignment}

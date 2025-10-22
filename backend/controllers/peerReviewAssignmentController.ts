@@ -59,11 +59,9 @@ export const postAssignPeerReviews = async (req: Request, res: Response) => {
       res.status(400).json({ message: error.message });
     } else {
       console.error('Error assigning peer reviews:', error);
-      res
-        .status(500)
-        .json({
-          message: (error as Error).message || 'Failed to assign peer reviews',
-        });
+      res.status(500).json({
+        message: (error as Error).message || 'Failed to assign peer reviews',
+      });
     }
   }
 };
@@ -74,7 +72,7 @@ export const postAddManualAssignment = async (req: Request, res: Response) => {
     CourseRole.Faculty,
   ]);
   const { courseId, peerReviewId } = req.params;
-  const { revieweeId, reviewerId } = req.body;
+  const { revieweeId, reviewerId, isTA } = req.body;
 
   try {
     await addManualAssignment(
@@ -82,7 +80,8 @@ export const postAddManualAssignment = async (req: Request, res: Response) => {
       peerReviewId,
       revieweeId,
       reviewerId,
-      userId
+      userId,
+      isTA
     );
     res
       .status(200)
@@ -92,12 +91,10 @@ export const postAddManualAssignment = async (req: Request, res: Response) => {
       res.status(404).json({ message: error.message });
     } else {
       console.error('Error assigning reviewer to reviewee:', error);
-      res
-        .status(500)
-        .json({
-          message:
-            (error as Error).message || 'Failed to assign reviewer to reviewee',
-        });
+      res.status(500).json({
+        message:
+          (error as Error).message || 'Failed to assign reviewer to reviewee',
+      });
     }
   }
 };
@@ -108,9 +105,10 @@ export const deleteManualAssignment = async (req: Request, res: Response) => {
     CourseRole.Faculty,
   ]);
   const { courseId, peerReviewId, revieweeId, reviewerId } = req.params;
+  const isTA = req.query.isTA === 'true';
 
   try {
-    await removeManualAssignment(peerReviewId, revieweeId, reviewerId);
+    await removeManualAssignment(peerReviewId, revieweeId, reviewerId, isTA);
     res
       .status(200)
       .json({ message: 'Reviewer removed from reviewee successfully' });
@@ -119,13 +117,10 @@ export const deleteManualAssignment = async (req: Request, res: Response) => {
       res.status(404).json({ message: error.message });
     } else {
       console.error('Error deleting reviewer from reviewee:', error);
-      res
-        .status(500)
-        .json({
-          message:
-            (error as Error).message ||
-            'Failed to delete reviewer from reviewee',
-        });
+      res.status(500).json({
+        message:
+          (error as Error).message || 'Failed to delete reviewer from reviewee',
+      });
     }
   }
 };

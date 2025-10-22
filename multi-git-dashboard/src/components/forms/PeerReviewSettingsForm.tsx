@@ -14,14 +14,15 @@ import {
 import { PeerReview, ReviewerType } from '@shared/types/PeerReview';
 import { TeamSet } from '@shared/types/TeamSet';
 import { useForm } from '@mantine/form';
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import { showNotification } from '@mantine/notifications';
+import { useDisclosure } from '@mantine/hooks';
 
 interface PeerReviewSettingsFormProps {
   courseId: string | string[] | undefined;
   peerReview: PeerReview | null;
   teamSets: TeamSet[];
-  onSetUpConfirmed: () => void;
+  onSubmit: () => void;
   onClose: () => void;
 }
 
@@ -41,12 +42,13 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
   courseId,
   peerReview,
   teamSets,
-  onSetUpConfirmed,
+  onSubmit,
   onClose,
 }) => {
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [openConfirmModal, setOpenConfirmModal] = useState(false);
+  const [
+    openedConfirmForm,
+    { open: openConfirmForm, close: closeConfirmForm },
+  ] = useDisclosure(false);
 
   // API Routes
   const createApiRoute = `/api/peer-review/${courseId}/peer-reviews`;
@@ -161,8 +163,6 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
   }, [peerReview]);
 
   const handleSubmit = async () => {
-    setError(null);
-    setLoading(true);
     try {
       const response = await fetch(
         isEditing ? updatePeerReviewRoute : createApiRoute,
@@ -179,15 +179,22 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
       }
       if (!isEditing) form.reset();
       originalValuesRef.current = normalize(form.values);
-      setOpenConfirmModal(false);
-      onSetUpConfirmed();
+      closeConfirmForm();
+      onSubmit();
+      showNotification({
+        title: `Peer Review ${isEditing ? 'Updated' : 'Created'}`,
+        message: `Your peer review has been successfully ${isEditing ? 'updated' : 'created'}.`,
+        color: 'green',
+      });
     } catch (error) {
       console.error('Error submitting peer review settings:', error);
-      setError(
-        'Failed to submit peer review settings: ' + (error as Error).message
-      );
-    } finally {
-      setLoading(false);
+      showNotification({
+        title: 'Error',
+        message:
+          (error as Error).message ||
+          `Failed to ${isEditing ? 'update' : 'create'} peer review.`,
+        color: 'red',
+      });
     }
   };
 
@@ -195,7 +202,7 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
     if (!isEditing) return handleSubmit();
     const originalValues = originalValuesRef.current;
     if (!originalValues || !checkIdentical(originalValues, form.values)) {
-      setOpenConfirmModal(true);
+      openConfirmForm();
     } else {
       showNotification({
         title: 'No Changes Detected',
@@ -205,21 +212,8 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
     }
   };
 
-  if (loading) {
-    return (
-      <Center mt="md">
-        <Loader size="sm" />
-      </Center>
-    );
-  }
-
   return (
     <>
-      {error && (
-        <Notification title="Error" color="red" onClose={() => setError(null)}>
-          {error}
-        </Notification>
-      )}
       <form onSubmit={form.onSubmit(confirmSubmit)}>
         <TextInput
           withAsterisk
@@ -375,8 +369,8 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
         </Group>
 
         <Modal
-          opened={openConfirmModal}
-          onClose={() => setOpenConfirmModal(false)}
+          opened={openedConfirmForm}
+          onClose={closeConfirmForm}
           title="Confirm Update?"
           centered
         >
@@ -388,10 +382,7 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
             <Button color="blue" onClick={handleSubmit}>
               Confirm Update
             </Button>
-            <Button
-              variant="default"
-              onClick={() => setOpenConfirmModal(false)}
-            >
+            <Button variant="default" onClick={closeConfirmForm}>
               Cancel
             </Button>
           </Group>
