@@ -213,182 +213,176 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
   };
 
   return (
-    <>
-      <form onSubmit={form.onSubmit(confirmSubmit)}>
-        <TextInput
-          withAsterisk
-          label="Peer Review Title"
-          {...form.getInputProps('assessmentName')}
-        />
+    <form onSubmit={form.onSubmit(confirmSubmit)}>
+      <TextInput
+        withAsterisk
+        label="Peer Review Title"
+        {...form.getInputProps('assessmentName')}
+      />
 
-        <Textarea
-          withAsterisk
-          label="Description"
-          {...form.getInputProps('description')}
-        />
+      <Textarea
+        withAsterisk
+        label="Description"
+        {...form.getInputProps('description')}
+      />
 
-        <TextInput
-          withAsterisk
-          label="Start Date"
-          {...form.getInputProps('startDate')}
-          placeholder="YYYY-MM-DD"
-          type="date"
-        />
+      <TextInput
+        withAsterisk
+        label="Start Date"
+        {...form.getInputProps('startDate')}
+        placeholder="YYYY-MM-DD"
+        type="date"
+      />
 
-        <TextInput
-          withAsterisk
-          label="End Date"
-          {...form.getInputProps('endDate')}
-          placeholder="YYYY-MM-DD"
-          type="date"
-        />
+      <TextInput
+        withAsterisk
+        label="End Date"
+        {...form.getInputProps('endDate')}
+        placeholder="YYYY-MM-DD"
+        type="date"
+      />
 
-        <Text
-          style={{
-            fontWeight: '600',
-            fontSize: '14px',
-            marginTop: 16,
-            marginBottom: 8,
-          }}
+      <Text
+        style={{
+          fontWeight: '600',
+          fontSize: '14px',
+          marginTop: 16,
+          marginBottom: 8,
+        }}
+      >
+        Team Set for this Peer Review
+      </Text>
+      <Select
+        placeholder="Select a Team Set"
+        data={teamSets.map(ts => ({ value: ts._id, label: ts.name }))}
+        value={form.values.teamSetId}
+        onChange={val => form.setFieldValue('teamSetId', val || '')}
+        searchable
+        nothingFoundMessage="No results found"
+        error={form.errors.teamSetId}
+      />
+
+      <Text
+        style={{
+          fontWeight: '600',
+          fontSize: '14px',
+          marginTop: 16,
+          marginBottom: 8,
+        }}
+      >
+        Reviewer Type
+      </Text>
+      <div
+        style={{
+          marginBottom: '16px',
+          display: 'flex',
+          flexDirection: 'row',
+          gap: '15px',
+        }}
+      >
+        <Radio.Group
+          value={form.values.reviewerType}
+          onChange={value =>
+            form.setFieldValue('reviewerType', value as ReviewerType)
+          }
         >
-          Team Set for this Peer Review
+          <div style={{ display: 'flex', gap: '20px' }}>
+            <Radio
+              label="Team"
+              value="Team"
+              styles={{ radio: { cursor: 'pointer' } }}
+            />
+            <Radio
+              label="Individual"
+              value="Individual"
+              styles={{ radio: { cursor: 'pointer' } }}
+            />
+          </div>
+        </Radio.Group>
+      </div>
+
+      <Text
+        style={{
+          fontWeight: '600',
+          fontSize: '14px',
+          marginTop: 16,
+          marginBottom: 8,
+        }}
+      >
+        Assign Peer Reviews to Teaching Assistants?
+      </Text>
+      <div
+        style={{
+          marginBottom: '16px',
+          display: 'flex',
+          flexDirection: 'row',
+          gap: '15px',
+        }}
+      >
+        <Radio.Group
+          value={form.values.TaAssignments ? 'yes' : 'no'}
+          onChange={val => form.setFieldValue('TaAssignments', val === 'yes')}
+        >
+          <div style={{ display: 'flex', gap: '32px' }}>
+            <Radio
+              label="Yes"
+              value="yes"
+              styles={{ radio: { cursor: 'pointer' } }}
+            />
+            <Radio
+              label="No"
+              value="no"
+              styles={{ radio: { cursor: 'pointer' } }}
+            />
+          </div>
+        </Radio.Group>
+      </div>
+
+      <TextInput
+        withAsterisk
+        label="Minimum Reviews per Reviewer"
+        {...form.getInputProps('minReviews')}
+        placeholder="Enter min reviews"
+        type="number"
+      />
+
+      <TextInput
+        withAsterisk
+        label="Maximum Reviews per Reviewer"
+        {...form.getInputProps('maxReviews')}
+        placeholder="Enter max reviews"
+        type="number"
+      />
+
+      <Group justify="flex-start" mt="sm" gap="xs">
+        <Button type="submit" color={isEditing ? 'green' : 'blue'}>
+          {isEditing ? 'Update Settings' : 'Create Peer Review'}
+        </Button>
+        <Button variant="default" onClick={onClose}>
+          Cancel
+        </Button>
+      </Group>
+
+      <Modal
+        opened={openedConfirmForm}
+        onClose={closeConfirmForm}
+        title="Confirm Update?"
+        centered
+      >
+        <Text size="sm" c="dimmed" mb="md">
+          Are you sure you want to update the peer review settings? <br />
+          Existing assignments and configurations may be affected.
         </Text>
-        <Select
-          placeholder="Select a Team Set"
-          data={teamSets.map(ts => ({ value: ts._id, label: ts.name }))}
-          value={form.values.teamSetId}
-          onChange={val => form.setFieldValue('teamSetId', val || '')}
-          searchable
-          nothingFoundMessage="No results found"
-          error={form.errors.teamSetId}
-        />
-
-        <Text
-          style={{
-            fontWeight: '600',
-            fontSize: '14px',
-            marginTop: 16,
-            marginBottom: 8,
-          }}
-        >
-          Reviewer Type
-        </Text>
-        <div
-          style={{
-            marginBottom: '16px',
-            display: 'flex',
-            flexDirection: 'row',
-            gap: '15px',
-          }}
-        >
-          <Radio.Group
-            value={form.values.reviewerType}
-            onChange={value =>
-              form.setFieldValue('reviewerType', value as ReviewerType)
-            }
-          >
-            <div style={{ display: 'flex', gap: '20px' }}>
-              <Radio
-                label="Team"
-                value="Team"
-                styles={{ radio: { cursor: 'pointer' } }}
-              />
-              <Radio
-                label="Individual"
-                value="Individual"
-                styles={{ radio: { cursor: 'pointer' } }}
-              />
-            </div>
-          </Radio.Group>
-        </div>
-
-        <Text
-          style={{
-            fontWeight: '600',
-            fontSize: '14px',
-            marginTop: 16,
-            marginBottom: 8,
-          }}
-        >
-          Assign Peer Reviews to Teaching Assistants?
-        </Text>
-        <div
-          style={{
-            marginBottom: '16px',
-            display: 'flex',
-            flexDirection: 'row',
-            gap: '15px',
-          }}
-        >
-          <Radio.Group
-            value={form.values.TaAssignments ? 'yes' : 'no'}
-            onChange={val => form.setFieldValue('TaAssignments', val === 'yes')}
-          >
-            <div style={{ display: 'flex', gap: '32px' }}>
-              <Radio
-                label="Yes"
-                value="yes"
-                styles={{ radio: { cursor: 'pointer' } }}
-              />
-              <Radio
-                label="No"
-                value="no"
-                styles={{ radio: { cursor: 'pointer' } }}
-              />
-            </div>
-          </Radio.Group>
-        </div>
-
-        <TextInput
-          withAsterisk
-          label="Minimum Reviews per Reviewer"
-          {...form.getInputProps('minReviews')}
-          placeholder="Enter min reviews"
-          type="number"
-        />
-
-        <TextInput
-          withAsterisk
-          label="Maximum Reviews per Reviewer"
-          {...form.getInputProps('maxReviews')}
-          placeholder="Enter max reviews"
-          type="number"
-        />
-
-        <Group justify="flex-start" mt="sm" gap="xs">
-          <Button
-            type="submit"
-            color={isEditing ? 'green' : 'blue'}
-            variant={isEditing ? '' : ''}
-          >
-            {isEditing ? 'Update Settings' : 'Create Peer Review'}
+        <Group justify="flex-end">
+          <Button color="blue" onClick={handleSubmit}>
+            Confirm Update
           </Button>
-          <Button variant="default" onClick={onClose}>
+          <Button variant="default" onClick={closeConfirmForm}>
             Cancel
           </Button>
         </Group>
-
-        <Modal
-          opened={openedConfirmForm}
-          onClose={closeConfirmForm}
-          title="Confirm Update?"
-          centered
-        >
-          <Text size="sm" c="dimmed" mb="md">
-            Are you sure you want to update the peer review settings? <br />
-            Existing assignments and configurations may be affected.
-          </Text>
-          <Group justify="flex-end">
-            <Button color="blue" onClick={handleSubmit}>
-              Confirm Update
-            </Button>
-            <Button variant="default" onClick={closeConfirmForm}>
-              Cancel
-            </Button>
-          </Group>
-        </Modal>
-      </form>
-    </>
+      </Modal>
+    </form>
   );
 };
 

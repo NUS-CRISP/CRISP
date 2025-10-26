@@ -8,32 +8,46 @@ import {
   Button,
   Group,
   Select,
+  Modal,
+  Switch,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
+import { useDisclosure } from '@mantine/hooks';
+import { showNotification } from '@mantine/notifications';
 
 interface PeerReviewAssignmentFormProps {
+  courseId: string;
+  peerReviewId: string;
   minReviewsPerReviewer: number;
   maxReviewsPerReviewer: number;
-  onAssign: (numberOfReviews: number, allowSameTa: boolean) => void;
+  onAssign: () => void;
   onClose: () => void;
 }
 
 const PeerReviewAssignmentForm: React.FC<PeerReviewAssignmentFormProps> = ({
+  courseId,
+  peerReviewId,
   minReviewsPerReviewer,
   maxReviewsPerReviewer,
   onAssign,
   onClose,
 }) => {
-  const [error, setError] = useState<string | null>(null);
+  const [
+    openedConfirmForm,
+    { open: openConfirmForm, close: closeConfirmForm },
+  ] = useDisclosure(false);
+
+  const assignPeerReviewsApiRoute = `/api/peer-review/${courseId}/${peerReviewId}/assign-peer-reviews`;
   const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   const form = useForm({
     initialValues: {
-      numberOfReviews: Math.max(minReviewsPerReviewer, 1),
-      allowSameTa: false,
+      reviewsPerReviewer: Math.max(minReviewsPerReviewer, 1),
+      allowSameTA: false,
     },
     validate: {
-      numberOfReviews: value => {
+      reviewsPerReviewer: value => {
         const num = Number(value);
         if (
           isNaN(num) ||
@@ -56,14 +70,36 @@ const PeerReviewAssignmentForm: React.FC<PeerReviewAssignmentFormProps> = ({
     });
   };
 
-  const handleSubmit = () => {
-    setLoading(true);
-    setError(null);
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(assignPeerReviewsApiRoute, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form.values),
+      });
 
-    onAssign(form.values.numberOfReviews, form.values.allowSameTa);
-
-    setLoading(false);
-    onClose();
+      const data = await response.json();
+      closeConfirmForm();
+      if (!response.ok) {
+        console.error('Failed to assign peer reviews: ', response.statusText);
+        setError(data.message || 'Something went wrong');
+        return;
+      }
+      onAssign();
+      showNotification({
+        title: 'Peer Reviews Assigned',
+        message: 'Peer reviews assigned successfully.',
+        color: 'green',
+      });
+    } catch (error) {
+      console.error('Error assigning peer reviews: ', error);
+      setError((error as Error).message || 'Something went wrong');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
@@ -77,51 +113,27 @@ const PeerReviewAssignmentForm: React.FC<PeerReviewAssignmentFormProps> = ({
   return (
     <>
       {error && (
-        <Notification title="Error" color="red" onClose={() => setError(null)}>
+        <Notification
+          title="Failed to assign peer reviews"
+          color="red"
+          onClose={() => setError(null)}
+          mb="md"
+        >
           {error}
         </Notification>
       )}
-      <form
-        onSubmit={form.onSubmit(() =>
-          onAssign(form.values.numberOfReviews, form.values.allowSameTa)
-        )}
-      >
-        <Text
-          style={{
-            fontWeight: '600',
-            fontSize: '14px',
-            marginTop: 16,
-            marginBottom: 8,
-          }}
-        >
-          Allow Reviewee and Reviewer to have the same TA?
-        </Text>
-        <div
-          style={{
-            marginBottom: '16px',
-            display: 'flex',
-            flexDirection: 'row',
-            gap: '15px',
-          }}
-        >
-          <Radio.Group
-            value={form.values.allowSameTa ? 'yes' : 'no'}
-            onChange={val => form.setFieldValue('allowSameTa', val === 'yes')}
-          >
-            <div style={{ display: 'flex', gap: '32px' }}>
-              <Radio
-                label="Yes"
-                value="yes"
-                styles={{ radio: { cursor: 'pointer' } }}
-              />
-              <Radio
-                label="No"
-                value="no"
-                styles={{ radio: { cursor: 'pointer' } }}
-              />
-            </div>
-          </Radio.Group>
-        </div>
+      <form onSubmit={form.onSubmit(openConfirmForm)}>
+        <Group>
+          <Text fw={600} fz="14px">
+            Allow Same TA for Reviewee and Reviewer?
+          </Text>
+          <Switch
+            checked={form.values.allowSameTA}
+            onChange={e =>
+              form.setFieldValue('allowSameTA', e.currentTarget.checked)
+            }
+          />
+        </Group>
 
         <Text
           style={{
@@ -136,7 +148,7 @@ const PeerReviewAssignmentForm: React.FC<PeerReviewAssignmentFormProps> = ({
         <Select
           placeholder="Select a Team Set"
           data={rangeOptions(minReviewsPerReviewer, maxReviewsPerReviewer)}
-          value={form.values.numberOfReviews.toString()}
+          value={form.values.reviewsPerReviewer.toString()}
           onChange={val => form.setFieldValue('numberOfReviews', Number(val))}
           searchable
           error={form.errors.numberOfReviews}
@@ -146,13 +158,34 @@ const PeerReviewAssignmentForm: React.FC<PeerReviewAssignmentFormProps> = ({
         </Text>
 
         <Group justify="flex-end" gap="xs">
-          <Button color="yellow" onClick={handleSubmit}>
-            Confirm Assign
+          <Button type="submit" color="yellow">
+            Assign
           </Button>
           <Button variant="default" onClick={onClose}>
             Cancel
           </Button>
         </Group>
+
+        <Modal
+          opened={openedConfirmForm}
+          onClose={closeConfirmForm}
+          title="Confirm Assign?"
+          centered
+        >
+          <Text size="sm" c="dimmed" mb="md">
+            Are you sure you want to assign peer reviews? <br />
+            Existing assignments (if any) will be deleted and new assignments
+            will be made.
+          </Text>
+          <Group justify="flex-end">
+            <Button color="blue" onClick={handleSubmit}>
+              Confirm Assign
+            </Button>
+            <Button variant="default" onClick={closeConfirmForm}>
+              Cancel
+            </Button>
+          </Group>
+        </Modal>
       </form>
     </>
   );

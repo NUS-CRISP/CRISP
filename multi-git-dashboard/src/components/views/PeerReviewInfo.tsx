@@ -75,7 +75,6 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
   onUpdate,
 }) => {
   const baseApiRoute = `/api/peer-review/${courseId}/${peerReview._id}`;
-  const assignPeerReviewsApiRoute = `${baseApiRoute}/assign-peer-reviews`;
   const baseManualAssignApiRoute = `${baseApiRoute}/manual-assign`;
 
   const [status, setStatus] = useState<Status>(Status.Idle);
@@ -95,8 +94,8 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
     { open: openDeleteModal, close: closeDeleteModal },
   ] = useDisclosure(false);
   const [
-    openedAssignmentModal,
-    { open: openAssignmentModal, close: closeAssignmentModal },
+    openedAssignmentForm,
+    { open: openAssignmentForm, close: closeAssignmentForm },
   ] = useDisclosure(false);
 
   // Fetch Peer Review Info
@@ -156,47 +155,6 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
     }
   };
 
-  const handleAssignPeerReviews = async (
-    numberOfReviews: number,
-    allowSameTa: boolean
-  ) => {
-    try {
-      setStatus(Status.Loading);
-      const response = await fetch(assignPeerReviewsApiRoute, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          reviewsPerReviewer: numberOfReviews,
-          allowSameTA: allowSameTa,
-        }),
-      });
-
-      if (!response.ok) {
-        console.error('Failed to assign peer reviews: ', response.statusText);
-        setNotification({
-          type: NotificationType.Error,
-          value: response.statusText,
-        });
-        return;
-      }
-      fetchPeerReviewInfo(); // Refresh the peer review info to reflect new assignments
-      setNotification({
-        type: NotificationType.Success,
-        value: 'Peer reviews assigned successfully.',
-      });
-    } catch (error) {
-      console.error('Error assigning peer reviews: ', error);
-      setNotification({
-        type: NotificationType.Error,
-        value: 'Error assigning peer reviews: ' + (error as Error).message,
-      });
-    } finally {
-      setStatus(Status.Idle);
-    }
-  };
-
   const addManualAssignment = async (
     revieweeId: string,
     reviewerId: string,
@@ -211,20 +169,22 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
         },
         body: JSON.stringify({ revieweeId, reviewerId, isTA }),
       });
+
+      const data = await response.json();
       if (!response.ok) {
-        console.error('Error adding manual assignment:', response.statusText);
+        console.error('Failed to add manual assignment:', response.statusText);
         setNotification({
           type: NotificationType.Error,
-          value: 'Error adding manual assignment: ' + response.statusText,
+          value: 'Failed to add manual assignment: ' + data.message,
         });
         return;
       }
       fetchPeerReviewInfo(); // Refresh the peer review info to reflect new assignments
     } catch (error) {
-      console.error('Error adding manual assignment:', error);
+      console.error('Failed to add manual assignment:', error);
       setNotification({
         type: NotificationType.Error,
-        value: 'Error adding manual assignment: ' + (error as Error).message,
+        value: 'Failed to add manual assignment: ' + (error as Error).message,
       });
     } finally {
       setStatus(Status.Idle);
@@ -245,13 +205,18 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
           method: 'DELETE',
         }
       );
+      const data = await response.json();
       if (!response.ok) {
-        console.error('Error deleting manual assignment:', response.statusText);
+        console.error('Failed to delete manual assignment:', data.message);
+        setNotification({
+          type: NotificationType.Error,
+          value: 'Failed to delete manual assignment: ' + data.message,
+        });
         return;
       }
       fetchPeerReviewInfo(); // Refresh the peer review info to reflect new assignments
     } catch (error) {
-      console.error('Error deleting manual assignment:', error);
+      console.error('Failed to delete manual assignment:', error);
     } finally {
       setStatus(Status.Idle);
     }
@@ -294,11 +259,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
             >
               Delete Peer Review
             </Button>
-            <Button
-              variant="light"
-              color="yellow"
-              onClick={openAssignmentModal}
-            >
+            <Button variant="light" color="yellow" onClick={openAssignmentForm}>
               Assign All Peer Reviews
             </Button>
           </Group>
@@ -333,16 +294,22 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
             message={`Are you sure you want to delete this ${peerReview.status} Peer Review?`}
           />
           <Modal
-            opened={openedAssignmentModal}
-            onClose={closeAssignmentModal}
+            opened={openedAssignmentForm}
+            onClose={closeAssignmentForm}
             title="Assign Peer Reviews"
             centered
           >
             <PeerReviewAssignmentForm
+              courseId={courseId}
+              peerReviewId={peerReview._id}
               minReviewsPerReviewer={peerReview.minReviewsPerReviewer}
               maxReviewsPerReviewer={peerReview.maxReviewsPerReviewer}
-              onAssign={handleAssignPeerReviews}
-              onClose={closeAssignmentModal}
+              onAssign={() => {
+                onUpdate();
+                fetchPeerReviewInfo();
+                closeAssignmentForm();
+              }}
+              onClose={closeAssignmentForm}
             />
           </Modal>
         </>
