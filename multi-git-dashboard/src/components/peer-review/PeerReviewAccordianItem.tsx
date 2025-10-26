@@ -253,7 +253,7 @@ const PeerReviewAccordionItem = forwardRef<
                     variant="light"
                     color="gray"
                   >
-                    Go to Team Repository
+                    Go to Team's Github Repository
                   </Button>
                   {hasFacultyPermission && (
                     <Button
