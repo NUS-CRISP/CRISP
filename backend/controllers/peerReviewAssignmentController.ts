@@ -40,7 +40,7 @@ export const postAssignPeerReviews = async (req: Request, res: Response) => {
     CourseRole.Faculty,
   ]);
   const { courseId, peerReviewId } = req.params;
-  const { reviewsPerReviewer, allowSameTA } = req.body;
+  const { reviewsPerReviewer, allowSameTA, groupsToAssign } = req.body;
 
   try {
     await assignPeerReviews(
@@ -48,7 +48,8 @@ export const postAssignPeerReviews = async (req: Request, res: Response) => {
       peerReviewId,
       userId,
       reviewsPerReviewer,
-      allowSameTA
+      allowSameTA,
+      groupsToAssign
     );
     res.status(200).json({ message: 'Peer reviews assigned successfully' });
   } catch (error) {

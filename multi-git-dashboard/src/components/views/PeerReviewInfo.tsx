@@ -302,6 +302,8 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
             <PeerReviewAssignmentForm
               courseId={courseId}
               peerReviewId={peerReview._id}
+              reviewerType={peerReview.reviewerType}
+              taAssignmentsEnabled={!!peerReview.TaAssignments}
               minReviewsPerReviewer={peerReview.minReviewsPerReviewer}
               maxReviewsPerReviewer={peerReview.maxReviewsPerReviewer}
               onAssign={() => {

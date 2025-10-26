@@ -77,6 +77,15 @@ const PeerReviewAccordionItem = forwardRef<
       reviewer: PeerReviewTeamDTO | PeerReviewTeamMemberDTO;
     } | null>(null);
 
+    // Get values for display
+    const numberOfMembers = currentTeam.members.length;
+    const numberOfTeamAssignments = currentTeam.assignedReviewsToTeam.length;
+    const numberOfReviewers = assignmentOfTeam
+      ? assignmentOfTeam.studentReviewers.length +
+        assignmentOfTeam.teamReviewers.length +
+        assignmentOfTeam.taReviewers.length
+      : 0;
+
     // Get dropdown options for teams excluding own team and already assigned teams
     const teamAssignedReviewees = useMemo(
       () =>
@@ -178,8 +187,7 @@ const PeerReviewAccordionItem = forwardRef<
                 <>
                   <Group justify="space-between">
                     <Text fw={600}>
-                      Team Assignments (
-                      {currentTeam.assignedReviewsToTeam.length})
+                      Team Assignments ({numberOfTeamAssignments})
                     </Text>
                     {hasFacultyPermission && (
                       <AddManualAssignmentBox
@@ -204,7 +212,7 @@ const PeerReviewAccordionItem = forwardRef<
                 </>
               )}
               <Stack gap={4}>
-                <Text fw={600}>Members ({currentTeam.members.length})</Text>
+                <Text fw={600}>Members ({numberOfMembers})</Text>
                 <Divider />
                 {currentTeam.members.map(m => (
                   <ScrollArea key={m.userId}>
@@ -277,13 +285,7 @@ const PeerReviewAccordionItem = forwardRef<
               {hasFacultyPermission && (
                 <Stack gap={4}>
                   <Text fw={600} size="md">
-                    Reviewers for Team (
-                    {!assignmentOfTeam
-                      ? 0
-                      : reviewerType === 'Individual'
-                        ? assignmentOfTeam.studentReviewers.length
-                        : assignmentOfTeam.teamReviewers.length}
-                    )
+                    Reviewers for Team ({numberOfReviewers})
                   </Text>
                   <Divider />
 

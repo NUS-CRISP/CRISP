@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   Notification,
   Text,
-  Radio,
   Center,
   Loader,
   Button,
@@ -10,6 +9,7 @@ import {
   Select,
   Modal,
   Switch,
+  Checkbox,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
@@ -18,6 +18,8 @@ import { showNotification } from '@mantine/notifications';
 interface PeerReviewAssignmentFormProps {
   courseId: string;
   peerReviewId: string;
+  reviewerType: 'Individual' | 'Team';
+  taAssignmentsEnabled: boolean;
   minReviewsPerReviewer: number;
   maxReviewsPerReviewer: number;
   onAssign: () => void;
@@ -27,6 +29,8 @@ interface PeerReviewAssignmentFormProps {
 const PeerReviewAssignmentForm: React.FC<PeerReviewAssignmentFormProps> = ({
   courseId,
   peerReviewId,
+  reviewerType,
+  taAssignmentsEnabled,
   minReviewsPerReviewer,
   maxReviewsPerReviewer,
   onAssign,
@@ -45,6 +49,7 @@ const PeerReviewAssignmentForm: React.FC<PeerReviewAssignmentFormProps> = ({
     initialValues: {
       reviewsPerReviewer: Math.max(minReviewsPerReviewer, 1),
       allowSameTA: false,
+      groupsToAssign: ['default'],
     },
     validate: {
       reviewsPerReviewer: value => {
@@ -58,6 +63,12 @@ const PeerReviewAssignmentForm: React.FC<PeerReviewAssignmentFormProps> = ({
         } else if (num > maxReviewsPerReviewer) {
           return `Number of reviews cannot exceed ${maxReviewsPerReviewer}`;
         }
+      },
+      groupsToAssign: value => {
+        if (value.length === 0) {
+          return 'At least one group must be selected to assign reviews';
+        }
+        return null;
       },
     },
   });
@@ -123,6 +134,33 @@ const PeerReviewAssignmentForm: React.FC<PeerReviewAssignmentFormProps> = ({
         </Notification>
       )}
       <form onSubmit={form.onSubmit(openConfirmForm)}>
+        <Text fw={600} fz="14px">
+          Select Groups to Assign:
+        </Text>
+        <Checkbox.Group
+          mb="md"
+          value={form.values.groupsToAssign}
+          onChange={vals => form.setFieldValue('groupsToAssign', vals)}
+          error={form.errors.groupsToAssign}
+        >
+          <Checkbox
+            my="xs"
+            value="default"
+            label={reviewerType == 'Individual' ? 'Students' : 'Teams'}
+          />
+          <Checkbox
+            my="xs"
+            value="assignTAs"
+            label="TAs"
+            disabled={!taAssignmentsEnabled}
+          />
+          {!taAssignmentsEnabled && (
+            <Text size="xs" c="dimmed">
+              *TA Assignments are not enabled for this Peer Review.
+            </Text>
+          )}
+        </Checkbox.Group>
+
         <Group>
           <Text fw={600} fz="14px">
             Allow Same TA for Reviewee and Reviewer?
@@ -135,23 +173,18 @@ const PeerReviewAssignmentForm: React.FC<PeerReviewAssignmentFormProps> = ({
           />
         </Group>
 
-        <Text
-          style={{
-            fontWeight: '600',
-            fontSize: '14px',
-            marginTop: 16,
-            marginBottom: 8,
-          }}
-        >
+        <Text fw={600} fz="14px" mt="16px" mb="8px">
           Number of Reviews to Assign
         </Text>
         <Select
-          placeholder="Select a Team Set"
+          placeholder="Select number of reviews to assign per reviewer"
           data={rangeOptions(minReviewsPerReviewer, maxReviewsPerReviewer)}
           value={form.values.reviewsPerReviewer.toString()}
-          onChange={val => form.setFieldValue('numberOfReviews', Number(val))}
+          onChange={val =>
+            form.setFieldValue('reviewsPerReviewer', Number(val))
+          }
           searchable
-          error={form.errors.numberOfReviews}
+          error={form.errors.reviewsPerReviewer}
         />
         <Text size="xs" c="dimmed" mt="xs" mb="md">
           *You can update the maximum number of reviews in the settings.
@@ -175,7 +208,7 @@ const PeerReviewAssignmentForm: React.FC<PeerReviewAssignmentFormProps> = ({
           <Text size="sm" c="dimmed" mb="md">
             Are you sure you want to assign peer reviews? <br />
             Existing assignments (if any) will be deleted and new assignments
-            will be made.
+            will be made. <strong>This action cannot be undone.</strong>
           </Text>
           <Group justify="flex-end">
             <Button color="blue" onClick={handleSubmit}>

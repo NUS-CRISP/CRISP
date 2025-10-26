@@ -98,16 +98,21 @@ export const assignPeerReviews = async (
   peerReviewId: string,
   userId: string,
   reviewsPerReviewer: number,
-  allowSameTA: boolean
+  allowSameTA: boolean,
+  groupsToAssign: string[]
 ) => {
   if (!Number.isInteger(reviewsPerReviewer) || reviewsPerReviewer <= 0) {
     throw new BadRequestError('reviewsPerReviewer must be a positive integer');
+  } else if (!Array.isArray(groupsToAssign) || groupsToAssign.length === 0) {
+    throw new BadRequestError('At least one group must be selected to assign');
   }
 
   const peerReview = await getPeerReviewById(peerReviewId);
   const reviewerType = peerReview.reviewerType;
   const taAssignmentsEnabled = peerReview.TaAssignments;
   const teamSetId = peerReview.teamSetId;
+  const assignDefault = groupsToAssign.includes('default');
+  const assignTAs = groupsToAssign.includes('assignTAs');
 
   // Prepare data structures
   const {
@@ -137,7 +142,13 @@ export const assignPeerReviews = async (
     teamReviewers,
     taReviewers,
     taHomeTeams,
-  } = buildReviewerPools(prTeams, prTeamIds, taAssignmentsEnabled);
+  } = buildReviewerPools(
+    prTeams,
+    prTeamIds,
+    taAssignmentsEnabled,
+    assignDefault,
+    assignTAs
+  );
 
   console.log('studentReviewers:', studentReviewers);
   console.log('teamReviewers:', teamReviewers);
@@ -162,7 +173,9 @@ export const assignPeerReviews = async (
     prTeamIds,
     allowSameTA,
     reviewsPerReviewer,
-    taAssignmentsEnabled
+    taAssignmentsEnabled,
+    assignDefault,
+    assignTAs
   );
 
   console.log('studentToEligibleRevieweesMap:', studentToEligibleRevieweesMap);
@@ -181,7 +194,9 @@ export const assignPeerReviews = async (
       teamToEligibleRevieweesMap,
       taToEligibleRevieweesMap,
       reviewsPerReviewer,
-      taAssignmentsEnabled
+      taAssignmentsEnabled,
+      assignDefault,
+      assignTAs
     );
 
   console.log('assignedStudentsForTeam:', assignedStudentsForTeam);
@@ -195,6 +210,8 @@ export const assignPeerReviews = async (
     userId,
     reviewerType,
     taAssignmentsEnabled,
+    assignDefault,
+    assignTAs,
     prTeamIds,
     getTeamRepo,
     assignedStudentsForTeam,
@@ -723,29 +740,35 @@ const prepareData = async (courseId: string, teamSetId: string) => {
 const buildReviewerPools = (
   prTeams: NormalizedTeam[],
   prTeamIds: string[],
-  taAssignmentsEnabled: boolean
+  taAssignmentsEnabled: boolean,
+  assignDefault: boolean,
+  assignTAs: boolean
 ) => {
   // Students Reviewers Pool
   const studentReviewers: string[] = [];
   const studentHomeTeam = new Map<string, string>(); // userId -> teamId
-  for (const team of prTeams) {
-    const tid = team.id;
-    for (const memberId of team.memberIds ?? []) {
-      const mid = memberId;
-      studentReviewers.push(mid);
-      studentHomeTeam.set(mid, tid);
-    }
-  }
 
   // Team Reviewers Pool
-  const teamReviewers: string[] = [...prTeamIds];
+  let teamReviewers: string[] = [];
+
+  if (assignDefault) {
+    for (const team of prTeams) {
+      const tid = team.id;
+      for (const memberId of team.memberIds ?? []) {
+        const mid = memberId;
+        studentReviewers.push(mid);
+        studentHomeTeam.set(mid, tid);
+      }
+    }
+    teamReviewers = [...prTeamIds];
+  }
 
   // TA Reviewers Pool (when taAssignmentsEnabled)
   const taReviewers = Array.from(
     new Set(prTeams.map(t => t.taId).filter((x): x is string => Boolean(x)))
   );
   const taHomeTeams = new Map<string, string[]>(); // taId -> teamIds
-  if (taAssignmentsEnabled) {
+  if (taAssignmentsEnabled && assignTAs) {
     for (const team of prTeams) {
       const ta = team.taId;
       if (ta) {
@@ -777,13 +800,15 @@ const buildEligibleRevieweeMaps = (
   prTeamIds: string[],
   allowSameTA: boolean,
   reviewsPerReviewer: number,
-  taAssignmentsEnabled: boolean
+  taAssignmentsEnabled: boolean,
+  assignDefault: boolean,
+  assignTAs: boolean
 ) => {
   console.log('allowSameTA:', allowSameTA);
   console.log('reviewsPerReviewer:', reviewsPerReviewer);
 
   const studentToEligibleRevieweesMap = new Map<string, string[]>();
-  if (reviewerType === 'Individual') {
+  if (reviewerType === 'Individual' && assignDefault) {
     for (const studentId of studentReviewers) {
       const homeTeamId = studentHomeTeam.get(studentId)!;
       console.log('homeTeamId for student', studentId, ':', homeTeamId);
@@ -811,7 +836,7 @@ const buildEligibleRevieweeMaps = (
 
   // Get Eligible Reviewees for Teams [cannot review own team, and (if !allowSameTA) cannot review teams with same TA]
   const teamToEligibleRevieweesMap = new Map<string, string[]>();
-  if (reviewerType === 'Team') {
+  if (reviewerType === 'Team' && assignDefault) {
     for (const teamId of teamReviewers) {
       const eligibleReviewees = makeEligibleReviewees(
         teamIdToTAMap,
@@ -831,7 +856,7 @@ const buildEligibleRevieweeMaps = (
 
   // Get Eligible Reviewees for TAs [cannot review teams they supervise]
   const taToEligibleRevieweesMap = new Map<string, string[]>();
-  if (taAssignmentsEnabled) {
+  if (taAssignmentsEnabled && assignTAs) {
     for (const taId of taReviewers) {
       let eligibleReviewees = prTeamIds;
       if (!allowSameTA) {
@@ -865,7 +890,9 @@ const performAssignments = (
   teamToEligibleRevieweesMap: Map<string, string[]>,
   taToEligibleRevieweesMap: Map<string, string[]>,
   reviewsPerReviewer: number,
-  taAssignmentsEnabled: boolean
+  taAssignmentsEnabled: boolean,
+  assignDefault: boolean,
+  assignTAs: boolean
 ) => {
   const assignedStudentsForTeam = new Map<string, Set<string>>(); // revieweeId -> set of studentReviewerIds
   const assignedTeamsForTeam = new Map<string, Set<string>>(); // revieweeId -> set of teamReviewerIds
@@ -877,7 +904,7 @@ const performAssignments = (
     assignedTAsForTeam.set(teamId, new Set());
   }
 
-  if (reviewerType === 'Individual') {
+  if (reviewerType === 'Individual' && assignDefault) {
     randomAndEqualAssign(
       studentReviewers,
       reviewsPerReviewer,
@@ -885,7 +912,7 @@ const performAssignments = (
       assignedStudentsForTeam,
       'student'
     );
-  } else {
+  } else if (assignDefault) {
     randomAndEqualAssign(
       teamReviewers,
       reviewsPerReviewer,
@@ -895,7 +922,7 @@ const performAssignments = (
     );
   }
 
-  if (taAssignmentsEnabled && taReviewers.length > 0) {
+  if (taAssignmentsEnabled && assignTAs && taReviewers.length > 0) {
     randomAndEqualAssign(
       taReviewers,
       reviewsPerReviewer,
@@ -913,6 +940,8 @@ const updateDBAssignments = async (
   userId: string,
   reviewerType: string,
   taAssignmentsEnabled: boolean,
+  assignDefault: boolean,
+  assignTAs: boolean,
   prTeamIds: string[],
   getTeamRepo: (teamId: string) => {
     repoUrl: string;
@@ -925,18 +954,52 @@ const updateDBAssignments = async (
 ) => {
   console.log('session starting, updating DB assignments...');
 
+  const existingAssignments = await PeerReviewAssignmentModel.find({
+    peerReviewId: peerReviewId,
+    reviewee: { $in: prTeamIds.map(oid) },
+  })
+    .select('_id reviewee studentReviewers teamReviewers taReviewers')
+    .lean();
+
+  const revieweeToAssignmentMap = new Map<
+    string,
+    (typeof existingAssignments)[number]
+  >();
+  for (const a of existingAssignments) {
+    revieweeToAssignmentMap.set(a.reviewee.toString(), a);
+  }
+
   const newAssignments: AnyBulkWriteOperation[] = prTeamIds.map(revieweeId => {
     const { repoUrl, repoName } = getTeamRepo(revieweeId);
+    const prev = revieweeToAssignmentMap.get(revieweeId);
 
     const studentIds = Array.from(
       assignedStudentsForTeam.get(revieweeId) ?? []
-    ).map(sid => oid(sid));
+    ).map(oid);
     const teamIds = Array.from(assignedTeamsForTeam.get(revieweeId) ?? []).map(
-      tid => oid(tid)
+      oid
     );
-    const taIds = Array.from(assignedTAsForTeam.get(revieweeId) ?? []).map(
-      taId => oid(taId)
-    );
+    const taIds = Array.from(assignedTAsForTeam.get(revieweeId) ?? []).map(oid);
+
+    const studentReviewers =
+      reviewerType === 'Individual'
+        ? assignDefault
+          ? studentIds
+          : prev?.studentReviewers ?? []
+        : [];
+
+    const teamReviewers =
+      reviewerType === 'Team'
+        ? assignDefault
+          ? teamIds
+          : prev?.teamReviewers ?? []
+        : [];
+
+    const taReviewers = taAssignmentsEnabled
+      ? assignTAs
+        ? taIds
+        : prev?.taReviewers ?? []
+      : [];
 
     const peerReviewIdObj = oid(peerReviewId);
     const revieweeIdObj = oid(revieweeId);
@@ -948,9 +1011,9 @@ const updateDBAssignments = async (
           peerReviewId: peerReviewIdObj,
           repoName,
           repoUrl,
-          studentReviewers: reviewerType === 'Individual' ? studentIds : [],
-          teamReviewers: reviewerType === 'Team' ? teamIds : [],
-          taReviewers: taAssignmentsEnabled ? taIds : [],
+          studentReviewers,
+          teamReviewers,
+          taReviewers,
           reviewee: revieweeIdObj,
           assignedBy: oid(userId),
           assignedAt: new Date(),
@@ -963,7 +1026,7 @@ const updateDBAssignments = async (
 
   await PeerReviewAssignmentModel.deleteMany({
     peerReviewId: peerReviewId,
-    reviewee: { $nin: prTeamIds.map(id => oid(id)) },
+    reviewee: { $nin: prTeamIds.map(oid) },
   });
 
   if (newAssignments.length > 0) {
