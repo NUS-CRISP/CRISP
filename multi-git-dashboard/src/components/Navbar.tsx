@@ -3,42 +3,20 @@ import {
   Alert,
   Center,
   FloatingPosition,
-  Stack,
   Title,
-  Tooltip,
-  UnstyledButton,
-  rem,
 } from '@mantine/core';
 import {
-  IconBell,
   IconGitBranch,
-  IconHelp,
-  IconHome2,
-  IconListDetails,
-  IconLogout,
-  IconSettings2,
-  IconUserCircle,
 } from '@tabler/icons-react';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { forwardRef, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import classes from '../styles/Navbar.module.css';
 import { useTutorialContext } from './tutorial/TutorialContext';
 import TutorialPopover from './tutorial/TutorialPopover';
 import { Course } from '@shared/types/Course';
 import { IconInfoCircle } from '@tabler/icons-react';
-import CrispRole from '@shared/types/auth/CrispRole';
-import NotificationSettingsForm from './forms/NotificationSettingsForm';
 import ProfileDropdown from './ProfileDropdown';
-
-interface NavbarLinkProps {
-  icon: typeof IconHome2;
-  label: string;
-  active?: boolean;
-  disabled?: boolean;
-  onClick: (event: React.MouseEvent) => void;
-  popoverOpened?: boolean;
-}
 
 interface CourseLink {
   link: string;
@@ -47,39 +25,11 @@ interface CourseLink {
   pngSrc: string;
 }
 
-const NavbarLink = forwardRef<HTMLButtonElement, NavbarLinkProps>(
-  ({ icon: Icon, label, active, disabled, onClick, popoverOpened }, ref) =>
-    popoverOpened ? (
-      <UnstyledButton
-        onClick={onClick}
-        style={disabled ? { cursor: 'default' } : undefined}
-        className={classes.link}
-        data-active={active || undefined}
-        ref={ref}
-      >
-        <Icon style={{ width: rem(20), height: rem(20) }} stroke={1.5} />
-      </UnstyledButton>
-    ) : (
-      <Tooltip label={label} position="right" transitionProps={{ duration: 0 }}>
-        <UnstyledButton
-          onClick={onClick}
-          style={disabled ? { cursor: 'default' } : undefined}
-          className={classes.link}
-          data-active={active || undefined}
-          ref={ref}
-        >
-          <Icon style={{ width: rem(20), height: rem(20) }} stroke={1.5} />
-        </UnstyledButton>
-      </Tooltip>
-    )
-);
-
 const Navbar: React.FC = () => {
   const { curTutorialStage, nextTutorialStage } = useTutorialContext();
 
   const router = useRouter();
   const { pathname } = router;
-  const { data: session } = useSession();
 
   const isCourseRoute = pathname.includes('/courses/[id]');
   const courseId = isCourseRoute ? (router.query.id as string) : null;
@@ -92,11 +42,6 @@ const Navbar: React.FC = () => {
 
   const [activeCourseTab, setActiveCourseTab] = useState('Overview');
   const [startTime, setStartTime] = useState<Date>(new Date());
-
-  const [mainLinkPopoverOpened, setMainLinkPopoverOpened] = useState(false);
-  const [questionPopoverOpened, setQuestionPopoverOpened] = useState(false);
-
-  const [notificationModalOpened, setNotificationModalOpened] = useState(false);
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -178,31 +123,6 @@ const Navbar: React.FC = () => {
     }
     await signOut();
   };
-
-  const mainLinksData = [
-    { link: '/courses', label: 'View Courses', icon: IconListDetails },
-  ];
-  if (session?.user?.crispRole === CrispRole.Admin) {
-    mainLinksData.push({ link: '/admin', label: 'Admin', icon: IconSettings2 });
-  }
-
-  const mainLinks = mainLinksData.map(item => (
-    <NavbarLink
-      icon={item.icon}
-      label={item.label}
-      active={item.label === activeMainTab}
-      onClick={event => {
-        event.preventDefault();
-        if (courseId) {
-          logSessionTime(activeCourseTab, true);
-        }
-        setActiveMainTab(item.label);
-        router.push(item.link);
-      }}
-      key={item.label}
-      popoverOpened={mainLinkPopoverOpened}
-    />
-  ));
 
   const courseLinksData = [
     {
@@ -420,95 +340,6 @@ const Navbar: React.FC = () => {
 
   return (
     <div className={classes.navbarsContainer}>
-      <TutorialPopover stage={1} position="right">
-        <nav
-          className={classes.navbar}
-          style={{
-            backgroundColor: getTutorialHighlightColor(1),
-          }}
-        >
-          <Center
-            className={classes.logo}
-            onClick={() => router.push('/courses')}
-            style={{ cursor: 'pointer' }}
-          >
-            <IconGitBranch size={30} />
-          </Center>
-
-          <div className={classes.navbarMain}>
-            <TutorialPopover
-              stage={2}
-              position="right"
-              onOpen={() => setMainLinkPopoverOpened(true)}
-              onClose={() => setMainLinkPopoverOpened(false)}
-            >
-              <Stack
-                justify="center"
-                gap={0}
-                style={{
-                  width: '50px',
-                  borderRadius: 10,
-                  backgroundColor: getTutorialHighlightColor(2),
-                }}
-              >
-                {mainLinks}
-              </Stack>
-            </TutorialPopover>
-          </div>
-
-          <TutorialPopover
-            stage={3}
-            position="right"
-            onOpen={() => setQuestionPopoverOpened(true)}
-            onClose={() => setQuestionPopoverOpened(false)}
-          >
-            <Stack
-              justify="center"
-              gap={0}
-              style={{
-                borderRadius: 10,
-                backgroundColor: getTutorialHighlightColor(3),
-              }}
-            >
-              <NavbarLink
-                onClick={() => {}}
-                icon={IconUserCircle}
-                label={`Hello, ${
-                  session && session.user ? session.user.name : 'user'
-                }`}
-                disabled
-                popoverOpened={questionPopoverOpened}
-              />
-
-              <NavbarLink
-                onClick={() => setNotificationModalOpened(true)}
-                icon={IconBell}
-                label="Configure Notifications"
-                popoverOpened={questionPopoverOpened}
-              />
-
-              <TutorialPopover stage={25} position="right-end" w={250} finish>
-                <NavbarLink
-                  onClick={() =>
-                    window.open('https://forms.gle/41KcH8gFh3uDfzQGA', '_blank')
-                  }
-                  icon={IconHelp}
-                  label="Submit issue / feature"
-                  popoverOpened={questionPopoverOpened}
-                />
-              </TutorialPopover>
-
-              <NavbarLink
-                onClick={handleSignOut}
-                icon={IconLogout}
-                label="Sign out"
-                popoverOpened={questionPopoverOpened}
-              />
-            </Stack>
-          </TutorialPopover>
-        </nav>
-      </TutorialPopover>
-
       {isCourseRoute && courseId && (
         <TutorialPopover stage={5} position="right">
           <nav
@@ -600,11 +431,6 @@ const Navbar: React.FC = () => {
       >
         <p>You need to add people for this course first.</p>
       </Alert>
-
-      <NotificationSettingsForm
-        opened={notificationModalOpened}
-        onClose={() => setNotificationModalOpened(false)}
-      />
     </div>
   );
 };
