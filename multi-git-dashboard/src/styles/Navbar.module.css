@@ -18,7 +18,7 @@
 .navbarMain {
   position: sticky;
   flex: 1;
-  margin-top: rem(40px);
+  margin-top: rem(10px);
 }
 
 .link {
