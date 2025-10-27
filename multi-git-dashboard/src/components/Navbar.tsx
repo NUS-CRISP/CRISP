@@ -436,7 +436,7 @@ const Navbar: React.FC = () => {
 
           <div className={classes.navbarMain}>
             <TutorialPopover
-              stage={2}    
+              stage={2}
               position="right"
               onOpen={() => setMainLinkPopoverOpened(true)}
               onClose={() => setMainLinkPopoverOpened(false)}
@@ -519,13 +519,40 @@ const Navbar: React.FC = () => {
             }}
           >
             <div className={classes.navbarMain}>
+              <Center
+                onClick={() => router.push('/courses')}
+                style={{
+                  cursor: 'pointer',
+                  flexDirection: 'row',
+                  gap: '8px',
+                  marginBottom: '8px',
+                  padding: '8px',
+                  alignItems: 'center',
+                  borderRadius: 'var(--mantine-radius-md)',
+                  transition: 'background-color 0.2s ease',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.backgroundColor =
+                    'light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-6))';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+              >
+                <IconGitBranch size={24} />
+                <Title order={3}>CRISP</Title>
+              </Center>
+
               <Title
-                order={3}
+                order={4}
                 className={classes.title}
                 style={{
                   marginBottom: '12px',
                   marginTop: '0px',
                   backgroundColor: getTutorialHighlightColor(5),
+                  paddingLeft: '2px',
+                  paddingTop: '6px',
+                  paddingBottom: '6px',
                 }}
               >
                 {courseCode}
