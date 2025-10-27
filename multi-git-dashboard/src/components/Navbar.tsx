@@ -29,6 +29,7 @@ import { Course } from '@shared/types/Course';
 import { IconInfoCircle } from '@tabler/icons-react';
 import CrispRole from '@shared/types/auth/CrispRole';
 import NotificationSettingsForm from './forms/NotificationSettingsForm';
+import ProfileDropdown from './ProfileDropdown';
 
 interface NavbarLinkProps {
   icon: typeof IconHome2;
@@ -543,6 +544,17 @@ const Navbar: React.FC = () => {
                 <Title order={3}>CRISP</Title>
               </Center>
 
+              <ProfileDropdown />
+              <div
+                key="divider"
+                style={{
+                  height: '1px',
+                  backgroundColor: '#e0e0e0',
+                  margin: '2px 0',
+                  width: '100%',
+                }}
+              />
+
               <Title
                 order={4}
                 className={classes.title}
@@ -550,19 +562,17 @@ const Navbar: React.FC = () => {
                   marginBottom: '12px',
                   marginTop: '0px',
                   backgroundColor: getTutorialHighlightColor(5),
-                  paddingLeft: '2px',
-                  paddingTop: '6px',
-                  paddingBottom: '6px',
+                  padding: '12px',
                 }}
               >
                 {courseCode}
               </Title>
-
               <div
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '20px',
+                  gap: '10px',
+                  padding: '0 12px',
                 }}
               >
                 {courseLinks}
