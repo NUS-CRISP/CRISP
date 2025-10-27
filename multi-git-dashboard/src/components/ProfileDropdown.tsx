@@ -1,11 +1,13 @@
 import { Menu, Group, Avatar, Text, UnstyledButton, rem } from '@mantine/core';
-import { IconSettings, IconChevronDown, IconLogout } from '@tabler/icons-react';
+import { IconSettings, IconChevronDown, IconLogout, IconBell } from '@tabler/icons-react';
 import { signOut, useSession } from 'next-auth/react';
 import { useState } from 'react';
+import NotificationSettingsForm from './forms/NotificationSettingsForm';
 
 export function ProfileDropdown() {
   const { data: session } = useSession();
   const [opened, setOpened] = useState(false);
+  const [notificationModalOpened, setNotificationModalOpened] = useState(false);
 
   return (
     <Menu
@@ -79,6 +81,13 @@ export function ProfileDropdown() {
         </Menu.Item>
 
         <Menu.Item
+          leftSection={<IconBell style={{ width: rem(16), height: rem(16) }} />}
+          onClick={() => setNotificationModalOpened(true)}
+        >
+          Configure Notifications
+        </Menu.Item>
+
+        <Menu.Item
           color="red"
           leftSection={
             <IconLogout style={{ width: rem(16), height: rem(16) }} />
@@ -88,6 +97,11 @@ export function ProfileDropdown() {
           Sign out
         </Menu.Item>
       </Menu.Dropdown>
+      
+      <NotificationSettingsForm
+        opened={notificationModalOpened}
+        onClose={() => setNotificationModalOpened(false)}
+      />
     </Menu>
   );
 }
