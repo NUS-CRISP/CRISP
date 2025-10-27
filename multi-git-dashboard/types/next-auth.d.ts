@@ -5,18 +5,20 @@ declare module 'next-auth' {
   interface User {
     id: string;
     name: string;
+    email: string;
     crispRole: CrispRole;
     courseRoles: CourseRoleTuple[];
   }
 
   interface Session {
-    user: CrispUser;
+    user: User;
   }
 }
 
 declare module 'next-auth/jwt' {
   interface JWT {
     name: string;
+    email: string;
     crispRole: CrispRole;
     courseRoles: CourseRoleTuple[];
   }

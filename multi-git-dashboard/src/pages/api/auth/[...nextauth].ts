@@ -40,6 +40,7 @@ export const authOptions: AuthOptions = {
           return {
             id: process.env.NEXT_PUBLIC_TRIAL_USER_ID || '',
             name: CrispRole.TrialUser,
+            email: 'trial@example.com',
             crispRole: CrispRole.TrialUser,
             courseRoles: trialAccount!.courseRoles,
           };
@@ -80,6 +81,7 @@ export const authOptions: AuthOptions = {
         return {
           id: account._id.toString(),
           name: user?.name || '',
+          email: email || '',
           crispRole: account.crispRole,
           courseRoles: account.courseRoles,
         };
@@ -93,6 +95,7 @@ export const authOptions: AuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.email = user.email;
         token.crispRole = user.crispRole;
         token.courseRoles = user.courseRoles;
       }
@@ -102,11 +105,15 @@ export const authOptions: AuthOptions = {
       if (token.name) {
         session.user.name = token.name;
       }
+      if (token.email) {
+        session.user.email = token.email;
+      }
       session.user.crispRole = token.crispRole;
       session.user.courseRoles = token.courseRoles;
       return {
         user: {
           name: token.name,
+          email: token.email,
           crispRole: token.crispRole,
           courseRoles: token.courseRoles,
         },

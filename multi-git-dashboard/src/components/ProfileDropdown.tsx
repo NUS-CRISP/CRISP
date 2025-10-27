@@ -55,14 +55,16 @@ export function ProfileDropdown() {
       <Menu.Dropdown>
         <Menu.Label>
           <div>
-            <Text size="sm" fw={500}>
+            <Text size="m" fw={500}>
               {session?.user?.name}
             </Text>
-            <Text size="xs" c="dimmed" truncate>
+            <Text size="sm" c="dimmed" truncate>
               {session?.user?.email}
             </Text>
           </div>
         </Menu.Label>
+
+        <Menu.Divider />
 
         <Menu.Item
           leftSection={
@@ -75,8 +77,6 @@ export function ProfileDropdown() {
         >
           Account settings
         </Menu.Item>
-
-        <Menu.Divider />
 
         <Menu.Item
           color="red"
