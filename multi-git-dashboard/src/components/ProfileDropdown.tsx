@@ -22,8 +22,8 @@ export function ProfileDropdown() {
     <Menu
       shadow="md"
       width={240}
-      position="right-start"
-      offset={8}
+      position="bottom-end"
+      offset={6}
       onChange={setOpened}
     >
       <Menu.Target>
