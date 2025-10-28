@@ -52,7 +52,7 @@ export const setupTutorialDataJob = async () => {
     const trialAccountDoc = new AccountModel({
       email: 'trial@example.com',
       password: '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
-      role: CrispRole.TrialUser,
+      crispRole: CrispRole.TrialUser,
       isApproved: true,
       wantsEmailNotifications: false,
       wantsTelegramNotifications: false,

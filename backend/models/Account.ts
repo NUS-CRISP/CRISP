@@ -55,6 +55,7 @@ const accountSchema = new Schema<Account>({
     required: false,
   },
   password: { type: String },
+  // TODO: Deprecate after job to remove all role attribute is run in prod
   role: {
     type: String,
     required: false,

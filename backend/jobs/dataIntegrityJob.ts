@@ -30,6 +30,7 @@ async function checkCrispRoles() {
           account.crispRole = CrispRole.Admin;
           break;
         case 'Faculty member':
+        case 'Faculty':
           account.crispRole = CrispRole.Faculty;
           break;
         case 'Trial User':
