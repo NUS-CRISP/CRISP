@@ -98,6 +98,4 @@
   padding: var(--mantine-spacing-sm);
   padding-top: rem(6px);
   height: rem(40px);
-  border-bottom: rem(1px) solid
-    light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-7));
 }
