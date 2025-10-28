@@ -1,13 +1,6 @@
 import { getTutorialHighlightColor } from '@/lib/utils';
-import {
-  Alert,
-  Center,
-  FloatingPosition,
-  Title,
-} from '@mantine/core';
-import {
-  IconGitBranch,
-} from '@tabler/icons-react';
+import { Alert, Center, FloatingPosition, Title } from '@mantine/core';
+import { IconGitBranch } from '@tabler/icons-react';
 import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
@@ -393,7 +386,7 @@ const Navbar: React.FC = () => {
                   marginBottom: '12px',
                   marginTop: '0px',
                   backgroundColor: getTutorialHighlightColor(5),
-                  padding: '12px',
+                  padding: '16px',
                 }}
               >
                 {courseCode}
