@@ -1,7 +1,17 @@
 import { getTutorialHighlightColor } from '@/lib/utils';
 import { Alert, Center, FloatingPosition, Title } from '@mantine/core';
 import { IconGitBranch } from '@tabler/icons-react';
-import { signOut } from 'next-auth/react';
+import {
+  IconLayoutDashboard,
+  IconUsersGroup,
+  IconGitPullRequest,
+  IconCode,
+  IconUsers,
+  IconFolder,
+  IconTimeline,
+  IconCalendar,
+  IconChecklist,
+} from '@tabler/icons-react';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import classes from '../styles/Navbar.module.css';
@@ -15,7 +25,7 @@ interface CourseLink {
   link: string;
   label: string;
   disabled?: boolean;
-  pngSrc: string;
+  icon: typeof IconGitBranch;
 }
 
 const Navbar: React.FC = () => {
@@ -110,71 +120,64 @@ const Navbar: React.FC = () => {
     }
   };
 
-  const handleSignOut = async () => {
-    if (courseId) {
-      logSessionTime(activeCourseTab, true);
-    }
-    await signOut();
-  };
-
   const courseLinksData = [
     {
       link: `/courses/${courseId}/course-overview`,
       label: 'Course Overview',
       disabled: !peopleAdded,
-      pngSrc: '/course-overview.png',
+      icon: IconLayoutDashboard,
     },
     {
       link: `/courses/${courseId}`,
       label: 'Team Review',
       disabled: !peopleAdded,
-      pngSrc: '/team-view.png',
+      icon: IconUsersGroup,
     },
     {
       link: `/courses/${courseId}/pr-review`,
       label: 'PR Review',
       disabled: !peopleAdded,
-      pngSrc: '/timeline.png',
+      icon: IconGitPullRequest,
     },
     {
       link: `/courses/${courseId}/code-analysis`,
       label: 'Code Analysis',
       disabled: !peopleAdded,
-      pngSrc: '/code-analysis.png',
+      icon: IconCode,
     },
     {
       link: `/courses/${courseId}/people`,
       label: 'People',
-      pngSrc: '/people.png',
+      icon: IconUsers,
     },
     {
       link: `/courses/${courseId}/repositories`,
       label: 'Repositories',
-      pngSrc: '/repositories.png',
+      icon: IconFolder,
     },
     {
       link: `/courses/${courseId}/teams`,
       label: 'Teams',
       disabled: !peopleAdded,
-      pngSrc: '/teams.png',
+      icon: IconUsersGroup,
     },
     {
       link: `/courses/${courseId}/timeline`,
       label: 'Timeline',
       disabled: !peopleAdded,
-      pngSrc: '/timeline.png',
+      icon: IconTimeline,
     },
     {
       link: `/courses/${courseId}/project-management`,
       label: 'Project Management',
       disabled: !peopleAdded,
-      pngSrc: '/jira.png',
+      icon: IconCalendar,
     },
     {
       link: `/courses/${courseId}/assessments`,
       label: 'Assessments',
       disabled: !peopleAdded,
-      pngSrc: '/assessments.png',
+      icon: IconChecklist,
     },
   ];
 
@@ -212,7 +215,8 @@ const Navbar: React.FC = () => {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <span style={{ marginLeft: '5px' }}>{item.label}</span>
+          <item.icon style={{ width: 16, height: 16, marginRight: 10 }} />
+          <span>{item.label}</span>
         </div>
       </a>
     );
@@ -338,7 +342,7 @@ const Navbar: React.FC = () => {
           <nav
             className={classes.courseNavbar}
             style={{
-              width: '180px',
+              width: '200px',
               backgroundColor: getTutorialHighlightColor(5),
               paddingTop: '5px',
             }}
