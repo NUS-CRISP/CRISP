@@ -1,6 +1,6 @@
 import { getTutorialHighlightColor } from '@/lib/utils';
 import { Alert, Center, FloatingPosition, Title } from '@mantine/core';
-import { IconGitBranch } from '@tabler/icons-react';
+import { IconGitBranch, IconMessagePlus } from '@tabler/icons-react';
 import {
   IconLayoutDashboard,
   IconUsersGroup,
@@ -111,8 +111,10 @@ const Navbar: React.FC = () => {
       return 'Course Overview';
     } else if (path.startsWith('/courses/[id]/code-analysis')) {
       return 'Code Analysis';
-    } else if (path.startsWith('/courses/[id]/pr-review')) {
-      return 'PR Review';
+    } else if (path.startsWith('/courses/[id]/pr-overview')) {
+      return 'PR Overview';
+    } else if (path.startsWith('/courses/[id]/peer-review')) {
+      return 'Peer Review';
     } else if (path.startsWith('/courses/[id]')) {
       return 'Team Review';
     } else {
@@ -134,8 +136,8 @@ const Navbar: React.FC = () => {
       icon: IconUsersGroup,
     },
     {
-      link: `/courses/${courseId}/pr-review`,
-      label: 'PR Review',
+      link: `/courses/${courseId}/pr-overview`,
+      label: 'PR Overview',
       disabled: !peopleAdded,
       icon: IconGitPullRequest,
     },
@@ -178,6 +180,12 @@ const Navbar: React.FC = () => {
       label: 'Assessments',
       disabled: !peopleAdded,
       icon: IconChecklist,
+    },
+    {
+      link: `/courses/${courseId}/peer-review`,
+      label: 'Peer Review',
+      disabled: !peopleAdded,
+      icon: IconMessagePlus,
     },
   ];
 
@@ -246,7 +254,7 @@ const Navbar: React.FC = () => {
     renderNavLink(courseLinksData[1], 12, 'top-start', 'Team Review')
   );
   courseLinks.push(
-    renderNavLink(courseLinksData[2], 10, 'top-start', 'PR Review', true)
+    renderNavLink(courseLinksData[2], 10, 'top-start', 'PR Overview', true)
   );
   courseLinks.push(
     renderNavLink(courseLinksData[3], 14, 'top-start', 'Code Analysis', true)
@@ -291,9 +299,12 @@ const Navbar: React.FC = () => {
     />
   );
 
-  // Third section: Assessment
+  // Third section: Assessment, Peer Reviews
   courseLinks.push(
     renderNavLink(courseLinksData[9], 23, 'top-start', 'Assessments', true)
+  );
+  courseLinks.push(
+    renderNavLink(courseLinksData[10], 23, 'top-start', 'Peer Review', true)
   );
 
   useEffect(() => {

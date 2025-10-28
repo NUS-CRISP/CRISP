@@ -1,4 +1,4 @@
-import PRReview from '@/components/views/PRReview';
+import PROverview from '@/components/views/PROverview';
 import {
   DateUtils,
   getCurrentWeekGenerator,
@@ -105,7 +105,7 @@ const CourseViewPage: React.FC = () => {
       }}
     >
       {course && dateUtils ? (
-        <PRReview
+        <PROverview
           courseId={courseId}
           dateUtils={dateUtils}
           teamSets={teamSets}

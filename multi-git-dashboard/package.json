@@ -31,6 +31,7 @@
     "@mantine/hooks": "^7.7.1",
     "@mantine/notifications": "^7.7.1",
     "@mantine/nprogress": "^7.7.1",
+    "@monaco-editor/react": "^4.7.0",
     "@mui/material": "^6.4.3",
     "@tabler/icons-react": "^2.47.0",
     "@types/d3": "^7.4.3",
