@@ -655,7 +655,7 @@ export const addFacultyToCourse = async (
       await facultyMember.save();
       const newAccount = new AccountModel({
         email: facultyData.email,
-        role: CrispRole.Faculty,
+        crispRole: CrispRole.Faculty,
         isApproved: false,
         user: facultyMember._id,
       });

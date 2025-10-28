@@ -15,6 +15,7 @@ export interface Account {
   telegramNotificationHour: number; // 0-23
   telegramNotificationWeekday: number; // 1-7, from Monday to Sunday
   password: string;
+  // TODO: Deprecate after job to remove all role attribute is run in prod
   role: string | null;
   crispRole: CrispRole;
   courseRoles: CourseRoleTuple[];
