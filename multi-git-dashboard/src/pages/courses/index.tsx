@@ -10,6 +10,7 @@ import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import CreateCourseForm from '../../components/forms/CreateCourseForm';
+import ProfileDropdown from '@/components/ProfileDropdown';
 
 const CourseListPage: React.FC = () => {
   const apiRoute = '/api/courses';
@@ -70,6 +71,7 @@ const CourseListPage: React.FC = () => {
     <ScrollArea
       style={{
         height: '100vh',
+        paddingTop: '8px',
         paddingRight: '20px',
         overflowY: 'auto',
         scrollbarWidth: 'thin',
@@ -79,7 +81,25 @@ const CourseListPage: React.FC = () => {
         <CreateCourseForm />
       </Modal>
       <Box pl={20}>
-        <h1>Courses</h1>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+            marginBottom: '8px',
+          }}
+        >
+          <h1 style={{ margin: 0 }}>Courses</h1>
+          <div
+            style={{
+              marginLeft: 'auto',
+              width: 'fit-content',
+            }}
+          >
+            <ProfileDropdown />
+          </div>
+        </div>
         {courses.length === 0 ? (
           <p>No courses to show</p>
         ) : (
