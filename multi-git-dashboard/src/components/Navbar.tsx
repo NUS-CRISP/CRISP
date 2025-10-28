@@ -211,7 +211,7 @@ const Navbar: React.FC = () => {
         }}
         style={{
           ...(item.disabled ? { cursor: 'not-allowed', opacity: 0.5 } : {}),
-          padding: '6px 0',
+          padding: '12px 0',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -285,7 +285,7 @@ const Navbar: React.FC = () => {
       style={{
         height: '1px',
         backgroundColor: '#e0e0e0',
-        margin: '10px 0',
+        margin: '2px 0',
         width: '100%',
       }}
     />
@@ -378,7 +378,7 @@ const Navbar: React.FC = () => {
                 style={{
                   height: '1px',
                   backgroundColor: '#e0e0e0',
-                  margin: '2px 0',
+                  marginTop: '2px',
                   width: '100%',
                 }}
               />
@@ -387,8 +387,7 @@ const Navbar: React.FC = () => {
                 order={4}
                 className={classes.title}
                 style={{
-                  marginBottom: '12px',
-                  marginTop: '0px',
+                  margin: '0px',
                   backgroundColor: getTutorialHighlightColor(5),
                   padding: '16px',
                 }}
@@ -399,8 +398,7 @@ const Navbar: React.FC = () => {
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '10px',
-                  padding: '0 12px',
+                  padding: '10px 12px',
                 }}
               >
                 {courseLinks}
