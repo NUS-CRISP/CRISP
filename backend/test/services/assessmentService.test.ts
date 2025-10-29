@@ -16,7 +16,7 @@ import {
   uploadAssessmentResultsById,
 } from '../../services/assessmentService';
 import { BadRequestError, NotFoundError } from '../../services/errors';
-import CrispRole from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 import CourseRole from '@shared/types/auth/CourseRole';
 
 let mongo: MongoMemoryServer;
@@ -83,7 +83,7 @@ async function createStudentUser(userData: any) {
   const account = new AccountModel({
     email: `${userData.identifier}@example.com`,
     password: 'hashedpassword',
-    crispRole: CrispRole.Normal,
+    crispRole: CRISP_ROLE.Normal,
     user: user._id,
     isApproved: true,
   });
@@ -102,7 +102,7 @@ async function createTAUser(userData: any) {
   const account = new AccountModel({
     email: `${userData.identifier}@example.com`,
     password: 'hashedpassword',
-    crispRole: CrispRole.Normal,
+    crispRole: CRISP_ROLE.Normal,
     user: user._id,
     isApproved: true,
   });
@@ -121,7 +121,7 @@ async function createFacultyUser(userData: any) {
   const account = new AccountModel({
     email: `${userData.identifier}@example.com`,
     password: 'hashedpassword',
-    crispRole: CrispRole.Faculty,
+    crispRole: CRISP_ROLE.Faculty,
     user: user._id,
     isApproved: true,
   });

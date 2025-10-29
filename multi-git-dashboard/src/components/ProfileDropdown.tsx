@@ -10,7 +10,7 @@ import { signOut, useSession } from 'next-auth/react';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import NotificationSettingsForm from './forms/NotificationSettingsForm';
-import CrispRole from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 
 export function ProfileDropdown() {
   const { data: session } = useSession();
@@ -75,7 +75,7 @@ export function ProfileDropdown() {
           </div>
         </Menu.Label>
 
-        {session?.user?.crispRole === CrispRole.Admin && (
+        {session?.user?.crispRole === CRISP_ROLE.Admin && (
           <Menu.Item
             color="blue"
             leftSection={

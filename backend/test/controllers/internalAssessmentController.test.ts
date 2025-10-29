@@ -22,7 +22,7 @@ import {
   MissingAuthorizationError,
 } from '../../services/errors';
 import AccountModel from '@models/Account';
-import CrispRole from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 import { getSubmissionsByAssessment } from '../../services/submissionService';
 import UserModel from '@models/User';
 
@@ -1157,7 +1157,7 @@ describe('internalAssessmentController', () => {
       req.params = { assessmentId: 'assessment1', type: 'short' };
 
       // Mock an authorized account (Faculty)
-      const mockAccount = { _id: 'account1', crispRole: CrispRole.Faculty };
+      const mockAccount = { _id: 'account1', crispRole: CRISP_ROLE.Faculty };
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account1');
       jest
         .spyOn(AccountModel, 'findById')
@@ -1230,7 +1230,7 @@ describe('internalAssessmentController', () => {
     it('should return comments filtered by long responses when type is "long"', async () => {
       req.params = { assessmentId: 'assessment1', type: 'long' };
 
-      const mockAccount = { _id: 'account1', crispRole: CrispRole.Admin };
+      const mockAccount = { _id: 'account1', crispRole: CRISP_ROLE.Admin };
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account1');
       jest
         .spyOn(AccountModel, 'findById')
@@ -1281,7 +1281,7 @@ describe('internalAssessmentController', () => {
     it('should return both short and long comments when type is not provided', async () => {
       req.params = { assessmentId: 'assessment1' };
 
-      const mockAccount = { _id: 'account1', crispRole: CrispRole.Faculty };
+      const mockAccount = { _id: 'account1', crispRole: CRISP_ROLE.Faculty };
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account1');
       jest
         .spyOn(AccountModel, 'findById')
@@ -1332,7 +1332,7 @@ describe('internalAssessmentController', () => {
     it('should return 200 with "No submissions yet." when no submissions are found', async () => {
       req.params = { assessmentId: 'assessment1' };
 
-      const mockAccount = { _id: 'account1', crispRole: CrispRole.Faculty };
+      const mockAccount = { _id: 'account1', crispRole: CRISP_ROLE.Faculty };
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account1');
       jest
         .spyOn(AccountModel, 'findById')
@@ -1373,7 +1373,7 @@ describe('internalAssessmentController', () => {
     it('should return 500 if an unexpected error occurs', async () => {
       req.params = { assessmentId: 'assessment1' };
 
-      const mockAccount = { _id: 'account1', crispRole: CrispRole.Faculty };
+      const mockAccount = { _id: 'account1', crispRole: CRISP_ROLE.Faculty };
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue('account1');
       jest
         .spyOn(AccountModel, 'findById')

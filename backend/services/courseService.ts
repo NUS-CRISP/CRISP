@@ -4,7 +4,7 @@ import CourseModel from '@models/Course';
 import TeamModel, { Team } from '@models/Team';
 import TeamSetModel, { TeamSet } from '@models/TeamSet';
 import UserModel, { User } from '@models/User';
-import CrispRole from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 import mongoose, { Types } from 'mongoose';
 import { BadRequestError, NotFoundError } from './errors';
 import { InternalAssessment } from '@shared/types/InternalAssessment';
@@ -66,9 +66,9 @@ export const createNewCourse = async (courseData: any, accountId: string) => {
     courseRole: CourseRole.Faculty,
   });
   await account.save();
-  if (account.crispRole !== CrispRole.Admin) {
+  if (account.crispRole !== CRISP_ROLE.Admin) {
     const adminAccount = await AccountModel.findOne({
-      crispRole: CrispRole.Admin,
+      crispRole: CRISP_ROLE.Admin,
     });
     if (!adminAccount) console.warn('Admin account missing!');
     else {
@@ -176,7 +176,7 @@ export const addStudentsToCourse = async (
       await student.save();
       const newAccount = new AccountModel({
         email: studentData.email, // Email is saved as case-sensitive (depends on organisation)
-        crispRole: CrispRole.Normal,
+        crispRole: CRISP_ROLE.Normal,
         isApproved: false,
         user: student._id,
       });
@@ -192,7 +192,7 @@ export const addStudentsToCourse = async (
       );
       if (
         (courseRoleTuple.length !== 0 &&
-          studentAccount.crispRole !== CrispRole.TrialUser) ||
+          studentAccount.crispRole !== CRISP_ROLE.TrialUser) ||
         studentData.name.toUpperCase() !== student.name.toUpperCase() ||
         studentData.email.toLowerCase() !== studentAccount.email.toLowerCase() // Check is case-insensitive to handle email case-insensitivity cases
       ) {
@@ -250,7 +250,7 @@ export const addStudentsToCourseAndTeam = async (
 
       const newAccount = new AccountModel({
         email: r.email,
-        crispRole: CrispRole.Normal,
+        crispRole: CRISP_ROLE.Normal,
         isApproved: false,
         user: student._id,
       });
@@ -265,7 +265,7 @@ export const addStudentsToCourseAndTeam = async (
       );
       if (
         (courseRoleTuple.length !== 0 &&
-          studentAccount.crispRole !== CrispRole.TrialUser) ||
+          studentAccount.crispRole !== CRISP_ROLE.TrialUser) ||
         (r.name && r.name.toUpperCase() !== student.name.toUpperCase()) ||
         (r.email &&
           r.email.toLowerCase() !== studentAccount.email.toLowerCase())
@@ -412,7 +412,7 @@ export const addTAsToCourse = async (courseId: string, TADataList: any[]) => {
       await TA.save();
       const newAccount = new AccountModel({
         email: TAData.email,
-        crispRole: CrispRole.Normal,
+        crispRole: CRISP_ROLE.Normal,
         isApproved: false,
         user: TA._id,
       });
@@ -428,7 +428,7 @@ export const addTAsToCourse = async (courseId: string, TADataList: any[]) => {
       );
       if (
         (courseRoleTuple.length !== 0 &&
-          TAAccount.crispRole !== CrispRole.TrialUser) ||
+          TAAccount.crispRole !== CRISP_ROLE.TrialUser) ||
         TAData.name.toUpperCase() !== TA.name.toUpperCase() ||
         TAData.email.toLowerCase() !== TAAccount.email.toLowerCase()
       ) {
@@ -479,7 +479,7 @@ export const addTAAndTeamToCourse = async (
 
       const newAccount = new AccountModel({
         email: TAData.email,
-        crispRole: CrispRole.Normal,
+        crispRole: CRISP_ROLE.Normal,
         isApproved: false,
         user: ta._id,
       });
@@ -494,7 +494,7 @@ export const addTAAndTeamToCourse = async (
       );
       if (
         (courseRoleTuple.length !== 0 &&
-          taAccount.crispRole !== CrispRole.TrialUser) ||
+          taAccount.crispRole !== CRISP_ROLE.TrialUser) ||
         (TAData.name && TAData.name.toUpperCase() !== ta.name.toUpperCase()) ||
         (TAData.email &&
           TAData.email.toLowerCase() !== taAccount.email.toLowerCase())
@@ -655,7 +655,7 @@ export const addFacultyToCourse = async (
       await facultyMember.save();
       const newAccount = new AccountModel({
         email: facultyData.email,
-        crispRole: CrispRole.Faculty,
+        crispRole: CRISP_ROLE.Faculty,
         isApproved: false,
         user: facultyMember._id,
       });
@@ -673,7 +673,7 @@ export const addFacultyToCourse = async (
       );
       if (
         (courseRoleTuple.length !== 0 &&
-          facultyAccount.crispRole !== CrispRole.TrialUser) ||
+          facultyAccount.crispRole !== CRISP_ROLE.TrialUser) ||
         facultyData.name.toUpperCase() !== facultyMember.name.toUpperCase() ||
         facultyData.email.toLowerCase() !== facultyAccount.email.toLowerCase()
       ) {
@@ -726,8 +726,8 @@ export const updateFacultyInCourse = async (
     if (
       (courseRoleTuple.length === 0 ||
         courseRoleTuple[0].courseRole !== CourseRole.Faculty) &&
-      facultyAccount.crispRole !== CrispRole.Faculty &&
-      facultyAccount.crispRole !== CrispRole.Admin
+      facultyAccount.crispRole !== CRISP_ROLE.Faculty &&
+      facultyAccount.crispRole !== CRISP_ROLE.Admin
     ) {
       continue;
     }

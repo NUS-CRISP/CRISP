@@ -7,7 +7,7 @@ import mongoose from 'mongoose';
 import { GitHubError, NotFoundError } from '../../services/errors';
 import * as gitHubService from '../../services/githubService';
 import * as gitHub from '../../utils/github';
-import CrispRole from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 import CourseRole from '@shared/types/auth/CourseRole';
 
 jest.mock('../../utils/github');
@@ -54,7 +54,7 @@ describe('gitHubService', () => {
     const mockFacultyAccount = new AccountModel({
       email: 'test@example.com',
       password: 'hashedpassword',
-      crispRole: CrispRole.Faculty,
+      crispRole: CRISP_ROLE.Faculty,
       user: mockFacultyUser._id,
       isApproved: true,
     });
@@ -276,7 +276,7 @@ describe('gitHubService', () => {
       const unauthorizedFacultyAccount = new AccountModel({
         email: 'test1@example.com',
         password: 'hashedpassword',
-        crispRole: CrispRole.Faculty,
+        crispRole: CRISP_ROLE.Faculty,
         user: unauthorizedFacultyUser._id,
         isApproved: true,
       });

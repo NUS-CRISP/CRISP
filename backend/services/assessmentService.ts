@@ -7,7 +7,7 @@ import ResultModel, { Result } from '../models/Result';
 import { Team } from '../models/Team';
 import TeamSetModel from '../models/TeamSet';
 import { BadRequestError, NotFoundError } from './errors';
-import CrispRole from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 import CourseRoles from '@shared/types/auth/CourseRole';
 
 interface ResultItem {
@@ -96,8 +96,8 @@ export const updateAssessmentById = async (
     throw new NotFoundError('Account not found');
   }
   if (
-    account.crispRole !== CrispRole.Admin &&
-    account.crispRole !== CrispRole.Faculty
+    account.crispRole !== CRISP_ROLE.Admin &&
+    account.crispRole !== CRISP_ROLE.Faculty
   ) {
     throw new BadRequestError('Unauthorized');
   }

@@ -1,10 +1,8 @@
-const CrispRole = {
-  Admin: 'admin',
-  TrialUser: 'Trial User',
-  Faculty: 'Faculty',
-  Normal: 'Normal'
+export const CRISP_ROLE = {
+  Admin: "admin",
+  TrialUser: "trial_user",
+  Faculty: "faculty",
+  Normal: "normal",
 } as const;
 
-export type CrispRoleType = (typeof CrispRole)[keyof typeof CrispRole];
-
-export default CrispRole;
+export type CrispRole = (typeof CRISP_ROLE)[keyof typeof CRISP_ROLE];

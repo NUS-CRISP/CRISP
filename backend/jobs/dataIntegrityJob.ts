@@ -8,7 +8,7 @@
 import AccountModel from '@models/Account';
 import CourseModel from '@models/Course';
 import CourseRole from '@shared/types/auth/CourseRole';
-import CrispRole from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 import cron from 'node-cron';
 
 // Check functions (and if errors are found, repair if possible)
@@ -24,17 +24,17 @@ async function checkCrispRoles() {
       switch (account.role) {
         case 'Student':
         case 'Teaching assistant':
-          account.crispRole = CrispRole.Normal;
+          account.crispRole = CRISP_ROLE.Normal;
           break;
         case 'admin':
-          account.crispRole = CrispRole.Admin;
+          account.crispRole = CRISP_ROLE.Admin;
           break;
         case 'Faculty member':
         case 'Faculty':
-          account.crispRole = CrispRole.Faculty;
+          account.crispRole = CRISP_ROLE.Faculty;
           break;
         case 'Trial User':
-          account.crispRole = CrispRole.TrialUser;
+          account.crispRole = CRISP_ROLE.TrialUser;
           break;
         default:
           break;

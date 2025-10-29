@@ -18,7 +18,7 @@ import AccountModel from '../models/Account';
 import SubmissionModel from '../models/Submission';
 import { AnswerUnion } from '../models/Answer';
 import { getUserIdByAccountId } from '../services/accountService';
-import CrispRole from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 
 /**
  * Controller to submit or update a submission for a particular assessment.
@@ -128,8 +128,8 @@ export const getUserSubmissions = async (req: Request, res: Response) => {
       userId
     );
     if (
-      account.crispRole !== CrispRole.Admin &&
-      account.crispRole !== CrispRole.Faculty
+      account.crispRole !== CRISP_ROLE.Admin &&
+      account.crispRole !== CRISP_ROLE.Faculty
     ) {
       submissions.forEach(sub => {
         sub.score = -1;
@@ -179,8 +179,8 @@ export const getAllSubmissions = async (req: Request, res: Response) => {
 
     if (
       !account ||
-      (account.crispRole !== CrispRole.Admin &&
-        account.crispRole !== CrispRole.Faculty)
+      (account.crispRole !== CRISP_ROLE.Admin &&
+        account.crispRole !== CRISP_ROLE.Faculty)
     ) {
       throw new MissingAuthorizationError('Access denied');
     }
@@ -232,7 +232,7 @@ export const deleteUserSubmission = async (req: Request, res: Response) => {
 
     if (!submission.user.equals(userId)) {
       const account = await AccountModel.findById(accountId);
-      if (!account || account.crispRole !== CrispRole.Admin) {
+      if (!account || account.crispRole !== CRISP_ROLE.Admin) {
         throw new MissingAuthorizationError(
           'You do not have permission to delete this submission'
         );
@@ -280,8 +280,8 @@ export const bulkDeleteSubmissionsByAssessment = async (
 
     if (
       !account ||
-      (account.crispRole !== CrispRole.Admin &&
-        account.crispRole !== CrispRole.Faculty)
+      (account.crispRole !== CRISP_ROLE.Admin &&
+        account.crispRole !== CRISP_ROLE.Faculty)
     ) {
       throw new MissingAuthorizationError(
         'You do not have permission to perform this action.'
@@ -360,8 +360,8 @@ export const getSubmissionByIdController = async (
       const account = await AccountModel.findById(accountId);
       if (
         !account ||
-        (account.crispRole !== CrispRole.Admin &&
-          account.crispRole !== CrispRole.Faculty)
+        (account.crispRole !== CRISP_ROLE.Admin &&
+          account.crispRole !== CRISP_ROLE.Faculty)
       ) {
         throw new MissingAuthorizationError(
           'You do not have permission to view this submission'
@@ -412,8 +412,8 @@ export const adjustSubmissionScoreController = async (
 
     if (
       !account ||
-      (account.crispRole !== CrispRole.Faculty &&
-        account.crispRole !== CrispRole.Admin)
+      (account.crispRole !== CRISP_ROLE.Faculty &&
+        account.crispRole !== CRISP_ROLE.Admin)
     ) {
       throw new MissingAuthorizationError(
         'You do not have permission to adjust scores.'

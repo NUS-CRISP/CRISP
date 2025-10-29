@@ -19,7 +19,7 @@ import {
   reorderQuestions,
 } from '../services/internalAssessmentService';
 import AccountModel from '@models/Account';
-import CrispRole from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 import { getSubmissionsByAssessment } from '../services/submissionService';
 import { AnswerUnion, TeamMemberSelectionAnswer } from '@models/Answer';
 import UserModel from '@models/User';
@@ -495,8 +495,8 @@ export const gatherComments = async (req: Request, res: Response) => {
 
     if (
       !account ||
-      (account.crispRole !== CrispRole.Faculty &&
-        account.crispRole !== CrispRole.Admin)
+      (account.crispRole !== CRISP_ROLE.Faculty &&
+        account.crispRole !== CRISP_ROLE.Admin)
     ) {
       throw new MissingAuthorizationError(
         'You do not have permission to gather comments.'

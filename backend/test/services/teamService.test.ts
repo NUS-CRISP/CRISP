@@ -15,7 +15,7 @@ import {
   removeMembersById,
   updateTeamById,
 } from '../../services/teamService';
-import CrispRole from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 import CourseRole from '@shared/types/auth/CourseRole';
 
 let mongo: MongoMemoryServer;
@@ -84,7 +84,7 @@ async function createStudentUser(userData: any) {
   const account = new AccountModel({
     email: `${userData.identifier}@example.com`,
     password: 'hashedpassword',
-    crispRole: CrispRole.Normal,
+    crispRole: CRISP_ROLE.Normal,
     user: user._id,
     isApproved: true,
   });
@@ -103,7 +103,7 @@ async function createTAUser(userData: any) {
   const account = new AccountModel({
     email: `${userData.identifier}@example.com`,
     password: 'hashedpassword',
-    crispRole: CrispRole.Normal,
+    crispRole: CRISP_ROLE.Normal,
     user: user._id,
     isApproved: true,
   });

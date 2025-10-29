@@ -18,7 +18,7 @@ import {
   NotFoundError,
   MissingAuthorizationError,
 } from '../../services/errors';
-import CrispRole from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 
 jest.mock('../../services/submissionService');
 jest.mock('../../utils/auth');
@@ -305,7 +305,7 @@ describe('submissionController', () => {
       const res = mockResponse();
 
       const accountId = 'account123';
-      const account = { id: accountId, crispRole: CrispRole.Admin };
+      const account = { id: accountId, crispRole: CRISP_ROLE.Admin };
       const mockSubmissions = [{ id: 'submission123' }];
 
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
@@ -330,7 +330,7 @@ describe('submissionController', () => {
     //   const res = mockResponse();
 
     //   const accountId = 'account123';
-    //   const account = { id: accountId, crispRole: CrispRole.Normal };
+    //   const account = { id: accountId, crispRole: CRISP_ROLE.Normal };
     //   const mockSubmissions = [
     //     { id: 'submission123', score: 69, adjustedScore: 420 },
     //   ];
@@ -360,7 +360,7 @@ describe('submissionController', () => {
       const res = mockResponse();
 
       const accountId = 'account123';
-      const account = { id: accountId, crispRole: CrispRole.Normal };
+      const account = { id: accountId, crispRole: CRISP_ROLE.Normal };
 
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
       (AccountModel.findById as jest.Mock).mockResolvedValue(account);
@@ -444,7 +444,7 @@ describe('submissionController', () => {
 
       const accountId = 'account123';
       const submission = { id: 'submission123', user: { equals: jest.fn() } };
-      const account = { id: accountId, crispRole: CrispRole.Normal };
+      const account = { id: accountId, crispRole: CRISP_ROLE.Normal };
 
       submission.user.equals.mockReturnValue(false);
 
@@ -570,7 +570,7 @@ describe('submissionController', () => {
         user: { equals: jest.fn() },
         populate: jest.fn().mockReturnThis(),
       };
-      const account = { id: accountId, crispRole: CrispRole.Normal };
+      const account = { id: accountId, crispRole: CRISP_ROLE.Normal };
 
       submission.user.equals.mockReturnValue(false);
 
@@ -615,7 +615,7 @@ describe('submissionController', () => {
       const res = mockResponse();
 
       const accountId = 'account123';
-      const account = { id: accountId, crispRole: CrispRole.Faculty };
+      const account = { id: accountId, crispRole: CRISP_ROLE.Faculty };
       const submission = { id: 'submission123', adjustedScore: 90 };
 
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
@@ -645,7 +645,7 @@ describe('submissionController', () => {
       const res = mockResponse();
 
       const accountId = 'account123';
-      const account = { id: accountId, crispRole: CrispRole.Faculty };
+      const account = { id: accountId, crispRole: CRISP_ROLE.Faculty };
 
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
       (AccountModel.findById as jest.Mock).mockResolvedValue(account);
@@ -665,7 +665,7 @@ describe('submissionController', () => {
       const res = mockResponse();
 
       const accountId = 'account123';
-      const account = { id: accountId, crispRole: CrispRole.Normal };
+      const account = { id: accountId, crispRole: CRISP_ROLE.Normal };
 
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
       (AccountModel.findById as jest.Mock).mockResolvedValue(account);
@@ -685,7 +685,7 @@ describe('submissionController', () => {
       const res = mockResponse();
 
       const accountId = 'account123';
-      const account = { id: accountId, crispRole: CrispRole.Faculty };
+      const account = { id: accountId, crispRole: CRISP_ROLE.Faculty };
 
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
       (AccountModel.findById as jest.Mock).mockResolvedValue(account);
@@ -706,7 +706,7 @@ describe('submissionController', () => {
       const res = mockResponse();
 
       const accountId = 'account123';
-      const account = { id: accountId, crispRole: CrispRole.Faculty };
+      const account = { id: accountId, crispRole: CRISP_ROLE.Faculty };
 
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
       (AccountModel.findById as jest.Mock).mockResolvedValue(account);
@@ -730,7 +730,7 @@ describe('submissionController', () => {
       const res = mockResponse();
 
       const accountId = 'account123';
-      const account = { id: accountId, crispRole: CrispRole.Faculty }; // or 'admin'
+      const account = { id: accountId, crispRole: CRISP_ROLE.Faculty }; // or 'admin'
       const userId = 'user123';
       const mockDeletedCount = 5;
 
@@ -767,7 +767,7 @@ describe('submissionController', () => {
       const res = mockResponse();
 
       const accountId = 'account123';
-      const account = { id: accountId, crispRole: CrispRole.Faculty };
+      const account = { id: accountId, crispRole: CRISP_ROLE.Faculty };
 
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
       (AccountModel.findById as jest.Mock).mockResolvedValue(account);
@@ -790,7 +790,7 @@ describe('submissionController', () => {
       const res = mockResponse();
 
       const accountId = 'account123';
-      const account = { id: accountId, crispRole: CrispRole.Normal }; // Not admin/faculty
+      const account = { id: accountId, crispRole: CRISP_ROLE.Normal }; // Not admin/faculty
 
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
       (AccountModel.findById as jest.Mock).mockResolvedValue(account);
@@ -809,7 +809,7 @@ describe('submissionController', () => {
       const res = mockResponse();
 
       const accountId = 'account123';
-      const account = { id: accountId, crispRole: CrispRole.Faculty };
+      const account = { id: accountId, crispRole: CRISP_ROLE.Faculty };
 
       jest.spyOn(authUtils, 'getAccountId').mockResolvedValue(accountId);
       (AccountModel.findById as jest.Mock).mockResolvedValue(account);
