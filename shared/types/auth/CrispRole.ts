@@ -5,6 +5,6 @@ const CrispRole = {
   Normal: 'Normal'
 } as const;
 
-export type CrispRole = (typeof CrispRole)[keyof typeof CrispRole];
+export type CrispRoleType = (typeof CrispRole)[keyof typeof CrispRole];
 
 export default CrispRole;
