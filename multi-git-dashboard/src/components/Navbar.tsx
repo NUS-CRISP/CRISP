@@ -135,7 +135,7 @@ const Navbar: React.FC = () => {
     },
     {
       link: `/courses/${courseId}/pr-overview`,
-      label: 'PR Review',
+      label: 'PR Overview',
       disabled: !peopleAdded,
       icon: IconGitPullRequest,
     },
