@@ -22,7 +22,7 @@ import { NotFoundError, BadRequestError } from '../../services/errors';
 import * as submissionService from '../../services/submissionService';
 import * as assessmentAssignmentSetService from '../../services/assessmentAssignmentSetService';
 import AccountModel from '@models/Account';
-import CrispRole from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 import CourseRole from '@shared/types/auth/CourseRole';
 
 let mongo: MongoMemoryServer;
@@ -64,7 +64,7 @@ describe('assessmentAssignmentSetService (team granularity)', () => {
     const facultyAccount = new AccountModel({
       email: 'faculty@example.com',
       password: 'password',
-      crispRole: CrispRole.Faculty,
+      crispRole: CRISP_ROLE.Faculty,
       user: faculty._id,
       isApproved: true,
     });
@@ -130,7 +130,7 @@ describe('assessmentAssignmentSetService (team granularity)', () => {
     const studentAccount = new AccountModel({
       email: 'student@example.com',
       password: 'password',
-      crispRole: CrispRole.Normal,
+      crispRole: CRISP_ROLE.Normal,
       user: student._id,
       isApproved: true,
     });
@@ -148,7 +148,7 @@ describe('assessmentAssignmentSetService (team granularity)', () => {
     const taAccount = new AccountModel({
       email: 'ta@example.com',
       password: 'password',
-      crispRole: CrispRole.Normal,
+      crispRole: CRISP_ROLE.Normal,
       user: ta._id,
       isApproved: true,
     });
@@ -504,7 +504,7 @@ describe('assessmentAssignmentSetService (individual granularity)', () => {
     const facultyAccount = new AccountModel({
       email: 'faculty@example.com',
       password: 'password',
-      crispRole: CrispRole.Faculty,
+      crispRole: CRISP_ROLE.Faculty,
       user: new mongoose.Types.ObjectId(),
       isApproved: true,
     });
@@ -552,7 +552,7 @@ describe('assessmentAssignmentSetService (individual granularity)', () => {
     const studentAccount1 = new AccountModel({
       email: 'student1@example.com',
       password: 'password',
-      crispRole: CrispRole.Normal,
+      crispRole: CRISP_ROLE.Normal,
       user: user1._id,
       isApproved: true,
     });
@@ -568,7 +568,7 @@ describe('assessmentAssignmentSetService (individual granularity)', () => {
     const studentAccount2 = new AccountModel({
       email: 'student2@example.com',
       password: 'password',
-      crispRole: CrispRole.Normal,
+      crispRole: CRISP_ROLE.Normal,
       user: user2._id,
       isApproved: true,
     });
@@ -596,7 +596,7 @@ describe('assessmentAssignmentSetService (individual granularity)', () => {
     const taAccount = new AccountModel({
       email: 'ta@example.com',
       password: 'password',
-      crispRole: CrispRole.Normal,
+      crispRole: CRISP_ROLE.Normal,
       user: ta._id,
       isApproved: true,
     });

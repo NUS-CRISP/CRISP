@@ -1,5 +1,5 @@
 import clientPromise from '@/lib/mongodb';
-import CrispRole from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 import bcrypt from 'bcrypt';
 import {
   GetServerSidePropsContext,
@@ -33,15 +33,15 @@ export const authOptions: AuthOptions = {
           .db(process.env.DB_NAME)
           .collection('accounts');
 
-        if (credentials?.type === CrispRole.TrialUser) {
+        if (credentials?.type === CRISP_ROLE.TrialUser) {
           const trialAccount = await accountsCollection.findOne({
-            crispRole: CrispRole.TrialUser,
+            crispRole: CRISP_ROLE.TrialUser,
           });
           return {
             id: process.env.NEXT_PUBLIC_TRIAL_USER_ID || '',
-            name: CrispRole.TrialUser,
+            name: CRISP_ROLE.TrialUser,
             email: 'trial@example.com',
-            crispRole: CrispRole.TrialUser,
+            crispRole: CRISP_ROLE.TrialUser,
             courseRoles: trialAccount!.courseRoles,
           };
         }

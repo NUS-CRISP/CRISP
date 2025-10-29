@@ -22,7 +22,7 @@ import { useEffect, useState } from 'react';
 import { GetServerSideProps } from 'next';
 import classes from '../styles/admin.module.css';
 import { getServerSessionHelper } from './api/auth/[...nextauth]';
-import CrispRole from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 
 type RowData = Pick<Account, 'email' | 'crispRole'>;
 
@@ -357,7 +357,7 @@ const AdminPage: React.FC = () => {
 export const getServerSideProps: GetServerSideProps = async context => {
   const session = await getServerSessionHelper(context.req, context.res);
 
-  if (!session || session.user.crispRole !== CrispRole.Admin) {
+  if (!session || session.user.crispRole !== CRISP_ROLE.Admin) {
     return {
       redirect: {
         destination: '/auth/signin',

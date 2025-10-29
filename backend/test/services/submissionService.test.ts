@@ -61,7 +61,7 @@ import AssessmentAssignmentSetModel, {
 import TeamModel from '@models/Team';
 import AssessmentResultModel from '@models/AssessmentResult';
 import { Question } from '@models/Question';
-import CrispRole from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 import CourseRole from '@shared/types/auth/CourseRole';
 
 let mongo: MongoMemoryServer;
@@ -283,7 +283,7 @@ const setupData = async (overrideEndDate?: Date) => {
   const facultyAccount = new AccountModel({
     email: 'faculty@example.com',
     password: 'password',
-    crispRole: CrispRole.Faculty,
+    crispRole: CRISP_ROLE.Faculty,
     user: faculty._id,
     isApproved: true,
   });
@@ -297,7 +297,7 @@ const setupData = async (overrideEndDate?: Date) => {
   const studentAccount = new AccountModel({
     email: 'student@example.com',
     password: 'password',
-    crispRole: CrispRole.Normal,
+    crispRole: CRISP_ROLE.Normal,
     user: student._id,
     isApproved: true,
   });
@@ -311,7 +311,7 @@ const setupData = async (overrideEndDate?: Date) => {
   const taAccount = new AccountModel({
     email: 'ta@example.com',
     password: 'password',
-    crispRole: CrispRole.Normal,
+    crispRole: CRISP_ROLE.Normal,
     user: ta._id,
     isApproved: true,
   });
@@ -2056,7 +2056,7 @@ describe('submissionService', () => {
       });
       const adminAccount = new AccountModel({
         email: 'admin@example.com',
-        crispRole: CrispRole.Admin,
+        crispRole: CRISP_ROLE.Admin,
         password: 'hi',
         user: admin._id,
       });
@@ -2248,7 +2248,7 @@ describe('submissionService', () => {
       const studentAccount = new AccountModel({
         email: 'someStudent@example.com',
         password: 'password',
-        crispRole: CrispRole.Normal,
+        crispRole: CRISP_ROLE.Normal,
         user: student._id,
         isApproved: true,
       });
@@ -2291,7 +2291,7 @@ describe('submissionService', () => {
       );
 
       // Switch role from faculty to TA => no bypass
-      account.crispRole = CrispRole.Normal;
+      account.crispRole = CRISP_ROLE.Normal;
       await account.save();
 
       await expect(

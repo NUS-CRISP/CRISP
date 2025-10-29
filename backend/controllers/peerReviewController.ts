@@ -13,7 +13,7 @@ import {
 } from '../services/peerReviewService';
 import { getAccountId } from '../utils/auth';
 import AccountModel from '@models/Account';
-import CrispRole from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 import CourseRole from '@shared/types/auth/CourseRole';
 
 export const getAllPeerReviews = async (req: Request, res: Response) => {

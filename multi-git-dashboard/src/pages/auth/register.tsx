@@ -21,7 +21,7 @@ import {
   IconAt,
   IconCircleKey,
 } from '@tabler/icons-react';
-import CrispRole, { CrispRoleType } from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE, CrispRole } from '@shared/types/auth/CrispRole';
 import AuthShell from '@/components/auth/AuthShell';
 
 {
@@ -45,7 +45,7 @@ const RegisterForm: React.FC = () => {
     email: string;
     password: string;
     confirmPassword: string;
-    role: CrispRoleType;
+    role: CrispRole;
   }>({
     initialValues: {
       identifier: '',
@@ -53,7 +53,7 @@ const RegisterForm: React.FC = () => {
       email: '',
       password: '',
       confirmPassword: '',
-      role: CrispRole.Normal,
+      role: CRISP_ROLE.Normal,
     },
     validate: {
       identifier: (v: string) =>
@@ -64,8 +64,8 @@ const RegisterForm: React.FC = () => {
       password: (v: string) => (v.length >= 8 ? null : 'At least 8 characters'),
       confirmPassword: (v: string, values: any) =>
         v === values.password ? null : 'Passwords do not match',
-      role: (v: CrispRoleType) =>
-        v === CrispRole.Normal || v === CrispRole.Faculty
+      role: (v: CrispRole) =>
+        v === CRISP_ROLE.Normal || v === CRISP_ROLE.Faculty
           ? null
           : 'Invalid role',
     },
@@ -102,8 +102,8 @@ const RegisterForm: React.FC = () => {
   };
 
   const roleData = [
-    { label: 'Student', value: CrispRole.Normal },
-    { label: 'Faculty', value: CrispRole.Faculty },
+    { label: 'Student', value: CRISP_ROLE.Normal },
+    { label: 'Faculty', value: CRISP_ROLE.Faculty },
   ];
 
   return (

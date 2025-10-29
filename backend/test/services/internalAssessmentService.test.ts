@@ -60,7 +60,7 @@ import AssessmentResultModel, {
 } from '@models/AssessmentResult';
 import QuestionModel from '@models/Question';
 import CourseRole from '@shared/types/auth/CourseRole';
-import CrispRole from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 
 let mongo: MongoMemoryServer;
 
@@ -93,7 +93,7 @@ const setupData = async () => {
   const facultyAccount = new AccountModel({
     email: 'faculty@example.com',
     password: 'password',
-    crispRole: CrispRole.Faculty,
+    crispRole: CRISP_ROLE.Faculty,
     user: faculty._id,
     isApproved: true,
   });
@@ -122,7 +122,7 @@ const setupData = async () => {
   const studentAccount = new AccountModel({
     email: 'student@example.com',
     password: 'password',
-    crispRole: CrispRole.Normal,
+    crispRole: CRISP_ROLE.Normal,
     user: student._id,
     isApproved: true,
   });
@@ -139,7 +139,7 @@ const setupData = async () => {
   const taAccount = new AccountModel({
     email: 'ta@example.com',
     password: 'password',
-    crispRole: CrispRole.Normal,
+    crispRole: CRISP_ROLE.Normal,
     user: student._id,
     isApproved: true,
   });
@@ -295,7 +295,7 @@ describe('internalAssessmentService', () => {
 
   describe('getInternalAssessmentById', () => {
     it('should retrieve an internal assessment by ID (admin)', async () => {
-      account.crispRole = CrispRole.Admin;
+      account.crispRole = CRISP_ROLE.Admin;
       await account.save();
       const fetched = await getInternalAssessmentById(
         assessment._id.toString(),
@@ -313,7 +313,7 @@ describe('internalAssessmentService', () => {
     });
 
     it('should retrieve an internal assessment by ID (Teaching assistant)', async () => {
-      account.crispRole = CrispRole.Normal;
+      account.crispRole = CRISP_ROLE.Normal;
       account.courseRoles.filter(
         (r: { course: String; courseRole: String }) =>
           r.course === course._id.toString()
@@ -410,7 +410,7 @@ describe('internalAssessmentService', () => {
       const studentAcc = await AccountModel.create({
         email: 'student-acc@example.com',
         password: 'password',
-        crispRole: CrispRole.Normal,
+        crispRole: CRISP_ROLE.Normal,
         courseRoles: {
           course: course._id.toString(),
           courseRole: CourseRole.Student,
@@ -1043,7 +1043,7 @@ describe('internalAssessmentService', () => {
       const studAcc = await AccountModel.create({
         email: 'stud@example.com',
         password: 'pass',
-        crispRole: CrispRole.Normal,
+        crispRole: CRISP_ROLE.Normal,
         courseRoles: {
           course: course._id.toString(),
           courseRole: CourseRole.Student,
@@ -1824,7 +1824,7 @@ describe('internalAssessmentService', () => {
         const studAcc = await AccountModel.create({
           email: 'stud2@example.com',
           password: 'pass',
-          crispRole: CrispRole.Normal,
+          crispRole: CRISP_ROLE.Normal,
           courseRoles: {
             course: course._id.toString(),
             courseRole: CourseRole.Student,
@@ -2463,7 +2463,7 @@ describe('internalAssessmentService', () => {
         const studAcc = await AccountModel.create({
           email: 'unauthorized@example.com',
           password: 'pass',
-          crispRole: CrispRole.Normal,
+          crispRole: CRISP_ROLE.Normal,
           courseRoles: {
             course: course._id.toString(),
             courseRole: CourseRole.Student,
@@ -2570,7 +2570,7 @@ describe('internalAssessmentService', () => {
       const studAcc = await AccountModel.create({
         email: 'stud-deleteQ@example.com',
         password: 'password',
-        crispRole: CrispRole.Normal,
+        crispRole: CRISP_ROLE.Normal,
         courseRoles: {
           course: course._id.toString(),
           courseRole: CourseRole.Student,
@@ -2662,7 +2662,7 @@ describe('internalAssessmentService', () => {
       const studAcc = await AccountModel.create({
         email: 'someguy@example.com',
         password: 'pass',
-        crispRole: CrispRole.Normal,
+        crispRole: CRISP_ROLE.Normal,
         courseRoles: {
           course: course._id.toString(),
           courseRole: CourseRole.Student,
@@ -2709,7 +2709,7 @@ describe('internalAssessmentService', () => {
       const studAcc = await AccountModel.create({
         email: 'stud1@example.com',
         password: 'pass',
-        crispRole: CrispRole.Normal,
+        crispRole: CRISP_ROLE.Normal,
         courseRoles: {
           course: course._id.toString(),
           courseRole: CourseRole.Student,
@@ -2751,7 +2751,7 @@ describe('internalAssessmentService', () => {
       const studAcc = await AccountModel.create({
         email: 'stud99@example.com',
         password: 'pass',
-        crispRole: CrispRole.Normal,
+        crispRole: CRISP_ROLE.Normal,
         courseRoles: {
           course: course._id.toString(),
           courseRole: CourseRole.Student,
@@ -2802,7 +2802,7 @@ describe('internalAssessmentService', () => {
       const studAcc = await AccountModel.create({
         email: 'stud-reorder@example.com',
         password: 'pwd',
-        crispRole: CrispRole.Normal,
+        crispRole: CRISP_ROLE.Normal,
         courseRoles: {
           course: course._id.toString(),
           courseRole: CourseRole.Student,

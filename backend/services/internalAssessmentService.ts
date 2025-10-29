@@ -35,7 +35,7 @@ import {
   MultipleChoiceAnswer,
   MultipleResponseAnswer,
 } from '@models/Answer';
-import CrispRole from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 
 /**
  * Retrieves an internal assessment by ID.
@@ -65,8 +65,8 @@ export const getInternalAssessmentById = async (
 
   // Populates different fields depending on the user's role
   const assessment =
-    account.crispRole === CrispRole.Faculty ||
-    account.crispRole === CrispRole.Admin
+    account.crispRole === CRISP_ROLE.Faculty ||
+    account.crispRole === CRISP_ROLE.Admin
       ? await InternalAssessmentModel.findById(assessmentId)
           .populate<{
             results: AssessmentResult[];
@@ -107,8 +107,8 @@ export const getInternalAssessmentById = async (
 
   // Sorts the results by student name if user is admin/faculty
   if (
-    account.crispRole === CrispRole.Faculty ||
-    account.crispRole === CrispRole.Admin
+    account.crispRole === CRISP_ROLE.Faculty ||
+    account.crispRole === CRISP_ROLE.Admin
   ) {
     (assessment.results as AssessmentResult[]).sort((a, b) =>
       (a.student as User).name.localeCompare((b.student as User).name)
@@ -142,8 +142,8 @@ export const updateInternalAssessmentById = async (
   }
 
   if (
-    account.crispRole !== CrispRole.Faculty &&
-    account.crispRole !== CrispRole.Admin
+    account.crispRole !== CRISP_ROLE.Faculty &&
+    account.crispRole !== CRISP_ROLE.Admin
   ) {
     throw new BadRequestError('Unauthorized');
   }
@@ -376,8 +376,8 @@ export const addQuestionToAssessment = async (
   }
 
   if (
-    account.crispRole !== CrispRole.Faculty &&
-    account.crispRole !== CrispRole.Admin
+    account.crispRole !== CRISP_ROLE.Faculty &&
+    account.crispRole !== CRISP_ROLE.Admin
   ) {
     throw new BadRequestError('Unauthorized');
   }
@@ -682,8 +682,8 @@ export const updateQuestionById = async (
   }
 
   if (
-    account.crispRole !== CrispRole.Faculty &&
-    account.crispRole !== CrispRole.Admin
+    account.crispRole !== CRISP_ROLE.Faculty &&
+    account.crispRole !== CRISP_ROLE.Admin
   ) {
     throw new BadRequestError('Unauthorized' + account);
   }
@@ -1041,8 +1041,8 @@ export const deleteQuestionById = async (
   }
 
   if (
-    account.crispRole !== CrispRole.Faculty &&
-    account.crispRole !== CrispRole.Admin
+    account.crispRole !== CRISP_ROLE.Faculty &&
+    account.crispRole !== CRISP_ROLE.Admin
   ) {
     throw new BadRequestError('Unauthorized');
   }
@@ -1099,8 +1099,8 @@ export const releaseInternalAssessmentById = async (
   }
 
   if (
-    account.crispRole !== CrispRole.Faculty &&
-    account.crispRole !== CrispRole.Admin
+    account.crispRole !== CRISP_ROLE.Faculty &&
+    account.crispRole !== CRISP_ROLE.Admin
   ) {
     throw new BadRequestError('Unauthorized');
   }
@@ -1144,8 +1144,8 @@ export const recallInternalAssessmentById = async (
   }
 
   if (
-    account.crispRole !== CrispRole.Faculty &&
-    account.crispRole !== CrispRole.Admin
+    account.crispRole !== CRISP_ROLE.Faculty &&
+    account.crispRole !== CRISP_ROLE.Admin
   ) {
     throw new BadRequestError('Unauthorized');
   }
@@ -1186,8 +1186,8 @@ export const recaluculateSubmissionsForAssessment = async (
   }
 
   if (
-    account.crispRole !== CrispRole.Faculty &&
-    account.crispRole !== CrispRole.Admin
+    account.crispRole !== CRISP_ROLE.Faculty &&
+    account.crispRole !== CRISP_ROLE.Admin
   ) {
     throw new BadRequestError('Unauthorized');
   }
@@ -1224,8 +1224,8 @@ export const reorderQuestions = async (
     throw new NotFoundError('Account not found');
   }
   if (
-    account.crispRole !== CrispRole.Faculty &&
-    account.crispRole !== CrispRole.Admin
+    account.crispRole !== CRISP_ROLE.Faculty &&
+    account.crispRole !== CRISP_ROLE.Admin
   ) {
     throw new BadRequestError('Unauthorized');
   }
