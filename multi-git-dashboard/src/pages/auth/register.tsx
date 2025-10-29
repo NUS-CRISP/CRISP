@@ -1,168 +1,304 @@
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
 import {
   Alert,
   Anchor,
   Button,
+  Center,
   Container,
+  Divider,
+  Group,
   Paper,
   PasswordInput,
+  rem,
   SegmentedControl,
+  Stack,
   Text,
   TextInput,
   Title,
+  useComputedColorScheme,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import type { CrispRole } from '@shared/types/auth/CrispRole';
-import CrispRoles from '@shared/types/auth/CrispRole';
-import { IconInfoCircle } from '@tabler/icons-react';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
-import { useState } from 'react';
+import {
+  IconAlertCircle,
+  IconGitBranch,
+  IconId,
+  IconLock,
+  IconUser,
+  IconAt,
+  IconChevronLeft,
+  IconCircleKey,
+} from '@tabler/icons-react';
+import CrispRole, { CrispRoleType } from '@shared/types/auth/CrispRole';
 
-interface FormValues {
-  identifier: string;
-  name: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  role: CrispRole;
+{
+  /* <Button
+  variant="subtle"
+  color="gray"
+  component={Link}
+  href="/"
+  leftSection={<IconChevronLeft size={18} />}
+  styles={{ label: { color: 'var(--mantine-color-gray-4)' } }}
+>
+  Back
+</Button> */
 }
 
-const RegisterPage: React.FC = () => {
+// CRISP Logo
+const BrandBadge: React.FC<{ size?: number }> = ({ size = 46 }) => (
+  <div
+    style={{
+      width: size,
+      height: size,
+      display: 'grid',
+      placeItems: 'center',
+      borderRadius: 9999,
+      background: 'linear-gradient(135deg,#A855F7,#22D3EE)',
+      boxShadow: '0 8px 32px rgba(168,85,247,.25)',
+    }}
+  >
+    <div
+      style={{
+        background: '#0f172a',
+        borderRadius: 9999,
+        width: size - 8,
+        height: size - 8,
+        display: 'grid',
+        placeItems: 'center',
+      }}
+    >
+      <IconGitBranch size={size - 16} />
+    </div>
+  </div>
+);
+
+const AuthShell: React.FC<{
+  children: React.ReactNode;
+  title: string;
+  subtitle?: string;
+}> = ({ children, title, subtitle }) => (
+  <div
+    style={{
+      minHeight: '100vh',
+      background:
+        'radial-gradient(1100px 520px at 12% 10%, rgba(100,116,139,.18), transparent), linear-gradient(135deg, #0b1324 0%, #0f172a 35%, #0b1220 100%)',
+      color: 'white',
+    }}
+  >
+    <Container
+      size={1200}
+      px="md"
+      py="xl"
+      style={{
+        display: 'grid',
+        gridTemplateColumns: '1.1fr 1fr',
+        gap: 'min(6vw, 48px)',
+        alignItems: 'center',
+      }}
+    >
+      {/* Left: just logo + title */}
+      <Stack visibleFrom="sm" h="100%" justify="center" gap="lg">
+        <Anchor
+          component={Link}
+          href="/"
+          underline="never"
+          c="inherit"
+          style={{ display: 'inline-block' }}
+        >
+          <Group gap="lg">
+            <BrandBadge size={100} />
+            <div>
+              <Title order={1} fw={700} fz={rem(70)}>
+                CRISP
+              </Title>
+              <Text size="lg" c="gray.4">
+                Classroom Repository Interaction & Status Platform
+              </Text>
+            </div>
+          </Group>
+        </Anchor>
+      </Stack>
+
+      {/* Right: glass card */}
+      <Center p={{ base: 'lg', md: 'xl' }}>
+        <Paper
+          shadow="xl"
+          radius="xl"
+          withBorder
+          p={{ base: 'lg', md: 36 }}
+          style={{
+            width: '100%',
+            backdropFilter: 'blur(8px)',
+            background: 'rgba(13, 20, 34, 0.72)',
+            borderColor: 'rgba(255,255,255,0.08)',
+          }}
+        >
+          <Stack gap={0}>
+            <Title order={2} fw={800} c="white">
+              {title}
+            </Title>
+            {subtitle && <Text c="gray.4">{subtitle}</Text>}
+          </Stack>
+          <div style={{ marginTop: 6 }}>{children}</div>
+        </Paper>
+      </Center>
+    </Container>
+  </div>
+);
+
+const RegisterForm: React.FC = () => {
   const router = useRouter();
-  const form = useForm<FormValues>({
+  const form = useForm<{
+    identifier: string;
+    name: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
+    role: CrispRoleType;
+  }>({
     initialValues: {
       identifier: '',
       name: '',
       email: '',
       password: '',
       confirmPassword: '',
-      role: CrispRoles.Normal,
+      role: CrispRole.Normal,
     },
     validate: {
-      identifier: (value: string) =>
-        value.trim().length < 3
-          ? 'NUSNet ID must be at least 3 characters long'
-          : null,
-      name: (value: string) =>
-        value.trim().length < 3
-          ? 'Name must be at least 3 characters long'
-          : null,
-      email: (value: string) =>
-        !/^\S+@\S+$/.test(value) ? 'Invalid email' : null,
-      password: (value: string) =>
-        value.length < 6 ? 'Password must be at least 6 characters long' : null,
-      confirmPassword: (value: string, values: FormValues) =>
-        value !== values.password ? 'Passwords do not match' : null,
-      role: (value: CrispRole) =>
-        !Object.values(CrispRoles).includes(value) ? 'Invalid role' : null,
+      identifier: (v: string) =>
+        v.trim().length >= 3 ? null : 'Insert your unique student ID',
+      name: (v: string) =>
+        v.trim().length >= 3 ? null : 'Name must be at least 3 chars',
+      email: (v: string) => (/^\S+@\S+$/.test(v) ? null : 'Invalid email'),
+      password: (v: string) => (v.length >= 8 ? null : 'At least 8 characters'),
+      confirmPassword: (v: string, values: any) =>
+        v === values.password ? null : 'Passwords do not match',
+      role: (v: CrispRoleType) =>
+        v === CrispRole.Normal || v === CrispRole.Faculty
+          ? null
+          : 'Invalid role',
     },
   });
-  const roleData = [
-  { label: 'Student', value: CrispRoles.Normal },
-  { label: 'Faculty', value: CrispRoles.Faculty },
-];
 
-  const [errors, setErrors] = useState({
-    passwordMismatch: false,
-    registerError: null,
-  });
+  const [loading, setLoading] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
 
-  const handleRegister = async (values: FormValues) => {
-    const apiRoute = '/api/accounts/register';
-
-    const response = await fetch(apiRoute, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(values),
-    });
-
-    if (!response.ok) {
-      const { error } = await response.json();
-      setErrors({ ...errors, registerError: error });
-      return;
+  const onSubmit = async (values: any) => {
+    setLoading(true);
+    setServerError(null);
+    try {
+      const resp = await fetch('/api/accounts/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          identifier: values.identifier.trim(),
+          name: values.name.trim(),
+          email: values.email.trim(),
+          password: values.password,
+          role: values.role,
+        }),
+      });
+      if (!resp.ok) {
+        const data = await resp.json().catch(() => ({}));
+        throw new Error(data?.error || `Registration failed (${resp.status})`);
+      }
+      router.push('/auth/signin?success=true');
+    } catch (e: any) {
+      setServerError(e.message ?? 'Registration failed');
+    } finally {
+      setLoading(false);
     }
-
-    router.push('/auth/signin?success=true');
   };
 
+  const roleData = [
+    { label: 'Student', value: CrispRole.Normal },
+    { label: 'Faculty', value: CrispRole.Faculty },
+  ];
+
   return (
-    <Container size={420} my={40}>
-      {errors.registerError && (
+    <form onSubmit={form.onSubmit(onSubmit)}>
+      {serverError && (
         <Alert
+          mb="md"
           variant="light"
           color="red"
+          icon={<IconAlertCircle />}
           withCloseButton
-          onClose={() => setErrors({ ...errors, registerError: null })}
-          title="Alert title"
-          icon={<IconInfoCircle />}
+          onClose={() => setServerError(null)}
         >
-          {errors.registerError}
+          {serverError}
         </Alert>
       )}
+      <Stack gap="sm">
+        <TextInput
+          label="Student ID"
+          placeholder="e1234567"
+          withAsterisk
+          leftSection={<IconId size={18} />}
+          {...form.getInputProps('identifier')}
+        />
+        <TextInput
+          label="Name"
+          placeholder="John Doe"
+          withAsterisk
+          leftSection={<IconUser size={18} />}
+          {...form.getInputProps('name')}
+        />
+        <TextInput
+          label="School Email"
+          placeholder="name@u.nus.edu"
+          withAsterisk
+          leftSection={<IconAt size={18} />}
+          {...form.getInputProps('email')}
+        />
+        <PasswordInput
+          label="Password"
+          placeholder="At least 8 characters"
+          withAsterisk
+          leftSection={<IconLock size={18} />}
+          {...form.getInputProps('password')}
+        />
+        <PasswordInput
+          label="Confirm password"
+          placeholder="Retype password"
+          withAsterisk
+          leftSection={<IconCircleKey size={18} />}
+          {...form.getInputProps('confirmPassword')}
+        />
+        <div>
+          <Text size="sm" fw={600} mb={6}>
+            Sign up as
+          </Text>
+          <SegmentedControl
+            fullWidth
+            data={roleData}
+            {...form.getInputProps('role')}
+          />
+        </div>
+        <Button type="submit" mt="xs" loading={loading}>
+          Create account
+        </Button>
+        <Divider label="or" labelPosition="center" my="sm" />
+        {/* TODO: Not implemented yet! Log in with SSO */}
+        <Button variant="light" color="gray" type="button" onClick={() => {}}>
+          Log in with SSO
+        </Button>
+      </Stack>
+    </form>
+  );
+};
 
-      <Title ta="center">Create an account</Title>
-      <Text c="dimmed" size="sm" ta="center" mt={5}>
+export default function RegisterPage() {
+  return (
+    <AuthShell title="Create an account">
+      <Text c="dimmed" size="sm" my={5}>
         Already have an account?{' '}
         <Anchor size="sm" component={Link} href="/auth/signin">
           Sign in
         </Anchor>
       </Text>
-
-      <Paper withBorder shadow="md" p={30} mt={30} radius="md">
-        <form onSubmit={form.onSubmit(handleRegister)}>
-          <TextInput
-            withAsterisk
-            label="NUSNet ID"
-            placeholder="e1234567"
-            {...form.getInputProps('identifier')}
-          />
-          <TextInput
-            withAsterisk
-            label="Name"
-            placeholder="John Doe"
-            {...form.getInputProps('name')}
-            mt="md"
-          />
-          <TextInput
-            withAsterisk
-            label="Email"
-            placeholder="E-mail"
-            {...form.getInputProps('email')}
-            mt="md"
-          />
-          <PasswordInput
-            withAsterisk
-            label="Password"
-            placeholder="Password"
-            {...form.getInputProps('password')}
-            mt="md"
-          />
-          <PasswordInput
-            withAsterisk
-            label="Confirm password"
-            placeholder="Confirm password"
-            {...form.getInputProps('confirmPassword')}
-            mt="md"
-          />
-          {errors.passwordMismatch && (
-            <Text c="red">Passwords do not match</Text>
-          )}
-          <Text size="sm" fw={500} mt="md">
-            Are you signing up as a:
-          </Text>
-          <SegmentedControl
-            data={roleData}
-            {...form.getInputProps('role')}
-          />
-          <Button type="submit" fullWidth mt="xl">
-            Register
-          </Button>
-        </form>
-      </Paper>
-    </Container>
+      <RegisterForm />
+    </AuthShell>
   );
-};
-
-export default RegisterPage;
+}
