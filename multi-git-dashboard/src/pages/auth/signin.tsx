@@ -1,133 +1,20 @@
+import AuthShell from '@/components/auth/AuthShell';
 import { logLogin } from '@/lib/auth/utils';
 import {
   Alert,
   Anchor,
   Button,
-  Center,
-  Container,
   Divider,
-  Group,
-  Paper,
   PasswordInput,
-  rem,
   Text,
   TextInput,
-  Title,
   Stack,
 } from '@mantine/core';
-import {
-  IconInfoCircle,
-  IconGitBranch,
-  IconAt,
-  IconLock,
-} from '@tabler/icons-react';
+import { IconInfoCircle, IconAt, IconLock } from '@tabler/icons-react';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-
-// CRISP Logo
-const BrandBadge: React.FC<{ size?: number }> = ({ size = 46 }) => (
-  <div
-    style={{
-      width: size,
-      height: size,
-      display: 'grid',
-      placeItems: 'center',
-      borderRadius: 9999,
-      background: 'linear-gradient(135deg,#A855F7,#22D3EE)',
-      boxShadow: '0 8px 32px rgba(168,85,247,.25)',
-    }}
-  >
-    <div
-      style={{
-        background: '#0f172a',
-        borderRadius: 9999,
-        width: size - 8,
-        height: size - 8,
-        display: 'grid',
-        placeItems: 'center',
-      }}
-    >
-      <IconGitBranch size={size - 16} />
-    </div>
-  </div>
-);
-
-const AuthShell: React.FC<{
-  children: React.ReactNode;
-  title: string;
-  subtitle?: string;
-}> = ({ children, title, subtitle }) => (
-  <div
-    style={{
-      minHeight: '100vh',
-      background:
-        'radial-gradient(1100px 520px at 12% 10%, rgba(100,116,139,.18), transparent), linear-gradient(135deg, #0b1324 0%, #0f172a 35%, #0b1220 100%)',
-      color: 'white',
-    }}
-  >
-    <Container
-      size={1200}
-      px="md"
-      py="xl"
-      style={{
-        minHeight: '100vh',
-        display: 'grid',
-        gridTemplateColumns: '1.1fr 1fr',
-        gap: 'min(6vw, 48px)',
-        alignItems: 'center',
-      }}
-    >
-      {/* Left: logo + title */}
-      <Stack visibleFrom="sm" h="100%" justify="center" gap="lg">
-        <Anchor
-          component={Link}
-          href="/"
-          underline="never"
-          c="inherit"
-          style={{ display: 'inline-block' }}
-        >
-          <Group gap="lg">
-            <BrandBadge size={100} />
-            <div>
-              <Title order={1} fw={700} fz={rem(70)}>
-                CRISP
-              </Title>
-              <Text size="lg" c="gray.4">
-                Classroom Repository Interaction & Status Platform
-              </Text>
-            </div>
-          </Group>
-        </Anchor>
-      </Stack>
-
-      {/* Right: glass card */}
-      <Center p={{ base: 'lg', md: 'xl' }}>
-        <Paper
-          shadow="xl"
-          radius="xl"
-          withBorder
-          p={{ base: 'lg', md: 36 }}
-          style={{
-            width: '100%',
-            backdropFilter: 'blur(8px)',
-            background: 'rgba(13, 20, 34, 0.72)',
-            borderColor: 'rgba(255,255,255,0.08)',
-          }}
-        >
-          <Stack gap={0}>
-            <Title order={2} fw={800} c="white">
-              {title}
-            </Title>
-            {subtitle && <Text c="gray.4">{subtitle}</Text>}
-          </Stack>
-          <div style={{ marginTop: 6 }}>{children}</div>
-        </Paper>
-      </Center>
-    </Container>
-  </div>
-);
 
 const SignInPage: React.FC = () => {
   const router = useRouter();
