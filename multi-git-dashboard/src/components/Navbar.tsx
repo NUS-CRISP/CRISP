@@ -134,8 +134,8 @@ const Navbar: React.FC = () => {
       icon: IconUsersGroup,
     },
     {
-      link: `/courses/${courseId}/pr-review`,
-      label: 'PR Review',
+      link: `/courses/${courseId}/pr-overview`,
+      label: 'PR Overview',
       disabled: !peopleAdded,
       icon: IconGitPullRequest,
     },
