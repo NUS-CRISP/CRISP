@@ -23,7 +23,7 @@ import * as submissionService from '../../services/submissionService';
 import * as assessmentAssignmentSetService from '../../services/assessmentAssignmentSetService';
 import AccountModel from '@models/Account';
 import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
-import CourseRole from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
 let mongo: MongoMemoryServer;
 
@@ -79,7 +79,7 @@ describe('assessmentAssignmentSetService (team granularity)', () => {
     await course.save();
     facultyAccount.courseRoles.push({
       course: course._id.toString(),
-      courseRole: CourseRole.Faculty,
+      courseRole: COURSE_ROLE.Faculty,
     });
     await facultyAccount.save();
     accountId = facultyAccount._id;
@@ -136,7 +136,7 @@ describe('assessmentAssignmentSetService (team granularity)', () => {
     });
     studentAccount.courseRoles.push({
       course: course._id.toString(),
-      courseRole: CourseRole.Student,
+      courseRole: COURSE_ROLE.Student,
     });
     await studentAccount.save();
 
@@ -154,7 +154,7 @@ describe('assessmentAssignmentSetService (team granularity)', () => {
     });
     taAccount.courseRoles.push({
       course: course._id.toString(),
-      courseRole: CourseRole.TA,
+      courseRole: COURSE_ROLE.TA,
     });
     await taAccount.save();
 
@@ -521,7 +521,7 @@ describe('assessmentAssignmentSetService (individual granularity)', () => {
     await course.save();
     facultyAccount.courseRoles.push({
       course: course._id.toString(),
-      courseRole: CourseRole.Faculty,
+      courseRole: COURSE_ROLE.Faculty,
     });
     await facultyAccount.save();
 
@@ -558,7 +558,7 @@ describe('assessmentAssignmentSetService (individual granularity)', () => {
     });
     studentAccount1.courseRoles.push({
       course: course._id.toString(),
-      courseRole: CourseRole.Student,
+      courseRole: COURSE_ROLE.Student,
     });
     await studentAccount1.save();
     const user2 = await UserModel.create({
@@ -574,7 +574,7 @@ describe('assessmentAssignmentSetService (individual granularity)', () => {
     });
     studentAccount2.courseRoles.push({
       course: course._id.toString(),
-      courseRole: CourseRole.Student,
+      courseRole: COURSE_ROLE.Student,
     });
     await studentAccount2.save();
     user1Id = user1._id;
@@ -602,7 +602,7 @@ describe('assessmentAssignmentSetService (individual granularity)', () => {
     });
     taAccount.courseRoles.push({
       course: course._id.toString(),
-      courseRole: CourseRole.TA,
+      courseRole: COURSE_ROLE.TA,
     });
     await taAccount.save();
 

@@ -49,7 +49,7 @@ import {
 import { NotFoundError } from '../../services/errors';
 import InternalAssessmentModel from '@models/InternalAssessment';
 import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
-import CourseRole from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 import { DEFAULT_TEAMSET_NAME } from '@shared/types/TeamSet';
 
 let mongo: MongoMemoryServer;
@@ -239,7 +239,7 @@ describe('courseService', () => {
     course.students.push(student._id);
     studentPair.account.courseRoles.push({
       course: course._id.toString(),
-      courseRole: CourseRole.Student,
+      courseRole: COURSE_ROLE.Student,
     });
     await studentPair.account.save();
 
@@ -251,7 +251,7 @@ describe('courseService', () => {
     course.TAs.push(ta._id);
     taPair.account.courseRoles.push({
       course: course._id.toString(),
-      courseRole: CourseRole.TA,
+      courseRole: COURSE_ROLE.TA,
     });
     await taPair.account.save();
 
@@ -263,7 +263,7 @@ describe('courseService', () => {
     course.faculty.push(faculty._id);
     facultyPair.account.courseRoles.push({
       course: course._id.toString(),
-      courseRole: CourseRole.Faculty,
+      courseRole: COURSE_ROLE.Faculty,
     });
     await facultyPair.account.save();
 
@@ -272,7 +272,7 @@ describe('courseService', () => {
     course.faculty.push(faculty2._id);
     facultyPair2.account.courseRoles.push({
       course: course._id.toString(),
-      courseRole: CourseRole.Faculty,
+      courseRole: COURSE_ROLE.Faculty,
     });
     await facultyPair2.account.save();
 
@@ -1778,7 +1778,7 @@ describe('courseService', () => {
         acct?.courseRoles.some(
           (cr: any) =>
             String(cr.course) === String(courseId) &&
-            cr.courseRole === CourseRole.Student
+            cr.courseRole === COURSE_ROLE.Student
         )
       ).toBe(true);
 
@@ -2014,7 +2014,7 @@ describe('courseService', () => {
         acct?.courseRoles.some(
           (cr: any) =>
             String(cr.course) === String(courseId) &&
-            cr.courseRole === CourseRole.TA
+            cr.courseRole === COURSE_ROLE.TA
         )
       ).toBe(true);
 

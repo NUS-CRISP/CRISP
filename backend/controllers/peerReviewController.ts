@@ -11,10 +11,7 @@ import {
   deletePeerReviewById,
   updatePeerReviewById,
 } from '../services/peerReviewService';
-import { getAccountId } from '../utils/auth';
-import AccountModel from '@models/Account';
-import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
-import CourseRole from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 import { verifyRequestUser, verifyRequestPermission } from '../utils/auth';
 
 export const getAllPeerReviews = async (req: Request, res: Response) => {
@@ -60,7 +57,7 @@ export const getPeerReviewInfo = async (req: Request, res: Response) => {
 export const createPeerReview = async (req: Request, res: Response) => {
   const { account, userCourseRole } = await verifyRequestUser(req);
   const userId = await verifyRequestPermission(account._id, userCourseRole, [
-    CourseRole.Faculty,
+    COURSE_ROLE.Faculty,
   ]);
 
   try {
@@ -85,7 +82,7 @@ export const createPeerReview = async (req: Request, res: Response) => {
 export const deletePeerReview = async (req: Request, res: Response) => {
   const { account, userCourseRole } = await verifyRequestUser(req);
   await verifyRequestPermission(account._id, userCourseRole, [
-    CourseRole.Faculty,
+    COURSE_ROLE.Faculty,
   ]);
 
   try {
@@ -108,7 +105,7 @@ export const deletePeerReview = async (req: Request, res: Response) => {
 export const updatePeerReview = async (req: Request, res: Response) => {
   const { account, userCourseRole } = await verifyRequestUser(req);
   const userId = await verifyRequestPermission(account._id, userCourseRole, [
-    CourseRole.Faculty,
+    COURSE_ROLE.Faculty,
   ]);
 
   try {

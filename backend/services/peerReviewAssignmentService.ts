@@ -5,7 +5,7 @@ import TeamDataModel, { TeamData } from '@models/TeamData';
 import { Types } from 'mongoose';
 import { getPeerReviewById, getTeamDataById } from './peerReviewService';
 import type { AnyBulkWriteOperation } from 'mongodb';
-import CourseRole from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 import { MissingAuthorizationError } from './errors';
 
 export interface NormalizedTeam {
@@ -29,10 +29,10 @@ export const getPeerReviewAssignmentById = async (
   const isReviewerUser =
     assignment.studentReviewers.includes(oid(userId)) ||
     assignment.taReviewers.includes(oid(userId));
-  if (isReviewerUser || userCourseRole === CourseRole.Faculty)
+  if (isReviewerUser || userCourseRole === COURSE_ROLE.Faculty)
     return assignment;
 
-  if (userCourseRole === CourseRole.Student) {
+  if (userCourseRole === COURSE_ROLE.Student) {
     // Check if student is part of the reviewer team
     const reviewerTeam = await TeamModel.findById(assignment.reviewee);
     if (reviewerTeam && reviewerTeam.members?.includes(oid(userId)))
@@ -44,7 +44,7 @@ export const getPeerReviewAssignmentById = async (
       return assignment;
   }
 
-  if (userCourseRole === CourseRole.TA) {
+  if (userCourseRole === COURSE_ROLE.TA) {
     // Check if TA is supervising the reviewee team
     const revieweeTeam = await TeamModel.findById(assignment.reviewee);
     if (revieweeTeam && revieweeTeam.TA! === oid(userId)) return assignment;

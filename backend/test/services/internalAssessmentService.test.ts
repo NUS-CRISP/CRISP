@@ -59,7 +59,7 @@ import AssessmentResultModel, {
   AssessmentResult,
 } from '@models/AssessmentResult';
 import QuestionModel from '@models/Question';
-import CourseRole from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 
 let mongo: MongoMemoryServer;
@@ -110,7 +110,7 @@ const setupData = async () => {
   await course.save();
   facultyAccount.courseRoles.push({
     course: course._id.toString(),
-    courseRole: CourseRole.Faculty,
+    courseRole: COURSE_ROLE.Faculty,
   });
   await facultyAccount.save();
 
@@ -128,7 +128,7 @@ const setupData = async () => {
   });
   studentAccount.courseRoles.push({
     course: course._id.toString(),
-    courseRole: CourseRole.Student,
+    courseRole: COURSE_ROLE.Student,
   });
   await studentAccount.save();
 
@@ -145,7 +145,7 @@ const setupData = async () => {
   });
   taAccount.courseRoles.push({
     course: course._id.toString(),
-    courseRole: CourseRole.TA,
+    courseRole: COURSE_ROLE.TA,
   });
   await taAccount.save();
   course.students.push(student._id);
@@ -317,7 +317,7 @@ describe('internalAssessmentService', () => {
       account.courseRoles.filter(
         (r: { course: String; courseRole: String }) =>
           r.course === course._id.toString()
-      )[0].courseRole = CourseRole.TA;
+      )[0].courseRole = COURSE_ROLE.TA;
       await account.save();
       const fetched = await getInternalAssessmentById(
         assessment._id.toString(),
@@ -413,7 +413,7 @@ describe('internalAssessmentService', () => {
         crispRole: CRISP_ROLE.Normal,
         courseRoles: {
           course: course._id.toString(),
-          courseRole: CourseRole.Student,
+          courseRole: COURSE_ROLE.Student,
         },
       });
       await expect(
@@ -1046,7 +1046,7 @@ describe('internalAssessmentService', () => {
         crispRole: CRISP_ROLE.Normal,
         courseRoles: {
           course: course._id.toString(),
-          courseRole: CourseRole.Student,
+          courseRole: COURSE_ROLE.Student,
         },
       });
       await expect(
@@ -1827,7 +1827,7 @@ describe('internalAssessmentService', () => {
           crispRole: CRISP_ROLE.Normal,
           courseRoles: {
             course: course._id.toString(),
-            courseRole: CourseRole.Student,
+            courseRole: COURSE_ROLE.Student,
           },
         });
         await expect(
@@ -2466,7 +2466,7 @@ describe('internalAssessmentService', () => {
           crispRole: CRISP_ROLE.Normal,
           courseRoles: {
             course: course._id.toString(),
-            courseRole: CourseRole.Student,
+            courseRole: COURSE_ROLE.Student,
           },
         });
         await expect(
@@ -2573,7 +2573,7 @@ describe('internalAssessmentService', () => {
         crispRole: CRISP_ROLE.Normal,
         courseRoles: {
           course: course._id.toString(),
-          courseRole: CourseRole.Student,
+          courseRole: COURSE_ROLE.Student,
         },
       });
       await expect(
@@ -2665,7 +2665,7 @@ describe('internalAssessmentService', () => {
         crispRole: CRISP_ROLE.Normal,
         courseRoles: {
           course: course._id.toString(),
-          courseRole: CourseRole.Student,
+          courseRole: COURSE_ROLE.Student,
         },
       });
       await expect(
@@ -2712,7 +2712,7 @@ describe('internalAssessmentService', () => {
         crispRole: CRISP_ROLE.Normal,
         courseRoles: {
           course: course._id.toString(),
-          courseRole: CourseRole.Student,
+          courseRole: COURSE_ROLE.Student,
         },
       });
       await expect(
@@ -2754,7 +2754,7 @@ describe('internalAssessmentService', () => {
         crispRole: CRISP_ROLE.Normal,
         courseRoles: {
           course: course._id.toString(),
-          courseRole: CourseRole.Student,
+          courseRole: COURSE_ROLE.Student,
         },
       });
       await expect(
@@ -2805,7 +2805,7 @@ describe('internalAssessmentService', () => {
         crispRole: CRISP_ROLE.Normal,
         courseRoles: {
           course: course._id.toString(),
-          courseRole: CourseRole.Student,
+          courseRole: COURSE_ROLE.Student,
         },
       });
       const docs = await InternalAssessmentModel.findById(

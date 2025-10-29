@@ -62,7 +62,7 @@ import TeamModel from '@models/Team';
 import AssessmentResultModel from '@models/AssessmentResult';
 import { Question } from '@models/Question';
 import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
-import CourseRole from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
 let mongo: MongoMemoryServer;
 
@@ -330,17 +330,17 @@ const setupData = async (overrideEndDate?: Date) => {
   await course.save();
   facultyAccount.courseRoles.push({
     course: course._id.toString(),
-    courseRole: CourseRole.Faculty,
+    courseRole: COURSE_ROLE.Faculty,
   });
   await facultyAccount.save();
   taAccount.courseRoles.push({
     course: course._id.toString(),
-    courseRole: CourseRole.TA,
+    courseRole: COURSE_ROLE.TA,
   });
   await taAccount.save();
   studentAccount.courseRoles.push({
     course: course._id.toString(),
-    courseRole: CourseRole.Student,
+    courseRole: COURSE_ROLE.Student,
   });
   await studentAccount.save();
 
