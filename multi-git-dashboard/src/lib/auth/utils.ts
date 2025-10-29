@@ -1,11 +1,7 @@
-import CrispRoles, { CrispRole } from '@shared/types/auth/CrispRole';
-import CourseRoles, {
-  CourseRole,
-  CourseRoleTuple,
-} from '@shared/types/auth/CourseRole';
+import CrispRole, { CrispRoleType } from '@shared/types/auth/CrispRole';
 import { useSession } from 'next-auth/react';
 
-export const hasPermission = (...CrispRoles: CrispRole[]) => {
+export const hasPermission = (...CrispRoles: CrispRoleType[]) => {
   const { data: session } = useSession();
   return (
     (session?.user.crispRole && CrispRoles.includes(session.user.crispRole)) ||
@@ -14,28 +10,9 @@ export const hasPermission = (...CrispRoles: CrispRole[]) => {
 };
 
 export const hasFacultyPermission = () =>
-  hasPermission(CrispRoles.Admin, CrispRoles.Faculty);
+  hasPermission(CrispRole.Admin, CrispRole.Faculty);
 
-export const hasCoursePermission = (
-  courseId: string,
-  ...CourseRoles: CourseRole[]
-) => {
-  const { data: session } = useSession();
-  return (
-    (session?.user.courseRoles &&
-      CourseRoles.includes(
-        session.user.courseRoles.filter(
-          (r: CourseRoleTuple) => r.course === courseId
-        )[1]
-      )) ||
-    false
-  );
-};
-
-export const hasCourseFacultyPermission = (courseId: string) =>
-  hasCoursePermission(courseId, CourseRoles.Faculty);
-
-export const isTrialUser = (...CrispRoles: CrispRole[]) => {
+export const isTrialUser = (...CrispRoles: CrispRoleType[]) => {
   const { data: session } = useSession();
   return (
     (session?.user.crispRole && CrispRoles.includes(session.user.crispRole)) ||
@@ -43,7 +20,7 @@ export const isTrialUser = (...CrispRoles: CrispRole[]) => {
   );
 };
 
-export const isTrial = () => isTrialUser(CrispRoles.TrialUser);
+export const isTrial = () => isTrialUser(CrispRole.TrialUser);
 
 export const logLogin = async () => {
   const res = await fetch('/api/metrics/login', {
