@@ -17,7 +17,6 @@ import {
   Text,
   TextInput,
   Title,
-  useComputedColorScheme,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import {
@@ -27,7 +26,6 @@ import {
   IconLock,
   IconUser,
   IconAt,
-  IconChevronLeft,
   IconCircleKey,
 } from '@tabler/icons-react';
 import CrispRole, { CrispRoleType } from '@shared/types/auth/CrispRole';
@@ -91,6 +89,7 @@ const AuthShell: React.FC<{
       px="md"
       py="xl"
       style={{
+        minHeight: '100vh',
         display: 'grid',
         gridTemplateColumns: '1.1fr 1fr',
         gap: 'min(6vw, 48px)',
