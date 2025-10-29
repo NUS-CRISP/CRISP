@@ -117,7 +117,7 @@ const RegisterForm: React.FC = () => {
           withCloseButton
           onClose={() => setServerError(null)}
         >
-          {serverError}
+          <Text c="white">{serverError}</Text>
         </Alert>
       )}
       <Stack gap="sm">

@@ -14,25 +14,13 @@ import { IconInfoCircle, IconAt, IconLock } from '@tabler/icons-react';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 const SignInPage: React.FC = () => {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showAlert, setShowAlert] = useState(!!router.query.success);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    if (showAlert) {
-      const timer = setTimeout(() => {
-        setShowAlert(false);
-        router.push('/auth/signin');
-      }, 3000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [showAlert, router]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +41,6 @@ const SignInPage: React.FC = () => {
 
   const showError = (message: string) => {
     setError(message);
-    setTimeout(() => setError(''), 5000);
   };
 
   return (
@@ -70,7 +57,6 @@ const SignInPage: React.FC = () => {
           color="green"
           withCloseButton
           onClose={() => {
-            setShowAlert(false);
             router.push('/auth/signin');
           }}
           icon={<IconInfoCircle />}
@@ -81,7 +67,17 @@ const SignInPage: React.FC = () => {
         </Alert>
       )}
       {error && (
-        <Alert variant="light" color="red" icon={<IconInfoCircle />} mb={15}>
+        <Alert
+          variant="light"
+          color="red"
+          icon={<IconInfoCircle />}
+          mb={15}
+          withCloseButton
+          onClose={() => {
+            setError('');
+            router.push('/auth/signin');
+          }}
+        >
           <Text c="white">{error}</Text>
         </Alert>
       )}
