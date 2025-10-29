@@ -164,6 +164,11 @@ const RegisterForm: React.FC = () => {
             fullWidth
             data={roleData}
             {...form.getInputProps('role')}
+            styles={{
+              root: {
+                backgroundColor: 'rgba(255,255,255,0.7)',
+              },
+            }}
           />
         </div>
         <Button type="submit" mt="xs" loading={loading}>
