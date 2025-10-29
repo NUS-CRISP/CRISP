@@ -25,7 +25,7 @@ import UserModel, { User } from '@models/User';
 import { JiraBoard } from '@shared/types/JiraData';
 import { MultipleChoiceOption } from '@shared/types/Question';
 import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
-import CourseRole from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
 const START_DATE_STRING = '2024-10-10T20:13:24Z';
 
@@ -157,13 +157,13 @@ export const setupTutorialDataJob = async () => {
 
   trialAccount.courseRoles.push({
     course: trialCourse._id.toString(),
-    courseRole: CourseRole.Faculty,
+    courseRole: COURSE_ROLE.Faculty,
   });
   await trialAccount.save();
 
   adminAccount.courseRoles.push({
     course: trialCourse._id.toString(),
-    courseRole: CourseRole.Faculty,
+    courseRole: COURSE_ROLE.Faculty,
   });
   await adminAccount.save();
 
@@ -221,7 +221,7 @@ export const setupTutorialDataJob = async () => {
         }
         studentAccount.courseRoles.push({
           course: trialCourse._id.toString(),
-          courseRole: CourseRole.Student,
+          courseRole: COURSE_ROLE.Student,
         });
         await studentUser.save();
         await studentAccount.save();
@@ -2507,7 +2507,7 @@ export const setupTutorialDataJob = async () => {
           }
           studentAccount.courseRoles.push({
             course: trialCourse._id.toString(),
-            courseRole: CourseRole.Student,
+            courseRole: COURSE_ROLE.Student,
           });
           await studentAccount.save();
           await newStudent.save();

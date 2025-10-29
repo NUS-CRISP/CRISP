@@ -13,8 +13,7 @@ import {
 } from '../services/peerReviewService';
 import { getAccountId } from '../utils/auth';
 import AccountModel from '@models/Account';
-import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
-import CourseRole from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
 export const getAllPeerReviews = async (req: Request, res: Response) => {
   try {
@@ -39,7 +38,7 @@ export const createPeerReview = async (req: Request, res: Response) => {
   const userCourseRole = account.courseRoles.find(
     cr => cr.course.toString() === req.params.courseId
   )?.courseRole;
-  if (!userCourseRole || userCourseRole !== CourseRole.Faculty) {
+  if (!userCourseRole || userCourseRole !== COURSE_ROLE.Faculty) {
     // Only course coordinators can create peer reviews
     throw new MissingAuthorizationError(
       'Access denied for user role: ' +
@@ -74,7 +73,7 @@ export const deletePeerReview = async (req: Request, res: Response) => {
   const userCourseRole = account.courseRoles.find(
     cr => cr.course.toString() === req.params.courseId
   )?.courseRole;
-  if (!userCourseRole || userCourseRole !== CourseRole.Faculty) {
+  if (!userCourseRole || userCourseRole !== COURSE_ROLE.Faculty) {
     throw new MissingAuthorizationError('Access denied');
   }
 
@@ -104,7 +103,7 @@ export const getPeerReviewSettings = async (req: Request, res: Response) => {
   const userCourseRole = account.courseRoles.find(
     cr => cr.course.toString() === req.params.courseId
   )?.courseRole;
-  if (!userCourseRole || userCourseRole !== CourseRole.Faculty) {
+  if (!userCourseRole || userCourseRole !== COURSE_ROLE.Faculty) {
     throw new MissingAuthorizationError('Access denied');
   }
 
@@ -130,7 +129,7 @@ export const updatePeerReviewSettings = async (req: Request, res: Response) => {
   const userCourseRole = account.courseRoles.find(
     cr => cr.course.toString() === req.params.courseId
   )?.courseRole;
-  if (!userCourseRole || userCourseRole !== CourseRole.Faculty) {
+  if (!userCourseRole || userCourseRole !== COURSE_ROLE.Faculty) {
     throw new MissingAuthorizationError('Access denied');
   }
 

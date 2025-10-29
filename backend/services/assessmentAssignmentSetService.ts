@@ -14,7 +14,7 @@ import { getSubmissionsByAssessmentAndUser } from './submissionService';
 import { TeamMemberSelectionAnswer } from '@models/Answer';
 import { getInternalAssessmentById } from './internalAssessmentService';
 import AccountModel from '@models/Account';
-import CourseRole from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
 /**
  * Utility function: Assign a random TA from a given pool to a team or user without TAs.
@@ -394,7 +394,7 @@ export const getUnmarkedAssignmentsByTAId = async (
       .length !== 0 &&
     account.courseRoles.filter(
       r => r.course === assessment.course.toString()
-    )[0].courseRole === CourseRole.Student
+    )[0].courseRole === COURSE_ROLE.Student
   ) {
     return []; // For the sake of notifications, this returns an empty array.
   }

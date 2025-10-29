@@ -8,7 +8,7 @@ import { GitHubError, NotFoundError } from '../../services/errors';
 import * as gitHubService from '../../services/githubService';
 import * as gitHub from '../../utils/github';
 import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
-import CourseRole from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
 jest.mock('../../utils/github');
 
@@ -76,7 +76,7 @@ describe('gitHubService', () => {
     await mockCourse.save();
     mockFacultyAccount.courseRoles.push({
       course: mockCourse._id.toString(),
-      courseRole: CourseRole.Faculty,
+      courseRole: COURSE_ROLE.Faculty,
     });
     await mockFacultyAccount.save();
 

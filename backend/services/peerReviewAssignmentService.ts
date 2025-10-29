@@ -9,7 +9,7 @@ import {
   NotFoundError,
   MissingAuthorizationError,
 } from './errors';
-import CourseRole from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
 export const getPeerReviewAssignmentsByPeerReviewId = async (
   userId: string,
@@ -23,7 +23,7 @@ export const getPeerReviewAssignmentsByPeerReviewId = async (
   }
 
   // Students can only view their own assignments
-  if (userCourseRole === CourseRole.Student) {
+  if (userCourseRole === COURSE_ROLE.Student) {
     const studentAssignments = await PeerReviewAssignmentModel.find({
       peerReviewId,
       reviewerUser: userId,
@@ -34,7 +34,7 @@ export const getPeerReviewAssignmentsByPeerReviewId = async (
   const allAssignments = await PeerReviewAssignmentModel.find({ peerReviewId });
 
   // TAs can view their own assignments (if any) and all assignments they are supervising
-  if (userCourseRole === CourseRole.TA) {
+  if (userCourseRole === COURSE_ROLE.TA) {
     const taAssignments = allAssignments
       .filter(async a => {
         const reviewerTeam = await TeamModel.findById(a.reviewerTeam);
@@ -57,8 +57,8 @@ export const getPeerReviewAssignmentsByTeamId = async (
 ) => {
   // Only course coordinators and TAs can view assignments by team
   if (
-    userCourseRole !== CourseRole.Faculty &&
-    userCourseRole !== CourseRole.TA
+    userCourseRole !== COURSE_ROLE.Faculty &&
+    userCourseRole !== COURSE_ROLE.TA
   ) {
     throw new MissingAuthorizationError(
       'Only course coordinators and TAs can view peer review assignments by team'
@@ -86,7 +86,7 @@ export const getPeerReviewAssignmentById = async (
   const isReviewerUser = assignment.reviewerUser?.toString() === userId;
   if (isReviewerUser) return assignment;
 
-  if (userCourseRole === CourseRole.Student) {
+  if (userCourseRole === COURSE_ROLE.Student) {
     // Check if student is part of the reviewer team
     const reviewerTeam = await TeamModel.findById(assignment.reviewerTeam);
     if (reviewerTeam && reviewerTeam.members?.map(String).includes(userId))
@@ -98,7 +98,7 @@ export const getPeerReviewAssignmentById = async (
       return assignment;
   }
 
-  if (userCourseRole === CourseRole.TA) {
+  if (userCourseRole === COURSE_ROLE.TA) {
     // Check if TA is supervising the reviewee team
     const revieweeTeam = await TeamModel.findById(assignment.reviewee);
     if (revieweeTeam && revieweeTeam.TA!.toString() === userId)
@@ -107,7 +107,7 @@ export const getPeerReviewAssignmentById = async (
 
   // Course coordinators can view all assignments
   console.log(userCourseRole);
-  if (userCourseRole === CourseRole.Faculty) return assignment;
+  if (userCourseRole === COURSE_ROLE.Faculty) return assignment;
 
   throw new MissingAuthorizationError(
     'You are not authorized to view this assignment'

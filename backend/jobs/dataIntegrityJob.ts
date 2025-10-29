@@ -7,7 +7,7 @@
  */
 import AccountModel from '@models/Account';
 import CourseModel from '@models/Course';
-import CourseRole from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 import cron from 'node-cron';
 
@@ -70,14 +70,14 @@ async function checkCourseRoles() {
         );
         studentAccount.courseRoles.push({
           course: course._id.toString(),
-          courseRole: CourseRole.Student,
+          courseRole: COURSE_ROLE.Student,
         });
         await studentAccount.save();
-      } else if (courseRoleTuple[0].courseRole !== CourseRole.Student) {
+      } else if (courseRoleTuple[0].courseRole !== COURSE_ROLE.Student) {
         console.warn(
           `Student account with id ${studentAccount._id} does not have correct course role for course ${course._id}. Fixing...`
         );
-        courseRoleTuple[0].courseRole = CourseRole.Student;
+        courseRoleTuple[0].courseRole = COURSE_ROLE.Student;
         await studentAccount.save();
       }
     }
@@ -99,14 +99,14 @@ async function checkCourseRoles() {
         );
         TAAccount.courseRoles.push({
           course: course._id.toString(),
-          courseRole: CourseRole.TA,
+          courseRole: COURSE_ROLE.TA,
         });
         await TAAccount.save();
-      } else if (courseRoleTuple[0].courseRole !== CourseRole.TA) {
+      } else if (courseRoleTuple[0].courseRole !== COURSE_ROLE.TA) {
         console.warn(
           `TA account with id ${TAAccount._id} does not have correct course role for course ${course._id}. Fixing...`
         );
-        courseRoleTuple[0].courseRole = CourseRole.TA;
+        courseRoleTuple[0].courseRole = COURSE_ROLE.TA;
         await TAAccount.save();
       }
     }
@@ -128,14 +128,14 @@ async function checkCourseRoles() {
         );
         facultyAccount.courseRoles.push({
           course: course._id.toString(),
-          courseRole: CourseRole.Faculty,
+          courseRole: COURSE_ROLE.Faculty,
         });
         await facultyAccount.save();
-      } else if (courseRoleTuple[0].courseRole !== CourseRole.Faculty) {
+      } else if (courseRoleTuple[0].courseRole !== COURSE_ROLE.Faculty) {
         console.warn(
           `Faculty account with id ${facultyAccount._id} does not have correct course role for course ${course._id}. Fixing...`
         );
-        courseRoleTuple[0].courseRole = CourseRole.Faculty;
+        courseRoleTuple[0].courseRole = COURSE_ROLE.Faculty;
         await facultyAccount.save();
       }
     }

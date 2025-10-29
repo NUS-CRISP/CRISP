@@ -1,7 +1,7 @@
 import mongoose, { Schema, Types } from 'mongoose';
 import { Account as SharedAccount } from '@shared/types/Account';
 import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
-import CourseRole from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
 export interface Account extends Omit<SharedAccount, 'user'>, Document {
   user: Types.ObjectId;
@@ -13,7 +13,7 @@ const CourseRoleTupleSchema = new mongoose.Schema(
     courseRole: {
       type: String,
       enum: Object.values(CourseRole),
-      default: CourseRole.TA,
+      default: COURSE_ROLE.TA,
     },
   },
   { _id: false }
