@@ -20,8 +20,7 @@ const AuthShell: React.FC<{
   <div
     style={{
       minHeight: '100vh',
-      background:
-        'radial-gradient(1100px 520px at 12% 10%, rgba(100,116,139,.18), transparent), linear-gradient(135deg, #0b1324 0%, #0f172a 35%, #0b1220 100%)',
+      background: 'linear-gradient(135deg, #0b1220 10%, #cfd7e3 100%)',
       color: 'white',
     }}
   >
@@ -52,7 +51,7 @@ const AuthShell: React.FC<{
               <Title order={1} fw={700} fz={rem(70)}>
                 CRISP
               </Title>
-              <Text size="lg" c="gray.4">
+              <Text size="lg" c="gray.3">
                 Classroom Repository Interaction & Status Platform
               </Text>
             </div>
@@ -78,7 +77,7 @@ const AuthShell: React.FC<{
             <Title order={2} fw={800} c="white">
               {title}
             </Title>
-            {subtitle && <Text c="gray.4">{subtitle}</Text>}
+            {subtitle && <Text c="gray.3">{subtitle}</Text>}
           </Stack>
           <div style={{ marginTop: 6 }}>{children}</div>
         </Paper>
