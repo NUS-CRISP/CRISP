@@ -4,8 +4,6 @@ import {
   Container,
   Loader,
   ScrollArea,
-  Group,
-  Button,
   Modal,
   Text,
   Notification,
@@ -13,6 +11,7 @@ import {
 import { useDisclosure } from '@mantine/hooks';
 import { Status } from '@shared/types/util/Status';
 import { useEffect, useState, useMemo } from 'react';
+import PeerReviewSettings from '../peer-review/PeerReviewSettings';
 import PeerReviewAccordionItem from '../peer-review/PeerReviewAccordianItem';
 import PeerReviewTAAccordianItem from '../peer-review/PeerReviewTAAccordianItem';
 import DeleteConfirmationModal from '../cards/Modals/DeleteConfirmationModal';
@@ -236,33 +235,16 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
       )}
       {hasFacultyPermission && peerReviewInfo && (
         <>
-          <Group
-            grow
-            w="100%"
-            mb={12}
-            mt={4}
-            style={{ display: 'flex', flex: '1' }}
-          >
-            <Button
-              onClick={openSettingsForm}
-              color="green"
-              variant="light"
-              disabled={peerReview.status === 'Completed'}
-            >
-              Update Settings
-            </Button>
-            <Button
-              color="red"
-              variant="light"
-              onClick={openDeleteModal}
-              disabled={peerReview.status === 'Completed'}
-            >
-              Delete Peer Review
-            </Button>
-            <Button variant="light" color="yellow" onClick={openAssignmentForm}>
-              Assign All Peer Reviews
-            </Button>
-          </Group>
+          <PeerReviewSettings
+            peerReview={peerReview}
+            teamSetName={
+              teamSets.find(ts => ts._id === peerReview.teamSetId)?.name ||
+              'Unknown Team Set'
+            }
+            onClickUpdate={openSettingsForm}
+            onClickDelete={openDeleteModal}
+            onClickAssign={openAssignmentForm}
+          />
           <Modal
             opened={openedSettingsForm}
             onClose={closeSettingsForm}

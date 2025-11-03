@@ -289,9 +289,21 @@ const PeerReviewAccordionItem = forwardRef<
                   </Text>
                   <Divider />
 
-                  {assignmentOfTeam ? (
-                    <ScrollArea style={{ height: 150 }} scrollbarSize={4}>
-                      <Stack gap="xs" mt="xs">
+                  {assignmentOfTeam && numberOfReviewers > 0 ? (
+                    <ScrollArea
+                      style={{
+                        minHeight: '124px',
+                        maxHeight: '272px',
+                        border: 'solid 1px',
+                        borderColor: '#505050',
+                        borderRadius: '6px',
+                      }}
+                      mt="xs"
+                      px="sm"
+                      py="xs"
+                      scrollbarSize={6}
+                    >
+                      <Stack gap="xs">
                         {reviewerType === 'Individual'
                           ? assignmentOfTeam.studentReviewers.map(reviewer => (
                               <Badge
