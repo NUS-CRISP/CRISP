@@ -1073,31 +1073,42 @@ const randomAndEqualAssign = (
   assignedForTeamMap: Map<string, Set<string>>,
   label: 'student' | 'team' | 'TA'
 ) => {
-  const randomisedReviewers = shuffleInPlace([...reviewerIds]);
-  for (const reviewerId of randomisedReviewers) {
-    const numReviewersNeeded = reviewsPerReviewer;
-    const candidates = [...(eligibleRevieweesMap.get(reviewerId) ?? [])];
-    shuffleInPlace(candidates);
-
-    const chosen = new Set<string>();
-    while (chosen.size < numReviewersNeeded) {
-      candidates.sort(
-        (a, b) =>
-          (assignedForTeamMap.get(a)?.size ?? 0) -
-          (assignedForTeamMap.get(b)?.size ?? 0)
-      );
-      const next = candidates.find(t => !chosen.has(t));
-      if (!next) {
-        throw new BadRequestError(
-          `Unable to assign enough reviews for ${label} reviewer ${reviewerId}.` +
-            'Consider allowing reviews of teams with same TA or reducing reviewsPerReviewer.'
-        );
-      }
-      if (!assignedForTeamMap.has(next))
-        assignedForTeamMap.set(next, new Set());
-      assignedForTeamMap.get(next)!.add(reviewerId);
-      chosen.add(next);
+  const slots: string[] = [];
+  for (const reviewerId of reviewerIds) {
+    for (let i = 0; i < reviewsPerReviewer; i++) {
+      slots.push(reviewerId);
     }
+  }
+
+  shuffleInPlace(slots);
+
+  const load = (teamId: string) => assignedForTeamMap.get(teamId)?.size ?? 0;
+
+  for (const reviewerId of slots) {
+    const eligibleReviewees = eligibleRevieweesMap.get(reviewerId);
+    if (!eligibleReviewees || eligibleReviewees.length === 0) {
+      throw new Error(
+        `No eligible reviewees available for ${label} reviewer ${reviewerId}`
+      );
+    }
+    eligibleReviewees.sort((a, b) => load(a) - load(b));
+
+    const next = eligibleReviewees.find(teamId => {
+      const assignedSet = assignedForTeamMap.get(teamId);
+      return !assignedSet || !assignedSet.has(reviewerId);
+    });
+
+    if (!next) {
+      throw new BadRequestError(
+        `Unable to assign enough reviews for ${label} reviewer ${reviewerId}. ` +
+          'Consider allowing reviews of teams with same TA or reducing the number of reviews per reviewer.'
+      );
+    }
+
+    if (!assignedForTeamMap.has(next)) {
+      assignedForTeamMap.set(next, new Set());
+    }
+    assignedForTeamMap.get(next)!.add(reviewerId);
   }
 };
 
