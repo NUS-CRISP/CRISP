@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { NotFoundError, BadRequestError } from '../services/errors';
 import {
-  getPeerReviewInfoById,
+  getPeerReviewAssignmentById,
   assignPeerReviews,
   addManualAssignment,
   removeManualAssignment,
@@ -9,27 +9,25 @@ import {
 import CourseRole from '@shared/types/auth/CourseRole';
 import { verifyRequestUser, verifyRequestPermission } from '../utils/auth';
 
-export const getPeerReviewInfo = async (req: Request, res: Response) => {
+export const getPeerReviewAssignment = async (req: Request, res: Response) => {
   const { account, userCourseRole } = await verifyRequestUser(req);
   const userId = await verifyRequestPermission(account._id, userCourseRole, []);
-  const { courseId, peerReviewId } = req.params;
+  const { courseId, peerReviewAssignmentId } = req.params;
 
   try {
-    const peerReviewInfo = await getPeerReviewInfoById(
-      userId,
+    const assignment = await getPeerReviewAssignmentById(
       userCourseRole,
-      courseId,
-      peerReviewId
+      userId,
+      peerReviewAssignmentId
     );
-    res.status(200).json(peerReviewInfo);
+    console.log('Fetched peer review assignment:', assignment);
+    res.status(200).json(assignment);
   } catch (error) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ message: error.message });
     } else {
-      console.error('Error fetching peer review assignments:', error);
-      res
-        .status(500)
-        .json({ message: 'Failed to get peer review assignments' });
+      console.error('Error fetching peer review assignment:', error);
+      res.status(500).json({ message: 'Failed to get peer review assignment' });
     }
   }
 };
