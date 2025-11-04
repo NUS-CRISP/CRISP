@@ -51,18 +51,16 @@ const PeerReviewAccordionItem = forwardRef<
   HTMLDivElement,
   PeerReviewAccordionItemProps
 >(
-  (
-    {
-      currentTeam,
-      teams,
-      assignmentOfTeam,
-      reviewerType,
-      hasFacultyPermission,
-      maxReviewsPerReviewer,
-      addManualAssignment,
-      deleteManualAssignment,
-    },
-  ) => {
+  ({
+    currentTeam,
+    teams,
+    assignmentOfTeam,
+    reviewerType,
+    hasFacultyPermission,
+    maxReviewsPerReviewer,
+    addManualAssignment,
+    deleteManualAssignment,
+  }) => {
     const router = useRouter();
 
     const [

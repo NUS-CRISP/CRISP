@@ -44,15 +44,13 @@ const PeerReviewTAAccordionItem = forwardRef<
   HTMLDivElement,
   PeerReviewTAAccordionItemProps
 >(
-  (
-    {
-      teams,
-      TAToAssignments,
-      hasFacultyPermission,
-      addManualAssignment,
-      deleteManualAssignment,
-    },
-  ) => {
+  ({
+    teams,
+    TAToAssignments,
+    hasFacultyPermission,
+    addManualAssignment,
+    deleteManualAssignment,
+  }) => {
     const [toBeDeletedReviewer, setToBeDeletedReviewer] = useState<{
       reviewee: Team;
       reviewer: { taId: string; taName: string };

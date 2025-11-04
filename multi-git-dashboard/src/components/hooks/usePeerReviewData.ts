@@ -49,7 +49,9 @@ export default function usePeerReviewData({
           assignmentId
         );
         if (cancelled) return;
-        const tree = await fetchGithubRepoStructure(prAssignment?.repoUrl ?? '');
+        const tree = await fetchGithubRepoStructure(
+          prAssignment?.repoUrl ?? ''
+        );
         if (cancelled) return;
         const comments = await apiFetchComments(courseId, assignmentId);
         if (cancelled) return;
