@@ -1,6 +1,5 @@
 import {
   Accordion,
-  Anchor,
   Badge,
   Group,
   Stack,
@@ -63,7 +62,6 @@ const PeerReviewAccordionItem = forwardRef<
       addManualAssignment,
       deleteManualAssignment,
     },
-    ref
   ) => {
     const router = useRouter();
 

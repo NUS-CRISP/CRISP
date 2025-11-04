@@ -52,7 +52,6 @@ const PeerReviewTAAccordionItem = forwardRef<
       addManualAssignment,
       deleteManualAssignment,
     },
-    ref
   ) => {
     const [toBeDeletedReviewer, setToBeDeletedReviewer] = useState<{
       reviewee: Team;

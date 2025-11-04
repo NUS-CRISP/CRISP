@@ -1,11 +1,10 @@
 import PeerReviewOverview from '@/components/views/PeerReviewOverview';
 import { Container } from '@mantine/core';
 import { useRouter } from 'next/router';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { hasFacultyPermission } from '@/lib/auth/utils';
 import { TeamSet } from '@shared/types/TeamSet';
 import { PeerReview } from '@shared/types/PeerReview';
-import { Course } from '@shared/types/Course';
 
 const PeerReviewListPage: React.FC = () => {
   const router = useRouter();

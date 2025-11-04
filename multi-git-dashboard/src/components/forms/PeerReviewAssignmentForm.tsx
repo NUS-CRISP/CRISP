@@ -146,7 +146,7 @@ const PeerReviewAssignmentForm: React.FC<PeerReviewAssignmentFormProps> = ({
           <Checkbox
             my="xs"
             value="default"
-            label={reviewerType == 'Individual' ? 'Students' : 'Teams'}
+            label={reviewerType === 'Individual' ? 'Students' : 'Teams'}
           />
           <Checkbox
             my="xs"
