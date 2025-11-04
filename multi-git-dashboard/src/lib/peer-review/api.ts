@@ -9,8 +9,8 @@ import {
 export const apiFetchPeerReviewAssignment = async (
   courseId: string,
   peerReviewAssignmentId: string
-): Promise<PeerReviewAssignment> => {
-  const peerReviewAssignmentApiRoute = `/api/peer-review/${courseId}/${peerReviewAssignmentId}`;
+): Promise<PeerReviewAssignment | null> => {
+  const peerReviewAssignmentApiRoute = `/api/peer-review/${courseId}/${peerReviewAssignmentId}/assignment`;
   try {
     const response = await fetch(peerReviewAssignmentApiRoute, {
       method: 'GET',
@@ -23,19 +23,7 @@ export const apiFetchPeerReviewAssignment = async (
     return assignment;
   } catch (err) {
     console.error('Error fetching peer review assignment: ', err);
-    return {
-      _id: peerReviewAssignmentId,
-      peerReviewId: 'peerReview123',
-      repoName: 'Sample Peer Review',
-      repoUrl: 'https://github.com/gongg21/AddSubtract.git',
-      reviewerUser: null,
-      reviewerTeam: null,
-      reviewee: null,
-      assignedBy: null,
-      assignedAt: new Date(),
-      deadline: null,
-      status: 'Pending',
-    };
+    return null;
   }
 };
 

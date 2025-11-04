@@ -4,28 +4,35 @@ import { PeerReview as SharedPeerReview } from '@shared/types/PeerReview';
 export interface PeerReview
   extends Omit<
       SharedPeerReview,
-      '_id' | 'courseId' | 'peerReviewSettingsId' | 'peerReviewAssignmentIds'
+      | '_id'
+      | 'courseId'
+      | 'peerReviewSettingsId'
+      | 'peerReviewAssignmentIds'
+      | 'teamSetId'
     >,
     Document {
   _id: Types.ObjectId;
   course: Types.ObjectId;
   peerReviewSettingsId: Types.ObjectId;
   peerReviewAssignmentIds: Types.ObjectId[];
+  teamSetId: Types.ObjectId;
   computedStatus?: 'Upcoming' | 'Ongoing' | 'Completed';
 }
 
 const peerReviewSchema = new Schema<PeerReview>({
+  // Basic info
   course: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
+  createdAt: { type: Date, default: Date.now, required: true },
+  status: {
+    type: String,
+    enum: ['Upcoming', 'Ongoing', 'Completed'],
+    required: true,
+    default: 'Upcoming',
+  },
+
+  // Settings
   title: { type: String, required: true },
   description: { type: String },
-  createdAt: { type: Date, default: Date.now, required: true },
-  peerReviewSettingsId: {
-    type: Schema.Types.ObjectId,
-    ref: 'PeerReviewSettings',
-  },
-  peerReviewAssignmentIds: [
-    { type: Schema.Types.ObjectId, ref: 'PeerReviewAssignment' },
-  ],
   startDate: { type: Date, required: true },
   endDate: {
     type: Date,
@@ -37,12 +44,31 @@ const peerReviewSchema = new Schema<PeerReview>({
       message: `end date must be in the future and after start date`,
     },
   },
-  status: {
+  teamSetId: { type: Schema.Types.ObjectId, ref: 'TeamSet', required: true },
+  TaAssignments: { type: Boolean, required: true, default: false },
+  reviewerType: {
     type: String,
-    enum: ['Upcoming', 'Ongoing', 'Completed'],
+    enum: ['Individual', 'Team'],
     required: true,
-    default: 'Upcoming',
+    default: 'Individual',
   },
+  minReviewsPerReviewer: { type: Number, required: true, min: 0 },
+  maxReviewsPerReviewer: {
+    type: Number,
+    required: true,
+    min: 1,
+    validate: {
+      validator: function (this: PeerReview, v: number) {
+        return v >= this.minReviewsPerReviewer;
+      },
+      message: `maxReviewsPerReviewer must be greater than or equal to minReviewsPerReviewer`,
+    },
+  },
+
+  // Assignments
+  peerReviewAssignmentIds: [
+    { type: Schema.Types.ObjectId, ref: 'PeerReviewAssignment' },
+  ],
 });
 
 peerReviewSchema.virtual('computedStatus').get(function (this: PeerReview) {

@@ -3,6 +3,9 @@ import cookie from 'cookie';
 import { Request } from 'express';
 import * as jose from 'jose';
 import { MissingAuthorizationError } from '../services/errors';
+import AccountModel from '@models/Account';
+import { getUserIdByAccountId } from '../services/accountService';
+import { CourseRole } from '@shared/types/auth/CourseRole';
 
 export const getAccountId = async (req: Request) => {
   const result = (await getToken(req)).sub;
@@ -35,4 +38,32 @@ export const getToken = async (req: Request) => {
 
   const dec = await jose.jwtDecrypt(jwe, key);
   return dec.payload;
+};
+
+export const verifyRequestUser = async (req: Request) => {
+  const accountId = await getAccountId(req);
+  const account = await AccountModel.findById(accountId);
+  if (!account) {
+    throw new MissingAuthorizationError('Access denied, invalid account');
+  }
+  const userCourseRole = account.courseRoles.find(
+    cr => cr.course.toString() === req.params.courseId
+  )?.courseRole;
+  if (!userCourseRole) {
+    throw new MissingAuthorizationError('Access denied, invalid course role');
+  }
+  return { account, userCourseRole };
+};
+
+export const verifyRequestPermission = async (
+  accountId: string,
+  userCourseRole: CourseRole,
+  authorisedRoles: CourseRole[]
+) => {
+  if (authorisedRoles.length > 0 && !authorisedRoles.includes(userCourseRole)) {
+    throw new MissingAuthorizationError(
+      'Access denied, insufficient permissions'
+    );
+  }
+  return await getUserIdByAccountId(accountId);
 };

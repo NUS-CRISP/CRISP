@@ -2,12 +2,10 @@ import { Tabs, Container, Button, Modal, Group } from '@mantine/core';
 import PeerReviewSettingsForm from '../forms/PeerReviewSettingsForm';
 import { useDisclosure } from '@mantine/hooks';
 import { TeamSet } from '@shared/types/TeamSet';
-import { Course } from '@shared/types/Course';
 import { PeerReview } from '@shared/types/PeerReview';
 import PeerReviewInfo from './PeerReviewInfo';
 
 interface PeerReviewOverviewProps {
-  course: Course | undefined;
   courseId: string;
   teamSets: TeamSet[];
   peerReviews: PeerReview[];
@@ -16,7 +14,6 @@ interface PeerReviewOverviewProps {
 }
 
 const PeerReviewOverview: React.FC<PeerReviewOverviewProps> = ({
-  course,
   courseId,
   teamSets,
   peerReviews,
@@ -35,34 +32,38 @@ const PeerReviewOverview: React.FC<PeerReviewOverviewProps> = ({
             opened={openedCreateForm}
             onClose={closeCreateForm}
             title="Create Peer Review"
+            centered
           >
             <PeerReviewSettingsForm
               courseId={courseId}
               peerReview={null}
-              onSetUpConfirmed={() => {
-                onUpdate();
+              teamSets={teamSets}
+              onSubmit={() => {
                 closeCreateForm();
+                onUpdate();
               }}
+              onClose={closeCreateForm}
             />
           </Modal>
         </Group>
       )}
-      <Tabs
-        defaultValue={peerReviews.length > 0 ? peerReviews[0]._id : undefined}
-        mt="md"
-      >
+      <Tabs mt="md">
         <Tabs.List
           style={{
             justifyContent: 'center',
           }}
         >
-          {course && peerReviews.length > 0
-            ? peerReviews.map(pr => (
-                <Tabs.Tab key={pr._id} value={pr._id}>
-                  {pr.title}
-                </Tabs.Tab>
-              ))
-            : null}
+          {courseId && peerReviews.length > 0 ? (
+            peerReviews.map(pr => (
+              <Tabs.Tab key={pr._id} value={pr._id}>
+                {pr.title}
+              </Tabs.Tab>
+            ))
+          ) : (
+            <Tabs.Tab key={'default'} value={'default'}>
+              No Peer Reviews Available
+            </Tabs.Tab>
+          )}
         </Tabs.List>
 
         {peerReviews.map(pr => (

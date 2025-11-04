@@ -1,17 +1,16 @@
 import express from 'express';
 import {
   getAllPeerReviews,
+  getPeerReviewInfo,
   createPeerReview,
+  updatePeerReview,
   deletePeerReview,
-  getPeerReviewSettings,
-  updatePeerReviewSettings,
 } from '../controllers/peerReviewController';
 import {
-  getPeerReviewAssignmentsByPeerReview,
-  getPeerReviewAssignmentsByTeam,
   getPeerReviewAssignment,
-  assignPeerReview,
-  randomAssignPeerReviews,
+  postAssignPeerReviews,
+  postAddManualAssignment,
+  deleteManualAssignment,
 } from '../controllers/peerReviewAssignmentController';
 import {
   getPeerReviewCommentsById,
@@ -25,25 +24,24 @@ const router = express.Router();
 // Peer Review Routes
 router.get('/:courseId/peer-reviews', getAllPeerReviews);
 router.post('/:courseId/peer-reviews', createPeerReview);
+router.put('/:courseId/:peerReviewId', updatePeerReview);
 router.delete('/:courseId/:peerReviewId', deletePeerReview);
-router.get('/:courseId/:peerReviewId/settings', getPeerReviewSettings);
-router.put('/:courseId/:peerReviewId/settings', updatePeerReviewSettings);
+router.get('/:courseId/:peerReviewId', getPeerReviewInfo);
 
 // Peer Review Assignment Routes
 router.get(
-  '/:courseId/:peerReviewId/assignments',
-  getPeerReviewAssignmentsByPeerReview
+  '/:courseId/:peerReviewAssignmentId/assignment',
+  getPeerReviewAssignment
 );
-router.get(
-  '/:courseId/:peerReviewId/assignments/:teamId',
-  getPeerReviewAssignmentsByTeam
-);
-router.post('/:courseId/:peerReviewId/assign-assignments', assignPeerReview);
 router.post(
-  '/:courseId/:peerReviewId/random-assignments',
-  randomAssignPeerReviews
+  '/:courseId/:peerReviewId/assign-peer-reviews',
+  postAssignPeerReviews
 );
-router.get('/:courseId/:peerReviewAssignmentId', getPeerReviewAssignment);
+router.post('/:courseId/:peerReviewId/manual-assign', postAddManualAssignment);
+router.delete(
+  '/:courseId/:peerReviewId/manual-assign/:revieweeId/:reviewerId',
+  deleteManualAssignment
+);
 
 // Peer Review Comment Routes
 router.get(

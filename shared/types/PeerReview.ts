@@ -1,26 +1,29 @@
 import { Team } from './Team';
 import { User } from './User';
 
+const REVIEWER_TYPES = ['Individual', 'Team'] as const;
+export type ReviewerType = typeof REVIEWER_TYPES[number];
+
 export interface PeerReview {
+  // Basic info
   _id: string;
   courseId: string;
+  createdAt: Date;
+  status: "Upcoming" | "Ongoing" | "Completed";
+  
+  // Settings
   title: string;
   description: string;
-  peerReviewSettingsId: string;
-  peerReviewAssignmentIds: string[];
-  createdAt: Date;
   startDate: Date;
   endDate: Date;
-  status: "Upcoming" | "Ongoing" | "Completed";
-}
-
-export interface PeerReviewSettings {
-  _id: string;
-  peerReviewId: string;
-  reviewerType: "Individual" | "Team";
+  reviewerType: ReviewerType;
   TaAssignments: boolean;
   minReviewsPerReviewer: number;
   maxReviewsPerReviewer: number;
+  teamSetId: string;
+  
+  // Assignments
+  peerReviewAssignmentIds: string[];
 }
 
 export interface PeerReviewAssignment {
@@ -28,10 +31,11 @@ export interface PeerReviewAssignment {
   peerReviewId: string;
   repoName: string;
   repoUrl: string;
-  reviewerUser: User | null;
-  reviewerTeam: Team | null;
-  reviewee: Team | null;
-  assignedBy: User | null;
+  studentReviewers: User[]; // for individual mode
+  teamReviewers: Team[]; // for team mode
+  taReviewers: User[]; // for TA assignments
+  reviewee: Team;
+  assignedBy: User;
   assignedAt: Date;
   deadline: Date | null;
   status: "Pending" | "In Progress" | "Completed";
@@ -55,4 +59,45 @@ export interface RepoNode {
   name: string;
   type: 'file' | 'directory';
   children?: RepoNode[];
+}
+
+export interface PeerReviewTeamMemberDTO {
+  userId: string;
+  name: string;
+  assignedReviews: PeerReviewAssignment[]; // for individual mode
+}
+
+export interface PeerReviewTeamDTO {
+  teamId: string;
+  teamNumber: number;
+  repoUrl: string;
+  repoName: string;
+  TA: {
+    id: string;
+    name: string;
+  };
+  members: PeerReviewTeamMemberDTO[];
+  assignedReviewsToTeam: PeerReviewAssignment[]; // for team mode
+}
+
+export type ReviewerRef = 
+  | { kind: "User"; userId: string; name: string }
+  | { kind: "Team"; teamId: string; teamNumber: number };
+
+export interface TAToAssignmentsMap {
+  [taId: string]: {
+    taName: string;
+    assignedReviews: PeerReviewAssignment[];
+  };
+}
+
+export interface PeerReviewInfoDTO {
+  _id: string;
+  teams: PeerReviewTeamDTO[];
+  reviewerType: ReviewerType;
+  assignmentsOfTeam: { [teamId: string]: PeerReviewAssignment };
+  TAAssignments: TAToAssignmentsMap;
+  capabilities: {
+    assignmentPageTeamIds: string[];
+  };
 }
