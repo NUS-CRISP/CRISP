@@ -1,7 +1,7 @@
 import PeerReviewModel from '@models/PeerReview';
 import CourseModel from '@models/Course';
 import { NotFoundError } from './errors';
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import PeerReviewAssignmentModel from '@models/PeerReviewAssignment';
 import PeerReviewCommentModel from '@models/PeerReviewComment';
 import {
@@ -14,11 +14,10 @@ import {
   initialiseAssignments,
   deleteAssignmentsByPeerReviewId,
 } from './peerReviewAssignmentService';
-import { Types } from 'mongoose';
 import CourseRole from '@shared/types/auth/CourseRole';
-import UserModel from '@models/User';
+import UserModel, { User } from '@models/User';
 import TeamModel from '@models/Team';
-import TeamDataModel from '@models/TeamData';
+import TeamDataModel, { TeamData } from '@models/TeamData';
 
 export interface NormalizedTeam {
   id: string;
@@ -181,9 +180,10 @@ export const deletePeerReviewById = async (peerReviewId: string) => {
     const peerReview = await PeerReviewModel.findById(peerReviewId);
     if (!peerReview) throw new NotFoundError('Peer review not found');
 
-    const prAssignments = await PeerReviewAssignmentModel.find({
-      peerReviewId,
-    });
+    const prAssignments: PeerReviewAssignment[] =
+      await PeerReviewAssignmentModel.find({
+        peerReviewId,
+      });
     const assignmentIds = prAssignments.map(assignment => assignment._id);
 
     // Delete associated comments
@@ -338,7 +338,7 @@ export const getTeamDataById = async (
   courseId: string,
   teamNumbers: number[]
 ) => {
-  const prTeamDatas = await TeamDataModel.find({
+  const prTeamDatas: TeamData[] = await TeamDataModel.find({
     course: courseId,
     teamId: { $in: teamNumbers },
   })
@@ -373,7 +373,7 @@ const getUsersByIdForTeams = async (scopedTeams: NormalizedTeam[]) => {
   }
 
   if (userIds.size === 0) return new Map<string, string>();
-  const users = await UserModel.find({ _id: { $in: [...userIds] } })
+  const users: User[] = await UserModel.find({ _id: { $in: [...userIds] } })
     .select('_id name')
     .lean();
   return new Map(users.map(u => [u._id.toString(), u.name]));

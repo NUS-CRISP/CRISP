@@ -1,7 +1,7 @@
 import PeerReviewAssignmentModel from '@models/PeerReviewAssignment';
-import TeamModel from '@models/Team';
+import TeamModel, { Team } from '@models/Team';
 import { BadRequestError, NotFoundError } from './errors';
-import TeamDataModel from '@models/TeamData';
+import TeamDataModel, { TeamData } from '@models/TeamData';
 import { Types } from 'mongoose';
 import { getPeerReviewById, getTeamDataById } from './peerReviewService';
 import type { AnyBulkWriteOperation } from 'mongodb';
@@ -308,11 +308,18 @@ export const initialiseAssignments = async (
   teamSetId: string,
   userId: string
 ) => {
-  const prTeams = await TeamModel.find({
+  const prTeams: Team[] = await TeamModel.find({
     teamSet: teamSetId,
   });
 
-  const prTeamDataById = await getTeamDataById(
+  const prTeamDataById: Map<
+    string,
+    {
+      gitHubOrgName: string;
+      repoName: string;
+      repoUrl: string;
+    }
+  > = await getTeamDataById(
     courseId,
     prTeams.map(t => t.number)
   );

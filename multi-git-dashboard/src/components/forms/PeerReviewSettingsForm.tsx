@@ -81,9 +81,11 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
   const form = useForm<FormValues>({
     initialValues: initial,
     validate: {
-      assessmentName: value => (value ? null : 'Assessment name is required'),
-      description: value => (value ? null : 'Description is required'),
-      startDate: value => {
+      assessmentName: (value: string) =>
+        value ? null : 'Assessment name is required',
+      description: (value: string) =>
+        value ? null : 'Description is required',
+      startDate: (value: string) => {
         if (!value) return 'Start date is required';
         if (
           form.values.endDate &&
@@ -92,7 +94,7 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
           return 'Start date must be before end date';
         }
       },
-      endDate: value => {
+      endDate: (value: string) => {
         if (!value) return 'End date is required';
         if (
           form.values.startDate &&
@@ -108,31 +110,30 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
         }
         return null;
       },
-      minReviews: value => {
-        const num = Number(value);
-        if (isNaN(num) || !Number.isInteger(num) || num < 0) {
+      minReviews: (value: number) => {
+        if (isNaN(value) || !Number.isInteger(value) || value < 0) {
           return 'Minimum reviews must be a non-negative integer';
         } else if (
           form.values.maxReviews &&
-          num > Number(form.values.maxReviews)
+          value > Number(form.values.maxReviews)
         ) {
           return 'Minimum reviews cannot exceed maximum reviews';
         }
         return null;
       },
-      maxReviews: value => {
-        const num = Number(value);
-        if (isNaN(num) || !Number.isInteger(num) || num < 1) {
+      maxReviews: (value: number) => {
+        if (isNaN(value) || !Number.isInteger(value) || value < 1) {
           return 'Maximum reviews must be a positive integer';
         } else if (
           form.values.minReviews &&
-          num < Number(form.values.minReviews)
+          value < Number(form.values.minReviews)
         ) {
           return 'Maximum reviews cannot be less than minimum reviews';
         }
         return null;
       },
-      teamSetId: value => (!value ? 'Please select a Team Set' : null),
+      teamSetId: (value: string) =>
+        !value ? 'Please select a Team Set' : null,
     },
   });
 
