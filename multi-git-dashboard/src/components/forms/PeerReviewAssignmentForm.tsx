@@ -52,19 +52,18 @@ const PeerReviewAssignmentForm: React.FC<PeerReviewAssignmentFormProps> = ({
       groupsToAssign: ['default'],
     },
     validate: {
-      reviewsPerReviewer: value => {
-        const num = Number(value);
+      reviewsPerReviewer: (value: number) => {
         if (
-          isNaN(num) ||
-          !Number.isInteger(num) ||
-          num < minReviewsPerReviewer
+          isNaN(value) ||
+          !Number.isInteger(value) ||
+          value < minReviewsPerReviewer
         ) {
           return `Number of reviews must be an integer greater than or equal to ${minReviewsPerReviewer}`;
-        } else if (num > maxReviewsPerReviewer) {
+        } else if (value > maxReviewsPerReviewer) {
           return `Number of reviews cannot exceed ${maxReviewsPerReviewer}`;
         }
       },
-      groupsToAssign: value => {
+      groupsToAssign: (value: string[]) => {
         if (value.length === 0) {
           return 'At least one group must be selected to assign reviews';
         }

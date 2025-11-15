@@ -12,8 +12,8 @@
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
-    "prettier-format": "prettier --config .prettierrc.json src/**/*.{ts,tsx} --write",
-    "prettier-check": "prettier --config .prettierrc.json src/**/*.{ts,tsx} --check"
+    "prettier-format": "prettier --config .prettierrc.json --write \"**/*.{ts,tsx}\"",
+    "prettier-check": "prettier --config .prettierrc.json --check \"**/*.{ts,tsx}\""
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -32,6 +32,7 @@
     "@mantine/notifications": "^7.7.1",
     "@mantine/nprogress": "^7.7.1",
     "@monaco-editor/react": "^4.7.0",
+    "monaco-editor": "^0.52.0",
     "@mui/material": "^6.4.3",
     "@tabler/icons-react": "^2.47.0",
     "@types/d3": "^7.4.3",

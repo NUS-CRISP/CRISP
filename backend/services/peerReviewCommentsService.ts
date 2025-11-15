@@ -1,6 +1,6 @@
 import PeerReviewAssignmentModel from '@models/PeerReviewAssignment';
 import PeerReviewCommentModel from '@models/PeerReviewComment';
-import TeamModel from '@models/Team';
+import TeamModel, { Team } from '@models/Team';
 import {
   BadRequestError,
   NotFoundError,
@@ -94,7 +94,7 @@ export const addPeerReviewCommentByAssignmentId = async (
     const reviewingTeams = await TeamModel.find({
       _id: { $in: assignment.teamReviewers },
     });
-    const isReviewerTeam = reviewingTeams.some(reviewerTeam =>
+    const isReviewerTeam = reviewingTeams.some((reviewerTeam: Team) =>
       reviewerTeam.members?.map(String).includes(userId)
     );
 
