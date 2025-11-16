@@ -109,15 +109,17 @@ const PeerReviewTAAccordionItem = forwardRef<
                         <Text>
                           {info.taName} ({taAssignedCount[taId]})
                         </Text>
-                        <AddManualAssignmentBox
-                          assignedCount={taAssignedCount[taId] ?? 0}
-                          dropdownOptions={getTaOptions(taId)}
-                          maxReviewsPerReviewer={teams.length} // TAs have no limit
-                          reviewerId={taId}
-                          addManualAssignment={(reviewee, reviewer) =>
-                            addManualAssignment(reviewee, reviewer, true)
-                          }
-                        />
+                        { hasFacultyPermission &&
+                          <AddManualAssignmentBox
+                            assignedCount={taAssignedCount[taId] ?? 0}
+                            dropdownOptions={getTaOptions(taId)}
+                            maxReviewsPerReviewer={teams.length} // TAs have no limit
+                            reviewerId={taId}
+                            addManualAssignment={(reviewee, reviewer) =>
+                              addManualAssignment(reviewee, reviewer, true)
+                            }
+                          />
+                        }
                       </Group>
                       <PeerReviewAssignments
                         assignments={info.assignedReviews}
