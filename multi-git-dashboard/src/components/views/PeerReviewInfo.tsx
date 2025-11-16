@@ -233,18 +233,19 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
           {notification.value}
         </Notification>
       )}
-      {hasFacultyPermission && peerReviewInfo && (
+      <PeerReviewSettings
+        peerReview={peerReview}
+        teamSetName={
+          teamSets.find(ts => ts._id === peerReview.teamSetId)?.name ||
+          'Unknown Team Set'
+        }
+        hasFacultyPermission
+        onClickUpdate={openSettingsForm}
+        onClickDelete={openDeleteModal}
+        onClickAssign={openAssignmentForm}
+      />
+      {hasFacultyPermission && (
         <>
-          <PeerReviewSettings
-            peerReview={peerReview}
-            teamSetName={
-              teamSets.find(ts => ts._id === peerReview.teamSetId)?.name ||
-              'Unknown Team Set'
-            }
-            onClickUpdate={openSettingsForm}
-            onClickDelete={openDeleteModal}
-            onClickAssign={openAssignmentForm}
-          />
           <Modal
             opened={openedSettingsForm}
             onClose={closeSettingsForm}
