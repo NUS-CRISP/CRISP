@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { getAccountId } from '../utils/auth';
 import AccountModel from '@models/Account';
-import { getUserIdByAccountId } from 'services/accountService';
+import { getUserIdByAccountId } from '../services/accountService';
 import {
   NotFoundError,
   BadRequestError,
