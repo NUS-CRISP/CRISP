@@ -13,6 +13,7 @@ import { PeerReview } from '@shared/types/PeerReview';
 interface PeerReviewSettingsProps {
   peerReview: PeerReview;
   teamSetName: string;
+  hasFacultyPermission: boolean;
   onClickUpdate: () => void;
   onClickDelete: () => void;
   onClickAssign: () => void;
@@ -32,6 +33,7 @@ const formatDate = (value: Date | string | null | undefined) => {
 const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
   peerReview,
   teamSetName,
+  hasFacultyPermission,
   onClickUpdate,
   onClickDelete,
   onClickAssign,
@@ -75,9 +77,11 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
             {status}
           </Badge>
           <Badge variant="outline">Reviewer Type: {reviewerType}</Badge>
-          <Badge variant="light" color={TaAssignments ? 'teal' : 'red'}>
-            TA Reviews: {TaAssignments ? 'Enabled' : 'Disabled'}
-          </Badge>
+          {hasFacultyPermission && (
+            <Badge variant="light" color={TaAssignments ? 'teal' : 'red'}>
+              TA Reviews: {TaAssignments ? 'Enabled' : 'Disabled'}
+            </Badge>
+          )}
         </Group>
       </Group>
 
@@ -99,19 +103,22 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
             <Text fz="sm">{formatDate(startDate)}</Text>
           </Stack>
 
-          <Stack gap={2}>
-            <Text fz="xs" c="dimmed">
-              Min. Reviews / Reviewer
-            </Text>
-            <Text fz="sm">{minReviewsPerReviewer ?? '—'}</Text>
-          </Stack>
-
-          <Stack gap={2}>
-            <Text fz="xs" c="dimmed">
-              Team set
-            </Text>
-            <Text fz="sm">{teamSetName}</Text>
-          </Stack>
+          {hasFacultyPermission && (
+            <>
+              <Stack gap={2}>
+                <Text fz="xs" c="dimmed">
+                  Min. Reviews / Reviewer
+                </Text>
+                <Text fz="sm">{minReviewsPerReviewer ?? '—'}</Text>
+              </Stack>
+              <Stack gap={2}>
+                <Text fz="xs" c="dimmed">
+                  Team set
+                </Text>
+                <Text fz="sm">{teamSetName}</Text>
+              </Stack>
+            </>
+          )}
         </Stack>
         <Stack>
           <Stack gap={2}>
@@ -120,40 +127,43 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
             </Text>
             <Text fz="sm">{formatDate(endDate)}</Text>
           </Stack>
-
-          <Stack gap={2}>
-            <Text fz="xs" c="dimmed">
-              Max. Reviews / Reviewer
-            </Text>
-            <Text fz="sm">{maxReviewsPerReviewer ?? '—'}</Text>
+          {hasFacultyPermission && (
+            <Stack gap={2}>
+              <Text fz="xs" c="dimmed">
+                Max. Reviews / Reviewer
+              </Text>
+              <Text fz="sm">{maxReviewsPerReviewer ?? '—'}</Text>
+            </Stack>
+          )}
+        </Stack>
+        {hasFacultyPermission && (
+          <Stack mt="sm">
+            <Button
+              onClick={onClickUpdate}
+              color="green"
+              variant="light"
+              disabled={status === 'Completed'}
+            >
+              Update Settings
+            </Button>
+            <Button
+              color="red"
+              variant="light"
+              onClick={onClickDelete}
+              disabled={status === 'Completed'}
+            >
+              Delete Peer Review
+            </Button>
+            <Button
+              color="yellow"
+              variant="light"
+              onClick={onClickAssign}
+              disabled={status === 'Completed'}
+            >
+              Assign All Peer Reviews
+            </Button>
           </Stack>
-        </Stack>
-        <Stack mt="sm">
-          <Button
-            onClick={onClickUpdate}
-            color="green"
-            variant="light"
-            disabled={status === 'Completed'}
-          >
-            Update Settings
-          </Button>
-          <Button
-            color="red"
-            variant="light"
-            onClick={onClickDelete}
-            disabled={status === 'Completed'}
-          >
-            Delete Peer Review
-          </Button>
-          <Button
-            color="yellow"
-            variant="light"
-            onClick={onClickAssign}
-            disabled={status === 'Completed'}
-          >
-            Assign All Peer Reviews
-          </Button>
-        </Stack>
+        )}
       </SimpleGrid>
     </Card>
   );

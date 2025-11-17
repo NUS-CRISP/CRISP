@@ -20,6 +20,8 @@ import { PeerReview, PeerReviewInfoDTO } from '@shared/types/PeerReview';
 import PeerReviewSettingsForm from '../forms/PeerReviewSettingsForm';
 import PeerReviewAssignmentForm from '../forms/PeerReviewAssignmentForm';
 import { showNotification } from '@mantine/notifications';
+import { hasCoursePermission } from '@/lib/auth/utils';
+import CourseRole from '@shared/types/auth/CourseRole';
 
 interface PeerReviewInfoProps {
   courseId: string;
@@ -96,6 +98,12 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
     openedAssignmentForm,
     { open: openAssignmentForm, close: closeAssignmentForm },
   ] = useDisclosure(false);
+
+  const isTAOrFaculty = hasCoursePermission(
+    courseId,
+    CourseRole.Faculty,
+    CourseRole.TA
+  );
 
   // Fetch Peer Review Info
   const fetchPeerReviewInfo = async () => {
@@ -233,18 +241,19 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
           {notification.value}
         </Notification>
       )}
-      {hasFacultyPermission && peerReviewInfo && (
+      <PeerReviewSettings
+        peerReview={peerReview}
+        teamSetName={
+          teamSets.find(ts => ts._id === peerReview.teamSetId)?.name ||
+          'Unknown Team Set'
+        }
+        hasFacultyPermission
+        onClickUpdate={openSettingsForm}
+        onClickDelete={openDeleteModal}
+        onClickAssign={openAssignmentForm}
+      />
+      {hasFacultyPermission && (
         <>
-          <PeerReviewSettings
-            peerReview={peerReview}
-            teamSetName={
-              teamSets.find(ts => ts._id === peerReview.teamSetId)?.name ||
-              'Unknown Team Set'
-            }
-            onClickUpdate={openSettingsForm}
-            onClickDelete={openDeleteModal}
-            onClickAssign={openAssignmentForm}
-          />
           <Modal
             opened={openedSettingsForm}
             onClose={closeSettingsForm}
@@ -313,7 +322,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
             multiple
             variant="separated"
           >
-            {peerReview.TaAssignments && (
+            {isTAOrFaculty && peerReview.TaAssignments && (
               <PeerReviewTAAccordianItem
                 teams={peerReviewInfo.teams.map(t => ({
                   value: t.teamId,

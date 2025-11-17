@@ -33,8 +33,8 @@ interface FormValues {
   endDate: string;
   reviewerType: ReviewerType;
   TaAssignments: boolean;
-  minReviews: number;
-  maxReviews: number;
+  minReviews: string | number;
+  maxReviews: string | number;
   teamSetId: string;
 }
 
@@ -110,23 +110,25 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
         }
         return null;
       },
-      minReviews: (value: number) => {
-        if (isNaN(value) || !Number.isInteger(value) || value < 0) {
+      minReviews: (value: string | number) => {
+        const num = typeof value === 'number' ? value : Number(value);
+        if (isNaN(num) || !Number.isInteger(num) || num < 0) {
           return 'Minimum reviews must be a non-negative integer';
         } else if (
           form.values.maxReviews &&
-          value > Number(form.values.maxReviews)
+          num > Number(form.values.maxReviews)
         ) {
           return 'Minimum reviews cannot exceed maximum reviews';
         }
         return null;
       },
-      maxReviews: (value: number) => {
-        if (isNaN(value) || !Number.isInteger(value) || value < 1) {
+      maxReviews: (value: string | number) => {
+        const num = typeof value === 'number' ? value : Number(value);
+        if (isNaN(num) || !Number.isInteger(num) || num < 1) {
           return 'Maximum reviews must be a positive integer';
         } else if (
           form.values.minReviews &&
-          value < Number(form.values.minReviews)
+          num < Number(form.values.minReviews)
         ) {
           return 'Maximum reviews cannot be less than minimum reviews';
         }
@@ -174,7 +176,7 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
         {
           method: isEditing ? 'PUT' : 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form.values),
+          body: JSON.stringify(normalize(form.values)),
         }
       );
 
