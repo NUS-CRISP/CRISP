@@ -247,7 +247,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
           teamSets.find(ts => ts._id === peerReview.teamSetId)?.name ||
           'Unknown Team Set'
         }
-        hasFacultyPermission
+        hasFacultyPermission={hasFacultyPermission}
         onClickUpdate={openSettingsForm}
         onClickDelete={openDeleteModal}
         onClickAssign={openAssignmentForm}
