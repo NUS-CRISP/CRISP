@@ -101,7 +101,33 @@ const CourseListPage: React.FC = () => {
           </div>
         </div>
         {courses.length === 0 ? (
-          <p>No courses to show</p>
+          <Box
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textAlign: 'center',
+              padding: '32px',
+              borderRadius: '12px',
+              border: '1px solid #e5e7eb',
+              background: '#f9fafb',
+              color: '#374151',
+              minHeight: '220px',
+            }}
+          >
+            <div>
+              <h2 style={{ margin: '0 0 8px' }}>No courses yet</h2>
+              <p style={{ margin: '0 0 16px', color: '#6b7280' }}>
+                You haven’t been added to any courses. Once you’re enrolled,
+                they’ll show up here.
+              </p>
+              {permission && (
+                <Button onClick={open} variant="filled">
+                  Create a course
+                </Button>
+              )}
+            </div>
+          </Box>
         ) : (
           <div
             style={{
