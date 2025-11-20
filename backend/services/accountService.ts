@@ -4,7 +4,7 @@ import UserModel from '../models/User';
 import { BadRequestError, NotFoundError } from './errors';
 import mongoose from 'mongoose';
 import { NotificationPeriod } from '@shared/types/Account';
-import CrispRoles, { CrispRole } from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE, CrispRole } from '@shared/types/auth/CrispRole';
 
 export const createNewAccount = async (
   identifier: string,
@@ -153,7 +153,7 @@ export const updateTelegramNotificationSettings = async (
 };
 
 export const getAllTrialAccounts = async () => {
-  return await AccountModel.find({ crispRole: CrispRoles.TrialUser }).populate(
+  return await AccountModel.find({ crispRole: CRISP_ROLE.TrialUser }).populate(
     'user'
   );
 };

@@ -8,7 +8,7 @@ import { Team } from '../models/Team';
 import TeamSetModel from '../models/TeamSet';
 import { BadRequestError, NotFoundError } from './errors';
 import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
-import CourseRoles from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
 interface ResultItem {
   teamNumber: number;
@@ -59,7 +59,7 @@ export const getAssessmentById = async (
   );
   if (
     courseRoleTuple.length > 0 &&
-    courseRoleTuple[0].courseRole === CourseRoles.TA
+    courseRoleTuple[0].courseRole === COURSE_ROLE.TA
   ) {
     const userId = account.user;
     assessment.results = assessment.results.filter(result =>
