@@ -12,7 +12,7 @@ const CourseRoleTupleSchema = new mongoose.Schema(
     course: { type: String, required: true },
     courseRole: {
       type: String,
-      enum: Object.values(CourseRole),
+      enum: Object.values(COURSE_ROLE),
       default: COURSE_ROLE.TA,
     },
   },
@@ -62,7 +62,7 @@ const accountSchema = new Schema<Account>({
   },
   crispRole: {
     type: String,
-    enum: CrispRole,
+    enum: CRISP_ROLE,
     default: CRISP_ROLE.Normal,
   },
   courseRoles: [CourseRoleTupleSchema],
