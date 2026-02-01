@@ -1,5 +1,6 @@
 import mongoose, { Schema, Types } from 'mongoose';
 import { PeerReviewComment as SharedPeerReviewComment } from '@shared/types/PeerReview';
+import CourseRole, { CourseRole as UserRole } from '@shared/types/auth/CourseRole';
 
 export interface PeerReviewComment
   extends Omit<
@@ -10,6 +11,7 @@ export interface PeerReviewComment
   _id: Types.ObjectId;
   peerReviewAssignmentId: Types.ObjectId;
   author: Types.ObjectId;
+  courseRole: UserRole;
 }
 
 const peerReviewCommentSchema = new Schema<PeerReviewComment>({
@@ -33,8 +35,11 @@ const peerReviewCommentSchema = new Schema<PeerReviewComment>({
   },
   comment: { type: String, required: true },
   author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  courseRole: { type: String, required: true, enum: Object.values(CourseRole) },
   createdAt: { type: Date, required: true, default: Date.now },
   updatedAt: { type: Date },
+  isFlagged: { type: Boolean, default: false },
+  flagReason: { type: String },
   isOverallComment: { type: Boolean, default: false },
 });
 

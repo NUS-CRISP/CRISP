@@ -12,6 +12,7 @@ import {
   addPeerReviewCommentByAssignmentId,
   updatePeerReviewCommentById,
   deletePeerReviewCommentById,
+  flagPeerReviewCommentById,
 } from '../services/peerReviewCommentsService';
 
 export const getPeerReviewCommentsById = async (
@@ -63,9 +64,6 @@ export const addPeerReviewComment = async (req: Request, res: Response) => {
     throw new MissingAuthorizationError('Access denied');
   }
   const userId = await getUserIdByAccountId(accountId);
-  console.log('userId:', userId);
-  console.log('peerReviewAssignmentId:', req.params.peerReviewAssignmentId);
-  console.log('commentData:', req.body);
 
   try {
     const newComment = await addPeerReviewCommentByAssignmentId(
@@ -141,6 +139,39 @@ export const deletePeerReviewComment = async (req: Request, res: Response) => {
     } else {
       console.error('Error deleting peer review comment:', error);
       res.status(500).json({ message: 'Failed to delete peer review comment' });
+    }
+  }
+};
+
+export const flagPeerReviewComment = async (req: Request, res: Response) => {
+  const accountId = await getAccountId(req);
+  const account = await AccountModel.findById(accountId);
+  if (!account) throw new MissingAuthorizationError('Access denied');
+
+  const courseId = req.params.courseId;
+  const userId = await getUserIdByAccountId(accountId);
+  const userCourseRole = account.courseRoles.find(
+    cr => cr.course.toString() === courseId
+  )?.courseRole;
+  if (!userCourseRole) throw new MissingAuthorizationError('Access denied');
+
+  try {
+    await flagPeerReviewCommentById(
+      userId,
+      userCourseRole,
+      req.params.commentId,
+      req.body.flagStatus,
+      req.body.flagReason
+    );
+    res
+      .status(200)
+      .json({ message: 'Peer review comment flagged successfully' });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ message: error.message });
+    } else {
+      console.error('Error flagging peer review comment:', error);
+      res.status(500).json({ message: 'Failed to flag peer review comment' });
     }
   }
 };

@@ -120,3 +120,27 @@ export const apiDeleteComment = async (
     throw new Error('Failed to delete comment: ' + (err as Error).message);
   }
 };
+
+const apiFlagComment = async (
+  courseId: string,
+  peerReviewAssignmentId: string,
+  commentId: string,
+  isFlag: boolean,
+  reason: string
+): Promise<void> => {
+  const flagCommentApiRoute = `/api/peer-review/${courseId}/${peerReviewAssignmentId}/comments/${commentId}/flag`;
+  try {
+    const response = await fetch(flagCommentApiRoute, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ flagStatus: isFlag, flagReason: reason }),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to flag comment');
+    }
+    return;
+  } catch (err) {
+    console.error('Error flagging comment: ', err);
+    throw new Error('Failed to flag comment: ' + (err as Error).message);
+  }
+};

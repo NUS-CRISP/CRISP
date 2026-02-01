@@ -176,16 +176,28 @@
 }
 
 .commentCard {
-  border: 1px solid #505050;
+  --cc-accent: rgba(255, 255, 255, 0.22);
+  --cc-tint: rgba(255, 255, 255, 0.08);
+
   padding: 12px;
-  margin-bottom: 8px;
-  margin-right: 8px;
+  margin: 4px 4px 10px 4px;
   cursor: pointer;
+
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-left: 6px solid var(--cc-accent);
+  transition: background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.commentCard:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.14);
 }
 
 .commentCardFocused {
-  border: 1px solid #66ccff;
-  background-color: rgba(102, 204, 255, 0.05);
+  border-color: color-mix(in srgb, var(--cc-accent) 80%, rgba(255,255,255,0.18));
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--cc-accent) 40%, transparent);
 }
 
 .focusedCommentHighlight {
@@ -202,6 +214,10 @@
 }
 
 .commentDeleteButton {
+  background-color: transparent;
+}
+
+.commentFlagButton {
   background-color: transparent;
 }
 

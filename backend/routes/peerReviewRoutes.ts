@@ -17,6 +17,7 @@ import {
   addPeerReviewComment,
   updatePeerReviewComment,
   deletePeerReviewComment,
+  flagPeerReviewComment,
 } from '../controllers/peerReviewCommentsController';
 
 const router = express.Router();
@@ -59,6 +60,10 @@ router.put(
 router.delete(
   '/:courseId/:peerReviewAssignmentId/comments/:commentId',
   deletePeerReviewComment
+);
+router.put(
+  '/:courseId/:peerReviewAssignmentId/comments/:commentId/flag',
+  flagPeerReviewComment
 );
 
 export default router;

@@ -11,6 +11,7 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import DeleteConfirmationModal from '@/components/cards/Modals/DeleteConfirmationModal';
+import FlagCommentConfirmationModal from '@/components/cards/Modals/FlagCommentConfirmationModal';
 import { IconListDetails, IconArrowLeft } from '@tabler/icons-react';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState, useRef } from 'react';
@@ -23,6 +24,7 @@ import usePeerReviewData from '@/components/hooks/usePeerReviewData';
 import { getLanguageForFile } from '@/lib/peer-review/utils';
 import type { editor as MEditor, IDisposable } from 'monaco-editor';
 import type { OnMount, Monaco } from '@monaco-editor/react';
+import { getMe } from '@/lib/auth/utils';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -54,15 +56,22 @@ const PeerReviewDetail: React.FC = () => {
     addComment,
     updateComment,
     deleteComment,
+    flagComment,
   } = usePeerReviewData({
     courseId: id,
     assignmentId: peerReviewAssignmentId,
   });
 
   // Current User
-  // const { data: session } = useSession();
-  // const currentUser: User = session?.user as User;
-
+  const [me, setMe] = useState<{ userId: string, userCourseRole: string } | null>(null);
+  useEffect(() => {
+    const fetchMe = async () => {
+      const userData = await getMe(id);
+      if (userData) setMe(userData);
+    };
+    fetchMe();
+  }, [id]);
+  
   /* ===== Refs and States for Editor and Interaction Logic ===== */
   const editorRef = useRef<MEditor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<Monaco | null>(null);
@@ -80,6 +89,7 @@ const PeerReviewDetail: React.FC = () => {
     null
   );
   const [deleteCommentId, setDeleteCommentId] = useState<string | null>(null);
+  const [flagCommentId, setFlagCommentId] = useState<string | null>(null);
 
   type ActiveWidget = { start: number; end: number; top: number } | null;
   const [activeWidget, setActiveWidget] = useState<ActiveWidget>(null);
@@ -430,6 +440,38 @@ const PeerReviewDetail: React.FC = () => {
     focusedCommentIds,
     renderFocusedAndStaticDecos,
   ]);
+  
+  // Flag comment handler
+  const requestFlagComment = useCallback(async (commentId: string) => {
+    setFlagCommentId(commentId);
+  }, []);
+  
+  const handleFlagComment = useCallback(async (flagReason: string) => {
+    if (!flagCommentId) return;
+    
+    try {
+      await flagComment(flagCommentId, flagReason);
+      if (focusedCommentIds.includes(flagCommentId)) {
+        const remainingIds = focusedCommentIds.filter(
+          id => id !== flagCommentId
+        );
+        renderFocusedAndStaticDecos(remainingIds);
+      }
+    } catch (error) {
+      notifications.show({
+        color: 'red',
+        title: 'Failed to flag comment',
+        message: (error as Error).message || 'Please try again.',
+      });
+    } finally {
+      setFlagCommentId(null);
+    }
+  }, [
+    flagCommentId,
+    flagComment,
+    focusedCommentIds,
+    renderFocusedAndStaticDecos,
+  ]);
 
   // Focus comment handler
   const handleFocusComment = useCallback(
@@ -511,12 +553,14 @@ const PeerReviewDetail: React.FC = () => {
           </Center>
         )}
         <PeerReviewCommentSidebar
+          user={me}
           comments={comments.filter(c => c.filePath === currFile)} // Filter logic based on role is handled on BE, here we just filter by file
           focusedComments={focusedCommentIds}
           onFocusComment={handleFocusComment}
           onAddComment={handleAddComment}
           onUpdateComment={handleUpdateComment}
           onDeleteComment={requestDeleteComment}
+          onFlagComment={requestFlagComment}
           onCancelComment={clearCommentDecorations}
           selectedLines={
             activeWidget
@@ -531,6 +575,13 @@ const PeerReviewDetail: React.FC = () => {
           onCancel={() => setDeleteCommentId(null)}
           title="Delete Comment?"
           message="Are you sure you want to delete this comment?"
+        />
+        <FlagCommentConfirmationModal
+          opened={!!flagCommentId}
+          onClose={() => setFlagCommentId(null)}
+          onConfirm={handleFlagComment}
+          onCancel={() => setFlagCommentId(null)}
+          title="Flag Comment?"
         />
       </Group>
     </Container>

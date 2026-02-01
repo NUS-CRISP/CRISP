@@ -16,12 +16,16 @@ import {
   IconPencil,
   IconX,
   IconCheck,
+  IconFlag,
 } from '@tabler/icons-react';
 import { PeerReviewComment } from '@shared/types/PeerReview';
 import classes from '../../styles/PeerReview.module.css';
 import { useEffect } from 'react';
+import CourseRole from '@shared/types/auth/CourseRole';
+import { User } from '@shared/types/auth/User';
 
 interface PeerReviewCommentSidebarProps {
+  user: { userId: string, userCourseRole: string };
   comments: PeerReviewComment[];
   focusedComments: string[];
   onFocusComment: (comment: PeerReviewComment) => void;
@@ -29,10 +33,12 @@ interface PeerReviewCommentSidebarProps {
   onCancelComment: () => void;
   onUpdateComment: (commentId: string, updatedComment: string) => void;
   onDeleteComment: (commentId: string) => void;
+  onFlagComment: (commentId: string) => void;
   selectedLines?: { start: number; end: number } | null;
 }
 
 const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
+  user,
   comments,
   focusedComments,
   onFocusComment,
@@ -40,6 +46,7 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
   onCancelComment,
   onUpdateComment,
   onDeleteComment,
+  onFlagComment,
   selectedLines,
 }) => {
   const [opened, setOpened] = useState(true);
@@ -67,6 +74,28 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
     onUpdateComment(commentId, editComment);
     setEditingId(null);
     setEditComment('');
+  };
+  
+  const getRoleVars = (courseRole?: CourseRole) => {
+    switch (courseRole) {
+      case CourseRole.TA:
+        return {
+          "--cc-accent": "#3B82F6", // clear blue
+          "--cc-tint": "rgba(59, 130, 246, 0.16)",
+        } as React.CSSProperties;
+
+      case CourseRole.Faculty:
+        return {
+          "--cc-accent": "#A855F7", // clear purple
+          "--cc-tint": "rgba(168, 85, 247, 0.16)",
+        } as React.CSSProperties;
+
+      default:
+        return {
+          "--cc-accent": "#10B981", // clear green
+          "--cc-tint": "rgba(16, 185, 129, 0.14)",
+        } as React.CSSProperties;
+    }
   };
 
   useEffect(() => {
@@ -147,55 +176,72 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
                   ? classes.commentCardFocused
                   : ''
               }`}
-            >
-              <Group justify="space-between">
-                <Text fw={500}>{c.author?.name || 'Anonymous'}</Text>
-                <Group gap={4}>
-                  {editingId === c._id ? (
-                    <>
-                      <ActionIcon
-                        size={24}
-                        disabled={!editComment.trim()}
-                        onClick={() => handleEditSave(c._id)}
-                      >
-                        <IconCheck size={14} />
-                      </ActionIcon>
-                      <ActionIcon
-                        size={24}
-                        color="gray"
-                        onClick={handleEditCancel}
-                      >
-                        <IconX size={14} />
-                      </ActionIcon>
-                    </>
-                  ) : (
-                    <>
-                      <ActionIcon
-                        size={24}
-                        className={classes.commentEditButton}
-                        color="blue"
-                        onClick={() => handleEditStart(c._id, c.comment)}
-                      >
-                        <IconPencil size={14} />
-                      </ActionIcon>
-                      <ActionIcon
-                        size={24}
-                        className={classes.commentDeleteButton}
-                        onClick={() => onDeleteComment(c._id)}
-                      >
-                        <IconTrash size={14} />
-                      </ActionIcon>
-                    </>
-                  )}
-                </Group>
+              style={getRoleVars(c.courseRole)}
+            > 
+              <Group justify="space-between" align="flex-start" wrap="nowrap" mb={4}>
+                <div style={{ flex: 1, minWidth: 0}}>
+                  {c.author?.name && 
+                    <Text fw={500} lh={1.2}>
+                      {c.author.name}
+                    </Text>
+                  }
+                  <Text size="xs" c="dimmed" mt={4}>
+                    {c.updatedAt
+                      ? `(updated on ${new Date(c.updatedAt).toLocaleDateString()})`
+                      : c.createdAt
+                        ? new Date(c.createdAt).toLocaleDateString()
+                        : ''}
+                  </Text>
+                </div>
+                { user.userId === c.author?._id && (
+                  <Group gap={4} wrap="nowrap" style={{ alignSelf: 'flex-start' }}>
+                    {editingId === c._id ? (
+                      <>
+                        <ActionIcon
+                          size={24}
+                          disabled={!editComment.trim()}
+                          onClick={() => handleEditSave(c._id)}
+                        >
+                          <IconCheck size={14} />
+                        </ActionIcon>
+                        <ActionIcon
+                          size={24}
+                          color="gray"
+                          onClick={handleEditCancel}
+                        >
+                          <IconX size={14} />
+                        </ActionIcon>
+                      </>
+                    ) : (
+                      <>
+                        <ActionIcon
+                          size={24}
+                          className={classes.commentEditButton}
+                          color="blue"
+                          onClick={() => handleEditStart(c._id, c.comment)}
+                        >
+                          <IconPencil size={14} />
+                        </ActionIcon>
+                        <ActionIcon
+                          size={24}
+                          className={classes.commentDeleteButton}
+                          onClick={() => onDeleteComment(c._id)}
+                        >
+                          <IconTrash size={14} />
+                        </ActionIcon>
+                        <ActionIcon
+                          size={24}
+                          className={classes.commentFlagButton}
+                          onClick={() => onFlagComment(c._id)}
+                        >
+                          <IconFlag size={14} />
+                        </ActionIcon>
+                      </>
+                    )}
+                  </Group>
+                )}
               </Group>
-              <Text size="xs" c="dimmed" mb={4}>
-                {c.updatedAt
-                  ? `(updated on ${new Date(c.updatedAt).toLocaleDateString()})`
-                  : c.createdAt
-                    ? new Date(c.createdAt).toLocaleDateString()
-                    : ''}
-              </Text>
+              
               {editingId === c._id ? (
                 <Textarea
                   value={editComment}

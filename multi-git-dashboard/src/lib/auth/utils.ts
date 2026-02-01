@@ -45,3 +45,18 @@ export const logLogin = async () => {
     console.error('Failed to log login event:', res.statusText);
   }
 };
+
+export const getMe = async (courseId) => {
+  const res = await fetch(`/api/courses/${courseId}/me`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  
+  if (!res.ok) {
+    console.error('Failed to fetch user data:', res.statusText);
+    return null;
+  }
+  
+  return res.json();
+};

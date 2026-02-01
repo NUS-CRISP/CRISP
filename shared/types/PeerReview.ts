@@ -1,3 +1,4 @@
+import { CourseRole } from './auth/CourseRole';
 import { Team } from './Team';
 import { User } from './User';
 
@@ -48,9 +49,12 @@ export interface PeerReviewComment {
   startLine: number;
   endLine: number;
   author: User;
+  courseRole: CourseRole;
   comment: string;
   createdAt: Date;
   updatedAt?: Date;
+  isFlagged?: boolean;
+  flagReason?: string;
   isOverallComment?: boolean;
 }
 

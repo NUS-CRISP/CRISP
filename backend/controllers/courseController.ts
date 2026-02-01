@@ -43,6 +43,27 @@ import { addStudentsToTeam, addTAsToTeam } from '../services/teamService';
 import { createTeamSet } from '../services/teamSetService';
 import { getAccountId } from '../utils/auth';
 import { addInternalAssessmentsToCourse } from '../services/internalAssessmentService';
+import AccountModel from '@models/Account';
+import { getUserIdByAccountId } from '../services/accountService';
+
+/*----------------------------------------Auth----------------------------------------*/
+export const getMe = async (req: Request, res: Response) => {
+  try {
+    const accountId = await getAccountId(req);
+    const account = await AccountModel.findById(accountId);
+    if (!account) {
+      throw new MissingAuthorizationError('Access denied');
+    }
+    const userCourseRole = account.courseRoles.find(
+        cr => cr.course.toString() === req.params.courseId
+      )?.courseRole;
+    const userId = await getUserIdByAccountId(accountId);
+    res.status(200).json({ userId, courseRole: userCourseRole });
+  } catch (error) {
+    console.error('Error getting user info:', error);
+    res.status(500).json({ message: 'Failed to get user info' });
+  };
+};
 
 /*----------------------------------------Course----------------------------------------*/
 export const createCourse = async (req: Request, res: Response) => {

@@ -10,6 +10,7 @@ import {
   apiAddComment,
   apiUpdateComment,
   apiDeleteComment,
+  apiFlagComment,
 } from '@/lib/peer-review/api';
 import {
   fetchGithubRepoStructure,
@@ -126,6 +127,22 @@ export default function usePeerReviewData({
     async (commentId: string) => {
       await apiDeleteComment(courseId, assignmentId, commentId);
       setComments(prev => prev.filter(c => c._id !== commentId));
+    },
+    [courseId, assignmentId]
+  );
+  
+  const flagComment = useCallback(
+    async (commentId: string, flagReason: string) => {
+      await apiFlagComment(courseId, assignmentId, commentId, true, flagReason);
+      await refreshComments();
+    },
+    [courseId, assignmentId]
+  );
+  
+  const unflagComment = useCallback(
+    async (commentId: string, unflagReason: string) => {
+      await apiFlagComment(courseId, assignmentId, commentId, false, unflagReason);
+      await refreshComments();
     },
     [courseId, assignmentId]
   );

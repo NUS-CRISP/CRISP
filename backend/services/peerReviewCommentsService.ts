@@ -18,6 +18,8 @@ const UNAUTHORIZED_TO_UPDATE_COMMENTS =
   'You are not authorized to update comments for this assignment';
 const UNAUTHORIZED_TO_DELETE_COMMENTS =
   'You are not authorized to delete comments for this assignment';
+const UNAUTHORIZED_TO_FLAG_COMMENTS =
+  'You are not authorized to flag comments for this assignment';
 
 export const getPeerReviewCommentsByAssignmentId = async (
   userId: string,
@@ -39,7 +41,7 @@ export const getPeerReviewCommentsByAssignmentId = async (
     if (isReviewee)
       return PeerReviewCommentModel.find({
         peerReviewAssignmentId: assignmentId,
-      }).populate('author', 'name');
+      }).select('-author');
     if (isReviewer) {
       return PeerReviewCommentModel.find({
         peerReviewAssignmentId: assignmentId,
@@ -135,6 +137,7 @@ export const addPeerReviewCommentByAssignmentId = async (
     startLine,
     endLine,
     comment,
+    courseRole: userCourseRole,
     author: userId,
     isOverallComment: isOverallComment || false,
   });
@@ -178,12 +181,7 @@ export const deletePeerReviewCommentById = async (
       'Peer review assignment not found for this comment'
     );
   }
-
-  console.log('role', userCourseRole);
-  console.log('userId', userId);
-  console.log('commentId', commentId);
-  console.log('comment author', comment.author.toString());
-
+  
   // If student, can only delete own comments
   if (
     userCourseRole === COURSE_ROLE.Student &&
@@ -202,6 +200,7 @@ export const deletePeerReviewCommentById = async (
     const revieweeTeam = await TeamModel.findById(assignment.reviewee);
     const isSupervisingTA =
       revieweeTeam && revieweeTeam.TA?.toString() === userId;
+
     if (isReviewer || isSupervisingTA) {
       const deletedComment = await PeerReviewCommentModel.deleteOne({
         _id: commentId,
@@ -220,3 +219,47 @@ export const deletePeerReviewCommentById = async (
 
   throw new MissingAuthorizationError(UNAUTHORIZED_TO_DELETE_COMMENTS);
 };
+
+export const flagPeerReviewCommentById = async (
+  userId: string,
+  userCourseRole: string,
+  commentId: string,
+  flagStatus: boolean,
+  flagReason?: string,
+) => {
+  const comment = await PeerReviewCommentModel.findById(commentId);
+  if (!comment) throw new NotFoundError(COMMENT_NOT_FOUND);
+  
+  const assignment = await PeerReviewAssignmentModel.findById(
+    comment.peerReviewAssignmentId
+  );
+  if (!assignment) {
+    throw new NotFoundError(
+      'Peer review assignment not found for this comment'
+    );
+  }
+
+  // If TA, can only flag comments of teams they are supervising
+  if (userCourseRole === CourseRole.TA) {
+    const revieweeTeam = await TeamModel.findById(assignment.reviewee);
+    const isSupervisingTA =
+      revieweeTeam && revieweeTeam.TA?.toString() === userId;
+
+    if (isSupervisingTA) {
+      comment.isFlagged = flagStatus;
+      comment.flagReason = flagReason;
+      await comment.save();
+      return;
+    }
+  }
+
+  // Course coordinators can flag any comment
+  if (userCourseRole === CourseRole.Faculty) {
+    comment.isFlagged = flagStatus;
+    comment.flagReason = flagReason;
+    await comment.save();
+    return;
+  }
+
+  throw new MissingAuthorizationError(UNAUTHORIZED_TO_FLAG_COMMENTS);
+}
