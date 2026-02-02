@@ -166,7 +166,6 @@ describe('courseController', () => {
 
     //   await createCourse(req, res);
 
-
     // });
   });
 
@@ -2199,7 +2198,10 @@ describe('courseController', () => {
 
       await addStudentsToCourseAndTeams(req, res);
 
-      expect(courseService.addStudentsToCourseAndTeam).toHaveBeenCalledWith('courseId', rows);
+      expect(courseService.addStudentsToCourseAndTeam).toHaveBeenCalledWith(
+        'courseId',
+        rows
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Students added to the course and teams successfully',
@@ -2209,7 +2211,9 @@ describe('courseController', () => {
     it('should handle NotFoundError and send a 404 status', async () => {
       const req = mockRequest(
         {
-          items: [{ identifier: 's1', name: 'A', email: 'a@x.com', teamNumber: 1 }],
+          items: [
+            { identifier: 's1', name: 'A', email: 'a@x.com', teamNumber: 1 },
+          ],
         },
         { id: 'courseId' }
       );
@@ -2226,7 +2230,9 @@ describe('courseController', () => {
     });
 
     it('should handle errors when adding students to course and teams', async () => {
-      const rows = [{ identifier: 's1', name: 'A', email: 'a@x.com', teamNumber: 1 }];
+      const rows = [
+        { identifier: 's1', name: 'A', email: 'a@x.com', teamNumber: 1 },
+      ];
       const req = mockRequest({ items: rows }, { id: 'courseId' });
       const res = mockResponse();
 
@@ -2237,15 +2243,27 @@ describe('courseController', () => {
       await addStudentsToCourseAndTeams(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to add students' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to add students',
+      });
     });
   });
 
   describe('addTAsAndTeams', () => {
     it('should add TAs to course with teams', async () => {
       const rows = [
-        { identifier: 'ta1', name: 'TA One', email: 'ta1@x.com', teamNumber: 3 },
-        { identifier: 'ta2', name: 'TA Two', email: 'ta2@x.com', teamNumber: 4 },
+        {
+          identifier: 'ta1',
+          name: 'TA One',
+          email: 'ta1@x.com',
+          teamNumber: 3,
+        },
+        {
+          identifier: 'ta2',
+          name: 'TA Two',
+          email: 'ta2@x.com',
+          teamNumber: 4,
+        },
       ];
       const req = mockRequest({ items: rows }, { id: 'courseId' });
       const res = mockResponse();
@@ -2256,7 +2274,10 @@ describe('courseController', () => {
 
       await addTAsAndTeams(req, res);
 
-      expect(courseService.addTAAndTeamToCourse).toHaveBeenCalledWith('courseId', rows);
+      expect(courseService.addTAAndTeamToCourse).toHaveBeenCalledWith(
+        'courseId',
+        rows
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'TAs added to the course with teams successfully',
@@ -2266,7 +2287,14 @@ describe('courseController', () => {
     it('should handle NotFoundError and send a 404 status', async () => {
       const req = mockRequest(
         {
-          items: [{ identifier: 'ta1', name: 'TA One', email: 'ta1@x.com', teamNumber: 3 }],
+          items: [
+            {
+              identifier: 'ta1',
+              name: 'TA One',
+              email: 'ta1@x.com',
+              teamNumber: 3,
+            },
+          ],
         },
         { id: 'courseId' }
       );
@@ -2283,7 +2311,14 @@ describe('courseController', () => {
     });
 
     it('should handle errors when adding TAs with teams', async () => {
-      const rows = [{ identifier: 'ta1', name: 'TA One', email: 'ta1@x.com', teamNumber: 3 }];
+      const rows = [
+        {
+          identifier: 'ta1',
+          name: 'TA One',
+          email: 'ta1@x.com',
+          teamNumber: 3,
+        },
+      ];
       const req = mockRequest({ items: rows }, { id: 'courseId' });
       const res = mockResponse();
 
@@ -2297,5 +2332,4 @@ describe('courseController', () => {
       expect(res.json).toHaveBeenCalledWith({ error: 'Failed to add TAs' });
     });
   });
-
 });
