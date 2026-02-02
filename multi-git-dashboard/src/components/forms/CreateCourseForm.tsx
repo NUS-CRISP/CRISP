@@ -20,13 +20,18 @@ import {
 import { DatePickerInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { CourseType } from '@shared/types/Course';
-import { IconBrandGithub, IconCheck, IconHelpCircle } from '@tabler/icons-react';
+import {
+  IconBrandGithub,
+  IconCheck,
+  IconHelpCircle,
+} from '@tabler/icons-react';
 import { getSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 
 const CARD_W = '210px';
-const gitHubNewInstallationUrl = 'https://github.com/apps/NUS-CRISP/installations/new';
+const gitHubNewInstallationUrl =
+  'https://github.com/apps/NUS-CRISP/installations/new';
 
 enum InstallationStatus {
   IDLE = 'idle',
@@ -96,14 +101,14 @@ const CreateCourse: React.FC = () => {
       // field should be valid only if courseType is Normal, or if courseType is GitHubOrg and installation check is successful
       gitHubOrgName: (value: string, values: CreateCourseFormValues) =>
         values.courseType === CourseType.Normal ||
-          (values.courseType === CourseType.GitHubOrg &&
-            appInstallationStatus === InstallationStatus.SUCCESS)
+        (values.courseType === CourseType.GitHubOrg &&
+          appInstallationStatus === InstallationStatus.SUCCESS)
           ? null
           : 'GitHub Organisation name is required',
       repoNameFilter: (value: string, values: CreateCourseFormValues) =>
         values.courseType === CourseType.Normal ||
-          (values.courseType === CourseType.GitHubOrg &&
-            appInstallationStatus === InstallationStatus.SUCCESS)
+        (values.courseType === CourseType.GitHubOrg &&
+          appInstallationStatus === InstallationStatus.SUCCESS)
           ? null
           : 'Repo name filter is required',
       provider: (value: string, values: CreateCourseFormValues) =>
@@ -114,19 +119,19 @@ const CreateCourse: React.FC = () => {
           : null,
       model: (value: string, values: CreateCourseFormValues) =>
         values.isOn &&
-          values.customisedAI &&
-          values.provider &&
-          modelOptions[values.provider]?.includes(value)
+        values.customisedAI &&
+        values.provider &&
+        modelOptions[values.provider]?.includes(value)
           ? null
           : values.customisedAI
             ? 'Model is missing / invalid'
             : null, // Only validate if 'customisedAI' is ON
       apiKey: (value: string, values: CreateCourseFormValues) =>
         values.isOn &&
-          values.customisedAI &&
-          values.provider &&
-          values.model &&
-          value.trim().length > 0
+        values.customisedAI &&
+        values.provider &&
+        values.model &&
+        value.trim().length > 0
           ? null
           : values.customisedAI
             ? 'Model is missing / invalid'
@@ -292,7 +297,12 @@ const CreateCourse: React.FC = () => {
               multiline
               w={300}
             >
-              <ActionIcon variant="subtle" color="gray" size="sm" aria-label="Setup Repositories help">
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                size="sm"
+                aria-label="Setup Repositories help"
+              >
                 <IconHelpCircle size={16} />
               </ActionIcon>
             </Tooltip>
@@ -312,8 +322,9 @@ const CreateCourse: React.FC = () => {
               </Title>
               <Card withBorder p="md">
                 <Text size="sm" c="dimmed" maw={520} mb="sm">
-                  Install the CRISP GitHub App in your GitHub organisation to enable automatic syncing
-                  of repositories from your organisation.
+                  Install the CRISP GitHub App in your GitHub organisation to
+                  enable automatic syncing of repositories from your
+                  organisation.
                 </Text>
                 <Button
                   w={CARD_W}
@@ -343,23 +354,37 @@ const CreateCourse: React.FC = () => {
                 />
                 <Space h="sm" />
                 {errorMessage && (
-                  <Text style={{ maxWidth: CARD_W, }} c="red">
+                  <Text style={{ maxWidth: CARD_W }} c="red">
                     {errorMessage}
                   </Text>
                 )}
                 <Button
                   type="button"
                   loading={appInstallationStatus === InstallationStatus.LOADING}
-                  variant={appInstallationStatus === InstallationStatus.SUCCESS ? 'filled' : 'outline'}
-                  color={appInstallationStatus === InstallationStatus.SUCCESS ? 'green'
-                    : appInstallationStatus === InstallationStatus.ERROR ? 'red' : 'blue'
+                  variant={
+                    appInstallationStatus === InstallationStatus.SUCCESS
+                      ? 'filled'
+                      : 'outline'
+                  }
+                  color={
+                    appInstallationStatus === InstallationStatus.SUCCESS
+                      ? 'green'
+                      : appInstallationStatus === InstallationStatus.ERROR
+                        ? 'red'
+                        : 'blue'
                   }
                   rightSection={
-                    appInstallationStatus === InstallationStatus.SUCCESS ? (<IconCheck size={14} />) : null
+                    appInstallationStatus === InstallationStatus.SUCCESS ? (
+                      <IconCheck size={14} />
+                    ) : null
                   }
-                  onClick={() => checkAppInstallation(form.values.gitHubOrgName)}
+                  onClick={() =>
+                    checkAppInstallation(form.values.gitHubOrgName)
+                  }
                 >
-                  {appInstallationStatus === InstallationStatus.ERROR ? 'Try Again' : 'Verify CRISP Installation'}
+                  {appInstallationStatus === InstallationStatus.ERROR
+                    ? 'Try Again'
+                    : 'Verify CRISP Installation'}
                 </Button>
 
                 <Collapse
@@ -405,7 +430,12 @@ const CreateCourse: React.FC = () => {
             multiline
             w={300}
           >
-            <ActionIcon variant="subtle" color="gray" size="sm" aria-label="AI Insights help">
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              size="sm"
+              aria-label="AI Insights help"
+            >
               <IconHelpCircle size={16} />
             </ActionIcon>
           </Tooltip>
@@ -434,7 +464,12 @@ const CreateCourse: React.FC = () => {
                   multiline
                   w={300}
                 >
-                  <ActionIcon variant="subtle" color="gray" size="sm" aria-label="AI Insights help">
+                  <ActionIcon
+                    variant="subtle"
+                    color="gray"
+                    size="sm"
+                    aria-label="AI Insights help"
+                  >
                     <IconHelpCircle size={16} />
                   </ActionIcon>
                 </Tooltip>
@@ -493,7 +528,12 @@ const CreateCourse: React.FC = () => {
                   }}
                 />
                 <Tooltip label="How often to generate AI insights for each group">
-                  <ActionIcon variant="subtle" color="gray" size="sm" aria-label="AI Insights help">
+                  <ActionIcon
+                    variant="subtle"
+                    color="gray"
+                    size="sm"
+                    aria-label="AI Insights help"
+                  >
                     <IconHelpCircle size={16} />
                   </ActionIcon>
                 </Tooltip>
@@ -512,7 +552,12 @@ const CreateCourse: React.FC = () => {
                   onChange={value => form.setFieldValue('aiStartDate', value)}
                 />
                 <Tooltip label="Pick the start date for generating AI insights">
-                  <ActionIcon variant="subtle" color="gray" size="sm" aria-label="AI Insights help">
+                  <ActionIcon
+                    variant="subtle"
+                    color="gray"
+                    size="sm"
+                    aria-label="AI Insights help"
+                  >
                     <IconHelpCircle size={16} />
                   </ActionIcon>
                 </Tooltip>

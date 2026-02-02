@@ -447,7 +447,7 @@ const Navbar: React.FC = () => {
 
           <div className={classes.navbarMain}>
             <TutorialPopover
-              stage={2}    
+              stage={2}
               position="right"
               onOpen={() => setMainLinkPopoverOpened(true)}
               onClose={() => setMainLinkPopoverOpened(false)}
