@@ -21,11 +21,10 @@ import {
 import { PeerReviewComment } from '@shared/types/PeerReview';
 import classes from '../../styles/PeerReview.module.css';
 import { useEffect } from 'react';
-import CourseRole from '@shared/types/auth/CourseRole';
-import { User } from '@shared/types/auth/User';
+import CourseRole, { CourseRole as UserCourseRole } from '@shared/types/auth/CourseRole';
 
 interface PeerReviewCommentSidebarProps {
-  user: { userId: string, userCourseRole: string };
+  user: { userId: string, userCourseRole: string } | null;
   comments: PeerReviewComment[];
   focusedComments: string[];
   onFocusComment: (comment: PeerReviewComment) => void;
@@ -76,7 +75,7 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
     setEditComment('');
   };
   
-  const getRoleVars = (courseRole?: CourseRole) => {
+  const getRoleVars = (courseRole?: UserCourseRole) => {
     switch (courseRole) {
       case CourseRole.TA:
         return {
@@ -193,7 +192,7 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
                         : ''}
                   </Text>
                 </div>
-                { user.userId === c.author?._id && (
+                { user?.userId === c.author?._id && (
                   <Group gap={4} wrap="nowrap" style={{ alignSelf: 'flex-start' }}>
                     {editingId === c._id ? (
                       <>

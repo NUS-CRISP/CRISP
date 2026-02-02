@@ -56,7 +56,7 @@ export const apiAddComment = async (
   peerReviewAssignmentId: string,
   comment: Omit<
     PeerReviewComment,
-    '_id' | 'peerReviewAssignmentId' | 'author' | 'createdAt' | 'updatedAt'
+    '_id' | 'peerReviewAssignmentId' | 'author' | 'createdAt' | 'updatedAt' | 'courseRole'
   >
 ): Promise<PeerReviewComment> => {
   const addCommentApiRoute = `/api/peer-review/${courseId}/${peerReviewAssignmentId}/comments`;
@@ -121,7 +121,7 @@ export const apiDeleteComment = async (
   }
 };
 
-const apiFlagComment = async (
+export const apiFlagComment = async (
   courseId: string,
   peerReviewAssignmentId: string,
   commentId: string,

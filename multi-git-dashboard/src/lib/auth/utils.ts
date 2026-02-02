@@ -46,7 +46,7 @@ export const logLogin = async () => {
   }
 };
 
-export const getMe = async (courseId) => {
+export const getMe = async (courseId: string) => {
   const res = await fetch(`/api/courses/${courseId}/me`, {
     method: 'GET',
     credentials: 'include',

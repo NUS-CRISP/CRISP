@@ -106,7 +106,7 @@ export default function usePeerReviewData({
     async (
       partial: Omit<
         PeerReviewComment,
-        '_id' | 'peerReviewAssignmentId' | 'author' | 'createdAt' | 'updatedAt'
+        '_id' | 'peerReviewAssignmentId' | 'author' | 'createdAt' | 'updatedAt' | 'courseRole'
       >
     ) => {
       await apiAddComment(courseId, assignmentId, partial);
@@ -164,5 +164,6 @@ export default function usePeerReviewData({
     addComment,
     updateComment,
     deleteComment,
+    flagComment,
   };
 }

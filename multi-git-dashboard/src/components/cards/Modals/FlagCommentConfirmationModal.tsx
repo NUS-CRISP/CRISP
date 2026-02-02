@@ -5,7 +5,7 @@ import { useDebouncedValue } from '@mantine/hooks';
 interface FlagCommentConfirmationModalProps {
   opened: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (reason: string) => void;
   onCancel: () => void;
   title?: string;
   message?: string;
