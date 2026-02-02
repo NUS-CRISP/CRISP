@@ -1,13 +1,10 @@
 import {
   ActionIcon,
-  Badge,
   Box,
   Button,
   Card,
-  CloseButton,
   Collapse,
   Group,
-  List,
   SegmentedControl,
   Select,
   Space,
