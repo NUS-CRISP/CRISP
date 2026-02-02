@@ -240,6 +240,32 @@ describe('gitHubService', () => {
       ).rejects.toThrow(NotFoundError);
     });
 
+    it('should throw NotFoundError if no github org or repo link', async () => {
+      const mockFacultyUser = await UserModel.findOne({ identifier: 'test' });
+      const courseWithoutGitHub = new CourseModel({
+        name: 'testCourseNoGitHub',
+        code: 'testCourseNoGitHub',
+        semester: 'testCourseNoGitHub',
+        startDate: new Date(),
+        faculty: [mockFacultyUser!._id],
+        TAs: [],
+        students: [],
+        teamSets: [],
+        courseType: 'GitHubOrg',
+        // No gitHubOrgName
+        // No gitHubRepoLinks
+        repoNameFilter: '',
+      });
+      await courseWithoutGitHub.save();
+
+      await expect(
+        gitHubService.getAuthorizedTeamDataByCourse(
+          mockFacultyAccountId,
+          courseWithoutGitHub._id.toString()
+        )
+      ).rejects.toThrow(NotFoundError);
+    });
+
     it('should throw NotFoundError if faculty member is not authorized to view team data', async () => {
       const unauthorizedFacultyUser = new UserModel({
         identifier: 'test1',
