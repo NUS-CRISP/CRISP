@@ -12,7 +12,7 @@ import { Team as SharedTeam } from '@shared/types/Team';
 import { TeamData } from '@shared/types/TeamData';
 import { Status } from '@shared/types/util/Status';
 import { useEffect, useState } from 'react';
-import PRAccordionItem from '../pr-review/PRAccordionItem';
+import PRAccordionItem from '../pr-overview/PRAccordionItem';
 import { useTutorialContext } from '../tutorial/TutorialContext';
 import TutorialPopover from '../tutorial/TutorialPopover';
 import { TeamSet } from '@shared/types/TeamSet';
@@ -30,7 +30,7 @@ export interface Team extends Omit<SharedTeam, 'teamData'> {
 
 export type ProfileGetter = (gitHandle: string) => Promise<Profile>;
 
-const PRReview: React.FC<OverviewProps> = ({
+const PROverview: React.FC<OverviewProps> = ({
   courseId,
   dateUtils,
   teamSets,
@@ -196,4 +196,4 @@ const PRReview: React.FC<OverviewProps> = ({
   );
 };
 
-export default PRReview;
+export default PROverview;

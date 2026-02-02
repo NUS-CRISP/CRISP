@@ -238,7 +238,7 @@ const getCourseData = async (octokit: Octokit, course: any) => {
       };
     }
 
-    // Continue with team PR reviews and save data
+    // Continue with team PR overviews and save data
     for (const teamPR of teamPRs) {
       for (const review of teamPR.reviews) {
         if (!review.user || !(review.user in teamContributions)) continue;
