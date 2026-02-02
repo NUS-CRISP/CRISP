@@ -1,12 +1,5 @@
 import { Request, Response } from 'express';
-import { getAccountId } from '../utils/auth';
-import AccountModel from '@models/Account';
-import { getUserIdByAccountId } from '../services/accountService';
-import {
-  NotFoundError,
-  BadRequestError,
-  MissingAuthorizationError,
-} from '../services/errors';
+import { verifyRequestPermission, verifyRequestUser } from '../utils/auth';
 import {
   getPeerReviewCommentsByAssignmentId,
   addPeerReviewCommentByAssignmentId,
@@ -14,58 +7,35 @@ import {
   deletePeerReviewCommentById,
   flagPeerReviewCommentById,
 } from '../services/peerReviewCommentsService';
+import { handleError } from '../utils/error';
+import CourseRole from '@shared/types/auth/CourseRole';
 
 export const getPeerReviewCommentsById = async (
   req: Request,
   res: Response
 ) => {
-  const accountId = await getAccountId(req);
-  const account = await AccountModel.findById(accountId);
-  if (!account) {
-    throw new MissingAuthorizationError('Access denied');
-  }
-  const userCourseRole = account.courseRoles.find(
-    cr => cr.course.toString() === req.params.courseId
-  )?.courseRole;
-  if (!userCourseRole) {
-    throw new MissingAuthorizationError('Access denied');
-  }
-  const userId = await getUserIdByAccountId(accountId);
-  const peerReviewAssignmentId = req.params.peerReviewAssignmentId;
-
   try {
+    const { account, userCourseRole } = await verifyRequestUser(req);
+    const userId = await verifyRequestPermission(account._id, userCourseRole, []);
+    const peerReviewAssignmentId = req.params.peerReviewAssignmentId;
+    
     const comments = await getPeerReviewCommentsByAssignmentId(
       userId,
       userCourseRole,
       peerReviewAssignmentId
     );
-    console.log('comments:', comments);
+
     res.status(200).json(comments);
   } catch (error) {
-    if (error instanceof NotFoundError) {
-      res.status(404).json({ message: error.message });
-    } else {
-      console.error('Error fetching peer review comments:', error);
-      res.status(500).json({ message: 'Failed to get peer review comments' });
-    }
+    return handleError(res, error, 'Failed to get peer review comments');
   }
 };
 
 export const addPeerReviewComment = async (req: Request, res: Response) => {
-  const accountId = await getAccountId(req);
-  const account = await AccountModel.findById(accountId);
-  if (!account) {
-    throw new MissingAuthorizationError('Access denied');
-  }
-  const userCourseRole = account.courseRoles.find(
-    cr => cr.course.toString() === req.params.courseId
-  )?.courseRole;
-  if (!userCourseRole) {
-    throw new MissingAuthorizationError('Access denied');
-  }
-  const userId = await getUserIdByAccountId(accountId);
-
   try {
+    const { account, userCourseRole } = await verifyRequestUser(req);
+    const userId = await verifyRequestPermission(account._id, userCourseRole, []);
+    
     const newComment = await addPeerReviewCommentByAssignmentId(
       userId,
       userCourseRole,
@@ -74,57 +44,35 @@ export const addPeerReviewComment = async (req: Request, res: Response) => {
     );
     res.status(201).json(newComment);
   } catch (error) {
-    if (error instanceof BadRequestError) {
-      res.status(400).json({ message: error.message });
-    } else {
-      console.error('Error adding peer review comment:', error);
-      res.status(500).json({ message: 'Failed to add peer review comment' });
-    }
+    return handleError(res, error, 'Failed to add peer review comment');
   }
 };
 
 export const updatePeerReviewComment = async (req: Request, res: Response) => {
-  const commentId = req.params.commentId;
-  const updatedComment = req.body.comment;
-  if (!updatedComment || typeof updatedComment !== 'string') {
-    return res.status(400).json({ message: 'Comment text is required' });
-  }
-
-  const accountId = await getAccountId(req);
-  const account = await AccountModel.findById(accountId);
-  if (!account) {
-    throw new MissingAuthorizationError('Access denied');
-  }
-  const userId = await getUserIdByAccountId(accountId);
-
   try {
+    const { account, userCourseRole } = await verifyRequestUser(req);
+    const userId = await verifyRequestPermission(account._id, userCourseRole, []);
+    const commentId = req.params.commentId;
+    const updatedComment = req.body.comment;
+    if (!updatedComment || typeof updatedComment !== 'string') {
+      return res.status(400).json({ message: 'Comment text is required' });
+    }
+    
     await updatePeerReviewCommentById(userId, commentId, updatedComment);
     res
       .status(200)
       .json({ message: 'Peer review comment updated successfully' });
   } catch (error) {
-    if (error instanceof BadRequestError) {
-      res.status(400).json({ message: error.message });
-    } else {
-      console.error('Error updating peer review comment:', error);
-      res.status(500).json({ message: 'Failed to update peer review comment' });
-    }
+    return handleError(res, error, 'Failed to update peer review comment');
   }
 };
 
 export const deletePeerReviewComment = async (req: Request, res: Response) => {
-  const accountId = await getAccountId(req);
-  const account = await AccountModel.findById(accountId);
-  if (!account) throw new MissingAuthorizationError('Access denied');
-
-  const courseId = req.params.courseId;
-  const userId = await getUserIdByAccountId(accountId);
-  const userCourseRole = account.courseRoles.find(
-    cr => cr.course.toString() === courseId
-  )?.courseRole;
-  if (!userCourseRole) throw new MissingAuthorizationError('Access denied');
 
   try {
+    const { account, userCourseRole } = await verifyRequestUser(req);
+    const userId = await verifyRequestPermission(account._id, userCourseRole, []);
+    
     await deletePeerReviewCommentById(
       userId,
       userCourseRole,
@@ -134,44 +82,28 @@ export const deletePeerReviewComment = async (req: Request, res: Response) => {
       .status(200)
       .json({ message: 'Peer review comment deleted successfully' });
   } catch (error) {
-    if (error instanceof NotFoundError) {
-      res.status(404).json({ message: error.message });
-    } else {
-      console.error('Error deleting peer review comment:', error);
-      res.status(500).json({ message: 'Failed to delete peer review comment' });
-    }
+    return handleError(res, error, 'Failed to delete peer review comment');
   }
 };
 
 export const flagPeerReviewComment = async (req: Request, res: Response) => {
-  const accountId = await getAccountId(req);
-  const account = await AccountModel.findById(accountId);
-  if (!account) throw new MissingAuthorizationError('Access denied');
-
-  const courseId = req.params.courseId;
-  const userId = await getUserIdByAccountId(accountId);
-  const userCourseRole = account.courseRoles.find(
-    cr => cr.course.toString() === courseId
-  )?.courseRole;
-  if (!userCourseRole) throw new MissingAuthorizationError('Access denied');
 
   try {
+    const { account, userCourseRole } = await verifyRequestUser(req);
+    const userId = await verifyRequestPermission(account._id, userCourseRole, [CourseRole.Faculty, CourseRole.TA]);
+    const { flagStatus, flagReason } = req.body;
+    
     await flagPeerReviewCommentById(
       userId,
       userCourseRole,
       req.params.commentId,
-      req.body.flagStatus,
-      req.body.flagReason
+      flagStatus,
+      flagReason
     );
     res
       .status(200)
       .json({ message: 'Peer review comment flagged successfully' });
   } catch (error) {
-    if (error instanceof NotFoundError) {
-      res.status(404).json({ message: error.message });
-    } else {
-      console.error('Error flagging peer review comment:', error);
-      res.status(500).json({ message: 'Failed to flag peer review comment' });
-    }
+    return handleError(res, error, 'Failed to flag peer review comment');
   }
 };

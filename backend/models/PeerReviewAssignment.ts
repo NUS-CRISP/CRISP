@@ -6,43 +6,33 @@ export interface PeerReviewAssignment
       SharedPeerReviewAssignment,
       | '_id'
       | 'peerReviewId'
-      | 'studentReviewers'
-      | 'teamReviewers'
-      | 'taReviewers'
       | 'reviewee'
-      | 'assignedBy'
     >,
     Document {
   _id: Types.ObjectId;
   peerReviewId: Types.ObjectId;
-  studentReviewers: Types.ObjectId[];
-  teamReviewers: Types.ObjectId[];
-  taReviewers: Types.ObjectId[];
   reviewee: Types.ObjectId;
-  assignedBy: Types.ObjectId;
 }
 
-const peerReviewAssignmentSchema = new Schema<PeerReviewAssignment>({
-  peerReviewId: {
-    type: Schema.Types.ObjectId,
-    ref: 'PeerReview',
-    required: true,
+const peerReviewAssignmentSchema = new Schema<PeerReviewAssignment>(
+  {
+    peerReviewId: {
+      type: Schema.Types.ObjectId,
+      ref: 'PeerReview',
+      required: true,
+      index: true,
+    },
+    repoName: { type: String, required: true },
+    repoUrl: { type: String, required: true },
+    reviewee: { type: Schema.Types.ObjectId, ref: 'Team', required: true, index: true },
+    deadline: { type: Date, default: null },
   },
-  repoName: { type: String, required: true },
-  repoUrl: { type: String, required: true },
-  studentReviewers: { type: [Schema.Types.ObjectId], ref: 'User', default: [] },
-  teamReviewers: { type: [Schema.Types.ObjectId], ref: 'Team', default: [] },
-  taReviewers: { type: [Schema.Types.ObjectId], ref: 'User', default: [] },
-  reviewee: { type: Schema.Types.ObjectId, ref: 'Team', required: true },
-  assignedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  assignedAt: { type: Date, default: Date.now, required: true },
-  deadline: { type: Date },
-  status: {
-    type: String,
-    enum: ['Pending', 'In Progress', 'Completed'],
-    default: 'Pending',
-  },
-});
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
+);
 
 // Ensure a team is only assigned as a reviewee once per peer review
 peerReviewAssignmentSchema.index(

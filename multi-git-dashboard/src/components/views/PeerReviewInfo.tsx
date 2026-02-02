@@ -134,7 +134,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
   // Persist Accordion State
   const values = useMemo(() => {
     const items = peerReviewInfo?.teams.map(t => t.teamId) || [];
-    if (peerReview.TaAssignments) items.push('teaching-assistants');
+    if (peerReview.taAssignments) items.push('teaching-assistants');
     return items;
   }, [peerReviewInfo]);
   const [opened, setOpened] = usePersistedAccordion(
@@ -294,7 +294,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
               courseId={courseId}
               peerReviewId={peerReview._id}
               reviewerType={peerReview.reviewerType}
-              taAssignmentsEnabled={!!peerReview.TaAssignments}
+              taAssignmentsEnabled={!!peerReview.taAssignments}
               minReviewsPerReviewer={peerReview.minReviewsPerReviewer}
               maxReviewsPerReviewer={peerReview.maxReviewsPerReviewer}
               onAssign={() => {
@@ -322,7 +322,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
             multiple
             variant="separated"
           >
-            {isTAOrFaculty && peerReview.TaAssignments && (
+            {isTAOrFaculty && peerReview.taAssignments && (
               <PeerReviewTAAccordianItem
                 teams={peerReviewInfo.teams.map(t => ({
                   value: t.teamId,
