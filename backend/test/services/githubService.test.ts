@@ -373,7 +373,6 @@ describe('gitHubService', () => {
           courseWithTeamSets._id.toString()
         )
       ).rejects.toThrow(NotFoundError);
-
     });
   });
 

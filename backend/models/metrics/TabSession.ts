@@ -1,8 +1,10 @@
 import { TabSession as SharedTabSession } from '@shared/types/metrics/TabSession';
 import mongoose, { Schema, Types } from 'mongoose';
 
-export interface TabSession
-  extends Omit<SharedTabSession, 'account' | 'course'> {
+export interface TabSession extends Omit<
+  SharedTabSession,
+  'account' | 'course'
+> {
   account: Types.ObjectId;
   course: Types.ObjectId;
 }
