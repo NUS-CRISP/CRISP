@@ -14,7 +14,7 @@ import {
   initialiseAssignments,
   deleteAssignmentsByPeerReviewId,
 } from './peerReviewAssignmentService';
-import CourseRole from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 import UserModel, { User } from '@models/User';
 import TeamModel from '@models/Team';
 import TeamDataModel, { TeamData } from '@models/TeamData';
@@ -290,7 +290,7 @@ const getScopedTeamIds = async (
   userCourseRole: string,
   teamSetId: string
 ) => {
-  if (userCourseRole === CourseRole.Student) {
+  if (userCourseRole === COURSE_ROLE.Student) {
     const myTeam = await TeamModel.findOne({
       teamSet: teamSetId,
       members: userId,
@@ -301,7 +301,7 @@ const getScopedTeamIds = async (
     return { teamIds: [myTeam._id.toString()] };
   }
 
-  if (userCourseRole === CourseRole.TA) {
+  if (userCourseRole === COURSE_ROLE.TA) {
     return { teamIds: [], filterByTA: userId };
   }
 
@@ -501,9 +501,9 @@ const buildTAToAssignmentsMap = (
 ): TAToAssignmentsMap => {
   if (!taAssignmentsEnabled) return {};
   const taIdsWanted =
-    userCourseRole === CourseRole.Faculty
+    userCourseRole === COURSE_ROLE.Faculty
       ? (scopedTeams.map(t => t.taId).filter(Boolean) as string[])
-      : userCourseRole === CourseRole.TA
+      : userCourseRole === COURSE_ROLE.TA
         ? [userId]
         : [];
 
