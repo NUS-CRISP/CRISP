@@ -39,14 +39,16 @@ import AuthShell from '@/components/auth/AuthShell';
 
 const RegisterForm: React.FC = () => {
   const router = useRouter();
-  const form = useForm<{
+  type RegisterValues = {
     identifier: string;
     name: string;
     email: string;
     password: string;
     confirmPassword: string;
     role: CrispRole;
-  }>({
+  };
+
+  const form = useForm<RegisterValues>({
     initialValues: {
       identifier: '',
       name: '',
@@ -62,7 +64,7 @@ const RegisterForm: React.FC = () => {
         v.trim().length >= 3 ? null : 'Name must be at least 3 chars',
       email: (v: string) => (/^\S+@\S+$/.test(v) ? null : 'Invalid email'),
       password: (v: string) => (v.length >= 8 ? null : 'At least 8 characters'),
-      confirmPassword: (v: string, values: any) =>
+      confirmPassword: (v: string, values: RegisterValues) =>
         v === values.password ? null : 'Passwords do not match',
       role: (v: CrispRole) =>
         v === CRISP_ROLE.Normal || v === CRISP_ROLE.Faculty
@@ -74,7 +76,7 @@ const RegisterForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
-  const onSubmit = async (values: any) => {
+  const onSubmit = async (values: RegisterValues) => {
     setLoading(true);
     setServerError(null);
     try {
@@ -94,8 +96,9 @@ const RegisterForm: React.FC = () => {
         throw new Error(data?.error || `Registration failed (${resp.status})`);
       }
       router.push('/auth/signin?success=true');
-    } catch (e: any) {
-      setServerError(e.message ?? 'Registration failed');
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Registration failed';
+      setServerError(message);
     } finally {
       setLoading(false);
     }
