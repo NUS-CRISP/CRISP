@@ -3,7 +3,7 @@ import { config } from 'dotenv';
 import express, { Express } from 'express';
 import setupCodeAnalysisJob from './jobs/codeAnalysisJob';
 import setupGitHubJob from './jobs/githubJob';
-import setupPublicGitHubJob from 'jobs/publicGithubJob';
+import setupPublicGitHubJob from './jobs/publicGithubJob';
 import setupJiraJob from './jobs/jiraJob';
 import setupTrofosJob from './jobs/trofosJob';
 import accountRoutes from './routes/accountRoutes';
