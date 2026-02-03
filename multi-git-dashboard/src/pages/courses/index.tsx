@@ -109,15 +109,24 @@ const CourseListPage: React.FC = () => {
               textAlign: 'center',
               padding: '32px',
               borderRadius: '12px',
-              border: '1px solid #e5e7eb',
-              background: '#f9fafb',
-              color: '#374151',
+              border:
+                '1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4))',
+              background:
+                'light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6))',
+              color:
+                'light-dark(var(--mantine-color-gray-9), var(--mantine-color-gray-0))',
               minHeight: '220px',
             }}
           >
             <div>
               <h2 style={{ margin: '0 0 8px' }}>No courses yet</h2>
-              <p style={{ margin: '0 0 16px', color: '#6b7280' }}>
+              <p
+                style={{
+                  margin: '0 0 16px',
+                  color:
+                    'light-dark(var(--mantine-color-gray-6), var(--mantine-color-gray-3))',
+                }}
+              >
                 You haven’t been added to any courses. Once you’re enrolled,
                 they’ll show up here.
               </p>
