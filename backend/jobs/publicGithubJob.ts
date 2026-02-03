@@ -3,7 +3,7 @@ import { Review, TeamContribution, TeamPR } from '@shared/types/TeamData';
 import cron from 'node-cron';
 import { App, Octokit } from 'octokit';
 import TeamData from '../models/TeamData';
-import { getGitHubApp } from 'utils/github';
+import { getGitHubApp } from '../utils/github';
 
 const fetchPublicRepoData = async () => {
   const courses = await CourseModel.find();
