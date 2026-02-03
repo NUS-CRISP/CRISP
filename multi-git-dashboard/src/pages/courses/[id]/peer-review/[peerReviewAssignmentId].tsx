@@ -27,7 +27,6 @@ import { getLanguageForFile } from '@/lib/peer-review/utils';
 import type { editor as MEditor, IDisposable } from 'monaco-editor';
 import type { OnMount, Monaco } from '@monaco-editor/react';
 import { getMe } from '@/lib/auth/utils';
-import CourseRole from '@shared/types/auth/CourseRole';
 import SubmissionStatusBadge from '@/components/peer-review/SubmissionStatusBadge';
 import SaveStateBadge from '@/components/peer-review/SaveStateBadge';
 import SubmitReviewConfirmationModal from '@/components/cards/Modals/SubmitReviewConfirmationModal';

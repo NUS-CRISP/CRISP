@@ -1,6 +1,6 @@
 import mongoose, { Schema, Types } from 'mongoose';
 import { PeerReviewComment as SharedPeerReviewComment } from '@shared/types/PeerReview';
-import CourseRole, { CourseRole as UserRole } from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
 export interface PeerReviewComment
   extends Omit<
@@ -56,7 +56,7 @@ const peerReviewCommentSchema = new Schema<PeerReviewComment>(
     },
     comment: { type: String, required: true },
     author: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-    authorCourseRole: { type: String, required: true, enum: Object.values(CourseRole) },
+    authorCourseRole: { type: String, required: true, enum: Object.values(COURSE_ROLE) },
     
     // Moderation Fields
     isFlagged: { type: Boolean, default: false },

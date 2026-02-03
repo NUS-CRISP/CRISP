@@ -3,7 +3,7 @@ import PeerReviewAssignmentModel from '@models/PeerReviewAssignment';
 import { PeerReview } from '@models/PeerReview';
 import TeamModel from '@models/Team';
 import { getPeerReviewById } from './peerReviewService';
-import CourseRole from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 import { BadRequestError, NotFoundError, MissingAuthorizationError } from './errors';
 import { Types } from 'mongoose';
 
@@ -31,7 +31,7 @@ export const getSubmissionsByAssignmentId = async (
   const peerReview = await getPeerReviewById(assignment.peerReviewId.toString());
 
   // Students can only see their own submission for this assignment
-  if (userCourseRole === CourseRole.Student) {
+  if (userCourseRole === COURSE_ROLE.Student) {
     const reviewerRef = await resolveReviewerRefForUser(
       userId,
       userCourseRole,
@@ -49,7 +49,7 @@ export const getSubmissionsByAssignmentId = async (
   }
 
   // TAs can see their own TA submission and of those they supervise
-  if (userCourseRole === CourseRole.TA) {
+  if (userCourseRole === COURSE_ROLE.TA) {
     const isSupervising = await isTAForAssignmentReviewee(
       userId,
       peerReviewAssignmentId
@@ -76,7 +76,7 @@ export const getSubmissionsByAssignmentId = async (
   }
 
   // Coordinators can view all submissions for this assignment
-  if (userCourseRole === CourseRole.Faculty) {
+  if (userCourseRole === COURSE_ROLE.Faculty) {
     const submissions = await PeerReviewSubmissionModel.find({
       peerReviewId: oid(peerReview._id.toString()),
       peerReviewAssignmentId: oid(assignment._id.toString()),
@@ -240,7 +240,7 @@ export const assertSubmissionWritableByCaller = async (
   submission: any,
 ) => {
   // Coordinators / supervising TAs should not be writing reviewer comments here
-  if (userCourseRole === CourseRole.Faculty) {
+  if (userCourseRole === COURSE_ROLE.Faculty) {
     throw new MissingAuthorizationError(UNAUTHORIZED);
   }
 
@@ -250,14 +250,14 @@ export const assertSubmissionWritableByCaller = async (
   }
 
   // TA reviewer: only their own TA submission
-  if (userCourseRole === CourseRole.TA) {
+  if (userCourseRole === COURSE_ROLE.TA) {
     if (submission.reviewerKind !== 'TA') throw new MissingAuthorizationError(UNAUTHORIZED);
     if (submission.reviewerUserId?.toString() !== userId) throw new MissingAuthorizationError(UNAUTHORIZED);
     return;
   }
 
   // Student reviewer
-  if (userCourseRole === CourseRole.Student) {
+  if (userCourseRole === COURSE_ROLE.Student) {
     if (submission.reviewerKind === 'Student') {
       if (submission.reviewerUserId?.toString() !== userId) throw new MissingAuthorizationError(UNAUTHORIZED);
       return;
@@ -280,12 +280,12 @@ const assertIsOwnerOfSubmission = async (
   submission: any
 ): Promise<void> => {
   // Coordinators can view but cannot edit/submit
-  if (userCourseRole === CourseRole.Faculty) {
+  if (userCourseRole === COURSE_ROLE.Faculty) {
     throw new MissingAuthorizationError(UNAUTHORIZED);
   }
 
   // TA submission owner
-  if (userCourseRole === CourseRole.TA) {
+  if (userCourseRole === COURSE_ROLE.TA) {
     if (submission.reviewerKind !== 'TA') throw new MissingAuthorizationError(UNAUTHORIZED);
     if (submission.reviewerUserId?.toString() !== userId)
       throw new MissingAuthorizationError(UNAUTHORIZED);
@@ -293,7 +293,7 @@ const assertIsOwnerOfSubmission = async (
   }
 
   // Student submission owner
-  if (userCourseRole === CourseRole.Student) {
+  if (userCourseRole === COURSE_ROLE.Student) {
     if (submission.reviewerKind === 'Student') {
       if (submission.reviewerUserId?.toString() !== userId)
         throw new MissingAuthorizationError(UNAUTHORIZED);
@@ -343,11 +343,11 @@ const resolveReviewerRefForUser = async (
   | { reviewerKind: 'Student'; reviewerUserId: string }
   | { reviewerKind: 'Team'; reviewerTeamId: string }
 > => {
-  if (userCourseRole === CourseRole.TA) {
+  if (userCourseRole === COURSE_ROLE.TA) {
     return { reviewerKind: 'TA', reviewerUserId: userId };
   }
 
-  if (userCourseRole === CourseRole.Student) {
+  if (userCourseRole === COURSE_ROLE.Student) {
     if (reviewerType === 'Individual') {
       return { reviewerKind: 'Student', reviewerUserId: userId };
     }

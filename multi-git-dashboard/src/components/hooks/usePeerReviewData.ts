@@ -21,7 +21,7 @@ import {
   fetchFileContent,
   flattenTree,
 } from '@/lib/peer-review/utils';
-import CourseRole from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
 type UsePeerReviewDataArgs = {
   courseId: string;
@@ -82,9 +82,9 @@ export default function usePeerReviewData({
         
         const submissions: PeerReviewSubmission[] = await apiFetchSubmissionsForAssignment(courseId, assignmentId);
         if (cancelled) return;
-        const mySubmission = userCourseRole === CourseRole.Student ? (submissions?.[0] ?? null) : null;
+        const mySubmission = userCourseRole === COURSE_ROLE.Student ? (submissions?.[0] ?? null) : null;
         setSubmission(mySubmission);
-        setCanEdit((userCourseRole === CourseRole.Student || userCourseRole === CourseRole.Faculty) && mySubmission?.status !== 'Submitted');
+        setCanEdit((userCourseRole === COURSE_ROLE.Student || userCourseRole === COURSE_ROLE.Faculty) && mySubmission?.status !== 'Submitted');
         
         const tree = await fetchGithubRepoStructure(
           prAssignment?.repoUrl ?? ''
@@ -196,7 +196,7 @@ export default function usePeerReviewData({
       if (!canEdit) throw new Error('Read-only');
       await apiSubmitReview(courseId, assignmentId);
       const updated = await apiFetchSubmissionsForAssignment(courseId, assignmentId);
-      const mySubmission = userCourseRole === CourseRole.Student ? (updated?.[0] ?? null) : null;
+      const mySubmission = userCourseRole === COURSE_ROLE.Student ? (updated?.[0] ?? null) : null;
       setSubmission(mySubmission);
       setCanEdit(false);
     }, [canEdit, courseId, assignmentId, userCourseRole]

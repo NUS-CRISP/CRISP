@@ -21,7 +21,7 @@ import {
 import { PeerReviewComment } from '@shared/types/PeerReview';
 import classes from '../../styles/PeerReview.module.css';
 import { useEffect } from 'react';
-import CourseRole, { CourseRole as UserCourseRole } from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE, CourseRole as UserCourseRole } from '@shared/types/auth/CourseRole';
 
 interface PeerReviewCommentSidebarProps {
   user: { userId: string, userCourseRole: string } | null;
@@ -79,13 +79,13 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
   
   const getRoleVars = (courseRole?: UserCourseRole) => {
     switch (courseRole) {
-      case CourseRole.TA:
+      case COURSE_ROLE.TA:
         return {
           "--cc-accent": "#3B82F6", // clear blue
           "--cc-tint": "rgba(59, 130, 246, 0.16)",
         } as React.CSSProperties;
 
-      case CourseRole.Faculty:
+      case COURSE_ROLE.Faculty:
         return {
           "--cc-accent": "#A855F7", // clear purple
           "--cc-tint": "rgba(168, 85, 247, 0.16)",

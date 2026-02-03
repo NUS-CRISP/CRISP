@@ -8,7 +8,7 @@ import {
   flagPeerReviewCommentById,
 } from '../services/peerReviewCommentsService';
 import { handleError } from '../utils/error';
-import CourseRole from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
 export const getPeerReviewCommentsById = async (
   req: Request,
@@ -105,7 +105,7 @@ export const flagPeerReviewComment = async (req: Request, res: Response) => {
 
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
-    const userId = await verifyRequestPermission(account._id, userCourseRole, [CourseRole.Faculty, CourseRole.TA]);
+    const userId = await verifyRequestPermission(account._id, userCourseRole, [COURSE_ROLE.Faculty, COURSE_ROLE.TA]);
     const { flagStatus, flagReason } = req.body;
     
     await flagPeerReviewCommentById(
