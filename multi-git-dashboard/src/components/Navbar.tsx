@@ -158,8 +158,8 @@ const Navbar: React.FC = () => {
       return 'Assessments';
     } else if (path.startsWith('/courses/[id]/project-management')) {
       return 'Project Management';
-    } else if (path.startsWith('/courses/[id]/class-overview')) {
-      return 'Class Overview';
+    } else if (path.startsWith('/courses/[id]/course-overview')) {
+      return 'Course Overview';
     } else if (path.startsWith('/courses/[id]/code-analysis')) {
       return 'Code Analysis';
     } else if (path.startsWith('/courses/[id]/pr-overview')) {
@@ -207,10 +207,10 @@ const Navbar: React.FC = () => {
 
   const courseLinksData = [
     {
-      link: `/courses/${courseId}/class-overview`,
-      label: 'Class Overview',
+      link: `/courses/${courseId}/course-overview`,
+      label: 'Course Overview',
       disabled: !peopleAdded,
-      pngSrc: '/class-overview.png',
+      pngSrc: '/course-overview.png',
     },
     {
       link: `/courses/${courseId}`,
@@ -328,12 +328,12 @@ const Navbar: React.FC = () => {
 
   const courseLinks = [];
 
-  // First section: Class Overview, Team Review, PR Overview, Code Analysis, Project Management
+  // Navbar Order: Course Overview, Team Review, PR Review, Code Analysis, Project Management
   courseLinks.push(
-    renderNavLink(courseLinksData[1], 6, 'top-start', 'Team Review')
+    renderNavLink(courseLinksData[0], 6, 'top-start', 'Course Overview', true)
   );
   courseLinks.push(
-    renderNavLink(courseLinksData[0], 12, 'top-start', 'Class Overview', true)
+    renderNavLink(courseLinksData[1], 12, 'top-start', 'Team Review')
   );
   courseLinks.push(
     renderNavLink(courseLinksData[2], 10, 'top-start', 'PR Overview', true)
@@ -439,7 +439,7 @@ const Navbar: React.FC = () => {
         >
           <Center
             className={classes.logo}
-            onClick={() => router.push('/')}
+            onClick={() => router.push('/courses')}
             style={{ cursor: 'pointer' }}
           >
             <IconGitBranch size={30} />

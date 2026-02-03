@@ -57,7 +57,10 @@ const RegisterPage: React.FC = () => {
         !Object.values(CrispRoles).includes(value) ? 'Invalid role' : null,
     },
   });
-  const roleData = [CrispRoles.Normal, CrispRoles.Faculty];
+  const roleData = [
+    { label: 'Student', value: CrispRoles.Normal },
+    { label: 'Faculty', value: CrispRoles.Faculty },
+  ];
 
   const [errors, setErrors] = useState({
     passwordMismatch: false,
@@ -149,10 +152,7 @@ const RegisterPage: React.FC = () => {
           <Text size="sm" fw={500} mt="md">
             Are you signing up as a:
           </Text>
-          <SegmentedControl
-            data={roleData}
-            {...form.getInputProps('crispRole')}
-          />
+          <SegmentedControl data={roleData} {...form.getInputProps('role')} />
           <Button type="submit" fullWidth mt="xl">
             Register
           </Button>

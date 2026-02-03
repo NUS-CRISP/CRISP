@@ -18,7 +18,7 @@ export interface Team extends Omit<SharedTeam, 'teamData'> {
 
 export type ProfileGetter = (gitHandle: string) => Promise<Profile>;
 
-const ClassOverview: React.FC<OverviewProps> = ({ courseId }) => {
+const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamDatas, setTeamDatas] = useState<TeamData[]>([]);
   const [status, setStatus] = useState<Status>(Status.Loading);
@@ -83,4 +83,4 @@ const ClassOverview: React.FC<OverviewProps> = ({ courseId }) => {
   );
 };
 
-export default ClassOverview;
+export default CourseOverview;

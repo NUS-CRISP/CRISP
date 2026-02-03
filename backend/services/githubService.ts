@@ -71,8 +71,13 @@ export const getAuthorizedTeamDataByCourse = async (
     role === CrispRole.Admin ||
     role === CrispRole.TrialUser
   ) {
-    if (!course.gitHubOrgName) {
-      throw new NotFoundError('Course GitHub organization not found');
+    if (
+      !course.gitHubOrgName &&
+      (!course.gitHubRepoLinks || course.gitHubRepoLinks.length === 0)
+    ) {
+      throw new NotFoundError(
+        'Course GitHub organization or repository links not found'
+      );
     }
     if (!(await CourseModel.exists({ _id: courseId, faculty: user._id }))) {
       throw new NotFoundError('User is not authorized to view course');

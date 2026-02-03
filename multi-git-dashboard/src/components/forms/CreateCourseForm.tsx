@@ -1,11 +1,10 @@
 import {
-  Badge,
+  ActionIcon,
   Box,
   Button,
   Card,
-  CloseButton,
   Collapse,
-  List,
+  Group,
   SegmentedControl,
   Select,
   Space,
@@ -18,13 +17,16 @@ import {
 import { DatePickerInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { CourseType } from '@shared/types/Course';
-import { IconBrandGithub, IconCheck } from '@tabler/icons-react';
+import {
+  IconBrandGithub,
+  IconCheck,
+  IconHelpCircle,
+} from '@tabler/icons-react';
 import { getSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 
 const CARD_W = '210px';
-// TODO: Setup webhook receiver to automatically get the org name where user installed GH app
 const gitHubNewInstallationUrl =
   'https://github.com/apps/NUS-CRISP/installations/new';
 
@@ -69,7 +71,7 @@ const CreateCourse: React.FC = () => {
       semester: '',
       startDate: null,
       duration: 13,
-      courseType: CourseType.Normal,
+      courseType: CourseType.GitHubOrg,
       gitHubOrgName: '',
       repoNameFilter: '',
       installationId: '',
@@ -99,7 +101,7 @@ const CreateCourse: React.FC = () => {
         (values.courseType === CourseType.GitHubOrg &&
           appInstallationStatus === InstallationStatus.SUCCESS)
           ? null
-          : 'GitHub Org name is required',
+          : 'GitHub Organisation name is required',
       repoNameFilter: (value: string, values: CreateCourseFormValues) =>
         values.courseType === CourseType.Normal ||
         (values.courseType === CourseType.GitHubOrg &&
@@ -218,6 +220,9 @@ const CreateCourse: React.FC = () => {
   return (
     <Box maw={300} mx="auto">
       <form onSubmit={form.onSubmit(handleSubmit)}>
+        <Title order={4} my={15}>
+          Course Details
+        </Title>
         <TextInput
           withAsterisk
           label="Course Name"
@@ -239,24 +244,16 @@ const CreateCourse: React.FC = () => {
             form.setFieldValue('code', event.currentTarget.value)
           }
         />
-        <Select
-          required
+        <TextInput
+          withAsterisk
           mt="md"
-          comboboxProps={{ withinPortal: true }}
-          data={[
-            'Ay2023/24 Sem 1',
-            'Ay2023/24 Sem 2',
-            'Ay2024/25 Sem 1',
-            'Ay2024/25 Sem 2',
-            'Ay2024/25 Special Term',
-            'AY2025/26 Sem 1',
-            'AY2025/26 Sem 2',
-          ]}
-          placeholder="Choose current semester"
-          label="Semester"
+          label="Academic Term"
+          placeholder="AY2025/2026 Semester 1"
           {...form.getInputProps('semester')}
           value={form.values.semester}
-          onChange={value => form.setFieldValue('semester', value ?? '')}
+          onChange={event =>
+            form.setFieldValue('semester', event.currentTarget.value)
+          }
         />
         <DatePickerInput
           withAsterisk
@@ -283,125 +280,115 @@ const CreateCourse: React.FC = () => {
           }
         />
         <Space h="md" />
+        <Title order={4} my={15}>
+          Course Repository Setup
+        </Title>
         <Box>
-          <Text size="sm" fw={500} mb={3}>
-            Course Type
-          </Text>
-          <SegmentedControl
-            data={[
-              { value: CourseType.Normal, label: 'Normal' },
-              { value: CourseType.GitHubOrg, label: 'GitHub Organisation' },
-            ]}
-            {...form.getInputProps('courseType')}
-          />
+          <Group gap={6}>
+            <Title order={6} my={5}>
+              Repository Source
+            </Title>
+            <Tooltip
+              label="Choose how course repositories are synced: Manual Setup via public GitHub links, or automatically through GitHub Organisation."
+              withinPortal
+              multiline
+              w={300}
+            >
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                size="sm"
+                aria-label="Setup Repositories help"
+              >
+                <IconHelpCircle size={16} />
+              </ActionIcon>
+            </Tooltip>
+            <SegmentedControl
+              data={[
+                { value: CourseType.GitHubOrg, label: 'GitHub Organisation' },
+                { value: CourseType.Normal, label: 'Manual Setup' },
+              ]}
+              {...form.getInputProps('courseType')}
+            />
+          </Group>
 
           <Collapse in={form.values.courseType === CourseType.GitHubOrg}>
             <Box>
-              <Title order={4} my={15}>
-                GitHub Org Integration Setup:
+              <Title order={6} my={10}>
+                GitHub Organisation Setup
               </Title>
-              <Card withBorder>
-                <List>
-                  <List.Item>
-                    <Button
-                      w={CARD_W}
-                      leftSection={<IconBrandGithub size={14} />}
-                      variant="default"
-                      component="a"
-                      href={gitHubNewInstallationUrl}
-                      target="_blank"
-                    >
-                      Install our GitHub App
-                    </Button>
-                  </List.Item>
-                  <Collapse
-                    in={appInstallationStatus !== InstallationStatus.SUCCESS}
-                    mt="md"
-                  >
-                    <List.Item>
-                      <TextInput
-                        withAsterisk
-                        label="GitHub Org Name"
-                        placeholder="e.g. nus-crisp"
-                        {...form.getInputProps('gitHubOrgName')}
-                        onChange={event => {
-                          form.setFieldValue(
-                            'gitHubOrgName',
-                            event.currentTarget.value
-                          );
-                          form.setFieldValue('installationId', '');
-                          setAppInstallationStatus(InstallationStatus.IDLE);
-                          setErrorMessage('');
-                        }}
-                      />
-                      <Space h="sm" />
-                      {errorMessage && (
-                        <Text
-                          style={{
-                            maxWidth: CARD_W,
-                          }}
-                          c="red"
-                        >
-                          {errorMessage}
-                        </Text>
-                      )}
-                      <Button
-                        type="button"
-                        loading={
-                          appInstallationStatus === InstallationStatus.LOADING
-                        }
-                        variant={
-                          appInstallationStatus === InstallationStatus.SUCCESS
-                            ? 'filled'
-                            : 'outline'
-                        }
-                        color={
-                          appInstallationStatus === InstallationStatus.SUCCESS
-                            ? 'green'
-                            : appInstallationStatus === InstallationStatus.ERROR
-                              ? 'red'
-                              : 'blue'
-                        }
-                        rightSection={
-                          appInstallationStatus ===
-                          InstallationStatus.SUCCESS ? (
-                            <IconCheck size={14} />
-                          ) : null
-                        }
-                        onClick={() =>
-                          checkAppInstallation(form.values.gitHubOrgName)
-                        }
-                      >
-                        {appInstallationStatus === InstallationStatus.ERROR
-                          ? 'Try Again'
-                          : 'Check Installation'}
-                      </Button>
-                    </List.Item>
-                  </Collapse>
-                  <Collapse
-                    in={appInstallationStatus === InstallationStatus.SUCCESS}
-                    mt="md"
-                  >
-                    <List.Item>
-                      <Badge
-                        variant="outline"
-                        color="green"
-                        size="lg"
-                        rightSection={
-                          <CloseButton
-                            style={{ color: '#40c057' }} // open-color, green 6
-                            onClick={() => {
-                              setAppInstallationStatus(InstallationStatus.IDLE);
-                              setErrorMessage('');
-                              form.setFieldValue('gitHubOrgName', '');
-                            }}
-                            size={14}
-                          />
-                        }
-                      >
-                        {form.values.gitHubOrgName}
-                      </Badge>
-                      {/* <MultiSelect
+              <Card withBorder p="md">
+                <Text size="sm" c="dimmed" maw={520} mb="sm">
+                  Install the CRISP GitHub App in your GitHub organisation to
+                  enable automatic syncing of repositories from your
+                  organisation.
+                </Text>
+                <Button
+                  w={CARD_W}
+                  leftSection={<IconBrandGithub size={14} />}
+                  variant="default"
+                  component="a"
+                  href={gitHubNewInstallationUrl}
+                  target="_blank"
+                >
+                  Install CRISP GitHub
+                </Button>
+                <TextInput
+                  withAsterisk
+                  placeholder="e.g. nus-crisp"
+                  label="GitHub Organisation Name"
+                  {...form.getInputProps('gitHubOrgName')}
+                  my={5}
+                  onChange={event => {
+                    form.setFieldValue(
+                      'gitHubOrgName',
+                      event.currentTarget.value
+                    );
+                    form.setFieldValue('installationId', '');
+                    setAppInstallationStatus(InstallationStatus.IDLE);
+                    setErrorMessage('');
+                  }}
+                />
+                <Space h="sm" />
+                {errorMessage && (
+                  <Text style={{ maxWidth: CARD_W }} c="red">
+                    {errorMessage}
+                  </Text>
+                )}
+                <Button
+                  type="button"
+                  loading={appInstallationStatus === InstallationStatus.LOADING}
+                  variant={
+                    appInstallationStatus === InstallationStatus.SUCCESS
+                      ? 'filled'
+                      : 'outline'
+                  }
+                  color={
+                    appInstallationStatus === InstallationStatus.SUCCESS
+                      ? 'green'
+                      : appInstallationStatus === InstallationStatus.ERROR
+                        ? 'red'
+                        : 'blue'
+                  }
+                  rightSection={
+                    appInstallationStatus === InstallationStatus.SUCCESS ? (
+                      <IconCheck size={14} />
+                    ) : null
+                  }
+                  onClick={() =>
+                    checkAppInstallation(form.values.gitHubOrgName)
+                  }
+                >
+                  {appInstallationStatus === InstallationStatus.ERROR
+                    ? 'Try Again'
+                    : 'Verify CRISP Installation'}
+                </Button>
+
+                <Collapse
+                  in={appInstallationStatus === InstallationStatus.SUCCESS}
+                  mt="md"
+                >
+                  {/* <MultiSelect
                         disabled
                         mt="sm"
                         label="Repositories"
@@ -412,49 +399,78 @@ const CreateCourse: React.FC = () => {
                         clearable
                         leftSectionWidth={100}
                       /> */}
-                      <TextInput
-                        withAsterisk
-                        label="Repo Name Filter"
-                        placeholder="e.g. 23s2"
-                        {...form.getInputProps('repoNameFilter')}
-                        onChange={event =>
-                          form.setFieldValue(
-                            'repoNameFilter',
-                            event.currentTarget.value
-                          )
-                        }
-                      />
-                    </List.Item>
-                  </Collapse>
-                </List>
+                  <TextInput
+                    withAsterisk
+                    label="Repo Name Filter"
+                    placeholder="e.g. 23s2"
+                    {...form.getInputProps('repoNameFilter')}
+                    onChange={event =>
+                      form.setFieldValue(
+                        'repoNameFilter',
+                        event.currentTarget.value
+                      )
+                    }
+                  />
+                </Collapse>
               </Card>
             </Box>
           </Collapse>
         </Box>
         <Space h="md" />
-        <Box>
+        <Group gap={6}>
+          <Title order={4} my={15}>
+            AI Insights Setup
+          </Title>
           <Tooltip
-            label="Enable using AI to generate insights for each group based on their code analysis metrics."
-            refProp="rootRef"
+            label="Enable using AI to generate insights for each group based on their code analysis metrics"
+            withinPortal
+            multiline
+            w={300}
           >
-            <Switch
-              defaultChecked
-              label="AI Insights"
-              size="lg"
-              {...form.getInputProps('isOn', { type: 'checkbox' })}
-            />
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              size="sm"
+              aria-label="AI Insights help"
+            >
+              <IconHelpCircle size={16} />
+            </ActionIcon>
           </Tooltip>
+        </Group>
+        <Box>
+          <Switch
+            defaultChecked
+            label="Enable AI Insights"
+            size="md"
+            mb={15}
+            {...form.getInputProps('isOn', { type: 'checkbox' })}
+          />
           <Collapse in={form.values.isOn}>
-            <Title order={4} my={15}>
-              AI Insights Setup:
-            </Title>
             <Card withBorder>
-              <Switch
-                onLabel="Input your own model and API key"
-                offLabel="Use default gemini-1.5-pro model"
-                size="xl"
-                {...form.getInputProps('customisedAI', { type: 'checkbox' })}
-              />
+              <Group gap={6}>
+                <Switch
+                  label="Use Customised AI Model"
+                  // onLabel="Input your own model and API key"
+                  // offLabel="Use default gemini-1.5-pro model"
+                  size="sm"
+                  {...form.getInputProps('customisedAI', { type: 'checkbox' })}
+                />
+                <Tooltip
+                  label="By default, we use the gemini-1.5-pro model. You can input your own model and API key to use customised AI model."
+                  withinPortal
+                  multiline
+                  w={300}
+                >
+                  <ActionIcon
+                    variant="subtle"
+                    color="gray"
+                    size="sm"
+                    aria-label="AI Insights help"
+                  >
+                    <IconHelpCircle size={16} />
+                  </ActionIcon>
+                </Tooltip>
+              </Group>
               <Space h="sm" />
               <Collapse in={form.values.customisedAI}>
                 <Select
@@ -487,7 +503,8 @@ const CreateCourse: React.FC = () => {
                   value={form.values.apiKey}
                 />
               </Collapse>
-              <Tooltip label="How often to generate ai insights for each group">
+              <Space h="sm" />
+              <Group gap={6}>
                 <Select
                   required
                   comboboxProps={{ withinPortal: true }}
@@ -497,8 +514,8 @@ const CreateCourse: React.FC = () => {
                     'Fortnightly',
                     'Every 4 weeks (~Monthly)',
                   ]}
-                  placeholder="Choose generation frequency"
-                  label="Generation Frequency"
+                  placeholder="Choose insight generation frequency"
+                  label="AI Insight Frequency"
                   onChange={value => {
                     const updatedFrequency =
                       value === 'Every 4 weeks (~Monthly)'
@@ -507,9 +524,19 @@ const CreateCourse: React.FC = () => {
                     form.setFieldValue('frequency', updatedFrequency);
                   }}
                 />
-              </Tooltip>
+                <Tooltip label="How often to generate AI insights for each group">
+                  <ActionIcon
+                    variant="subtle"
+                    color="gray"
+                    size="sm"
+                    aria-label="AI Insights help"
+                  >
+                    <IconHelpCircle size={16} />
+                  </ActionIcon>
+                </Tooltip>
+              </Group>
               <Space h="sm" />
-              <Tooltip label="Starting date for AI insights generation. First scan will be performed on this date">
+              <Group gap={6}>
                 <DatePickerInput
                   withAsterisk
                   label="Start Date"
@@ -521,7 +548,17 @@ const CreateCourse: React.FC = () => {
                   } // Only allow from next day onwards
                   onChange={value => form.setFieldValue('aiStartDate', value)}
                 />
-              </Tooltip>
+                <Tooltip label="Pick the start date for generating AI insights">
+                  <ActionIcon
+                    variant="subtle"
+                    color="gray"
+                    size="sm"
+                    aria-label="AI Insights help"
+                  >
+                    <IconHelpCircle size={16} />
+                  </ActionIcon>
+                </Tooltip>
+              </Group>
             </Card>
           </Collapse>
         </Box>

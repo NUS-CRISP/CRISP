@@ -1,4 +1,4 @@
-import ClassOverview from '@/components/views/ClassOverview';
+import CourseOverview from '@/components/views/CourseOverview';
 import {
   DateUtils,
   getCurrentWeekGenerator,
@@ -74,7 +74,7 @@ const CourseViewPage: React.FC = () => {
       }}
     >
       {course && dateUtils ? (
-        <ClassOverview courseId={courseId} dateUtils={dateUtils} />
+        <CourseOverview courseId={courseId} dateUtils={dateUtils} />
       ) : (
         <Text>Course not available</Text>
       )}

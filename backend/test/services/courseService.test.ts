@@ -54,7 +54,6 @@ import { DEFAULT_TEAMSET_NAME } from '@shared/types/TeamSet';
 
 let mongo: MongoMemoryServer;
 
-
 beforeAll(async () => {
   mongo = await MongoMemoryServer.create();
   const mongoUri = await mongo.getUri();
@@ -1721,23 +1720,34 @@ describe('courseService', () => {
 
       await addStudentsToCourseAndTeam(courseId, rows);
 
-      const teamSet = await TeamSetModel.findOne({ course: courseId, name: DEFAULT_TEAMSET_NAME });
+      const teamSet = await TeamSetModel.findOne({
+        course: courseId,
+        name: DEFAULT_TEAMSET_NAME,
+      });
       expect(teamSet).toBeTruthy();
 
-      const team = await TeamModel.findOne({ number: 7, teamSet: teamSet?._id });
+      const team = await TeamModel.findOne({
+        number: 7,
+        teamSet: teamSet?._id,
+      });
       expect(team).toBeTruthy();
 
-      const reloadedStudent = await UserModel.findOne({ identifier: 'stud-exists' });
+      const reloadedStudent = await UserModel.findOne({
+        identifier: 'stud-exists',
+      });
       expect(
-        team?.members?.map(m => String(m)).includes(String(reloadedStudent?._id))
+        team?.members
+          ?.map(m => String(m))
+          .includes(String(reloadedStudent?._id))
       ).toBe(true);
 
       const course = await CourseModel.findById(courseId).populate('students');
       expect(
-        course?.students.some((s: any) => String(s._id) === String(reloadedStudent?._id))
+        course?.students.some(
+          (s: any) => String(s._id) === String(reloadedStudent?._id)
+        )
       ).toBe(true);
     });
-
 
     it('creates a NEW student + account, enrolls them, and assigns to a NEW team', async () => {
       await ensureDefaultTeamSet();
@@ -1787,9 +1797,9 @@ describe('courseService', () => {
 
       // TeamSet.teams updated via $addToSet
       const reloadedTs = await TeamSetModel.findById(teamSet?._id);
-      expect(
-        reloadedTs?.teams.map(String).includes(String(team?._id))
-      ).toBe(true);
+      expect(reloadedTs?.teams.map(String).includes(String(team?._id))).toBe(
+        true
+      );
     });
 
     it('is idempotent: adding the same student to the same team twice does not duplicate membership', async () => {
@@ -1803,21 +1813,32 @@ describe('courseService', () => {
       });
 
       const rows = [
-        { identifier: 'stud-idem', name: 'Stud Idem', email: 'stud-idem@example.com', teamNumber: 9 },
+        {
+          identifier: 'stud-idem',
+          name: 'Stud Idem',
+          email: 'stud-idem@example.com',
+          teamNumber: 9,
+        },
       ];
 
       await addStudentsToCourseAndTeam(courseId, rows);
       await addStudentsToCourseAndTeam(courseId, rows);
 
-      const teamSet = await TeamSetModel.findOne({ course: courseId, name: DEFAULT_TEAMSET_NAME });
-      const team = await TeamModel.findOne({ number: 9, teamSet: teamSet?._id });
+      const teamSet = await TeamSetModel.findOne({
+        course: courseId,
+        name: DEFAULT_TEAMSET_NAME,
+      });
+      const team = await TeamModel.findOne({
+        number: 9,
+        teamSet: teamSet?._id,
+      });
 
       const student = await UserModel.findOne({ identifier: 'stud-idem' });
       const occurrences =
-        team?.members?.map(String).filter(id => id === String(student?._id)).length ?? 0;
+        team?.members?.map(String).filter(id => id === String(student?._id))
+          .length ?? 0;
       expect(occurrences).toBe(1);
     });
-
 
     it('skips when an existing student has mismatched name/email (non-trial) leading to `continue`', async () => {
       // Create a student + account that *already exists* but with different name/email
@@ -1869,7 +1890,9 @@ describe('courseService', () => {
 
       const u = await UserModel.findOne({ identifier: 'stud-noteam' });
       expect(u).toBeTruthy();
-      expect(u?.enrolledCourses.map(String).includes(String(courseId))).toBe(true);
+      expect(u?.enrolledCourses.map(String).includes(String(courseId))).toBe(
+        true
+      );
 
       const anyTeam = await TeamModel.findOne({ members: u?._id });
       expect(anyTeam).toBeNull();
@@ -1942,8 +1965,14 @@ describe('courseService', () => {
 
       await addTAAndTeamToCourse(courseId, rows);
 
-      const teamSet = await TeamSetModel.findOne({ course: courseId, name: DEFAULT_TEAMSET_NAME });
-      const team = await TeamModel.findOne({ number: 4, teamSet: teamSet?._id });
+      const teamSet = await TeamSetModel.findOne({
+        course: courseId,
+        name: DEFAULT_TEAMSET_NAME,
+      });
+      const team = await TeamModel.findOne({
+        number: 4,
+        teamSet: teamSet?._id,
+      });
       expect(team).toBeTruthy();
 
       const ta = await UserModel.findOne({ identifier: 'ta-exists' });
@@ -1951,10 +1980,10 @@ describe('courseService', () => {
 
       const course = await CourseModel.findById(courseId).populate('TAs');
       const countSameTA =
-        course?.TAs.filter((t: any) => String(t._id) === String(ta?._id)).length ?? 0;
+        course?.TAs.filter((t: any) => String(t._id) === String(ta?._id))
+          .length ?? 0;
       expect(countSameTA).toBe(1);
     });
-
 
     it('creates a NEW TA + account, enrolls them as TA, and assigns to a NEW team', async () => {
       await ensureDefaultTeamSet();
@@ -1974,9 +2003,9 @@ describe('courseService', () => {
 
       const ta = await UserModel.findOne({ identifier: newId });
       expect(ta).toBeTruthy();
-      expect(
-        ta?.enrolledCourses.map(String).includes(String(courseId))
-      ).toBe(true);
+      expect(ta?.enrolledCourses.map(String).includes(String(courseId))).toBe(
+        true
+      );
 
       const acct = await AccountModel.findOne({ user: ta?._id });
       expect(acct).toBeTruthy();
@@ -2002,9 +2031,9 @@ describe('courseService', () => {
 
       // TeamSet.teams updated via $addToSet
       const reloadedTs = await TeamSetModel.findById(teamSet?._id);
-      expect(
-        reloadedTs?.teams.map(String).includes(String(team?._id))
-      ).toBe(true);
+      expect(reloadedTs?.teams.map(String).includes(String(team?._id))).toBe(
+        true
+      );
     });
 
     it('reassigns TA on an existing team (overwrites previous TA)', async () => {
@@ -2018,11 +2047,22 @@ describe('courseService', () => {
       });
 
       const course = await CourseModel.findById(courseId);
-      const ts = await TeamSetModel.findOne({ course: course?._id, name: DEFAULT_TEAMSET_NAME });
+      const ts = await TeamSetModel.findOne({
+        course: course?._id,
+        name: DEFAULT_TEAMSET_NAME,
+      });
 
-      const team = new TeamModel({ number: 6, teamSet: ts?._id, members: [], TA: placeholder.user._id });
+      const team = new TeamModel({
+        number: 6,
+        teamSet: ts?._id,
+        members: [],
+        TA: placeholder.user._id,
+      });
       await team.save();
-      await TeamSetModel.updateOne({ _id: ts?._id }, { $addToSet: { teams: team._id } });
+      await TeamSetModel.updateOne(
+        { _id: ts?._id },
+        { $addToSet: { teams: team._id } }
+      );
 
       // real TA exists but is NOT enrolled yet
       await createTAUser({
@@ -2032,14 +2072,18 @@ describe('courseService', () => {
       });
 
       await addTAAndTeamToCourse(courseId, [
-        { identifier: 'real-ta', name: 'Real TA', email: 'real-ta@example.com', teamNumber: 6 },
+        {
+          identifier: 'real-ta',
+          name: 'Real TA',
+          email: 'real-ta@example.com',
+          teamNumber: 6,
+        },
       ]);
 
       const reloadedTeam = await TeamModel.findById(team._id);
       const realTA = await UserModel.findOne({ identifier: 'real-ta' });
       expect(String(reloadedTeam?.TA)).toBe(String(realTA?._id));
     });
-
 
     it('skips when an existing TA has mismatched name/email (non-trial), leaving no team created', async () => {
       const { user, account } = await createTAUser({
@@ -2085,9 +2129,9 @@ describe('courseService', () => {
 
       const ta = await UserModel.findOne({ identifier: 'tanoteam' });
       expect(ta).toBeTruthy();
-      expect(
-        ta?.enrolledCourses.map(String).includes(String(courseId))
-      ).toBe(true);
+      expect(ta?.enrolledCourses.map(String).includes(String(courseId))).toBe(
+        true
+      );
 
       const anyTeam = await TeamModel.findOne({ TA: ta?._id });
       expect(anyTeam).toBeNull();
@@ -2120,5 +2164,4 @@ describe('courseService', () => {
       ).rejects.toThrow(NotFoundError);
     });
   });
-
 });
