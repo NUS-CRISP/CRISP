@@ -194,6 +194,8 @@ export const submitMySubmission = async (
   submission.updatedAt = now;
   submission.status = 'Submitted';
   await submission.save();
+  
+  console.log(`submission successful`);
   return submission;
 };
 

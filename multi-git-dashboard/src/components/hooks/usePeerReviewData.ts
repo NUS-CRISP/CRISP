@@ -14,6 +14,7 @@ import {
   apiFlagComment,
   apiFetchSubmissionsForAssignment,
   apiTouchDraft,
+  apiSubmitReview,
 } from '@/lib/peer-review/api';
 import {
   fetchGithubRepoStructure,
@@ -189,6 +190,17 @@ export default function usePeerReviewData({
     },
     [courseId, assignmentId]
   );
+  
+  const submitReview = useCallback(
+    async () => {
+      if (!canEdit) throw new Error('Read-only');
+      await apiSubmitReview(courseId, assignmentId);
+      const updated = await apiFetchSubmissionsForAssignment(courseId, assignmentId);
+      const mySubmission = userCourseRole === CourseRole.Student ? (updated?.[0] ?? null) : null;
+      setSubmission(mySubmission);
+      setCanEdit(false);
+    }, [canEdit, courseId, assignmentId, userCourseRole]
+  );
 
   const currentCode = useMemo(() => {
     if (!currFile) return '// No file selected';
@@ -213,5 +225,6 @@ export default function usePeerReviewData({
     deleteComment,
     flagComment,
     unflagComment,
+    submitReview
   };
 }

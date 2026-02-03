@@ -50,6 +50,27 @@ export const apiTouchDraft = async (
   }
 };
 
+export const apiSubmitReview = async (
+  courseId: string,
+  peerReviewAssignmentId: string
+): Promise<PeerReviewSubmission | null> => {
+  const submitReviewApiRoute = `/api/peer-review/${courseId}/${peerReviewAssignmentId}/submission/submit`;   
+  try {
+    const response = await fetch(submitReviewApiRoute, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!response.ok) {
+      throw new Error('Failed to submit review');
+    }
+    const submittedSubmission: PeerReviewSubmission = await response.json();
+    return submittedSubmission;
+  } catch (err) {
+    console.error('Error submitting review: ', err);
+    return null;
+  }
+};
+
 /* ----- Peer Review Assignment API Calls ----- */
 export const apiFetchPeerReviewAssignment = async (
   courseId: string,

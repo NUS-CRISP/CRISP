@@ -1,0 +1,74 @@
+import React from 'react';
+import { Badge } from '@mantine/core';
+import CourseRole from '@shared/types/auth/CourseRole';
+import type { PeerReviewSubmission } from '@shared/types/PeerReview';
+
+type SubmissionStatusBadgeProps = {
+  userCourseRole: string | null;
+  submission: PeerReviewSubmission | null;
+};
+
+const SubmissionStatusBadge: React.FC<SubmissionStatusBadgeProps> = ({
+  userCourseRole,
+  submission,
+}) => {
+  if (!userCourseRole) return null;
+  
+  if (userCourseRole === CourseRole.Faculty) {
+    return (
+      <Badge
+        variant="filled"
+        radius="md"
+        size="lg"
+        color="indigo"
+      >
+        Staff View
+      </Badge>
+    )
+  }
+  
+  if (userCourseRole === CourseRole.TA) {
+    return (
+      <Badge
+        variant="light"
+        radius="md"
+        size="lg"
+        color="blue"
+      >
+        Supervising View
+      </Badge>
+    )
+  }
+  
+  if (!submission?.status) {
+    return (
+      <Badge
+        variant="light"
+        radius="md"
+        size="lg"
+        color="red"
+      >
+        No Submission
+      </Badge>
+    )
+  }
+  
+  const colourByStatus: Record<string, string> = {
+    NotStarted: 'gray',
+    Draft: 'blue',
+    Submitted: 'green',
+  };
+  
+  return (
+    <Badge
+      variant={submission.status === 'Submitted' ? 'filled' : 'light'}
+      radius="md"
+      size="lg"
+      color={colourByStatus[submission.status] || 'gray'}
+    >
+      {submission.status}
+    </Badge>
+  );
+};
+
+export default SubmissionStatusBadge;

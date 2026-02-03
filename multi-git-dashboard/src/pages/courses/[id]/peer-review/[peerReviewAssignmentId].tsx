@@ -9,11 +9,12 @@ import {
   Box,
   Card,
   Badge,
+  Button,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import DeleteConfirmationModal from '@/components/cards/Modals/DeleteConfirmationModal';
 import FlagCommentConfirmationModal from '@/components/cards/Modals/FlagCommentConfirmationModal';
-import { IconListDetails, IconArrowLeft } from '@tabler/icons-react';
+import { IconListDetails, IconArrowLeft, IconSend } from '@tabler/icons-react';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 import { PeerReviewComment } from '@shared/types/PeerReview';
@@ -27,6 +28,9 @@ import type { editor as MEditor, IDisposable } from 'monaco-editor';
 import type { OnMount, Monaco } from '@monaco-editor/react';
 import { getMe } from '@/lib/auth/utils';
 import CourseRole from '@shared/types/auth/CourseRole';
+import SubmissionStatusBadge from '@/components/peer-review/SubmissionStatusBadge';
+import SaveStateBadge from '@/components/peer-review/SaveStateBadge';
+import SubmitReviewConfirmationModal from '@/components/cards/Modals/SubmitReviewConfirmationModal';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -74,6 +78,7 @@ const PeerReviewDetail: React.FC = () => {
     deleteComment,
     flagComment,
     unflagComment,
+    submitReview,
   } = usePeerReviewData({
     courseId: id,
     assignmentId: peerReviewAssignmentId,
@@ -96,8 +101,11 @@ const PeerReviewDetail: React.FC = () => {
   const [updatingCommentId, setUpdatingCommentId] = useState<string | null>(
     null
   );
+  
   const [deleteCommentId, setDeleteCommentId] = useState<string | null>(null);
   const [flagCommentId, setFlagCommentId] = useState<string | null>(null);
+  const [submitReviewModalOpened, setSubmitReviewModalOpened] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   type ActiveWidget = { start: number; end: number; top: number } | null;
   const [activeWidget, setActiveWidget] = useState<ActiveWidget>(null);
@@ -510,20 +518,26 @@ const PeerReviewDetail: React.FC = () => {
     [renderFocusedAndStaticDecos]
   );
   
-  const statusBadge = useMemo(() => {
-    if (!submission) return null;
-    if (me?.userCourseRole === CourseRole.Faculty) return <Badge>Staff View</Badge>;
-    if (me?.userCourseRole === CourseRole.TA) return <Badge>Supervising View</Badge>;
-    return <Badge>{submission.status}</Badge>
-  }, [canEdit, me?.userCourseRole, submission])
-  
-  const saveBadge = useMemo(() => {
-    if (!canEdit) return null;
-    if (saveState === 'Saving') return <Badge>Saving...</Badge>;
-    if (saveState === 'Saved') return <Badge>Saved</Badge>;
-    if (saveState === 'Error') return <Badge color="red">Save failed</Badge>;
-    return null;
-  }, [saveState, canEdit]);
+  const handleSubmitReview = useCallback(async () => {
+    try {
+      setSubmitting(true);
+      await submitReview();
+      setSubmitReviewModalOpened(false);
+      notifications.show({
+          color: 'green',
+          title: 'Review submitted successfully!',
+          message: 'Your peer review has been submitted.',
+        });
+    } catch (error) {
+      notifications.show({
+        color: 'red',
+        title: 'Failed to submit review',
+        message: (error as Error).message || 'Please try again.',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  }, [submitReview]);
 
   if (loading || !me) return <Center>Loading...</Center>;
   if (!peerReviewAssignment) return <Center>Unable to load assignment.</Center>;
@@ -531,22 +545,41 @@ const PeerReviewDetail: React.FC = () => {
 
   return (
     <Container fluid className={classes.wrapper}>
-      <Group className={classes.header}>
-        <IconArrowLeft
-          onClick={() => router.push(`/courses/${id}/peer-review`)}
-          className={classes.returnButton}
-        />
-        <IconListDetails />
-        <Title order={4}>Peer Review:</Title>
-        <Anchor
-          href={peerReviewAssignment.repoUrl}
-          target="_blank"
-          rel="noreferrer"
-        >
-          <Title order={4}>{peerReviewAssignment.repoName}</Title>
-        </Anchor>
+      <Group className={classes.header} justify='space-between'>
+        <Group gap='xs'>
+          <IconArrowLeft
+            onClick={() => router.push(`/courses/${id}/peer-review`)}
+            className={classes.returnButton}
+          />
+          <IconListDetails style={{ opacity: 0.8 }}/>
+          <Title order={4}>Peer Review:</Title>
+          <Anchor
+            href={peerReviewAssignment.repoUrl}
+            target="_blank"
+            rel="noreferrer"
+            underline="never"
+          >
+            <Title order={4}>{peerReviewAssignment.repoName}</Title>
+          </Anchor>
+        </Group>
+        <Group gap='xs'>
+          <SaveStateBadge canEdit={canEdit} saveState={saveState} />
+          <SubmissionStatusBadge userCourseRole={me.userCourseRole} submission={submission} />
+          {true && // To change to check for a submission
+            <Button
+              leftSection={<IconSend size={16} />}
+              radius='md'
+              size='xs'
+              fz="sm"
+              h='27px'
+              disabled={!canEdit || submission?.status === 'Submitted'}
+              onClick={() => setSubmitReviewModalOpened(true)}
+            >
+              Submit Review
+            </Button>
+          }
+        </Group>
       </Group>
-
       <Group className={classes.body}>
         <Box className={classes.repositoryBox}>
           <Text className={classes.repositoryTitle}>Repository</Text>
@@ -611,6 +644,15 @@ const PeerReviewDetail: React.FC = () => {
               ? { start: activeWidget.start, end: activeWidget.end }
               : null
           }
+        />
+        <SubmitReviewConfirmationModal
+          opened={submitReviewModalOpened}
+          onClose={() => setSubmitReviewModalOpened(false)}
+          onConfirm={handleSubmitReview}
+          comments={comments}
+          submitting={submitting}
+          locked={submission?.status === 'Submitted'}
+          repoName={peerReviewAssignment.repoName}
         />
         <DeleteConfirmationModal
           opened={!!deleteCommentId}
