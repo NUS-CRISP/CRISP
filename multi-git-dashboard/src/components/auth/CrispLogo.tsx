@@ -1,4 +1,4 @@
-import { IconGitBranch } from "@tabler/icons-react";
+import { IconGitBranch } from '@tabler/icons-react';
 
 // CRISP Logo
 const CrispLogo: React.FC<{ size?: number }> = ({ size = 46 }) => (
