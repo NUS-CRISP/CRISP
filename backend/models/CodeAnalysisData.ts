@@ -2,8 +2,7 @@ import { CodeAnalysisData as SharedCodeAnalysisData } from '@shared/types/CodeAn
 import mongoose, { Schema, Types } from 'mongoose';
 
 export interface CodeAnalysisData
-  extends Omit<SharedCodeAnalysisData, '_id'>,
-    Document {
+  extends Omit<SharedCodeAnalysisData, '_id'>, Document {
   _id: Types.ObjectId;
   metricStats: Map<string, { median: number; mean: number }>;
 }

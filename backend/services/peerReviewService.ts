@@ -58,7 +58,7 @@ export const getPeerReviewInfoById = async (
   peerReviewId: string
 ): Promise<PeerReviewInfoDTO> => {
   const peerReview = await getPeerReviewById(peerReviewId);
-  
+
   const ctx = await buildPeerReviewScopeContext(
     userId,
     userCourseRole,
@@ -66,57 +66,60 @@ export const getPeerReviewInfoById = async (
     peerReviewId,
     peerReview.reviewerType,
     peerReview.taAssignments,
-    peerReview.teamSetId.toString(),
+    peerReview.teamSetId.toString()
   );
-  
+
   if (ctx.scopedTeams.length === 0)
     return emptyPeerReviewInfo(peerReviewId, peerReview.reviewerType);
-  
+
   const assignmentState = await loadAssignmentsState(
     peerReviewId,
-    ctx.scopedTeamIds,
+    ctx.scopedTeamIds
   );
-  
+
   const reviewerScope = computeReviewerScope(
     userId,
     userCourseRole,
     peerReview.reviewerType,
     peerReview.taAssignments,
-    ctx.scopedTeams,
+    ctx.scopedTeams
   );
-  
+
   const submissions = await loadSubmissionsForScope(
     peerReviewId,
     peerReview.reviewerType,
     peerReview.taAssignments,
     reviewerScope.scopedMemberIds,
     reviewerScope.scopedReviewerTeamIds,
-    reviewerScope.taIdsWanted,
+    reviewerScope.taIdsWanted
   );
-  
+
   await addMissingAssignmentsForSubmissions(
     submissions,
-    assignmentState.assignmentById,
+    assignmentState.assignmentById
   );
-  
+
   const assignedReviewMaps = buildAssignedReviewMaps(
     submissions,
     assignmentState.assignmentById,
     reviewerScope.taIdsWanted,
-    ctx.usersById,
+    ctx.usersById
   );
-  
+
   if (userCourseRole !== COURSE_ROLE.Student) {
     populateAssignmentsOfTeamReviewers(
       assignmentState.assignmentsOfTeam,
       submissions,
       assignmentState.assignmentById,
       ctx.usersById,
-      ctx.teamNumberById,
+      ctx.teamNumberById
     );
   }
-  
-  console.log('AFTER POPULATION, assignmentState.assignmentsOfTeam:', assignmentState.assignmentsOfTeam);
+
+  console.log(
+    'AFTER POPULATION, assignmentState.assignmentsOfTeam:',
+    assignmentState.assignmentsOfTeam
+  );
 
   const teams = buildTeamsDTO(
     peerReview.reviewerType,
@@ -124,13 +127,16 @@ export const getPeerReviewInfoById = async (
     ctx.teamDataById,
     ctx.usersById,
     assignedReviewMaps.memberAssignedMap,
-    assignedReviewMaps.teamAssignedMap,
+    assignedReviewMaps.teamAssignedMap
   );
-  
+
   console.log('peerReviewId:', peerReviewId);
   console.log('peerReview.reviewerType:', peerReview.reviewerType);
   console.log('teams:', teams);
-  console.log('assignmentState.assignmentsOfTeam:', assignmentState.assignmentsOfTeam);
+  console.log(
+    'assignmentState.assignmentsOfTeam:',
+    assignmentState.assignmentsOfTeam
+  );
   console.log('TAAssignments:', assignedReviewMaps.assignmentsForTAs);
 
   return {
@@ -307,7 +313,7 @@ const buildPeerReviewScopeContext = async (
   peerReviewId: string,
   reviewerType: 'Individual' | 'Team',
   taAssignmentsEnabled: boolean,
-  teamSetId: string,
+  teamSetId: string
 ) => {
   const { teamIds, filterByTA } = await getScopedTeamIds(
     userId,
@@ -326,12 +332,18 @@ const buildPeerReviewScopeContext = async (
   const usersById = await getUsersByIdForTeams(scopedTeams);
   const teamNumberById = new Map(scopedTeams.map(t => [t.id, t.number]));
 
-  return { scopedTeams, scopedTeamIds, teamDataById, usersById, teamNumberById };
+  return {
+    scopedTeams,
+    scopedTeamIds,
+    teamDataById,
+    usersById,
+    teamNumberById,
+  };
 };
 
 const loadAssignmentsState = async (
   peerReviewId: string,
-  scopedTeamIds: string[],
+  scopedTeamIds: string[]
 ) => {
   const assignmentDocs = await PeerReviewAssignmentModel.find({
     peerReviewId: oid(peerReviewId),
@@ -374,21 +386,21 @@ const computeReviewerScope = (
   userCourseRole: string,
   reviewerType: 'Individual' | 'Team',
   taAssignmentsEnabled: boolean,
-  scopedTeams: NormalizedTeam[],
+  scopedTeams: NormalizedTeam[]
 ) => {
-  const scopedMemberIds = userCourseRole === COURSE_ROLE.Student
-    ? [userId]
-    : Array.from(new Set(scopedTeams.flatMap(t => t.memberIds)));
+  const scopedMemberIds =
+    userCourseRole === COURSE_ROLE.Student
+      ? [userId]
+      : Array.from(new Set(scopedTeams.flatMap(t => t.memberIds)));
   const scopedReviewerTeamIds = scopedTeams.map(t => t.id);
 
-  const taIdsWanted =
-    !taAssignmentsEnabled
-      ? []
-      : userCourseRole === COURSE_ROLE.Faculty
-        ? (scopedTeams.map(t => t.taId).filter(Boolean) as string[])
-        : userCourseRole === COURSE_ROLE.TA
-          ? [userId]
-          : [];
+  const taIdsWanted = !taAssignmentsEnabled
+    ? []
+    : userCourseRole === COURSE_ROLE.Faculty
+      ? (scopedTeams.map(t => t.taId).filter(Boolean) as string[])
+      : userCourseRole === COURSE_ROLE.TA
+        ? [userId]
+        : [];
 
   return { scopedMemberIds, scopedReviewerTeamIds, taIdsWanted };
 };
@@ -399,7 +411,7 @@ const loadSubmissionsForScope = async (
   taAssignmentsEnabled: boolean,
   scopedMemberIds: string[],
   scopedTeamIds: string[],
-  taIdsWanted: string[],
+  taIdsWanted: string[]
 ) => {
   const [studentSubs, teamSubs, taSubs] = await Promise.all([
     reviewerType === 'Individual'
@@ -432,10 +444,14 @@ const loadSubmissionsForScope = async (
 
 const addMissingAssignmentsForSubmissions = async (
   submissions: { studentSubs: any[]; teamSubs: any[]; taSubs: any[] },
-  assignmentById: Map<string, PeerReviewAssignment>,
+  assignmentById: Map<string, PeerReviewAssignment>
 ) => {
   const neededIds = new Set<string>();
-  for (const s of [...submissions.studentSubs, ...submissions.teamSubs, ...submissions.taSubs]) {
+  for (const s of [
+    ...submissions.studentSubs,
+    ...submissions.teamSubs,
+    ...submissions.taSubs,
+  ]) {
     neededIds.add(s.peerReviewAssignmentId.toString());
   }
 
@@ -469,7 +485,7 @@ const buildAssignedReviewMaps = (
   submissions: { studentSubs: any[]; teamSubs: any[]; taSubs: any[] },
   assignmentById: Map<string, PeerReviewAssignment>,
   taIdsWanted: string[],
-  usersById: Map<string, string>,
+  usersById: Map<string, string>
 ) => {
   const memberAssignedMap = new Map<string, AssignedReviewDTO[]>();
   for (const s of submissions.studentSubs) {
@@ -523,7 +539,7 @@ const populateAssignmentsOfTeamReviewers = (
   submissions: { studentSubs: any[]; teamSubs: any[]; taSubs: any[] },
   assignmentById: Map<string, PeerReviewAssignment>,
   usersById: Map<string, string>,
-  teamNumberById: Map<string, number>,
+  teamNumberById: Map<string, number>
 ) => {
   for (const s of submissions.studentSubs) {
     const assignment = assignmentById.get(s.peerReviewAssignmentId.toString());
@@ -580,14 +596,17 @@ const populateAssignmentsOfTeamReviewers = (
 const buildTeamsDTO = (
   reviewerType: 'Individual' | 'Team',
   scopedTeams: NormalizedTeam[],
-  teamDataById: Map<string, { repoUrl: string; repoName: string; gitHubOrgName: string }>,
+  teamDataById: Map<
+    string,
+    { repoUrl: string; repoName: string; gitHubOrgName: string }
+  >,
   usersById: Map<string, string>,
   memberAssignedMap: Map<string, AssignedReviewDTO[]>,
-  teamAssignedMap: Map<string, AssignedReviewDTO[]>,
+  teamAssignedMap: Map<string, AssignedReviewDTO[]>
 ) => {
   return scopedTeams.map(team => {
     const teamData = teamDataById.get(team.number.toString());
-    const taName = team.taId ? usersById.get(team.taId) ?? '' : '';
+    const taName = team.taId ? (usersById.get(team.taId) ?? '') : '';
 
     const members: PeerReviewTeamMemberDTO[] = team.memberIds.map(memberId => ({
       userId: memberId,
@@ -596,7 +615,7 @@ const buildTeamsDTO = (
     }));
 
     const assignedReviewsToTeam =
-      reviewerType === 'Team' ? teamAssignedMap.get(team.id) ?? [] : [];
+      reviewerType === 'Team' ? (teamAssignedMap.get(team.id) ?? []) : [];
 
     return {
       teamId: team.id,
@@ -644,7 +663,7 @@ const getScopedTeamIds = async (
   if (userCourseRole === COURSE_ROLE.TA) {
     return { teamIds: [], filterByTA: userId };
   }
-  
+
   return { teamIds: [] };
 };
 
@@ -737,7 +756,9 @@ const toAssignedReviewDTO = (
   submission: any,
   assignmentById: Map<string, PeerReviewAssignment>
 ): AssignedReviewDTO | null => {
-  const assignment = assignmentById.get(submission.peerReviewAssignmentId.toString());
+  const assignment = assignmentById.get(
+    submission.peerReviewAssignmentId.toString()
+  );
   if (!assignment) return null;
 
   return {

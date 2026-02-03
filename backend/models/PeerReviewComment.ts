@@ -3,7 +3,8 @@ import { PeerReviewComment as SharedPeerReviewComment } from '@shared/types/Peer
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
 export interface PeerReviewComment
-  extends Omit<
+  extends
+    Omit<
       SharedPeerReviewComment,
       | '_id'
       | 'peerReviewId'
@@ -40,7 +41,7 @@ const peerReviewCommentSchema = new Schema<PeerReviewComment>(
       ref: 'PeerReviewSubmission',
       index: true,
     },
-    
+
     filePath: { type: String, required: true },
     startLine: { type: Number, required: true, min: 1 },
     endLine: {
@@ -55,9 +56,18 @@ const peerReviewCommentSchema = new Schema<PeerReviewComment>(
       },
     },
     comment: { type: String, required: true },
-    author: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-    authorCourseRole: { type: String, required: true, enum: Object.values(COURSE_ROLE) },
-    
+    author: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      index: true,
+    },
+    authorCourseRole: {
+      type: String,
+      required: true,
+      enum: Object.values(COURSE_ROLE),
+    },
+
     // Moderation Fields
     isFlagged: { type: Boolean, default: false },
     flagReason: { type: String, default: '' },
@@ -68,7 +78,7 @@ const peerReviewCommentSchema = new Schema<PeerReviewComment>(
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  },
+  }
 );
 
 peerReviewCommentSchema.index({ peerReviewSubmissionId: 1, createdAt: 1 });

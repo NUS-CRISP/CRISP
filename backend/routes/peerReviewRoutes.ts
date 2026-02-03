@@ -72,8 +72,17 @@ router.put(
 );
 
 // Peer Review Submission Routes
-router.get('/:courseId/:peerReviewAssignmentId/submissions', getSubmissionsForAssignment);
-router.put('/:courseId/:peerReviewAssignmentId/submissions', putMySubmissionDraft);
-router.post('/:courseId/:peerReviewAssignmentId/submissions/submit', postSubmitMySubmission);
+router.get(
+  '/:courseId/:peerReviewAssignmentId/submissions',
+  getSubmissionsForAssignment
+);
+router.put(
+  '/:courseId/:peerReviewAssignmentId/submissions',
+  putMySubmissionDraft
+);
+router.post(
+  '/:courseId/:peerReviewAssignmentId/submissions/submit',
+  postSubmitMySubmission
+);
 
 export default router;

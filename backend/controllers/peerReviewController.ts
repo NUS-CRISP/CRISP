@@ -21,12 +21,15 @@ export const getAllPeerReviews = async (req: Request, res: Response) => {
 };
 
 export const getPeerReviewInfo = async (req: Request, res: Response) => {
-
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
-    const userId = await verifyRequestPermission(account._id, userCourseRole, []);
+    const userId = await verifyRequestPermission(
+      account._id,
+      userCourseRole,
+      []
+    );
     const { courseId, peerReviewId } = req.params;
-    
+
     const peerReviewInfo = await getPeerReviewInfoById(
       userId,
       userCourseRole,
@@ -40,13 +43,12 @@ export const getPeerReviewInfo = async (req: Request, res: Response) => {
 };
 
 export const createPeerReview = async (req: Request, res: Response) => {
-
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
     const userId = await verifyRequestPermission(account._id, userCourseRole, [
       COURSE_ROLE.Faculty,
     ]);
-    
+
     const newPeerReview = await createPeerReviewById(
       req.params.courseId,
       userId,
@@ -64,7 +66,7 @@ export const deletePeerReview = async (req: Request, res: Response) => {
     await verifyRequestPermission(account._id, userCourseRole, [
       COURSE_ROLE.Faculty,
     ]);
-    
+
     const deletedRes = await deletePeerReviewById(req.params.peerReviewId);
     res.status(200).json({
       message: `${deletedRes.deletedPeerReviewTitle} deleted successfully`,
@@ -77,12 +79,10 @@ export const deletePeerReview = async (req: Request, res: Response) => {
 export const updatePeerReview = async (req: Request, res: Response) => {
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
-    const userId = await verifyRequestPermission(
-      account._id,
-      userCourseRole,
-      [COURSE_ROLE.Faculty]
-    );
-    
+    const userId = await verifyRequestPermission(account._id, userCourseRole, [
+      COURSE_ROLE.Faculty,
+    ]);
+
     await updatePeerReviewById(req.params.peerReviewId, userId, req.body);
     res
       .status(200)

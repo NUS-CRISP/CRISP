@@ -5,7 +5,11 @@ import {
   MissingAuthorizationError,
 } from '../services/errors';
 
-export const handleError = (res: Response, error: unknown, fallbackMsg: string) => {
+export const handleError = (
+  res: Response,
+  error: unknown,
+  fallbackMsg: string
+) => {
   if (error instanceof NotFoundError) {
     return res.status(404).json({ message: error.message });
   }

@@ -2,13 +2,7 @@ import mongoose, { Schema, Types, Document } from 'mongoose';
 import { PeerReview as SharedPeerReview } from '@shared/types/PeerReview';
 
 export interface PeerReview
-  extends Omit<
-      SharedPeerReview,
-      | '_id'
-      | 'courseId'
-      | 'teamSetId'
-    >,
-    Document {
+  extends Omit<SharedPeerReview, '_id' | 'courseId' | 'teamSetId'>, Document {
   _id: Types.ObjectId;
   course: Types.ObjectId;
   teamSetId: Types.ObjectId;
@@ -46,7 +40,7 @@ const peerReviewSchema = new Schema<PeerReview>(
       required: true,
       default: 'Individual',
     },
-    
+
     teamSetId: { type: Schema.Types.ObjectId, ref: 'TeamSet', required: true },
     taAssignments: { type: Boolean, required: true, default: false },
     minReviewsPerReviewer: { type: Number, required: true, min: 0 },
@@ -66,7 +60,7 @@ const peerReviewSchema = new Schema<PeerReview>(
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  },
+  }
 );
 
 peerReviewSchema.virtual('computedStatus').get(function (this: PeerReview) {

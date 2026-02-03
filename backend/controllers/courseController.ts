@@ -55,7 +55,7 @@ export const getMe = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error getting user info:', error);
     res.status(500).json({ message: 'Failed to get user info' });
-  };
+  }
 };
 
 /*----------------------------------------Course----------------------------------------*/

@@ -8,10 +8,17 @@ import {
   submitMySubmission,
 } from '../services/peerReviewSubmissionService';
 
-export const getSubmissionsForAssignment = async (req: Request, res: Response) => {
+export const getSubmissionsForAssignment = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
-    const userId = await verifyRequestPermission(account._id, userCourseRole, []);
+    const userId = await verifyRequestPermission(
+      account._id,
+      userCourseRole,
+      []
+    );
 
     const { courseId, peerReviewAssignmentId } = req.params;
 
@@ -30,8 +37,12 @@ export const getSubmissionsForAssignment = async (req: Request, res: Response) =
 export const getMySubmission = async (req: Request, res: Response) => {
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
-    const userId = await verifyRequestPermission(account._id, userCourseRole, []);
-    
+    const userId = await verifyRequestPermission(
+      account._id,
+      userCourseRole,
+      []
+    );
+
     const { courseId, peerReviewAssignmentId } = req.params;
     const submissions = await getMySubmissionForAssignmentId(
       userId,
@@ -48,13 +59,17 @@ export const getMySubmission = async (req: Request, res: Response) => {
 export const putMySubmissionDraft = async (req: Request, res: Response) => {
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
-    const userId = await verifyRequestPermission(account._id, userCourseRole, []);
+    const userId = await verifyRequestPermission(
+      account._id,
+      userCourseRole,
+      []
+    );
     const { courseId, assignmentId } = req.params;
 
     const updated = await updateMySubmissionDraft(
       userId,
       userCourseRole,
-      assignmentId,
+      assignmentId
     );
 
     res.status(200).json(updated);
@@ -66,7 +81,11 @@ export const putMySubmissionDraft = async (req: Request, res: Response) => {
 export const postSubmitMySubmission = async (req: Request, res: Response) => {
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
-    const userId = await verifyRequestPermission(account._id, userCourseRole, []);
+    const userId = await verifyRequestPermission(
+      account._id,
+      userCourseRole,
+      []
+    );
     const { courseId, assignmentId } = req.params;
 
     const submitted = await submitMySubmission(

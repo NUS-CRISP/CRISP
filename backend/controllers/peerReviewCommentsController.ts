@@ -16,9 +16,13 @@ export const getPeerReviewCommentsById = async (
 ) => {
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
-    const userId = await verifyRequestPermission(account._id, userCourseRole, []);
+    const userId = await verifyRequestPermission(
+      account._id,
+      userCourseRole,
+      []
+    );
     const peerReviewAssignmentId = req.params.peerReviewAssignmentId;
-    
+
     const comments = await getPeerReviewCommentsByAssignmentId(
       userId,
       userCourseRole,
@@ -34,16 +38,20 @@ export const getPeerReviewCommentsById = async (
 export const addPeerReviewComment = async (req: Request, res: Response) => {
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
-    const userId = await verifyRequestPermission(account._id, userCourseRole, []);
+    const userId = await verifyRequestPermission(
+      account._id,
+      userCourseRole,
+      []
+    );
     const assignmentId = req.params.peerReviewAssignmentId;
     const { comment: commentData, submissionId } = req.body;
-    
+
     const newComment = await addPeerReviewCommentByAssignmentId(
       userId,
       userCourseRole,
       assignmentId,
       submissionId,
-      commentData,
+      commentData
     );
     res.status(201).json(newComment);
   } catch (error) {
@@ -54,14 +62,18 @@ export const addPeerReviewComment = async (req: Request, res: Response) => {
 export const updatePeerReviewComment = async (req: Request, res: Response) => {
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
-    const userId = await verifyRequestPermission(account._id, userCourseRole, []);
-    
+    const userId = await verifyRequestPermission(
+      account._id,
+      userCourseRole,
+      []
+    );
+
     const { peerReviewAssignmentId, commentId } = req.params;
     const { comment: updatedComment, submissionId } = req.body;
     if (!updatedComment || typeof updatedComment !== 'string') {
       return res.status(400).json({ message: 'Comment text is required' });
     }
-    
+
     await updatePeerReviewCommentById(
       userId,
       userCourseRole,
@@ -79,19 +91,22 @@ export const updatePeerReviewComment = async (req: Request, res: Response) => {
 };
 
 export const deletePeerReviewComment = async (req: Request, res: Response) => {
-
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
-    const userId = await verifyRequestPermission(account._id, userCourseRole, []);
+    const userId = await verifyRequestPermission(
+      account._id,
+      userCourseRole,
+      []
+    );
     const { peerReviewAssignmentId, commentId } = req.params;
     const submissionId = req.body.submissionId;
-    
+
     await deletePeerReviewCommentById(
       userId,
       userCourseRole,
       peerReviewAssignmentId,
       commentId,
-      submissionId,
+      submissionId
     );
     res
       .status(200)
@@ -102,12 +117,14 @@ export const deletePeerReviewComment = async (req: Request, res: Response) => {
 };
 
 export const flagPeerReviewComment = async (req: Request, res: Response) => {
-
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
-    const userId = await verifyRequestPermission(account._id, userCourseRole, [COURSE_ROLE.Faculty, COURSE_ROLE.TA]);
+    const userId = await verifyRequestPermission(account._id, userCourseRole, [
+      COURSE_ROLE.Faculty,
+      COURSE_ROLE.TA,
+    ]);
     const { flagStatus, flagReason } = req.body;
-    
+
     await flagPeerReviewCommentById(
       userId,
       userCourseRole,

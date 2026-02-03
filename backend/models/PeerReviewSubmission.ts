@@ -2,12 +2,10 @@ import mongoose, { Schema, Types, Document } from 'mongoose';
 import { PeerReviewSubmission as SharedPeerReviewSubmission } from '@shared/types/PeerReview';
 
 export interface PeerReviewSubmission
-  extends Omit<
+  extends
+    Omit<
       SharedPeerReviewSubmission,
-      | '_id'
-      | 'peerReviewId'
-      | 'peerReviewAssignmentId'
-      | 'reviewerId'
+      '_id' | 'peerReviewId' | 'peerReviewAssignmentId' | 'reviewerId'
     >,
     Document {
   _id: Types.ObjectId;
@@ -24,7 +22,7 @@ const peerReviewSubmissionSchema = new Schema<PeerReviewSubmission>(
       required: true,
       index: true,
     },
-    
+
     peerReviewAssignmentId: {
       type: Schema.Types.ObjectId,
       ref: 'PeerReviewAssignment',
@@ -38,7 +36,7 @@ const peerReviewSubmissionSchema = new Schema<PeerReviewSubmission>(
       required: true,
       index: true,
     },
-    
+
     reviewerUserId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
@@ -89,13 +87,23 @@ peerReviewSubmissionSchema.pre('validate', function (next) {
   const hasTeam = Boolean(doc.reviewerTeamId);
 
   if (hasUser && hasTeam) {
-    return next(new Error('Only either reviewerUserId or reviewerTeamId may be set.'));
+    return next(
+      new Error('Only either reviewerUserId or reviewerTeamId may be set.')
+    );
   }
 
   if (doc.reviewerKind === 'Team') {
-    if (!hasTeam) return next(new Error('reviewerTeamId is required when reviewerKind is Team.'));
+    if (!hasTeam)
+      return next(
+        new Error('reviewerTeamId is required when reviewerKind is Team.')
+      );
   } else {
-    if (!hasUser) return next(new Error('reviewerUserId is required when reviewerKind is Student or TA.'));
+    if (!hasUser)
+      return next(
+        new Error(
+          'reviewerUserId is required when reviewerKind is Student or TA.'
+        )
+      );
   }
 
   return next();
@@ -104,16 +112,30 @@ peerReviewSubmissionSchema.pre('validate', function (next) {
 // Only one submission per (assignment, reviewer)
 peerReviewSubmissionSchema.index(
   { peerReviewAssignmentId: 1, reviewerKind: 1, reviewerUserId: 1 },
-  { unique: true, partialFilterExpression: { reviewerUserId: { $exists: true } } }
+  {
+    unique: true,
+    partialFilterExpression: { reviewerUserId: { $exists: true } },
+  }
 );
 
 peerReviewSubmissionSchema.index(
   { peerReviewAssignmentId: 1, reviewerKind: 1, reviewerTeamId: 1 },
-  { unique: true, partialFilterExpression: { reviewerTeamId: { $exists: true } } }
+  {
+    unique: true,
+    partialFilterExpression: { reviewerTeamId: { $exists: true } },
+  }
 );
 
-peerReviewSubmissionSchema.index({ peerReviewId: 1, reviewerUserId: 1, reviewerKind: 1 });
-peerReviewSubmissionSchema.index({ peerReviewId: 1, reviewerTeamId: 1, reviewerKind: 1 });
+peerReviewSubmissionSchema.index({
+  peerReviewId: 1,
+  reviewerUserId: 1,
+  reviewerKind: 1,
+});
+peerReviewSubmissionSchema.index({
+  peerReviewId: 1,
+  reviewerTeamId: 1,
+  reviewerKind: 1,
+});
 
 peerReviewSubmissionSchema.index({ peerReviewAssignmentId: 1, status: 1 });
 
