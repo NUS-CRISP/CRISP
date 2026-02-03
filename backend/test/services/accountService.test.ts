@@ -14,7 +14,7 @@ import {
 } from '../../services/accountService';
 import { BadRequestError, NotFoundError } from '../../services/errors';
 import UserModel from '@models/User';
-import CrispRole from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 
 let mongo: MongoMemoryServer;
 
@@ -43,7 +43,7 @@ const testAccountDetails = {
   name: 'Test User',
   email: 'test@example.com',
   password: 'password123',
-  crispRole: CrispRole.Normal,
+  crispRole: CRISP_ROLE.Normal,
 };
 
 async function createTestAccount(changes = {}) {
@@ -416,7 +416,7 @@ describe('getAllTrialAccounts', () => {
     await createTestAccount({
       email: 'pending@example.com',
       identifier: 'testIdentifier1',
-      crispRole: CrispRole.TrialUser,
+      crispRole: CRISP_ROLE.TrialUser,
     });
 
     const pendingAccounts = await getAllTrialAccounts();

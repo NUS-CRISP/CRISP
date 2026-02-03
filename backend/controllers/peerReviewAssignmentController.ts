@@ -6,7 +6,7 @@ import {
   addManualAssignment,
   removeManualAssignment,
 } from '../services/peerReviewAssignmentService';
-import CourseRole from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 import { verifyRequestUser, verifyRequestPermission } from '../utils/auth';
 
 export const getPeerReviewAssignment = async (req: Request, res: Response) => {
@@ -35,7 +35,7 @@ export const getPeerReviewAssignment = async (req: Request, res: Response) => {
 export const postAssignPeerReviews = async (req: Request, res: Response) => {
   const { account, userCourseRole } = await verifyRequestUser(req);
   const userId = await verifyRequestPermission(account._id, userCourseRole, [
-    CourseRole.Faculty,
+    COURSE_ROLE.Faculty,
   ]);
   const { courseId, peerReviewId } = req.params;
   const { reviewsPerReviewer, allowSameTA, groupsToAssign } = req.body;
@@ -68,7 +68,7 @@ export const postAssignPeerReviews = async (req: Request, res: Response) => {
 export const postAddManualAssignment = async (req: Request, res: Response) => {
   const { account, userCourseRole } = await verifyRequestUser(req);
   const userId = await verifyRequestPermission(account._id, userCourseRole, [
-    CourseRole.Faculty,
+    COURSE_ROLE.Faculty,
   ]);
   const { courseId, peerReviewId } = req.params;
   const { revieweeId, reviewerId, isTA } = req.body;
@@ -101,7 +101,7 @@ export const postAddManualAssignment = async (req: Request, res: Response) => {
 export const deleteManualAssignment = async (req: Request, res: Response) => {
   const { account, userCourseRole } = await verifyRequestUser(req);
   await verifyRequestPermission(account._id, userCourseRole, [
-    CourseRole.Faculty,
+    COURSE_ROLE.Faculty,
   ]);
   const { courseId, peerReviewId, revieweeId, reviewerId } = req.params;
   const isTA = req.query.isTA === 'true';

@@ -16,8 +16,8 @@ import {
   uploadAssessmentResultsById,
 } from '../../services/assessmentService';
 import { BadRequestError, NotFoundError } from '../../services/errors';
-import CrispRole from '@shared/types/auth/CrispRole';
-import CourseRole from '@shared/types/auth/CourseRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
 let mongo: MongoMemoryServer;
 
@@ -83,7 +83,7 @@ async function createStudentUser(userData: any) {
   const account = new AccountModel({
     email: `${userData.identifier}@example.com`,
     password: 'hashedpassword',
-    crispRole: CrispRole.Normal,
+    crispRole: CRISP_ROLE.Normal,
     user: user._id,
     isApproved: true,
   });
@@ -102,7 +102,7 @@ async function createTAUser(userData: any) {
   const account = new AccountModel({
     email: `${userData.identifier}@example.com`,
     password: 'hashedpassword',
-    crispRole: CrispRole.Normal,
+    crispRole: CRISP_ROLE.Normal,
     user: user._id,
     isApproved: true,
   });
@@ -121,7 +121,7 @@ async function createFacultyUser(userData: any) {
   const account = new AccountModel({
     email: `${userData.identifier}@example.com`,
     password: 'hashedpassword',
-    crispRole: CrispRole.Faculty,
+    crispRole: CRISP_ROLE.Faculty,
     user: user._id,
     isApproved: true,
   });
@@ -171,7 +171,7 @@ describe('assessmentService', () => {
     course.students.push(student._id);
     studentAccount.courseRoles.push({
       course: courseId,
-      courseRole: CourseRole.Student,
+      courseRole: COURSE_ROLE.Student,
     });
     await studentAccount.save();
     const { user: student2, account: studentAccount2 } =
@@ -185,7 +185,7 @@ describe('assessmentService', () => {
     await student2.save();
     studentAccount2.courseRoles.push({
       course: courseId,
-      courseRole: CourseRole.Student,
+      courseRole: COURSE_ROLE.Student,
     });
     await studentAccount2.save();
     await course.save();
@@ -197,7 +197,7 @@ describe('assessmentService', () => {
     taAccountId = taAccount._id;
     taAccount.courseRoles.push({
       course: course._id.toString(),
-      courseRole: CourseRole.TA,
+      courseRole: COURSE_ROLE.TA,
     });
     await taAccount.save();
 
@@ -206,7 +206,7 @@ describe('assessmentService', () => {
     const facultyAccount = faculty_pair.account;
     facultyAccount.courseRoles.push({
       course: course._id.toString(),
-      courseRole: CourseRole.Faculty,
+      courseRole: COURSE_ROLE.Faculty,
     });
     await facultyAccount.save();
 

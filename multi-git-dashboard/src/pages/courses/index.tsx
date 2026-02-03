@@ -10,6 +10,7 @@ import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import CreateCourseForm from '../../components/forms/CreateCourseForm';
+import ProfileDropdown from '@/components/ProfileDropdown';
 
 const CourseListPage: React.FC = () => {
   const apiRoute = '/api/courses';
@@ -70,6 +71,7 @@ const CourseListPage: React.FC = () => {
     <ScrollArea
       style={{
         height: '100vh',
+        paddingTop: '8px',
         paddingRight: '20px',
         overflowY: 'auto',
         scrollbarWidth: 'thin',
@@ -79,9 +81,62 @@ const CourseListPage: React.FC = () => {
         <CreateCourseForm />
       </Modal>
       <Box pl={20}>
-        <h1>Courses</h1>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+            marginBottom: '8px',
+          }}
+        >
+          <h1 style={{ margin: 0 }}>Courses</h1>
+          <div
+            style={{
+              marginLeft: 'auto',
+              width: 'fit-content',
+            }}
+          >
+            <ProfileDropdown />
+          </div>
+        </div>
         {courses.length === 0 ? (
-          <p>No courses to show</p>
+          <Box
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textAlign: 'center',
+              padding: '32px',
+              borderRadius: '12px',
+              border:
+                '1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4))',
+              background:
+                'light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6))',
+              color:
+                'light-dark(var(--mantine-color-gray-9), var(--mantine-color-gray-0))',
+              minHeight: '220px',
+            }}
+          >
+            <div>
+              <h2 style={{ margin: '0 0 8px' }}>No courses yet</h2>
+              <p
+                style={{
+                  margin: '0 0 16px',
+                  color:
+                    'light-dark(var(--mantine-color-gray-6), var(--mantine-color-gray-3))',
+                }}
+              >
+                You haven’t been added to any courses. Once you’re enrolled,
+                they’ll show up here.
+              </p>
+              {permission && (
+                <Button onClick={open} variant="filled">
+                  Create a course
+                </Button>
+              )}
+            </div>
+          </Box>
         ) : (
           <div
             style={{

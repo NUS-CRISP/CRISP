@@ -48,7 +48,7 @@ import AccountModel from '@models/Account';
 import AssessmentResultModel, { MarkEntry } from '@models/AssessmentResult';
 import UserModel, { User } from '@models/User';
 import { recalculateResult } from './assessmentResultService';
-import CrispRole from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 import CourseModel from '@models/Course';
 
 /**
@@ -657,7 +657,7 @@ export const updateSubmission = async (
   const course = await CourseModel.findById(assessment.course); // Assume valid
   const isCourseFaculty =
     course!.faculty.filter(f => f === account!.user).length !== 0;
-  if (account && (isCourseFaculty || account.crispRole === CrispRole.Admin)) {
+  if (account && (isCourseFaculty || account.crispRole === CRISP_ROLE.Admin)) {
     bypass = true;
   }
 

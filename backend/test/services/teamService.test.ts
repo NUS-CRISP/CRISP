@@ -15,8 +15,8 @@ import {
   removeMembersById,
   updateTeamById,
 } from '../../services/teamService';
-import CrispRole from '@shared/types/auth/CrispRole';
-import CourseRole from '@shared/types/auth/CourseRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
 let mongo: MongoMemoryServer;
 
@@ -84,7 +84,7 @@ async function createStudentUser(userData: any) {
   const account = new AccountModel({
     email: `${userData.identifier}@example.com`,
     password: 'hashedpassword',
-    crispRole: CrispRole.Normal,
+    crispRole: CRISP_ROLE.Normal,
     user: user._id,
     isApproved: true,
   });
@@ -103,7 +103,7 @@ async function createTAUser(userData: any) {
   const account = new AccountModel({
     email: `${userData.identifier}@example.com`,
     password: 'hashedpassword',
-    crispRole: CrispRole.Normal,
+    crispRole: CRISP_ROLE.Normal,
     user: user._id,
     isApproved: true,
   });
@@ -151,11 +151,11 @@ describe('teamService', () => {
       await ta2.save();
       ta1Acc.courseRoles.push({
         course: course._id.toString(),
-        courseRole: CourseRole.TA,
+        courseRole: COURSE_ROLE.TA,
       });
       ta2Acc.courseRoles.push({
         course: course._id.toString(),
-        courseRole: CourseRole.TA,
+        courseRole: COURSE_ROLE.TA,
       });
       await ta1Acc.save();
       await ta2Acc.save();
@@ -232,7 +232,7 @@ describe('teamService', () => {
       await ta.save();
       taAcc.courseRoles.push({
         course: course._id.toString(),
-        courseRole: CourseRole.TA,
+        courseRole: COURSE_ROLE.TA,
       });
       await taAcc.save();
       course.TAs.push(ta._id);
@@ -456,7 +456,7 @@ describe('teamService', () => {
       await student.save();
       studentAcc.courseRoles.push({
         course: course._id.toString(),
-        courseRole: CourseRole.Student,
+        courseRole: COURSE_ROLE.Student,
       });
       await studentAcc.save();
       course.students.push(student._id);
@@ -521,7 +521,7 @@ describe('teamService', () => {
       await student.save();
       studentAcc.courseRoles.push({
         course: course._id.toString(),
-        courseRole: CourseRole.Student,
+        courseRole: COURSE_ROLE.Student,
       });
       await studentAcc.save();
       course.students.push(student._id);
@@ -556,7 +556,7 @@ describe('teamService', () => {
       await ta.save();
       taAcc.courseRoles.push({
         course: course._id.toString(),
-        courseRole: CourseRole.TA,
+        courseRole: COURSE_ROLE.TA,
       });
       await taAcc.save();
       course.TAs.push(ta._id);
@@ -618,7 +618,7 @@ describe('teamService', () => {
       await ta.save();
       taAcc.courseRoles.push({
         course: course._id.toString(),
-        courseRole: CourseRole.TA,
+        courseRole: COURSE_ROLE.TA,
       });
       await taAcc.save();
       course.TAs.push(ta._id);

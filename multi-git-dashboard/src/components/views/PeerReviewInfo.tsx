@@ -21,7 +21,7 @@ import PeerReviewSettingsForm from '../forms/PeerReviewSettingsForm';
 import PeerReviewAssignmentForm from '../forms/PeerReviewAssignmentForm';
 import { showNotification } from '@mantine/notifications';
 import { hasCoursePermission } from '@/lib/auth/utils';
-import CourseRole from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
 interface PeerReviewInfoProps {
   courseId: string;
@@ -101,8 +101,8 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
 
   const isTAOrFaculty = hasCoursePermission(
     courseId,
-    CourseRole.Faculty,
-    CourseRole.TA
+    COURSE_ROLE.Faculty,
+    COURSE_ROLE.TA
   );
 
   // Fetch Peer Review Info

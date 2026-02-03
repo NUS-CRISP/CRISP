@@ -9,8 +9,8 @@ import { NotFoundError } from '../../services/errors';
 import TeamModel from '@models/Team';
 import TeamSetModel from '@models/TeamSet';
 import TeamDataModel from '@models/TeamData';
-import CrispRole from '@shared/types/auth/CrispRole';
-import CourseRole from '@shared/types/auth/CourseRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
 let mongo: MongoMemoryServer;
 
@@ -57,7 +57,7 @@ describe('codeAnalysisService', () => {
     const mockFacultyAccount = new AccountModel({
       email: 'test@example.com',
       password: 'hashedpassword',
-      crispRole: CrispRole.Faculty,
+      crispRole: CRISP_ROLE.Faculty,
       user: mockFacultyUser._id,
       isApproved: true,
     });
@@ -73,7 +73,7 @@ describe('codeAnalysisService', () => {
     const mockTAAccount = new AccountModel({
       email: 'mockTA@example.com',
       password: 'hashedpassword',
-      crispRole: CrispRole.Normal,
+      crispRole: CRISP_ROLE.Normal,
       user: mockTAUser._id,
       isApproved: true,
     });
@@ -96,12 +96,12 @@ describe('codeAnalysisService', () => {
     await mockCourse.save();
     mockTAAccount.courseRoles.push({
       course: mockCourse._id.toString(),
-      courseRole: CourseRole.TA,
+      courseRole: COURSE_ROLE.TA,
     });
     await mockTAAccount.save();
     mockFacultyAccount.courseRoles.push({
       course: mockCourse._id.toString(),
-      courseRole: CourseRole.Faculty,
+      courseRole: COURSE_ROLE.Faculty,
     });
     await mockFacultyAccount.save();
 
@@ -292,7 +292,7 @@ describe('codeAnalysisService', () => {
       const adminAccount = new AccountModel({
         email: 'test1@example.com',
         password: 'hashedpassword',
-        crispRole: CrispRole.Admin,
+        crispRole: CRISP_ROLE.Admin,
         user: adminUser._id,
         isApproved: true,
       });
@@ -335,7 +335,7 @@ describe('codeAnalysisService', () => {
       const unauthorizedFacultyAccount = new AccountModel({
         email: 'test1@example.com',
         password: 'hashedpassword',
-        crispRole: CrispRole.Faculty,
+        crispRole: CRISP_ROLE.Faculty,
         user: unauthorizedFacultyUser._id,
         isApproved: true,
       });
@@ -423,14 +423,14 @@ describe('codeAnalysisService', () => {
       const mockTAAccount = await AccountModel.findById(mockTAAccountId);
       mockTAAccount!.courseRoles.push({
         course: courseWithoutTeamSets._id.toString(),
-        courseRole: CourseRole.TA,
+        courseRole: COURSE_ROLE.TA,
       });
       await mockTAAccount!.save();
       const mockFacultyAccount =
         await AccountModel.findById(mockFacultyAccountId);
       mockFacultyAccount!.courseRoles.push({
         course: courseWithoutTeamSets._id.toString(),
-        courseRole: CourseRole.Faculty,
+        courseRole: COURSE_ROLE.Faculty,
       });
       await mockFacultyAccount!.save();
 
@@ -460,14 +460,14 @@ describe('codeAnalysisService', () => {
       const mockTAAccount = await AccountModel.findById(mockTAAccountId);
       mockTAAccount!.courseRoles.push({
         course: courseWithoutTeams._id.toString(),
-        courseRole: CourseRole.TA,
+        courseRole: COURSE_ROLE.TA,
       });
       await mockTAAccount!.save();
       const mockFacultyAccount =
         await AccountModel.findById(mockFacultyAccountId);
       mockFacultyAccount!.courseRoles.push({
         course: courseWithoutTeams._id.toString(),
-        courseRole: CourseRole.Faculty,
+        courseRole: COURSE_ROLE.Faculty,
       });
       await mockFacultyAccount!.save();
 
@@ -507,14 +507,14 @@ describe('codeAnalysisService', () => {
       const mockTAAccount = await AccountModel.findById(mockTAAccountId);
       mockTAAccount!.courseRoles.push({
         course: courseWithoutCodeAnalysisData._id.toString(),
-        courseRole: CourseRole.TA,
+        courseRole: COURSE_ROLE.TA,
       });
       await mockTAAccount!.save();
       const mockFacultyAccount =
         await AccountModel.findById(mockFacultyAccountId);
       mockFacultyAccount!.courseRoles.push({
         course: courseWithoutCodeAnalysisData._id.toString(),
-        courseRole: CourseRole.Faculty,
+        courseRole: COURSE_ROLE.Faculty,
       });
       await mockFacultyAccount!.save();
 

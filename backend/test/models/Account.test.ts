@@ -2,7 +2,7 @@ import mongoose, { ConnectOptions } from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import AccountModel from '../../models/Account';
 import UserModel from '../../models/User';
-import CrispRole from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 
 let mongoServer: MongoMemoryServer;
 
@@ -33,7 +33,7 @@ describe('AccountModel', () => {
     const accountData: any = {
       email: 'test@example.com',
       password: 'password123',
-      crispRole: CrispRole.Faculty,
+      crispRole: CRISP_ROLE.Faculty,
       isApproved: false,
       user: userData._id,
     };
@@ -43,7 +43,7 @@ describe('AccountModel', () => {
 
     expect(savedAccount.email).toEqual(accountData.email);
     expect(savedAccount.isApproved).toBe(false);
-    expect(savedAccount.crispRole).toEqual(CrispRole.Faculty);
+    expect(savedAccount.crispRole).toEqual(CRISP_ROLE.Faculty);
   });
 
   it('should update an existing account', async () => {
@@ -53,7 +53,7 @@ describe('AccountModel', () => {
     const account = new AccountModel({
       email: 'existing@example.com',
       password: 'password123',
-      crispRole: CrispRole.Normal,
+      crispRole: CRISP_ROLE.Normal,
       isApproved: false,
       user: user._id,
     });
@@ -76,7 +76,7 @@ describe('AccountModel', () => {
     const account = new AccountModel({
       email: 'delete@example.com',
       password: 'password123',
-      crispRole: CrispRole.Normal,
+      crispRole: CRISP_ROLE.Normal,
       isApproved: false,
       user: user._id,
     });
@@ -96,7 +96,7 @@ describe('AccountModel', () => {
     const account1 = new AccountModel({
       email: 'unique@example.com',
       password: 'password123',
-      crispRole: CrispRole.Normal,
+      crispRole: CRISP_ROLE.Normal,
       isApproved: true,
       user: user1._id,
     });
@@ -105,7 +105,7 @@ describe('AccountModel', () => {
     const account2 = new AccountModel({
       email: 'unique@example.com',
       password: 'password321',
-      crispRole: CrispRole.Normal,
+      crispRole: CRISP_ROLE.Normal,
       isApproved: false,
       user: user2._id,
     });
@@ -116,7 +116,7 @@ describe('AccountModel', () => {
   it('should not save an account without required fields', async () => {
     const accountData = {
       // Missing email and password
-      crispRole: CrispRole.Normal,
+      crispRole: CRISP_ROLE.Normal,
       isApproved: true,
     };
 

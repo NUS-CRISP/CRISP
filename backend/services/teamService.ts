@@ -1,4 +1,4 @@
-import CourseRole from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 import AccountModel from '../models/Account';
 import CourseModel from '../models/Course';
 import TeamModel, { Team } from '../models/Team';
@@ -71,7 +71,7 @@ export const addStudentsToTeam = async (courseId: string, students: any[]) => {
       !account ||
       account.courseRoles.filter(r => r.course === courseId).length === 0 ||
       account.courseRoles.filter(r => r.course === courseId)[0].courseRole !==
-        CourseRole.Student ||
+        COURSE_ROLE.Student ||
       !student.enrolledCourses.includes(course._id) ||
       !course.students.some(s => s._id.equals(student._id)) ||
       !studentData.teamSet ||
@@ -125,7 +125,7 @@ export const addTAsToTeam = async (courseId: string, tas: any[]) => {
       !account ||
       account.courseRoles.filter(r => r.course === courseId).length === 0 ||
       account.courseRoles.filter(r => r.course === courseId)[0].courseRole !==
-        CourseRole.TA ||
+        COURSE_ROLE.TA ||
       !ta.enrolledCourses.includes(course._id) ||
       !course.TAs.some(t => t._id.equals(ta._id)) ||
       !taData.teamSet ||

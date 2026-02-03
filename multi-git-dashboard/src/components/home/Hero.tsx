@@ -1,5 +1,5 @@
 import { Button, Group, Container, Image } from '@mantine/core';
-import Role from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 import classes from '@styles/Home.module.css';
 import { IconArrowRight, IconBrandGithub } from '@tabler/icons-react';
 import { signIn } from 'next-auth/react';
@@ -42,7 +42,7 @@ const Hero = () => {
             onClick={async () =>
               await signIn('credentials', {
                 callbackUrl: '/courses?trial=true',
-                type: Role.TrialUser,
+                type: CRISP_ROLE.TrialUser,
               })
             }
             rightSection={

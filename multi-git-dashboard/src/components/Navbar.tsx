@@ -1,84 +1,39 @@
 import { getTutorialHighlightColor } from '@/lib/utils';
+import { Alert, Center, FloatingPosition, Title } from '@mantine/core';
+import { IconGitBranch } from '@tabler/icons-react';
 import {
-  Alert,
-  Center,
-  FloatingPosition,
-  Stack,
-  Title,
-  Tooltip,
-  UnstyledButton,
-  rem,
-} from '@mantine/core';
-import {
-  IconBell,
-  IconGitBranch,
-  IconHelp,
-  IconHome2,
-  IconListDetails,
-  IconLogout,
-  IconSettings2,
-  IconUserCircle,
+  IconLayoutDashboard,
+  IconUsersGroup,
+  IconGitPullRequest,
+  IconCode,
+  IconUsers,
+  IconFolder,
+  IconTimeline,
+  IconCalendar,
+  IconChecklist,
+  IconMessagePlus,
 } from '@tabler/icons-react';
-import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { forwardRef, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import classes from '../styles/Navbar.module.css';
 import { useTutorialContext } from './tutorial/TutorialContext';
 import TutorialPopover from './tutorial/TutorialPopover';
 import { Course } from '@shared/types/Course';
 import { IconInfoCircle } from '@tabler/icons-react';
-import CrispRole from '@shared/types/auth/CrispRole';
-import NotificationSettingsForm from './forms/NotificationSettingsForm';
-
-interface NavbarLinkProps {
-  icon: typeof IconHome2;
-  label: string;
-  active?: boolean;
-  disabled?: boolean;
-  onClick: (event: React.MouseEvent) => void;
-  popoverOpened?: boolean;
-}
+import ProfileDropdown from './ProfileDropdown';
 
 interface CourseLink {
   link: string;
   label: string;
   disabled?: boolean;
-  pngSrc: string;
+  icon: typeof IconGitBranch;
 }
-
-const NavbarLink = forwardRef<HTMLButtonElement, NavbarLinkProps>(
-  ({ icon: Icon, label, active, disabled, onClick, popoverOpened }, ref) =>
-    popoverOpened ? (
-      <UnstyledButton
-        onClick={onClick}
-        style={disabled ? { cursor: 'default' } : undefined}
-        className={classes.link}
-        data-active={active || undefined}
-        ref={ref}
-      >
-        <Icon style={{ width: rem(20), height: rem(20) }} stroke={1.5} />
-      </UnstyledButton>
-    ) : (
-      <Tooltip label={label} position="right" transitionProps={{ duration: 0 }}>
-        <UnstyledButton
-          onClick={onClick}
-          style={disabled ? { cursor: 'default' } : undefined}
-          className={classes.link}
-          data-active={active || undefined}
-          ref={ref}
-        >
-          <Icon style={{ width: rem(20), height: rem(20) }} stroke={1.5} />
-        </UnstyledButton>
-      </Tooltip>
-    )
-);
 
 const Navbar: React.FC = () => {
   const { curTutorialStage, nextTutorialStage } = useTutorialContext();
 
   const router = useRouter();
   const { pathname } = router;
-  const { data: session } = useSession();
 
   const isCourseRoute = pathname.includes('/courses/[id]');
   const courseId = isCourseRoute ? (router.query.id as string) : null;
@@ -86,16 +41,10 @@ const Navbar: React.FC = () => {
   const [peopleAdded, setPeopleAdded] = useState(false);
   const [alertOpened, setAlertOpened] = useState(false);
 
-  const [activeMainTab, setActiveMainTab] = useState('Home');
   const [courseCode, setCourseCode] = useState('');
 
   const [activeCourseTab, setActiveCourseTab] = useState('Overview');
   const [startTime, setStartTime] = useState<Date>(new Date());
-
-  const [mainLinkPopoverOpened, setMainLinkPopoverOpened] = useState(false);
-  const [questionPopoverOpened, setQuestionPopoverOpened] = useState(false);
-
-  const [notificationModalOpened, setNotificationModalOpened] = useState(false);
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -164,8 +113,6 @@ const Navbar: React.FC = () => {
       return 'Code Analysis';
     } else if (path.startsWith('/courses/[id]/pr-overview')) {
       return 'PR Overview';
-    } else if (path.startsWith('/courses/[id]/peer-review')) {
-      return 'Peer Review';
     } else if (path.startsWith('/courses/[id]')) {
       return 'Team Review';
     } else {
@@ -173,102 +120,70 @@ const Navbar: React.FC = () => {
     }
   };
 
-  const handleSignOut = async () => {
-    if (courseId) {
-      logSessionTime(activeCourseTab, true);
-    }
-    await signOut();
-  };
-
-  const mainLinksData = [
-    { link: '/courses', label: 'View Courses', icon: IconListDetails },
-  ];
-  if (session?.user?.crispRole === CrispRole.Admin) {
-    mainLinksData.push({ link: '/admin', label: 'Admin', icon: IconSettings2 });
-  }
-
-  const mainLinks = mainLinksData.map(item => (
-    <NavbarLink
-      icon={item.icon}
-      label={item.label}
-      active={item.label === activeMainTab}
-      onClick={event => {
-        event.preventDefault();
-        if (courseId) {
-          logSessionTime(activeCourseTab, true);
-        }
-        setActiveMainTab(item.label);
-        router.push(item.link);
-      }}
-      key={item.label}
-      popoverOpened={mainLinkPopoverOpened}
-    />
-  ));
-
   const courseLinksData = [
     {
       link: `/courses/${courseId}/course-overview`,
       label: 'Course Overview',
       disabled: !peopleAdded,
-      pngSrc: '/course-overview.png',
+      icon: IconLayoutDashboard,
     },
     {
       link: `/courses/${courseId}`,
       label: 'Team Review',
       disabled: !peopleAdded,
-      pngSrc: '/team-view.png',
+      icon: IconUsersGroup,
     },
     {
       link: `/courses/${courseId}/pr-overview`,
       label: 'PR Overview',
       disabled: !peopleAdded,
-      pngSrc: '/timeline.png',
+      icon: IconGitPullRequest,
     },
     {
       link: `/courses/${courseId}/code-analysis`,
       label: 'Code Analysis',
       disabled: !peopleAdded,
-      pngSrc: '/code-analysis.png',
+      icon: IconCode,
     },
     {
       link: `/courses/${courseId}/people`,
       label: 'People',
-      pngSrc: '/people.png',
+      icon: IconUsers,
     },
     {
       link: `/courses/${courseId}/repositories`,
       label: 'Repositories',
-      pngSrc: '/repositories.png',
+      icon: IconFolder,
     },
     {
       link: `/courses/${courseId}/teams`,
       label: 'Teams',
       disabled: !peopleAdded,
-      pngSrc: '/teams.png',
+      icon: IconUsersGroup,
     },
     {
       link: `/courses/${courseId}/timeline`,
       label: 'Timeline',
       disabled: !peopleAdded,
-      pngSrc: '/timeline.png',
+      icon: IconTimeline,
     },
     {
       link: `/courses/${courseId}/project-management`,
       label: 'Project Management',
       disabled: !peopleAdded,
-      pngSrc: '/jira.png',
+      icon: IconCalendar,
     },
     {
       link: `/courses/${courseId}/assessments`,
       label: 'Assessments',
       disabled: !peopleAdded,
-      pngSrc: '/assessments.png',
+      icon: IconChecklist,
     },
     {
       link: `/courses/${courseId}/peer-review`,
       label: 'Peer Review',
       disabled: !peopleAdded,
-      pngSrc: '/peer-review.png',
+      icon: IconMessagePlus,
     },
   ];
 
@@ -302,11 +217,12 @@ const Navbar: React.FC = () => {
         }}
         style={{
           ...(item.disabled ? { cursor: 'not-allowed', opacity: 0.5 } : {}),
-          padding: '6px 0',
+          padding: '12px 0',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <span style={{ marginLeft: '5px' }}>{item.label}</span>
+          <item.icon style={{ width: 16, height: 16, marginRight: 10 }} />
+          <span>{item.label}</span>
         </div>
       </a>
     );
@@ -336,7 +252,7 @@ const Navbar: React.FC = () => {
     renderNavLink(courseLinksData[1], 12, 'top-start', 'Team Review')
   );
   courseLinks.push(
-    renderNavLink(courseLinksData[2], 10, 'top-start', 'PR Overview', true)
+    renderNavLink(courseLinksData[2], 10, 'top-start', 'PR Review', true)
   );
   courseLinks.push(
     renderNavLink(courseLinksData[3], 14, 'top-start', 'Code Analysis', true)
@@ -375,27 +291,20 @@ const Navbar: React.FC = () => {
       style={{
         height: '1px',
         backgroundColor: '#e0e0e0',
-        margin: '10px 0',
+        margin: '2px 0',
         width: '100%',
       }}
     />
   );
 
-  // Third section: Assessment, Peer Reviews
+  // Third section: Assessment, Peer Review
   courseLinks.push(
     renderNavLink(courseLinksData[9], 23, 'top-start', 'Assessments', true)
   );
-  courseLinks.push(
-    renderNavLink(courseLinksData[10], 23, 'top-start', 'Peer Review', true)
-  );
+  courseLinks.push(renderNavLink(courseLinksData[10]));
 
   useEffect(() => {
     const path = router.pathname;
-    if (path.startsWith('/admin')) {
-      setActiveMainTab('Admin');
-    } else {
-      setActiveMainTab('View Courses');
-    }
     const newTab = determineActiveTab(path);
     setActiveCourseTab(newTab);
   }, [router.pathname]);
@@ -430,123 +339,68 @@ const Navbar: React.FC = () => {
 
   return (
     <div className={classes.navbarsContainer}>
-      <TutorialPopover stage={1} position="right">
-        <nav
-          className={classes.navbar}
-          style={{
-            backgroundColor: getTutorialHighlightColor(1),
-          }}
-        >
-          <Center
-            className={classes.logo}
-            onClick={() => router.push('/courses')}
-            style={{ cursor: 'pointer' }}
-          >
-            <IconGitBranch size={30} />
-          </Center>
-
-          <div className={classes.navbarMain}>
-            <TutorialPopover
-              stage={2}
-              position="right"
-              onOpen={() => setMainLinkPopoverOpened(true)}
-              onClose={() => setMainLinkPopoverOpened(false)}
-            >
-              <Stack
-                justify="center"
-                gap={0}
-                style={{
-                  width: '50px',
-                  borderRadius: 10,
-                  backgroundColor: getTutorialHighlightColor(2),
-                }}
-              >
-                {mainLinks}
-              </Stack>
-            </TutorialPopover>
-          </div>
-
-          <TutorialPopover
-            stage={3}
-            position="right"
-            onOpen={() => setQuestionPopoverOpened(true)}
-            onClose={() => setQuestionPopoverOpened(false)}
-          >
-            <Stack
-              justify="center"
-              gap={0}
-              style={{
-                borderRadius: 10,
-                backgroundColor: getTutorialHighlightColor(3),
-              }}
-            >
-              <NavbarLink
-                onClick={() => {}}
-                icon={IconUserCircle}
-                label={`Hello, ${
-                  session && session.user ? session.user.name : 'user'
-                }`}
-                disabled
-                popoverOpened={questionPopoverOpened}
-              />
-
-              <NavbarLink
-                onClick={() => setNotificationModalOpened(true)}
-                icon={IconBell}
-                label="Configure Notifications"
-                popoverOpened={questionPopoverOpened}
-              />
-
-              <TutorialPopover stage={25} position="right-end" w={250} finish>
-                <NavbarLink
-                  onClick={() =>
-                    window.open('https://forms.gle/41KcH8gFh3uDfzQGA', '_blank')
-                  }
-                  icon={IconHelp}
-                  label="Submit issue / feature"
-                  popoverOpened={questionPopoverOpened}
-                />
-              </TutorialPopover>
-
-              <NavbarLink
-                onClick={handleSignOut}
-                icon={IconLogout}
-                label="Sign out"
-                popoverOpened={questionPopoverOpened}
-              />
-            </Stack>
-          </TutorialPopover>
-        </nav>
-      </TutorialPopover>
-
       {isCourseRoute && courseId && (
         <TutorialPopover stage={5} position="right">
           <nav
             className={classes.courseNavbar}
             style={{
-              width: '180px',
+              width: '200px',
               backgroundColor: getTutorialHighlightColor(5),
               paddingTop: '5px',
             }}
           >
             <div className={classes.navbarMain}>
+              <Center
+                onClick={() => router.push('/courses')}
+                style={{
+                  cursor: 'pointer',
+                  flexDirection: 'row',
+                  gap: '8px',
+                  marginBottom: '8px',
+                  padding: '8px',
+                  alignItems: 'center',
+                  borderRadius: 'var(--mantine-radius-md)',
+                  transition: 'background-color 0.2s ease',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.backgroundColor =
+                    'light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-6))';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+              >
+                <IconGitBranch size={24} />
+                <Title order={3}>CRISP</Title>
+              </Center>
+
+              <ProfileDropdown />
+              <div
+                key="divider"
+                style={{
+                  height: '1px',
+                  backgroundColor: '#e0e0e0',
+                  marginTop: '2px',
+                  width: '100%',
+                }}
+              />
+
               <Title
-                order={3}
+                order={4}
                 className={classes.title}
                 style={{
-                  marginBottom: '12px',
-                  marginTop: '0px',
+                  margin: '0px',
                   backgroundColor: getTutorialHighlightColor(5),
+                  padding: '16px',
                 }}
               >
                 {courseCode}
               </Title>
-
               <div
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '20px',
+                  padding: '10px 12px',
                 }}
               >
                 {courseLinks}
@@ -574,11 +428,6 @@ const Navbar: React.FC = () => {
       >
         <p>You need to add people for this course first.</p>
       </Alert>
-
-      <NotificationSettingsForm
-        opened={notificationModalOpened}
-        onClose={() => setNotificationModalOpened(false)}
-      />
     </div>
   );
 };

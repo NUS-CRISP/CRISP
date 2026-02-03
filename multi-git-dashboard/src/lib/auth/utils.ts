@@ -1,4 +1,4 @@
-import CrispRoles, { CrispRole } from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE, CrispRole } from '@shared/types/auth/CrispRole';
 import { CourseRole, CourseRoleTuple } from '@shared/types/auth/CourseRole';
 import { useSession } from 'next-auth/react';
 
@@ -11,7 +11,7 @@ export const hasPermission = (...CrispRoles: CrispRole[]) => {
 };
 
 export const hasFacultyPermission = () =>
-  hasPermission(CrispRoles.Admin, CrispRoles.Faculty);
+  hasPermission(CRISP_ROLE.Admin, CRISP_ROLE.Faculty);
 
 export const hasCoursePermission = (
   courseId: string,
@@ -33,7 +33,7 @@ export const isTrialUser = (...CrispRoles: CrispRole[]) => {
   );
 };
 
-export const isTrial = () => isTrialUser(CrispRoles.TrialUser);
+export const isTrial = () => isTrialUser(CRISP_ROLE.TrialUser);
 
 export const logLogin = async () => {
   const res = await fetch('/api/metrics/login', {

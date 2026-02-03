@@ -9,7 +9,7 @@ import {
   fetchAndSaveSheetData,
   getAssessmentSheetData,
 } from '../../services/googleService';
-import CrispRole from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 
 jest.mock('../../utils/google');
 
@@ -99,7 +99,7 @@ describe('googleService', () => {
       const account = new AccountModel({
         email: 'ta1@example.com',
         password: 'hashedpassword',
-        crispRole: CrispRole.Normal,
+        crispRole: CRISP_ROLE.Normal,
         isApproved: true,
       });
       await account.save();
@@ -112,7 +112,7 @@ describe('googleService', () => {
       const account = new AccountModel({
         email: 'ta1@example.com',
         password: 'hashedpassword',
-        crispRole: CrispRole.Normal,
+        crispRole: CRISP_ROLE.Normal,
         isApproved: true,
       });
       await account.save();
@@ -127,7 +127,7 @@ describe('googleService', () => {
       const account = new AccountModel({
         email: 'ta1@example.com',
         password: 'hashedpassword',
-        crispRole: CrispRole.Faculty,
+        crispRole: CRISP_ROLE.Faculty,
         isApproved: true,
       });
       await account.save();
@@ -151,7 +151,7 @@ describe('googleService', () => {
       const account = new AccountModel({
         email: 'ta1@example.com',
         password: 'hashedpassword',
-        crispRole: CrispRole.Normal,
+        crispRole: CRISP_ROLE.Normal,
         isApproved: true,
       });
       await account.save();
@@ -168,7 +168,7 @@ describe('googleService', () => {
       const account = new AccountModel({
         email: 'ta1@example.com',
         password: 'hashedpassword',
-        crispRole: CrispRole.Normal,
+        crispRole: CRISP_ROLE.Normal,
         isApproved: true,
       });
       await account.save();
@@ -184,7 +184,7 @@ describe('googleService', () => {
       const account = new AccountModel({
         email: 'ta1@example.com',
         password: 'hashedpassword',
-        crispRole: CrispRole.Normal,
+        crispRole: CRISP_ROLE.Normal,
         isApproved: true,
       });
       await account.save();

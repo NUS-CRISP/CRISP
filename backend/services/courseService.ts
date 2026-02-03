@@ -4,11 +4,11 @@ import CourseModel from '@models/Course';
 import TeamModel, { Team } from '@models/Team';
 import TeamSetModel, { TeamSet } from '@models/TeamSet';
 import UserModel, { User } from '@models/User';
-import CrispRole from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 import mongoose, { Types } from 'mongoose';
 import { BadRequestError, NotFoundError } from './errors';
 import { InternalAssessment } from '@shared/types/InternalAssessment';
-import CourseRole from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 import { DEFAULT_TEAMSET_NAME } from '@shared/types/TeamSet';
 
 /*----------------------------------------Course----------------------------------------*/
@@ -63,12 +63,12 @@ export const createNewCourse = async (courseData: any, accountId: string) => {
   course.faculty.push(user._id);
   account.courseRoles.push({
     course: course._id.toString(),
-    courseRole: CourseRole.Faculty,
+    courseRole: COURSE_ROLE.Faculty,
   });
   await account.save();
-  if (account.crispRole !== CrispRole.Admin) {
+  if (account.crispRole !== CRISP_ROLE.Admin) {
     const adminAccount = await AccountModel.findOne({
-      crispRole: CrispRole.Admin,
+      crispRole: CRISP_ROLE.Admin,
     });
     if (!adminAccount) console.warn('Admin account missing!');
     else {
@@ -176,7 +176,7 @@ export const addStudentsToCourse = async (
       await student.save();
       const newAccount = new AccountModel({
         email: studentData.email, // Email is saved as case-sensitive (depends on organisation)
-        crispRole: CrispRole.Normal,
+        crispRole: CRISP_ROLE.Normal,
         isApproved: false,
         user: student._id,
       });
@@ -192,7 +192,7 @@ export const addStudentsToCourse = async (
       );
       if (
         (courseRoleTuple.length !== 0 &&
-          studentAccount.crispRole !== CrispRole.TrialUser) ||
+          studentAccount.crispRole !== CRISP_ROLE.TrialUser) ||
         studentData.name.toUpperCase() !== student.name.toUpperCase() ||
         studentData.email.toLowerCase() !== studentAccount.email.toLowerCase() // Check is case-insensitive to handle email case-insensitivity cases
       ) {
@@ -204,7 +204,7 @@ export const addStudentsToCourse = async (
       student.enrolledCourses.push(course._id);
       studentAccount.courseRoles.push({
         course: course._id.toString(),
-        courseRole: CourseRole.Student,
+        courseRole: COURSE_ROLE.Student,
       });
     }
     await student.save();
@@ -250,7 +250,7 @@ export const addStudentsToCourseAndTeam = async (
 
       const newAccount = new AccountModel({
         email: r.email,
-        crispRole: CrispRole.Normal,
+        crispRole: CRISP_ROLE.Normal,
         isApproved: false,
         user: student._id,
       });
@@ -265,7 +265,7 @@ export const addStudentsToCourseAndTeam = async (
       );
       if (
         (courseRoleTuple.length !== 0 &&
-          studentAccount.crispRole !== CrispRole.TrialUser) ||
+          studentAccount.crispRole !== CRISP_ROLE.TrialUser) ||
         (r.name && r.name.toUpperCase() !== student.name.toUpperCase()) ||
         (r.email &&
           r.email.toLowerCase() !== studentAccount.email.toLowerCase())
@@ -280,7 +280,7 @@ export const addStudentsToCourseAndTeam = async (
       student.enrolledCourses.push(course._id);
       studentAccount.courseRoles.push({
         course: course._id.toString(),
-        courseRole: CourseRole.Student,
+        courseRole: COURSE_ROLE.Student,
       });
     }
 
@@ -354,7 +354,7 @@ export const updateStudentsInCourse = async (
     );
     if (
       courseRoleTuple.length === 0 ||
-      courseRoleTuple[0].courseRole !== CourseRole.Student
+      courseRoleTuple[0].courseRole !== COURSE_ROLE.Student
     ) {
       continue;
     }
@@ -412,7 +412,7 @@ export const addTAsToCourse = async (courseId: string, TADataList: any[]) => {
       await TA.save();
       const newAccount = new AccountModel({
         email: TAData.email,
-        crispRole: CrispRole.Normal,
+        crispRole: CRISP_ROLE.Normal,
         isApproved: false,
         user: TA._id,
       });
@@ -428,7 +428,7 @@ export const addTAsToCourse = async (courseId: string, TADataList: any[]) => {
       );
       if (
         (courseRoleTuple.length !== 0 &&
-          TAAccount.crispRole !== CrispRole.TrialUser) ||
+          TAAccount.crispRole !== CRISP_ROLE.TrialUser) ||
         TAData.name.toUpperCase() !== TA.name.toUpperCase() ||
         TAData.email.toLowerCase() !== TAAccount.email.toLowerCase()
       ) {
@@ -440,7 +440,7 @@ export const addTAsToCourse = async (courseId: string, TADataList: any[]) => {
       TA.enrolledCourses.push(course._id);
       TAAccount?.courseRoles.push({
         course: course._id.toString(),
-        courseRole: CourseRole.TA,
+        courseRole: COURSE_ROLE.TA,
       });
     }
     await TA.save();
@@ -479,7 +479,7 @@ export const addTAAndTeamToCourse = async (
 
       const newAccount = new AccountModel({
         email: TAData.email,
-        crispRole: CrispRole.Normal,
+        crispRole: CRISP_ROLE.Normal,
         isApproved: false,
         user: ta._id,
       });
@@ -494,7 +494,7 @@ export const addTAAndTeamToCourse = async (
       );
       if (
         (courseRoleTuple.length !== 0 &&
-          taAccount.crispRole !== CrispRole.TrialUser) ||
+          taAccount.crispRole !== CRISP_ROLE.TrialUser) ||
         (TAData.name && TAData.name.toUpperCase() !== ta.name.toUpperCase()) ||
         (TAData.email &&
           TAData.email.toLowerCase() !== taAccount.email.toLowerCase())
@@ -513,7 +513,7 @@ export const addTAAndTeamToCourse = async (
       ta.enrolledCourses.push(course._id);
       taAccount.courseRoles.push({
         course: course._id.toString(),
-        courseRole: CourseRole.TA,
+        courseRole: COURSE_ROLE.TA,
       });
     }
 
@@ -587,7 +587,7 @@ export const updateTAsInCourse = async (
     );
     if (
       courseRoleTuple.length === 0 ||
-      courseRoleTuple[0].courseRole !== CourseRole.TA
+      courseRoleTuple[0].courseRole !== COURSE_ROLE.TA
     ) {
       continue;
     }
@@ -655,7 +655,7 @@ export const addFacultyToCourse = async (
       await facultyMember.save();
       const newAccount = new AccountModel({
         email: facultyData.email,
-        role: CrispRole.Faculty,
+        crispRole: CRISP_ROLE.Faculty,
         isApproved: false,
         user: facultyMember._id,
       });
@@ -673,7 +673,7 @@ export const addFacultyToCourse = async (
       );
       if (
         (courseRoleTuple.length !== 0 &&
-          facultyAccount.crispRole !== CrispRole.TrialUser) ||
+          facultyAccount.crispRole !== CRISP_ROLE.TrialUser) ||
         facultyData.name.toUpperCase() !== facultyMember.name.toUpperCase() ||
         facultyData.email.toLowerCase() !== facultyAccount.email.toLowerCase()
       ) {
@@ -686,7 +686,7 @@ export const addFacultyToCourse = async (
       facultyMember.enrolledCourses.push(course._id);
       facultyAccount.courseRoles.push({
         course: courseId,
-        courseRole: CourseRole.Faculty,
+        courseRole: COURSE_ROLE.Faculty,
       });
     }
     await facultyMember.save();
@@ -725,9 +725,9 @@ export const updateFacultyInCourse = async (
     );
     if (
       (courseRoleTuple.length === 0 ||
-        courseRoleTuple[0].courseRole !== CourseRole.Faculty) &&
-      facultyAccount.crispRole !== CrispRole.Faculty &&
-      facultyAccount.crispRole !== CrispRole.Admin
+        courseRoleTuple[0].courseRole !== COURSE_ROLE.Faculty) &&
+      facultyAccount.crispRole !== CRISP_ROLE.Faculty &&
+      facultyAccount.crispRole !== CRISP_ROLE.Admin
     ) {
       continue;
     }
@@ -891,7 +891,7 @@ export const getTeamSetsFromCourse = async (
   );
   if (courseRoleTuple.length === 0) throw new BadRequestError('Unauthorized');
   const role = courseRoleTuple[0].courseRole;
-  if (role === CourseRole.TA) {
+  if (role === COURSE_ROLE.TA) {
     const userId = account.user;
     course.teamSets.forEach(
       teamSet =>
@@ -1058,7 +1058,7 @@ export const getProjectManagementBoardFromCourse = async (
   );
   if (courseRoleTuple.length === 0) throw new BadRequestError('Unauthorized');
   const role = courseRoleTuple[0].courseRole;
-  if (role === CourseRole.TA) {
+  if (role === COURSE_ROLE.TA) {
     const userId = account.user;
     course.teamSets.forEach(
       teamSet =>

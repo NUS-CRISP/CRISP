@@ -12,7 +12,7 @@ import {
 } from '../../controllers/accountController';
 import * as accountService from '../../services/accountService';
 import { BadRequestError, NotFoundError } from '../../services/errors';
-import CrispRole from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 
 jest.mock('../../services/accountService');
 
@@ -47,7 +47,7 @@ describe('accountController', () => {
         name: 'John Doe',
         email: 'john@example.com',
         password: 'password123',
-        crispRole: CrispRole.Normal,
+        crispRole: CRISP_ROLE.Normal,
       };
       const res = mockResponse();
 
@@ -68,7 +68,7 @@ describe('accountController', () => {
         name: 'John Doe',
         email: 'john@example.com',
         password: 'password123',
-        crispRole: CrispRole.Normal,
+        crispRole: CRISP_ROLE.Normal,
       };
       const res = mockResponse();
 
@@ -89,7 +89,7 @@ describe('accountController', () => {
         name: 'John Doe',
         email: 'john@example.com',
         password: 'password123',
-        crispRole: CrispRole.Normal,
+        crispRole: CRISP_ROLE.Normal,
       };
       const res = mockResponse();
 
@@ -113,7 +113,7 @@ describe('accountController', () => {
       const mockAccounts = [
         {
           email: 'pending@example.com',
-          crispRole: CrispRole.Normal,
+          crispRole: CRISP_ROLE.Normal,
         },
       ];
 
@@ -503,7 +503,7 @@ describe('retrieveTrialAccounts', () => {
     const mockAccounts = [
       {
         email: 'trial@example.com',
-        crispRole: CrispRole.TrialUser,
+        crispRole: CRISP_ROLE.TrialUser,
       },
     ];
 
