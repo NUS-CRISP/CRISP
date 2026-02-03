@@ -112,8 +112,8 @@ const Navbar: React.FC = () => {
       return 'Course Overview';
     } else if (path.startsWith('/courses/[id]/code-analysis')) {
       return 'Code Analysis';
-    } else if (path.startsWith('/courses/[id]/pr-review')) {
-      return 'PR Review';
+    } else if (path.startsWith('/courses/[id]/pr-overview')) {
+      return 'PR Overview';
     } else if (path.startsWith('/courses/[id]')) {
       return 'Team Review';
     } else {
@@ -135,7 +135,7 @@ const Navbar: React.FC = () => {
       icon: IconUsersGroup,
     },
     {
-      link: `/courses/${courseId}/pr-review`,
+      link: `/courses/${courseId}/pr-overview`,
       label: 'PR Review',
       disabled: !peopleAdded,
       icon: IconGitPullRequest,
