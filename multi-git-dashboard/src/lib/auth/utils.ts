@@ -51,11 +51,11 @@ export const getMe = async (courseId: string) => {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
   });
-  
+
   if (!res.ok) {
     console.error('Failed to fetch user data:', res.statusText);
     return null;
   }
-  
+
   return res.json();
 };

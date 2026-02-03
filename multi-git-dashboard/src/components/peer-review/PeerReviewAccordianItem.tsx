@@ -88,7 +88,9 @@ const PeerReviewAccordionItem = forwardRef<
       () =>
         new Set(
           currentTeam.assignedReviewsToTeam
-            ? currentTeam.assignedReviewsToTeam.map(tr => tr.assignment.reviewee._id)
+            ? currentTeam.assignedReviewsToTeam.map(
+                tr => tr.assignment.reviewee._id
+              )
             : []
         ),
       [currentTeam.assignedReviewsToTeam]
@@ -300,15 +302,17 @@ const PeerReviewAccordionItem = forwardRef<
                     >
                       <Stack gap="xs">
                         {reviewerType === 'Individual'
-                          ? assignmentOfTeam.reviewers.students.map(reviewer => (
-                              <Badge
-                                size="sm"
-                                variant="light"
-                                key={`user-${reviewer.userId}`}
-                              >
-                                {reviewer.name}
-                              </Badge>
-                            ))
+                          ? assignmentOfTeam.reviewers.students.map(
+                              reviewer => (
+                                <Badge
+                                  size="sm"
+                                  variant="light"
+                                  key={`user-${reviewer.userId}`}
+                                >
+                                  {reviewer.name}
+                                </Badge>
+                              )
+                            )
                           : assignmentOfTeam.reviewers.teams.map(reviewer => (
                               <Badge size="sm" key={`team-${reviewer.teamId}`}>
                                 Team {reviewer.teamNumber}

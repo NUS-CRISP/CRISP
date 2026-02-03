@@ -54,7 +54,7 @@ export const apiSubmitReview = async (
   courseId: string,
   peerReviewAssignmentId: string
 ): Promise<PeerReviewSubmission | null> => {
-  const submitReviewApiRoute = `/api/peer-review/${courseId}/${peerReviewAssignmentId}/submission/submit`;   
+  const submitReviewApiRoute = `/api/peer-review/${courseId}/${peerReviewAssignmentId}/submission/submit`;
   try {
     const response = await fetch(submitReviewApiRoute, {
       method: 'POST',
@@ -122,9 +122,16 @@ export const apiAddComment = async (
   peerReviewAssignmentId: string,
   comment: Omit<
     PeerReviewComment,
-    '_id' | 'peerReviewId' | 'peerReviewAssignmentId' | 'peerReviewSubmissionId' | 'author' | 'createdAt' | 'updatedAt' | 'authorCourseRole'
+    | '_id'
+    | 'peerReviewId'
+    | 'peerReviewAssignmentId'
+    | 'peerReviewSubmissionId'
+    | 'author'
+    | 'createdAt'
+    | 'updatedAt'
+    | 'authorCourseRole'
   >,
-  submissionId: string,
+  submissionId: string
 ): Promise<PeerReviewComment> => {
   const addCommentApiRoute = `/api/peer-review/${courseId}/${peerReviewAssignmentId}/comments`;
   try {
@@ -149,7 +156,7 @@ export const apiUpdateComment = async (
   peerReviewAssignmentId: string,
   commentId: string,
   updatedComment: string,
-  submissionId: string,
+  submissionId: string
 ): Promise<void> => {
   const updateCommentApiRoute = `/api/peer-review/${courseId}/${peerReviewAssignmentId}/comments/${commentId}`;
   try {
@@ -172,7 +179,7 @@ export const apiDeleteComment = async (
   courseId: string,
   peerReviewAssignmentId: string,
   commentId: string,
-  submissionId: string,
+  submissionId: string
 ): Promise<void> => {
   const deleteCommentApiRoute = `/api/peer-review/${courseId}/${peerReviewAssignmentId}/comments/${commentId}`;
   try {

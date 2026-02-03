@@ -21,10 +21,13 @@ import {
 import { PeerReviewComment } from '@shared/types/PeerReview';
 import classes from '../../styles/PeerReview.module.css';
 import { useEffect } from 'react';
-import { COURSE_ROLE, CourseRole as UserCourseRole } from '@shared/types/auth/CourseRole';
+import {
+  COURSE_ROLE,
+  CourseRole as UserCourseRole,
+} from '@shared/types/auth/CourseRole';
 
 interface PeerReviewCommentSidebarProps {
-  user: { userId: string, userCourseRole: string } | null;
+  user: { userId: string; userCourseRole: string } | null;
   readOnly: boolean;
   comments: PeerReviewComment[];
   focusedComments: string[];
@@ -76,25 +79,25 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
     setEditingId(null);
     setEditComment('');
   };
-  
+
   const getRoleVars = (courseRole?: UserCourseRole) => {
     switch (courseRole) {
       case COURSE_ROLE.TA:
         return {
-          "--cc-accent": "#3B82F6", // clear blue
-          "--cc-tint": "rgba(59, 130, 246, 0.16)",
+          '--cc-accent': '#3B82F6', // clear blue
+          '--cc-tint': 'rgba(59, 130, 246, 0.16)',
         } as React.CSSProperties;
 
       case COURSE_ROLE.Faculty:
         return {
-          "--cc-accent": "#A855F7", // clear purple
-          "--cc-tint": "rgba(168, 85, 247, 0.16)",
+          '--cc-accent': '#A855F7', // clear purple
+          '--cc-tint': 'rgba(168, 85, 247, 0.16)',
         } as React.CSSProperties;
 
       default:
         return {
-          "--cc-accent": "#10B981", // clear green
-          "--cc-tint": "rgba(16, 185, 129, 0.14)",
+          '--cc-accent': '#10B981', // clear green
+          '--cc-tint': 'rgba(16, 185, 129, 0.14)',
         } as React.CSSProperties;
     }
   };
@@ -178,20 +181,29 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
                   : ''
               }`}
               style={getRoleVars(c.authorCourseRole)}
-            > 
-              <Group justify="space-between" align="flex-start" wrap="nowrap" mb={4}>
-                <div style={{ flex: 1, minWidth: 0}}>
-                  {c.author?.name && 
+            >
+              <Group
+                justify="space-between"
+                align="flex-start"
+                wrap="nowrap"
+                mb={4}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  {c.author?.name && (
                     <Text fw={500} lh={1.2}>
                       {c.author.name}
                     </Text>
-                  }
+                  )}
                   <Text size="xs" c="dimmed" mt={4}>
                     {c.updatedAt && new Date(c.updatedAt).toLocaleDateString()}
                   </Text>
                 </div>
-                { user?.userId === c.author?._id && (
-                  <Group gap={4} wrap="nowrap" style={{ alignSelf: 'flex-start' }}>
+                {user?.userId === c.author?._id && (
+                  <Group
+                    gap={4}
+                    wrap="nowrap"
+                    style={{ alignSelf: 'flex-start' }}
+                  >
                     {editingId === c._id ? (
                       <>
                         <ActionIcon
@@ -238,7 +250,7 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
                   </Group>
                 )}
               </Group>
-              
+
               {editingId === c._id ? (
                 <Textarea
                   value={editComment}

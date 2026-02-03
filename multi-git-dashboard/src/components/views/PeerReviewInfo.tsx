@@ -337,21 +337,23 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
             )}
             {peerReviewInfo.teams.map(team => (
               <>
-              <PeerReviewAccordionItem
-                key={team.teamId}
-                currentTeam={team}
-                teams={peerReviewInfo.teams.map(t => ({
-                  value: t.teamId,
-                  TA: t.TA,
-                  label: `Team ${t.teamNumber}`,
-                }))}
-                reviewerType={peerReviewInfo.reviewerType}
-                assignmentOfTeam={peerReviewInfo.assignmentsOfTeam[team.teamId]}
-                maxReviewsPerReviewer={peerReview.maxReviewsPerReviewer}
-                hasFacultyPermission={hasFacultyPermission}
-                addManualAssignment={addManualAssignment}
-                deleteManualAssignment={deleteManualAssignment}
-              />
+                <PeerReviewAccordionItem
+                  key={team.teamId}
+                  currentTeam={team}
+                  teams={peerReviewInfo.teams.map(t => ({
+                    value: t.teamId,
+                    TA: t.TA,
+                    label: `Team ${t.teamNumber}`,
+                  }))}
+                  reviewerType={peerReviewInfo.reviewerType}
+                  assignmentOfTeam={
+                    peerReviewInfo.assignmentsOfTeam[team.teamId]
+                  }
+                  maxReviewsPerReviewer={peerReview.maxReviewsPerReviewer}
+                  hasFacultyPermission={hasFacultyPermission}
+                  addManualAssignment={addManualAssignment}
+                  deleteManualAssignment={deleteManualAssignment}
+                />
               </>
             ))}
           </Accordion>

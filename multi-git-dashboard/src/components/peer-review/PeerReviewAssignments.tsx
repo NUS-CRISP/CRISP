@@ -1,7 +1,10 @@
 import { ActionIcon, Button, Group, Text, Stack } from '@mantine/core';
 import { IconTrash } from '@tabler/icons-react';
 import { useRouter } from 'next/router';
-import { AssignedReviewDTO, PeerReviewAssignment } from '@shared/types/PeerReview';
+import {
+  AssignedReviewDTO,
+  PeerReviewAssignment,
+} from '@shared/types/PeerReview';
 import { Team } from '@shared/types/Team';
 
 interface PeerReviewAssignmentsProps {
@@ -28,7 +31,12 @@ const PeerReviewAssignments: React.FC<PeerReviewAssignmentsProps> = ({
   return (
     <Stack gap="sm" my="xs">
       {assignments.map(a => (
-        <Group key={a.assignment._id} gap={4} justify="flex-start" wrap="nowrap">
+        <Group
+          key={a.assignment._id}
+          gap={4}
+          justify="flex-start"
+          wrap="nowrap"
+        >
           <Button
             size="compact-xs"
             variant="light"
