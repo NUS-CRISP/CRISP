@@ -11,6 +11,7 @@ import {
   IconTimeline,
   IconCalendar,
   IconChecklist,
+  IconMessagePlus,
 } from '@tabler/icons-react';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
@@ -179,6 +180,12 @@ const Navbar: React.FC = () => {
       disabled: !peopleAdded,
       icon: IconChecklist,
     },
+    {
+      link: `/courses/${courseId}/peer-review`,
+      label: 'Peer Review',
+      disabled: !peopleAdded,
+      icon: IconMessagePlus,
+    },
   ];
 
   const renderNavLink = (
@@ -291,10 +298,11 @@ const Navbar: React.FC = () => {
     />
   );
 
-  // Third section: Assessment
+  // Third section: Assessment, Peer Review
   courseLinks.push(
     renderNavLink(courseLinksData[9], 23, 'top-start', 'Assessments', true)
   );
+  courseLinks.push(renderNavLink(courseLinksData[10]));
 
   useEffect(() => {
     const path = router.pathname;
