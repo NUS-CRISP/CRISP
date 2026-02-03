@@ -41,7 +41,6 @@ const Navbar: React.FC = () => {
   const [peopleAdded, setPeopleAdded] = useState(false);
   const [alertOpened, setAlertOpened] = useState(false);
 
-  const [activeMainTab, setActiveMainTab] = useState('Home');
   const [courseCode, setCourseCode] = useState('');
 
   const [activeCourseTab, setActiveCourseTab] = useState('Overview');
@@ -306,11 +305,6 @@ const Navbar: React.FC = () => {
 
   useEffect(() => {
     const path = router.pathname;
-    if (path.startsWith('/admin')) {
-      setActiveMainTab('Admin');
-    } else {
-      setActiveMainTab('View Courses');
-    }
     const newTab = determineActiveTab(path);
     setActiveCourseTab(newTab);
   }, [router.pathname]);
