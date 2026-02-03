@@ -9,6 +9,7 @@ import * as gitHubService from '../../services/githubService';
 import * as gitHub from '../../utils/github';
 import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
+import TeamSetModel from '@models/TeamSet';
 
 jest.mock('../../utils/github');
 
@@ -37,6 +38,8 @@ afterAll(async () => {
 describe('gitHubService', () => {
   let mockFacultyCourseId: string;
   let mockFacultyAccountId: string;
+  let mockCourseWithoutTeamsId: string;
+  let mockNormalAccountId: string;
 
   beforeEach(async () => {
     await UserModel.deleteMany({});
@@ -59,6 +62,24 @@ describe('gitHubService', () => {
       isApproved: true,
     });
     await mockFacultyAccount.save();
+
+    const normalUser = new UserModel({
+      identifier: 'ta-test',
+      name: 'TA Test User',
+      enrolledCourses: [],
+      gitHandle: 'ta-test',
+    });
+    await normalUser.save();
+
+    const normalAccount = new AccountModel({
+      email: 'ta-test@example.com',
+      password: 'hashedpassword',
+      crispRole: CRISP_ROLE.Normal,
+      user: normalUser._id,
+      isApproved: true,
+    });
+    await normalAccount.save();
+
     const mockCourse = new CourseModel({
       name: 'testCourse',
       code: 'testCourse',
@@ -79,9 +100,28 @@ describe('gitHubService', () => {
       courseRole: COURSE_ROLE.Faculty,
     });
     await mockFacultyAccount.save();
+    await mockCourse.save();
+
+    const mockCourseWithoutTeams = new CourseModel({
+      name: 'testCourseWithoutTeams',
+      code: 'testCourseWithoutTeams',
+      semester: 'testCourse',
+      startDate: new Date(),
+      faculty: [mockFacultyUser._id],
+      TAs: [],
+      students: [],
+      teamSets: [],
+      courseType: 'GitHubOrg',
+      gitHubOrgName: 'org',
+      repoNameFilter: '',
+      installationId: 123456,
+    });
+    await mockCourseWithoutTeams.save();
 
     mockFacultyAccountId = mockFacultyAccount._id.toString();
     mockFacultyCourseId = mockCourse._id.toString();
+    mockCourseWithoutTeamsId = mockCourseWithoutTeams._id.toString();
+    mockNormalAccountId = normalAccount._id.toString();
 
     const teamData1 = new TeamDataModel({
       repoName: 'team1',
@@ -292,6 +332,48 @@ describe('gitHubService', () => {
 
       await unauthorizedFacultyUser.deleteOne();
       await unauthorizedFacultyAccount.deleteOne();
+    });
+
+    it('should throw NotFoundError if no team sets found for course normal', async () => {
+      await expect(
+        gitHubService.getAuthorizedTeamDataByCourse(
+          mockNormalAccountId,
+          mockCourseWithoutTeamsId
+        )
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should throw NotFoundError if Normal user has no teams as TA', async () => {
+      const mockFacultyUser = await UserModel.findOne({ identifier: 'test' });
+
+      // Create a course with team sets
+      const courseWithTeamSets = new CourseModel({
+        name: 'courseWithTeamSets',
+        code: 'courseWithTeamSets',
+        semester: 'testCourse',
+        startDate: new Date(),
+        faculty: [mockFacultyUser!._id],
+        gitHubOrgName: 'org',
+        courseType: 'GitHubOrg',
+        repoNameFilter: '',
+      });
+      await courseWithTeamSets.save();
+
+      // Create a team set for this course
+      const teamSet = new TeamSetModel({
+        name: 'Test Team Set',
+        course: courseWithTeamSets._id,
+      });
+      await teamSet.save();
+
+      // Normal user tries to access but has no teams assigned as TA
+      await expect(
+        gitHubService.getAuthorizedTeamDataByCourse(
+          mockNormalAccountId,
+          courseWithTeamSets._id.toString()
+        )
+      ).rejects.toThrow(NotFoundError);
+
     });
   });
 

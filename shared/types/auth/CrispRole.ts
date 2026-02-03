@@ -4,7 +4,7 @@ export const CRISP_ROLE = {
   Admin: "admin",
   TrialUser: "Trial User",
   Faculty: "Faculty",
-  Normal: "Normal",
+  Normal: "Normal", // Normal is used for students and TAs
 } as const;
 
 export type CrispRole = (typeof CRISP_ROLE)[keyof typeof CRISP_ROLE];

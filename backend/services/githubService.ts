@@ -87,7 +87,7 @@ export const getAuthorizedTeamDataByCourse = async (
       course: courseId,
     });
 
-    if (!teamDatas) {
+    if (teamDatas.length == 0) {
       throw new NotFoundError('No team data found for course');
     }
     const sortedDatas = teamDatas.sort((a, b) => {
@@ -98,7 +98,7 @@ export const getAuthorizedTeamDataByCourse = async (
     return sortedDatas;
   } else if (role === CRISP_ROLE.Normal) {
     const teamSets = await TeamSetModel.find({ course: courseId });
-    if (!teamSets) {
+    if (teamSets.length === 0) {
       throw new NotFoundError('No team sets found for course');
     }
     const teams = await TeamModel.find({
@@ -108,7 +108,7 @@ export const getAuthorizedTeamDataByCourse = async (
       path: 'teamData',
       options: { sort: { repoName: 1 } },
     });
-    if (!teams) {
+    if (teams.length == 0) {
       throw new NotFoundError('No teams found for course');
     }
     const sortedDatas = teams
