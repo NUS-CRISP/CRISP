@@ -223,7 +223,9 @@ export async function runNotificationCheck() {
   const weekday = now.getDay() === 0 ? 7 : now.getDay();
 
   const accounts = await AccountModel.find({
-    crispRole: { $in: [CRISP_ROLE.Normal, CRISP_ROLE.Faculty, CRISP_ROLE.Admin] },
+    crispRole: {
+      $in: [CRISP_ROLE.Normal, CRISP_ROLE.Faculty, CRISP_ROLE.Admin],
+    },
     isApproved: true,
   }).populate('user');
 

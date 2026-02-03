@@ -70,7 +70,7 @@ app.use('/api/assessment-results', assessmentResultRoutes);
 app.use('/api/assignment-sets', assessmentAssignmentSetRoutes);
 app.use('/api/codeanalysis', codeAnalysisRoutes);
 app.use('/api/notifications', notificationRoutes);
-app.use('/api/peer-review', peerReviewRoutes)
+app.use('/api/peer-review', peerReviewRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
