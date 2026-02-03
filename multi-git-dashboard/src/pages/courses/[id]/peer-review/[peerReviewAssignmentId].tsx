@@ -8,13 +8,14 @@ import {
   Text,
   Box,
   Card,
+  Badge,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import DeleteConfirmationModal from '@/components/cards/Modals/DeleteConfirmationModal';
 import FlagCommentConfirmationModal from '@/components/cards/Modals/FlagCommentConfirmationModal';
 import { IconListDetails, IconArrowLeft } from '@tabler/icons-react';
 import { useRouter } from 'next/router';
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 import { PeerReviewComment } from '@shared/types/PeerReview';
 import PeerReviewFileTree from '@/components/peer-review/PeerReviewFileTree';
 import PeerReviewCommentSidebar from '@/components/peer-review/PeerReviewCommentSidebar';
@@ -25,6 +26,7 @@ import { getLanguageForFile } from '@/lib/peer-review/utils';
 import type { editor as MEditor, IDisposable } from 'monaco-editor';
 import type { OnMount, Monaco } from '@monaco-editor/react';
 import { getMe } from '@/lib/auth/utils';
+import CourseRole from '@shared/types/auth/CourseRole';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -44,24 +46,6 @@ const PeerReviewDetail: React.FC = () => {
     typeof peerReviewAssignmentId === 'string';
   if (!ready) return <Center>Loading...</Center>;
 
-  // Fetch peer review assignment data
-  const {
-    loading,
-    peerReviewAssignment,
-    repoTree,
-    currFile,
-    currentCode,
-    comments,
-    openFile,
-    addComment,
-    updateComment,
-    deleteComment,
-    flagComment,
-  } = usePeerReviewData({
-    courseId: id,
-    assignmentId: peerReviewAssignmentId,
-  });
-
   // Current User
   const [me, setMe] = useState<{ userId: string, userCourseRole: string } | null>(null);
   useEffect(() => {
@@ -71,6 +55,30 @@ const PeerReviewDetail: React.FC = () => {
     };
     fetchMe();
   }, [id]);
+  
+  // Fetch peer review assignment data
+  const {
+    loading,
+    peerReviewAssignment,
+    repoTree,
+    currFile,
+    currentCode,
+    comments,
+    submission,
+    canEdit,
+    saveState,
+    
+    openFile,
+    addComment,
+    updateComment,
+    deleteComment,
+    flagComment,
+    unflagComment,
+  } = usePeerReviewData({
+    courseId: id,
+    assignmentId: peerReviewAssignmentId,
+    userCourseRole: me?.userCourseRole,
+  });
   
   /* ===== Refs and States for Editor and Interaction Logic ===== */
   const editorRef = useRef<MEditor.IStandaloneCodeEditor | null>(null);
@@ -191,6 +199,7 @@ const PeerReviewDetail: React.FC = () => {
     const onMouseDown = editor.onMouseDown((e: MEditor.IEditorMouseEvent) => {
       // 1) Click on glyph margin: start selection
       if (
+        canEdit &&
         e.target.type === monaco.editor.MouseTargetType.GUTTER_GLYPH_MARGIN &&
         e.target.position
       ) {
@@ -243,7 +252,7 @@ const PeerReviewDetail: React.FC = () => {
     });
 
     const onMouseUp = editor.onMouseUp((e: MEditor.IEditorMouseEvent) => {
-      if (startLine === null) return;
+      if (!canEdit || startLine === null) return;
 
       // Cancel if not released on a line number
       if (!e.target?.position) {
@@ -285,7 +294,7 @@ const PeerReviewDetail: React.FC = () => {
 
     const onMouseMove = editor.onMouseMove((e: MEditor.IEditorMouseEvent) => {
       // Don't do anything if dragging a selection
-      if (activeWidgetRef.current) {
+      if (!canEdit || activeWidgetRef.current) {
         hoverDecoRef.current = editor.deltaDecorations(
           hoverDecoRef.current,
           []
@@ -347,6 +356,7 @@ const PeerReviewDetail: React.FC = () => {
   // Add comment handler
   const handleAddComment = useCallback(
     async (text: string) => {
+      if (!canEdit) return false;
       if (submittingComment) return false;
       if (!text.trim()) return false;
       if (!activeWidget || !currFile) return false;
@@ -358,12 +368,16 @@ const PeerReviewDetail: React.FC = () => {
           startLine: activeWidget.start,
           endLine: activeWidget.end,
           comment: text,
-          isOverallComment: false,
         });
 
         clearCommentDecorations();
         setActiveWidget(null);
-
+        
+        notifications.show({
+          color: 'green',
+          title: 'Comment added successfully!',
+          message: 'Your comment has been added.',
+        });
         return true;
       } catch (error) {
         notifications.show({
@@ -376,12 +390,13 @@ const PeerReviewDetail: React.FC = () => {
         setSubmittingComment(false);
       }
     },
-    [submittingComment, activeWidget, currFile, addComment]
+    [canEdit, submittingComment, activeWidget, currFile, addComment]
   );
 
   // Update comment handler
   const handleUpdateComment = useCallback(
     async (commentId: string, newComment: string) => {
+      if (!canEdit) return false;
       if (updatingCommentId) return false;
       if (!newComment.trim()) return false;
 
@@ -394,6 +409,11 @@ const PeerReviewDetail: React.FC = () => {
         await updateComment(commentId, newComment);
         clearCommentDecorations();
         setActiveWidget(null);
+        notifications.show({
+          color: 'yellow',
+          title: 'Comment updated successfully!',
+          message: 'Your comment has been updated.',
+        });
         return true;
       } catch (error) {
         notifications.show({
@@ -406,7 +426,7 @@ const PeerReviewDetail: React.FC = () => {
         setUpdatingCommentId(null);
       }
     },
-    [updatingCommentId, updateComment]
+    [canEdit, updatingCommentId, updateComment]
   );
 
   // Delete comment handler
@@ -415,6 +435,7 @@ const PeerReviewDetail: React.FC = () => {
   }, []);
 
   const handleDeleteComment = useCallback(async () => {
+    if (!canEdit) return;
     if (!deleteCommentId) return;
 
     try {
@@ -425,6 +446,11 @@ const PeerReviewDetail: React.FC = () => {
         );
         renderFocusedAndStaticDecos(remainingIds);
       }
+      notifications.show({
+          color: 'orange',
+          title: 'Comment deleted successfully!',
+          message: 'Your comment has been deleted.',
+        });
     } catch (error) {
       notifications.show({
         color: 'red',
@@ -435,6 +461,7 @@ const PeerReviewDetail: React.FC = () => {
       setDeleteCommentId(null);
     }
   }, [
+    canEdit,
     deleteCommentId,
     deleteComment,
     focusedCommentIds,
@@ -443,8 +470,9 @@ const PeerReviewDetail: React.FC = () => {
   
   // Flag comment handler
   const requestFlagComment = useCallback(async (commentId: string) => {
+    if (!canEdit) return;
     setFlagCommentId(commentId);
-  }, []);
+  }, [canEdit]);
   
   const handleFlagComment = useCallback(async (flagReason: string) => {
     if (!flagCommentId) return;
@@ -481,8 +509,23 @@ const PeerReviewDetail: React.FC = () => {
     },
     [renderFocusedAndStaticDecos]
   );
+  
+  const statusBadge = useMemo(() => {
+    if (!submission) return null;
+    if (me?.userCourseRole === CourseRole.Faculty) return <Badge>Staff View</Badge>;
+    if (me?.userCourseRole === CourseRole.TA) return <Badge>Supervising View</Badge>;
+    return <Badge>{submission.status}</Badge>
+  }, [canEdit, me?.userCourseRole, submission])
+  
+  const saveBadge = useMemo(() => {
+    if (!canEdit) return null;
+    if (saveState === 'Saving') return <Badge>Saving...</Badge>;
+    if (saveState === 'Saved') return <Badge>Saved</Badge>;
+    if (saveState === 'Error') return <Badge color="red">Save failed</Badge>;
+    return null;
+  }, [saveState, canEdit]);
 
-  if (loading) return <Center>Loading…</Center>;
+  if (loading || !me) return <Center>Loading...</Center>;
   if (!peerReviewAssignment) return <Center>Unable to load assignment.</Center>;
   if (!repoTree) return <Center>No repository tree found.</Center>;
 
@@ -554,6 +597,7 @@ const PeerReviewDetail: React.FC = () => {
         )}
         <PeerReviewCommentSidebar
           user={me}
+          readOnly={!canEdit}
           comments={comments.filter(c => c.filePath === currFile)} // Filter logic based on role is handled on BE, here we just filter by file
           focusedComments={focusedCommentIds}
           onFocusComment={handleFocusComment}

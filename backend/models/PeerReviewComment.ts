@@ -9,7 +9,7 @@ export interface PeerReviewComment
       | 'peerReviewId'
       | 'peerReviewAssignmentId'
       | 'peerReviewSubmissionId'
-      | 'authorId'
+      | 'author'
       | 'flaggedBy'
     >,
     Document {
@@ -17,7 +17,7 @@ export interface PeerReviewComment
   peerReviewId: Types.ObjectId;
   peerReviewAssignmentId: Types.ObjectId;
   peerReviewSubmissionId: Types.ObjectId;
-  authorId: Types.ObjectId;
+  author: Types.ObjectId;
   flaggedBy?: Types.ObjectId;
 }
 
@@ -38,7 +38,6 @@ const peerReviewCommentSchema = new Schema<PeerReviewComment>(
     peerReviewSubmissionId: {
       type: Schema.Types.ObjectId,
       ref: 'PeerReviewSubmission',
-      required: true,
       index: true,
     },
     
@@ -56,7 +55,7 @@ const peerReviewCommentSchema = new Schema<PeerReviewComment>(
       },
     },
     comment: { type: String, required: true },
-    authorId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    author: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     authorCourseRole: { type: String, required: true, enum: Object.values(CourseRole) },
     
     // Moderation Fields

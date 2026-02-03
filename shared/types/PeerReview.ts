@@ -43,7 +43,7 @@ export interface PeerReviewAssignment {
   updatedAt: Date;
   deadline?: Date | null;
   
-  reviewee: string;
+  reviewee: Team;
   repoName: string;
   repoUrl: string;
 }
@@ -82,7 +82,7 @@ export interface PeerReviewComment {
   startLine: number;
   endLine: number;
   
-  authorId: string;
+  author: User;
   authorCourseRole: CourseRole;
   comment: string;
   

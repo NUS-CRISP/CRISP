@@ -23,7 +23,7 @@ export const getPeerReviewAssignmentById = async (
   userId: string,
   assignmentId: string
 ) => {
-  const assignment = await PeerReviewAssignmentModel.findById(assignmentId);
+  const assignment = await PeerReviewAssignmentModel.findById(assignmentId).populate('reviewee');
   if (!assignment) throw new NotFoundError('Peer review assignment not found');
   
   // Faculty can access all assignments
@@ -661,7 +661,6 @@ const upsertAndLoadAssignments = async (
             peerReviewId: oid(peerReviewId),
             reviewee: oid(reviewee),
             createdAt: now,
-            updatedAt: now,
           },
         },
         upsert: true,

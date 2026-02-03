@@ -12,6 +12,8 @@ const ASSIGNMENT_NOT_FOUND = 'Peer review assignment not found';
 const UNAUTHORIZED = 'You are not authorized to access this submission';
 const PEER_REVIEW_CLOSED = 'Peer review is closed; submission is not allowed';
 const SUBMISSION_ALREADY_SUBMITTED = 'Submission has already been submitted';
+const INVALID_SUBMISSION = 'Invalid submission';
+const SUBMISSION_LOCKED = 'Submission has already been submitted';
 
 type ReviewerKind = 'Student' | 'Team' | 'TA';
 type SubmissionStatus = 'NotStarted' | 'Draft' | 'Submitted';
@@ -23,11 +25,10 @@ const oid = (s: string) => new Types.ObjectId(s);
 export const getSubmissionsByAssignmentId = async (
   userId: string,
   userCourseRole: string,
-  peerReviewId: string,
   peerReviewAssignmentId: string
 ) => {
-  const assignment = await fetchAssignment(peerReviewAssignmentId, peerReviewId);
-  const peerReview = await getPeerReviewById(peerReviewId);
+  const assignment = await fetchAssignment(peerReviewAssignmentId);
+  const peerReview = await getPeerReviewById(assignment.peerReviewId.toString());
 
   // Students can only see their own submission for this assignment
   if (userCourseRole === CourseRole.Student) {
@@ -43,7 +44,8 @@ export const getSubmissionsByAssignmentId = async (
       assignment._id.toString(),
       reviewerRef
     );
-    return mine ? [mine] : [];
+    if (!mine) throw new NotFoundError(SUBMISSION_NOT_FOUND);
+    return [mine];
   }
 
   // TAs can see their own TA submission and of those they supervise
@@ -54,39 +56,70 @@ export const getSubmissionsByAssignmentId = async (
     );
     
     if (isSupervising) {
-      return PeerReviewSubmissionModel.find({
+      const submissions = await PeerReviewSubmissionModel.find({
         peerReviewId: oid(peerReview._id.toString()),
         peerReviewAssignmentId: oid(assignment._id.toString()),
       }).lean();
+      if (submissions.length === 0) throw new NotFoundError(SUBMISSION_NOT_FOUND);
+      return submissions;
     };
     
-    return PeerReviewSubmissionModel.find({
+    const submission = await PeerReviewSubmissionModel.find({
       peerReviewId: oid(peerReview._id.toString()),
       peerReviewAssignmentId: oid(assignment._id.toString()),
       reviewerKind: 'TA',
       reviewerUserId: oid(userId),
     }).lean();
+    
+    if (submission.length === 0) throw new NotFoundError(SUBMISSION_NOT_FOUND);
+    return submission;
   }
 
   // Coordinators can view all submissions for this assignment
   if (userCourseRole === CourseRole.Faculty) {
-    return PeerReviewSubmissionModel.find({
+    const submissions = await PeerReviewSubmissionModel.find({
       peerReviewId: oid(peerReview._id.toString()),
       peerReviewAssignmentId: oid(assignment._id.toString()),
     }).lean();
+
+    if (submissions.length === 0) throw new NotFoundError(SUBMISSION_NOT_FOUND);
+    return submissions;
   }
 
   throw new MissingAuthorizationError(UNAUTHORIZED);
 };
 
+export const getMySubmissionForAssignmentId = async (
+  userId: string,
+  userCourseRole: string,
+  assignmentId: string
+) => {
+  const assignment = await fetchAssignment(assignmentId);
+  const peerReview = await getPeerReviewById(assignment.peerReviewId.toString());
+  const reviewerRef = await resolveReviewerRefForUser(
+    userId,
+    userCourseRole,
+    peerReview.teamSetId.toString(),
+    peerReview.reviewerType
+  );
+  
+  const submission = await findSubmissionByReviewerRef(
+    peerReview._id.toString(),
+    assignment._id.toString(),
+    reviewerRef
+  );
+  
+  if (!submission) throw new NotFoundError(SUBMISSION_NOT_FOUND);
+  return submission;
+};
+
 export const updateMySubmissionDraft = async (
   userId: string,
   userCourseRole: string,
-  peerReviewId: string,
   assignmentId: string,
 ) => {
-  const assignment = await fetchAssignment(assignmentId, peerReviewId);
-  const peerReview = await getPeerReviewById(peerReviewId);
+  const assignment = await fetchAssignment(assignmentId);
+  const peerReview = await getPeerReviewById(assignment.peerReviewId.toString());
   assertPeerReviewActive(peerReview);
   
   const reviewerRef = await resolveReviewerRefForUser(
@@ -128,11 +161,10 @@ export const updateMySubmissionDraft = async (
 export const submitMySubmission = async (
   userId: string,
   userCourseRole: string,
-  peerReviewId: string,
   assignmentId: string,
 ) => {
-  const assignment = await fetchAssignment(assignmentId, peerReviewId);
-  const peerReview = await getPeerReviewById(peerReviewId);
+  const assignment = await fetchAssignment(assignmentId);
+  const peerReview = await getPeerReviewById(assignment.peerReviewId.toString());
   assertPeerReviewActive(peerReview);
   
   const reviewerRef = await resolveReviewerRefForUser(
@@ -166,13 +198,26 @@ export const submitMySubmission = async (
 };
 
 /* ----- Subfunctions and Helpers ----- */
-const fetchAssignment = async(assignmentId: string, peerReviewId: string) => {
+const fetchAssignment = async(assignmentId: string) => {
   const assignment = await PeerReviewAssignmentModel.findById(
     assignmentId
   );
-  if (!assignment || assignment.peerReviewId.toString() !== peerReviewId) throw new NotFoundError(ASSIGNMENT_NOT_FOUND);
+  if (!assignment) throw new NotFoundError(ASSIGNMENT_NOT_FOUND);
   return assignment;
 }
+
+export const fetchSubmissionForAssignment = async (submissionId: string, assignmentId: string) => {
+  if (!Types.ObjectId.isValid(submissionId)) throw new BadRequestError(INVALID_SUBMISSION);
+
+  const submission = await PeerReviewSubmissionModel.findById(submissionId);
+  if (!submission) throw new NotFoundError(SUBMISSION_NOT_FOUND);
+
+  if (submission.peerReviewAssignmentId.toString() !== assignmentId) {
+    throw new BadRequestError(INVALID_SUBMISSION);
+  }
+
+  return submission;
+};
 
 const assertPeerReviewActive = (peerReview: PeerReview) => {
   if (peerReview.computedStatus === 'Upcoming' || peerReview.computedStatus === 'Closed')
@@ -186,6 +231,46 @@ const assertStudentInReviewerTeam = async (userId: string, teamId: string) => {
   const isMember = (team.members ?? []).map(String).includes(userId);
   if (!isMember) throw new MissingAuthorizationError(UNAUTHORIZED);
 };
+
+export const assertSubmissionWritableByCaller = async (
+  userId: string,
+  userCourseRole: string,
+  submission: any,
+) => {
+  // Coordinators / supervising TAs should not be writing reviewer comments here
+  if (userCourseRole === CourseRole.Faculty) {
+    throw new MissingAuthorizationError(UNAUTHORIZED);
+  }
+
+  // Lock after submit
+  if (submission.status === 'Submitted') {
+    throw new BadRequestError(SUBMISSION_LOCKED);
+  }
+
+  // TA reviewer: only their own TA submission
+  if (userCourseRole === CourseRole.TA) {
+    if (submission.reviewerKind !== 'TA') throw new MissingAuthorizationError(UNAUTHORIZED);
+    if (submission.reviewerUserId?.toString() !== userId) throw new MissingAuthorizationError(UNAUTHORIZED);
+    return;
+  }
+
+  // Student reviewer
+  if (userCourseRole === CourseRole.Student) {
+    if (submission.reviewerKind === 'Student') {
+      if (submission.reviewerUserId?.toString() !== userId) throw new MissingAuthorizationError(UNAUTHORIZED);
+      return;
+    }
+
+    if (submission.reviewerKind === 'Team') {
+      if (!submission.reviewerTeamId) throw new MissingAuthorizationError(UNAUTHORIZED);
+      await assertStudentInReviewerTeam(userId, submission.reviewerTeamId.toString());
+      return;
+    }
+  }
+
+  throw new MissingAuthorizationError(UNAUTHORIZED);
+};
+
 
 const assertIsOwnerOfSubmission = async (
   userId: string,

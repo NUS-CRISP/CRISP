@@ -44,7 +44,7 @@ import { noCache } from '../middleware/noCache';
 
 const router = express.Router();
 
-router.get("/:id/me", getMe);
+router.get("/:courseId/me", getMe);
 router.post('/', createCourse);
 router.get('/', noCache, getCourses);
 router.get('/:id', getCourse);

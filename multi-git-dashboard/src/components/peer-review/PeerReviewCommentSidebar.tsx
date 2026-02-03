@@ -25,6 +25,7 @@ import CourseRole, { CourseRole as UserCourseRole } from '@shared/types/auth/Cou
 
 interface PeerReviewCommentSidebarProps {
   user: { userId: string, userCourseRole: string } | null;
+  readOnly: boolean;
   comments: PeerReviewComment[];
   focusedComments: string[];
   onFocusComment: (comment: PeerReviewComment) => void;
@@ -38,6 +39,7 @@ interface PeerReviewCommentSidebarProps {
 
 const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
   user,
+  readOnly,
   comments,
   focusedComments,
   onFocusComment,
@@ -175,7 +177,7 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
                   ? classes.commentCardFocused
                   : ''
               }`}
-              style={getRoleVars(c.courseRole)}
+              style={getRoleVars(c.authorCourseRole)}
             > 
               <Group justify="space-between" align="flex-start" wrap="nowrap" mb={4}>
                 <div style={{ flex: 1, minWidth: 0}}>
@@ -185,11 +187,7 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
                     </Text>
                   }
                   <Text size="xs" c="dimmed" mt={4}>
-                    {c.updatedAt
-                      ? `(updated on ${new Date(c.updatedAt).toLocaleDateString()})`
-                      : c.createdAt
-                        ? new Date(c.createdAt).toLocaleDateString()
-                        : ''}
+                    {c.updatedAt && new Date(c.updatedAt).toLocaleDateString()}
                   </Text>
                 </div>
                 { user?.userId === c.author?._id && (

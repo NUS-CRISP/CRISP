@@ -35,12 +35,15 @@ export const addPeerReviewComment = async (req: Request, res: Response) => {
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
     const userId = await verifyRequestPermission(account._id, userCourseRole, []);
+    const assignmentId = req.params.peerReviewAssignmentId;
+    const { comment: commentData, submissionId } = req.body;
     
     const newComment = await addPeerReviewCommentByAssignmentId(
       userId,
       userCourseRole,
-      req.params.peerReviewAssignmentId,
-      req.body
+      assignmentId,
+      submissionId,
+      commentData,
     );
     res.status(201).json(newComment);
   } catch (error) {
@@ -52,13 +55,21 @@ export const updatePeerReviewComment = async (req: Request, res: Response) => {
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
     const userId = await verifyRequestPermission(account._id, userCourseRole, []);
-    const commentId = req.params.commentId;
-    const updatedComment = req.body.comment;
+    
+    const { peerReviewAssignmentId, commentId } = req.params;
+    const { comment: updatedComment, submissionId } = req.body;
     if (!updatedComment || typeof updatedComment !== 'string') {
       return res.status(400).json({ message: 'Comment text is required' });
     }
     
-    await updatePeerReviewCommentById(userId, commentId, updatedComment);
+    await updatePeerReviewCommentById(
+      userId,
+      userCourseRole,
+      peerReviewAssignmentId,
+      commentId,
+      updatedComment,
+      submissionId
+    );
     res
       .status(200)
       .json({ message: 'Peer review comment updated successfully' });
@@ -72,11 +83,15 @@ export const deletePeerReviewComment = async (req: Request, res: Response) => {
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
     const userId = await verifyRequestPermission(account._id, userCourseRole, []);
+    const { peerReviewAssignmentId, commentId } = req.params;
+    const submissionId = req.body.submissionId;
     
     await deletePeerReviewCommentById(
       userId,
       userCourseRole,
-      req.params.commentId
+      peerReviewAssignmentId,
+      commentId,
+      submissionId,
     );
     res
       .status(200)

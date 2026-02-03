@@ -336,6 +336,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
               />
             )}
             {peerReviewInfo.teams.map(team => (
+              <>
               <PeerReviewAccordionItem
                 key={team.teamId}
                 currentTeam={team}
@@ -351,6 +352,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
                 addManualAssignment={addManualAssignment}
                 deleteManualAssignment={deleteManualAssignment}
               />
+              </>
             ))}
           </Accordion>
         </ScrollArea.Autosize>

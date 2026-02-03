@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   PeerReviewAssignment,
   PeerReviewComment,
+  PeerReviewSubmission,
   RepoNode,
 } from '@shared/types/PeerReview';
 import {
@@ -11,36 +12,63 @@ import {
   apiUpdateComment,
   apiDeleteComment,
   apiFlagComment,
+  apiFetchSubmissionsForAssignment,
+  apiTouchDraft,
 } from '@/lib/peer-review/api';
 import {
   fetchGithubRepoStructure,
   fetchFileContent,
   flattenTree,
 } from '@/lib/peer-review/utils';
+import CourseRole from '@shared/types/auth/CourseRole';
 
 type UsePeerReviewDataArgs = {
   courseId: string;
   assignmentId: string;
+  userCourseRole?: string;
 };
 
 export default function usePeerReviewData({
   courseId,
   assignmentId,
+  userCourseRole,
 }: UsePeerReviewDataArgs) {
   const [loading, setLoading] = useState(true);
-  const [peerReviewAssignment, setpeerReviewAssignment] =
+  const [peerReviewAssignment, setPeerReviewAssignment] =
     useState<PeerReviewAssignment | null>(null);
   const [repoTree, setRepoTree] = useState<RepoNode | null>(null);
   const [currFile, setCurrFile] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState<Record<string, string>>({});
   const [comments, setComments] = useState<PeerReviewComment[]>([]);
+  
+  const [submission, setSubmission] = useState<PeerReviewSubmission | null>(null);
+  const [saveState, setSaveState] = useState<'Idle' | 'Saving' | 'Saved' | 'Error'>('Idle');
+  const [canEdit, setCanEdit] = useState(false);
+  const touchDraftTimer = useRef<NodeJS.Timeout | null>(null);
+  
+  const scheduleTouchDraft = useCallback(() => {
+    if (!canEdit) return;
+    if (touchDraftTimer.current) clearTimeout(touchDraftTimer.current);
+
+    touchDraftTimer.current = setTimeout(async () => {
+      try {
+        setSaveState('Saving');
+        const updated = await apiTouchDraft(courseId, assignmentId);
+        setSubmission(updated);
+        setSaveState('Saved');
+      } catch {
+        setSaveState('Error');
+      }
+    }, 900);
+  }, [canEdit, courseId, assignmentId]);
 
   // Initial load of data
   useEffect(() => {
-    if (!courseId || !assignmentId) {
+    if (!courseId || !assignmentId || !userCourseRole) {
       setLoading(false);
       return;
     }
+    
     let cancelled = false;
     const initialLoad = async () => {
       try {
@@ -50,14 +78,22 @@ export default function usePeerReviewData({
           assignmentId
         );
         if (cancelled) return;
+        
+        const submissions: PeerReviewSubmission[] = await apiFetchSubmissionsForAssignment(courseId, assignmentId);
+        if (cancelled) return;
+        const mySubmission = userCourseRole === CourseRole.Student ? (submissions?.[0] ?? null) : null;
+        setSubmission(mySubmission);
+        setCanEdit((userCourseRole === CourseRole.Student || userCourseRole === CourseRole.Faculty) && mySubmission?.status !== 'Submitted');
+        
         const tree = await fetchGithubRepoStructure(
           prAssignment?.repoUrl ?? ''
         );
         if (cancelled) return;
+        
         const comments = await apiFetchComments(courseId, assignmentId);
         if (cancelled) return;
-
-        setpeerReviewAssignment(prAssignment);
+        
+        setPeerReviewAssignment(prAssignment);
         setRepoTree(tree);
         setComments(comments);
 
@@ -78,8 +114,9 @@ export default function usePeerReviewData({
     initialLoad();
     return () => {
       cancelled = true;
+      if (touchDraftTimer.current) clearTimeout(touchDraftTimer.current);
     };
-  }, [courseId, assignmentId]);
+  }, [courseId, assignmentId, userCourseRole]);
 
   const openFile = useCallback(
     async (filePath: string) => {
@@ -106,29 +143,35 @@ export default function usePeerReviewData({
     async (
       partial: Omit<
         PeerReviewComment,
-        '_id' | 'peerReviewAssignmentId' | 'author' | 'createdAt' | 'updatedAt' | 'courseRole'
+        '_id' | 'peerReviewId' | 'peerReviewAssignmentId' | 'peerReviewSubmissionId' | 'author' | 'createdAt' | 'updatedAt' | 'authorCourseRole'
       >
     ) => {
-      await apiAddComment(courseId, assignmentId, partial);
+      if (!canEdit) throw new Error('Read-only');
+      await apiAddComment(courseId, assignmentId, partial, submission?._id || '');
+      scheduleTouchDraft();
       await refreshComments();
     },
-    [courseId, assignmentId, refreshComments]
+    [canEdit, courseId, assignmentId, refreshComments, submission]
   );
 
   const updateComment = useCallback(
     async (commentId: string, updated: string) => {
-      await apiUpdateComment(courseId, assignmentId, commentId, updated);
+      if (!canEdit) throw new Error('Read-only');
+      await apiUpdateComment(courseId, assignmentId, commentId, updated, submission?._id || '');
+      scheduleTouchDraft();
       await refreshComments();
     },
-    [courseId, assignmentId, refreshComments]
+    [canEdit, scheduleTouchDraft, courseId, assignmentId, refreshComments]
   );
 
   const deleteComment = useCallback(
     async (commentId: string) => {
-      await apiDeleteComment(courseId, assignmentId, commentId);
+      if (!canEdit) throw new Error('Read-only');
+      await apiDeleteComment(courseId, assignmentId, commentId, submission?._id || '');
+      scheduleTouchDraft();
       setComments(prev => prev.filter(c => c._id !== commentId));
     },
-    [courseId, assignmentId]
+    [canEdit, scheduleTouchDraft, courseId, assignmentId]
   );
   
   const flagComment = useCallback(
@@ -159,11 +202,16 @@ export default function usePeerReviewData({
     currFile,
     comments,
     currentCode,
+    submission,
+    canEdit,
+    saveState,
+    
     setCurrFile,
     openFile,
     addComment,
     updateComment,
     deleteComment,
     flagComment,
+    unflagComment,
   };
 }

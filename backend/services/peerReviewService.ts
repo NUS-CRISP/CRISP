@@ -19,7 +19,7 @@ import {
 } from './peerReviewAssignmentService';
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 import UserModel, { User } from '@models/User';
-import TeamModel from '@models/Team';
+import TeamModel, { Team } from '@models/Team';
 import TeamDataModel, { TeamData } from '@models/TeamData';
 
 export interface NormalizedTeam {
@@ -115,6 +115,8 @@ export const getPeerReviewInfoById = async (
       ctx.teamNumberById,
     );
   }
+  
+  console.log('AFTER POPULATION, assignmentState.assignmentsOfTeam:', assignmentState.assignmentsOfTeam);
 
   const teams = buildTeamsDTO(
     peerReview.reviewerType,
@@ -124,6 +126,12 @@ export const getPeerReviewInfoById = async (
     assignedReviewMaps.memberAssignedMap,
     assignedReviewMaps.teamAssignedMap,
   );
+  
+  console.log('peerReviewId:', peerReviewId);
+  console.log('peerReview.reviewerType:', peerReview.reviewerType);
+  console.log('teams:', teams);
+  console.log('assignmentState.assignmentsOfTeam:', assignmentState.assignmentsOfTeam);
+  console.log('TAAssignments:', assignedReviewMaps.assignmentsForTAs);
 
   return {
     _id: peerReviewId,
@@ -327,27 +335,32 @@ const loadAssignmentsState = async (
 ) => {
   const assignmentDocs = await PeerReviewAssignmentModel.find({
     peerReviewId: oid(peerReviewId),
-    revieweeTeamId: { $in: scopedTeamIds.map(oid) },
+    reviewee: { $in: scopedTeamIds.map(oid) },
   }).lean();
 
   const assignmentById = new Map<string, PeerReviewAssignment>();
   const assignmentsOfTeam: Record<string, RevieweeAssignmentsDTO> = {};
 
   for (const a of assignmentDocs) {
+    const reviewee = await TeamModel.findById(a.reviewee);
+    if (!reviewee) continue;
     const assignmentDto: PeerReviewAssignment = {
       _id: a._id.toString(),
       peerReviewId: a.peerReviewId.toString(),
       createdAt: a.createdAt,
       updatedAt: a.updatedAt,
       deadline: a.deadline ?? null,
-      reviewee: a.reviewee.toString(),
+      reviewee: {
+        ...reviewee.toObject(),
+        _id: reviewee._id.toString(),
+      },
       repoName: 'AddSubtract',
       repoUrl: 'https://github.com/gongg21/AddSubtract.git',
     };
 
     assignmentById.set(assignmentDto._id, assignmentDto);
 
-    assignmentsOfTeam[assignmentDto.reviewee] = {
+    assignmentsOfTeam[assignmentDto.reviewee._id] = {
       assignment: assignmentDto,
       reviewers: { students: [], teams: [], TAs: [] },
     };
@@ -434,13 +447,18 @@ const addMissingAssignmentsForSubmissions = async (
   }).lean();
 
   for (const a of extra) {
+    const reviewee = await TeamModel.findById(a.reviewee);
+    if (!reviewee) continue;
     assignmentById.set(a._id.toString(), {
       _id: a._id.toString(),
       peerReviewId: a.peerReviewId.toString(),
       createdAt: a.createdAt,
       updatedAt: a.updatedAt,
       deadline: a.deadline ?? null,
-      reviewee: a.reviewee.toString(),
+      reviewee: {
+        ...reviewee.toObject(),
+        _id: reviewee._id.toString(),
+      },
       repoName: 'AddSubtract',
       repoUrl: 'https://github.com/gongg21/AddSubtract.git',
     });
@@ -511,7 +529,7 @@ const populateAssignmentsOfTeamReviewers = (
     const assignment = assignmentById.get(s.peerReviewAssignmentId.toString());
     if (!assignment) continue;
 
-    const revieweeTeamId = assignment.reviewee;
+    const revieweeTeamId = assignment.reviewee._id;
     if (!assignmentsOfTeam[revieweeTeamId]) continue;
 
     const rid = s.reviewerUserId?.toString();
@@ -528,7 +546,7 @@ const populateAssignmentsOfTeamReviewers = (
     const assignment = assignmentById.get(s.peerReviewAssignmentId.toString());
     if (!assignment) continue;
 
-    const revieweeTeamId = assignment.reviewee;
+    const revieweeTeamId = assignment.reviewee._id;
     if (!assignmentsOfTeam[revieweeTeamId]) continue;
 
     const tid = s.reviewerTeamId?.toString();
@@ -545,7 +563,7 @@ const populateAssignmentsOfTeamReviewers = (
     const assignment = assignmentById.get(s.peerReviewAssignmentId.toString());
     if (!assignment) continue;
 
-    const revieweeTeamId = assignment.reviewee;
+    const revieweeTeamId = assignment.reviewee._id;
     if (!assignmentsOfTeam[revieweeTeamId]) continue;
 
     const rid = s.reviewerUserId?.toString();
@@ -558,7 +576,6 @@ const populateAssignmentsOfTeamReviewers = (
     });
   }
 };
-
 
 const buildTeamsDTO = (
   reviewerType: 'Individual' | 'Team',
