@@ -20,8 +20,6 @@ const ASSIGNMENT_NOT_FOUND = 'Peer review assignment not found';
 const COMMENT_NOT_FOUND = 'Peer review comment not found';
 const UNAUTHORIZED_TO_VIEW_COMMENTS =
   'You are not authorized to see comments for this assignment';
-const UNAUTHORIZED_TO_ADD_COMMENTS =
-  'You are not authorized to add comments for this assignment';
 const UNAUTHORIZED_TO_UPDATE_COMMENTS =
   'You are not authorized to update comments for this assignment';
 const UNAUTHORIZED_TO_DELETE_COMMENTS =
@@ -93,7 +91,12 @@ export const addPeerReviewCommentByAssignmentId = async (
   userCourseRole: string,
   assignmentId: string,
   submissionId: string,
-  commentData: any
+  commentData: {
+    filePath: string;
+    startLine: number;
+    endLine: number;
+    comment: string;
+  }
 ) => {
   const assignment = await fetchAssignment(assignmentId);
   const peerReview = await getPeerReviewById(

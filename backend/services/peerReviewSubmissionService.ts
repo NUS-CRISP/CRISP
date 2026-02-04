@@ -1,4 +1,4 @@
-import PeerReviewSubmissionModel from '@models/PeerReviewSubmission';
+import PeerReviewSubmissionModel, { PeerReviewSubmission } from '@models/PeerReviewSubmission';
 import PeerReviewAssignmentModel from '@models/PeerReviewAssignment';
 import { PeerReview } from '@models/PeerReview';
 import TeamModel from '@models/Team';
@@ -19,7 +19,6 @@ const SUBMISSION_ALREADY_SUBMITTED = 'Submission has already been submitted';
 const INVALID_SUBMISSION = 'Invalid submission';
 const SUBMISSION_LOCKED = 'Submission has already been submitted';
 
-type ReviewerKind = 'Student' | 'Team' | 'TA';
 type SubmissionStatus = 'NotStarted' | 'Draft' | 'Submitted';
 
 const oid = (s: string) => new Types.ObjectId(s);
@@ -207,7 +206,7 @@ export const submitMySubmission = async (
   submission.status = 'Submitted';
   await submission.save();
 
-  console.log(`submission successful`);
+  console.log('submission successful');
   return submission;
 };
 
@@ -254,7 +253,7 @@ const assertStudentInReviewerTeam = async (userId: string, teamId: string) => {
 export const assertSubmissionWritableByCaller = async (
   userId: string,
   userCourseRole: string,
-  submission: any
+  submission: PeerReviewSubmission
 ) => {
   // Coordinators / supervising TAs should not be writing reviewer comments here
   if (userCourseRole === COURSE_ROLE.Faculty) {
@@ -300,7 +299,7 @@ export const assertSubmissionWritableByCaller = async (
 const assertIsOwnerOfSubmission = async (
   userId: string,
   userCourseRole: string,
-  submission: any
+  submission: PeerReviewSubmission
 ): Promise<void> => {
   // Coordinators can view but cannot edit/submit
   if (userCourseRole === COURSE_ROLE.Faculty) {
@@ -407,7 +406,13 @@ const findSubmissionByReviewerRef = async (
     peerReviewId: oid(peerReviewId),
     peerReviewAssignmentId: oid(assignmentId),
     reviewerKind: ref.reviewerKind,
-  } as any;
+  } as {
+    peerReviewId: Types.ObjectId;
+    peerReviewAssignmentId: Types.ObjectId;
+    reviewerKind: 'TA' | 'Student' | 'Team';
+    reviewerUserId?: Types.ObjectId;
+    reviewerTeamId?: Types.ObjectId;
+  };
 
   if (ref.reviewerKind === 'Team') {
     base.reviewerTeamId = oid(ref.reviewerTeamId);

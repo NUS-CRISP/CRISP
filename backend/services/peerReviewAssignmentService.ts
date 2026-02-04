@@ -1,13 +1,13 @@
-import PeerReviewAssignmentModel from '@models/PeerReviewAssignment';
+import PeerReviewAssignmentModel, { PeerReviewAssignment } from '@models/PeerReviewAssignment';
 import TeamModel, { Team } from '@models/Team';
 import { BadRequestError, NotFoundError } from './errors';
-import TeamDataModel, { TeamData } from '@models/TeamData';
+import TeamDataModel from '@models/TeamData';
 import { Types } from 'mongoose';
 import { getPeerReviewById, getTeamDataById } from './peerReviewService';
 import type { AnyBulkWriteOperation } from 'mongodb';
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 import { MissingAuthorizationError } from './errors';
-import PeerReviewSubmissionModel from '@models/PeerReviewSubmission';
+import PeerReviewSubmissionModel, { PeerReviewSubmission } from '@models/PeerReviewSubmission';
 
 export interface NormalizedTeam {
   id: string;
@@ -29,12 +29,6 @@ export const getPeerReviewAssignmentById = async (
 
   // Faculty can access all assignments
   if (userCourseRole === COURSE_ROLE.Faculty) return assignment;
-
-  const peerReview = await getPeerReviewById(
-    assignment.peerReviewId.toString()
-  );
-  const reviewerType = peerReview.reviewerType;
-  const teamSetId = peerReview.teamSetId.toString();
 
   // Case 1: Direct Reviewer (Student/TA)
   const isDirectReviewer = await PeerReviewSubmissionModel.exists({
@@ -317,7 +311,6 @@ export const initialiseAssignments = async (
   courseId: string,
   peerReviewId: string,
   teamSetId: string,
-  userId: string
 ) => {
   const prTeams: Team[] = await TeamModel.find({
     teamSet: teamSetId,
@@ -527,7 +520,7 @@ const buildEligibleRevieweeMaps = (
       }
       if (eligibleReviewees.length < reviewsPerReviewer) {
         throw new BadRequestError(
-          `Not enough eligible reviewees for TAs. ` +
+          'Not enough eligible reviewees for TAs. ' +
             'Consider reducing the number of reviews per reviewer.'
         );
       }
@@ -680,14 +673,14 @@ const upsertAndLoadAssignments = async (
     await PeerReviewAssignmentModel.bulkWrite(ops, { ordered: true });
   }
 
-  const finalAssignments = await PeerReviewAssignmentModel.find({
+  const finalAssignments: PeerReviewAssignment[] = await PeerReviewAssignmentModel.find({
     peerReviewId: oid(peerReviewId),
     reviewee: { $in: prTeamIds.map(oid) },
   })
     .select('_id reviewee repoName repoUrl')
     .lean();
 
-  const finalMap = new Map<string, (typeof finalAssignments)[number]>();
+  const finalMap = new Map<string, PeerReviewAssignment>();
   for (const a of finalAssignments) {
     finalMap.set(a.reviewee.toString(), a);
   }
@@ -741,12 +734,12 @@ const buildDesiredReviewerSets = (
   assignDefault: boolean,
   assignTAs: boolean,
   prTeamIds: string[],
-  assignmentByReviewee: Map<string, any>,
+  assignmentByReviewee: Map<string, PeerReviewAssignment>,
   assignedStudentsForTeam: Map<string, Set<string>>,
   assignedTeamsForTeam: Map<string, Set<string>>,
   assignedTAsForTeam: Map<string, Set<string>>,
   existing: {
-    subs: any[];
+    subs: PeerReviewSubmission[];
     byAssignment: Map<
       string,
       { Student: Set<string>; Team: Set<string>; TA: Set<string> }
@@ -760,6 +753,7 @@ const buildDesiredReviewerSets = (
 
   for (const reviewee of prTeamIds) {
     const assignment = assignmentByReviewee.get(reviewee);
+    if (!assignment) continue; // should not happen
     const assignmentId = assignment._id.toString();
 
     const prev = existing.byAssignment.get(assignmentId) ?? {
@@ -807,7 +801,7 @@ const applySubmissionDiffs = async (
     { Student: Set<string>; Team: Set<string>; TA: Set<string> }
   >,
   existing: {
-    subs: any[];
+    subs: PeerReviewSubmission[];
     byAssignment: Map<
       string,
       { Student: Set<string>; Team: Set<string>; TA: Set<string> }

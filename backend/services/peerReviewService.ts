@@ -4,7 +4,7 @@ import { NotFoundError } from './errors';
 import mongoose, { Types } from 'mongoose';
 import PeerReviewAssignmentModel from '@models/PeerReviewAssignment';
 import PeerReviewCommentModel from '@models/PeerReviewComment';
-import PeerReviewSubmissionModel from '@models/PeerReviewSubmission';
+import PeerReviewSubmissionModel, { PeerReviewSubmission } from '@models/PeerReviewSubmission';
 import {
   PeerReviewTeamMemberDTO,
   PeerReviewInfoDTO,
@@ -19,7 +19,7 @@ import {
 } from './peerReviewAssignmentService';
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 import UserModel, { User } from '@models/User';
-import TeamModel, { Team } from '@models/Team';
+import TeamModel from '@models/Team';
 import TeamDataModel, { TeamData } from '@models/TeamData';
 
 export interface NormalizedTeam {
@@ -202,7 +202,6 @@ export const createPeerReviewById = async (
     courseId,
     newPeerReview._id.toString(),
     teamSetId,
-    userId
   );
 
   return newPeerReview;
@@ -257,7 +256,17 @@ export const deletePeerReviewById = async (peerReviewId: string) => {
 export const updatePeerReviewById = async (
   peerReviewId: string,
   userId: string,
-  settingsData: any
+  settingsData: {
+    assessmentName?: string;
+    description?: string;
+    startDate?: Date;
+    endDate?: Date;
+    teamSetId?: string;
+    reviewerType?: 'Individual' | 'Team';
+    taAssignments?: boolean;
+    minReviews?: number;
+    maxReviews?: number;
+  }
 ) => {
   const {
     assessmentName: title,
@@ -298,7 +307,6 @@ export const updatePeerReviewById = async (
       updatedPeerReview.course.toString(),
       peerReviewId,
       teamSetId,
-      userId
     );
   }
 
@@ -443,7 +451,7 @@ const loadSubmissionsForScope = async (
 };
 
 const addMissingAssignmentsForSubmissions = async (
-  submissions: { studentSubs: any[]; teamSubs: any[]; taSubs: any[] },
+  submissions: { studentSubs: PeerReviewSubmission[]; teamSubs: PeerReviewSubmission[]; taSubs: PeerReviewSubmission[] },
   assignmentById: Map<string, PeerReviewAssignment>
 ) => {
   const neededIds = new Set<string>();
@@ -482,7 +490,7 @@ const addMissingAssignmentsForSubmissions = async (
 };
 
 const buildAssignedReviewMaps = (
-  submissions: { studentSubs: any[]; teamSubs: any[]; taSubs: any[] },
+  submissions: { studentSubs: PeerReviewSubmission[]; teamSubs: PeerReviewSubmission[]; taSubs: PeerReviewSubmission[] },
   assignmentById: Map<string, PeerReviewAssignment>,
   taIdsWanted: string[],
   usersById: Map<string, string>
@@ -536,7 +544,7 @@ const buildAssignedReviewMaps = (
 
 const populateAssignmentsOfTeamReviewers = (
   assignmentsOfTeam: Record<string, RevieweeAssignmentsDTO>,
-  submissions: { studentSubs: any[]; teamSubs: any[]; taSubs: any[] },
+  submissions: { studentSubs: PeerReviewSubmission[]; teamSubs: PeerReviewSubmission[]; taSubs: PeerReviewSubmission[] },
   assignmentById: Map<string, PeerReviewAssignment>,
   usersById: Map<string, string>,
   teamNumberById: Map<string, number>
@@ -553,7 +561,9 @@ const populateAssignmentsOfTeamReviewers = (
 
     pushReviewer(assignmentsOfTeam, revieweeTeamId, 'Student', {
       userId: rid,
+      teamId: '',
       name: usersById.get(rid) ?? 'Unknown',
+      teamNumber: -1,
       status: s.status,
     });
   }
@@ -569,7 +579,9 @@ const populateAssignmentsOfTeamReviewers = (
     if (!tid) continue;
 
     pushReviewer(assignmentsOfTeam, revieweeTeamId, 'Team', {
+      userId: '',
       teamId: tid,
+      name: '',
       teamNumber: teamNumberById.get(tid) ?? -1,
       status: s.status,
     });
@@ -587,7 +599,9 @@ const populateAssignmentsOfTeamReviewers = (
 
     pushReviewer(assignmentsOfTeam, revieweeTeamId, 'TA', {
       userId: rid,
+      teamId: '',
       name: usersById.get(rid) ?? 'Unknown',
+      teamNumber: -1,
       status: s.status,
     });
   }
@@ -672,7 +686,7 @@ const getScopedTeams = async (
   teamIds: string[],
   filterByTA?: string
 ): Promise<NormalizedTeam[]> => {
-  const teamQuery: any = { teamSet: teamSetId };
+  const teamQuery: { [key: string]: string | { $in: string[] } } = { teamSet: teamSetId };
   if (teamIds.length > 0) {
     teamQuery._id = { $in: teamIds };
   }
@@ -742,7 +756,13 @@ const pushReviewer = (
   assignmentsOfTeam: Record<string, RevieweeAssignmentsDTO>,
   revieweeTeamId: string,
   kind: 'Student' | 'Team' | 'TA',
-  payload: any
+  payload: {
+    userId: string;
+    name: string;
+    teamId: string;
+    teamNumber: number;
+    status: PeerReviewSubmission['status'];
+  }
 ) => {
   const entry = assignmentsOfTeam[revieweeTeamId];
   if (!entry) return;
@@ -753,7 +773,7 @@ const pushReviewer = (
 };
 
 const toAssignedReviewDTO = (
-  submission: any,
+  submission: PeerReviewSubmission,
   assignmentById: Map<string, PeerReviewAssignment>
 ): AssignedReviewDTO | null => {
   const assignment = assignmentById.get(

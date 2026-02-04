@@ -8,7 +8,6 @@ interface FlagCommentConfirmationModalProps {
   onConfirm: (reason: string) => void;
   onCancel: () => void;
   title?: string;
-  message?: string;
 }
 
 const MIN_LEN = 10;
@@ -16,7 +15,7 @@ const MAX_LEN = 500;
 
 const FlagCommentConfirmationModal: React.FC<
   FlagCommentConfirmationModalProps
-> = ({ opened, onClose, onConfirm, onCancel, title, message }) => {
+> = ({ opened, onClose, onConfirm, onCancel, title }) => {
   const [flagReason, setFlagReason] = useState('');
   const [touched, setTouched] = useState(false);
   const [debouncedFlagReason] = useDebouncedValue(flagReason, 500);
