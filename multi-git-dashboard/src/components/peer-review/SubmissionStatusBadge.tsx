@@ -1,6 +1,6 @@
 import React from 'react';
 import { Badge } from '@mantine/core';
-import CourseRole from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 import type { PeerReviewSubmission } from '@shared/types/PeerReview';
 
 type SubmissionStatusBadgeProps = {
@@ -14,7 +14,7 @@ const SubmissionStatusBadge: React.FC<SubmissionStatusBadgeProps> = ({
 }) => {
   if (!userCourseRole) return null;
 
-  if (userCourseRole === CourseRole.Faculty) {
+  if (userCourseRole === COURSE_ROLE.Faculty) {
     return (
       <Badge variant="filled" radius="md" size="lg" color="indigo">
         Staff View
@@ -22,7 +22,7 @@ const SubmissionStatusBadge: React.FC<SubmissionStatusBadgeProps> = ({
     );
   }
 
-  if (userCourseRole === CourseRole.TA) {
+  if (userCourseRole === COURSE_ROLE.TA) {
     return (
       <Badge variant="light" radius="md" size="lg" color="blue">
         Supervising View

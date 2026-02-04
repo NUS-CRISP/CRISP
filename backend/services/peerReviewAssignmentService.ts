@@ -1,4 +1,6 @@
-import PeerReviewAssignmentModel, { PeerReviewAssignment } from '@models/PeerReviewAssignment';
+import PeerReviewAssignmentModel, {
+  PeerReviewAssignment,
+} from '@models/PeerReviewAssignment';
 import TeamModel, { Team } from '@models/Team';
 import { BadRequestError, NotFoundError } from './errors';
 import TeamDataModel from '@models/TeamData';
@@ -7,7 +9,9 @@ import { getPeerReviewById, getTeamDataById } from './peerReviewService';
 import type { AnyBulkWriteOperation } from 'mongodb';
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 import { MissingAuthorizationError } from './errors';
-import PeerReviewSubmissionModel, { PeerReviewSubmission } from '@models/PeerReviewSubmission';
+import PeerReviewSubmissionModel, {
+  PeerReviewSubmission,
+} from '@models/PeerReviewSubmission';
 
 export interface NormalizedTeam {
   id: string;
@@ -310,7 +314,7 @@ export const removeManualAssignment = async (
 export const initialiseAssignments = async (
   courseId: string,
   peerReviewId: string,
-  teamSetId: string,
+  teamSetId: string
 ) => {
   const prTeams: Team[] = await TeamModel.find({
     teamSet: teamSetId,
@@ -673,12 +677,13 @@ const upsertAndLoadAssignments = async (
     await PeerReviewAssignmentModel.bulkWrite(ops, { ordered: true });
   }
 
-  const finalAssignments: PeerReviewAssignment[] = await PeerReviewAssignmentModel.find({
-    peerReviewId: oid(peerReviewId),
-    reviewee: { $in: prTeamIds.map(oid) },
-  })
-    .select('_id reviewee repoName repoUrl')
-    .lean();
+  const finalAssignments: PeerReviewAssignment[] =
+    await PeerReviewAssignmentModel.find({
+      peerReviewId: oid(peerReviewId),
+      reviewee: { $in: prTeamIds.map(oid) },
+    })
+      .select('_id reviewee repoName repoUrl')
+      .lean();
 
   const finalMap = new Map<string, PeerReviewAssignment>();
   for (const a of finalAssignments) {

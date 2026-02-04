@@ -4,7 +4,9 @@ import { NotFoundError } from './errors';
 import mongoose, { Types } from 'mongoose';
 import PeerReviewAssignmentModel from '@models/PeerReviewAssignment';
 import PeerReviewCommentModel from '@models/PeerReviewComment';
-import PeerReviewSubmissionModel, { PeerReviewSubmission } from '@models/PeerReviewSubmission';
+import PeerReviewSubmissionModel, {
+  PeerReviewSubmission,
+} from '@models/PeerReviewSubmission';
 import {
   PeerReviewTeamMemberDTO,
   PeerReviewInfoDTO,
@@ -201,7 +203,7 @@ export const createPeerReviewById = async (
   await initialiseAssignments(
     courseId,
     newPeerReview._id.toString(),
-    teamSetId,
+    teamSetId
   );
 
   return newPeerReview;
@@ -306,7 +308,7 @@ export const updatePeerReviewById = async (
     await initialiseAssignments(
       updatedPeerReview.course.toString(),
       peerReviewId,
-      teamSetId,
+      teamSetId
     );
   }
 
@@ -451,7 +453,11 @@ const loadSubmissionsForScope = async (
 };
 
 const addMissingAssignmentsForSubmissions = async (
-  submissions: { studentSubs: PeerReviewSubmission[]; teamSubs: PeerReviewSubmission[]; taSubs: PeerReviewSubmission[] },
+  submissions: {
+    studentSubs: PeerReviewSubmission[];
+    teamSubs: PeerReviewSubmission[];
+    taSubs: PeerReviewSubmission[];
+  },
   assignmentById: Map<string, PeerReviewAssignment>
 ) => {
   const neededIds = new Set<string>();
@@ -490,7 +496,11 @@ const addMissingAssignmentsForSubmissions = async (
 };
 
 const buildAssignedReviewMaps = (
-  submissions: { studentSubs: PeerReviewSubmission[]; teamSubs: PeerReviewSubmission[]; taSubs: PeerReviewSubmission[] },
+  submissions: {
+    studentSubs: PeerReviewSubmission[];
+    teamSubs: PeerReviewSubmission[];
+    taSubs: PeerReviewSubmission[];
+  },
   assignmentById: Map<string, PeerReviewAssignment>,
   taIdsWanted: string[],
   usersById: Map<string, string>
@@ -544,7 +554,11 @@ const buildAssignedReviewMaps = (
 
 const populateAssignmentsOfTeamReviewers = (
   assignmentsOfTeam: Record<string, RevieweeAssignmentsDTO>,
-  submissions: { studentSubs: PeerReviewSubmission[]; teamSubs: PeerReviewSubmission[]; taSubs: PeerReviewSubmission[] },
+  submissions: {
+    studentSubs: PeerReviewSubmission[];
+    teamSubs: PeerReviewSubmission[];
+    taSubs: PeerReviewSubmission[];
+  },
   assignmentById: Map<string, PeerReviewAssignment>,
   usersById: Map<string, string>,
   teamNumberById: Map<string, number>
@@ -686,7 +700,9 @@ const getScopedTeams = async (
   teamIds: string[],
   filterByTA?: string
 ): Promise<NormalizedTeam[]> => {
-  const teamQuery: { [key: string]: string | { $in: string[] } } = { teamSet: teamSetId };
+  const teamQuery: { [key: string]: string | { $in: string[] } } = {
+    teamSet: teamSetId,
+  };
   if (teamIds.length > 0) {
     teamQuery._id = { $in: teamIds };
   }

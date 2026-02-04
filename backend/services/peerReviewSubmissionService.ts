@@ -1,4 +1,6 @@
-import PeerReviewSubmissionModel, { PeerReviewSubmission } from '@models/PeerReviewSubmission';
+import PeerReviewSubmissionModel, {
+  PeerReviewSubmission,
+} from '@models/PeerReviewSubmission';
 import PeerReviewAssignmentModel from '@models/PeerReviewAssignment';
 import { PeerReview } from '@models/PeerReview';
 import TeamModel from '@models/Team';
