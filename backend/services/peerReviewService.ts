@@ -38,7 +38,7 @@ export const getAllPeerReviewsyId = async (courseId: string) => {
   if (!peerReviews)
     throw new NotFoundError('No peer reviews found for this course');
 
-  const result = peerReviews.map((r) => {
+  const result = peerReviews.map(r => {
     const obj = r.toObject();
     obj.status = obj.computedStatus ?? obj.status; // override with computed status
     return obj;
@@ -220,7 +220,7 @@ export const deletePeerReviewById = async (peerReviewId: string) => {
       await PeerReviewAssignmentModel.find({
         peerReviewId,
       });
-    const assignmentIds = prAssignments.map((assignment) => assignment._id);
+    const assignmentIds = prAssignments.map(assignment => assignment._id);
 
     // Delete associated comments
     const delCommentsRes = await PeerReviewCommentModel.deleteMany({
@@ -332,15 +332,15 @@ const buildPeerReviewScopeContext = async (
   );
 
   const scopedTeams = await getScopedTeams(teamSetId, teamIds, filterByTA);
-  const scopedTeamIds = scopedTeams.map((t) => t.id);
+  const scopedTeamIds = scopedTeams.map(t => t.id);
 
   const teamDataById = await getTeamDataById(
     courseId,
-    scopedTeams.map((t) => t.number)
+    scopedTeams.map(t => t.number)
   );
 
   const usersById = await getUsersByIdForTeams(scopedTeams);
-  const teamNumberById = new Map(scopedTeams.map((t) => [t.id, t.number]));
+  const teamNumberById = new Map(scopedTeams.map(t => [t.id, t.number]));
 
   return {
     scopedTeams,
@@ -401,13 +401,13 @@ const computeReviewerScope = (
   const scopedMemberIds =
     userCourseRole === COURSE_ROLE.Student
       ? [userId]
-      : Array.from(new Set(scopedTeams.flatMap((t) => t.memberIds)));
-  const scopedReviewerTeamIds = scopedTeams.map((t) => t.id);
+      : Array.from(new Set(scopedTeams.flatMap(t => t.memberIds)));
+  const scopedReviewerTeamIds = scopedTeams.map(t => t.id);
 
   const taIdsWanted = !taAssignmentsEnabled
     ? []
     : userCourseRole === COURSE_ROLE.Faculty
-      ? (scopedTeams.map((t) => t.taId).filter(Boolean) as string[])
+      ? (scopedTeams.map(t => t.taId).filter(Boolean) as string[])
       : userCourseRole === COURSE_ROLE.TA
         ? [userId]
         : [];
@@ -469,7 +469,7 @@ const addMissingAssignmentsForSubmissions = async (
     neededIds.add(s.peerReviewAssignmentId.toString());
   }
 
-  const missing = [...neededIds].filter((id) => !assignmentById.has(id));
+  const missing = [...neededIds].filter(id => !assignmentById.has(id));
   if (missing.length === 0) return;
 
   const extra = await PeerReviewAssignmentModel.find({
@@ -632,17 +632,15 @@ const buildTeamsDTO = (
   memberAssignedMap: Map<string, AssignedReviewDTO[]>,
   teamAssignedMap: Map<string, AssignedReviewDTO[]>
 ) => {
-  return scopedTeams.map((team) => {
+  return scopedTeams.map(team => {
     const teamData = teamDataById.get(team.number.toString());
     const taName = team.taId ? (usersById.get(team.taId) ?? '') : '';
 
-    const members: PeerReviewTeamMemberDTO[] = team.memberIds.map(
-      (memberId) => ({
-        userId: memberId,
-        name: usersById.get(memberId) ?? 'Unknown',
-        assignedReviews: memberAssignedMap.get(memberId) ?? [],
-      })
-    );
+    const members: PeerReviewTeamMemberDTO[] = team.memberIds.map(memberId => ({
+      userId: memberId,
+      name: usersById.get(memberId) ?? 'Unknown',
+      assignedReviews: memberAssignedMap.get(memberId) ?? [],
+    }));
 
     const assignedReviewsToTeam =
       reviewerType === 'Team' ? (teamAssignedMap.get(team.id) ?? []) : [];
@@ -717,11 +715,11 @@ const getScopedTeams = async (
     .lean();
 
   if (prTeams.length === 0) return [];
-  return prTeams.map((t) => ({
+  return prTeams.map(t => ({
     id: t._id.toString(),
     number: t.number,
     taId: t.TA ? t.TA.toString() : null,
-    memberIds: t.members ? t.members.map((m) => m.toString()) : [],
+    memberIds: t.members ? t.members.map(m => m.toString()) : [],
   }));
 };
 
@@ -736,7 +734,7 @@ export const getTeamDataById = async (
     .select('teamId gitHubOrgName repoName')
     .lean();
   const teamDataById = new Map(
-    prTeamDatas.map((td) => [
+    prTeamDatas.map(td => [
       td.teamId.toString(),
       {
         gitHubOrgName: td.gitHubOrgName || '',
@@ -760,14 +758,14 @@ const getUsersByIdForTeams = async (scopedTeams: NormalizedTeam[]) => {
   const userIds = new Set<string>();
   for (const team of scopedTeams) {
     if (team.taId) userIds.add(team.taId.toString());
-    team.memberIds.forEach((mid) => userIds.add(mid));
+    team.memberIds.forEach(mid => userIds.add(mid));
   }
 
   if (userIds.size === 0) return new Map<string, string>();
   const users: User[] = await UserModel.find({ _id: { $in: [...userIds] } })
     .select('_id name')
     .lean();
-  return new Map(users.map((u) => [u._id.toString(), u.name]));
+  return new Map(users.map(u => [u._id.toString(), u.name]));
 };
 
 const pushReviewer = (
