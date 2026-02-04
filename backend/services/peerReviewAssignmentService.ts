@@ -252,7 +252,7 @@ export const addManualAssignment = async (
   })
     .select('repoName')
     .lean();
-    
+
   const { repoName, repoUrl } = await resolveTeamRepo(courseId, revieweeId);
   console.log('repoName:', repoName);
   console.log('repoUrl:', repoUrl);
@@ -261,7 +261,7 @@ export const addManualAssignment = async (
     peerReviewId,
     revieweeId,
     repoName ?? 'AddSubtract',
-    repoUrl ?? TEMP_FALLBACK_URL,
+    repoUrl ?? TEMP_FALLBACK_URL
   );
 
   console.log('checking manual assignment duplicates...');
@@ -329,7 +329,7 @@ export const initialiseAssignments = async (
     courseId,
     prTeams.map(t => t.number)
   );
-  
+
   console.log(prTeamDataById);
 
   for (const team of prTeams) {
@@ -376,7 +376,7 @@ const prepareData = async (courseId: string, teamSetId: string) => {
   const teamIdToTeamMap = new Map(teams.map(t => [t.id, t]));
   const teamIdToTAMap = new Map(teams.map(t => [t.id, t.taId]));
   const teamIdToRepoMap = await getTeamDataById(courseId, prTeamNumbers);
-  
+
   return {
     teams,
     prTeamIds,

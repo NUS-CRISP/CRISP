@@ -370,7 +370,10 @@ const loadAssignmentsState = async (
 
   for (const a of assignmentDocs) {
     const reviewee = await TeamModel.findById(a.reviewee);
-    const { repoName, repoUrl } = await resolveTeamRepo(courseId, a.reviewee.toString());
+    const { repoName, repoUrl } = await resolveTeamRepo(
+      courseId,
+      a.reviewee.toString()
+    );
     if (!reviewee) continue;
     const assignmentDto: PeerReviewAssignment = {
       _id: a._id.toString(),
@@ -485,7 +488,10 @@ const addMissingAssignmentsForSubmissions = async (
 
   for (const a of extra) {
     const reviewee = await TeamModel.findById(a.reviewee);
-    const { repoName, repoUrl } = await resolveTeamRepo(courseId, a.reviewee.toString());
+    const { repoName, repoUrl } = await resolveTeamRepo(
+      courseId,
+      a.reviewee.toString()
+    );
     if (!reviewee) continue;
     assignmentById.set(a._id.toString(), {
       _id: a._id.toString(),
@@ -741,27 +747,37 @@ export const getTeamDataById = async (
   })
     .select('teamId gitHubOrgName repoName')
     .lean();
-    
-  const entries = (await Promise.all(
-    prTeamDatas.map(async (td) => {
-      try {
-        const { repoName, repoUrl, gitHubOrgName } = await resolveTeamRepo(
-          courseId,
-          td.teamId.toString()
-        );
 
-        return [
-          td.teamId.toString(),
-          { gitHubOrgName: gitHubOrgName ?? '', repoName: repoName ?? 'AddSubtract', repoUrl: repoUrl ?? TEMP_FALLBACK_URL },
-        ] as const;
-      } catch {
-        return [
-          td.teamId.toString(),
-          { gitHubOrgName: '', repoName: 'AddSubtract', repoUrl: TEMP_FALLBACK_URL },
-        ] as const;
-      }
-    })
-  )).filter(Boolean);
+  const entries = (
+    await Promise.all(
+      prTeamDatas.map(async td => {
+        try {
+          const { repoName, repoUrl, gitHubOrgName } = await resolveTeamRepo(
+            courseId,
+            td.teamId.toString()
+          );
+
+          return [
+            td.teamId.toString(),
+            {
+              gitHubOrgName: gitHubOrgName ?? '',
+              repoName: repoName ?? 'AddSubtract',
+              repoUrl: repoUrl ?? TEMP_FALLBACK_URL,
+            },
+          ] as const;
+        } catch {
+          return [
+            td.teamId.toString(),
+            {
+              gitHubOrgName: '',
+              repoName: 'AddSubtract',
+              repoUrl: TEMP_FALLBACK_URL,
+            },
+          ] as const;
+        }
+      })
+    )
+  ).filter(Boolean);
 
   const teamDataById = new Map(entries);
 

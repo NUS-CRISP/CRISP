@@ -30,6 +30,8 @@ export const normalizeGitHubUrl = (url: String) => url.replace(/\/+$/, '');
 
 export const extractRepoNameFromUrl = (url: String) => {
   // https://github.com/org/repo or https://github.com/org/repo.git
-  const m = normalizeGitHubUrl(url).match(/^https?:\/\/github\.com\/[^/]+\/([^/]+)(?:\.git)?$/i);
+  const m = normalizeGitHubUrl(url).match(
+    /^https?:\/\/github\.com\/[^/]+\/([^/]+)(?:\.git)?$/i
+  );
   return m?.[1] ?? null;
 };
