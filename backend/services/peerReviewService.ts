@@ -34,7 +34,7 @@ export interface NormalizedTeam {
 
 const oid = (s: string) => new Types.ObjectId(s);
 
-const FALLBACK_URL = 'https://github.com/gongg21/AddSubtract.git';
+const TEMP_FALLBACK_URL = 'https://github.com/gongg21/AddSubtract.git';
 
 export const getAllPeerReviewsyId = async (courseId: string) => {
   const peerReviews = await PeerReviewModel.find({ course: courseId });
@@ -158,7 +158,6 @@ export const getPeerReviewInfoById = async (
 
 export const createPeerReviewById = async (
   courseId: string,
-  userId: string,
   peerReviewData: {
     assessmentName: string;
     description: string;
@@ -384,7 +383,7 @@ const loadAssignmentsState = async (
         _id: reviewee._id.toString(),
       },
       repoName: repoName ?? 'AddSubtract',
-      repoUrl: repoUrl ?? FALLBACK_URL,
+      repoUrl: repoUrl ?? TEMP_FALLBACK_URL,
     };
 
     assignmentById.set(assignmentDto._id, assignmentDto);
@@ -499,7 +498,7 @@ const addMissingAssignmentsForSubmissions = async (
         _id: reviewee._id.toString(),
       },
       repoName: repoName ?? 'AddSubtract',
-      repoUrl: repoUrl ?? FALLBACK_URL,
+      repoUrl: repoUrl ?? TEMP_FALLBACK_URL,
     });
   }
 };
@@ -753,12 +752,12 @@ export const getTeamDataById = async (
 
         return [
           td.teamId.toString(),
-          { gitHubOrgName: gitHubOrgName ?? '', repoName: repoName ?? '', repoUrl: repoUrl ?? FALLBACK_URL },
+          { gitHubOrgName: gitHubOrgName ?? '', repoName: repoName ?? 'AddSubtract', repoUrl: repoUrl ?? TEMP_FALLBACK_URL },
         ] as const;
       } catch {
         return [
           td.teamId.toString(),
-          { gitHubOrgName: '', repoName: '', repoUrl: FALLBACK_URL },
+          { gitHubOrgName: '', repoName: 'AddSubtract', repoUrl: TEMP_FALLBACK_URL },
         ] as const;
       }
     })
@@ -770,7 +769,7 @@ export const getTeamDataById = async (
   teamDataById.set('1', {
     gitHubOrgName: 'gongg21',
     repoName: 'AddSubtract',
-    repoUrl: FALLBACK_URL,
+    repoUrl: TEMP_FALLBACK_URL,
   });
 
   return teamDataById;

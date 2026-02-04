@@ -51,7 +51,6 @@ export const createPeerReview = async (req: Request, res: Response) => {
 
     const newPeerReview = await createPeerReviewById(
       req.params.courseId,
-      userId,
       req.body
     );
     res.status(201).json(newPeerReview);

@@ -260,7 +260,7 @@ export const addManualAssignment = async (
   const assignmentId = await ensureAssignmentForReviewee(
     peerReviewId,
     revieweeId,
-    repoName ?? teamData?.repoName,
+    repoName ?? 'AddSubtract',
     repoUrl ?? TEMP_FALLBACK_URL,
   );
 
@@ -329,6 +329,8 @@ export const initialiseAssignments = async (
     courseId,
     prTeams.map(t => t.number)
   );
+  
+  console.log(prTeamDataById);
 
   for (const team of prTeams) {
     const newAssignment = new PeerReviewAssignmentModel({
