@@ -1,10 +1,7 @@
 import { ActionIcon, Button, Group, Text, Stack } from '@mantine/core';
 import { IconTrash } from '@tabler/icons-react';
 import { useRouter } from 'next/router';
-import {
-  AssignedReviewDTO,
-  PeerReviewAssignment,
-} from '@shared/types/PeerReview';
+import { AssignedReviewDTO } from '@shared/types/PeerReview';
 import { Team } from '@shared/types/Team';
 
 interface PeerReviewAssignmentsProps {

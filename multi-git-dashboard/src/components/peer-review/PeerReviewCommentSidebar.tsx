@@ -28,7 +28,6 @@ import {
 
 interface PeerReviewCommentSidebarProps {
   user: { userId: string; userCourseRole: string } | null;
-  readOnly: boolean;
   comments: PeerReviewComment[];
   focusedComments: string[];
   onFocusComment: (comment: PeerReviewComment) => void;
@@ -42,7 +41,6 @@ interface PeerReviewCommentSidebarProps {
 
 const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
   user,
-  readOnly,
   comments,
   focusedComments,
   onFocusComment,

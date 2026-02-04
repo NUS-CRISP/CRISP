@@ -10,7 +10,6 @@ import {
 } from '@mantine/core';
 import { forwardRef, useState, useMemo } from 'react';
 import {
-  PeerReviewAssignment,
   PeerReviewTeamDTO,
   PeerReviewTeamMemberDTO,
   RevieweeAssignmentsDTO,

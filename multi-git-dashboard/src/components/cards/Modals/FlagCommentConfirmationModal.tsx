@@ -1,4 +1,4 @@
-import { Modal, Text, Group, Button, Textarea, Stack } from '@mantine/core';
+import { Modal, Text, Group, Button, Textarea } from '@mantine/core';
 import { useState } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
 

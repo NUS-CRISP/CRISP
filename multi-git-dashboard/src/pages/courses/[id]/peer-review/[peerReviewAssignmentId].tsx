@@ -8,7 +8,6 @@ import {
   Text,
   Box,
   Card,
-  Badge,
   Button,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
@@ -16,7 +15,7 @@ import DeleteConfirmationModal from '@/components/cards/Modals/DeleteConfirmatio
 import FlagCommentConfirmationModal from '@/components/cards/Modals/FlagCommentConfirmationModal';
 import { IconListDetails, IconArrowLeft, IconSend } from '@tabler/icons-react';
 import { useRouter } from 'next/router';
-import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { PeerReviewComment } from '@shared/types/PeerReview';
 import PeerReviewFileTree from '@/components/peer-review/PeerReviewFileTree';
 import PeerReviewCommentSidebar from '@/components/peer-review/PeerReviewCommentSidebar';
@@ -79,7 +78,6 @@ const PeerReviewDetail: React.FC = () => {
     updateComment,
     deleteComment,
     flagComment,
-    unflagComment,
     submitReview,
   } = usePeerReviewData({
     courseId: id,
@@ -636,7 +634,6 @@ const PeerReviewDetail: React.FC = () => {
         )}
         <PeerReviewCommentSidebar
           user={me}
-          readOnly={!canEdit}
           comments={comments.filter(c => c.filePath === currFile)} // Filter logic based on role is handled on BE, here we just filter by file
           focusedComments={focusedCommentIds}
           onFocusComment={handleFocusComment}
