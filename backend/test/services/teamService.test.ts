@@ -20,6 +20,9 @@ import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
 let mongo: MongoMemoryServer;
 
+jest.mock('../../services/teamService');
+jest.mock('@models/TeamData');
+
 beforeAll(async () => {
   mongo = await MongoMemoryServer.create();
   const mongoUri = await mongo.getUri();
