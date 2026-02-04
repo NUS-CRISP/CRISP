@@ -6,6 +6,8 @@ import TeamSetModel from '../models/TeamSet';
 import UserModel from '../models/User';
 import { BadRequestError, NotFoundError } from './errors';
 import { getTeamSetsByCourseId } from './teamSetService';
+import TeamDataModel from '@models/TeamData';
+import { extractRepoNameFromUrl, normalizeGitHubUrl } from '../utils/github';
 
 export const getTeamsByCourseId = async (courseId: string) => {
   const teamSets = await getTeamSetsByCourseId(courseId);
@@ -171,4 +173,41 @@ export const removeMembersById = async (teamId: string, userId: string) => {
   }
   team.members = team.members?.filter(member => !member._id.equals(user._id));
   await team.save();
+};
+
+/* ----- Repository-related functions ----- */
+export const resolveTeamRepo = async (courseId: string, teamId: string) => {
+  const course = await CourseModel.findById(courseId);
+  if (!course) throw new NotFoundError('Course not found');
+
+  const team = await TeamModel.findById(teamId);
+  if (!team) throw new NotFoundError('Team not found');
+
+  const teamData = await TeamDataModel.findById(team.teamData);
+  if (!teamData) throw new NotFoundError('Team data not found');
+
+  const repoName = teamData.repoName;
+
+  // GitHub Org Course: build URL from org + repoName
+  if (course.courseType === 'GitHubOrg') {
+    if (!course.gitHubOrgName) {
+      throw new NotFoundError('GitHub organization not set for course');
+    }
+    return {
+      repoName,
+      repoUrl: `https://github.com/${course.gitHubOrgName}/${repoName}`,
+      gitHubOrgName: course.gitHubOrgName,
+    };
+  }
+
+  // Normal Course: find repo URL from gitHubRepoLinks
+  const links = (course.gitHubRepoLinks ?? []).map(normalizeGitHubUrl);
+  const match = links.find(l => extractRepoNameFromUrl(l) === repoName);
+  if (!match) throw new NotFoundError('Repository link not found in course');
+
+  return {
+    repoName,
+    repoUrl: match,
+    gitHubOrgName: null,
+  };
 };
