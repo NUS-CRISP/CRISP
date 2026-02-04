@@ -634,7 +634,7 @@ const buildTeamsDTO = (
 ) => {
   return scopedTeams.map(team => {
     const teamData = teamDataById.get(team.number.toString());
-    const taName = team.taId ? (usersById.get(team.taId) ?? '') : '';
+    const taName = team.taId ? usersById.get(team.taId) ?? '' : '';
 
     const members: PeerReviewTeamMemberDTO[] = team.memberIds.map(memberId => ({
       userId: memberId,
@@ -643,7 +643,7 @@ const buildTeamsDTO = (
     }));
 
     const assignedReviewsToTeam =
-      reviewerType === 'Team' ? (teamAssignedMap.get(team.id) ?? []) : [];
+      reviewerType === 'Team' ? teamAssignedMap.get(team.id) ?? [] : [];
 
     return {
       teamId: team.id,
