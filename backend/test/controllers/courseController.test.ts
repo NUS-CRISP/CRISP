@@ -58,8 +58,6 @@ jest.mock('../../services/assessmentService');
 jest.mock('../../services/teamSetService');
 jest.mock('../../services/teamService');
 jest.mock('../../utils/auth');
-jest.mock('../../utils/github');
-jest.mock('@models/TeamData');
 jest.mock('../../services/internalAssessmentService');
 
 const mockRequest = (body = {}, params = {}, headers = {}) => {

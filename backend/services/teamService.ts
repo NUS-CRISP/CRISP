@@ -7,7 +7,7 @@ import UserModel from '../models/User';
 import { BadRequestError, NotFoundError } from './errors';
 import { getTeamSetsByCourseId } from './teamSetService';
 import TeamDataModel from '@models/TeamData';
-import { extractRepoNameFromUrl, normalizeGitHubUrl } from 'utils/github';
+import { extractRepoNameFromUrl, normalizeGitHubUrl } from '../utils/github';
 
 export const getTeamsByCourseId = async (courseId: string) => {
   const teamSets = await getTeamSetsByCourseId(courseId);
