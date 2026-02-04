@@ -81,7 +81,9 @@ const PeerReviewTAAccordionItem = forwardRef<
 
     const getTaOptions = (taId: string) => {
       const assigned = new Set(
-        TAToAssignments[taId]?.assignedReviews.map(a => a.assignment.reviewee._id) || []
+        TAToAssignments[taId]?.assignedReviews.map(
+          a => a.assignment.reviewee._id
+        ) || []
       );
       return teams
         .filter(t => !assigned.has(t.value))
