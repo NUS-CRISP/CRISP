@@ -10,9 +10,9 @@ import {
 } from '@mantine/core';
 import { forwardRef, useState, useMemo } from 'react';
 import {
-  PeerReviewAssignment,
   PeerReviewTeamDTO,
   PeerReviewTeamMemberDTO,
+  RevieweeAssignmentsDTO,
 } from '@shared/types/PeerReview';
 import { Team } from '@shared/types/Team';
 import { useRouter } from 'next/router';
@@ -31,7 +31,7 @@ interface PeerReviewAccordionItemProps {
     };
     label: string;
   }[];
-  assignmentOfTeam: PeerReviewAssignment | null;
+  assignmentOfTeam: RevieweeAssignmentsDTO | null;
   reviewerType: 'Individual' | 'Team';
   maxReviewsPerReviewer: number;
   hasFacultyPermission: boolean;
@@ -77,9 +77,9 @@ const PeerReviewAccordionItem = forwardRef<
     const numberOfMembers = currentTeam.members.length;
     const numberOfTeamAssignments = currentTeam.assignedReviewsToTeam.length;
     const numberOfReviewers = assignmentOfTeam
-      ? assignmentOfTeam.studentReviewers.length +
-        assignmentOfTeam.teamReviewers.length +
-        assignmentOfTeam.taReviewers.length
+      ? assignmentOfTeam.reviewers.students.length +
+        assignmentOfTeam.reviewers.teams.length +
+        assignmentOfTeam.reviewers.TAs.length
       : 0;
 
     // Get dropdown options for teams excluding own team and already assigned teams
@@ -87,7 +87,9 @@ const PeerReviewAccordionItem = forwardRef<
       () =>
         new Set(
           currentTeam.assignedReviewsToTeam
-            ? currentTeam.assignedReviewsToTeam.map(tr => tr.reviewee._id)
+            ? currentTeam.assignedReviewsToTeam.map(
+                tr => tr.assignment.reviewee._id
+              )
             : []
         ),
       [currentTeam.assignedReviewsToTeam]
@@ -120,7 +122,7 @@ const PeerReviewAccordionItem = forwardRef<
       currentTeam.members.forEach(member => {
         m[member.userId] = new Set(
           member.assignedReviews
-            ? member.assignedReviews.map(ar => ar.reviewee._id)
+            ? member.assignedReviews.map(ar => ar.assignment.reviewee._id)
             : []
         );
       });
@@ -263,7 +265,7 @@ const PeerReviewAccordionItem = forwardRef<
                     component="a"
                     onClick={() =>
                       router.push(
-                        `${router.asPath.replace(/\/$/, '')}/${assignmentOfTeam?._id}`
+                        `${router.asPath.replace(/\/$/, '')}/${assignmentOfTeam?.assignment._id}`
                       )
                     }
                     size="xs"
@@ -299,23 +301,25 @@ const PeerReviewAccordionItem = forwardRef<
                     >
                       <Stack gap="xs">
                         {reviewerType === 'Individual'
-                          ? assignmentOfTeam.studentReviewers.map(reviewer => (
-                              <Badge
-                                size="sm"
-                                variant="light"
-                                key={`user-${reviewer._id}`}
-                              >
-                                {reviewer.name}
-                              </Badge>
-                            ))
-                          : assignmentOfTeam.teamReviewers.map(reviewer => (
-                              <Badge size="sm" key={`team-${reviewer._id}`}>
-                                Team {reviewer.number}
+                          ? assignmentOfTeam.reviewers.students.map(
+                              reviewer => (
+                                <Badge
+                                  size="sm"
+                                  variant="light"
+                                  key={`user-${reviewer.userId}`}
+                                >
+                                  {reviewer.name}
+                                </Badge>
+                              )
+                            )
+                          : assignmentOfTeam.reviewers.teams.map(reviewer => (
+                              <Badge size="sm" key={`team-${reviewer.teamId}`}>
+                                Team {reviewer.teamNumber}
                               </Badge>
                             ))}
-                        {assignmentOfTeam.taReviewers.map(reviewer => (
+                        {assignmentOfTeam.reviewers.TAs.map(reviewer => (
                           <Badge
-                            key={`ta-${reviewer._id}`}
+                            key={`ta-${reviewer.userId}`}
                             color="yellow"
                             variant="light"
                             size="sm"

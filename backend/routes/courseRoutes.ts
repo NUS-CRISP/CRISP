@@ -1,5 +1,6 @@
 import express from 'express';
 import {
+  getMe,
   addAssessments,
   getCourseCode,
   getAssessments,
@@ -43,6 +44,7 @@ import { noCache } from '../middleware/noCache';
 
 const router = express.Router();
 
+router.get('/:courseId/me', getMe);
 router.post('/', createCourse);
 router.get('/', noCache, getCourses);
 router.get('/:id', getCourse);

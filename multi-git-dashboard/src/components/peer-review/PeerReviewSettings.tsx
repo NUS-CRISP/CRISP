@@ -43,7 +43,7 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
     startDate,
     endDate,
     reviewerType,
-    TaAssignments,
+    taAssignments,
     minReviewsPerReviewer,
     maxReviewsPerReviewer,
     status,
@@ -67,9 +67,9 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
         <Group gap="xs">
           <Badge
             color={
-              status === 'Completed'
+              status === 'Closed'
                 ? 'green'
-                : status === 'Ongoing'
+                : status === 'Active'
                   ? 'yellow'
                   : 'violet'
             }
@@ -78,8 +78,8 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
           </Badge>
           <Badge variant="outline">Reviewer Type: {reviewerType}</Badge>
           {hasFacultyPermission && (
-            <Badge variant="light" color={TaAssignments ? 'teal' : 'red'}>
-              TA Reviews: {TaAssignments ? 'Enabled' : 'Disabled'}
+            <Badge variant="light" color={taAssignments ? 'teal' : 'red'}>
+              TA Reviews: {taAssignments ? 'Enabled' : 'Disabled'}
             </Badge>
           )}
         </Group>
@@ -142,7 +142,7 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
               onClick={onClickUpdate}
               color="green"
               variant="light"
-              disabled={status === 'Completed'}
+              disabled={status === 'Closed'}
             >
               Update Settings
             </Button>
@@ -150,7 +150,7 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
               color="red"
               variant="light"
               onClick={onClickDelete}
-              disabled={status === 'Completed'}
+              disabled={status === 'Closed'}
             >
               Delete Peer Review
             </Button>
@@ -158,7 +158,7 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
               color="yellow"
               variant="light"
               onClick={onClickAssign}
-              disabled={status === 'Completed'}
+              disabled={status === 'Closed'}
             >
               Assign All Peer Reviews
             </Button>

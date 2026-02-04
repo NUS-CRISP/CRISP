@@ -8,7 +8,7 @@ import {
 } from '@mantine/core';
 import { forwardRef, useState, useMemo } from 'react';
 import {
-  PeerReviewAssignment,
+  AssignedReviewDTO,
   TAToAssignmentsMap,
 } from '@shared/types/PeerReview';
 import { Team } from '@shared/types/Team';
@@ -65,7 +65,7 @@ const PeerReviewTAAccordionItem = forwardRef<
     const taEntries = useMemo(
       () =>
         Object.entries(TAToAssignments) as Array<
-          [string, { taName: string; assignedReviews: PeerReviewAssignment[] }]
+          [string, { taName: string; assignedReviews: AssignedReviewDTO[] }]
         >,
       [TAToAssignments]
     );
@@ -81,7 +81,9 @@ const PeerReviewTAAccordionItem = forwardRef<
 
     const getTaOptions = (taId: string) => {
       const assigned = new Set(
-        TAToAssignments[taId]?.assignedReviews.map(a => a.reviewee._id) || []
+        TAToAssignments[taId]?.assignedReviews.map(
+          a => a.assignment.reviewee._id
+        ) || []
       );
       return teams
         .filter(t => !assigned.has(t.value))

@@ -293,7 +293,7 @@ export const addStudentsToCourseAndTeam = async (
 
     if (r.teamNumber !== undefined && r.teamNumber !== null) {
       const teamSetName = DEFAULT_TEAMSET_NAME;
-      let teamSet = await TeamSetModel.findOne({
+      const teamSet = await TeamSetModel.findOne({
         course: course._id,
         name: teamSetName,
       });

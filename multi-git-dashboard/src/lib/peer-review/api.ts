@@ -1,9 +1,75 @@
 import {
   PeerReviewAssignment,
   PeerReviewComment,
+  PeerReviewSubmission,
 } from '@shared/types/PeerReview';
 
 // API Calls for Peer Review Feature
+
+/* ----- Peer Review Assignment API Calls ----- */
+export const apiFetchSubmissionsForAssignment = async (
+  courseId: string,
+  peerReviewAssignmentId: string
+): Promise<PeerReviewSubmission[]> => {
+  const submissionsApiRoute = `/api/peer-review/${courseId}/${peerReviewAssignmentId}/submissions`;
+  try {
+    const response = await fetch(submissionsApiRoute, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!response.ok) {
+      console.error('Error fetching submissions:', response.statusText);
+      return [];
+    }
+    const submissions: PeerReviewSubmission[] = await response.json();
+    return submissions;
+  } catch (err) {
+    console.error('Error fetching submissions: ', err);
+    return [];
+  }
+};
+
+export const apiTouchDraft = async (
+  courseId: string,
+  peerReviewAssignmentId: string
+): Promise<PeerReviewSubmission | null> => {
+  const touchDraftApiRoute = `/api/peer-review/${courseId}/${peerReviewAssignmentId}/submission`;
+  try {
+    const response = await fetch(touchDraftApiRoute, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!response.ok) {
+      throw new Error('Failed to touch draft');
+    }
+    const updatedSubmission: PeerReviewSubmission = await response.json();
+    return updatedSubmission;
+  } catch (err) {
+    console.error('Error touching draft: ', err);
+    return null;
+  }
+};
+
+export const apiSubmitReview = async (
+  courseId: string,
+  peerReviewAssignmentId: string
+): Promise<PeerReviewSubmission | null> => {
+  const submitReviewApiRoute = `/api/peer-review/${courseId}/${peerReviewAssignmentId}/submission/submit`;
+  try {
+    const response = await fetch(submitReviewApiRoute, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!response.ok) {
+      throw new Error('Failed to submit review');
+    }
+    const submittedSubmission: PeerReviewSubmission = await response.json();
+    return submittedSubmission;
+  } catch (err) {
+    console.error('Error submitting review: ', err);
+    return null;
+  }
+};
 
 /* ----- Peer Review Assignment API Calls ----- */
 export const apiFetchPeerReviewAssignment = async (
@@ -56,15 +122,23 @@ export const apiAddComment = async (
   peerReviewAssignmentId: string,
   comment: Omit<
     PeerReviewComment,
-    '_id' | 'peerReviewAssignmentId' | 'author' | 'createdAt' | 'updatedAt'
-  >
+    | '_id'
+    | 'peerReviewId'
+    | 'peerReviewAssignmentId'
+    | 'peerReviewSubmissionId'
+    | 'author'
+    | 'createdAt'
+    | 'updatedAt'
+    | 'authorCourseRole'
+  >,
+  submissionId: string
 ): Promise<PeerReviewComment> => {
   const addCommentApiRoute = `/api/peer-review/${courseId}/${peerReviewAssignmentId}/comments`;
   try {
     const response = await fetch(addCommentApiRoute, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(comment),
+      body: JSON.stringify({ comment, submissionId }),
     });
     if (!response.ok) {
       throw new Error('Failed to save comment');
@@ -81,14 +155,15 @@ export const apiUpdateComment = async (
   courseId: string,
   peerReviewAssignmentId: string,
   commentId: string,
-  updatedComment: string
+  updatedComment: string,
+  submissionId: string
 ): Promise<void> => {
   const updateCommentApiRoute = `/api/peer-review/${courseId}/${peerReviewAssignmentId}/comments/${commentId}`;
   try {
     const response = await fetch(updateCommentApiRoute, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ comment: updatedComment }),
+      body: JSON.stringify({ comment: updatedComment, submissionId }),
     });
     if (!response.ok) {
       throw new Error('Failed to update comment');
@@ -103,13 +178,15 @@ export const apiUpdateComment = async (
 export const apiDeleteComment = async (
   courseId: string,
   peerReviewAssignmentId: string,
-  commentId: string
+  commentId: string,
+  submissionId: string
 ): Promise<void> => {
   const deleteCommentApiRoute = `/api/peer-review/${courseId}/${peerReviewAssignmentId}/comments/${commentId}`;
   try {
     const response = await fetch(deleteCommentApiRoute, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ submissionId }),
     });
     if (!response.ok) {
       throw new Error('Failed to delete comment');
@@ -118,5 +195,29 @@ export const apiDeleteComment = async (
   } catch (err) {
     console.error('Error deleting comment: ', err);
     throw new Error('Failed to delete comment: ' + (err as Error).message);
+  }
+};
+
+export const apiFlagComment = async (
+  courseId: string,
+  peerReviewAssignmentId: string,
+  commentId: string,
+  isFlag: boolean,
+  reason: string
+): Promise<void> => {
+  const flagCommentApiRoute = `/api/peer-review/${courseId}/${peerReviewAssignmentId}/comments/${commentId}/flag`;
+  try {
+    const response = await fetch(flagCommentApiRoute, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ flagStatus: isFlag, flagReason: reason }),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to flag comment');
+    }
+    return;
+  } catch (err) {
+    console.error('Error flagging comment: ', err);
+    throw new Error('Failed to flag comment: ' + (err as Error).message);
   }
 };

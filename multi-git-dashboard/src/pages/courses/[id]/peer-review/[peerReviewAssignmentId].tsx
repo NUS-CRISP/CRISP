@@ -8,10 +8,12 @@ import {
   Text,
   Box,
   Card,
+  Button,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import DeleteConfirmationModal from '@/components/cards/Modals/DeleteConfirmationModal';
-import { IconListDetails, IconArrowLeft } from '@tabler/icons-react';
+import FlagCommentConfirmationModal from '@/components/cards/Modals/FlagCommentConfirmationModal';
+import { IconListDetails, IconArrowLeft, IconSend } from '@tabler/icons-react';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState, useRef } from 'react';
 import { PeerReviewComment } from '@shared/types/PeerReview';
@@ -23,6 +25,10 @@ import usePeerReviewData from '@/components/hooks/usePeerReviewData';
 import { getLanguageForFile } from '@/lib/peer-review/utils';
 import type { editor as MEditor, IDisposable } from 'monaco-editor';
 import type { OnMount, Monaco } from '@monaco-editor/react';
+import { getMe } from '@/lib/auth/utils';
+import SubmissionStatusBadge from '@/components/peer-review/SubmissionStatusBadge';
+import SaveStateBadge from '@/components/peer-review/SaveStateBadge';
+import SubmitReviewConfirmationModal from '@/components/cards/Modals/SubmitReviewConfirmationModal';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -42,6 +48,19 @@ const PeerReviewDetail: React.FC = () => {
     typeof peerReviewAssignmentId === 'string';
   if (!ready) return <Center>Loading...</Center>;
 
+  // Current User
+  const [me, setMe] = useState<{
+    userId: string;
+    userCourseRole: string;
+  } | null>(null);
+  useEffect(() => {
+    const fetchMe = async () => {
+      const userData = await getMe(id);
+      if (userData) setMe(userData);
+    };
+    fetchMe();
+  }, [id]);
+
   // Fetch peer review assignment data
   const {
     loading,
@@ -50,18 +69,21 @@ const PeerReviewDetail: React.FC = () => {
     currFile,
     currentCode,
     comments,
+    submission,
+    canEdit,
+    saveState,
+
     openFile,
     addComment,
     updateComment,
     deleteComment,
+    flagComment,
+    submitReview,
   } = usePeerReviewData({
     courseId: id,
     assignmentId: peerReviewAssignmentId,
+    userCourseRole: me?.userCourseRole,
   });
-
-  // Current User
-  // const { data: session } = useSession();
-  // const currentUser: User = session?.user as User;
 
   /* ===== Refs and States for Editor and Interaction Logic ===== */
   const editorRef = useRef<MEditor.IStandaloneCodeEditor | null>(null);
@@ -79,7 +101,11 @@ const PeerReviewDetail: React.FC = () => {
   const [updatingCommentId, setUpdatingCommentId] = useState<string | null>(
     null
   );
+
   const [deleteCommentId, setDeleteCommentId] = useState<string | null>(null);
+  const [flagCommentId, setFlagCommentId] = useState<string | null>(null);
+  const [submitReviewModalOpened, setSubmitReviewModalOpened] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   type ActiveWidget = { start: number; end: number; top: number } | null;
   const [activeWidget, setActiveWidget] = useState<ActiveWidget>(null);
@@ -181,6 +207,7 @@ const PeerReviewDetail: React.FC = () => {
     const onMouseDown = editor.onMouseDown((e: MEditor.IEditorMouseEvent) => {
       // 1) Click on glyph margin: start selection
       if (
+        canEdit &&
         e.target.type === monaco.editor.MouseTargetType.GUTTER_GLYPH_MARGIN &&
         e.target.position
       ) {
@@ -233,7 +260,7 @@ const PeerReviewDetail: React.FC = () => {
     });
 
     const onMouseUp = editor.onMouseUp((e: MEditor.IEditorMouseEvent) => {
-      if (startLine === null) return;
+      if (!canEdit || startLine === null) return;
 
       // Cancel if not released on a line number
       if (!e.target?.position) {
@@ -275,7 +302,7 @@ const PeerReviewDetail: React.FC = () => {
 
     const onMouseMove = editor.onMouseMove((e: MEditor.IEditorMouseEvent) => {
       // Don't do anything if dragging a selection
-      if (activeWidgetRef.current) {
+      if (!canEdit || activeWidgetRef.current) {
         hoverDecoRef.current = editor.deltaDecorations(
           hoverDecoRef.current,
           []
@@ -337,6 +364,7 @@ const PeerReviewDetail: React.FC = () => {
   // Add comment handler
   const handleAddComment = useCallback(
     async (text: string) => {
+      if (!canEdit) return false;
       if (submittingComment) return false;
       if (!text.trim()) return false;
       if (!activeWidget || !currFile) return false;
@@ -348,12 +376,16 @@ const PeerReviewDetail: React.FC = () => {
           startLine: activeWidget.start,
           endLine: activeWidget.end,
           comment: text,
-          isOverallComment: false,
         });
 
         clearCommentDecorations();
         setActiveWidget(null);
 
+        notifications.show({
+          color: 'green',
+          title: 'Comment added successfully!',
+          message: 'Your comment has been added.',
+        });
         return true;
       } catch (error) {
         notifications.show({
@@ -366,12 +398,13 @@ const PeerReviewDetail: React.FC = () => {
         setSubmittingComment(false);
       }
     },
-    [submittingComment, activeWidget, currFile, addComment]
+    [canEdit, submittingComment, activeWidget, currFile, addComment]
   );
 
   // Update comment handler
   const handleUpdateComment = useCallback(
     async (commentId: string, newComment: string) => {
+      if (!canEdit) return false;
       if (updatingCommentId) return false;
       if (!newComment.trim()) return false;
 
@@ -384,6 +417,11 @@ const PeerReviewDetail: React.FC = () => {
         await updateComment(commentId, newComment);
         clearCommentDecorations();
         setActiveWidget(null);
+        notifications.show({
+          color: 'yellow',
+          title: 'Comment updated successfully!',
+          message: 'Your comment has been updated.',
+        });
         return true;
       } catch (error) {
         notifications.show({
@@ -396,7 +434,7 @@ const PeerReviewDetail: React.FC = () => {
         setUpdatingCommentId(null);
       }
     },
-    [updatingCommentId, updateComment]
+    [canEdit, updatingCommentId, updateComment]
   );
 
   // Delete comment handler
@@ -405,6 +443,7 @@ const PeerReviewDetail: React.FC = () => {
   }, []);
 
   const handleDeleteComment = useCallback(async () => {
+    if (!canEdit) return;
     if (!deleteCommentId) return;
 
     try {
@@ -415,6 +454,11 @@ const PeerReviewDetail: React.FC = () => {
         );
         renderFocusedAndStaticDecos(remainingIds);
       }
+      notifications.show({
+        color: 'orange',
+        title: 'Comment deleted successfully!',
+        message: 'Your comment has been deleted.',
+      });
     } catch (error) {
       notifications.show({
         color: 'red',
@@ -425,11 +469,46 @@ const PeerReviewDetail: React.FC = () => {
       setDeleteCommentId(null);
     }
   }, [
+    canEdit,
     deleteCommentId,
     deleteComment,
     focusedCommentIds,
     renderFocusedAndStaticDecos,
   ]);
+
+  // Flag comment handler
+  const requestFlagComment = useCallback(
+    async (commentId: string) => {
+      if (!canEdit) return;
+      setFlagCommentId(commentId);
+    },
+    [canEdit]
+  );
+
+  const handleFlagComment = useCallback(
+    async (flagReason: string) => {
+      if (!flagCommentId) return;
+
+      try {
+        await flagComment(flagCommentId, flagReason);
+        if (focusedCommentIds.includes(flagCommentId)) {
+          const remainingIds = focusedCommentIds.filter(
+            id => id !== flagCommentId
+          );
+          renderFocusedAndStaticDecos(remainingIds);
+        }
+      } catch (error) {
+        notifications.show({
+          color: 'red',
+          title: 'Failed to flag comment',
+          message: (error as Error).message || 'Please try again.',
+        });
+      } finally {
+        setFlagCommentId(null);
+      }
+    },
+    [flagCommentId, flagComment, focusedCommentIds, renderFocusedAndStaticDecos]
+  );
 
   // Focus comment handler
   const handleFocusComment = useCallback(
@@ -440,28 +519,71 @@ const PeerReviewDetail: React.FC = () => {
     [renderFocusedAndStaticDecos]
   );
 
-  if (loading) return <Center>Loading…</Center>;
+  const handleSubmitReview = useCallback(async () => {
+    try {
+      setSubmitting(true);
+      await submitReview();
+      setSubmitReviewModalOpened(false);
+      notifications.show({
+        color: 'green',
+        title: 'Review submitted successfully!',
+        message: 'Your peer review has been submitted.',
+      });
+    } catch (error) {
+      notifications.show({
+        color: 'red',
+        title: 'Failed to submit review',
+        message: (error as Error).message || 'Please try again.',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  }, [submitReview]);
+
+  if (loading || !me) return <Center>Loading...</Center>;
   if (!peerReviewAssignment) return <Center>Unable to load assignment.</Center>;
   if (!repoTree) return <Center>No repository tree found.</Center>;
 
   return (
     <Container fluid className={classes.wrapper}>
-      <Group className={classes.header}>
-        <IconArrowLeft
-          onClick={() => router.push(`/courses/${id}/peer-review`)}
-          className={classes.returnButton}
-        />
-        <IconListDetails />
-        <Title order={4}>Peer Review:</Title>
-        <Anchor
-          href={peerReviewAssignment.repoUrl}
-          target="_blank"
-          rel="noreferrer"
-        >
-          <Title order={4}>{peerReviewAssignment.repoName}</Title>
-        </Anchor>
+      <Group className={classes.header} justify="space-between">
+        <Group gap="xs">
+          <IconArrowLeft
+            onClick={() => router.push(`/courses/${id}/peer-review`)}
+            className={classes.returnButton}
+          />
+          <IconListDetails style={{ opacity: 0.8 }} />
+          <Title order={4}>Peer Review:</Title>
+          <Anchor
+            href={peerReviewAssignment.repoUrl}
+            target="_blank"
+            rel="noreferrer"
+            underline="never"
+          >
+            <Title order={4}>{peerReviewAssignment.repoName}</Title>
+          </Anchor>
+        </Group>
+        <Group gap="xs">
+          <SaveStateBadge canEdit={canEdit} saveState={saveState} />
+          <SubmissionStatusBadge
+            userCourseRole={me.userCourseRole}
+            submission={submission}
+          />
+          {true && ( // To change to check for a submission
+            <Button
+              leftSection={<IconSend size={16} />}
+              radius="md"
+              size="xs"
+              fz="sm"
+              h="27px"
+              disabled={!canEdit || submission?.status === 'Submitted'}
+              onClick={() => setSubmitReviewModalOpened(true)}
+            >
+              Submit Review
+            </Button>
+          )}
+        </Group>
       </Group>
-
       <Group className={classes.body}>
         <Box className={classes.repositoryBox}>
           <Text className={classes.repositoryTitle}>Repository</Text>
@@ -511,18 +633,29 @@ const PeerReviewDetail: React.FC = () => {
           </Center>
         )}
         <PeerReviewCommentSidebar
+          user={me}
           comments={comments.filter(c => c.filePath === currFile)} // Filter logic based on role is handled on BE, here we just filter by file
           focusedComments={focusedCommentIds}
           onFocusComment={handleFocusComment}
           onAddComment={handleAddComment}
           onUpdateComment={handleUpdateComment}
           onDeleteComment={requestDeleteComment}
+          onFlagComment={requestFlagComment}
           onCancelComment={clearCommentDecorations}
           selectedLines={
             activeWidget
               ? { start: activeWidget.start, end: activeWidget.end }
               : null
           }
+        />
+        <SubmitReviewConfirmationModal
+          opened={submitReviewModalOpened}
+          onClose={() => setSubmitReviewModalOpened(false)}
+          onConfirm={handleSubmitReview}
+          comments={comments}
+          submitting={submitting}
+          locked={submission?.status === 'Submitted'}
+          repoName={peerReviewAssignment.repoName}
         />
         <DeleteConfirmationModal
           opened={!!deleteCommentId}
@@ -531,6 +664,13 @@ const PeerReviewDetail: React.FC = () => {
           onCancel={() => setDeleteCommentId(null)}
           title="Delete Comment?"
           message="Are you sure you want to delete this comment?"
+        />
+        <FlagCommentConfirmationModal
+          opened={!!flagCommentId}
+          onClose={() => setFlagCommentId(null)}
+          onConfirm={handleFlagComment}
+          onCancel={() => setFlagCommentId(null)}
+          title="Flag Comment?"
         />
       </Group>
     </Container>

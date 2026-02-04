@@ -17,7 +17,13 @@ import {
   addPeerReviewComment,
   updatePeerReviewComment,
   deletePeerReviewComment,
+  flagPeerReviewComment,
 } from '../controllers/peerReviewCommentsController';
+import {
+  getSubmissionsForAssignment,
+  putMySubmissionDraft,
+  postSubmitMySubmission,
+} from '../controllers/peerReviewSubmissionController';
 
 const router = express.Router();
 
@@ -59,6 +65,24 @@ router.put(
 router.delete(
   '/:courseId/:peerReviewAssignmentId/comments/:commentId',
   deletePeerReviewComment
+);
+router.put(
+  '/:courseId/:peerReviewAssignmentId/comments/:commentId/flag',
+  flagPeerReviewComment
+);
+
+// Peer Review Submission Routes
+router.get(
+  '/:courseId/:peerReviewAssignmentId/submissions',
+  getSubmissionsForAssignment
+);
+router.put(
+  '/:courseId/:peerReviewAssignmentId/submissions',
+  putMySubmissionDraft
+);
+router.post(
+  '/:courseId/:peerReviewAssignmentId/submissions/submit',
+  postSubmitMySubmission
 );
 
 export default router;

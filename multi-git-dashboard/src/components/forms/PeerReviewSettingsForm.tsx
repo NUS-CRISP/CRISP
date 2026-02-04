@@ -32,7 +32,7 @@ interface FormValues {
   startDate: string;
   endDate: string;
   reviewerType: ReviewerType;
-  TaAssignments: boolean;
+  taAssignments: boolean;
   minReviews: string | number;
   maxReviews: string | number;
   teamSetId: string;
@@ -69,7 +69,7 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
       : '',
     endDate: pr?.endDate ? new Date(pr.endDate).toISOString().slice(0, 10) : '',
     reviewerType: pr?.reviewerType ?? 'Individual',
-    TaAssignments: Boolean(pr?.TaAssignments ?? false),
+    taAssignments: Boolean(pr?.taAssignments ?? false),
     minReviews: pr?.minReviewsPerReviewer ?? 0,
     maxReviews: pr?.maxReviewsPerReviewer ?? 1,
     teamSetId: pr?.teamSetId ?? '',
@@ -146,7 +146,7 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
     startDate: values.startDate || '',
     endDate: values.endDate || '',
     reviewerType: values.reviewerType,
-    TaAssignments: Boolean(values.TaAssignments),
+    taAssignments: Boolean(values.taAssignments),
     minReviews: Number(values.minReviews ?? 0),
     maxReviews: Number(values.maxReviews ?? 1),
     teamSetId: values.teamSetId || '',
@@ -345,8 +345,8 @@ const PeerReviewSettingsForm: React.FC<PeerReviewSettingsFormProps> = ({
           }}
         >
           <Radio.Group
-            value={form.values.TaAssignments ? 'yes' : 'no'}
-            onChange={val => form.setFieldValue('TaAssignments', val === 'yes')}
+            value={form.values.taAssignments ? 'yes' : 'no'}
+            onChange={val => form.setFieldValue('taAssignments', val === 'yes')}
           >
             <div style={{ display: 'flex', gap: '32px' }}>
               <Radio
