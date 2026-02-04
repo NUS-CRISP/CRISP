@@ -23,6 +23,7 @@ import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 import UserModel, { User } from '@models/User';
 import TeamModel from '@models/Team';
 import TeamDataModel, { TeamData } from '@models/TeamData';
+import { resolveTeamRepo } from './teamService';
 
 export interface NormalizedTeam {
   id: string;
@@ -32,6 +33,8 @@ export interface NormalizedTeam {
 }
 
 const oid = (s: string) => new Types.ObjectId(s);
+
+const FALLBACK_URL = 'https://github.com/gongg21/AddSubtract.git';
 
 export const getAllPeerReviewsyId = async (courseId: string) => {
   const peerReviews = await PeerReviewModel.find({ course: courseId });
@@ -75,6 +78,7 @@ export const getPeerReviewInfoById = async (
     return emptyPeerReviewInfo(peerReviewId, peerReview.reviewerType);
 
   const assignmentState = await loadAssignmentsState(
+    courseId,
     peerReviewId,
     ctx.scopedTeamIds
   );
@@ -97,6 +101,7 @@ export const getPeerReviewInfoById = async (
   );
 
   await addMissingAssignmentsForSubmissions(
+    courseId,
     submissions,
     assignmentState.assignmentById
   );
@@ -352,6 +357,7 @@ const buildPeerReviewScopeContext = async (
 };
 
 const loadAssignmentsState = async (
+  courseId: string,
   peerReviewId: string,
   scopedTeamIds: string[]
 ) => {
@@ -365,6 +371,7 @@ const loadAssignmentsState = async (
 
   for (const a of assignmentDocs) {
     const reviewee = await TeamModel.findById(a.reviewee);
+    const { repoName, repoUrl } = await resolveTeamRepo(courseId, a.reviewee.toString());
     if (!reviewee) continue;
     const assignmentDto: PeerReviewAssignment = {
       _id: a._id.toString(),
@@ -376,8 +383,8 @@ const loadAssignmentsState = async (
         ...reviewee.toObject(),
         _id: reviewee._id.toString(),
       },
-      repoName: 'AddSubtract',
-      repoUrl: 'https://github.com/gongg21/AddSubtract.git',
+      repoName: repoName ?? 'AddSubtract',
+      repoUrl: repoUrl ?? FALLBACK_URL,
     };
 
     assignmentById.set(assignmentDto._id, assignmentDto);
@@ -453,6 +460,7 @@ const loadSubmissionsForScope = async (
 };
 
 const addMissingAssignmentsForSubmissions = async (
+  courseId: string,
   submissions: {
     studentSubs: PeerReviewSubmission[];
     teamSubs: PeerReviewSubmission[];
@@ -478,6 +486,7 @@ const addMissingAssignmentsForSubmissions = async (
 
   for (const a of extra) {
     const reviewee = await TeamModel.findById(a.reviewee);
+    const { repoName, repoUrl } = await resolveTeamRepo(courseId, a.reviewee.toString());
     if (!reviewee) continue;
     assignmentById.set(a._id.toString(), {
       _id: a._id.toString(),
@@ -489,8 +498,8 @@ const addMissingAssignmentsForSubmissions = async (
         ...reviewee.toObject(),
         _id: reviewee._id.toString(),
       },
-      repoName: 'AddSubtract',
-      repoUrl: 'https://github.com/gongg21/AddSubtract.git',
+      repoName: repoName ?? 'AddSubtract',
+      repoUrl: repoUrl ?? FALLBACK_URL,
     });
   }
 };
@@ -733,22 +742,35 @@ export const getTeamDataById = async (
   })
     .select('teamId gitHubOrgName repoName')
     .lean();
-  const teamDataById = new Map(
-    prTeamDatas.map(td => [
-      td.teamId.toString(),
-      {
-        gitHubOrgName: td.gitHubOrgName || '',
-        repoName: td.repoName || '',
-        repoUrl: 'https://github.com/gongg21/AddSubtract.git',
-      },
-    ])
-  );
+    
+  const entries = (await Promise.all(
+    prTeamDatas.map(async (td) => {
+      try {
+        const { repoName, repoUrl, gitHubOrgName } = await resolveTeamRepo(
+          courseId,
+          td.teamId.toString()
+        );
+
+        return [
+          td.teamId.toString(),
+          { gitHubOrgName: gitHubOrgName ?? '', repoName: repoName ?? '', repoUrl: repoUrl ?? FALLBACK_URL },
+        ] as const;
+      } catch {
+        return [
+          td.teamId.toString(),
+          { gitHubOrgName: '', repoName: '', repoUrl: FALLBACK_URL },
+        ] as const;
+      }
+    })
+  )).filter(Boolean);
+
+  const teamDataById = new Map(entries);
 
   // DUMMY DATA FOR TESTING
   teamDataById.set('1', {
     gitHubOrgName: 'gongg21',
     repoName: 'AddSubtract',
-    repoUrl: 'https://github.com/gongg21/AddSubtract.git',
+    repoUrl: FALLBACK_URL,
   });
 
   return teamDataById;

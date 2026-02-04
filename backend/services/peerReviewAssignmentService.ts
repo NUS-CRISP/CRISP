@@ -12,6 +12,7 @@ import { MissingAuthorizationError } from './errors';
 import PeerReviewSubmissionModel, {
   PeerReviewSubmission,
 } from '@models/PeerReviewSubmission';
+import { resolveTeamRepo } from './teamService';
 
 export interface NormalizedTeam {
   id: string;
@@ -21,6 +22,8 @@ export interface NormalizedTeam {
 }
 
 const oid = (s: string) => new Types.ObjectId(s);
+
+const TEMP_FALLBACK_URL = 'https://github.com/gongg21/AddSubtract.git';
 
 export const getPeerReviewAssignmentById = async (
   userCourseRole: string,
@@ -249,14 +252,16 @@ export const addManualAssignment = async (
   })
     .select('repoName')
     .lean();
-
-  // TODO: Derive repo URL for this team, for now fix example in upsert function
+    
+  const { repoName, repoUrl } = await resolveTeamRepo(courseId, revieweeId);
+  console.log('repoName:', repoName);
+  console.log('repoUrl:', repoUrl);
 
   const assignmentId = await ensureAssignmentForReviewee(
     peerReviewId,
     revieweeId,
-    teamData?.repoName ?? '',
-    'https://github.com/gongg21/AddSubtract.git'
+    repoName ?? teamData?.repoName,
+    repoUrl ?? TEMP_FALLBACK_URL,
   );
 
   console.log('checking manual assignment duplicates...');
@@ -328,8 +333,8 @@ export const initialiseAssignments = async (
   for (const team of prTeams) {
     const newAssignment = new PeerReviewAssignmentModel({
       peerReviewId: peerReviewId,
-      repoName: prTeamDataById.get(team.number.toString())?.repoName || '', // TODO: derive actual repo name
-      repoUrl: 'https://github.com/gongg21/AddSubtract.git', // TODO: derive actual repo URL
+      repoName: prTeamDataById.get(team.number.toString())?.repoName,
+      repoUrl: prTeamDataById.get(team.number.toString())?.repoUrl,
       reviewee: team._id,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -368,25 +373,8 @@ const prepareData = async (courseId: string, teamSetId: string) => {
   const prTeamNumbers = teams.map(t => t.number);
   const teamIdToTeamMap = new Map(teams.map(t => [t.id, t]));
   const teamIdToTAMap = new Map(teams.map(t => [t.id, t.taId]));
-
-  const prTeamDatas = await TeamDataModel.find({
-    course: courseId,
-    teamId: { $in: prTeamNumbers },
-  })
-    .select('teamId gitHubOrgName repoName')
-    .lean();
-
-  const teamIdToRepoMap = new Map(
-    prTeamDatas.map(td => [
-      td.teamId.toString(),
-      {
-        gitHubOrgName: td.gitHubOrgName || '',
-        repoName: td.repoName || '',
-        repoUrl: 'https://github.com/gongg21/AddSubtract.git',
-      },
-    ])
-  );
-
+  const teamIdToRepoMap = await getTeamDataById(courseId, prTeamNumbers);
+  
   return {
     teams,
     prTeamIds,
