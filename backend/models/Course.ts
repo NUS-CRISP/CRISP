@@ -2,8 +2,7 @@ import { Course as SharedCourse } from '@shared/types/Course';
 import mongoose, { Schema, Types } from 'mongoose';
 
 export interface Course
-  extends
-    Omit<
+  extends Omit<
       SharedCourse,
       | '_id'
       | 'faculty'

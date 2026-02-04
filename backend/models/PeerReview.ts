@@ -2,7 +2,8 @@ import mongoose, { Schema, Types, Document } from 'mongoose';
 import { PeerReview as SharedPeerReview } from '@shared/types/PeerReview';
 
 export interface PeerReview
-  extends Omit<SharedPeerReview, '_id' | 'courseId' | 'teamSetId'>, Document {
+  extends Omit<SharedPeerReview, '_id' | 'courseId' | 'teamSetId'>,
+    Document {
   _id: Types.ObjectId;
   course: Types.ObjectId;
   teamSetId: Types.ObjectId;
