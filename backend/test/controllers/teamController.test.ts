@@ -14,6 +14,9 @@ import { getAccountId } from '../../utils/auth';
 import { getTeamsByTAIdAndCourseId } from '../../services/teamService';
 import { getUserIdByAccountId } from '../../services/accountService';
 
+jest.mock('../../services/teamService');
+jest.mock('../../utils/auth');
+
 beforeEach(() => {
   jest.clearAllMocks();
 });
