@@ -1,10 +1,4 @@
-import {
-  Box,
-  Button,
-  Group,
-  Text,
-  Title,
-} from '@mantine/core';
+import { Box, Button, Group, Text, Title } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useRouter } from 'next/router';
 import { getSession } from 'next-auth/react';
@@ -230,10 +224,6 @@ const CreateCoursePage = () => {
   }, [router.isReady, router.query.courseId]);
 
   const saveCurrentStep = async (publish = false) => {
-    const session = await getSession();
-    const accountId = session?.user?.id;
-    if (!accountId) return;
-
     const body: any = {};
     // Build partial payload depending on `step`
     if (step === 0) {
@@ -273,11 +263,17 @@ const CreateCoursePage = () => {
           startDate: v.aiStartDate ?? undefined,
         },
       });
-    } else if (step === 5) {
-      Object.assign(body, {
-        status: publish ? 'active' : 'draft',
-        draftStep: 5,
-      });
+    } else if (step === TOTAL_STEPS - 1) {
+      if (publish) {
+        Object.assign(body, {
+          status: 'active',
+        });
+      } else {
+        Object.assign(body, {
+          status: 'draft',
+          draftStep: 5,
+        });
+      }
     } else {
       body.draftStep = step;
     }
@@ -290,7 +286,6 @@ const CreateCoursePage = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `${accountId}`,
           },
           body: JSON.stringify(body),
         });
@@ -304,7 +299,6 @@ const CreateCoursePage = () => {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `${accountId}`,
           },
           body: JSON.stringify(body),
         });
@@ -322,11 +316,6 @@ const CreateCoursePage = () => {
 
     await saveCurrentStep(false);
     setStep(s => Math.min(s + 1, TOTAL_STEPS - 1));
-  };
-
-  const handleSave = async () => {
-    // save draft without changing step
-    await saveCurrentStep(false);
   };
 
   const handlePublish = async () => {
@@ -492,23 +481,15 @@ const CreateCoursePage = () => {
                 Cancel
               </Button>
             </Group>
-            <Group>
-              <Button
-                size="xl"
-                variant="outline"
-                onClick={handleSave}
-                loading={loading}
-              >
-                Save
-              </Button>
-              <Button
-                size="xl"
-                onClick={step === TOTAL_STEPS - 1 ? handlePublish : handleNext}
-                loading={loading}
-              >
-                {step === TOTAL_STEPS - 1 ? 'Confirm & Create' : 'Next'}
-              </Button>
-            </Group>
+            <Button
+              size="xl"
+              onClick={step === TOTAL_STEPS - 1 ? handlePublish : handleNext}
+              loading={loading}
+            >
+              {step === TOTAL_STEPS - 1
+                ? 'Confirm & Create'
+                : 'Save & Continue'}
+            </Button>
           </Group>
         </Box>
       </Box>
