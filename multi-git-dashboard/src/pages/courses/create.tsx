@@ -1,40 +1,22 @@
 import {
-  ActionIcon,
   Box,
   Button,
-  Card,
-  Collapse,
   Group,
-  SegmentedControl,
-  Select,
-  Space,
-  Stepper,
-  Switch,
   Text,
-  TextInput,
   Title,
-  Tooltip,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useRouter } from 'next/router';
 import { getSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { CourseType } from '@shared/types/Course';
-import {
-  IconCheck,
-  IconFlag,
-  IconGitBranch,
-  IconHierarchy2,
-  IconListDetails,
-  IconRobot,
-  IconUsers,
-} from '@tabler/icons-react';
 
 import { CourseDetailsSetup } from '@/components/create-course/CourseDetailsSetup';
 import { CourseReposSetup } from '@/components/create-course/CourseReposSetup';
 import type { CreateCourseFormValues } from '@/components/create-course/types';
 import { CourseAISetup } from '@/components/create-course/CourseAISetup';
 import { CourseReviewSummary } from '@/components/create-course/CourseReviewSummary';
+import ProgressBar from '@/components/create-course/ProgressBar';
 
 enum InstallationStatus {
   IDLE = 'idle',
@@ -385,80 +367,9 @@ const CreateCoursePage = () => {
           Create Course
         </Title>
 
-        {/* Status bar */}
-        <Stepper
-          active={step}
-          onStepClick={setStep}
-          allowNextStepsSelect={false}
-          size="md"
-          color="blue"
-          completedIcon={<IconCheck size={16} />}
-          styles={{
-            steps: { gap: 4 },
-            separator: { flexGrow: 1 },
-            step: {
-              flexDirection: 'column',
-            },
-            stepBody: {
-              marginTop: 8,
-              marginLeft: 0,
-            },
-            stepIcon: {
-              margin: 0,
-            },
-          }}
-        >
-          <Stepper.Step
-            label={
-              <Group gap={6} align="center" justify="center">
-                <IconListDetails size={16} />
-                <Text size="md">Course Details</Text>
-              </Group>
-            }
-          />
-          <Stepper.Step
-            label={
-              <Group gap={6} align="center" justify="center">
-                <IconUsers size={16} />
-                <Text size="md">People</Text>
-              </Group>
-            }
-          />
-          <Stepper.Step
-            label={
-              <Group gap={6} align="center" justify="center">
-                <IconHierarchy2 size={16} />
-                <Text size="md">Teams</Text>
-              </Group>
-            }
-          />
-          <Stepper.Step
-            label={
-              <Group gap={6} align="center" justify="center">
-                <IconGitBranch size={16} />
-                <Text size="md">Repositories</Text>
-              </Group>
-            }
-          />
-          <Stepper.Step
-            label={
-              <Group gap={6} align="center" justify="center">
-                <IconRobot size={16} />
-                <Text size="md">AI Insights</Text>
-              </Group>
-            }
-          />
-          <Stepper.Step
-            label={
-              <Group gap={6} align="center" justify="center">
-                <IconFlag size={16} />
-                <Text size="md">Finish</Text>
-              </Group>
-            }
-          />
-        </Stepper>
+        <ProgressBar step={step} setStep={setStep} />
 
-        {/* Step content */}
+        {/* Get respective step content */}
         <Box
           mt="xl"
           style={{
