@@ -1,4 +1,4 @@
-import { Badge, Card, Group, Text } from '@mantine/core';
+import { Badge, Box, Card, Group, Text, Title } from '@mantine/core';
 import { Course } from '@shared/types/Course';
 import Link from 'next/link';
 import { forwardRef } from 'react';
@@ -7,7 +7,6 @@ import { useTutorialContext } from '../tutorial/TutorialContext';
 interface CourseCardProps {
   course: Course;
   isTutorial?: boolean;
-  /** When provided and course is a draft, clicking the card calls this instead of navigating. */
   onContinueDraft?: (courseId: string) => void;
 }
 
@@ -18,27 +17,59 @@ const CourseCard = forwardRef<HTMLAnchorElement, CourseCardProps>(
 
     const cardContent = (
       <>
-        <Group mt="md" mb="xs" justify="space-between">
-          <Text>{course.name}</Text>
+        <Box
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            width: '100%',
+            marginBottom: 'var(--mantine-spacing-md)',
+          }}
+        >
+          <Text size="md" fw={600} c="dimmed" tt="uppercase">
+            {course.semester}
+          </Text>
           {isDraft && (
-            <Badge variant="light" color="gray">
-              Draft
+            <Badge variant="light" color="yellow" size="sm">
+              DRAFT
             </Badge>
           )}
-        </Group>
-        <Text size="sm" c="dimmed">
+        </Box>
+
+        <Title order={2} mb="sm" lineClamp={2}>
           {course.code}
+        </Title>
+
+        <Text size="md" c="dimmed" mb="md">
+          {course.name}
         </Text>
-        <Text size="sm" c="dimmed">
-          {course.semester}
-        </Text>
+
         {isDraft && onContinueDraft && (
-          <Text size="sm" c="blue" mt="sm" component="span">
-            Click to continue creating
+          <Text
+            size="sm"
+            c="blue.4"
+            fw={500}
+            mt="auto"
+            style={{ opacity: 0.9 }}
+          >
+            Click to continue creating →
           </Text>
         )}
       </>
     );
+
+    const cardStyles = {
+      width: '350px',
+      minHeight: '200px',
+      display: 'flex',
+      flexDirection: 'column' as const,
+      transition: 'all 0.2s ease',
+      cursor: 'pointer',
+      '&:hover': {
+        transform: 'translateY(-4px)',
+        boxShadow: 'var(--mantine-shadow-md)',
+      },
+    };
 
     if (isDraft && onContinueDraft) {
       return (
@@ -54,12 +85,8 @@ const CourseCard = forwardRef<HTMLAnchorElement, CourseCardProps>(
             if (isTutorial) nextTutorialStage();
           }}
           style={{
-            width: '350px',
-            height: '200px',
-            marginTop: '6px',
-            marginBottom: '6px',
-            textAlign: 'left',
-            cursor: 'pointer',
+            ...cardStyles,
+            alignItems: 'flex-start',
           }}
           ref={ref as React.RefObject<HTMLButtonElement>}
         >
@@ -77,13 +104,7 @@ const CourseCard = forwardRef<HTMLAnchorElement, CourseCardProps>(
         component={Link}
         href={`/courses/${course._id}/course-overview`}
         onClick={() => isTutorial && nextTutorialStage()}
-        style={{
-          width: '350px',
-          height: '200px',
-          marginTop: '6px',
-          marginBottom: '6px',
-          textDecoration: 'none',
-        }}
+        style={{ ...cardStyles, textDecoration: 'none' }}
         ref={ref}
       >
         {cardContent}
@@ -91,5 +112,7 @@ const CourseCard = forwardRef<HTMLAnchorElement, CourseCardProps>(
     );
   }
 );
+
+CourseCard.displayName = 'CourseCard';
 
 export default CourseCard;
