@@ -37,7 +37,7 @@ export const createNewCourse = async (courseData: any, accountId: string) => {
     apiKey,
     frequency,
     aiStartDate,
-    status = 'active',
+    status,
     draftStep,
   } = courseData;
 
@@ -48,8 +48,6 @@ export const createNewCourse = async (courseData: any, accountId: string) => {
     startDate,
     durationWeeks: duration,
     courseType,
-    ...(status && { status }),
-    ...(draftStep !== undefined && { draftStep }),
     ...(gitHubOrgName && { gitHubOrgName }),
     ...(repoNameFilter && { repoNameFilter }),
     ...(installationId && { installationId }),
@@ -62,6 +60,13 @@ export const createNewCourse = async (courseData: any, accountId: string) => {
       ...(aiStartDate && { startDate: aiStartDate }),
     },
   };
+
+  if (draftStep !== undefined && draftStep !== null) {
+    courseFields.status = 'draft';
+    courseFields.draftStep = draftStep;
+  } else {
+    courseFields.status = status ?? 'active';
+  }
 
   const course = await CourseModel.create(courseFields);
   course.faculty.push(user._id);
@@ -120,9 +125,14 @@ export const getCourseById = async (courseId: string, accountId?: string) => {
 };
 
 export const updateCourseById = async (courseId: string, updateData: any) => {
+  const update: any = { ...updateData };
+  if (updateData.status === 'active') {
+    update.$unset = { draftStep: '' };
+  }
+
   const updatedCourse = await CourseModel.findByIdAndUpdate(
     courseId,
-    updateData,
+    update,
     {
       new: true,
     }
