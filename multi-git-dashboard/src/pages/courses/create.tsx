@@ -34,6 +34,10 @@ import {
   IconUsers,
 } from '@tabler/icons-react';
 
+import { CourseDetailsSetup } from '@/components/course-create/CourseDetailsSetup';
+import { CourseReposSetup } from '@/components/course-create/CourseReposSetup';
+import type { CreateCourseFormValues } from '@/components/course-create/types';
+
 const CARD_W = '210px';
 const gitHubNewInstallationUrl =
   'https://github.com/apps/NUS-CRISP/installations/new';
@@ -43,25 +47,6 @@ enum InstallationStatus {
   LOADING = 'loading',
   SUCCESS = 'success',
   ERROR = 'error',
-}
-
-interface CreateCourseFormValues {
-  name: string;
-  code: string;
-  semester: string;
-  startDate: Date | null;
-  duration: number;
-  courseType: CourseType;
-  gitHubOrgName: string;
-  repoNameFilter: string;
-  installationId: string;
-  isOn: boolean;
-  customisedAI: boolean;
-  provider: string;
-  model: string;
-  apiKey: string;
-  frequency: string;
-  aiStartDate: Date | null;
 }
 
 const modelOptions: Record<string, string[]> = {
@@ -493,78 +478,7 @@ const CreateCoursePage = () => {
           }}
         >
           {/* Step 0: Course details */}
-          {step === 0 && (
-            <>
-              <Title order={3} mt="md" mb="xs" style={{ fontSize: '2rem' }}>
-                Course Details
-              </Title>
-              <Text size="sm" c="dimmed" mb="md">
-                Please provide essential information to begin setting up your
-                course.
-              </Text>
-
-              <TextInput
-                withAsterisk
-                label="Course Name"
-                placeholder="Software Engineering Project"
-                {...form.getInputProps('name')}
-                value={form.values.name}
-                onChange={e =>
-                  form.setFieldValue('name', e.currentTarget.value)
-                }
-              />
-
-              <Group mt="md" grow gap="md" align="flex-start">
-                <TextInput
-                  withAsterisk
-                  label="Course Code"
-                  placeholder="CS3203"
-                  {...form.getInputProps('code')}
-                  value={form.values.code}
-                  onChange={e =>
-                    form.setFieldValue('code', e.currentTarget.value)
-                  }
-                />
-                <TextInput
-                  withAsterisk
-                  label="Academic Term"
-                  placeholder="AY2025/2026 Semester 1"
-                  {...form.getInputProps('semester')}
-                  value={form.values.semester}
-                  onChange={e =>
-                    form.setFieldValue('semester', e.currentTarget.value)
-                  }
-                />
-              </Group>
-
-              <Group mt="md" grow gap="md" align="flex-start">
-                <DatePickerInput
-                  withAsterisk
-                  label="Start Date"
-                  placeholder="Pick start date"
-                  error={form.errors.startDate}
-                  value={form.values.startDate}
-                  onChange={value => form.setFieldValue('startDate', value)}
-                />
-                <TextInput
-                  withAsterisk
-                  label="Duration"
-                  placeholder="13"
-                  rightSection={
-                    <Text style={{ paddingRight: 30 }}> weeks </Text>
-                  }
-                  {...form.getInputProps('duration')}
-                  value={form.values.duration}
-                  onChange={e =>
-                    form.setFieldValue(
-                      'duration',
-                      Number(e.currentTarget.value) || 0
-                    )
-                  }
-                />
-              </Group>
-            </>
-          )}
+          {step === 0 && <CourseDetailsSetup form={form} />}
 
           {/* Step 1: People */}
           {step === 1 && (
@@ -601,141 +515,28 @@ const CreateCoursePage = () => {
 
           {/* Step 3: Repositories */}
           {step === 3 && (
-            <>
-              <Title order={4} mt="md" mb="xs">
-                Repositories
-              </Title>
-              <Text size="sm" c="dimmed" mb="md">
-                Choose how course repositories are synced.
-              </Text>
-              <Box>
-                <Group gap={6}>
-                  <Title order={6} my={5}>
-                    Repository Source
-                  </Title>
-                  <Tooltip
-                    label="Choose how course repositories are synced: Manual Setup via public GitHub links, or automatically through GitHub Organisation."
-                    withinPortal
-                    multiline
-                    w={300}
-                  >
-                    <ActionIcon
-                      variant="subtle"
-                      color="gray"
-                      size="sm"
-                      aria-label="Setup Repositories help"
-                    >
-                      <IconHelpCircle size={16} />
-                    </ActionIcon>
-                  </Tooltip>
-                  <SegmentedControl
-                    data={[
-                      {
-                        value: CourseType.GitHubOrg,
-                        label: 'GitHub Organisation',
-                      },
-                      { value: CourseType.Normal, label: 'Manual Setup' },
-                    ]}
-                    {...form.getInputProps('courseType')}
-                  />
-                </Group>
-                <Collapse in={form.values.courseType === CourseType.GitHubOrg}>
-                  <Box>
-                    <Title order={6} my={10}>
-                      GitHub Organisation Setup
-                    </Title>
-                    <Card withBorder p="md">
-                      <Text size="sm" c="dimmed" maw={520} mb="sm">
-                        Install the CRISP GitHub App in your GitHub organisation
-                        to enable automatic syncing of repositories.
-                      </Text>
-                      <Button
-                        w={CARD_W}
-                        leftSection={<IconBrandGithub size={14} />}
-                        variant="default"
-                        component="a"
-                        href={gitHubNewInstallationUrl}
-                        target="_blank"
-                      >
-                        Install CRISP GitHub
-                      </Button>
-                      <TextInput
-                        withAsterisk
-                        placeholder="e.g. nus-crisp"
-                        label="GitHub Organisation Name"
-                        {...form.getInputProps('gitHubOrgName')}
-                        my={5}
-                        onChange={e => {
-                          form.setFieldValue(
-                            'gitHubOrgName',
-                            e.currentTarget.value
-                          );
-                          form.setFieldValue('installationId', '');
-                          setAppInstallationStatus(InstallationStatus.IDLE);
-                          setErrorMessage('');
-                        }}
-                      />
-                      <Space h="sm" />
-                      {errorMessage && (
-                        <Text style={{ maxWidth: CARD_W }} c="red">
-                          {errorMessage}
-                        </Text>
-                      )}
-                      <Button
-                        type="button"
-                        loading={
-                          appInstallationStatus === InstallationStatus.LOADING
-                        }
-                        variant={
-                          appInstallationStatus === InstallationStatus.SUCCESS
-                            ? 'filled'
-                            : 'outline'
-                        }
-                        color={
-                          appInstallationStatus === InstallationStatus.SUCCESS
-                            ? 'green'
-                            : appInstallationStatus === InstallationStatus.ERROR
-                              ? 'red'
-                              : 'blue'
-                        }
-                        rightSection={
-                          appInstallationStatus ===
-                          InstallationStatus.SUCCESS ? (
-                            <IconCheck size={14} />
-                          ) : null
-                        }
-                        onClick={() =>
-                          checkAppInstallation(form.values.gitHubOrgName)
-                        }
-                      >
-                        {appInstallationStatus === InstallationStatus.ERROR
-                          ? 'Try Again'
-                          : 'Verify CRISP Installation'}
-                      </Button>
-                      <Collapse
-                        in={
-                          appInstallationStatus === InstallationStatus.SUCCESS
-                        }
-                        mt="md"
-                      >
-                        <TextInput
-                          withAsterisk
-                          label="Repo Name Filter"
-                          placeholder="e.g. 23s2"
-                          {...form.getInputProps('repoNameFilter')}
-                          onChange={e =>
-                            form.setFieldValue(
-                              'repoNameFilter',
-                              e.currentTarget.value
-                            )
-                          }
-                        />
-                      </Collapse>
-                    </Card>
-                  </Box>
-                </Collapse>
-              </Box>
-            </>
+            <CourseReposSetup
+              form={form}
+              appInstallationStatus={
+                appInstallationStatus === InstallationStatus.LOADING
+                  ? 'loading'
+                  : appInstallationStatus === InstallationStatus.SUCCESS
+                    ? 'success'
+                    : appInstallationStatus === InstallationStatus.ERROR
+                      ? 'error'
+                      : 'idle'
+              }
+              errorMessage={errorMessage}
+              onOrgNameChange={value => {
+                form.setFieldValue('gitHubOrgName', value);
+                form.setFieldValue('installationId', '');
+                setAppInstallationStatus(InstallationStatus.IDLE);
+                setErrorMessage('');
+              }}
+              onVerifyClick={() =>
+                checkAppInstallation(form.values.gitHubOrgName)
+              }
+            />
           )}
 
           {/* Step 4: AI Insights */}
