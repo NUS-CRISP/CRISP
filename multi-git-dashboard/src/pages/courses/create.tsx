@@ -75,7 +75,7 @@ const modelOptions: Record<string, string[]> = {
   DeepSeek: ['deepseek-chat', 'deepseek-reasoner'],
 };
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 6;
 
 const CreateCoursePage = () => {
   const router = useRouter();
@@ -167,11 +167,12 @@ const CreateCoursePage = () => {
   });
 
   const stepFields: (keyof CreateCourseFormValues)[][] = [
-    ['name', 'code', 'semester', 'startDate', 'duration'],
-    [],
-    [],
-    ['courseType', 'gitHubOrgName', 'repoNameFilter'],
-    ['frequency', 'aiStartDate', 'provider', 'model', 'apiKey'],
+    ['name', 'code', 'semester', 'startDate', 'duration'], // Course details
+    [], // People
+    [], // Team allocation
+    ['courseType', 'gitHubOrgName', 'repoNameFilter'], // Repositories
+    ['frequency', 'aiStartDate', 'provider', 'model', 'apiKey'], // AI insights
+    [], // Review
   ];
 
   const apiRoute = '/api/courses';
@@ -293,7 +294,7 @@ const CreateCoursePage = () => {
     } else if (step === 4) {
       const v = form.values;
       Object.assign(body, {
-        status: publish ? 'active' : 'draft',
+        status: 'draft',
         draftStep: 4,
         aiInsights: {
           isOn: v.isOn,
@@ -303,6 +304,11 @@ const CreateCoursePage = () => {
           frequency: v.frequency || undefined,
           startDate: v.aiStartDate ?? undefined,
         },
+      });
+    } else if (step === 5) {
+      Object.assign(body, {
+        status: publish ? 'active' : 'draft',
+        draftStep: 5,
       });
     } else {
       body.draftStep = step;
@@ -778,13 +784,124 @@ const CreateCoursePage = () => {
             </Box>
           </>
         )}
+
+        {/* Step 5: Review & confirm */}
+        {step === 5 && (
+          <>
+            <Title order={4} mt="md" mb="xs">
+              Review &amp; Confirm
+            </Title>
+            <Text size="sm" c="dimmed" mb="md">
+              Review your course configuration before creating it.
+            </Text>
+
+            <Group align="flex-start" grow>
+              <Card withBorder padding="md">
+                <Title order={5} mb="xs">
+                  Course Details
+                </Title>
+                <Text size="sm">
+                  <strong>Name: </strong>
+                  {form.values.name || '-'}
+                </Text>
+                <Text size="sm">
+                  <strong>Code: </strong>
+                  {form.values.code || '-'}
+                </Text>
+                <Text size="sm">
+                  <strong>Term: </strong>
+                  {form.values.semester || '-'}
+                </Text>
+                <Text size="sm">
+                  <strong>Start Date: </strong>
+                  {form.values.startDate?.toLocaleDateString() || '-'}
+                </Text>
+                <Text size="sm">
+                  <strong>Duration: </strong>
+                  {form.values.duration} weeks
+                </Text>
+              </Card>
+
+              <Card withBorder padding="md">
+                <Title order={5} mb="xs">
+                  Repositories
+                </Title>
+                <Text size="sm">
+                  <strong>Source: </strong>
+                  {form.values.courseType === CourseType.GitHubOrg
+                    ? 'GitHub Organisation'
+                    : 'Manual Setup'}
+                </Text>
+                {form.values.courseType === CourseType.GitHubOrg && (
+                  <>
+                    <Text size="sm">
+                      <strong>Organisation: </strong>
+                      {form.values.gitHubOrgName || '-'}
+                    </Text>
+                    <Text size="sm">
+                      <strong>Repo filter: </strong>
+                      {form.values.repoNameFilter || '-'}
+                    </Text>
+                  </>
+                )}
+              </Card>
+            </Group>
+
+            <Card withBorder padding="md" mt="md">
+              <Title order={5} mb="xs">
+                AI Insights
+              </Title>
+              <Text size="sm">
+                <strong>Enabled: </strong>
+                {form.values.isOn ? 'Yes' : 'No'}
+              </Text>
+              {form.values.isOn && (
+                <>
+                  <Text size="sm">
+                    <strong>Frequency: </strong>
+                    {form.values.frequency || '-'}
+                  </Text>
+                  <Text size="sm">
+                    <strong>Start Date: </strong>
+                    {form.values.aiStartDate?.toLocaleDateString() || '-'}
+                  </Text>
+                  <Text size="sm">
+                    <strong>Custom model: </strong>
+                    {form.values.customisedAI ? 'Yes' : 'No'}
+                  </Text>
+                  {form.values.customisedAI && (
+                    <>
+                      <Text size="sm">
+                        <strong>Provider: </strong>
+                        {form.values.provider || '-'}
+                      </Text>
+                      <Text size="sm">
+                        <strong>Model: </strong>
+                        {form.values.model || '-'}
+                      </Text>
+                    </>
+                  )}
+                </>
+              )}
+            </Card>
+          </>
+        )}
       </Box>
 
       {/* Bottom actions */}
       <Group justify="space-between" mt="xl">
-        <Button variant="default" onClick={handleCancel} disabled={loading}>
-          Cancel
-        </Button>
+        <Group>
+          <Button
+            variant="default"
+            onClick={() => setStep(s => Math.max(s - 1, 0))}
+            disabled={loading || step === 0}
+          >
+            Back
+          </Button>
+          <Button variant="default" onClick={handleCancel} disabled={loading}>
+            Cancel
+          </Button>
+        </Group>
         <Group>
           <Button variant="outline" onClick={handleSave} loading={loading}>
             Save
@@ -793,7 +910,7 @@ const CreateCoursePage = () => {
             onClick={step === TOTAL_STEPS - 1 ? handlePublish : handleNext}
             loading={loading}
           >
-            {step === TOTAL_STEPS - 1 ? 'Create Course' : 'Next'}
+            {step === TOTAL_STEPS - 1 ? 'Confirm & Create' : 'Next'}
           </Button>
         </Group>
       </Group>
