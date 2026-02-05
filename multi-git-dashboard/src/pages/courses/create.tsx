@@ -8,6 +8,7 @@ import {
   SegmentedControl,
   Select,
   Space,
+  Stack,
   Stepper,
   Switch,
   Text,
@@ -390,13 +391,18 @@ const CreateCoursePage = () => {
     >
       <Box
         style={{
+          fontSize: '1.5rem',
           width: '100%',
           maxWidth: 1200,
           display: 'flex',
           flexDirection: 'column',
         }}
       >
-        <Title order={1} mb="xl" style={{ fontSize: '3rem', textAlign: 'center' }}>
+        <Title
+          order={1}
+          mb="xl"
+          style={{ fontSize: '3rem', textAlign: 'center' }}
+        >
           Create Course
         </Title>
 
@@ -405,59 +411,69 @@ const CreateCoursePage = () => {
           active={step}
           onStepClick={setStep}
           allowNextStepsSelect={false}
-          size="sm"
+          size="md"
           color="blue"
           completedIcon={<IconCheck size={16} />}
           styles={{
             steps: { gap: 4 },
             separator: { flexGrow: 1 },
+            step: {
+              flexDirection: 'column',
+            },
+            stepBody: {
+              marginTop: 8,
+              marginLeft: 0,
+            },
+            stepIcon: {
+              margin: 0,
+            },
           }}
         >
           <Stepper.Step
             label={
-              <Group gap={6} align="center">
-                <IconListDetails size={14} />
-                <Text size="xs">Course Details</Text>
+              <Group gap={6} align="center" justify="center">
+                <IconListDetails size={16} />
+                <Text size="md">Course Details</Text>
               </Group>
             }
           />
           <Stepper.Step
             label={
-              <Group gap={6} align="center">
-                <IconUsers size={14} />
-                <Text size="xs">People</Text>
+              <Group gap={6} align="center" justify="center">
+                <IconUsers size={16} />
+                <Text size="md">People</Text>
               </Group>
             }
           />
           <Stepper.Step
             label={
-              <Group gap={6} align="center">
-                <IconHierarchy2 size={14} />
-                <Text size="xs">Teams</Text>
+              <Group gap={6} align="center" justify="center">
+                <IconHierarchy2 size={16} />
+                <Text size="md">Teams</Text>
               </Group>
             }
           />
           <Stepper.Step
             label={
-              <Group gap={6} align="center">
-                <IconGitBranch size={14} />
-                <Text size="xs">Repositories</Text>
+              <Group gap={6} align="center" justify="center">
+                <IconGitBranch size={16} />
+                <Text size="md">Repositories</Text>
               </Group>
             }
           />
           <Stepper.Step
             label={
-              <Group gap={6} align="center">
-                <IconRobot size={14} />
-                <Text size="xs">AI Insights</Text>
+              <Group gap={6} align="center" justify="center">
+                <IconRobot size={16} />
+                <Text size="md">AI Insights</Text>
               </Group>
             }
           />
           <Stepper.Step
             label={
-              <Group gap={6} align="center">
-                <IconFlag size={14} />
-                <Text size="xs">Finish</Text>
+              <Group gap={6} align="center" justify="center">
+                <IconFlag size={16} />
+                <Text size="md">Finish</Text>
               </Group>
             }
           />
