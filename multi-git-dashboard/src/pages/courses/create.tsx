@@ -8,7 +8,6 @@ import {
   SegmentedControl,
   Select,
   Space,
-  Stack,
   Stepper,
   Switch,
   Text,
@@ -23,11 +22,9 @@ import { getSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { CourseType } from '@shared/types/Course';
 import {
-  IconBrandGithub,
   IconCheck,
   IconFlag,
   IconGitBranch,
-  IconHelpCircle,
   IconHierarchy2,
   IconListDetails,
   IconRobot,
@@ -37,10 +34,8 @@ import {
 import { CourseDetailsSetup } from '@/components/course-create/CourseDetailsSetup';
 import { CourseReposSetup } from '@/components/course-create/CourseReposSetup';
 import type { CreateCourseFormValues } from '@/components/course-create/types';
-
-const CARD_W = '210px';
-const gitHubNewInstallationUrl =
-  'https://github.com/apps/NUS-CRISP/installations/new';
+import { CourseAISetup } from '@/components/course-create/CourseAISetup';
+import { CourseReviewSummary } from '@/components/course-create/CourseReviewSummary';
 
 enum InstallationStatus {
   IDLE = 'idle',
@@ -66,6 +61,7 @@ const modelOptions: Record<string, string[]> = {
   ],
   DeepSeek: ['deepseek-chat', 'deepseek-reasoner'],
 };
+
 
 const TOTAL_STEPS = 6;
 
@@ -540,252 +536,10 @@ const CreateCoursePage = () => {
           )}
 
           {/* Step 4: AI Insights */}
-          {step === 4 && (
-            <>
-              <Title order={4} mt="md" mb="xs">
-                AI Insights
-              </Title>
-              <Text size="sm" c="dimmed" mb="md">
-                Configure model and frequency of AI generated insights on
-                teams&apos; codebase.
-              </Text>
-              <Box>
-                <Switch
-                  defaultChecked
-                  label="Enable AI Insights"
-                  size="md"
-                  mb={15}
-                  {...form.getInputProps('isOn', { type: 'checkbox' })}
-                />
-                <Collapse in={form.values.isOn}>
-                  <Card withBorder>
-                    <Group gap={6}>
-                      <Switch
-                        label="Use Customised AI Model"
-                        size="sm"
-                        {...form.getInputProps('customisedAI', {
-                          type: 'checkbox',
-                        })}
-                      />
-                      <Tooltip
-                        label="By default, we use the gemini-1.5-pro model. You can input your own model and API key to use customised AI model."
-                        withinPortal
-                        multiline
-                        w={300}
-                      >
-                        <ActionIcon
-                          variant="subtle"
-                          color="gray"
-                          size="sm"
-                          aria-label="AI Insights help"
-                        >
-                          <IconHelpCircle size={16} />
-                        </ActionIcon>
-                      </Tooltip>
-                    </Group>
-                    <Space h="sm" />
-                    <Collapse in={form.values.customisedAI}>
-                      <Select
-                        required
-                        comboboxProps={{ withinPortal: true }}
-                        data={['Gemini', 'OpenAI', 'DeepSeek']}
-                        placeholder="Choose AI provider"
-                        label="AI Provider"
-                        {...form.getInputProps('provider')}
-                        value={form.values.provider}
-                      />
-                      <Space h="sm" />
-                      <Select
-                        required
-                        disabled={!form.values.provider}
-                        comboboxProps={{ withinPortal: true }}
-                        data={modelOptions[form.values.provider] || []}
-                        placeholder="Choose AI model"
-                        label="AI model"
-                        {...form.getInputProps('model')}
-                        value={form.values.model}
-                      />
-                      <Space h="sm" />
-                      <TextInput
-                        withAsterisk
-                        label="API Key"
-                        disabled={!form.values.provider || !form.values.model}
-                        placeholder="e.g. 123456"
-                        {...form.getInputProps('apiKey')}
-                        value={form.values.apiKey}
-                      />
-                    </Collapse>
-                    <Space h="sm" />
-                    <Group gap={6}>
-                      <Select
-                        required
-                        comboboxProps={{ withinPortal: true }}
-                        data={[
-                          'Daily',
-                          'Weekly',
-                          'Fortnightly',
-                          'Every 4 weeks (~Monthly)',
-                        ]}
-                        placeholder="Choose insight generation frequency"
-                        label="AI Insight Frequency"
-                        value={
-                          form.values.frequency === 'Monthly'
-                            ? 'Every 4 weeks (~Monthly)'
-                            : form.values.frequency || null
-                        }
-                        onChange={value => {
-                          form.setFieldValue(
-                            'frequency',
-                            value === 'Every 4 weeks (~Monthly)'
-                              ? 'Monthly'
-                              : value || ''
-                          );
-                        }}
-                      />
-                      <Tooltip label="How often to generate AI insights for each group">
-                        <ActionIcon
-                          variant="subtle"
-                          color="gray"
-                          size="sm"
-                          aria-label="AI Insights help"
-                        >
-                          <IconHelpCircle size={16} />
-                        </ActionIcon>
-                      </Tooltip>
-                    </Group>
-                    <Space h="sm" />
-                    <Group gap={6}>
-                      <DatePickerInput
-                        withAsterisk
-                        label="Start Date"
-                        placeholder="Pick start date"
-                        error={form.errors.aiStartDate}
-                        value={form.values.aiStartDate}
-                        minDate={
-                          new Date(new Date().setDate(new Date().getDate() + 1))
-                        }
-                        onChange={value =>
-                          form.setFieldValue('aiStartDate', value)
-                        }
-                      />
-                      <Tooltip label="Pick the start date for generating AI insights">
-                        <ActionIcon
-                          variant="subtle"
-                          color="gray"
-                          size="sm"
-                          aria-label="AI Insights help"
-                        >
-                          <IconHelpCircle size={16} />
-                        </ActionIcon>
-                      </Tooltip>
-                    </Group>
-                  </Card>
-                </Collapse>
-              </Box>
-            </>
-          )}
+          {step === 4 && <CourseAISetup form={form} modelOptions={modelOptions} />}
 
           {/* Step 5: Review & confirm */}
-          {step === 5 && (
-            <>
-              <Title order={4} mt="md" mb="xs">
-                Review &amp; Confirm
-              </Title>
-              <Text size="sm" c="dimmed" mb="md">
-                Review your course configuration before creating it.
-              </Text>
-
-              <Group align="flex-start" grow>
-                <Card withBorder padding="md">
-                  <Title order={5} mb="xs">
-                    Course Details
-                  </Title>
-                  <Text size="sm">
-                    <strong>Name: </strong>
-                    {form.values.name || '-'}
-                  </Text>
-                  <Text size="sm">
-                    <strong>Code: </strong>
-                    {form.values.code || '-'}
-                  </Text>
-                  <Text size="sm">
-                    <strong>Term: </strong>
-                    {form.values.semester || '-'}
-                  </Text>
-                  <Text size="sm">
-                    <strong>Start Date: </strong>
-                    {form.values.startDate?.toLocaleDateString() || '-'}
-                  </Text>
-                  <Text size="sm">
-                    <strong>Duration: </strong>
-                    {form.values.duration} weeks
-                  </Text>
-                </Card>
-
-                <Card withBorder padding="md">
-                  <Title order={5} mb="xs">
-                    Repositories
-                  </Title>
-                  <Text size="sm">
-                    <strong>Source: </strong>
-                    {form.values.courseType === CourseType.GitHubOrg
-                      ? 'GitHub Organisation'
-                      : 'Manual Setup'}
-                  </Text>
-                  {form.values.courseType === CourseType.GitHubOrg && (
-                    <>
-                      <Text size="sm">
-                        <strong>Organisation: </strong>
-                        {form.values.gitHubOrgName || '-'}
-                      </Text>
-                      <Text size="sm">
-                        <strong>Repo filter: </strong>
-                        {form.values.repoNameFilter || '-'}
-                      </Text>
-                    </>
-                  )}
-                </Card>
-              </Group>
-
-              <Card withBorder padding="md" mt="md">
-                <Title order={5} mb="xs">
-                  AI Insights
-                </Title>
-                <Text size="sm">
-                  <strong>Enabled: </strong>
-                  {form.values.isOn ? 'Yes' : 'No'}
-                </Text>
-                {form.values.isOn && (
-                  <>
-                    <Text size="sm">
-                      <strong>Frequency: </strong>
-                      {form.values.frequency || '-'}
-                    </Text>
-                    <Text size="sm">
-                      <strong>Start Date: </strong>
-                      {form.values.aiStartDate?.toLocaleDateString() || '-'}
-                    </Text>
-                    <Text size="sm">
-                      <strong>Custom model: </strong>
-                      {form.values.customisedAI ? 'Yes' : 'No'}
-                    </Text>
-                    {form.values.customisedAI && (
-                      <>
-                        <Text size="sm">
-                          <strong>Provider: </strong>
-                          {form.values.provider || '-'}
-                        </Text>
-                        <Text size="sm">
-                          <strong>Model: </strong>
-                          {form.values.model || '-'}
-                        </Text>
-                      </>
-                    )}
-                  </>
-                )}
-              </Card>
-            </>
-          )}
+          {step === 5 && <CourseReviewSummary form={form} />}
         </Box>
 
         {/* Bottom actions - fixed footer */}
