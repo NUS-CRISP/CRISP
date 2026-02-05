@@ -1,3 +1,4 @@
+// should be deprecated, use the new create course page instead and split into smaller components
 import {
   ActionIcon,
   Box,
