@@ -24,7 +24,13 @@ import { CourseType } from '@shared/types/Course';
 import {
   IconBrandGithub,
   IconCheck,
+  IconFlag,
+  IconGitBranch,
   IconHelpCircle,
+  IconHierarchy2,
+  IconListDetails,
+  IconRobot,
+  IconUsers,
 } from '@tabler/icons-react';
 
 const CARD_W = '210px';
@@ -379,541 +385,651 @@ const CreateCoursePage = () => {
         display: 'flex',
         flexDirection: 'column',
         boxSizing: 'border-box',
+        alignItems: 'center',
       }}
     >
-      <Title order={2} mb="md">
-        Create Course
-      </Title>
-
-      {/* Status bar */}
-      <Stepper active={step} onStepClick={setStep} allowNextStepsSelect={false}>
-        <Stepper.Step label="Course Details" />
-        <Stepper.Step label="People" />
-        <Stepper.Step label="Team Allocation" />
-        <Stepper.Step label="Repositories" />
-        <Stepper.Step label="AI Insights" />
-        <Stepper.Step label="Finish" />
-      </Stepper>
-
-      {/* Step content – reuse pieces from CreateCourseForm here */}
       <Box
-        mt="xl"
         style={{
-          flex: 1,
           width: '100%',
+          maxWidth: 1200,
           display: 'flex',
           flexDirection: 'column',
         }}
       >
-        {/* Step 0: Course details */}
-        {step === 0 && (
-          <>
-            <Title order={4} mt="md" mb="xs">
-              Course Details
-            </Title>
-            <Text size="sm" c="dimmed" mb="md">
-              Please provide essential information to begin setting up your
-              course.
-            </Text>
-            <TextInput
-              withAsterisk
-              label="Course Name"
-              placeholder="Software Engineering Project"
-              {...form.getInputProps('name')}
-              value={form.values.name}
-              onChange={e => form.setFieldValue('name', e.currentTarget.value)}
-            />
-            <TextInput
-              withAsterisk
-              mt="md"
-              label="Course Code"
-              placeholder="CS3203"
-              {...form.getInputProps('code')}
-              value={form.values.code}
-              onChange={e => form.setFieldValue('code', e.currentTarget.value)}
-            />
-            <TextInput
-              withAsterisk
-              mt="md"
-              label="Academic Term"
-              placeholder="AY2025/2026 Semester 1"
-              {...form.getInputProps('semester')}
-              value={form.values.semester}
-              onChange={e =>
-                form.setFieldValue('semester', e.currentTarget.value)
-              }
-            />
-            <DatePickerInput
-              withAsterisk
-              mt="md"
-              label="Start Date"
-              placeholder="Pick start date"
-              error={form.errors.startDate}
-              value={form.values.startDate}
-              onChange={value => form.setFieldValue('startDate', value)}
-            />
-            <TextInput
-              withAsterisk
-              mt="md"
-              label="Duration"
-              placeholder="13"
-              rightSection={<Text style={{ paddingRight: 30 }}> weeks </Text>}
-              {...form.getInputProps('duration')}
-              value={form.values.duration}
-              onChange={e =>
-                form.setFieldValue(
-                  'duration',
-                  Number(e.currentTarget.value) || 0
-                )
-              }
-            />
-          </>
-        )}
+        <Title order={1} mb="xl" style={{ fontSize: '3rem', textAlign: 'center' }}>
+          Create Course
+        </Title>
 
-        {/* Step 1: People */}
-        {step === 1 && (
-          <>
-            <Title order={4} mt="md" mb="xs">
-              People
-            </Title>
-            <Text size="sm" c="dimmed" mb="md">
-              Upload faculty, teaching assistants (TAs) and student information.
-              You can add people after the course is created from the course
-              People page.
-            </Text>
-            <Text size="sm" c="dimmed">
-              No configuration required in this step. Click Next to continue.
-            </Text>
-          </>
-        )}
+        {/* Status bar */}
+        <Stepper
+          active={step}
+          onStepClick={setStep}
+          allowNextStepsSelect={false}
+          size="sm"
+          color="blue"
+          completedIcon={<IconCheck size={16} />}
+          styles={{
+            steps: { gap: 4 },
+            separator: { flexGrow: 1 },
+          }}
+        >
+          <Stepper.Step
+            label={
+              <Group gap={6} align="center">
+                <IconListDetails size={14} />
+                <Text size="xs">Course Details</Text>
+              </Group>
+            }
+          />
+          <Stepper.Step
+            label={
+              <Group gap={6} align="center">
+                <IconUsers size={14} />
+                <Text size="xs">People</Text>
+              </Group>
+            }
+          />
+          <Stepper.Step
+            label={
+              <Group gap={6} align="center">
+                <IconHierarchy2 size={14} />
+                <Text size="xs">Teams</Text>
+              </Group>
+            }
+          />
+          <Stepper.Step
+            label={
+              <Group gap={6} align="center">
+                <IconGitBranch size={14} />
+                <Text size="xs">Repositories</Text>
+              </Group>
+            }
+          />
+          <Stepper.Step
+            label={
+              <Group gap={6} align="center">
+                <IconRobot size={14} />
+                <Text size="xs">AI Insights</Text>
+              </Group>
+            }
+          />
+          <Stepper.Step
+            label={
+              <Group gap={6} align="center">
+                <IconFlag size={14} />
+                <Text size="xs">Finish</Text>
+              </Group>
+            }
+          />
+        </Stepper>
 
-        {/* Step 2: Team allocation */}
-        {step === 2 && (
-          <>
-            <Title order={4} mt="md" mb="xs">
-              Team Allocation
-            </Title>
-            <Text size="sm" c="dimmed" mb="md">
-              Allocate students and TAs to teams. You can configure teams after
-              the course is created from the course Teams page.
-            </Text>
-            <Text size="sm" c="dimmed">
-              No configuration required in this step. Click Next to continue.
-            </Text>
-          </>
-        )}
+        {/* Step content */}
+        <Box
+          mt="xl"
+          style={{
+            flex: 1,
+            width: '100%',
+            maxWidth: 800,
+            display: 'flex',
+            flexDirection: 'column',
+            padding: '20px 96px',
+            margin: '0 auto',
+          }}
+        >
+          {/* Step 0: Course details */}
+          {step === 0 && (
+            <>
+              <Title order={3} mt="md" mb="xs" style={{ fontSize: '2rem' }}>
+                Course Details
+              </Title>
+              <Text size="sm" c="dimmed" mb="md">
+                Please provide essential information to begin setting up your
+                course.
+              </Text>
 
-        {/* Step 3: Repositories */}
-        {step === 3 && (
-          <>
-            <Title order={4} mt="md" mb="xs">
-              Repositories
-            </Title>
-            <Text size="sm" c="dimmed" mb="md">
-              Choose how course repositories are synced.
-            </Text>
-            <Box>
-              <Group gap={6}>
-                <Title order={6} my={5}>
-                  Repository Source
-                </Title>
-                <Tooltip
-                  label="Choose how course repositories are synced: Manual Setup via public GitHub links, or automatically through GitHub Organisation."
-                  withinPortal
-                  multiline
-                  w={300}
-                >
-                  <ActionIcon
-                    variant="subtle"
-                    color="gray"
-                    size="sm"
-                    aria-label="Setup Repositories help"
-                  >
-                    <IconHelpCircle size={16} />
-                  </ActionIcon>
-                </Tooltip>
-                <SegmentedControl
-                  data={[
-                    {
-                      value: CourseType.GitHubOrg,
-                      label: 'GitHub Organisation',
-                    },
-                    { value: CourseType.Normal, label: 'Manual Setup' },
-                  ]}
-                  {...form.getInputProps('courseType')}
+              <TextInput
+                withAsterisk
+                label="Course Name"
+                placeholder="Software Engineering Project"
+                {...form.getInputProps('name')}
+                value={form.values.name}
+                onChange={e =>
+                  form.setFieldValue('name', e.currentTarget.value)
+                }
+              />
+
+              <Group mt="md" grow gap="md" align="flex-start">
+                <TextInput
+                  withAsterisk
+                  label="Course Code"
+                  placeholder="CS3203"
+                  {...form.getInputProps('code')}
+                  value={form.values.code}
+                  onChange={e =>
+                    form.setFieldValue('code', e.currentTarget.value)
+                  }
+                />
+                <TextInput
+                  withAsterisk
+                  label="Academic Term"
+                  placeholder="AY2025/2026 Semester 1"
+                  {...form.getInputProps('semester')}
+                  value={form.values.semester}
+                  onChange={e =>
+                    form.setFieldValue('semester', e.currentTarget.value)
+                  }
                 />
               </Group>
-              <Collapse in={form.values.courseType === CourseType.GitHubOrg}>
-                <Box>
-                  <Title order={6} my={10}>
-                    GitHub Organisation Setup
+
+              <Group mt="md" grow gap="md" align="flex-start">
+                <DatePickerInput
+                  withAsterisk
+                  label="Start Date"
+                  placeholder="Pick start date"
+                  error={form.errors.startDate}
+                  value={form.values.startDate}
+                  onChange={value => form.setFieldValue('startDate', value)}
+                />
+                <TextInput
+                  withAsterisk
+                  label="Duration"
+                  placeholder="13"
+                  rightSection={
+                    <Text style={{ paddingRight: 30 }}> weeks </Text>
+                  }
+                  {...form.getInputProps('duration')}
+                  value={form.values.duration}
+                  onChange={e =>
+                    form.setFieldValue(
+                      'duration',
+                      Number(e.currentTarget.value) || 0
+                    )
+                  }
+                />
+              </Group>
+            </>
+          )}
+
+          {/* Step 1: People */}
+          {step === 1 && (
+            <>
+              <Title order={4} mt="md" mb="xs">
+                People
+              </Title>
+              <Text size="sm" c="dimmed" mb="md">
+                Upload faculty, teaching assistants (TAs) and student
+                information. You can add people after the course is created from
+                the course People page.
+              </Text>
+              <Text size="sm" c="dimmed">
+                No configuration required in this step. Click Next to continue.
+              </Text>
+            </>
+          )}
+
+          {/* Step 2: Team allocation */}
+          {step === 2 && (
+            <>
+              <Title order={4} mt="md" mb="xs">
+                Team Allocation
+              </Title>
+              <Text size="sm" c="dimmed" mb="md">
+                Allocate students and TAs to teams. You can configure teams
+                after the course is created from the course Teams page.
+              </Text>
+              <Text size="sm" c="dimmed">
+                No configuration required in this step. Click Next to continue.
+              </Text>
+            </>
+          )}
+
+          {/* Step 3: Repositories */}
+          {step === 3 && (
+            <>
+              <Title order={4} mt="md" mb="xs">
+                Repositories
+              </Title>
+              <Text size="sm" c="dimmed" mb="md">
+                Choose how course repositories are synced.
+              </Text>
+              <Box>
+                <Group gap={6}>
+                  <Title order={6} my={5}>
+                    Repository Source
                   </Title>
-                  <Card withBorder p="md">
-                    <Text size="sm" c="dimmed" maw={520} mb="sm">
-                      Install the CRISP GitHub App in your GitHub organisation
-                      to enable automatic syncing of repositories.
-                    </Text>
-                    <Button
-                      w={CARD_W}
-                      leftSection={<IconBrandGithub size={14} />}
-                      variant="default"
-                      component="a"
-                      href={gitHubNewInstallationUrl}
-                      target="_blank"
+                  <Tooltip
+                    label="Choose how course repositories are synced: Manual Setup via public GitHub links, or automatically through GitHub Organisation."
+                    withinPortal
+                    multiline
+                    w={300}
+                  >
+                    <ActionIcon
+                      variant="subtle"
+                      color="gray"
+                      size="sm"
+                      aria-label="Setup Repositories help"
                     >
-                      Install CRISP GitHub
-                    </Button>
-                    <TextInput
-                      withAsterisk
-                      placeholder="e.g. nus-crisp"
-                      label="GitHub Organisation Name"
-                      {...form.getInputProps('gitHubOrgName')}
-                      my={5}
-                      onChange={e => {
-                        form.setFieldValue(
-                          'gitHubOrgName',
-                          e.currentTarget.value
-                        );
-                        form.setFieldValue('installationId', '');
-                        setAppInstallationStatus(InstallationStatus.IDLE);
-                        setErrorMessage('');
-                      }}
-                    />
-                    <Space h="sm" />
-                    {errorMessage && (
-                      <Text style={{ maxWidth: CARD_W }} c="red">
-                        {errorMessage}
+                      <IconHelpCircle size={16} />
+                    </ActionIcon>
+                  </Tooltip>
+                  <SegmentedControl
+                    data={[
+                      {
+                        value: CourseType.GitHubOrg,
+                        label: 'GitHub Organisation',
+                      },
+                      { value: CourseType.Normal, label: 'Manual Setup' },
+                    ]}
+                    {...form.getInputProps('courseType')}
+                  />
+                </Group>
+                <Collapse in={form.values.courseType === CourseType.GitHubOrg}>
+                  <Box>
+                    <Title order={6} my={10}>
+                      GitHub Organisation Setup
+                    </Title>
+                    <Card withBorder p="md">
+                      <Text size="sm" c="dimmed" maw={520} mb="sm">
+                        Install the CRISP GitHub App in your GitHub organisation
+                        to enable automatic syncing of repositories.
                       </Text>
-                    )}
-                    <Button
-                      type="button"
-                      loading={
-                        appInstallationStatus === InstallationStatus.LOADING
-                      }
-                      variant={
-                        appInstallationStatus === InstallationStatus.SUCCESS
-                          ? 'filled'
-                          : 'outline'
-                      }
-                      color={
-                        appInstallationStatus === InstallationStatus.SUCCESS
-                          ? 'green'
-                          : appInstallationStatus === InstallationStatus.ERROR
-                            ? 'red'
-                            : 'blue'
-                      }
-                      rightSection={
-                        appInstallationStatus === InstallationStatus.SUCCESS ? (
-                          <IconCheck size={14} />
-                        ) : null
-                      }
-                      onClick={() =>
-                        checkAppInstallation(form.values.gitHubOrgName)
-                      }
-                    >
-                      {appInstallationStatus === InstallationStatus.ERROR
-                        ? 'Try Again'
-                        : 'Verify CRISP Installation'}
-                    </Button>
-                    <Collapse
-                      in={appInstallationStatus === InstallationStatus.SUCCESS}
-                      mt="md"
-                    >
+                      <Button
+                        w={CARD_W}
+                        leftSection={<IconBrandGithub size={14} />}
+                        variant="default"
+                        component="a"
+                        href={gitHubNewInstallationUrl}
+                        target="_blank"
+                      >
+                        Install CRISP GitHub
+                      </Button>
                       <TextInput
                         withAsterisk
-                        label="Repo Name Filter"
-                        placeholder="e.g. 23s2"
-                        {...form.getInputProps('repoNameFilter')}
-                        onChange={e =>
+                        placeholder="e.g. nus-crisp"
+                        label="GitHub Organisation Name"
+                        {...form.getInputProps('gitHubOrgName')}
+                        my={5}
+                        onChange={e => {
                           form.setFieldValue(
-                            'repoNameFilter',
+                            'gitHubOrgName',
                             e.currentTarget.value
-                          )
-                        }
+                          );
+                          form.setFieldValue('installationId', '');
+                          setAppInstallationStatus(InstallationStatus.IDLE);
+                          setErrorMessage('');
+                        }}
                       />
-                    </Collapse>
-                  </Card>
-                </Box>
-              </Collapse>
-            </Box>
-          </>
-        )}
-
-        {/* Step 4: AI Insights */}
-        {step === 4 && (
-          <>
-            <Title order={4} mt="md" mb="xs">
-              AI Insights
-            </Title>
-            <Text size="sm" c="dimmed" mb="md">
-              Configure model and frequency of AI generated insights on
-              teams&apos; codebase.
-            </Text>
-            <Box>
-              <Switch
-                defaultChecked
-                label="Enable AI Insights"
-                size="md"
-                mb={15}
-                {...form.getInputProps('isOn', { type: 'checkbox' })}
-              />
-              <Collapse in={form.values.isOn}>
-                <Card withBorder>
-                  <Group gap={6}>
-                    <Switch
-                      label="Use Customised AI Model"
-                      size="sm"
-                      {...form.getInputProps('customisedAI', {
-                        type: 'checkbox',
-                      })}
-                    />
-                    <Tooltip
-                      label="By default, we use the gemini-1.5-pro model. You can input your own model and API key to use customised AI model."
-                      withinPortal
-                      multiline
-                      w={300}
-                    >
-                      <ActionIcon
-                        variant="subtle"
-                        color="gray"
-                        size="sm"
-                        aria-label="AI Insights help"
+                      <Space h="sm" />
+                      {errorMessage && (
+                        <Text style={{ maxWidth: CARD_W }} c="red">
+                          {errorMessage}
+                        </Text>
+                      )}
+                      <Button
+                        type="button"
+                        loading={
+                          appInstallationStatus === InstallationStatus.LOADING
+                        }
+                        variant={
+                          appInstallationStatus === InstallationStatus.SUCCESS
+                            ? 'filled'
+                            : 'outline'
+                        }
+                        color={
+                          appInstallationStatus === InstallationStatus.SUCCESS
+                            ? 'green'
+                            : appInstallationStatus === InstallationStatus.ERROR
+                              ? 'red'
+                              : 'blue'
+                        }
+                        rightSection={
+                          appInstallationStatus ===
+                          InstallationStatus.SUCCESS ? (
+                            <IconCheck size={14} />
+                          ) : null
+                        }
+                        onClick={() =>
+                          checkAppInstallation(form.values.gitHubOrgName)
+                        }
                       >
-                        <IconHelpCircle size={16} />
-                      </ActionIcon>
-                    </Tooltip>
-                  </Group>
-                  <Space h="sm" />
-                  <Collapse in={form.values.customisedAI}>
-                    <Select
-                      required
-                      comboboxProps={{ withinPortal: true }}
-                      data={['Gemini', 'OpenAI', 'DeepSeek']}
-                      placeholder="Choose AI provider"
-                      label="AI Provider"
-                      {...form.getInputProps('provider')}
-                      value={form.values.provider}
-                    />
-                    <Space h="sm" />
-                    <Select
-                      required
-                      disabled={!form.values.provider}
-                      comboboxProps={{ withinPortal: true }}
-                      data={modelOptions[form.values.provider] || []}
-                      placeholder="Choose AI model"
-                      label="AI model"
-                      {...form.getInputProps('model')}
-                      value={form.values.model}
-                    />
-                    <Space h="sm" />
-                    <TextInput
-                      withAsterisk
-                      label="API Key"
-                      disabled={!form.values.provider || !form.values.model}
-                      placeholder="e.g. 123456"
-                      {...form.getInputProps('apiKey')}
-                      value={form.values.apiKey}
-                    />
-                  </Collapse>
-                  <Space h="sm" />
-                  <Group gap={6}>
-                    <Select
-                      required
-                      comboboxProps={{ withinPortal: true }}
-                      data={[
-                        'Daily',
-                        'Weekly',
-                        'Fortnightly',
-                        'Every 4 weeks (~Monthly)',
-                      ]}
-                      placeholder="Choose insight generation frequency"
-                      label="AI Insight Frequency"
-                      value={
-                        form.values.frequency === 'Monthly'
-                          ? 'Every 4 weeks (~Monthly)'
-                          : form.values.frequency || null
-                      }
-                      onChange={value => {
-                        form.setFieldValue(
-                          'frequency',
-                          value === 'Every 4 weeks (~Monthly)'
-                            ? 'Monthly'
-                            : value || ''
-                        );
-                      }}
-                    />
-                    <Tooltip label="How often to generate AI insights for each group">
-                      <ActionIcon
-                        variant="subtle"
-                        color="gray"
-                        size="sm"
-                        aria-label="AI Insights help"
+                        {appInstallationStatus === InstallationStatus.ERROR
+                          ? 'Try Again'
+                          : 'Verify CRISP Installation'}
+                      </Button>
+                      <Collapse
+                        in={
+                          appInstallationStatus === InstallationStatus.SUCCESS
+                        }
+                        mt="md"
                       >
-                        <IconHelpCircle size={16} />
-                      </ActionIcon>
-                    </Tooltip>
-                  </Group>
-                  <Space h="sm" />
-                  <Group gap={6}>
-                    <DatePickerInput
-                      withAsterisk
-                      label="Start Date"
-                      placeholder="Pick start date"
-                      error={form.errors.aiStartDate}
-                      value={form.values.aiStartDate}
-                      minDate={
-                        new Date(new Date().setDate(new Date().getDate() + 1))
-                      }
-                      onChange={value =>
-                        form.setFieldValue('aiStartDate', value)
-                      }
-                    />
-                    <Tooltip label="Pick the start date for generating AI insights">
-                      <ActionIcon
-                        variant="subtle"
-                        color="gray"
-                        size="sm"
-                        aria-label="AI Insights help"
-                      >
-                        <IconHelpCircle size={16} />
-                      </ActionIcon>
-                    </Tooltip>
-                  </Group>
-                </Card>
-              </Collapse>
-            </Box>
-          </>
-        )}
+                        <TextInput
+                          withAsterisk
+                          label="Repo Name Filter"
+                          placeholder="e.g. 23s2"
+                          {...form.getInputProps('repoNameFilter')}
+                          onChange={e =>
+                            form.setFieldValue(
+                              'repoNameFilter',
+                              e.currentTarget.value
+                            )
+                          }
+                        />
+                      </Collapse>
+                    </Card>
+                  </Box>
+                </Collapse>
+              </Box>
+            </>
+          )}
 
-        {/* Step 5: Review & confirm */}
-        {step === 5 && (
-          <>
-            <Title order={4} mt="md" mb="xs">
-              Review &amp; Confirm
-            </Title>
-            <Text size="sm" c="dimmed" mb="md">
-              Review your course configuration before creating it.
-            </Text>
-
-            <Group align="flex-start" grow>
-              <Card withBorder padding="md">
-                <Title order={5} mb="xs">
-                  Course Details
-                </Title>
-                <Text size="sm">
-                  <strong>Name: </strong>
-                  {form.values.name || '-'}
-                </Text>
-                <Text size="sm">
-                  <strong>Code: </strong>
-                  {form.values.code || '-'}
-                </Text>
-                <Text size="sm">
-                  <strong>Term: </strong>
-                  {form.values.semester || '-'}
-                </Text>
-                <Text size="sm">
-                  <strong>Start Date: </strong>
-                  {form.values.startDate?.toLocaleDateString() || '-'}
-                </Text>
-                <Text size="sm">
-                  <strong>Duration: </strong>
-                  {form.values.duration} weeks
-                </Text>
-              </Card>
-
-              <Card withBorder padding="md">
-                <Title order={5} mb="xs">
-                  Repositories
-                </Title>
-                <Text size="sm">
-                  <strong>Source: </strong>
-                  {form.values.courseType === CourseType.GitHubOrg
-                    ? 'GitHub Organisation'
-                    : 'Manual Setup'}
-                </Text>
-                {form.values.courseType === CourseType.GitHubOrg && (
-                  <>
-                    <Text size="sm">
-                      <strong>Organisation: </strong>
-                      {form.values.gitHubOrgName || '-'}
-                    </Text>
-                    <Text size="sm">
-                      <strong>Repo filter: </strong>
-                      {form.values.repoNameFilter || '-'}
-                    </Text>
-                  </>
-                )}
-              </Card>
-            </Group>
-
-            <Card withBorder padding="md" mt="md">
-              <Title order={5} mb="xs">
+          {/* Step 4: AI Insights */}
+          {step === 4 && (
+            <>
+              <Title order={4} mt="md" mb="xs">
                 AI Insights
               </Title>
-              <Text size="sm">
-                <strong>Enabled: </strong>
-                {form.values.isOn ? 'Yes' : 'No'}
+              <Text size="sm" c="dimmed" mb="md">
+                Configure model and frequency of AI generated insights on
+                teams&apos; codebase.
               </Text>
-              {form.values.isOn && (
-                <>
+              <Box>
+                <Switch
+                  defaultChecked
+                  label="Enable AI Insights"
+                  size="md"
+                  mb={15}
+                  {...form.getInputProps('isOn', { type: 'checkbox' })}
+                />
+                <Collapse in={form.values.isOn}>
+                  <Card withBorder>
+                    <Group gap={6}>
+                      <Switch
+                        label="Use Customised AI Model"
+                        size="sm"
+                        {...form.getInputProps('customisedAI', {
+                          type: 'checkbox',
+                        })}
+                      />
+                      <Tooltip
+                        label="By default, we use the gemini-1.5-pro model. You can input your own model and API key to use customised AI model."
+                        withinPortal
+                        multiline
+                        w={300}
+                      >
+                        <ActionIcon
+                          variant="subtle"
+                          color="gray"
+                          size="sm"
+                          aria-label="AI Insights help"
+                        >
+                          <IconHelpCircle size={16} />
+                        </ActionIcon>
+                      </Tooltip>
+                    </Group>
+                    <Space h="sm" />
+                    <Collapse in={form.values.customisedAI}>
+                      <Select
+                        required
+                        comboboxProps={{ withinPortal: true }}
+                        data={['Gemini', 'OpenAI', 'DeepSeek']}
+                        placeholder="Choose AI provider"
+                        label="AI Provider"
+                        {...form.getInputProps('provider')}
+                        value={form.values.provider}
+                      />
+                      <Space h="sm" />
+                      <Select
+                        required
+                        disabled={!form.values.provider}
+                        comboboxProps={{ withinPortal: true }}
+                        data={modelOptions[form.values.provider] || []}
+                        placeholder="Choose AI model"
+                        label="AI model"
+                        {...form.getInputProps('model')}
+                        value={form.values.model}
+                      />
+                      <Space h="sm" />
+                      <TextInput
+                        withAsterisk
+                        label="API Key"
+                        disabled={!form.values.provider || !form.values.model}
+                        placeholder="e.g. 123456"
+                        {...form.getInputProps('apiKey')}
+                        value={form.values.apiKey}
+                      />
+                    </Collapse>
+                    <Space h="sm" />
+                    <Group gap={6}>
+                      <Select
+                        required
+                        comboboxProps={{ withinPortal: true }}
+                        data={[
+                          'Daily',
+                          'Weekly',
+                          'Fortnightly',
+                          'Every 4 weeks (~Monthly)',
+                        ]}
+                        placeholder="Choose insight generation frequency"
+                        label="AI Insight Frequency"
+                        value={
+                          form.values.frequency === 'Monthly'
+                            ? 'Every 4 weeks (~Monthly)'
+                            : form.values.frequency || null
+                        }
+                        onChange={value => {
+                          form.setFieldValue(
+                            'frequency',
+                            value === 'Every 4 weeks (~Monthly)'
+                              ? 'Monthly'
+                              : value || ''
+                          );
+                        }}
+                      />
+                      <Tooltip label="How often to generate AI insights for each group">
+                        <ActionIcon
+                          variant="subtle"
+                          color="gray"
+                          size="sm"
+                          aria-label="AI Insights help"
+                        >
+                          <IconHelpCircle size={16} />
+                        </ActionIcon>
+                      </Tooltip>
+                    </Group>
+                    <Space h="sm" />
+                    <Group gap={6}>
+                      <DatePickerInput
+                        withAsterisk
+                        label="Start Date"
+                        placeholder="Pick start date"
+                        error={form.errors.aiStartDate}
+                        value={form.values.aiStartDate}
+                        minDate={
+                          new Date(new Date().setDate(new Date().getDate() + 1))
+                        }
+                        onChange={value =>
+                          form.setFieldValue('aiStartDate', value)
+                        }
+                      />
+                      <Tooltip label="Pick the start date for generating AI insights">
+                        <ActionIcon
+                          variant="subtle"
+                          color="gray"
+                          size="sm"
+                          aria-label="AI Insights help"
+                        >
+                          <IconHelpCircle size={16} />
+                        </ActionIcon>
+                      </Tooltip>
+                    </Group>
+                  </Card>
+                </Collapse>
+              </Box>
+            </>
+          )}
+
+          {/* Step 5: Review & confirm */}
+          {step === 5 && (
+            <>
+              <Title order={4} mt="md" mb="xs">
+                Review &amp; Confirm
+              </Title>
+              <Text size="sm" c="dimmed" mb="md">
+                Review your course configuration before creating it.
+              </Text>
+
+              <Group align="flex-start" grow>
+                <Card withBorder padding="md">
+                  <Title order={5} mb="xs">
+                    Course Details
+                  </Title>
                   <Text size="sm">
-                    <strong>Frequency: </strong>
-                    {form.values.frequency || '-'}
+                    <strong>Name: </strong>
+                    {form.values.name || '-'}
+                  </Text>
+                  <Text size="sm">
+                    <strong>Code: </strong>
+                    {form.values.code || '-'}
+                  </Text>
+                  <Text size="sm">
+                    <strong>Term: </strong>
+                    {form.values.semester || '-'}
                   </Text>
                   <Text size="sm">
                     <strong>Start Date: </strong>
-                    {form.values.aiStartDate?.toLocaleDateString() || '-'}
+                    {form.values.startDate?.toLocaleDateString() || '-'}
                   </Text>
                   <Text size="sm">
-                    <strong>Custom model: </strong>
-                    {form.values.customisedAI ? 'Yes' : 'No'}
+                    <strong>Duration: </strong>
+                    {form.values.duration} weeks
                   </Text>
-                  {form.values.customisedAI && (
+                </Card>
+
+                <Card withBorder padding="md">
+                  <Title order={5} mb="xs">
+                    Repositories
+                  </Title>
+                  <Text size="sm">
+                    <strong>Source: </strong>
+                    {form.values.courseType === CourseType.GitHubOrg
+                      ? 'GitHub Organisation'
+                      : 'Manual Setup'}
+                  </Text>
+                  {form.values.courseType === CourseType.GitHubOrg && (
                     <>
                       <Text size="sm">
-                        <strong>Provider: </strong>
-                        {form.values.provider || '-'}
+                        <strong>Organisation: </strong>
+                        {form.values.gitHubOrgName || '-'}
                       </Text>
                       <Text size="sm">
-                        <strong>Model: </strong>
-                        {form.values.model || '-'}
+                        <strong>Repo filter: </strong>
+                        {form.values.repoNameFilter || '-'}
                       </Text>
                     </>
                   )}
-                </>
-              )}
-            </Card>
-          </>
-        )}
-      </Box>
+                </Card>
+              </Group>
 
-      {/* Bottom actions */}
-      <Group justify="space-between" mt="xl">
-        <Group>
-          <Button
-            variant="default"
-            onClick={() => setStep(s => Math.max(s - 1, 0))}
-            disabled={loading || step === 0}
+              <Card withBorder padding="md" mt="md">
+                <Title order={5} mb="xs">
+                  AI Insights
+                </Title>
+                <Text size="sm">
+                  <strong>Enabled: </strong>
+                  {form.values.isOn ? 'Yes' : 'No'}
+                </Text>
+                {form.values.isOn && (
+                  <>
+                    <Text size="sm">
+                      <strong>Frequency: </strong>
+                      {form.values.frequency || '-'}
+                    </Text>
+                    <Text size="sm">
+                      <strong>Start Date: </strong>
+                      {form.values.aiStartDate?.toLocaleDateString() || '-'}
+                    </Text>
+                    <Text size="sm">
+                      <strong>Custom model: </strong>
+                      {form.values.customisedAI ? 'Yes' : 'No'}
+                    </Text>
+                    {form.values.customisedAI && (
+                      <>
+                        <Text size="sm">
+                          <strong>Provider: </strong>
+                          {form.values.provider || '-'}
+                        </Text>
+                        <Text size="sm">
+                          <strong>Model: </strong>
+                          {form.values.model || '-'}
+                        </Text>
+                      </>
+                    )}
+                  </>
+                )}
+              </Card>
+            </>
+          )}
+        </Box>
+
+        {/* Bottom actions - fixed footer */}
+        <Box
+          component="footer"
+          style={{
+            position: 'fixed',
+            left: 0,
+            right: 0,
+            bottom: 0,
+            padding: '12px 24px',
+            background:
+              'linear-gradient(to top, var(--mantine-color-body), transparent)',
+            backdropFilter: 'blur(6px)',
+            borderTop:
+              '1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4))',
+            zIndex: 20,
+          }}
+        >
+          <Group
+            justify="space-between"
+            style={{ maxWidth: 1200, margin: '0 auto' }}
           >
-            Back
-          </Button>
-          <Button variant="default" onClick={handleCancel} disabled={loading}>
-            Cancel
-          </Button>
-        </Group>
-        <Group>
-          <Button variant="outline" onClick={handleSave} loading={loading}>
-            Save
-          </Button>
-          <Button
-            onClick={step === TOTAL_STEPS - 1 ? handlePublish : handleNext}
-            loading={loading}
-          >
-            {step === TOTAL_STEPS - 1 ? 'Confirm & Create' : 'Next'}
-          </Button>
-        </Group>
-      </Group>
+            <Group>
+              <Button
+                size="xl"
+                variant="default"
+                onClick={() => setStep(s => Math.max(s - 1, 0))}
+                disabled={loading || step === 0}
+              >
+                Back
+              </Button>
+              <Button
+                size="xl"
+                variant="default"
+                onClick={handleCancel}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+            </Group>
+            <Group>
+              <Button
+                size="xl"
+                variant="outline"
+                onClick={handleSave}
+                loading={loading}
+              >
+                Save
+              </Button>
+              <Button
+                size="xl"
+                onClick={step === TOTAL_STEPS - 1 ? handlePublish : handleNext}
+                loading={loading}
+              >
+                {step === TOTAL_STEPS - 1 ? 'Confirm & Create' : 'Next'}
+              </Button>
+            </Group>
+          </Group>
+        </Box>
+      </Box>
     </Box>
   );
 };
