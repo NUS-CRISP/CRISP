@@ -147,7 +147,6 @@ export const updateMySubmissionDraft = async (
   );
 
   if (!submission) throw new NotFoundError(SUBMISSION_NOT_FOUND);
-  await assertIsOwnerOfSubmission(userId, userCourseRole, submission);
 
   // Cannot edit once submitted
   if (submission.status === 'Submitted') {
@@ -194,7 +193,6 @@ export const submitMySubmission = async (
   );
 
   if (!submission) throw new NotFoundError(SUBMISSION_NOT_FOUND);
-  await assertIsOwnerOfSubmission(userId, userCourseRole, submission);
 
   if (submission.status === 'Submitted') {
     throw new BadRequestError(SUBMISSION_ALREADY_SUBMITTED);
@@ -298,50 +296,6 @@ export const assertSubmissionWritableByCaller = async (
   throw new MissingAuthorizationError(UNAUTHORIZED);
 };
 
-const assertIsOwnerOfSubmission = async (
-  userId: string,
-  userCourseRole: string,
-  submission: PeerReviewSubmission
-): Promise<void> => {
-  // Coordinators can view but cannot edit/submit
-  if (userCourseRole === COURSE_ROLE.Faculty) {
-    throw new MissingAuthorizationError(UNAUTHORIZED);
-  }
-
-  // TA submission owner
-  if (userCourseRole === COURSE_ROLE.TA) {
-    if (submission.reviewerKind !== 'TA')
-      throw new MissingAuthorizationError(UNAUTHORIZED);
-    if (submission.reviewerUserId?.toString() !== userId)
-      throw new MissingAuthorizationError(UNAUTHORIZED);
-    return;
-  }
-
-  // Student submission owner
-  if (userCourseRole === COURSE_ROLE.Student) {
-    if (submission.reviewerKind === 'Student') {
-      if (submission.reviewerUserId?.toString() !== userId)
-        throw new MissingAuthorizationError(UNAUTHORIZED);
-      return;
-    }
-
-    if (submission.reviewerKind === 'Team') {
-      if (!submission.reviewerTeamId)
-        throw new MissingAuthorizationError(UNAUTHORIZED);
-      await assertStudentInReviewerTeam(
-        userId,
-        submission.reviewerTeamId.toString()
-      );
-      return;
-    }
-
-    // Students should not edit TA submissions
-    throw new MissingAuthorizationError(UNAUTHORIZED);
-  }
-
-  throw new MissingAuthorizationError(UNAUTHORIZED);
-};
-
 const isTAForAssignmentReviewee = async (
   taUserId: string,
   peerReviewAssignmentId: string
@@ -351,9 +305,8 @@ const isTAForAssignmentReviewee = async (
   )
     .select('_id reviewee')
     .lean();
-  if (!assignment) throw new NotFoundError(ASSIGNMENT_NOT_FOUND);
 
-  const revieweeTeam = await TeamModel.findById(assignment.reviewee)
+  const revieweeTeam = await TeamModel.findById(assignment?.reviewee)
     .select('_id TA')
     .lean();
   if (!revieweeTeam) {

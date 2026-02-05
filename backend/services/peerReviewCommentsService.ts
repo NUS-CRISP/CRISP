@@ -369,7 +369,4 @@ const findSubmissionForUserOnAssignment = async (
       reviewerUserId: userId,
     }).select('_id reviewerKind reviewerUserId reviewerTeamId');
   }
-
-  // Faculty doesn't "need" a submission to view
-  return null;
 };
