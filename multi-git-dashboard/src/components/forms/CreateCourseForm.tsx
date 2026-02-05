@@ -84,7 +84,6 @@ const modelOptions: Record<string, string[]> = {
 };
 
 interface CreateCourseFormProps {
-  /** When provided, load this draft and resume from the next step. */
   initialDraftId?: string;
   onCancel?: () => void;
 }

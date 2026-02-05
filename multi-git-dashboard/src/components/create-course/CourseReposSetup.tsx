@@ -13,7 +13,7 @@ import {
   Tooltip,
 } from '@mantine/core';
 import { UseFormReturnType } from '@mantine/form';
-import { CreateCourseFormValues } from '@/components/course-create/types';
+import { CreateCourseFormValues } from '@/components/create-course/types';
 import { CourseType } from '@shared/types/Course';
 import {
   IconBrandGithub,

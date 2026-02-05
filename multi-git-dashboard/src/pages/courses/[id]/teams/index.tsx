@@ -1,4 +1,4 @@
-import TeamsInfo from '@/components/views/TeamsInfo';
+crimport TeamsInfo from '@/components/views/TeamsInfo';
 import { hasFacultyPermission } from '@/lib/auth/utils';
 import { Container } from '@mantine/core';
 import { TeamSet } from '@shared/types/TeamSet';

@@ -15,7 +15,6 @@ import {
   Title,
   Tooltip,
 } from '@mantine/core';
-import { DatePickerInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { useRouter } from 'next/router';
 import { getSession } from 'next-auth/react';
@@ -31,11 +30,11 @@ import {
   IconUsers,
 } from '@tabler/icons-react';
 
-import { CourseDetailsSetup } from '@/components/course-create/CourseDetailsSetup';
-import { CourseReposSetup } from '@/components/course-create/CourseReposSetup';
-import type { CreateCourseFormValues } from '@/components/course-create/types';
-import { CourseAISetup } from '@/components/course-create/CourseAISetup';
-import { CourseReviewSummary } from '@/components/course-create/CourseReviewSummary';
+import { CourseDetailsSetup } from '@/components/create-course/CourseDetailsSetup';
+import { CourseReposSetup } from '@/components/create-course/CourseReposSetup';
+import type { CreateCourseFormValues } from '@/components/create-course/types';
+import { CourseAISetup } from '@/components/create-course/CourseAISetup';
+import { CourseReviewSummary } from '@/components/create-course/CourseReviewSummary';
 
 enum InstallationStatus {
   IDLE = 'idle',
@@ -61,7 +60,6 @@ const modelOptions: Record<string, string[]> = {
   ],
   DeepSeek: ['deepseek-chat', 'deepseek-reasoner'],
 };
-
 
 const TOTAL_STEPS = 6;
 
@@ -536,7 +534,9 @@ const CreateCoursePage = () => {
           )}
 
           {/* Step 4: AI Insights */}
-          {step === 4 && <CourseAISetup form={form} modelOptions={modelOptions} />}
+          {step === 4 && (
+            <CourseAISetup form={form} modelOptions={modelOptions} />
+          )}
 
           {/* Step 5: Review & confirm */}
           {step === 5 && <CourseReviewSummary form={form} />}

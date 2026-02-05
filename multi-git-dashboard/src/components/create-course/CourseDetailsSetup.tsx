@@ -1,7 +1,7 @@
 import { Group, Text, TextInput, Title } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import { UseFormReturnType } from '@mantine/form';
-import { CreateCourseFormValues } from '@/components/course-create/types';
+import { CreateCourseFormValues } from '@/components/create-course/types';
 
 interface Props {
   form: UseFormReturnType<CreateCourseFormValues>;

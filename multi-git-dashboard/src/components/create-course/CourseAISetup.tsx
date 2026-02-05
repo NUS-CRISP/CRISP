@@ -14,14 +14,14 @@ import {
 import { DatePickerInput } from '@mantine/dates';
 import { UseFormReturnType } from '@mantine/form';
 import { IconHelpCircle } from '@tabler/icons-react';
-import { CreateCourseFormValues } from './types';
+import type { CreateCourseFormValues } from '@/components/create-course/types';
 
 interface Props {
   form: UseFormReturnType<CreateCourseFormValues>;
   modelOptions: Record<string, string[]>;
 }
 
-  export const CourseAISetup = ({ form, modelOptions }: Props) => {
+export const CourseAISetup = ({ form, modelOptions }: Props) => {
   return (
     <>
       <Title order={4} mt="md" mb="xs">
