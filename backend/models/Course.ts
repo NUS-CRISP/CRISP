@@ -28,6 +28,12 @@ export const courseSchema = new Schema<Course>({
   semester: { type: String, required: true },
   startDate: { type: Date, required: true },
   durationWeeks: { type: Number, required: false },
+  status: {
+    type: String,
+    enum: ['draft', 'active'],
+    default: 'active',
+  },
+  draftStep: { type: Number, required: false },
   faculty: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   TAs: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   students: [{ type: Schema.Types.ObjectId, ref: 'User' }],

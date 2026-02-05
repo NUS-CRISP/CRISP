@@ -17,6 +17,7 @@ const CourseListPage: React.FC = () => {
   const permission = hasFacultyPermission();
 
   const [opened, { open, close }] = useDisclosure(false);
+  const [draftIdToResume, setDraftIdToResume] = useState<string | null>(null);
 
   const { curTutorialStage, startTutorial } = useTutorialContext();
 
@@ -77,8 +78,22 @@ const CourseListPage: React.FC = () => {
         scrollbarWidth: 'thin',
       }}
     >
-      <Modal opened={opened} onClose={close} title="Course Creation">
-        <CreateCourseForm />
+      <Modal
+        opened={opened}
+        onClose={() => {
+          close();
+          setDraftIdToResume(null);
+        }}
+        title="Create Course"
+        size="lg"
+      >
+        <CreateCourseForm
+          initialDraftId={draftIdToResume ?? undefined}
+          onCancel={() => {
+            close();
+            setDraftIdToResume(null);
+          }}
+        />
       </Modal>
       <Box pl={20}>
         <div
@@ -157,6 +172,14 @@ const CourseListPage: React.FC = () => {
                   key={course._id}
                   course={course}
                   isTutorial={idx === 0 && curTutorialStage === 4}
+                  onContinueDraft={
+                    course.status === 'draft'
+                      ? id => {
+                          setDraftIdToResume(id);
+                          open();
+                        }
+                      : undefined
+                  }
                 />
               </TutorialPopover>
             ))}

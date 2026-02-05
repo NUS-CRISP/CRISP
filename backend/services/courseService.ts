@@ -37,6 +37,8 @@ export const createNewCourse = async (courseData: any, accountId: string) => {
     apiKey,
     frequency,
     aiStartDate,
+    status = 'active',
+    draftStep,
   } = courseData;
 
   const courseFields = {
@@ -46,11 +48,13 @@ export const createNewCourse = async (courseData: any, accountId: string) => {
     startDate,
     durationWeeks: duration,
     courseType,
+    ...(status && { status }),
+    ...(draftStep !== undefined && { draftStep }),
     ...(gitHubOrgName && { gitHubOrgName }),
     ...(repoNameFilter && { repoNameFilter }),
     ...(installationId && { installationId }),
     aiInsights: {
-      isOn: isOn,
+      isOn: isOn ?? false,
       ...(provider && { provider }),
       ...(model && { model }),
       ...(apiKey && { apiKey }),
