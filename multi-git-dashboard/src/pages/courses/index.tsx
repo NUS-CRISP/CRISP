@@ -3,21 +3,16 @@ import { useTutorialContext } from '@/components/tutorial/TutorialContext';
 import TutorialPopover from '@/components/tutorial/TutorialPopover';
 import WelcomeMessage from '@/components/views/WelcomeMessage';
 import { hasFacultyPermission } from '@/lib/auth/utils';
-import { Box, Button, Modal, ScrollArea } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
+import { Box, Button, ScrollArea } from '@mantine/core';
 import { Course } from '@shared/types/Course';
 import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import CreateCourseForm from '../../components/forms/CreateCourseForm';
 import ProfileDropdown from '@/components/ProfileDropdown';
 
 const CourseListPage: React.FC = () => {
   const apiRoute = '/api/courses';
   const permission = hasFacultyPermission();
-
-  const [opened, { open, close }] = useDisclosure(false);
-  const [draftIdToResume, setDraftIdToResume] = useState<string | null>(null);
 
   const { curTutorialStage, startTutorial } = useTutorialContext();
 
@@ -78,23 +73,6 @@ const CourseListPage: React.FC = () => {
         scrollbarWidth: 'thin',
       }}
     >
-      <Modal
-        opened={opened}
-        onClose={() => {
-          close();
-          setDraftIdToResume(null);
-        }}
-        title="Create Course"
-        size="lg"
-      >
-        <CreateCourseForm
-          initialDraftId={draftIdToResume ?? undefined}
-          onCancel={() => {
-            close();
-            setDraftIdToResume(null);
-          }}
-        />
-      </Modal>
       <Box pl={20}>
         <div
           style={{
@@ -146,7 +124,10 @@ const CourseListPage: React.FC = () => {
                 they’ll show up here.
               </p>
               {permission && (
-                <Button onClick={open} variant="filled">
+                <Button
+                  onClick={() => router.push('/courses/create')}
+                  variant="filled"
+                >
                   Create a course
                 </Button>
               )}
@@ -175,8 +156,7 @@ const CourseListPage: React.FC = () => {
                   onContinueDraft={
                     course.status === 'draft'
                       ? id => {
-                          setDraftIdToResume(id);
-                          open();
+                          router.push(`/courses/create?courseId=${id}`);
                         }
                       : undefined
                   }
@@ -187,7 +167,11 @@ const CourseListPage: React.FC = () => {
         )}
         {permission && (
           <div>
-            <Button onClick={open} mt={16} mb={20}>
+            <Button
+              onClick={() => router.push('/courses/create')}
+              mt={16}
+              mb={20}
+            >
               Create Course
             </Button>
           </div>
