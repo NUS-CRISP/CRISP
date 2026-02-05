@@ -9,7 +9,6 @@ import {
   SegmentedControl,
   Select,
   Space,
-  Stepper,
   Switch,
   Text,
   TextInput,
@@ -26,16 +25,9 @@ import {
 } from '@tabler/icons-react';
 import { getSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 
 const CARD_W = '210px';
-const TOTAL_STEPS = 5;
-const STEP_COURSE_DETAILS = 0;
-const STEP_PEOPLE = 1;
-const STEP_TEAM_ALLOCATION = 2;
-const STEP_REPOSITORIES = 3;
-const STEP_AI_INSIGHTS = 4;
-
 const gitHubNewInstallationUrl =
   'https://github.com/apps/NUS-CRISP/installations/new';
 
@@ -65,42 +57,10 @@ interface CreateCourseFormValues {
   aiStartDate: Date | null;
 }
 
-const modelOptions: Record<string, string[]> = {
-  Gemini: [
-    'gemini-1.5-pro',
-    'gemini-1.5-flash',
-    'gemini-2.0-flash-lite',
-    'gemini-2.0-flash',
-  ],
-  OpenAI: [
-    'gpt-3.5-turbo',
-    'gpt-4o-mini',
-    'gpt-4o',
-    'gpt-4.5-preview',
-    'o1-mini',
-    'o1',
-  ],
-  DeepSeek: ['deepseek-chat', 'deepseek-reasoner'],
-};
-
-interface CreateCourseFormProps {
-  initialDraftId?: string;
-  onCancel?: () => void;
-}
-
-const CreateCourse: React.FC<CreateCourseFormProps> = ({
-  initialDraftId,
-  onCancel,
-}) => {
+const CreateCourse: React.FC = () => {
   const router = useRouter();
   const apiRoute = '/api/courses';
 
-  const [currentStep, setCurrentStep] = useState(0);
-  const [draftCourseId, setDraftCourseId] = useState<string | null>(
-    initialDraftId ?? null
-  );
-  const [loading, setLoading] = useState(false);
-  const [loadingDraft, setLoadingDraft] = useState(!!initialDraftId);
   const [appInstallationStatus, setAppInstallationStatus] =
     useState<InstallationStatus>(InstallationStatus.IDLE);
   const [errorMessage, setErrorMessage] = useState('');
@@ -136,6 +96,7 @@ const CreateCourse: React.FC<CreateCourseFormProps> = ({
       duration: (value: number) => (value ? null : 'Duration is required'),
       courseType: (value: CourseType) =>
         value ? null : 'Course type is required',
+      // field should be valid only if courseType is Normal, or if courseType is GitHubOrg and installation check is successful
       gitHubOrgName: (value: string, values: CreateCourseFormValues) =>
         values.courseType === CourseType.Normal ||
         (values.courseType === CourseType.GitHubOrg &&
@@ -162,7 +123,7 @@ const CreateCourse: React.FC<CreateCourseFormProps> = ({
           ? null
           : values.customisedAI
             ? 'Model is missing / invalid'
-            : null,
+            : null, // Only validate if 'customisedAI' is ON
       apiKey: (value: string, values: CreateCourseFormValues) =>
         values.isOn &&
         values.customisedAI &&
@@ -172,7 +133,7 @@ const CreateCourse: React.FC<CreateCourseFormProps> = ({
           ? null
           : values.customisedAI
             ? 'Model is missing / invalid'
-            : null,
+            : null, // Only validate if 'customisedAI' is ON
       frequency: (value: string, values: CreateCourseFormValues) =>
         values.isOn
           ? value.trim().length
@@ -184,35 +145,21 @@ const CreateCourse: React.FC<CreateCourseFormProps> = ({
     },
   });
 
-  const stepFields: (keyof CreateCourseFormValues)[][] = [
-    ['name', 'code', 'semester', 'startDate', 'duration'],
-    [],
-    [],
-    ['courseType', 'gitHubOrgName', 'repoNameFilter'],
-    ['frequency', 'aiStartDate', 'provider', 'model', 'apiKey'],
-  ];
-
-  const validateCurrentStep = useCallback((): boolean => {
-    const fields = stepFields[currentStep];
-    if (fields.length === 0) return true;
-    let valid = true;
-    for (const field of fields) {
-      const result = form.validateField(field);
-      if (result.hasError) valid = false;
-    }
-    return valid;
-  }, [currentStep, form]);
-
   const checkAppInstallation = async (orgName: string) => {
     const checkAppInstallationApiRoute = '/api/github/check-installation';
+
     setAppInstallationStatus(InstallationStatus.LOADING);
     setErrorMessage('');
+
     try {
       const response = await fetch(checkAppInstallationApiRoute, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ orgName }),
       });
+
       if (!response.ok) {
         setAppInstallationStatus(InstallationStatus.ERROR);
         const errorData = await response.json();
@@ -221,6 +168,7 @@ const CreateCourse: React.FC<CreateCourseFormProps> = ({
       }
       const { installationId } = await response.json();
       form.setFieldValue('installationId', installationId);
+
       setAppInstallationStatus(InstallationStatus.SUCCESS);
     } catch (error) {
       console.error('Error checking app installation:', error);
@@ -229,559 +177,398 @@ const CreateCourse: React.FC<CreateCourseFormProps> = ({
     }
   };
 
-  useEffect(() => {
-    if (!initialDraftId) return;
-    const loadDraft = async () => {
-      try {
-        const res = await fetch(`/api/courses/${initialDraftId}`);
-        if (!res.ok) return;
-        const course = await res.json();
-        form.setValues({
-          name: course.name ?? '',
-          code: course.code ?? '',
-          semester: course.semester ?? '',
-          startDate: course.startDate ? new Date(course.startDate) : null,
-          duration: course.durationWeeks ?? 13,
-          courseType: course.courseType ?? CourseType.GitHubOrg,
-          gitHubOrgName: course.gitHubOrgName ?? '',
-          repoNameFilter: course.repoNameFilter ?? '',
-          installationId: course.installationId?.toString() ?? '',
-          isOn: course.aiInsights?.isOn ?? true,
-          customisedAI: !!(
-            course.aiInsights?.provider || course.aiInsights?.model
-          ),
-          provider: course.aiInsights?.provider ?? '',
-          model: course.aiInsights?.model ?? '',
-          apiKey: course.aiInsights?.apiKey ?? '',
-          frequency: course.aiInsights?.frequency ?? '',
-          aiStartDate: course.aiInsights?.startDate
-            ? new Date(course.aiInsights.startDate)
-            : null,
-        });
-        const lastStep = course.draftStep ?? -1;
-        setCurrentStep(Math.min(lastStep + 1, TOTAL_STEPS - 1));
-        if (course.installationId)
-          setAppInstallationStatus(InstallationStatus.SUCCESS);
-      } catch (e) {
-        console.error('Error loading draft:', e);
-      } finally {
-        setLoadingDraft(false);
-      }
-    };
-    loadDraft();
-  }, [initialDraftId]);
-
-  const saveStep = async (
-    stepIndex: number,
-    payload: Record<string, unknown>
-  ) => {
+  const handleSubmit = async () => {
     const session = await getSession();
     const accountId = session?.user?.id;
-    if (!accountId) return;
 
-    if (stepIndex === STEP_COURSE_DETAILS) {
-      const res = await fetch(apiRoute, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `${accountId}`,
-        },
-        body: JSON.stringify({
-          ...payload,
-          status: 'draft',
-          draftStep: STEP_COURSE_DETAILS,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to create draft');
-      setDraftCourseId(data._id);
-      return;
-    }
-
-    const id = draftCourseId ?? initialDraftId;
-    if (!id) return;
-    const res = await fetch(`${apiRoute}/${id}`, {
-      method: 'PUT',
+    const response = await fetch(apiRoute, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `${accountId}`,
       },
-      body: JSON.stringify({ ...payload, draftStep: stepIndex }),
+      body: JSON.stringify(form.values),
     });
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error || 'Failed to update course');
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Error creating course:', data);
+      return;
     }
+
+    router.push(`/courses/${data._id}?new=true`);
   };
 
-  const handleNext = async () => {
-    if (!validateCurrentStep()) return;
-    setLoading(true);
-    setErrorMessage('');
-    try {
-      if (currentStep === STEP_COURSE_DETAILS) {
-        const v = form.values;
-        await saveStep(STEP_COURSE_DETAILS, {
-          name: v.name,
-          code: v.code,
-          semester: v.semester,
-          startDate: v.startDate,
-          duration: v.duration,
-          courseType: v.courseType,
-          isOn: v.isOn,
-          frequency: v.frequency || undefined,
-          aiStartDate: v.aiStartDate,
-        });
-        setCurrentStep(1);
-      } else if (currentStep === STEP_PEOPLE) {
-        await saveStep(STEP_PEOPLE, {});
-        setCurrentStep(2);
-      } else if (currentStep === STEP_TEAM_ALLOCATION) {
-        await saveStep(STEP_TEAM_ALLOCATION, {});
-        setCurrentStep(3);
-      } else if (currentStep === STEP_REPOSITORIES) {
-        const v = form.values;
-        await saveStep(STEP_REPOSITORIES, {
-          courseType: v.courseType,
-          gitHubOrgName:
-            v.courseType === CourseType.GitHubOrg ? v.gitHubOrgName : undefined,
-          repoNameFilter:
-            v.courseType === CourseType.GitHubOrg
-              ? v.repoNameFilter
-              : undefined,
-          installationId: v.installationId
-            ? Number(v.installationId)
-            : undefined,
-        });
-        setCurrentStep(4);
-      } else if (currentStep === STEP_AI_INSIGHTS) {
-        const v = form.values;
-        await saveStep(STEP_AI_INSIGHTS, {
-          status: 'active',
-          aiInsights: {
-            isOn: v.isOn,
-            provider: v.customisedAI ? v.provider : undefined,
-            model: v.customisedAI ? v.model : undefined,
-            apiKey: v.customisedAI ? v.apiKey : undefined,
-            frequency: v.frequency || undefined,
-            startDate: v.aiStartDate ?? undefined,
-          },
-        });
-        const id = draftCourseId ?? initialDraftId;
-        if (id) router.push(`/courses/${id}?new=true`);
-      }
-    } catch (err) {
-      setErrorMessage(
-        err instanceof Error ? err.message : 'Something went wrong'
-      );
-    } finally {
-      setLoading(false);
-    }
+  const modelOptions: Record<string, string[]> = {
+    Gemini: [
+      'gemini-1.5-pro',
+      'gemini-1.5-flash',
+      'gemini-2.0-flash-lite',
+      'gemini-2.0-flash',
+    ],
+    OpenAI: [
+      'gpt-3.5-turbo',
+      'gpt-4o-mini',
+      'gpt-4o',
+      'gpt-4.5-preview',
+      'o1-mini',
+      'o1',
+    ],
+    DeepSeek: ['deepseek-chat', 'deepseek-reasoner'],
   };
-
-  const handleCancel = () => {
-    if (onCancel) onCancel();
-    else router.push('/courses');
-  };
-
-  if (loadingDraft) {
-    return (
-      <Box p="md">
-        <Text size="sm" c="dimmed">
-          Loading draft…
-        </Text>
-      </Box>
-    );
-  }
 
   return (
-    <Box maw={520} mx="auto">
-      <Stepper
-        active={currentStep}
-        onStepClick={step => setCurrentStep(step)}
-        allowNextStepsSelect={false}
-      >
-        <Stepper.Step
-          label="Course Details"
-          description="Essential information"
-        >
-          <Title order={4} mt="md" mb="xs">
-            Course Details
-          </Title>
-          <Text size="sm" c="dimmed" mb="md">
-            Please provide essential information to begin setting up your
-            course.
-          </Text>
-          <TextInput
-            withAsterisk
-            label="Course Name"
-            placeholder="Software Engineering Project"
-            {...form.getInputProps('name')}
-            value={form.values.name}
-            onChange={e => form.setFieldValue('name', e.currentTarget.value)}
-          />
-          <TextInput
-            withAsterisk
-            mt="md"
-            label="Course Code"
-            placeholder="CS3203"
-            {...form.getInputProps('code')}
-            value={form.values.code}
-            onChange={e => form.setFieldValue('code', e.currentTarget.value)}
-          />
-          <TextInput
-            withAsterisk
-            mt="md"
-            label="Academic Term"
-            placeholder="AY2025/2026 Semester 1"
-            {...form.getInputProps('semester')}
-            value={form.values.semester}
-            onChange={e =>
-              form.setFieldValue('semester', e.currentTarget.value)
-            }
-          />
-          <DatePickerInput
-            withAsterisk
-            mt="md"
-            label="Start Date"
-            placeholder="Pick start date"
-            error={form.errors.startDate}
-            value={form.values.startDate}
-            onChange={value => form.setFieldValue('startDate', value)}
-          />
-          <TextInput
-            withAsterisk
-            mt="md"
-            label="Duration"
-            placeholder="13"
-            rightSection={<Text style={{ paddingRight: 30 }}> weeks </Text>}
-            {...form.getInputProps('duration')}
-            value={form.values.duration}
-            onChange={e =>
-              form.setFieldValue('duration', Number(e.currentTarget.value) || 0)
-            }
-          />
-        </Stepper.Step>
-
-        <Stepper.Step label="People" description="Faculty, TAs & students">
-          <Title order={4} mt="md" mb="xs">
-            People
-          </Title>
-          <Text size="sm" c="dimmed" mb="md">
-            Upload faculty, teaching assistants (TAs) and student information.
-            You can add people after the course is created from the course
-            People page.
-          </Text>
-          <Text size="sm" c="dimmed">
-            No configuration required in this step. Click Next to continue.
-          </Text>
-        </Stepper.Step>
-
-        <Stepper.Step label="Team Allocation" description="Teams setup">
-          <Title order={4} mt="md" mb="xs">
-            Team Allocation
-          </Title>
-          <Text size="sm" c="dimmed" mb="md">
-            Allocate students and TAs to teams. You can configure teams after
-            the course is created from the course Teams page.
-          </Text>
-          <Text size="sm" c="dimmed">
-            No configuration required in this step. Click Next to continue.
-          </Text>
-        </Stepper.Step>
-
-        <Stepper.Step label="Repositories" description="Repository source">
-          <Title order={4} mt="md" mb="xs">
-            Repositories
-          </Title>
-          <Text size="sm" c="dimmed" mb="md">
-            Choose how course repositories are synced.
-          </Text>
-          <Box>
-            <Group gap={6}>
-              <Title order={6} my={5}>
-                Repository Source
-              </Title>
-              <Tooltip
-                label="Choose how course repositories are synced: Manual Setup via public GitHub links, or automatically through GitHub Organisation."
-                withinPortal
-                multiline
-                w={300}
+    <Box maw={300} mx="auto">
+      <form onSubmit={form.onSubmit(handleSubmit)}>
+        <Title order={4} my={15}>
+          Course Details
+        </Title>
+        <TextInput
+          withAsterisk
+          label="Course Name"
+          placeholder="Software Engineering Project"
+          {...form.getInputProps('name')}
+          value={form.values.name}
+          onChange={event =>
+            form.setFieldValue('name', event.currentTarget.value)
+          }
+        />
+        <TextInput
+          withAsterisk
+          mt="md"
+          label="Course Code"
+          placeholder="CS3203"
+          {...form.getInputProps('code')}
+          value={form.values.code}
+          onChange={event =>
+            form.setFieldValue('code', event.currentTarget.value)
+          }
+        />
+        <TextInput
+          withAsterisk
+          mt="md"
+          label="Academic Term"
+          placeholder="AY2025/2026 Semester 1"
+          {...form.getInputProps('semester')}
+          value={form.values.semester}
+          onChange={event =>
+            form.setFieldValue('semester', event.currentTarget.value)
+          }
+        />
+        <DatePickerInput
+          withAsterisk
+          mt="md"
+          label="Start Date"
+          placeholder="Pick start date"
+          error={form.errors.startDate}
+          value={form.values.startDate}
+          onChange={value => form.setFieldValue('startDate', value)}
+        />
+        <TextInput
+          withAsterisk
+          mt="md"
+          label="Duration"
+          placeholder="13"
+          rightSection={<Text style={{ paddingRight: 30 }}> weeks </Text>}
+          {...form.getInputProps('duration')}
+          value={form.values.duration}
+          onChange={event =>
+            form.setFieldValue(
+              'duration',
+              Number(event.currentTarget.value) || 0
+            )
+          }
+        />
+        <Space h="md" />
+        <Title order={4} my={15}>
+          Course Repository Setup
+        </Title>
+        <Box>
+          <Group gap={6}>
+            <Title order={6} my={5}>
+              Repository Source
+            </Title>
+            <Tooltip
+              label="Choose how course repositories are synced: Manual Setup via public GitHub links, or automatically through GitHub Organisation."
+              withinPortal
+              multiline
+              w={300}
+            >
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                size="sm"
+                aria-label="Setup Repositories help"
               >
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  size="sm"
-                  aria-label="Setup Repositories help"
-                >
-                  <IconHelpCircle size={16} />
-                </ActionIcon>
-              </Tooltip>
-              <SegmentedControl
-                data={[
-                  { value: CourseType.GitHubOrg, label: 'GitHub Organisation' },
-                  { value: CourseType.Normal, label: 'Manual Setup' },
-                ]}
-                {...form.getInputProps('courseType')}
-              />
-            </Group>
-            <Collapse in={form.values.courseType === CourseType.GitHubOrg}>
-              <Box>
-                <Title order={6} my={10}>
-                  GitHub Organisation Setup
-                </Title>
-                <Card withBorder p="md">
-                  <Text size="sm" c="dimmed" maw={520} mb="sm">
-                    Install the CRISP GitHub App in your GitHub organisation to
-                    enable automatic syncing of repositories.
-                  </Text>
-                  <Button
-                    w={CARD_W}
-                    leftSection={<IconBrandGithub size={14} />}
-                    variant="default"
-                    component="a"
-                    href={gitHubNewInstallationUrl}
-                    target="_blank"
-                  >
-                    Install CRISP GitHub
-                  </Button>
-                  <TextInput
-                    withAsterisk
-                    placeholder="e.g. nus-crisp"
-                    label="GitHub Organisation Name"
-                    {...form.getInputProps('gitHubOrgName')}
-                    my={5}
-                    onChange={e => {
-                      form.setFieldValue(
-                        'gitHubOrgName',
-                        e.currentTarget.value
-                      );
-                      form.setFieldValue('installationId', '');
-                      setAppInstallationStatus(InstallationStatus.IDLE);
-                      setErrorMessage('');
-                    }}
-                  />
-                  <Space h="sm" />
-                  {errorMessage && (
-                    <Text style={{ maxWidth: CARD_W }} c="red">
-                      {errorMessage}
-                    </Text>
-                  )}
-                  <Button
-                    type="button"
-                    loading={
-                      appInstallationStatus === InstallationStatus.LOADING
-                    }
-                    variant={
-                      appInstallationStatus === InstallationStatus.SUCCESS
-                        ? 'filled'
-                        : 'outline'
-                    }
-                    color={
-                      appInstallationStatus === InstallationStatus.SUCCESS
-                        ? 'green'
-                        : appInstallationStatus === InstallationStatus.ERROR
-                          ? 'red'
-                          : 'blue'
-                    }
-                    rightSection={
-                      appInstallationStatus === InstallationStatus.SUCCESS ? (
-                        <IconCheck size={14} />
-                      ) : null
-                    }
-                    onClick={() =>
-                      checkAppInstallation(form.values.gitHubOrgName)
-                    }
-                  >
-                    {appInstallationStatus === InstallationStatus.ERROR
-                      ? 'Try Again'
-                      : 'Verify CRISP Installation'}
-                  </Button>
-                  <Collapse
-                    in={appInstallationStatus === InstallationStatus.SUCCESS}
-                    mt="md"
-                  >
-                    <TextInput
-                      withAsterisk
-                      label="Repo Name Filter"
-                      placeholder="e.g. 23s2"
-                      {...form.getInputProps('repoNameFilter')}
-                      onChange={e =>
-                        form.setFieldValue(
-                          'repoNameFilter',
-                          e.currentTarget.value
-                        )
-                      }
-                    />
-                  </Collapse>
-                </Card>
-              </Box>
-            </Collapse>
-          </Box>
-        </Stepper.Step>
-
-        <Stepper.Step label="AI Insights" description="AI configuration">
-          <Title order={4} mt="md" mb="xs">
-            AI Insights
-          </Title>
-          <Text size="sm" c="dimmed" mb="md">
-            Configure model and frequency of AI generated insights on
-            teams&apos; codebase.
-          </Text>
-          <Box>
-            <Switch
-              defaultChecked
-              label="Enable AI Insights"
-              size="md"
-              mb={15}
-              {...form.getInputProps('isOn', { type: 'checkbox' })}
+                <IconHelpCircle size={16} />
+              </ActionIcon>
+            </Tooltip>
+            <SegmentedControl
+              data={[
+                { value: CourseType.GitHubOrg, label: 'GitHub Organisation' },
+                { value: CourseType.Normal, label: 'Manual Setup' },
+              ]}
+              {...form.getInputProps('courseType')}
             />
-            <Collapse in={form.values.isOn}>
-              <Card withBorder>
-                <Group gap={6}>
-                  <Switch
-                    label="Use Customised AI Model"
-                    size="sm"
-                    {...form.getInputProps('customisedAI', {
-                      type: 'checkbox',
-                    })}
-                  />
-                  <Tooltip
-                    label="By default, we use the gemini-1.5-pro model. You can input your own model and API key to use customised AI model."
-                    withinPortal
-                    multiline
-                    w={300}
-                  >
-                    <ActionIcon
-                      variant="subtle"
-                      color="gray"
-                      size="sm"
-                      aria-label="AI Insights help"
-                    >
-                      <IconHelpCircle size={16} />
-                    </ActionIcon>
-                  </Tooltip>
-                </Group>
+          </Group>
+
+          <Collapse in={form.values.courseType === CourseType.GitHubOrg}>
+            <Box>
+              <Title order={6} my={10}>
+                GitHub Organisation Setup
+              </Title>
+              <Card withBorder p="md">
+                <Text size="sm" c="dimmed" maw={520} mb="sm">
+                  Install the CRISP GitHub App in your GitHub organisation to
+                  enable automatic syncing of repositories from your
+                  organisation.
+                </Text>
+                <Button
+                  w={CARD_W}
+                  leftSection={<IconBrandGithub size={14} />}
+                  variant="default"
+                  component="a"
+                  href={gitHubNewInstallationUrl}
+                  target="_blank"
+                >
+                  Install CRISP GitHub
+                </Button>
+                <TextInput
+                  withAsterisk
+                  placeholder="e.g. nus-crisp"
+                  label="GitHub Organisation Name"
+                  {...form.getInputProps('gitHubOrgName')}
+                  my={5}
+                  onChange={event => {
+                    form.setFieldValue(
+                      'gitHubOrgName',
+                      event.currentTarget.value
+                    );
+                    form.setFieldValue('installationId', '');
+                    setAppInstallationStatus(InstallationStatus.IDLE);
+                    setErrorMessage('');
+                  }}
+                />
                 <Space h="sm" />
-                <Collapse in={form.values.customisedAI}>
-                  <Select
-                    required
-                    comboboxProps={{ withinPortal: true }}
-                    data={['Gemini', 'OpenAI', 'DeepSeek']}
-                    placeholder="Choose AI provider"
-                    label="AI Provider"
-                    {...form.getInputProps('provider')}
-                    value={form.values.provider}
-                  />
-                  <Space h="sm" />
-                  <Select
-                    required
-                    disabled={!form.values.provider}
-                    comboboxProps={{ withinPortal: true }}
-                    data={modelOptions[form.values.provider] || []}
-                    placeholder="Choose AI model"
-                    label="AI model"
-                    {...form.getInputProps('model')}
-                    value={form.values.model}
-                  />
-                  <Space h="sm" />
+                {errorMessage && (
+                  <Text style={{ maxWidth: CARD_W }} c="red">
+                    {errorMessage}
+                  </Text>
+                )}
+                <Button
+                  type="button"
+                  loading={appInstallationStatus === InstallationStatus.LOADING}
+                  variant={
+                    appInstallationStatus === InstallationStatus.SUCCESS
+                      ? 'filled'
+                      : 'outline'
+                  }
+                  color={
+                    appInstallationStatus === InstallationStatus.SUCCESS
+                      ? 'green'
+                      : appInstallationStatus === InstallationStatus.ERROR
+                        ? 'red'
+                        : 'blue'
+                  }
+                  rightSection={
+                    appInstallationStatus === InstallationStatus.SUCCESS ? (
+                      <IconCheck size={14} />
+                    ) : null
+                  }
+                  onClick={() =>
+                    checkAppInstallation(form.values.gitHubOrgName)
+                  }
+                >
+                  {appInstallationStatus === InstallationStatus.ERROR
+                    ? 'Try Again'
+                    : 'Verify CRISP Installation'}
+                </Button>
+
+                <Collapse
+                  in={appInstallationStatus === InstallationStatus.SUCCESS}
+                  mt="md"
+                >
+                  {/* <MultiSelect
+                        disabled
+                        mt="sm"
+                        label="Repositories"
+                        placeholder="Pick repos..."
+                        data={repoList}
+                        hidePickedOptions
+                        searchable
+                        clearable
+                        leftSectionWidth={100}
+                      /> */}
                   <TextInput
                     withAsterisk
-                    label="API Key"
-                    disabled={!form.values.provider || !form.values.model}
-                    placeholder="e.g. 123456"
-                    {...form.getInputProps('apiKey')}
-                    value={form.values.apiKey}
+                    label="Repo Name Filter"
+                    placeholder="e.g. 23s2"
+                    {...form.getInputProps('repoNameFilter')}
+                    onChange={event =>
+                      form.setFieldValue(
+                        'repoNameFilter',
+                        event.currentTarget.value
+                      )
+                    }
                   />
                 </Collapse>
-                <Space h="sm" />
-                <Group gap={6}>
-                  <Select
-                    required
-                    comboboxProps={{ withinPortal: true }}
-                    data={[
-                      'Daily',
-                      'Weekly',
-                      'Fortnightly',
-                      'Every 4 weeks (~Monthly)',
-                    ]}
-                    placeholder="Choose insight generation frequency"
-                    label="AI Insight Frequency"
-                    value={
-                      form.values.frequency === 'Monthly'
-                        ? 'Every 4 weeks (~Monthly)'
-                        : form.values.frequency || null
-                    }
-                    onChange={value => {
-                      form.setFieldValue(
-                        'frequency',
-                        value === 'Every 4 weeks (~Monthly)'
-                          ? 'Monthly'
-                          : value || ''
-                      );
-                    }}
-                  />
-                  <Tooltip label="How often to generate AI insights for each group">
-                    <ActionIcon
-                      variant="subtle"
-                      color="gray"
-                      size="sm"
-                      aria-label="AI Insights help"
-                    >
-                      <IconHelpCircle size={16} />
-                    </ActionIcon>
-                  </Tooltip>
-                </Group>
-                <Space h="sm" />
-                <Group gap={6}>
-                  <DatePickerInput
-                    withAsterisk
-                    label="Start Date"
-                    placeholder="Pick start date"
-                    error={form.errors.aiStartDate}
-                    value={form.values.aiStartDate}
-                    minDate={
-                      new Date(new Date().setDate(new Date().getDate() + 1))
-                    }
-                    onChange={value => form.setFieldValue('aiStartDate', value)}
-                  />
-                  <Tooltip label="Pick the start date for generating AI insights">
-                    <ActionIcon
-                      variant="subtle"
-                      color="gray"
-                      size="sm"
-                      aria-label="AI Insights help"
-                    >
-                      <IconHelpCircle size={16} />
-                    </ActionIcon>
-                  </Tooltip>
-                </Group>
               </Card>
-            </Collapse>
-          </Box>
-        </Stepper.Step>
-
-        <Stepper.Completed>
-          <Text size="sm" c="dimmed">
-            Course created. Redirecting…
-          </Text>
-        </Stepper.Completed>
-      </Stepper>
-
-      {errorMessage && (
-        <Text size="sm" c="red" mt="md">
-          {errorMessage}
-        </Text>
-      )}
-
-      <Group justify="space-between" mt="xl">
-        <Button variant="default" onClick={handleCancel} disabled={loading}>
-          Cancel
-        </Button>
-        <Button loading={loading} onClick={handleNext}>
-          {currentStep === STEP_AI_INSIGHTS ? 'Create Course' : 'Next'}
-        </Button>
-      </Group>
+            </Box>
+          </Collapse>
+        </Box>
+        <Space h="md" />
+        <Group gap={6}>
+          <Title order={4} my={15}>
+            AI Insights Setup
+          </Title>
+          <Tooltip
+            label="Enable using AI to generate insights for each group based on their code analysis metrics"
+            withinPortal
+            multiline
+            w={300}
+          >
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              size="sm"
+              aria-label="AI Insights help"
+            >
+              <IconHelpCircle size={16} />
+            </ActionIcon>
+          </Tooltip>
+        </Group>
+        <Box>
+          <Switch
+            defaultChecked
+            label="Enable AI Insights"
+            size="md"
+            mb={15}
+            {...form.getInputProps('isOn', { type: 'checkbox' })}
+          />
+          <Collapse in={form.values.isOn}>
+            <Card withBorder>
+              <Group gap={6}>
+                <Switch
+                  label="Use Customised AI Model"
+                  // onLabel="Input your own model and API key"
+                  // offLabel="Use default gemini-1.5-pro model"
+                  size="sm"
+                  {...form.getInputProps('customisedAI', { type: 'checkbox' })}
+                />
+                <Tooltip
+                  label="By default, we use the gemini-1.5-pro model. You can input your own model and API key to use customised AI model."
+                  withinPortal
+                  multiline
+                  w={300}
+                >
+                  <ActionIcon
+                    variant="subtle"
+                    color="gray"
+                    size="sm"
+                    aria-label="AI Insights help"
+                  >
+                    <IconHelpCircle size={16} />
+                  </ActionIcon>
+                </Tooltip>
+              </Group>
+              <Space h="sm" />
+              <Collapse in={form.values.customisedAI}>
+                <Select
+                  required
+                  comboboxProps={{ withinPortal: true }}
+                  data={['Gemini', 'OpenAI', 'DeepSeek']}
+                  placeholder="Choose AI provider"
+                  label="AI Provider"
+                  {...form.getInputProps('provider')}
+                  value={form.values.provider}
+                />
+                <Space h="sm" />
+                <Select
+                  required
+                  disabled={!form.values.provider}
+                  comboboxProps={{ withinPortal: true }}
+                  data={modelOptions[form.values.provider] || []}
+                  placeholder="Choose AI model"
+                  label="AI model"
+                  {...form.getInputProps('model')}
+                  value={form.values.model}
+                />
+                <Space h="sm" />
+                <TextInput
+                  withAsterisk
+                  label="API Key"
+                  disabled={!form.values.provider || !form.values.model}
+                  placeholder="e.g. 123456"
+                  {...form.getInputProps('apiKey')}
+                  value={form.values.apiKey}
+                />
+              </Collapse>
+              <Space h="sm" />
+              <Group gap={6}>
+                <Select
+                  required
+                  comboboxProps={{ withinPortal: true }}
+                  data={[
+                    'Daily',
+                    'Weekly',
+                    'Fortnightly',
+                    'Every 4 weeks (~Monthly)',
+                  ]}
+                  placeholder="Choose insight generation frequency"
+                  label="AI Insight Frequency"
+                  onChange={value => {
+                    const updatedFrequency =
+                      value === 'Every 4 weeks (~Monthly)'
+                        ? 'Monthly'
+                        : value || '';
+                    form.setFieldValue('frequency', updatedFrequency);
+                  }}
+                />
+                <Tooltip label="How often to generate AI insights for each group">
+                  <ActionIcon
+                    variant="subtle"
+                    color="gray"
+                    size="sm"
+                    aria-label="AI Insights help"
+                  >
+                    <IconHelpCircle size={16} />
+                  </ActionIcon>
+                </Tooltip>
+              </Group>
+              <Space h="sm" />
+              <Group gap={6}>
+                <DatePickerInput
+                  withAsterisk
+                  label="Start Date"
+                  placeholder="Pick start date"
+                  error={form.errors.aiStartDate}
+                  value={form.values.aiStartDate}
+                  minDate={
+                    new Date(new Date().setDate(new Date().getDate() + 1))
+                  } // Only allow from next day onwards
+                  onChange={value => form.setFieldValue('aiStartDate', value)}
+                />
+                <Tooltip label="Pick the start date for generating AI insights">
+                  <ActionIcon
+                    variant="subtle"
+                    color="gray"
+                    size="sm"
+                    aria-label="AI Insights help"
+                  >
+                    <IconHelpCircle size={16} />
+                  </ActionIcon>
+                </Tooltip>
+              </Group>
+            </Card>
+          </Collapse>
+        </Box>
+        <Space h="md" mt="md" />
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <Button type="submit">Create Course</Button>
+        </div>
+        <Space mt="md" />
+      </form>
     </Box>
   );
 };
