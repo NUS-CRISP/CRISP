@@ -18,7 +18,14 @@ import {
 import PeopleInfoContainer from '@/components/views/PeopleInfoContainer';
 import TeamsInfoContainer from '@/components/views/TeamsInfoContainer';
 import StepIntro from '@/components/create-course/StepIntro';
-import { IconFlag, IconGitBranch, IconHierarchy2, IconListDetails, IconRobot, IconUsers } from '@tabler/icons-react';
+import {
+  IconFlag,
+  IconGitBranch,
+  IconHierarchy2,
+  IconListDetails,
+  IconRobot,
+  IconUsers,
+} from '@tabler/icons-react';
 
 const TOTAL_STEPS = 6;
 

@@ -56,7 +56,12 @@ export const CourseDetailsSetup = ({ form }: Props) => {
           label="Duration"
           size="lg"
           placeholder="13"
-          rightSection={<Text size="lg" style={{ paddingRight: 30 }}> weeks </Text>}
+          rightSection={
+            <Text size="lg" style={{ paddingRight: 30 }}>
+              {' '}
+              weeks{' '}
+            </Text>
+          }
           {...form.getInputProps('duration')}
           value={form.values.duration}
           onChange={e =>

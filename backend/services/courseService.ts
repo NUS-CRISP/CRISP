@@ -130,13 +130,9 @@ export const updateCourseById = async (courseId: string, updateData: any) => {
     update.$unset = { draftStep: '' };
   }
 
-  const updatedCourse = await CourseModel.findByIdAndUpdate(
-    courseId,
-    update,
-    {
-      new: true,
-    }
-  );
+  const updatedCourse = await CourseModel.findByIdAndUpdate(courseId, update, {
+    new: true,
+  });
   if (!updatedCourse) {
     throw new NotFoundError('Course not found');
   }
