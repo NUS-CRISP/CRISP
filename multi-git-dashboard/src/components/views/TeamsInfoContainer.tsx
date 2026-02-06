@@ -94,7 +94,6 @@ const TeamsInfoContainer: React.FC<TeamsInfoContainerProps> = ({
     fetchTeachingTeam();
     fetchTeamDatas();
     fetchJiraBoards();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId]);
 
   return (

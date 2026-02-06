@@ -53,12 +53,10 @@ const PeopleInfoContainer: React.FC<PeopleInfoContainerProps> = ({
 
   useEffect(() => {
     if (courseId) fetchPeople();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId]);
 
   useEffect(() => {
     if (permission && faculty.length + TAs.length > 0) getAccountStatuses();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [permission, faculty, TAs]);
 
   const onUpdate = () => {

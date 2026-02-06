@@ -400,7 +400,7 @@ const CreateCoursePage = () => {
               <StepIntro
                 icon={<IconHierarchy2 size={25} />}
                 title="Team Allocation"
-                description="Organise students and TAs into teams. 
+                description="Organise students and TAs into teams.
                 You can reconfigure teams later from the course's Teams page."
               />
               <Box mt="md">
