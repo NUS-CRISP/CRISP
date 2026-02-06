@@ -43,12 +43,6 @@ export const CourseReposSetup = ({
 }: Props) => {
   return (
     <>
-      <Title order={2} mt="md" mb="xs">
-        Repositories
-      </Title>
-      <Text size="md" c="dimmed" mb="md">
-        Choose how course repositories are synced.
-      </Text>
       <Box>
         <Group gap={6}>
           <Title order={3} my={5}>
@@ -82,7 +76,7 @@ export const CourseReposSetup = ({
           />
         </Group>
         <Collapse in={form.values.courseType === CourseType.GitHubOrg}>
-        <Space h="md" />
+          <Space h="md" />
           <Box>
             <Title order={4} my={10}>
               GitHub Organisation Setup

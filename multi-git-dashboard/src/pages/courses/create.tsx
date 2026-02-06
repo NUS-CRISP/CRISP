@@ -1,4 +1,4 @@
-import { Box, Button, Group, Text, Title } from '@mantine/core';
+import { Box, Button, Group, Title } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
 import { useRouter } from 'next/router';
@@ -17,6 +17,8 @@ import {
 } from '@/components/create-course/constants';
 import PeopleInfoContainer from '@/components/views/PeopleInfoContainer';
 import TeamsInfoContainer from '@/components/views/TeamsInfoContainer';
+import StepIntro from '@/components/create-course/StepIntro';
+import { IconFlag, IconGitBranch, IconHierarchy2, IconListDetails, IconRobot, IconUsers } from '@tabler/icons-react';
 
 const TOTAL_STEPS = 6;
 
@@ -359,24 +361,53 @@ const CreateCoursePage = () => {
           }}
         >
           {/* Step 0: Course details */}
-          {step === 0 && <CourseDetailsSetup form={form} />}
+          {step === 0 && (
+            <>
+              <StepIntro
+                icon={<IconListDetails size={25} />}
+                title="Course Details"
+                description="Enter the course details."
+              />
+              <CourseDetailsSetup form={form} />
+            </>
+          )}
 
           {/* Step 1: People */}
-          {step === 1 &&
-            <Box mt="md">
-              <PeopleInfoContainer courseId={courseId ?? ''} />
-            </Box>
-          }
+          {step === 1 && (
+            <>
+              <StepIntro
+                icon={<IconUsers size={25} />}
+                title="Add People"
+                description="Add faculty, Teaching Assistants (TAs) and students to the course."
+              />
+              <Box mt="md">
+                <PeopleInfoContainer courseId={courseId ?? ''} />
+              </Box>
+            </>
+          )}
 
           {/* Step 2: Team allocation */}
           {step === 2 && (
-            <Box mt="md">
-              <TeamsInfoContainer courseId={courseId ?? ''} />
-            </Box>
+            <>
+              <StepIntro
+                icon={<IconHierarchy2 size={25} />}
+                title="Team Allocation"
+                description="Allocate students and TAs to teams. You can configure teams after the course is created from the course Teams page."
+              />
+              <Box mt="md">
+                <TeamsInfoContainer courseId={courseId ?? ''} />
+              </Box>
+            </>
           )}
 
           {/* Step 3: Repositories */}
           {step === 3 && (
+            <>
+            <StepIntro
+                icon={<IconGitBranch size={25} />}
+                title="Repositories"
+                description="Choose how course repositories are synced."
+              />
             <CourseReposSetup
               form={form}
               appInstallationStatus={
@@ -399,15 +430,32 @@ const CreateCoursePage = () => {
                 checkAppInstallation(form.values.gitHubOrgName)
               }
             />
+            </>
           )}
 
           {/* Step 4: AI Insights */}
           {step === 4 && (
-            <CourseAISetup form={form} modelOptions={modelOptions} />
+            <>
+            <StepIntro
+                icon={<IconRobot size={25} />}
+                title="AI Insights"
+                description="Enable using AI to generate insights for each group based on their code analysis metrics"
+              />
+              <CourseAISetup form={form} modelOptions={modelOptions} />
+            </>
           )}
 
           {/* Step 5: Review & confirm */}
-          {step === 5 && <CourseReviewSummary form={form} />}
+          {step === 5 && (
+            <>
+            <StepIntro
+                icon={<IconFlag size={25} />}
+                title="Review & Confirm"
+                description="Review the course details and confirm the creation of the course."
+              />
+              <CourseReviewSummary form={form} />
+            </>
+          )}
         </Box>
 
         {/* Bottom actions - fixed footer */}

@@ -10,13 +10,6 @@ interface Props {
 export const CourseDetailsSetup = ({ form }: Props) => {
   return (
     <>
-      <Title order={2} mt="md" mb="xs">
-        Course Details
-      </Title>
-      <Text size="md" c="dimmed" mb="md">
-        Please provide essential information to begin setting up your course.
-      </Text>
-
       <TextInput
         withAsterisk
         label="Course Name"
