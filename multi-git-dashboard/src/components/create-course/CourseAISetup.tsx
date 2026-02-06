@@ -6,9 +6,7 @@ import {
   Select,
   Space,
   Switch,
-  Text,
   TextInput,
-  Title,
   Tooltip,
 } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';

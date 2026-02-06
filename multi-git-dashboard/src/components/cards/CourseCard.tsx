@@ -1,4 +1,4 @@
-import { Badge, Box, Card, Group, Text, Title } from '@mantine/core';
+import { Badge, Box, Card, Text, Title } from '@mantine/core';
 import { Course } from '@shared/types/Course';
 import Link from 'next/link';
 import { forwardRef } from 'react';

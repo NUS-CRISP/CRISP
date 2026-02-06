@@ -210,11 +210,10 @@ const CreateCoursePage = () => {
       }
     };
     loadDraft();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router.isReady, router.query.courseId]);
+  }, [router.isReady, router.query.courseId, form]);
 
   const saveCurrentStep = async (publish = false) => {
-    const body: any = {};
+    const body: Record<string, unknown> = {};
     // Build partial payload depending on `step`
     if (step === 0) {
       const v = form.values;
@@ -373,8 +372,8 @@ const CreateCoursePage = () => {
               <StepIntro
                 icon={<IconListDetails size={25} />}
                 title="Course Details"
-                description="Set up the basic information for your course, such as its name, code, semester, and duration. 
-                This helps identify your course and determines when it will run. You can edit these details later if needed.."
+                description="Set up the basic information for your course, such as its name, code, semester, and duration.
+                This helps identify your course and determines when it will run. You can edit these details later if needed."
               />
               <CourseDetailsSetup form={form} />
             </>
@@ -386,7 +385,7 @@ const CreateCoursePage = () => {
               <StepIntro
                 icon={<IconUsers size={25} />}
                 title="Add People"
-                description="Invite Faculty staff, Teaching Assistants (TAs), and students to your course. 
+                description="Invite Faculty staff, Teaching Assistants (TAs), and students to your course.
                 You can edit course participants again later if needed."
               />
               <Box mt="md">
@@ -416,7 +415,7 @@ const CreateCoursePage = () => {
               <StepIntro
                 icon={<IconGitBranch size={25} />}
                 title="Repositories"
-                description="Choose how student repositories are linked to this course. 
+                description="Choose how student repositories are linked to this course.
                 If you’re using GitHub organisations, we’ll help you verify access and automatically sync repositories for analysis."
               />
               <CourseReposSetup
@@ -450,7 +449,7 @@ const CreateCoursePage = () => {
               <StepIntro
                 icon={<IconRobot size={25} />}
                 title="AI Insights"
-                description="Enable AI-powered insights to analyse team activity and code metrics over time. 
+                description="Enable AI-powered insights to analyse team activity and code metrics over time.
                 You can use the default settings or customise the AI provider, model, and update frequency."
               />
               <CourseAISetup form={form} modelOptions={modelOptions} />

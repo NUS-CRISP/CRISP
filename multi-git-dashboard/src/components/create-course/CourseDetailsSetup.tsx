@@ -1,4 +1,4 @@
-import { Group, Text, TextInput, Title } from '@mantine/core';
+import { Group, Text, TextInput } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import { UseFormReturnType } from '@mantine/form';
 import { CreateCourseFormValues } from '@/components/create-course/types';
