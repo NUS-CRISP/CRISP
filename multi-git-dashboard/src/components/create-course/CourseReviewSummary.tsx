@@ -10,10 +10,10 @@ interface Props {
 export const CourseReviewSummary = ({ form }: Props) => {
   return (
     <>
-      <Title order={4} mt="md" mb="xs">
+      <Title order={2} mt="md" mb="xs">
         Review &amp; Confirm
       </Title>
-      <Text size="sm" c="dimmed" mb="md">
+      <Text size="md" c="dimmed" mb="md">
         Review your course configuration before creating it.
       </Text>
 
@@ -22,23 +22,23 @@ export const CourseReviewSummary = ({ form }: Props) => {
           <Title order={5} mb="xs">
             Course Details
           </Title>
-          <Text size="sm">
+          <Text size="md">
             <strong>Name: </strong>
             {form.values.name || '-'}
           </Text>
-          <Text size="sm">
+          <Text size="md">
             <strong>Code: </strong>
             {form.values.code || '-'}
           </Text>
-          <Text size="sm">
+          <Text size="md">
             <strong>Term: </strong>
             {form.values.semester || '-'}
           </Text>
-          <Text size="sm">
+          <Text size="md">
             <strong>Start Date: </strong>
             {form.values.startDate?.toLocaleDateString() || '-'}
           </Text>
-          <Text size="sm">
+          <Text size="md">
             <strong>Duration: </strong>
             {form.values.duration} weeks
           </Text>
@@ -48,7 +48,7 @@ export const CourseReviewSummary = ({ form }: Props) => {
           <Title order={5} mb="xs">
             Repositories
           </Title>
-          <Text size="sm">
+          <Text size="md">
             <strong>Source: </strong>
             {form.values.courseType === CourseType.GitHubOrg
               ? 'GitHub Organisation'
@@ -56,11 +56,11 @@ export const CourseReviewSummary = ({ form }: Props) => {
           </Text>
           {form.values.courseType === CourseType.GitHubOrg && (
             <>
-              <Text size="sm">
+              <Text size="md">
                 <strong>Organisation: </strong>
                 {form.values.gitHubOrgName || '-'}
               </Text>
-              <Text size="sm">
+              <Text size="md">
                 <strong>Repo filter: </strong>
                 {form.values.repoNameFilter || '-'}
               </Text>
@@ -73,31 +73,31 @@ export const CourseReviewSummary = ({ form }: Props) => {
         <Title order={5} mb="xs">
           AI Insights
         </Title>
-        <Text size="sm">
+        <Text size="md">
           <strong>Enabled: </strong>
           {form.values.isOn ? 'Yes' : 'No'}
         </Text>
         {form.values.isOn && (
           <>
-            <Text size="sm">
+            <Text size="md">
               <strong>Frequency: </strong>
               {form.values.frequency || '-'}
             </Text>
-            <Text size="sm">
+            <Text size="md">
               <strong>Start Date: </strong>
               {form.values.aiStartDate?.toLocaleDateString() || '-'}
             </Text>
-            <Text size="sm">
+            <Text size="md">
               <strong>Custom model: </strong>
               {form.values.customisedAI ? 'Yes' : 'No'}
             </Text>
             {form.values.customisedAI && (
               <>
-                <Text size="sm">
+                <Text size="md">
                   <strong>Provider: </strong>
                   {form.values.provider || '-'}
                 </Text>
-                <Text size="sm">
+                <Text size="md">
                   <strong>Model: </strong>
                   {form.values.model || '-'}
                 </Text>

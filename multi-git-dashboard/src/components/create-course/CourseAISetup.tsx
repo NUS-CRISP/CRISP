@@ -24,17 +24,17 @@ interface Props {
 export const CourseAISetup = ({ form, modelOptions }: Props) => {
   return (
     <>
-      <Title order={4} mt="md" mb="xs">
+      <Title order={2} mt="md" mb="xs">
         AI Insights
       </Title>
-      <Text size="sm" c="dimmed" mb="md">
+      <Text size="md" c="dimmed" mb="md">
         Configure model and frequency of AI generated insights on teams&apos;
         codebase.
       </Text>
       <Switch
         defaultChecked
         label="Enable AI Insights"
-        size="md"
+        size="lg"
         mb={15}
         {...form.getInputProps('isOn', { type: 'checkbox' })}
       />
@@ -43,7 +43,7 @@ export const CourseAISetup = ({ form, modelOptions }: Props) => {
           <Group gap={6}>
             <Switch
               label="Use Customised AI Model"
-              size="sm"
+              size="lg"
               {...form.getInputProps('customisedAI', {
                 type: 'checkbox',
               })}
@@ -57,10 +57,10 @@ export const CourseAISetup = ({ form, modelOptions }: Props) => {
               <ActionIcon
                 variant="subtle"
                 color="gray"
-                size="sm"
+                size="lg"
                 aria-label="AI Insights help"
               >
-                <IconHelpCircle size={16} />
+                <IconHelpCircle size={20} />
               </ActionIcon>
             </Tooltip>
           </Group>
@@ -68,6 +68,7 @@ export const CourseAISetup = ({ form, modelOptions }: Props) => {
           <Collapse in={form.values.customisedAI}>
             <Select
               required
+              size="lg"
               comboboxProps={{ withinPortal: true }}
               data={['Gemini', 'OpenAI', 'DeepSeek']}
               placeholder="Choose AI provider"
@@ -79,6 +80,7 @@ export const CourseAISetup = ({ form, modelOptions }: Props) => {
             <Select
               required
               disabled={!form.values.provider}
+              size="lg"
               comboboxProps={{ withinPortal: true }}
               data={modelOptions[form.values.provider] || []}
               placeholder="Choose AI model"
@@ -89,6 +91,7 @@ export const CourseAISetup = ({ form, modelOptions }: Props) => {
             <Space h="sm" />
             <TextInput
               withAsterisk
+              size="lg"
               label="API Key"
               disabled={!form.values.provider || !form.values.model}
               placeholder="e.g. 123456"
@@ -100,6 +103,7 @@ export const CourseAISetup = ({ form, modelOptions }: Props) => {
           <Group gap={6}>
             <Select
               required
+              size="lg"
               comboboxProps={{ withinPortal: true }}
               data={[
                 'Daily',
@@ -107,7 +111,7 @@ export const CourseAISetup = ({ form, modelOptions }: Props) => {
                 'Fortnightly',
                 'Every 4 weeks (~Monthly)',
               ]}
-              placeholder="Choose insight generation frequency"
+              placeholder="Fortnightly"
               label="AI Insight Frequency"
               value={
                 form.values.frequency === 'Monthly'
@@ -125,10 +129,10 @@ export const CourseAISetup = ({ form, modelOptions }: Props) => {
               <ActionIcon
                 variant="subtle"
                 color="gray"
-                size="sm"
+                size="lg"
                 aria-label="AI Insights help"
               >
-                <IconHelpCircle size={16} />
+                <IconHelpCircle size={20} />
               </ActionIcon>
             </Tooltip>
           </Group>
@@ -136,8 +140,9 @@ export const CourseAISetup = ({ form, modelOptions }: Props) => {
           <Group gap={6}>
             <DatePickerInput
               withAsterisk
+              size="lg"
               label="Start Date"
-              placeholder="Pick start date"
+              placeholder="January 1, 1900"
               error={form.errors.aiStartDate}
               value={form.values.aiStartDate}
               minDate={new Date(new Date().setDate(new Date().getDate() + 1))}
@@ -147,10 +152,10 @@ export const CourseAISetup = ({ form, modelOptions }: Props) => {
               <ActionIcon
                 variant="subtle"
                 color="gray"
-                size="sm"
+                size="lg"
                 aria-label="AI Insights help"
               >
-                <IconHelpCircle size={16} />
+                <IconHelpCircle size={20} />
               </ActionIcon>
             </Tooltip>
           </Group>

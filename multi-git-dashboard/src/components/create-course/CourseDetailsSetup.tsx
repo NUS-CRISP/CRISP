@@ -10,45 +10,49 @@ interface Props {
 export const CourseDetailsSetup = ({ form }: Props) => {
   return (
     <>
-      <Title order={3} mt="md" mb="xs">
+      <Title order={2} mt="md" mb="xs">
         Course Details
       </Title>
-      <Text size="sm" c="dimmed" mb="md">
+      <Text size="md" c="dimmed" mb="md">
         Please provide essential information to begin setting up your course.
       </Text>
 
       <TextInput
         withAsterisk
         label="Course Name"
+        size="lg"
         placeholder="Software Engineering Project"
         {...form.getInputProps('name')}
         value={form.values.name}
         onChange={e => form.setFieldValue('name', e.currentTarget.value)}
       />
 
-      <Group mt="md" grow gap="md" align="flex-start">
-        <TextInput
-          withAsterisk
-          label="Course Code"
-          placeholder="CS3203"
-          {...form.getInputProps('code')}
-          value={form.values.code}
-          onChange={e => form.setFieldValue('code', e.currentTarget.value)}
-        />
-        <TextInput
-          withAsterisk
-          label="Academic Term"
-          placeholder="AY2025/2026 Semester 1"
-          {...form.getInputProps('semester')}
-          value={form.values.semester}
-          onChange={e => form.setFieldValue('semester', e.currentTarget.value)}
-        />
-      </Group>
+      <TextInput
+        withAsterisk
+        mt="md"
+        label="Course Code"
+        size="lg"
+        placeholder="CS3203"
+        {...form.getInputProps('code')}
+        value={form.values.code}
+        onChange={e => form.setFieldValue('code', e.currentTarget.value)}
+      />
+      <TextInput
+        withAsterisk
+        mt="md"
+        label="Academic Term"
+        size="lg"
+        placeholder="AY2025/2026 Semester 1"
+        {...form.getInputProps('semester')}
+        value={form.values.semester}
+        onChange={e => form.setFieldValue('semester', e.currentTarget.value)}
+      />
 
       <Group mt="md" grow gap="md" align="flex-start">
         <DatePickerInput
           withAsterisk
           label="Start Date"
+          size="lg"
           placeholder="Pick start date"
           error={form.errors.startDate}
           value={form.values.startDate}
@@ -57,8 +61,9 @@ export const CourseDetailsSetup = ({ form }: Props) => {
         <TextInput
           withAsterisk
           label="Duration"
+          size="lg"
           placeholder="13"
-          rightSection={<Text style={{ paddingRight: 30 }}> weeks </Text>}
+          rightSection={<Text size="lg" style={{ paddingRight: 30 }}> weeks </Text>}
           {...form.getInputProps('duration')}
           value={form.values.duration}
           onChange={e =>

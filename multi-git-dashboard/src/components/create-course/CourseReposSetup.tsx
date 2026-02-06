@@ -21,7 +21,6 @@ import {
   IconHelpCircle,
 } from '@tabler/icons-react';
 
-const CARD_W = '210px';
 const gitHubNewInstallationUrl =
   'https://github.com/apps/NUS-CRISP/installations/new';
 
@@ -44,15 +43,15 @@ export const CourseReposSetup = ({
 }: Props) => {
   return (
     <>
-      <Title order={4} mt="md" mb="xs">
+      <Title order={2} mt="md" mb="xs">
         Repositories
       </Title>
-      <Text size="sm" c="dimmed" mb="md">
+      <Text size="md" c="dimmed" mb="md">
         Choose how course repositories are synced.
       </Text>
       <Box>
         <Group gap={6}>
-          <Title order={6} my={5}>
+          <Title order={3} my={5}>
             Repository Source
           </Title>
           <Tooltip
@@ -67,10 +66,11 @@ export const CourseReposSetup = ({
               size="sm"
               aria-label="Setup Repositories help"
             >
-              <IconHelpCircle size={16} />
+              <IconHelpCircle size={20} />
             </ActionIcon>
           </Tooltip>
           <SegmentedControl
+            size="md"
             data={[
               {
                 value: CourseType.GitHubOrg,
@@ -82,17 +82,17 @@ export const CourseReposSetup = ({
           />
         </Group>
         <Collapse in={form.values.courseType === CourseType.GitHubOrg}>
+        <Space h="md" />
           <Box>
-            <Title order={6} my={10}>
+            <Title order={4} my={10}>
               GitHub Organisation Setup
             </Title>
             <Card withBorder p="md">
-              <Text size="sm" c="dimmed" maw={520} mb="sm">
+              <Text size="md" maw={520} mb="sm">
                 Install the CRISP GitHub App in your GitHub organisation to
                 enable automatic syncing of repositories.
               </Text>
               <Button
-                w={CARD_W}
                 leftSection={<IconBrandGithub size={14} />}
                 variant="default"
                 component="a"
@@ -103,6 +103,7 @@ export const CourseReposSetup = ({
               </Button>
               <TextInput
                 withAsterisk
+                size="lg"
                 placeholder="e.g. nus-crisp"
                 label="GitHub Organisation Name"
                 {...form.getInputProps('gitHubOrgName')}
@@ -111,10 +112,11 @@ export const CourseReposSetup = ({
               />
               <Space h="sm" />
               {errorMessage && (
-                <Text style={{ maxWidth: CARD_W }} c="red">
+                <Text size="md" c="red" ta="center">
                   {errorMessage}
                 </Text>
               )}
+              <Space h="sm" />
               <Button
                 type="button"
                 loading={appInstallationStatus === 'loading'}
