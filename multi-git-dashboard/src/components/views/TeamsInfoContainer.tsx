@@ -1,23 +1,22 @@
 import TeamsInfo from '@/components/views/TeamsInfo';
 import { hasFacultyPermission } from '@/lib/auth/utils';
-import { Container } from '@mantine/core';
 import { TeamSet } from '@shared/types/TeamSet';
-import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
-import { User } from '@shared/types/User';
-import { TeamData } from '@shared/types/TeamData';
 import { JiraBoard } from '@shared/types/JiraData';
+import { TeamData } from '@shared/types/TeamData';
+import { User } from '@shared/types/User';
+import { useEffect, useState } from 'react';
 
-const TimelineListPage: React.FC = () => {
-  const router = useRouter();
-  const { id } = router.query as {
-    id: string;
-  };
+interface TeamsInfoContainerProps {
+  courseId: string;
+}
 
-  const teamSetsApiRoute = `/api/courses/${id}/teamsets`;
-  const teachingTeamApiRoute = `/api/courses/${id}/teachingteam`;
-  const teamDatasApiRoute = `/api/github/course/${id}/names`;
-  const jiraBoardsApiRoute = `/api/jira/course/${id}/names`;
+const TeamsInfoContainer: React.FC<TeamsInfoContainerProps> = ({
+  courseId,
+}) => {
+  const teamSetsApiRoute = `/api/courses/${courseId}/teamsets`;
+  const teachingTeamApiRoute = `/api/courses/${courseId}/teachingteam`;
+  const teamDatasApiRoute = `/api/github/course/${courseId}/names`;
+  const jiraBoardsApiRoute = `/api/jira/course/${courseId}/names`;
 
   const [teamSets, setTeamSets] = useState<TeamSet[]>([]);
   const [teachingTeam, setTeachingTeam] = useState<User[]>([]);
@@ -25,22 +24,6 @@ const TimelineListPage: React.FC = () => {
   const [jiraBoards, setJiraBoards] = useState<JiraBoard[]>([]);
 
   const permission = hasFacultyPermission();
-
-  const onUpdate = () => {
-    fetchTeamSets();
-    fetchTeachingTeam();
-    fetchTeamDatas();
-    fetchJiraBoards();
-  };
-
-  useEffect(() => {
-    if (router.isReady) {
-      fetchTeamSets();
-      fetchTeachingTeam();
-      fetchTeamDatas();
-      fetchJiraBoards();
-    }
-  }, [router.isReady]);
 
   const fetchTeamSets = async () => {
     try {
@@ -98,21 +81,33 @@ const TimelineListPage: React.FC = () => {
     }
   };
 
+  const onUpdate = () => {
+    fetchTeamSets();
+    fetchTeachingTeam();
+    fetchTeamDatas();
+    fetchJiraBoards();
+  };
+
+  useEffect(() => {
+    if (!courseId) return;
+    fetchTeamSets();
+    fetchTeachingTeam();
+    fetchTeamDatas();
+    fetchJiraBoards();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [courseId]);
+
   return (
-    <Container>
-      {id && (
-        <TeamsInfo
-          courseId={id}
-          teamSets={teamSets}
-          teachingTeam={teachingTeam}
-          teamDatas={teamDatas}
-          jiraBoards={jiraBoards}
-          hasFacultyPermission={permission}
-          onUpdate={onUpdate}
-        />
-      )}
-    </Container>
+    <TeamsInfo
+      courseId={courseId}
+      teamSets={teamSets}
+      teachingTeam={teachingTeam}
+      teamDatas={teamDatas}
+      jiraBoards={jiraBoards}
+      hasFacultyPermission={permission}
+      onUpdate={onUpdate}
+    />
   );
 };
 
-export default TimelineListPage;
+export default TeamsInfoContainer;

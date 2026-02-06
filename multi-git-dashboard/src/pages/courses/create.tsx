@@ -16,6 +16,7 @@ import {
   modelOptions,
 } from '@/components/create-course/constants';
 import PeopleInfoContainer from '@/components/views/PeopleInfoContainer';
+import TeamsInfoContainer from '@/components/views/TeamsInfoContainer';
 
 const TOTAL_STEPS = 6;
 
@@ -379,20 +380,21 @@ const CreateCoursePage = () => {
             ))}
 
           {/* Step 2: Team allocation */}
-          {step === 2 && (
-            <>
-              <Title order={4} mt="md" mb="xs">
-                Team Allocation
-              </Title>
-              <Text size="sm" c="dimmed" mb="md">
-                Allocate students and TAs to teams. You can configure teams
-                after the course is created from the course Teams page.
-              </Text>
-              <Text size="sm" c="dimmed">
-                No configuration required in this step. Click Next to continue.
-              </Text>
-            </>
-          )}
+          {step === 2 &&
+            (courseId ? (
+              <Box mt="md">
+                <TeamsInfoContainer courseId={courseId} />
+              </Box>
+            ) : (
+              <>
+                <Title order={4} mt="md" mb="xs">
+                  Team Allocation
+                </Title>
+                <Text size="sm" c="dimmed" mb="md">
+                  Save course details first, then you can configure teams here.
+                </Text>
+              </>
+            ))}
 
           {/* Step 3: Repositories */}
           {step === 3 && (
