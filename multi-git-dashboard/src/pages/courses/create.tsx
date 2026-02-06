@@ -11,31 +11,11 @@ import type { CreateCourseFormValues } from '@/components/create-course/types';
 import { CourseAISetup } from '@/components/create-course/CourseAISetup';
 import { CourseReviewSummary } from '@/components/create-course/CourseReviewSummary';
 import ProgressBar from '@/components/create-course/ProgressBar';
-
-enum InstallationStatus {
-  IDLE = 'idle',
-  LOADING = 'loading',
-  SUCCESS = 'success',
-  ERROR = 'error',
-}
-
-const modelOptions: Record<string, string[]> = {
-  Gemini: [
-    'gemini-1.5-pro',
-    'gemini-1.5-flash',
-    'gemini-2.0-flash-lite',
-    'gemini-2.0-flash',
-  ],
-  OpenAI: [
-    'gpt-3.5-turbo',
-    'gpt-4o-mini',
-    'gpt-4o',
-    'gpt-4.5-preview',
-    'o1-mini',
-    'o1',
-  ],
-  DeepSeek: ['deepseek-chat', 'deepseek-reasoner'],
-};
+import {
+  InstallationStatus,
+  modelOptions,
+} from '@/components/create-course/constants';
+import PeopleInfoContainer from '@/components/views/PeopleInfoContainer';
 
 const TOTAL_STEPS = 6;
 
@@ -381,21 +361,22 @@ const CreateCoursePage = () => {
           {step === 0 && <CourseDetailsSetup form={form} />}
 
           {/* Step 1: People */}
-          {step === 1 && (
-            <>
-              <Title order={4} mt="md" mb="xs">
-                People
-              </Title>
-              <Text size="sm" c="dimmed" mb="md">
-                Upload faculty, teaching assistants (TAs) and student
-                information. You can add people after the course is created from
-                the course People page.
-              </Text>
-              <Text size="sm" c="dimmed">
-                No configuration required in this step. Click Next to continue.
-              </Text>
-            </>
-          )}
+          {step === 1 &&
+            (courseId ? (
+              <Box mt="md">
+                <PeopleInfoContainer courseId={courseId} />
+              </Box>
+            ) : (
+              <>
+                <Title order={4} mt="md" mb="xs">
+                  People
+                </Title>
+                <Text size="sm" c="dimmed" mb="md">
+                  Save course details first, then you can add faculty, TAs and
+                  students here.
+                </Text>
+              </>
+            ))}
 
           {/* Step 2: Team allocation */}
           {step === 2 && (
