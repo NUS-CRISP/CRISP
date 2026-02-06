@@ -363,38 +363,17 @@ const CreateCoursePage = () => {
 
           {/* Step 1: People */}
           {step === 1 &&
-            (courseId ? (
-              <Box mt="md">
-                <PeopleInfoContainer courseId={courseId} />
-              </Box>
-            ) : (
-              <>
-                <Title order={4} mt="md" mb="xs">
-                  People
-                </Title>
-                <Text size="sm" c="dimmed" mb="md">
-                  Save course details first, then you can add faculty, TAs and
-                  students here.
-                </Text>
-              </>
-            ))}
+            <Box mt="md">
+              <PeopleInfoContainer courseId={courseId ?? ''} />
+            </Box>
+          }
 
           {/* Step 2: Team allocation */}
-          {step === 2 &&
-            (courseId ? (
-              <Box mt="md">
-                <TeamsInfoContainer courseId={courseId} />
-              </Box>
-            ) : (
-              <>
-                <Title order={4} mt="md" mb="xs">
-                  Team Allocation
-                </Title>
-                <Text size="sm" c="dimmed" mb="md">
-                  Save course details first, then you can configure teams here.
-                </Text>
-              </>
-            ))}
+          {step === 2 && (
+            <Box mt="md">
+              <TeamsInfoContainer courseId={courseId ?? ''} />
+            </Box>
+          )}
 
           {/* Step 3: Repositories */}
           {step === 3 && (
