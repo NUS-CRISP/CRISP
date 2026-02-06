@@ -1,7 +1,7 @@
 import { Box, Button, Group, Text, Title } from '@mantine/core';
 import { useForm } from '@mantine/form';
+import { notifications } from '@mantine/notifications';
 import { useRouter } from 'next/router';
-import { getSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { CourseType } from '@shared/types/Course';
 
@@ -306,6 +306,12 @@ const CreateCoursePage = () => {
         if (!res.ok) throw new Error(data.error || 'Failed to update course');
         if (publish) router.push(`/courses/${courseId}?new=true`);
       }
+    } catch (error) {
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to save course. Please try again.',
+        color: 'red',
+      });
     } finally {
       setLoading(false);
     }
