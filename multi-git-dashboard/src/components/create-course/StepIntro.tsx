@@ -29,7 +29,7 @@ const StepIntro = ({ icon, title, description }: StepIntroProps) => {
           </Title>
         </Group>
 
-        <Text size="md" c="gray.7" ml={50}>
+        <Text size="md" ml={50}>
           {description}
         </Text>
       </Stack>

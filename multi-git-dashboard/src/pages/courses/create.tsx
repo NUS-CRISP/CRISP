@@ -366,7 +366,8 @@ const CreateCoursePage = () => {
               <StepIntro
                 icon={<IconListDetails size={25} />}
                 title="Course Details"
-                description="Enter the course details."
+                description="Set up the basic information for your course, such as its name, code, semester, and duration. 
+                This helps identify your course and determines when it will run. You can edit these details later if needed.."
               />
               <CourseDetailsSetup form={form} />
             </>
@@ -378,7 +379,8 @@ const CreateCoursePage = () => {
               <StepIntro
                 icon={<IconUsers size={25} />}
                 title="Add People"
-                description="Add faculty, Teaching Assistants (TAs) and students to the course."
+                description="Invite Faculty staff, Teaching Assistants (TAs), and students to your course. 
+                You can edit course participants again later if needed."
               />
               <Box mt="md">
                 <PeopleInfoContainer courseId={courseId ?? ''} />
@@ -392,7 +394,8 @@ const CreateCoursePage = () => {
               <StepIntro
                 icon={<IconHierarchy2 size={25} />}
                 title="Team Allocation"
-                description="Allocate students and TAs to teams. You can configure teams after the course is created from the course Teams page."
+                description="Organise students and TAs into teams. 
+                You can reconfigure teams later from the course's Teams page."
               />
               <Box mt="md">
                 <TeamsInfoContainer courseId={courseId ?? ''} />
@@ -403,43 +406,45 @@ const CreateCoursePage = () => {
           {/* Step 3: Repositories */}
           {step === 3 && (
             <>
-            <StepIntro
+              <StepIntro
                 icon={<IconGitBranch size={25} />}
                 title="Repositories"
-                description="Choose how course repositories are synced."
+                description="Choose how student repositories are linked to this course. 
+                If you’re using GitHub organisations, we’ll help you verify access and automatically sync repositories for analysis."
               />
-            <CourseReposSetup
-              form={form}
-              appInstallationStatus={
-                appInstallationStatus === InstallationStatus.LOADING
-                  ? 'loading'
-                  : appInstallationStatus === InstallationStatus.SUCCESS
-                    ? 'success'
-                    : appInstallationStatus === InstallationStatus.ERROR
-                      ? 'error'
-                      : 'idle'
-              }
-              errorMessage={errorMessage}
-              onOrgNameChange={value => {
-                form.setFieldValue('gitHubOrgName', value);
-                form.setFieldValue('installationId', '');
-                setAppInstallationStatus(InstallationStatus.IDLE);
-                setErrorMessage('');
-              }}
-              onVerifyClick={() =>
-                checkAppInstallation(form.values.gitHubOrgName)
-              }
-            />
+              <CourseReposSetup
+                form={form}
+                appInstallationStatus={
+                  appInstallationStatus === InstallationStatus.LOADING
+                    ? 'loading'
+                    : appInstallationStatus === InstallationStatus.SUCCESS
+                      ? 'success'
+                      : appInstallationStatus === InstallationStatus.ERROR
+                        ? 'error'
+                        : 'idle'
+                }
+                errorMessage={errorMessage}
+                onOrgNameChange={value => {
+                  form.setFieldValue('gitHubOrgName', value);
+                  form.setFieldValue('installationId', '');
+                  setAppInstallationStatus(InstallationStatus.IDLE);
+                  setErrorMessage('');
+                }}
+                onVerifyClick={() =>
+                  checkAppInstallation(form.values.gitHubOrgName)
+                }
+              />
             </>
           )}
 
           {/* Step 4: AI Insights */}
           {step === 4 && (
             <>
-            <StepIntro
+              <StepIntro
                 icon={<IconRobot size={25} />}
                 title="AI Insights"
-                description="Enable using AI to generate insights for each group based on their code analysis metrics"
+                description="Enable AI-powered insights to analyse team activity and code metrics over time. 
+                You can use the default settings or customise the AI provider, model, and update frequency."
               />
               <CourseAISetup form={form} modelOptions={modelOptions} />
             </>
@@ -448,10 +453,10 @@ const CreateCoursePage = () => {
           {/* Step 5: Review & confirm */}
           {step === 5 && (
             <>
-            <StepIntro
+              <StepIntro
                 icon={<IconFlag size={25} />}
                 title="Review & Confirm"
-                description="Review the course details and confirm the creation of the course."
+                description="Once confirmed, your course will be officially activated in CRISP!"
               />
               <CourseReviewSummary form={form} />
             </>

@@ -24,13 +24,6 @@ interface Props {
 export const CourseAISetup = ({ form, modelOptions }: Props) => {
   return (
     <>
-      <Title order={2} mt="md" mb="xs">
-        AI Insights
-      </Title>
-      <Text size="md" c="dimmed" mb="md">
-        Configure model and frequency of AI generated insights on teams&apos;
-        codebase.
-      </Text>
       <Switch
         defaultChecked
         label="Enable AI Insights"

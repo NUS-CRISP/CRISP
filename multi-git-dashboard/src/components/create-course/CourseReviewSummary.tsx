@@ -10,13 +10,6 @@ interface Props {
 export const CourseReviewSummary = ({ form }: Props) => {
   return (
     <>
-      <Title order={2} mt="md" mb="xs">
-        Review &amp; Confirm
-      </Title>
-      <Text size="md" c="dimmed" mb="md">
-        Review your course configuration before creating it.
-      </Text>
-
       <Group align="flex-start" grow>
         <Card withBorder padding="md">
           <Title order={5} mb="xs">
