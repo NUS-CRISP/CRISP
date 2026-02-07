@@ -68,3 +68,69 @@ describe('getTeamMembers', () => {
     expect(result).toEqual(new Set(['user1', 'user2']));
   });
 });
+
+describe('normalizeGitHubUrl', () => {
+  it('removes trailing slashes', () => {
+    expect(github.normalizeGitHubUrl('https://github.com/org/repo/')).toBe(
+      'https://github.com/org/repo'
+    );
+    expect(github.normalizeGitHubUrl('https://github.com/org/repo////')).toBe(
+      'https://github.com/org/repo'
+    );
+  });
+
+  it('does not change urls without trailing slashes', () => {
+    expect(github.normalizeGitHubUrl('https://github.com/org/repo')).toBe(
+      'https://github.com/org/repo'
+    );
+  });
+});
+
+describe('extractRepoNameFromUrl', () => {
+  it('extracts repo name from https url', () => {
+    expect(github.extractRepoNameFromUrl('https://github.com/org/repo')).toBe(
+      'repo'
+    );
+  });
+
+  it('extracts repo name when url ends with .git', () => {
+    expect(
+      github.extractRepoNameFromUrl('https://github.com/org/repo.git')
+    ).toBe('repo');
+  });
+
+  it('extracts repo name when url has trailing slashes', () => {
+    expect(
+      github.extractRepoNameFromUrl('https://github.com/org/repo////')
+    ).toBe('repo');
+  });
+
+  it('extracts repo name when url has .git and trailing slashes', () => {
+    expect(
+      github.extractRepoNameFromUrl('https://github.com/org/repo.git////')
+    ).toBe('repo');
+  });
+
+  it('is case-insensitive for scheme + domain', () => {
+    expect(github.extractRepoNameFromUrl('HTTPS://GITHUB.COM/org/repo')).toBe(
+      'repo'
+    );
+  });
+
+  it('returns null for non-github urls', () => {
+    expect(github.extractRepoNameFromUrl('https://gitlab.com/org/repo')).toBe(
+      null
+    );
+  });
+
+  it('returns null for missing org/repo shape', () => {
+    expect(github.extractRepoNameFromUrl('https://github.com/org')).toBe(null);
+    expect(github.extractRepoNameFromUrl('https://github.com/')).toBe(null);
+  });
+
+  it('returns null for extra path segments', () => {
+    expect(
+      github.extractRepoNameFromUrl('https://github.com/org/repo/issues')
+    ).toBe(null);
+  });
+});

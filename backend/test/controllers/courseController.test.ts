@@ -2,6 +2,7 @@ import { Assessment } from '@models/Assessment';
 import { TeamSet } from '@models/TeamSet';
 import { Request, Response } from 'express';
 import {
+  getMe,
   addAssessments,
   addFaculty,
   addInternalAssessments,
@@ -47,6 +48,7 @@ import {
   MissingAuthorizationError,
   NotFoundError,
 } from '../../services/errors';
+import * as accountService from '../../services/accountService';
 import * as teamService from '../../services/teamService';
 import * as teamSetService from '../../services/teamSetService';
 import * as auth from '../../utils/auth';
@@ -59,6 +61,7 @@ jest.mock('../../services/teamSetService');
 jest.mock('../../services/teamService');
 jest.mock('../../utils/auth');
 jest.mock('../../services/internalAssessmentService');
+jest.mock('../../services/accountService');
 
 const mockRequest = (body = {}, params = {}, headers = {}) => {
   const req = {} as Request;
@@ -90,6 +93,83 @@ describe('courseController', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe('getMe', () => {
+    it('returns 200 with { userId, userCourseRole } when verifyRequestUser succeeds', async () => {
+      const req = mockRequest();
+      const res = mockResponse();
+
+      jest.spyOn(auth, 'verifyRequestUser').mockResolvedValueOnce({
+        account: { _id: 'acc-1' },
+        userCourseRole: 'Student',
+      } as any);
+
+      jest
+        .spyOn(accountService, 'getUserIdByAccountId')
+        .mockResolvedValueOnce('user-123' as any);
+
+      await getMe(req, res);
+
+      expect(auth.verifyRequestUser).toHaveBeenCalledWith(req);
+      expect(accountService.getUserIdByAccountId).toHaveBeenCalledWith('acc-1');
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        userId: 'user-123',
+        userCourseRole: 'Student',
+      });
+    });
+
+    it('returns 500 when verifyRequestUser throws', async () => {
+      const req = mockRequest();
+      const res = mockResponse();
+
+      const err = new Error('bad token');
+      jest.spyOn(auth, 'verifyRequestUser').mockRejectedValueOnce(err);
+
+      const consoleSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+
+      await getMe(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Failed to get user info',
+      });
+      expect(consoleSpy).toHaveBeenCalled(); // ensures your catch branch ran
+
+      consoleSpy.mockRestore();
+    });
+
+    it('returns 500 when getUserIdByAccountId throws', async () => {
+      const req = mockRequest();
+      const res = mockResponse();
+
+      jest.spyOn(auth, 'verifyRequestUser').mockResolvedValueOnce({
+        account: { _id: 'acc-2' },
+        userCourseRole: 'TA',
+      } as any);
+
+      jest
+        .spyOn(accountService, 'getUserIdByAccountId')
+        .mockRejectedValueOnce(new Error('db down'));
+
+      const consoleSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+
+      await getMe(req, res);
+
+      expect(accountService.getUserIdByAccountId).toHaveBeenCalledWith('acc-2');
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Failed to get user info',
+      });
+      expect(consoleSpy).toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
+    });
   });
 
   describe('createCourse', () => {

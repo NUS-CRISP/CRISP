@@ -38,9 +38,6 @@ const TEMP_FALLBACK_URL = 'https://github.com/gongg21/AddSubtract.git';
 
 export const getAllPeerReviewsyId = async (courseId: string) => {
   const peerReviews = await PeerReviewModel.find({ course: courseId });
-  if (!peerReviews)
-    throw new NotFoundError('No peer reviews found for this course');
-
   const result = peerReviews.map(r => {
     const obj = r.toObject();
     obj.status = obj.computedStatus ?? obj.status; // override with computed status
@@ -522,27 +519,23 @@ const buildAssignedReviewMaps = (
   const memberAssignedMap = new Map<string, AssignedReviewDTO[]>();
   for (const s of submissions.studentSubs) {
     const rid = s.reviewerUserId?.toString();
-    if (!rid) continue;
-
     const dto = toAssignedReviewDTO(s, assignmentById);
     if (!dto) continue;
 
-    const arr = memberAssignedMap.get(rid) ?? [];
+    const arr = memberAssignedMap.get(rid!) ?? [];
     arr.push(dto);
-    memberAssignedMap.set(rid, arr);
+    memberAssignedMap.set(rid!, arr);
   }
 
   const teamAssignedMap = new Map<string, AssignedReviewDTO[]>();
   for (const s of submissions.teamSubs) {
     const tid = s.reviewerTeamId?.toString();
-    if (!tid) continue;
-
     const dto = toAssignedReviewDTO(s, assignmentById);
     if (!dto) continue;
 
-    const arr = teamAssignedMap.get(tid) ?? [];
+    const arr = teamAssignedMap.get(tid!) ?? [];
     arr.push(dto);
-    teamAssignedMap.set(tid, arr);
+    teamAssignedMap.set(tid!, arr);
   }
 
   const assignmentsForTAs: TAToAssignmentsMap = {};
@@ -555,12 +548,10 @@ const buildAssignedReviewMaps = (
 
   for (const s of submissions.taSubs) {
     const taId = s.reviewerUserId?.toString();
-    if (!taId) continue;
-
     const dto = toAssignedReviewDTO(s, assignmentById);
     if (!dto) continue;
 
-    assignmentsForTAs[taId]?.assignedReviews.push(dto);
+    assignmentsForTAs[taId!]?.assignedReviews.push(dto);
   }
 
   return { memberAssignedMap, teamAssignedMap, assignmentsForTAs };

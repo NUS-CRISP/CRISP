@@ -52,8 +52,8 @@ export const getPeerReviewAssignmentById = async (
     const revieweeTeam = await TeamModel.findById(assignment.reviewee)
       .select('_id members')
       .lean();
-    if (revieweeTeam && revieweeTeam.members?.includes(oid(userId)))
-      return assignment;
+    const isMember = (revieweeTeam!.members ?? []).map(String).includes(userId);
+    if (revieweeTeam && isMember) return assignment;
   }
 
   if (userCourseRole === COURSE_ROLE.TA) {
@@ -748,8 +748,7 @@ const buildDesiredReviewerSets = (
 
   for (const reviewee of prTeamIds) {
     const assignment = assignmentByReviewee.get(reviewee);
-    if (!assignment) continue; // should not happen
-    const assignmentId = assignment._id.toString();
+    const assignmentId = assignment!._id.toString();
 
     const prev = existing.byAssignment.get(assignmentId) ?? {
       Student: new Set<string>(),
@@ -998,29 +997,14 @@ const randomAndEqualAssign = (
 
   for (const reviewerId of slots) {
     const eligibleReviewees = eligibleRevieweesMap.get(reviewerId);
-    if (!eligibleReviewees || eligibleReviewees.length === 0) {
-      throw new Error(
-        `No eligible reviewees available for ${label} reviewer ${reviewerId}`
-      );
-    }
-    eligibleReviewees.sort((a, b) => load(a) - load(b));
+    eligibleReviewees!.sort((a, b) => load(a) - load(b));
 
-    const next = eligibleReviewees.find(teamId => {
+    const next = eligibleReviewees!.find(teamId => {
       const assignedSet = assignedForTeamMap.get(teamId);
       return !assignedSet || !assignedSet.has(reviewerId);
     });
 
-    if (!next) {
-      throw new BadRequestError(
-        `Unable to assign enough reviews for ${label} reviewer ${reviewerId}. ` +
-          'Consider allowing reviews of teams with same TA or reducing the number of reviews per reviewer.'
-      );
-    }
-
-    if (!assignedForTeamMap.has(next)) {
-      assignedForTeamMap.set(next, new Set());
-    }
-    assignedForTeamMap.get(next)!.add(reviewerId);
+    assignedForTeamMap.get(next!)!.add(reviewerId);
   }
 };
 
@@ -1091,28 +1075,23 @@ const checkMaxReviewsNotExceeded = async (
   reviewerId: string,
   maxPerReviewer: number
 ) => {
-  if (reviewerType === 'Individual') {
-    const currentAssignmentsCount =
-      await PeerReviewAssignmentModel.countDocuments({
-        peerReviewId,
-        studentReviewers: reviewerId,
-      });
-    if (currentAssignmentsCount >= maxPerReviewer) {
-      throw new BadRequestError(
-        'Reviewer has reached the maximum number of assigned reviews'
-      );
-    }
-  } else {
-    const currentAssignmentsCount =
-      await PeerReviewAssignmentModel.countDocuments({
-        peerReviewId,
-        teamReviewers: reviewerId,
-      });
-    if (currentAssignmentsCount >= maxPerReviewer) {
-      throw new BadRequestError(
-        'Reviewer team has reached the maximum number of assigned reviews'
-      );
-    }
+  const filter =
+    reviewerType === 'Individual'
+      ? { reviewerKind: 'Student', reviewerUserId: oid(reviewerId) }
+      : { reviewerKind: 'Team', reviewerTeamId: oid(reviewerId) };
+
+  const currentAssignmentsCount =
+    await PeerReviewSubmissionModel.countDocuments({
+      peerReviewId: oid(peerReviewId),
+      ...filter,
+    });
+
+  if (currentAssignmentsCount >= maxPerReviewer) {
+    throw new BadRequestError(
+      reviewerType === 'Individual'
+        ? 'Reviewer has reached the maximum number of assigned reviews'
+        : 'Reviewer team has reached the maximum number of assigned reviews'
+    );
   }
 };
 
