@@ -37,6 +37,8 @@ export const createNewCourse = async (courseData: any, accountId: string) => {
     apiKey,
     frequency,
     aiStartDate,
+    status,
+    draftStep,
   } = courseData;
 
   const courseFields = {
@@ -50,7 +52,7 @@ export const createNewCourse = async (courseData: any, accountId: string) => {
     ...(repoNameFilter && { repoNameFilter }),
     ...(installationId && { installationId }),
     aiInsights: {
-      isOn: isOn,
+      isOn: isOn ?? false,
       ...(provider && { provider }),
       ...(model && { model }),
       ...(apiKey && { apiKey }),
@@ -58,6 +60,13 @@ export const createNewCourse = async (courseData: any, accountId: string) => {
       ...(aiStartDate && { startDate: aiStartDate }),
     },
   };
+
+  if (draftStep !== undefined && draftStep !== null) {
+    courseFields.status = 'draft';
+    courseFields.draftStep = draftStep;
+  } else {
+    courseFields.status = status ?? 'active';
+  }
 
   const course = await CourseModel.create(courseFields);
   course.faculty.push(user._id);
@@ -116,13 +125,14 @@ export const getCourseById = async (courseId: string, accountId?: string) => {
 };
 
 export const updateCourseById = async (courseId: string, updateData: any) => {
-  const updatedCourse = await CourseModel.findByIdAndUpdate(
-    courseId,
-    updateData,
-    {
-      new: true,
-    }
-  );
+  const update: any = { ...updateData };
+  if (updateData.status === 'active') {
+    update.$unset = { draftStep: '' };
+  }
+
+  const updatedCourse = await CourseModel.findByIdAndUpdate(courseId, update, {
+    new: true,
+  });
   if (!updatedCourse) {
     throw new NotFoundError('Course not found');
   }
