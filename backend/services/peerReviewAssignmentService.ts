@@ -3,7 +3,6 @@ import PeerReviewAssignmentModel, {
 } from '@models/PeerReviewAssignment';
 import TeamModel, { Team } from '@models/Team';
 import { BadRequestError, NotFoundError } from './errors';
-import TeamDataModel from '@models/TeamData';
 import { Types } from 'mongoose';
 import { getPeerReviewById, getTeamDataById } from './peerReviewService';
 import type { AnyBulkWriteOperation } from 'mongodb';
@@ -22,8 +21,6 @@ export interface NormalizedTeam {
 }
 
 const oid = (s: string) => new Types.ObjectId(s);
-
-const TEMP_FALLBACK_URL = 'https://github.com/gongg21/AddSubtract.git';
 
 export const getPeerReviewAssignmentById = async (
   userCourseRole: string,
@@ -100,18 +97,6 @@ export const assignPeerReviews = async (
     teamIdToTAMap,
     teamIdToRepoMap,
   } = await prepareData(courseId, teamSetId.toString());
-
-  // Helper to get repo info for a team
-  const getTeamRepo = (teamId: string) => {
-    const num = teamIdToTeamMap.get(teamId)!.number;
-    return (
-      teamIdToRepoMap.get(num.toString()) || {
-        repoUrl: '',
-        repoName: '',
-        gitHubOrgName: '',
-      }
-    );
-  };
 
   // Build Reviewer Pools
   const {
@@ -190,7 +175,7 @@ export const assignPeerReviews = async (
     assignDefault,
     assignTAs,
     prTeamIds,
-    getTeamRepo,
+    teamIdToRepoMap,
     assignedStudentsForTeam,
     assignedTeamsForTeam,
     assignedTAsForTeam
@@ -246,22 +231,13 @@ export const addManualAssignment = async (
   }
 
   // Ensure assignment exists (and fetch its id)
-  const teamData = await TeamDataModel.findOne({
-    course: courseId,
-    teamId: reviewee.number,
-  })
-    .select('repoName')
-    .lean();
-
   const { repoName, repoUrl } = await resolveTeamRepo(courseId, revieweeId);
-  console.log('repoName:', repoName);
-  console.log('repoUrl:', repoUrl);
 
   const assignmentId = await ensureAssignmentForReviewee(
     peerReviewId,
     revieweeId,
-    repoName ?? 'AddSubtract',
-    repoUrl ?? TEMP_FALLBACK_URL
+    repoName,
+    repoUrl,
   );
 
   console.log('checking manual assignment duplicates...');
@@ -327,16 +303,16 @@ export const initialiseAssignments = async (
 
   const prTeamDataById = await getTeamDataById(
     courseId,
-    prTeams.map(t => t.number)
+    prTeams.map(t => t._id.toString())
   );
 
-  console.log(prTeamDataById);
+  console.log("during assignment initialisations, peerReviewTeamDataById:", prTeamDataById);
 
   for (const team of prTeams) {
     const newAssignment = new PeerReviewAssignmentModel({
       peerReviewId: peerReviewId,
-      repoName: prTeamDataById.get(team.number.toString())?.repoName,
-      repoUrl: prTeamDataById.get(team.number.toString())?.repoUrl,
+      repoName: prTeamDataById.get(team._id.toString())?.repoName,
+      repoUrl: prTeamDataById.get(team._id.toString())?.repoUrl,
       reviewee: team._id,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -372,10 +348,9 @@ const prepareData = async (courseId: string, teamSetId: string) => {
 
   // Prepare data structures
   const prTeamIds = teams.map(t => t.id);
-  const prTeamNumbers = teams.map(t => t.number);
   const teamIdToTeamMap = new Map(teams.map(t => [t.id, t]));
   const teamIdToTAMap = new Map(teams.map(t => [t.id, t.taId]));
-  const teamIdToRepoMap = await getTeamDataById(courseId, prTeamNumbers);
+  const teamIdToRepoMap = await getTeamDataById(courseId, prTeamIds);
 
   return {
     teams,
@@ -592,11 +567,7 @@ const updateDBAssignmentsAndSubmissions = async (
   assignDefault: boolean,
   assignTAs: boolean,
   prTeamIds: string[],
-  getTeamRepo: (teamId: string) => {
-    repoUrl: string;
-    repoName: string;
-    gitHubOrgName: string;
-  },
+  teamIdToRepoMap: Map<string, { repoUrl: string; repoName: string; gitHubOrgName: string }>,
   assignedStudentsForTeam: Map<string, Set<string>>,
   assignedTeamsForTeam: Map<string, Set<string>>,
   assignedTAsForTeam: Map<string, Set<string>>
@@ -605,7 +576,7 @@ const updateDBAssignmentsAndSubmissions = async (
   const assignmentByReviewee = await upsertAndLoadAssignments(
     peerReviewId,
     prTeamIds,
-    getTeamRepo
+    teamIdToRepoMap
   );
 
   // 2. Load existing submissions for these assignments (so we can do partial updates)
@@ -638,15 +609,11 @@ const updateDBAssignmentsAndSubmissions = async (
 const upsertAndLoadAssignments = async (
   peerReviewId: string,
   prTeamIds: string[],
-  getTeamRepo: (teamId: string) => {
-    repoUrl: string;
-    repoName: string;
-    gitHubOrgName: string;
-  }
+  teamIdToRepoMap: Map<string, { repoUrl: string; repoName: string; gitHubOrgName: string }>
 ) => {
   const now = new Date();
   const ops: AnyBulkWriteOperation[] = prTeamIds.map(reviewee => {
-    const { repoName, repoUrl } = getTeamRepo(reviewee);
+    const { repoName, repoUrl } = teamIdToRepoMap.get(reviewee) ?? { repoName: 'no repo', repoUrl: 'no repo', gitHubOrgName: '' };
     return {
       updateOne: {
         filter: { peerReviewId: oid(peerReviewId), reviewee: oid(reviewee) },
