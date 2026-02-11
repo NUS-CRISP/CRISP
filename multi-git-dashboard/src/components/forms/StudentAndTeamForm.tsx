@@ -64,26 +64,36 @@ const StudentAndTeamForm: React.FC<StudentAndTeamFormProps> = ({
       setError('Team Number must be an integer');
       return;
     }
-    const response = await fetch(apiRoute, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        items: [
-          {
-            identifier: form.values.identifier,
-            name: form.values.name,
-            gitHandle: form.values.gitHandle,
-            email: form.values.email,
-            ...(tn !== undefined ? { teamNumber: tn } : {}),
-          },
-        ],
-      }),
-    });
+    try {
+      const response = await fetch(apiRoute, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          items: [
+            {
+              identifier: form.values.identifier,
+              name: form.values.name,
+              gitHandle: form.values.gitHandle,
+              email: form.values.email,
+              ...(tn !== undefined ? { teamNumber: tn } : {}),
+            },
+          ],
+        }),
+      });
 
-    await response.json();
-    onStudentCreated();
+      if (!response.ok) {
+        setError('Failed to add student. Please try again.');
+        return;
+      }
+
+      await response.json();
+      onStudentCreated();
+    } catch (error) {
+      console.error('Error adding student:', error);
+      setError('An error occurred. Please try again.');
+    }
   };
 
   return (
