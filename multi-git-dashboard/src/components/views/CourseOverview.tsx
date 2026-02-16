@@ -304,14 +304,14 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
               withBorder
               radius="lg"
               component={Link}
-              href={`/courses/${courseId}`}
+              href={`/courses/${courseId}/team-analytics`}
               className={classes.navCard}
             >
               <ThemeIcon radius="md" size={52} className={classes.navIcon}>
                 <IconUsersGroup size={24} />
               </ThemeIcon>
               <Title order={3} className={classes.navTitle}>
-                Team analytics
+                Team Analytics
               </Title>
               <Text c="dimmed" className={classes.navDescription}>
                 Deep dive into team performance metrics, code quality, and
@@ -330,7 +330,7 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
                 <IconMessagePlus size={24} />
               </ThemeIcon>
               <Title order={3} className={classes.navTitle}>
-                Peer review
+                Peer Review
               </Title>
               <Text c="dimmed" className={classes.navDescription}>
                 Review peer evaluations and provide feedback
@@ -369,7 +369,7 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
                 </ThemeIcon>
                 <Group justify="space-between" wrap="nowrap">
                   <Title order={3} className={classes.navTitle}>
-                    Create assessment
+                    Create Assessment
                   </Title>
                 </Group>
                 <Text c="dimmed" className={classes.navDescription}>
@@ -419,7 +419,7 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
                   <IconSettings size={24} />
                 </ThemeIcon>
                 <Title order={3} className={classes.navTitle}>
-                  Course settings
+                  Course Settings
                 </Title>
                 <Text c="dimmed" className={classes.navDescription}>
                   Manage people, repositories, timeline, and course
