@@ -1,9 +1,10 @@
-import { Box, Group, Text, Anchor } from '@mantine/core';
+import { Box, Group, Text, Anchor, Center, Title } from '@mantine/core';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import classes from '@/styles/course-overview.module.css';
 import ProfileDropdown from './ProfileDropdown';
 import CrispLogo from './shared/CrispLogo';
+import CrispIcon from './shared/CrispIcon';
 
 type Breadcrumb = {
   label: string;
@@ -39,8 +40,8 @@ const TopBar: React.FC = () => {
   const router = useRouter();
   const { pathname, asPath, query } = router;
 
-  const isCourseRoute = pathname.startsWith('/courses');
   const courseId = (query.id as string) || undefined;
+  const isCourseRoute = pathname.startsWith('/courses/') && !!courseId;
 
   const [courseCode, setCourseCode] = useState<string | null>(null);
   const [courseMeta, setCourseMeta] = useState<string | null>(null);
@@ -58,37 +59,40 @@ const TopBar: React.FC = () => {
         const semester = data.semester ?? '';
         const name = data.name ?? '';
         const meta =
-          semester && name ? `${semester} • ${name}` : semester || name || null;
+          semester && name ? `${name} • ${semester}` : name || semester || null;
         setCourseMeta(meta);
       } catch {
-        // fail silently – top bar is non-critical
+        // fail silently, top bar is non-critical
       }
     };
 
     if (isCourseRoute && courseId) {
       fetchCourseMeta();
+    } else {
+      // Leaving a course route, clear any stale course state
+      setCourseCode(null);
+      setCourseMeta(null);
     }
   }, [courseId, isCourseRoute]);
 
   const breadcrumbs: Breadcrumb[] = useMemo(() => {
-    if (!isCourseRoute) return [];
+    if (!isCourseRoute || !courseId) return [];
 
     const url = asPath.split('?')[0];
     const segments = url.split('/').filter(Boolean);
 
-    const crumbs: Breadcrumb[] = [{ label: 'Courses', href: '/courses' }];
-
-    if (courseId && courseCode) {
-      crumbs.push({ label: courseCode, href: `/courses/${courseId}` });
+    // `/courses` or `/courses/[id]` – no breadcrumbs, just course header
+    if (segments.length <= 2) {
+      return [];
     }
 
     // segments: ['courses', '<id>', ...rest]
-    if (segments.length <= 2) {
-      crumbs.push({ label: 'Overview' });
-      return crumbs;
-    }
-
     const rest = segments.slice(2);
+
+    const crumbs: Breadcrumb[] = [];
+
+    // Always start in-course breadcrumbs from the overview page
+    crumbs.push({ label: 'Overview', href: `/courses/${courseId}` });
 
     rest.forEach((seg, index) => {
       const isLast = index === rest.length - 1;
@@ -105,7 +109,7 @@ const TopBar: React.FC = () => {
     });
 
     return crumbs;
-  }, [asPath, courseCode, courseId, isCourseRoute]);
+  }, [asPath, courseId, isCourseRoute]);
 
   return (
     <Box className={classes.header}>
@@ -114,24 +118,46 @@ const TopBar: React.FC = () => {
         justify="space-between"
         wrap="nowrap"
       >
-        <Group gap="lg" wrap="nowrap">
+        <Group gap={12} wrap="nowrap">
           <Box
             onClick={() => router.push('/courses')}
-            style={{ cursor: 'pointer' }}
+            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
           >
-            <CrispLogo />
+            {isCourseRoute ? (
+              <Center
+                onMouseEnter={e => {
+                  e.currentTarget.style.backgroundColor =
+                    'light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-6))';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+                style={{
+                  padding: 8,
+                  borderRadius: 'var(--mantine-radius-md)',
+                  transition: 'background-color 0.2s ease',
+                }}
+              >
+                <CrispIcon size={45} />
+              </Center>
+            ) : (
+              <CrispLogo />
+            )}
           </Box>
 
           {isCourseRoute && (
-            <Box className={classes.courseHeaderInfo}>
-              {courseCode && (
-                <Text className={classes.courseCode}>{courseCode}</Text>
-              )}
-              {courseMeta && (
-                <Text className={classes.courseMeta}>{courseMeta}</Text>
-              )}
+            <Group gap="xl" wrap="nowrap" align="center">
+              <Group className={classes.courseHeaderInfo} gap={12} wrap="nowrap" align="baseline">
+                {courseCode && (
+                  <Title order={2} className={classes.courseCode}>{courseCode}</Title>
+                )}
+                {courseMeta && (
+                  <Title order={4} className={classes.courseMeta}>{courseMeta}</Title>
+                )}
+              </Group>
+
               {breadcrumbs.length > 0 && (
-                <Group gap={6} wrap="wrap" mt={4}>
+                <Group gap={6} wrap="wrap">
                   {breadcrumbs.map((crumb, index) => {
                     const isLast = index === breadcrumbs.length - 1;
                     return (
@@ -171,7 +197,7 @@ const TopBar: React.FC = () => {
                   })}
                 </Group>
               )}
-            </Box>
+            </Group>
           )}
         </Group>
 

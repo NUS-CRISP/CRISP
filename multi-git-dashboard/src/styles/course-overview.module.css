@@ -27,19 +27,15 @@
 
 .courseHeaderInfo {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 30px;
 }
 
-.courseCode {
-  font-size: 1.25rem;
-  font-weight: 700;
-  line-height: 1.1;
-}
 
 .courseMeta {
-  font-size: 0.875rem;
   color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
+  font-weight: 400;
   line-height: 1.1;
 }
 

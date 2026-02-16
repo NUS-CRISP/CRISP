@@ -10,7 +10,7 @@ import {
   Text,
 } from '@mantine/core';
 import Link from 'next/link';
-import CrispLogo from '../shared/CrispIcon';
+import CrispIcon from '../shared/CrispIcon';
 
 const AuthShell: React.FC<{
   children: React.ReactNode;
@@ -46,7 +46,7 @@ const AuthShell: React.FC<{
           style={{ display: 'inline-block' }}
         >
           <Group gap="lg">
-            <CrispLogo size={100} />
+            <CrispIcon size={100} />
             <div>
               <Title order={1} fw={700} fz={rem(70)}>
                 CRISP

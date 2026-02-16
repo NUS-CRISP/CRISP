@@ -23,6 +23,8 @@ export function ProfileDropdown() {
       style={{
         marginLeft: 'auto',
         width: 'fit-content',
+        transform: 'scale(1.4)',
+        transformOrigin: 'right center',
       }}
     >
       <Menu

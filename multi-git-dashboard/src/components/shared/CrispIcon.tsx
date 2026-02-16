@@ -1,6 +1,6 @@
 import { IconGitBranch } from '@tabler/icons-react';
 
-// CRISP Logo
+// CRISP Icon
 const CrispIcon: React.FC<{ size?: number }> = ({ size = 46 }) => (
   <div
     style={{
