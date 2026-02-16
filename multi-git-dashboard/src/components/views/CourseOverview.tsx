@@ -1,33 +1,85 @@
-import { DateUtils } from '@/lib/utils';
-import { Center, Container, Loader, ScrollArea } from '@mantine/core';
-import { Profile } from '@shared/types/Profile';
-import { Team as SharedTeam } from '@shared/types/Team';
-import { TeamData } from '@shared/types/TeamData';
+import { AreaChart } from '@mantine/charts';
+import {
+  ActionIcon,
+  Box,
+  Card,
+  Center,
+  Container,
+  Divider,
+  Group,
+  Loader,
+  ScrollArea,
+  SimpleGrid,
+  Stack,
+  Text,
+  ThemeIcon,
+  Title,
+} from '@mantine/core';
+import { hasFacultyPermission } from '@/lib/auth/utils';
+import { Course } from '@shared/types/Course';
+import { TeamData, TeamPR } from '@shared/types/TeamData';
 import { Status } from '@shared/types/util/Status';
-import { useEffect, useState } from 'react';
+import {
+  IconArrowLeft,
+  IconChecklist,
+  IconGitPullRequest,
+  IconLayoutDashboard,
+  IconMessagePlus,
+  IconSettings,
+  IconUsersGroup,
+} from '@tabler/icons-react';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useEffect, useMemo, useState } from 'react';
+import classes from '@/styles/course-overview.module.css';
 import AllTeams from '../overview/analytics/team/AllTeams';
 import TutorialPopover from '../tutorial/TutorialPopover';
 
 interface OverviewProps {
   courseId: string;
-  dateUtils: DateUtils;
-}
-export interface Team extends Omit<SharedTeam, 'teamData'> {
-  teamData: string; // TeamData not populated
 }
 
-export type ProfileGetter = (gitHandle: string) => Promise<Profile>;
+type Stat = {
+  label: string;
+  value: string;
+  sublabel?: string;
+};
+
+const formatCompactNumber = (n: number) =>
+  new Intl.NumberFormat('en', { notation: 'compact' }).format(n);
+
+const toDate = (d: unknown): Date | null => {
+  if (!d) return null;
+  const date = d instanceof Date ? d : new Date(d as string);
+  return isNaN(date.getTime()) ? null : date;
+};
+
+const timeAgo = (d: Date) => {
+  const diffMs = Date.now() - d.getTime();
+  const minutes = Math.floor(diffMs / (1000 * 60));
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+};
+
+const normalizePrState = (s?: string) => (s ?? '').trim().toLowerCase();
 
 const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
-  const [teams, setTeams] = useState<Team[]>([]);
+  const router = useRouter();
+  const permission = hasFacultyPermission();
+
+  const [course, setCourse] = useState<Course | null>(null);
   const [teamDatas, setTeamDatas] = useState<TeamData[]>([]);
   const [status, setStatus] = useState<Status>(Status.Loading);
 
-  const getTeams = async () => {
-    const res = await fetch(`/api/teams/course/${courseId}`);
-    if (!res.ok) throw new Error('Failed to fetch teams');
-    const teams: Team[] = await res.json();
-    return teams;
+  const getCourse = async () => {
+    const res = await fetch(`/api/courses/${courseId}`);
+    if (!res.ok) throw new Error('Failed to fetch course');
+    const c: Course = await res.json();
+    return c;
   };
 
   const getTeamDatas = async () => {
@@ -41,9 +93,11 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
     const fetchData = async () => {
       setStatus(Status.Loading);
       try {
-        const fetchedTeams = await getTeams();
-        setTeams(fetchedTeams);
-        const fetchedTeamDatas = await getTeamDatas();
+        const [fetchedCourse, fetchedTeamDatas] = await Promise.all([
+          getCourse(),
+          getTeamDatas(),
+        ]);
+        setCourse(fetchedCourse);
         setTeamDatas(fetchedTeamDatas);
         setStatus(Status.Idle);
       } catch (error) {
@@ -55,17 +109,131 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
     fetchData();
   }, [courseId]);
 
-  if (status === Status.Loading)
+  const uniqueTeamData = useMemo(
+    () =>
+      teamDatas.filter(
+        (team, index, self) =>
+          index === self.findIndex(t => t.repoName === team.repoName)
+      ),
+    [teamDatas]
+  );
+
+  const totals = useMemo(() => {
+    const totalCommits = uniqueTeamData.reduce((acc, t) => acc + (t.commits ?? 0), 0);
+    const totalPRs = uniqueTeamData.reduce(
+      (acc, t) => acc + (t.pullRequests ?? 0),
+      0
+    );
+
+    const allPRs: Array<(TeamPR & { repoName: string })> = [];
+    for (const t of uniqueTeamData) {
+      for (const pr of t.teamPRs ?? []) allPRs.push({ ...pr, repoName: t.repoName });
+    }
+    const openPRs = allPRs.filter(pr => normalizePrState(pr.state) === 'open');
+    const pendingReviews = openPRs.filter(pr => (pr.reviews?.length ?? 0) === 0);
+
+    return {
+      totalCommits,
+      totalPRs,
+      openPRsCount: openPRs.length,
+      pendingReviewsCount: pendingReviews.length,
+      totalRepos: uniqueTeamData.length,
+    };
+  }, [uniqueTeamData]);
+
+  const stats: Stat[] = useMemo(() => {
+    const totalStudents = course?.students?.length ?? 0;
+    const activeTeams = course?.teamSets?.length
+      ? course.teamSets.reduce((acc, ts) => acc + (ts.teams?.length ?? 0), 0)
+      : undefined;
+
+    return [
+      {
+        label: 'Total students',
+        value: formatCompactNumber(totalStudents),
+        sublabel: activeTeams ? `${activeTeams} teams configured` : undefined,
+      },
+      {
+        label: 'Pull requests',
+        value: formatCompactNumber(totals.totalPRs),
+        sublabel: `${totals.openPRsCount} open`,
+      },
+      {
+        label: 'Code commits',
+        value: formatCompactNumber(totals.totalCommits),
+        sublabel: `Across ${totals.totalRepos} repos`,
+      },
+      {
+        label: 'Pending reviews',
+        value: formatCompactNumber(totals.pendingReviewsCount),
+        sublabel: 'Open PRs with no reviews',
+      },
+    ];
+  }, [course, totals]);
+
+  const recentActivity = useMemo(() => {
+    const allPRs: Array<(TeamPR & { repoName: string })> = [];
+    for (const t of uniqueTeamData) {
+      for (const pr of t.teamPRs ?? []) allPRs.push({ ...pr, repoName: t.repoName });
+    }
+
+    const withDates = allPRs
+      .map(pr => ({
+        ...pr,
+        createdAtDate: toDate(pr.createdAt),
+        updatedAtDate: toDate(pr.updatedAt),
+      }))
+      .filter(pr => pr.createdAtDate || pr.updatedAtDate);
+
+    withDates.sort((a, b) => {
+      const ad = (a.updatedAtDate ?? a.createdAtDate)!.getTime();
+      const bd = (b.updatedAtDate ?? b.createdAtDate)!.getTime();
+      return bd - ad;
+    });
+
+    return withDates.slice(0, 8);
+  }, [uniqueTeamData]);
+
+  const chartData = useMemo(
+    () =>
+      uniqueTeamData.slice(0, 12).map(t => ({
+        teamName: t.repoName,
+        commits: t.commits ?? 0,
+        pullRequests: t.pullRequests ?? 0,
+      })),
+    [uniqueTeamData]
+  );
+
+  const series = [
+    { name: 'pullRequests', color: 'violet.6' },
+    { name: 'commits', color: 'blue.6' },
+  ];
+
+  if (status === Status.Loading) {
     return (
-      <Center>
+      <Center style={{ height: '70vh' }}>
         <Container mt={40}>
           <Loader />
         </Container>
       </Center>
     );
-  if (status === Status.Error) return <Center>No GitHub Data Available</Center>;
-  if (!teams.length || !teamDatas.length)
-    return <Center>No teams found.</Center>;
+  }
+
+  if (status === Status.Error) {
+    return (
+      <Center style={{ height: '70vh' }}>
+        <Text c="dimmed">No GitHub data available for this course.</Text>
+      </Center>
+    );
+  }
+
+  if (!course) {
+    return (
+      <Center style={{ height: '70vh' }}>
+        <Text c="dimmed">Course not available.</Text>
+      </Center>
+    );
+  }
 
   return (
     <ScrollArea
@@ -76,9 +244,259 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
         scrollbarWidth: 'thin',
       }}
     >
-      <TutorialPopover stage={13} position="left">
-        <AllTeams teamDatas={teamDatas} />
-      </TutorialPopover>
+      <AllTeams teamDatas={teamDatas} />
+      <Box className={classes.page} pl={20} pr={20}>
+        <Group justify="space-between" className={classes.topBar} wrap="nowrap">
+          <Group gap="sm" wrap="nowrap">
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              onClick={() => router.push('/courses')}
+              aria-label="Back to dashboard"
+            >
+              <IconArrowLeft size={18} />
+            </ActionIcon>
+            <Box>
+              <Text fw={700} lh={1.1}>
+                {course.code}
+              </Text>
+              <Text size="sm" c="dimmed" lh={1.1}>
+                {course.semester}
+              </Text>
+            </Box>
+          </Group>
+        </Group>
+
+        <Box className={classes.pageHeader}>
+          <Title order={1} className={classes.pageTitle}>
+            Course Overview
+          </Title>
+          <Text c="dimmed" className={classes.pageSubtitle}>
+            Manage your course, track progress, and review student performance
+          </Text>
+        </Box>
+
+        <Group align="stretch" className={classes.overviewRow}>
+          <Card withBorder radius="lg" className={classes.graphCard}>
+            <Group justify="space-between" mb="sm" wrap="nowrap">
+              <Group gap="xs" wrap="nowrap">
+                <ThemeIcon variant="light" radius="md" size="lg">
+                  <IconLayoutDashboard size={18} />
+                </ThemeIcon>
+                <Text fw={600}>Activity snapshot</Text>
+              </Group>
+              <Text size="sm" c="dimmed">
+                Top {Math.min(12, chartData.length)} repos
+              </Text>
+            </Group>
+            {chartData.length ? (
+              <AreaChart
+                h={360}
+                data={chartData}
+                dataKey="teamName"
+                series={series}
+                curveType="linear"
+                tickLine="xy"
+                gridAxis="xy"
+              />
+            ) : (
+              <Center style={{ height: 360 }}>
+                <Text c="dimmed">No repository activity yet.</Text>
+              </Center>
+            )}
+          </Card>
+
+          <Card withBorder radius="lg" className={classes.statsCard}>
+            <Stack gap={0}>
+              {stats.map((s, idx) => (
+                <Box
+                  key={s.label}
+                  className={classes.statRow}
+                  data-last={idx === stats.length - 1 || undefined}
+                >
+                  <Text className={classes.statLabel}>{s.label}</Text>
+                  <Text className={classes.statValue}>{s.value}</Text>
+                  {s.sublabel && (
+                    <Text size="sm" c="dimmed">
+                      {s.sublabel}
+                    </Text>
+                  )}
+                </Box>
+              ))}
+            </Stack>
+          </Card>
+        </Group>
+
+        <Box mt={30}>
+          <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="lg">
+            <Card
+              withBorder
+              radius="lg"
+              component={Link}
+              href={`/courses/${courseId}`}
+              className={classes.navCard}
+            >
+              <ThemeIcon radius="md" size={52} className={classes.navIcon}>
+                <IconUsersGroup size={24} />
+              </ThemeIcon>
+              <Title order={3} className={classes.navTitle}>
+                Team analytics
+              </Title>
+              <Text c="dimmed" className={classes.navDescription}>
+                Deep dive into team performance metrics, code quality, and
+                project progress
+              </Text>
+            </Card>
+
+            <Card
+              withBorder
+              radius="lg"
+              component={Link}
+              href={`/courses/${courseId}/peer-review`}
+              className={`${classes.navCard} ${classes.navCardFeatured}`}
+            >
+              <ThemeIcon radius="md" size={52} className={classes.navIcon}>
+                <IconMessagePlus size={24} />
+              </ThemeIcon>
+              <Title order={3} className={classes.navTitle}>
+                Peer review
+              </Title>
+              <Text c="dimmed" className={classes.navDescription}>
+                Review peer evaluations and provide feedback
+              </Text>
+            </Card>
+
+            <Card
+              withBorder
+              radius="lg"
+              component={permission ? Link : 'div'}
+              href={permission ? `/courses/${courseId}/assessments` : undefined}
+              className={`${classes.navCard} ${classes.navCardFeatured} ${
+                permission ? '' : classes.navCardDisabled
+              }`}
+            >
+              <ThemeIcon radius="md" size={52} className={classes.navIcon}>
+                <IconChecklist size={24} />
+              </ThemeIcon>
+              <Group justify="space-between" wrap="nowrap">
+                <Title order={3} className={classes.navTitle}>
+                  Create assessment
+                </Title>
+              </Group>
+              <Text c="dimmed" className={classes.navDescription}>
+                Set up a new assignment or evaluation for your students
+              </Text>
+              {!permission && (
+                <Text size="xs" c="dimmed" mt="sm">
+                  Available to faculty only
+                </Text>
+              )}
+            </Card>
+
+            <Card
+              withBorder
+              radius="lg"
+              component={permission ? Link : 'div'}
+              href={
+                permission ? `/courses/${courseId}/repositories` : undefined
+              }
+              className={`${classes.navCard} ${
+                permission ? '' : classes.navCardDisabled
+              }`}
+            >
+              <ThemeIcon radius="md" size={52} className={classes.navIconMuted}>
+                <IconSettings size={24} />
+              </ThemeIcon>
+              <Title order={3} className={classes.navTitle}>
+                Course settings
+              </Title>
+              <Text c="dimmed" className={classes.navDescription}>
+                Manage people, repositories, timeline, and course configuration
+              </Text>
+              {!permission && (
+                <Text size="xs" c="dimmed" mt="sm">
+                  Available to faculty only
+                </Text>
+              )}
+            </Card>
+          </SimpleGrid>
+        </Box>
+
+        <Box mt={40} pb={30}>
+          <Group justify="space-between" mb="md">
+            <Title order={2}>Recent activity</Title>
+            <Text size="sm" c="dimmed">
+              Based on PR updates across repos
+            </Text>
+          </Group>
+
+          <Card withBorder radius="lg" className={classes.activityCard}>
+            {recentActivity.length === 0 ? (
+              <Center style={{ padding: '22px 10px' }}>
+                <Text c="dimmed">No recent pull request activity.</Text>
+              </Center>
+            ) : (
+              <Stack gap={0}>
+                {recentActivity.map((item, idx) => {
+                  const activityDate =
+                    item.updatedAtDate ?? item.createdAtDate ?? new Date();
+                  const isLast = idx === recentActivity.length - 1;
+                  return (
+                    <Box key={`${item.repoName}-${item.id}`}>
+                      <Group
+                        align="flex-start"
+                        justify="space-between"
+                        wrap="nowrap"
+                        className={classes.activityRow}
+                      >
+                        <Group gap="sm" wrap="nowrap">
+                          <ThemeIcon
+                            radius="md"
+                            variant="light"
+                            color="blue"
+                            className={classes.activityIcon}
+                          >
+                            <IconGitPullRequest size={18} />
+                          </ThemeIcon>
+                          <Box>
+                            <Text fw={500} lineClamp={1}>
+                              {item.title || `PR #${item.id}`}
+                            </Text>
+                            <Text size="sm" c="dimmed" lineClamp={1}>
+                              {item.repoName}
+                              {item.user ? ` • opened by ${item.user}` : ''}
+                            </Text>
+                            {item.url && (
+                              <Text
+                                size="sm"
+                                component="a"
+                                href={item.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className={classes.activityLink}
+                              >
+                                View PR
+                              </Text>
+                            )}
+                          </Box>
+                        </Group>
+                        <Text
+                          size="sm"
+                          c="dimmed"
+                          style={{ whiteSpace: 'nowrap' }}
+                        >
+                          {timeAgo(activityDate)}
+                        </Text>
+                      </Group>
+                      {!isLast && <Divider />}
+                    </Box>
+                  );
+                })}
+              </Stack>
+            )}
+          </Card>
+        </Box>
+      </Box>
     </ScrollArea>
   );
 };

@@ -1,0 +1,163 @@
+.page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding-top: 8px;
+}
+
+.topBar {
+  margin-bottom: 12px;
+}
+
+.pageHeader {
+  margin-bottom: 28px;
+}
+
+.pageTitle {
+  font-size: 2.5rem;
+  line-height: 1.1;
+}
+
+.pageSubtitle {
+  font-size: 1.05rem;
+}
+
+.overviewRow {
+  gap: 24px;
+
+  @media (max-width: $mantine-breakpoint-md) {
+    flex-direction: column;
+  }
+}
+
+.graphCard {
+  flex: 1.2;
+  min-width: 0;
+  padding: 22px;
+}
+
+.statsCard {
+  flex: 0 0 320px;
+  padding: 22px;
+
+  @media (max-width: $mantine-breakpoint-md) {
+    flex: 1 1 auto;
+  }
+}
+
+.statRow {
+  padding: 14px 0;
+  border-bottom: 1px solid
+    light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+}
+
+.statRow[data-last] {
+  border-bottom: none;
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
+}
+
+.statValue {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.navCard {
+  padding: 22px;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+  overflow: hidden;
+
+  background: light-dark(
+    linear-gradient(135deg, var(--mantine-color-white) 0%, var(--mantine-color-gray-0) 100%),
+    linear-gradient(135deg, #1e1e2e 0%, #18181b 100%)
+  );
+  border-color: light-dark(
+    var(--mantine-color-blue-2),
+    rgba(96, 165, 250, 0.45)
+  );
+
+  @mixin hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(59, 130, 246, 0.18);
+    border-color: light-dark(var(--mantine-color-blue-4), rgba(96, 165, 250, 0.7));
+  }
+}
+
+.navCardFeatured {
+  border-color: light-dark(
+    var(--mantine-color-violet-3),
+    rgba(167, 139, 250, 0.5)
+  );
+
+  @mixin hover {
+    box-shadow: 0 12px 32px rgba(124, 58, 237, 0.22);
+    border-color: light-dark(var(--mantine-color-violet-5), rgba(167, 139, 250, 0.8));
+  }
+}
+
+.navCardDisabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+
+  @mixin hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+.navIcon {
+  background: linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%);
+  color: white;
+}
+
+.navIconMuted {
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+  color: white;
+}
+
+.navTitle {
+  margin-top: 14px;
+  margin-bottom: 6px;
+}
+
+.navDescription {
+  line-height: 1.6;
+}
+
+.activityCard {
+  padding: 6px 10px;
+}
+
+.activityRow {
+  padding: 14px 6px;
+}
+
+.activityIcon {
+  width: 40px;
+  height: 40px;
+}
+
+.activityLink {
+  display: inline-block;
+  margin-top: 4px;
+  color: var(--mantine-color-blue-filled);
+  text-decoration: none;
+
+  @mixin hover {
+    text-decoration: underline;
+  }
+}
+
