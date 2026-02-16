@@ -21,6 +21,7 @@ import TutorialPopover from './tutorial/TutorialPopover';
 import { Course } from '@shared/types/Course';
 import { IconInfoCircle } from '@tabler/icons-react';
 import ProfileDropdown from './ProfileDropdown';
+import CrispLogo from './shared/CrispLogo';
 
 interface CourseLink {
   link: string;
@@ -370,8 +371,7 @@ const Navbar: React.FC = () => {
                   e.currentTarget.style.backgroundColor = 'transparent';
                 }}
               >
-                <IconGitBranch size={24} />
-                <Title order={3}>CRISP</Title>
+                <CrispLogo />
               </Center>
 
               <ProfileDropdown />

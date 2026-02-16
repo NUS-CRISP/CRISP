@@ -10,7 +10,7 @@ import {
   Text,
 } from '@mantine/core';
 import Link from 'next/link';
-import CrispLogo from './CrispLogo';
+import CrispLogo from '../shared/CrispIcon';
 
 const AuthShell: React.FC<{
   children: React.ReactNode;

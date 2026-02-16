@@ -1,11 +1,56 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: light-dark(var(--mantine-color-white), var(--mantine-color-dark-7));
+  border-bottom: 1px solid
+    light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+}
+
+.headerInner {
+  padding: 14px 24px;
+}
+
+.backButton {
+  padding: 8px 10px;
+  border-radius: var(--mantine-radius-md);
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+
+  @mixin hover {
+    background: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
+    color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
+  }
+}
+
+.courseHeaderInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.courseCode {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.courseMeta {
+  font-size: 0.875rem;
+  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
+  line-height: 1.1;
+}
+
+.headerRight {
+  min-width: 220px;
+}
+
 .page {
   max-width: 1400px;
   margin: 0 auto;
   padding-top: 8px;
-}
-
-.topBar {
-  margin-bottom: 12px;
 }
 
 .pageHeader {

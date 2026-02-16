@@ -1,4 +1,3 @@
-import { AreaChart } from '@mantine/charts';
 import {
   ActionIcon,
   Box,
@@ -14,6 +13,7 @@ import {
   Text,
   ThemeIcon,
   Title,
+  UnstyledButton,
 } from '@mantine/core';
 import { hasFacultyPermission } from '@/lib/auth/utils';
 import { Course } from '@shared/types/Course';
@@ -22,8 +22,8 @@ import { Status } from '@shared/types/util/Status';
 import {
   IconArrowLeft,
   IconChecklist,
+  IconGitBranch,
   IconGitPullRequest,
-  IconLayoutDashboard,
   IconMessagePlus,
   IconSettings,
   IconUsersGroup,
@@ -33,7 +33,8 @@ import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import classes from '@/styles/course-overview.module.css';
 import AllTeams from '../overview/analytics/team/AllTeams';
-import TutorialPopover from '../tutorial/TutorialPopover';
+import ProfileDropdown from '../ProfileDropdown';
+import CrispLogo from '../shared/CrispLogo';
 
 interface OverviewProps {
   courseId: string;
@@ -194,21 +195,6 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
     return withDates.slice(0, 8);
   }, [uniqueTeamData]);
 
-  const chartData = useMemo(
-    () =>
-      uniqueTeamData.slice(0, 12).map(t => ({
-        teamName: t.repoName,
-        commits: t.commits ?? 0,
-        pullRequests: t.pullRequests ?? 0,
-      })),
-    [uniqueTeamData]
-  );
-
-  const series = [
-    { name: 'pullRequests', color: 'violet.6' },
-    { name: 'commits', color: 'blue.6' },
-  ];
-
   if (status === Status.Loading) {
     return (
       <Center style={{ height: '70vh' }}>
@@ -244,29 +230,39 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
         scrollbarWidth: 'thin',
       }}
     >
-      <AllTeams teamDatas={teamDatas} />
-      <Box className={classes.page} pl={20} pr={20}>
-        <Group justify="space-between" className={classes.topBar} wrap="nowrap">
-          <Group gap="sm" wrap="nowrap">
-            <ActionIcon
-              variant="subtle"
-              color="gray"
+      <Box className={classes.header}>
+        <Group
+          className={classes.headerInner}
+          justify="space-between"
+          wrap="nowrap"
+        >
+          <Group gap="lg" wrap="nowrap">
+            <UnstyledButton
+              className={classes.backButton}
               onClick={() => router.push('/courses')}
-              aria-label="Back to dashboard"
             >
-              <IconArrowLeft size={18} />
-            </ActionIcon>
-            <Box>
-              <Text fw={700} lh={1.1}>
-                {course.code}
-              </Text>
-              <Text size="sm" c="dimmed" lh={1.1}>
+              <Group gap={8} wrap="nowrap">
+                <IconArrowLeft size={18} />
+                <Text fw={500}>Dashboard</Text>
+              </Group>
+            </UnstyledButton>
+
+            <CrispLogo />
+
+            <Box className={classes.courseHeaderInfo}>
+              <Text className={classes.courseCode}>{course.code}</Text>
+              <Text className={classes.courseMeta}>
                 {course.semester}
+                {course.name ? ` • ${course.name}` : ''}
               </Text>
             </Box>
           </Group>
-        </Group>
 
+          <ProfileDropdown />
+        </Group>
+      </Box>
+
+      <Box className={classes.page} pl={20} pr={20}>
         <Box className={classes.pageHeader}>
           <Title order={1} className={classes.pageTitle}>
             Course Overview
@@ -277,34 +273,9 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
         </Box>
 
         <Group align="stretch" className={classes.overviewRow}>
-          <Card withBorder radius="lg" className={classes.graphCard}>
-            <Group justify="space-between" mb="sm" wrap="nowrap">
-              <Group gap="xs" wrap="nowrap">
-                <ThemeIcon variant="light" radius="md" size="lg">
-                  <IconLayoutDashboard size={18} />
-                </ThemeIcon>
-                <Text fw={600}>Activity snapshot</Text>
-              </Group>
-              <Text size="sm" c="dimmed">
-                Top {Math.min(12, chartData.length)} repos
-              </Text>
-            </Group>
-            {chartData.length ? (
-              <AreaChart
-                h={360}
-                data={chartData}
-                dataKey="teamName"
-                series={series}
-                curveType="linear"
-                tickLine="xy"
-                gridAxis="xy"
-              />
-            ) : (
-              <Center style={{ height: 360 }}>
-                <Text c="dimmed">No repository activity yet.</Text>
-              </Center>
-            )}
-          </Card>
+          <Box className={classes.graphCard}>
+            <AllTeams teamDatas={teamDatas} />
+          </Box>
 
           <Card withBorder radius="lg" className={classes.statsCard}>
             <Stack gap={0}>
@@ -366,59 +337,99 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
               </Text>
             </Card>
 
-            <Card
-              withBorder
-              radius="lg"
-              component={permission ? Link : 'div'}
-              href={permission ? `/courses/${courseId}/assessments` : undefined}
-              className={`${classes.navCard} ${classes.navCardFeatured} ${
-                permission ? '' : classes.navCardDisabled
-              }`}
-            >
-              <ThemeIcon radius="md" size={52} className={classes.navIcon}>
-                <IconChecklist size={24} />
-              </ThemeIcon>
-              <Group justify="space-between" wrap="nowrap">
-                <Title order={3} className={classes.navTitle}>
-                  Create assessment
-                </Title>
-              </Group>
-              <Text c="dimmed" className={classes.navDescription}>
-                Set up a new assignment or evaluation for your students
-              </Text>
-              {!permission && (
+            {permission ? (
+              <Card
+                withBorder
+                radius="lg"
+                component={Link}
+                href={`/courses/${courseId}/assessments`}
+                className={`${classes.navCard} ${classes.navCardFeatured}`}
+              >
+                <ThemeIcon radius="md" size={52} className={classes.navIcon}>
+                  <IconChecklist size={24} />
+                </ThemeIcon>
+                <Group justify="space-between" wrap="nowrap">
+                  <Title order={3} className={classes.navTitle}>
+                    Create assessment
+                  </Title>
+                </Group>
+                <Text c="dimmed" className={classes.navDescription}>
+                  Set up a new assignment or evaluation for your students
+                </Text>
+              </Card>
+            ) : (
+              <Card
+                withBorder
+                radius="lg"
+                component="div"
+                className={`${classes.navCard} ${classes.navCardFeatured} ${classes.navCardDisabled}`}
+              >
+                <ThemeIcon radius="md" size={52} className={classes.navIcon}>
+                  <IconChecklist size={24} />
+                </ThemeIcon>
+                <Group justify="space-between" wrap="nowrap">
+                  <Title order={3} className={classes.navTitle}>
+                    Create assessment
+                  </Title>
+                </Group>
+                <Text c="dimmed" className={classes.navDescription}>
+                  Set up a new assignment or evaluation for your students
+                </Text>
                 <Text size="xs" c="dimmed" mt="sm">
                   Available to faculty only
                 </Text>
-              )}
-            </Card>
+              </Card>
+            )}
 
-            <Card
-              withBorder
-              radius="lg"
-              component={permission ? Link : 'div'}
-              href={
-                permission ? `/courses/${courseId}/repositories` : undefined
-              }
-              className={`${classes.navCard} ${
-                permission ? '' : classes.navCardDisabled
-              }`}
-            >
-              <ThemeIcon radius="md" size={52} className={classes.navIconMuted}>
-                <IconSettings size={24} />
-              </ThemeIcon>
-              <Title order={3} className={classes.navTitle}>
-                Course settings
-              </Title>
-              <Text c="dimmed" className={classes.navDescription}>
-                Manage people, repositories, timeline, and course configuration
-              </Text>
-              {!permission && (
+            {permission ? (
+              <Card
+                withBorder
+                radius="lg"
+                component={Link}
+                href={`/courses/${courseId}/repositories`}
+                className={classes.navCard}
+              >
+                <ThemeIcon
+                  radius="md"
+                  size={52}
+                  className={classes.navIconMuted}
+                >
+                  <IconSettings size={24} />
+                </ThemeIcon>
+                <Title order={3} className={classes.navTitle}>
+                  Course settings
+                </Title>
+                <Text c="dimmed" className={classes.navDescription}>
+                  Manage people, repositories, timeline, and course
+                  configuration
+                </Text>
+              </Card>
+            ) : (
+              <Card
+                withBorder
+                radius="lg"
+                component="div"
+                className={`${classes.navCard} ${classes.navCardDisabled}`}
+              >
+                <ThemeIcon
+                  radius="md"
+                  size={52}
+                  className={classes.navIconMuted}
+                >
+                  <IconSettings size={24} />
+                </ThemeIcon>
+                <Title order={3} className={classes.navTitle}>
+                  Course settings
+                </Title>
+                <Text c="dimmed" className={classes.navDescription}>
+                  Manage people, repositories, timeline, and course
+                  configuration
+                </Text>
                 <Text size="xs" c="dimmed" mt="sm">
                   Available to faculty only
                 </Text>
-              )}
-            </Card>
+              </Card>
+            )}
           </SimpleGrid>
         </Box>
 
