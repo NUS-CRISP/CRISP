@@ -102,7 +102,7 @@ const CourseCard = forwardRef<HTMLAnchorElement, CourseCardProps>(
         radius="md"
         withBorder
         component={Link}
-        href={`/courses/${course._id}/course-overview`}
+        href={`/courses/${course._id}`}
         onClick={() => isTutorial && nextTutorialStage()}
         style={{ ...cardStyles, textDecoration: 'none' }}
         ref={ref}

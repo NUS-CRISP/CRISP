@@ -93,7 +93,9 @@ const Navbar: React.FC = () => {
   };
 
   const determineActiveTab = (path: string) => {
-    if (path.startsWith('/courses/[id]/people')) {
+    if (path.startsWith('/courses/[id]/course-overview')) {
+      return 'Course Overview';
+    } else if (path.startsWith('/courses/[id]/people')) {
       return 'People';
     } else if (path.startsWith('/courses/[id]/repositories')) {
       return 'Repositories';
@@ -108,14 +110,15 @@ const Navbar: React.FC = () => {
       return 'Assessments';
     } else if (path.startsWith('/courses/[id]/project-management')) {
       return 'Project Management';
-    } else if (path.startsWith('/courses/[id]/course-overview')) {
-      return 'Course Overview';
+    } else if (path.startsWith('/courses/[id]/team-review')) {
+      return 'Team Review';
     } else if (path.startsWith('/courses/[id]/code-analysis')) {
       return 'Code Analysis';
     } else if (path.startsWith('/courses/[id]/pr-overview')) {
       return 'PR Overview';
     } else if (path.startsWith('/courses/[id]')) {
-      return 'Team Review';
+      // Fallback for legacy routes: treat bare /courses/[id] as Course Overview
+      return 'Course Overview';
     } else {
       return '';
     }
@@ -123,13 +126,13 @@ const Navbar: React.FC = () => {
 
   const courseLinksData = [
     {
-      link: `/courses/${courseId}/course-overview`,
+      link: `/courses/${courseId}`,
       label: 'Course Overview',
       disabled: !peopleAdded,
       icon: IconLayoutDashboard,
     },
     {
-      link: `/courses/${courseId}`,
+      link: `/courses/${courseId}/team-review`,
       label: 'Team Review',
       disabled: !peopleAdded,
       icon: IconUsersGroup,
