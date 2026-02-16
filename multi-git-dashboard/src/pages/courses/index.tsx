@@ -84,14 +84,7 @@ const CourseListPage: React.FC = () => {
           }}
         >
           <h1 style={{ margin: 0 }}>Courses</h1>
-          <div
-            style={{
-              marginLeft: 'auto',
-              width: 'fit-content',
-            }}
-          >
             <ProfileDropdown />
-          </div>
         </div>
         {courses.length === 0 ? (
           <Box
