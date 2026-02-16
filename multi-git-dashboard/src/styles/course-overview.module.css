@@ -65,7 +65,7 @@
 .overviewRow {
   gap: 24px;
 
-  @media (max-width: $mantine-breakpoint-md) {
+  @media (max-width: var(--mantine-breakpoint-md)) {
     flex-direction: column;
   }
 }
@@ -126,7 +126,7 @@
   border: 1px solid
     light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
 
-  @media (max-width: $mantine-breakpoint-md) {
+  @media (max-width: var(--mantine-breakpoint-md)) {
     flex: 1 1 auto;
   }
 }
