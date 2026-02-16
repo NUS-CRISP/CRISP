@@ -1,10 +1,11 @@
-import { Box, Group, Text, Anchor, Center, Title } from '@mantine/core';
+import { Box, Group, Text, Anchor, Center, Title, ActionIcon } from '@mantine/core';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import classes from '@/styles/course-overview.module.css';
 import ProfileDropdown from './ProfileDropdown';
 import CrispLogo from './shared/CrispLogo';
 import CrispIcon from './shared/CrispIcon';
+import { IconArrowLeft } from '@tabler/icons-react';
 
 type Breadcrumb = {
   label: string;
@@ -146,16 +147,32 @@ const TopBar: React.FC = () => {
           </Box>
 
           {isCourseRoute && (
-            <Group gap="xl" wrap="nowrap" align="center">
-              <Group className={classes.courseHeaderInfo} gap={12} wrap="nowrap" align="baseline">
+            <Group gap="l" wrap="nowrap" align="center">
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                onClick={() => router.push('/courses')}
+                aria-label="Back to dashboard"
+              >
+                <IconArrowLeft size={18} />
+              </ActionIcon>
+              <Group
+                className={classes.courseHeaderInfo}
+                gap={12}
+                wrap="nowrap"
+                align="baseline"
+              >
                 {courseCode && (
-                  <Title order={2} className={classes.courseCode}>{courseCode}</Title>
+                  <Title order={2} className={classes.courseCode}>
+                    {courseCode}
+                  </Title>
                 )}
                 {courseMeta && (
-                  <Title order={4} className={classes.courseMeta}>{courseMeta}</Title>
+                  <Title order={4} className={classes.courseMeta}>
+                    {courseMeta}
+                  </Title>
                 )}
               </Group>
-
               {breadcrumbs.length > 0 && (
                 <Group gap={6} wrap="wrap">
                   {breadcrumbs.map((crumb, index) => {
