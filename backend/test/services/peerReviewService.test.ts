@@ -733,7 +733,7 @@ describe('peerReviewService', () => {
         gitHubOrgName: null,
       });
 
-      const map = await getTeamDataById(testCourseId.toString(), ["99"]);
+      const map = await getTeamDataById(testCourseId.toString(), ['99']);
 
       expect(map.get('99')?.repoName).toBe('team101');
       expect(map.get('99')?.repoUrl).toBeTruthy();
@@ -748,7 +748,7 @@ describe('peerReviewService', () => {
         gitHubOrgName: 'Org10',
       });
 
-      const map = await getTeamDataById(testCourseId.toString(), ["10"]);
+      const map = await getTeamDataById(testCourseId.toString(), ['10']);
 
       expect(map.get('10')?.repoName).toBe('Repo10');
       expect(map.get('10')?.repoUrl).toContain('10.git');
@@ -762,10 +762,10 @@ describe('peerReviewService', () => {
         throw new Error('boom');
       });
 
-      const map = await getTeamDataById(testCourseId.toString(), ["11"]);
+      const map = await getTeamDataById(testCourseId.toString(), ['11']);
 
-      expect(map.get('11')?.repoName).toBe("");
-      expect(map.get('11')?.repoUrl).toBe("");
+      expect(map.get('11')?.repoName).toBe('');
+      expect(map.get('11')?.repoUrl).toBe('');
     });
   });
 

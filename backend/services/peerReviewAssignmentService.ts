@@ -237,7 +237,7 @@ export const addManualAssignment = async (
     peerReviewId,
     revieweeId,
     repoName,
-    repoUrl,
+    repoUrl
   );
 
   console.log('checking manual assignment duplicates...');
@@ -306,7 +306,10 @@ export const initialiseAssignments = async (
     prTeams.map(t => t._id.toString())
   );
 
-  console.log("during assignment initialisations, peerReviewTeamDataById:", prTeamDataById);
+  console.log(
+    'during assignment initialisations, peerReviewTeamDataById:',
+    prTeamDataById
+  );
 
   for (const team of prTeams) {
     const newAssignment = new PeerReviewAssignmentModel({
@@ -567,7 +570,10 @@ const updateDBAssignmentsAndSubmissions = async (
   assignDefault: boolean,
   assignTAs: boolean,
   prTeamIds: string[],
-  teamIdToRepoMap: Map<string, { repoUrl: string; repoName: string; gitHubOrgName: string }>,
+  teamIdToRepoMap: Map<
+    string,
+    { repoUrl: string; repoName: string; gitHubOrgName: string }
+  >,
   assignedStudentsForTeam: Map<string, Set<string>>,
   assignedTeamsForTeam: Map<string, Set<string>>,
   assignedTAsForTeam: Map<string, Set<string>>
@@ -609,11 +615,18 @@ const updateDBAssignmentsAndSubmissions = async (
 const upsertAndLoadAssignments = async (
   peerReviewId: string,
   prTeamIds: string[],
-  teamIdToRepoMap: Map<string, { repoUrl: string; repoName: string; gitHubOrgName: string }>
+  teamIdToRepoMap: Map<
+    string,
+    { repoUrl: string; repoName: string; gitHubOrgName: string }
+  >
 ) => {
   const now = new Date();
   const ops: AnyBulkWriteOperation[] = prTeamIds.map(reviewee => {
-    const { repoName, repoUrl } = teamIdToRepoMap.get(reviewee) ?? { repoName: 'no repo', repoUrl: 'no repo', gitHubOrgName: '' };
+    const { repoName, repoUrl } = teamIdToRepoMap.get(reviewee) ?? {
+      repoName: 'no repo',
+      repoUrl: 'no repo',
+      gitHubOrgName: '',
+    };
     return {
       updateOne: {
         filter: { peerReviewId: oid(peerReviewId), reviewee: oid(reviewee) },

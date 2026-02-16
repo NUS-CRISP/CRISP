@@ -78,8 +78,8 @@ export const getPeerReviewInfoById = async (
     peerReviewId,
     ctx.scopedTeamIds
   );
-  
-  console.log("Loaded assignmentState:", assignmentState);
+
+  console.log('Loaded assignmentState:', assignmentState);
 
   const reviewerScope = computeReviewerScope(
     userId,
@@ -88,8 +88,8 @@ export const getPeerReviewInfoById = async (
     peerReview.taAssignments,
     ctx.scopedTeams
   );
-  
-  console.log("Computed reviewerScope:", reviewerScope);
+
+  console.log('Computed reviewerScope:', reviewerScope);
 
   const submissions = await loadSubmissionsForScope(
     peerReviewId,
@@ -99,8 +99,8 @@ export const getPeerReviewInfoById = async (
     reviewerScope.scopedReviewerTeamIds,
     reviewerScope.taIdsWanted
   );
-  
-  console.log("Loaded submissions:", submissions);
+
+  console.log('Loaded submissions:', submissions);
 
   await addMissingAssignmentsForSubmissions(
     courseId,
@@ -114,8 +114,8 @@ export const getPeerReviewInfoById = async (
     reviewerScope.taIdsWanted,
     ctx.usersById
   );
-  
-  console.log("Built assignedReviewMaps:", assignedReviewMaps);
+
+  console.log('Built assignedReviewMaps:', assignedReviewMaps);
 
   if (userCourseRole !== COURSE_ROLE.Student) {
     populateAssignmentsOfTeamReviewers(
@@ -213,8 +213,8 @@ export const createPeerReviewById = async (
     newPeerReview._id.toString(),
     teamSetId
   );
-  
-  console.log("assignments initialised on peer review creation");
+
+  console.log('assignments initialised on peer review creation');
 
   return newPeerReview;
 };
@@ -344,10 +344,7 @@ const buildPeerReviewScopeContext = async (
   const scopedTeams = await getScopedTeams(teamSetId, teamIds, filterByTA);
   const scopedTeamIds = scopedTeams.map(t => t.id);
 
-  const teamDataById = await getTeamDataById(
-    courseId,
-    scopedTeamIds
-  );
+  const teamDataById = await getTeamDataById(courseId, scopedTeamIds);
 
   const usersById = await getUsersByIdForTeams(scopedTeams);
   const teamNumberById = new Map(scopedTeams.map(t => [t.id, t.number]));
@@ -376,14 +373,20 @@ const loadAssignmentsState = async (
 
   for (const a of assignmentDocs) {
     const reviewee = await TeamModel.findById(a.reviewee);
-    console.log("Processing assignment for reviewee team ID:", a.reviewee.toString());
+    console.log(
+      'Processing assignment for reviewee team ID:',
+      a.reviewee.toString()
+    );
     const { repoName, repoUrl } = await resolveTeamRepo(
       courseId,
       a.reviewee.toString()
     );
-    console.log("Resolved repo for team", a.reviewee.toString(), ":", {repoName, repoUrl});
+    console.log('Resolved repo for team', a.reviewee.toString(), ':', {
+      repoName,
+      repoUrl,
+    });
     if (!reviewee) continue;
-    
+
     const teamTA = await UserModel.findById(reviewee.TA);
     const assignmentDto: PeerReviewAssignment = {
       _id: a._id.toString(),
@@ -706,7 +709,7 @@ const getScopedTeamIds = async (
     if (!myTeam) return { teamIds: [] };
     return { teamIds: [myTeam._id.toString()] };
   }
-  
+
   if (userCourseRole === COURSE_ROLE.TA) {
     const teams = await TeamModel.find({
       teamSet: teamSetId,
@@ -716,7 +719,7 @@ const getScopedTeamIds = async (
       .lean();
     return { teamIds: teams.map(t => t._id.toString()), filterByTA: userId };
   }
-  
+
   const teams = await TeamModel.find({ teamSet: teamSetId })
     .select('_id')
     .lean();
@@ -752,10 +755,7 @@ const getScopedTeams = async (
   }));
 };
 
-export const getTeamDataById = async (
-  courseId: string,
-  teamIds: string[]
-) => {
+export const getTeamDataById = async (courseId: string, teamIds: string[]) => {
   const entries = (
     await Promise.all(
       teamIds.map(async teamId => {
@@ -764,7 +764,11 @@ export const getTeamDataById = async (
             courseId,
             teamId
           );
-          console.log("Resolved team data for teamId", teamId, ":", {repoName, repoUrl, gitHubOrgName});
+          console.log('Resolved team data for teamId', teamId, ':', {
+            repoName,
+            repoUrl,
+            gitHubOrgName,
+          });
 
           return [
             teamId,
