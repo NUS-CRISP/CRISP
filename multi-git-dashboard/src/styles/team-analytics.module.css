@@ -103,3 +103,43 @@
     var(--mantine-color-dark-4)
   );
 }
+
+/* Team detail page */
+.detailPage {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 24px 32px;
+}
+
+.detailHeader {
+  margin-bottom: 24px;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 0.9375rem;
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-2));
+  text-decoration: none;
+  transition: color 160ms ease;
+}
+
+.backLink:hover {
+  color: light-dark(var(--mantine-color-blue-6), var(--mantine-color-blue-4));
+}
+
+.detailTitle {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: light-dark(var(--mantine-color-dark-7), var(--mantine-color-gray-0));
+}
+
+.detailTabs {
+  margin-top: 8px;
+}
+
+.tabPanel {
+  padding: 4px 0;
+}
