@@ -187,12 +187,12 @@ export const resolveTeamRepo = async (courseId: string, teamId: string) => {
 
   const teamData = await TeamDataModel.findById(team.teamData);
   if (!teamData) throw new NotFoundError('Team data not found');
-  
+
   const repoName = teamData.repoName ?? team.number.toString();
 
   // GitHub Org Course: build URL from org + repoName
   if (course.courseType === 'GitHubOrg') {
-    console.log("Course is GitHubOrg type");
+    console.log('Course is GitHubOrg type');
     return {
       repoName,
       repoUrl: `https://github.com/${course.gitHubOrgName}/${repoName}`,
@@ -201,7 +201,7 @@ export const resolveTeamRepo = async (courseId: string, teamId: string) => {
   }
 
   // Normal Course: find repo URL from gitHubRepoLinks
-  console.log("Course is normal type");
+  console.log('Course is normal type');
   const links = (course.gitHubRepoLinks ?? []).map(normalizeGitHubUrl);
   const match = links.find(l => extractRepoNameFromUrl(l) === repoName);
   return {
