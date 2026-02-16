@@ -13,16 +13,13 @@ import {
   Text,
   ThemeIcon,
   Title,
-  UnstyledButton,
 } from '@mantine/core';
 import { hasFacultyPermission } from '@/lib/auth/utils';
 import { Course } from '@shared/types/Course';
 import { TeamData, TeamPR } from '@shared/types/TeamData';
 import { Status } from '@shared/types/util/Status';
 import {
-  IconArrowLeft,
   IconChecklist,
-  IconGitBranch,
   IconGitPullRequest,
   IconMessagePlus,
   IconSettings,
@@ -33,8 +30,6 @@ import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import classes from '@/styles/course-overview.module.css';
 import AllTeams from '../overview/analytics/team/AllTeams';
-import ProfileDropdown from '../ProfileDropdown';
-import CrispLogo from '../shared/CrispLogo';
 
 interface OverviewProps {
   courseId: string;
@@ -230,38 +225,6 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
         scrollbarWidth: 'thin',
       }}
     >
-      <Box className={classes.header}>
-        <Group
-          className={classes.headerInner}
-          justify="space-between"
-          wrap="nowrap"
-        >
-          <Group gap="lg" wrap="nowrap">
-            <UnstyledButton
-              className={classes.backButton}
-              onClick={() => router.push('/courses')}
-            >
-              <Group gap={8} wrap="nowrap">
-                <IconArrowLeft size={18} />
-                <Text fw={500}>Dashboard</Text>
-              </Group>
-            </UnstyledButton>
-
-            <CrispLogo />
-
-            <Box className={classes.courseHeaderInfo}>
-              <Text className={classes.courseCode}>{course.code}</Text>
-              <Text className={classes.courseMeta}>
-                {course.semester}
-                {course.name ? ` • ${course.name}` : ''}
-              </Text>
-            </Box>
-          </Group>
-
-          <ProfileDropdown />
-        </Group>
-      </Box>
-
       <Box className={classes.page} pl={20} pr={20}>
         <Box className={classes.pageHeader}>
           <Title order={1} className={classes.pageTitle}>
