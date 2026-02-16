@@ -1,0 +1,105 @@
+.page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding-top: 8px;
+}
+
+.pageHeader {
+  margin-bottom: 28px;
+}
+
+.pageTitle {
+  font-size: 2.5rem;
+  line-height: 1.1;
+}
+
+.pageSubtitle {
+  font-size: 1.05rem;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 220px;
+  max-width: 360px;
+}
+
+.filterSelect {
+  min-width: 140px;
+}
+
+.grid {
+  padding-bottom: 32px;
+}
+
+.teamCard {
+  padding: 22px;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+  text-decoration: none;
+  color: inherit;
+
+  background: light-dark(
+    var(--mantine-color-white),
+    var(--mantine-color-dark-7)
+  );
+  border: 1px solid
+    light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+
+  @mixin hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px
+      light-dark(
+        rgba(0, 0, 0, 0.08),
+        rgba(0, 0, 0, 0.35)
+      );
+    border-color: light-dark(
+      var(--mantine-color-gray-4),
+      var(--mantine-color-dark-3)
+    );
+  }
+}
+
+.teamName {
+  font-weight: 600;
+  color: light-dark(var(--mantine-color-dark-7), var(--mantine-color-gray-0));
+}
+
+.statusBadge {
+  font-weight: 500;
+}
+
+.avatarGroup {
+  flex-shrink: 0;
+}
+
+.avatar {
+  font-size: 10px;
+}
+
+.stats {
+  padding-top: 4px;
+  border-top: 1px solid
+    light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-5));
+}
+
+.emptyState {
+  background: light-dark(
+    var(--mantine-color-gray-0),
+    var(--mantine-color-dark-6)
+  );
+  border-color: light-dark(
+    var(--mantine-color-gray-3),
+    var(--mantine-color-dark-4)
+  );
+}
