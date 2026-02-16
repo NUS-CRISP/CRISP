@@ -396,7 +396,7 @@ const loadAssignmentsState = async (
         _id: reviewee._id.toString(),
         TA: teamTA!.toObject(),
       },
-      repoName: repoName ?? 'AddSubtract',
+      repoName: repoName,
       repoUrl: repoUrl ?? TEMP_FALLBACK_URL,
     };
 
@@ -514,7 +514,7 @@ const addMissingAssignmentsForSubmissions = async (
         ...reviewee.toObject(),
         _id: reviewee._id.toString(),
       },
-      repoName: repoName ?? 'AddSubtract',
+      repoName: repoName,
       repoUrl: repoUrl ?? TEMP_FALLBACK_URL,
     });
   }
