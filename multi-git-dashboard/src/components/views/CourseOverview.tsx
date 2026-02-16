@@ -149,21 +149,25 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
         label: 'Total students',
         value: formatCompactNumber(totalStudents),
         sublabel: activeTeams ? `${activeTeams} teams configured` : undefined,
+        color: 'blue',
       },
       {
         label: 'Pull requests',
         value: formatCompactNumber(totals.totalPRs),
         sublabel: `${totals.openPRsCount} open`,
+        color: 'grape',
       },
       {
         label: 'Code commits',
         value: formatCompactNumber(totals.totalCommits),
         sublabel: `Across ${totals.totalRepos} repos`,
+        color: 'teal',
       },
       {
         label: 'Pending reviews',
         value: formatCompactNumber(totals.pendingReviewsCount),
         sublabel: 'Open PRs with no reviews',
+        color: 'orange',
       },
     ];
   }, [course, totals]);
@@ -250,9 +254,31 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
                   data-last={idx === stats.length - 1 || undefined}
                 >
                   <Text className={classes.statLabel}>{s.label}</Text>
-                  <Text className={classes.statValue}>{s.value}</Text>
+                  <Text
+                    className={classes.statValue}
+                    style={
+                      s.color
+                        ? {
+                            color: `var(--mantine-color-${s.color}-6)`,
+                          }
+                        : undefined
+                    }
+                  >
+                    {s.value}
+                  </Text>
                   {s.sublabel && (
-                    <Text className={classes.statSublabel}>{s.sublabel}</Text>
+                    <Text
+                      className={classes.statSublabel}
+                      style={
+                        s.color
+                          ? {
+                              color: `var(--mantine-color-${s.color}-5)`,
+                            }
+                          : undefined
+                      }
+                    >
+                      {s.sublabel}
+                    </Text>
                   )}
                 </Box>
               ))}
