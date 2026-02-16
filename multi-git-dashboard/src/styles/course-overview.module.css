@@ -73,20 +73,78 @@
 .graphCard {
   flex: 1.2;
   min-width: 0;
-  padding: 22px;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* All Teams Overview card – standardised layout */
+.overviewChartCard {
+  margin: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.overviewChartTitle {
+  margin-bottom: 16px;
+  font-weight: 700;
+}
+
+.overviewChartButtonWrap {
+  margin-bottom: 20px;
+}
+
+.overviewChartControls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 24px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 640px) {
+  .overviewChartControls {
+    grid-template-columns: 1fr;
+  }
+}
+
+.overviewChartArea {
+  flex: 1;
+  min-height: 360px;
+  padding-right: 20px;
 }
 
 .statsCard {
   flex: 0 0 320px;
-  padding: 22px;
+  min-height: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  background: light-dark(
+    var(--mantine-color-gray-0),
+    var(--mantine-color-dark-6)
+  );
+  border: 1px solid
+    light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
 
   @media (max-width: $mantine-breakpoint-md) {
     flex: 1 1 auto;
   }
 }
 
+.statsCardStack {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .statRow {
-  padding: 14px 0;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 18px 22px;
   border-bottom: 1px solid
     light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
 }
@@ -96,17 +154,26 @@
 }
 
 .statLabel {
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
+  margin-bottom: 6px;
 }
 
 .statValue {
-  font-size: 1.75rem;
+  font-size: 2.25rem;
   font-weight: 700;
-  line-height: 1.1;
+  line-height: 1.2;
+  color: light-dark(var(--mantine-color-dark-7), var(--mantine-color-gray-0));
+}
+
+.statSublabel {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
+  margin-top: 4px;
 }
 
 .navCard {

@@ -39,6 +39,7 @@ type Stat = {
   label: string;
   value: string;
   sublabel?: string;
+  color?: string;
 };
 
 const formatCompactNumber = (n: number) =>
@@ -241,7 +242,7 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
           </Box>
 
           <Card withBorder radius="lg" className={classes.statsCard}>
-            <Stack gap={0}>
+            <Stack gap={0} className={classes.statsCardStack}>
               {stats.map((s, idx) => (
                 <Box
                   key={s.label}
@@ -251,9 +252,7 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
                   <Text className={classes.statLabel}>{s.label}</Text>
                   <Text className={classes.statValue}>{s.value}</Text>
                   {s.sublabel && (
-                    <Text size="sm" c="dimmed">
-                      {s.sublabel}
-                    </Text>
+                    <Text className={classes.statSublabel}>{s.sublabel}</Text>
                   )}
                 </Box>
               ))}
@@ -277,8 +276,7 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
                 Team Analytics
               </Title>
               <Text c="dimmed" className={classes.navDescription}>
-                Deep dive into team performance metrics, code quality, and
-                project progress
+                Deep dive into individual teams' performance metrics
               </Text>
             </Card>
 
@@ -296,7 +294,7 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
                 Peer Review
               </Title>
               <Text c="dimmed" className={classes.navDescription}>
-                Review peer evaluations and provide feedback
+                Review peer-to-peer code reviews and provide feedback
               </Text>
             </Card>
 
@@ -317,7 +315,7 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
                   </Title>
                 </Group>
                 <Text c="dimmed" className={classes.navDescription}>
-                  Set up a new assignment or evaluation for your students
+                  Set up new assignments and manage assessments for your students
                 </Text>
               </Card>
             ) : (
@@ -386,7 +384,7 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
                 </Title>
                 <Text c="dimmed" className={classes.navDescription}>
                   Manage people, repositories, timeline, and course
-                  configuration
+                  configurations
                 </Text>
                 <Text size="xs" c="dimmed" mt="sm">
                   Available to faculty only

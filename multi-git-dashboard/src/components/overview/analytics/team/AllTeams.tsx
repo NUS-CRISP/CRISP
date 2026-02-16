@@ -5,13 +5,13 @@ import {
   Select,
   MultiSelect,
   Group,
-  Center,
   Title,
   Popover,
   Button,
 } from '@mantine/core';
 import { AreaChart, BarChart } from '@mantine/charts';
 import { TeamData } from '@shared/types/TeamData';
+import classes from '@/styles/course-overview.module.css';
 
 interface AllTeamsProps {
   teamDatas: TeamData[];
@@ -92,34 +92,33 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
       color: ['violet.6', 'blue.6', 'teal.6', 'orange.6'][index % 4],
     }));
 
+    const chartHeight = 460;
     const renderChart = () => {
       if (chartType === 'BarChart') {
         return (
-          <div style={{ paddingRight: '20px' }}>
-            <BarChart
-              h={460}
-              data={chartData}
-              dataKey="teamName"
-              series={series}
-              tickLine="xy"
-            />
-          </div>
-        );
-      } else if (chartType === 'AreaChart') {
-        return (
-          <div style={{ paddingRight: '20px' }}>
-            <AreaChart
-              h={460}
-              data={chartData}
-              dataKey="teamName"
-              series={series}
-              curveType="linear"
-              tickLine="xy"
-              gridAxis="xy"
-            />
-          </div>
+          <BarChart
+            h={chartHeight}
+            data={chartData}
+            dataKey="teamName"
+            series={series}
+            tickLine="xy"
+          />
         );
       }
+      if (chartType === 'AreaChart') {
+        return (
+          <AreaChart
+            h={chartHeight}
+            data={chartData}
+            dataKey="teamName"
+            series={series}
+            curveType="linear"
+            tickLine="xy"
+            gridAxis="xy"
+          />
+        );
+      }
+      return null;
     };
 
     const teamNames = uniqueTeamData.map(teamName => ({
@@ -128,96 +127,77 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
     }));
 
     return (
-      <div>
-        <Card
-          withBorder
-          ref={ref}
-          style={{ marginTop: '10px', marginBottom: '10px' }}
-        >
-          <Stack>
-            <Center>
-              <Title order={5}>All Teams Overview</Title>
-            </Center>
+      <Card
+        withBorder
+        ref={ref}
+        className={classes.overviewChartCard}
+        p={22}
+      >
+        <Stack gap={0}>
+          <Title order={3} className={classes.overviewChartTitle}>
+            All Teams Overview
+          </Title>
 
-            <Group justify="center">
-              <Popover width={900} position="bottom" withArrow shadow="md">
-                <Popover.Target>
-                  <Button style={{ width: '250px' }}>
-                    Select team(s) to display
-                  </Button>
-                </Popover.Target>
-                <Popover.Dropdown>
-                  <MultiSelect
-                    label="Select Teams"
-                    placeholder="Select teams to display"
-                    value={selectedTeams}
-                    onChange={setSelectedTeams}
-                    data={teamNames}
-                    withScrollArea={true}
-                    searchable
-                    clearable
-                    maxDropdownHeight={200}
-                    styles={{
-                      input: { minHeight: '36px' },
-                    }}
-                    comboboxProps={{ withinPortal: false }}
-                  />
-                </Popover.Dropdown>
-              </Popover>
-            </Group>
+          <Group justify="center" mb={10}>
+            <Popover width={900} position="bottom" withArrow shadow="md">
+              <Popover.Target>
+                <Button>Select team(s) to display</Button>
+              </Popover.Target>
+              <Popover.Dropdown>
+                <MultiSelect
+                  label="Select Teams"
+                  placeholder="Select teams to display"
+                  value={selectedTeams}
+                  onChange={setSelectedTeams}
+                  data={teamNames}
+                  withScrollArea
+                  searchable
+                  clearable
+                  maxDropdownHeight={200}
+                  styles={{ input: { minHeight: 36 } }}
+                  comboboxProps={{ withinPortal: false }}
+                />
+              </Popover.Dropdown>
+            </Popover>
+          </Group>
 
-            <Group grow>
-              <Select
-                label="Chart Type"
-                placeholder="Select chart type"
-                value={chartType}
-                onChange={(value: string | null) => {
-                  if (value) setChartType(value);
-                }}
-                data={[
-                  { value: 'BarChart', label: 'Bar Chart' },
-                  { value: 'AreaChart', label: 'Area Chart' },
-                ]}
-              />
+          <div className={classes.overviewChartControls}>
+            <Select
+              label="Chart Type"
+              value={chartType}
+              onChange={(value: string | null) => value && setChartType(value)}
+              data={[
+                { value: 'BarChart', label: 'Bar Chart' },
+                { value: 'AreaChart', label: 'Area Chart' },
+              ]}
+            />
+            <Select
+              label="Single Metric for Sorting"
+              value={singleMetric}
+              onChange={(value: string | null) => value && setSingleMetric(value)}
+              data={availableMetrics}
+            />
+            <MultiSelect
+              label="Metrics"
+              value={selectedMetrics}
+              onChange={setSelectedMetrics}
+              data={availableMetrics}
+            />
+            <Select
+              label="Sort By"
+              value={sortType}
+              onChange={(value: string | null) => value && setSortType(value)}
+              data={[
+                { value: 'all', label: 'No Sorting' },
+                { value: 'ascending', label: 'Ascending Order' },
+                { value: 'descending', label: 'Descending Order' },
+              ]}
+            />
+          </div>
 
-              <MultiSelect
-                label="Metrics"
-                value={selectedMetrics}
-                onChange={setSelectedMetrics}
-                data={availableMetrics}
-              />
-            </Group>
-
-            <Group grow>
-              <Select
-                label="Single Metric for Sorting"
-                placeholder="Select a metric"
-                value={singleMetric}
-                onChange={(value: string | null) => {
-                  if (value) setSingleMetric(value);
-                }}
-                data={availableMetrics}
-              />
-
-              <Select
-                label="Sort By"
-                placeholder="Select sorting option"
-                value={sortType}
-                onChange={(value: string | null) => {
-                  if (value) setSortType(value);
-                }}
-                data={[
-                  { value: 'all', label: 'No Sorting' },
-                  { value: 'ascending', label: 'Ascending Order' },
-                  { value: 'descending', label: 'Descending Order' },
-                ]}
-              />
-            </Group>
-
-            {renderChart()}
-          </Stack>
-        </Card>
-      </div>
+          <div className={classes.overviewChartArea}>{renderChart()}</div>
+        </Stack>
+      </Card>
     );
   }
 );

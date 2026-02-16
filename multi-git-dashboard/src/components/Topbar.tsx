@@ -1,4 +1,12 @@
-import { Box, Group, Text, Anchor, Center, Title, ActionIcon } from '@mantine/core';
+import {
+  Box,
+  Group,
+  Text,
+  Anchor,
+  Center,
+  Title,
+  ActionIcon,
+} from '@mantine/core';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import classes from '@/styles/course-overview.module.css';
@@ -43,6 +51,7 @@ const TopBar: React.FC = () => {
 
   const courseId = (query.id as string) || undefined;
   const isCourseRoute = pathname.startsWith('/courses/') && !!courseId;
+  const isOverviewRoute = pathname === '/courses/[id]';
 
   const [courseCode, setCourseCode] = useState<string | null>(null);
   const [courseMeta, setCourseMeta] = useState<string | null>(null);
@@ -148,14 +157,16 @@ const TopBar: React.FC = () => {
 
           {isCourseRoute && (
             <Group gap="l" wrap="nowrap" align="center">
-              <ActionIcon
-                variant="subtle"
-                color="gray"
-                onClick={() => router.push('/courses')}
-                aria-label="Back to dashboard"
-              >
-                <IconArrowLeft size={18} />
-              </ActionIcon>
+              {isOverviewRoute && (
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  onClick={() => router.push('/courses')}
+                  aria-label="Back to dashboard"
+                >
+                  <IconArrowLeft size={18} />
+                </ActionIcon>
+              )}
               <Group
                 className={classes.courseHeaderInfo}
                 gap={12}
