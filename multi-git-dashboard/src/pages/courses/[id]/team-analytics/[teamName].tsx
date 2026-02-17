@@ -4,13 +4,19 @@ import { TeamSet } from '@shared/types/TeamSet';
 import { Text } from '@mantine/core';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
-import { DateUtils, getCurrentWeekGenerator, getEndOfWeek, weekToDateGenerator } from '@/lib/utils';
+import {
+  DateUtils,
+  getCurrentWeekGenerator,
+  getEndOfWeek,
+  weekToDateGenerator,
+} from '@/lib/utils';
 import dayjs from 'dayjs';
 
 const TeamDetailPage: React.FC = () => {
   const router = useRouter();
   const courseId = router.query.id as string;
-  const teamId = router.query.teamId as string;
+  const teamNameParam = router.query.teamName as string;
+  const teamName = teamNameParam ? decodeURIComponent(teamNameParam) : '';
 
   const [course, setCourse] = useState<Course | null>(null);
   const [dateUtils, setDateUtils] = useState<DateUtils | null>(null);
@@ -34,7 +40,7 @@ const TeamDetailPage: React.FC = () => {
   }, [courseId]);
 
   useEffect(() => {
-    if (!courseId || !teamId) return;
+    if (!courseId || !teamName) return;
 
     let cancelled = false;
 
@@ -72,9 +78,9 @@ const TeamDetailPage: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [courseId, teamId, fetchCourse, fetchTeamSets]);
+  }, [courseId, teamName, fetchCourse, fetchTeamSets]);
 
-  if (!courseId || !teamId) {
+  if (!courseId || !teamName) {
     return <Text>Course or team not specified</Text>;
   }
 
@@ -82,7 +88,7 @@ const TeamDetailPage: React.FC = () => {
     return (
       <TeamDetail
         courseId={courseId}
-        teamDataId={teamId}
+        teamName={teamName}
         status="loading"
       />
     );
@@ -92,7 +98,7 @@ const TeamDetailPage: React.FC = () => {
     return (
       <TeamDetail
         courseId={courseId}
-        teamDataId={teamId}
+        teamName={teamName}
         status="error"
       />
     );
@@ -101,7 +107,7 @@ const TeamDetailPage: React.FC = () => {
   return (
     <TeamDetail
       courseId={courseId}
-      teamDataId={teamId}
+      teamName={teamName}
       course={course}
       dateUtils={dateUtils}
       teamSets={teamSets}

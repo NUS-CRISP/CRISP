@@ -219,7 +219,7 @@ const TeamsOverview: React.FC<TeamsOverviewProps> = ({
                   withBorder
                   radius="lg"
                   component={Link}
-                  href={`/courses/${courseId}/team-analytics/${team._id}`}
+                  href={`/courses/${courseId}/team-analytics/${encodeURIComponent(team.repoName)}`}
                   className={classes.teamCard}
                 >
                   <Group justify="space-between" align="flex-start" wrap="nowrap">

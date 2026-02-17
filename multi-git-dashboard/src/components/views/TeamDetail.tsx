@@ -32,7 +32,7 @@ type TeamDetailStatus = 'loading' | 'ready' | 'notfound' | 'error';
 
 interface TeamDetailProps {
   courseId: string;
-  teamDataId: string;
+  teamName: string;
   status: TeamDetailStatus;
   course?: Course | null;
   dateUtils?: DateUtils | null;
@@ -41,7 +41,7 @@ interface TeamDetailProps {
 
 const TeamDetail: React.FC<TeamDetailProps> = ({
   courseId,
-  teamDataId,
+  teamName,
   status: initialStatus,
   course,
   dateUtils,
@@ -54,13 +54,13 @@ const TeamDetail: React.FC<TeamDetailProps> = ({
   const [fetchStatus, setFetchStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
 
   const teamData = useMemo(
-    () => teamDatas.find(d => d._id === teamDataId),
-    [teamDatas, teamDataId]
+    () => teamDatas.find(d => d.repoName === teamName),
+    [teamDatas, teamName]
   );
 
   const team = useMemo(
-    () => teams.find(t => t.teamData === teamDataId),
-    [teams, teamDataId]
+    () => (teamData ? teams.find(t => t.teamData === teamData._id) : undefined),
+    [teams, teamData]
   );
 
   const teamWithBoard = useMemo(() => {
@@ -158,7 +158,7 @@ const TeamDetail: React.FC<TeamDetailProps> = ({
   const notFound =
     initialStatus === 'ready' &&
     fetchStatus === 'done' &&
-    (!teamData || (!team && teamDatas.length > 0));
+    (!teamData || (teamDatas.length > 0 && !teamData));
   const error = initialStatus === 'error' || fetchStatus === 'error';
   const loading =
     initialStatus === 'loading' ||
