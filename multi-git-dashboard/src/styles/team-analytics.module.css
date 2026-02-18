@@ -59,18 +59,19 @@
     light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
   border-radius: var(--mantine-radius-xl);
 
-  @mixin hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px
-      light-dark(
-        rgba(0, 0, 0, 0.08),
-        rgba(0, 0, 0, 0.35)
-      );
-    border-color: light-dark(
-      var(--mantine-color-gray-4),
-      var(--mantine-color-dark-3)
+}
+
+.teamCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px
+    light-dark(
+      rgba(0, 0, 0, 0.08),
+      rgba(0, 0, 0, 0.35)
     );
-  }
+  border-color: light-dark(
+    var(--mantine-color-gray-4),
+    var(--mantine-color-dark-3)
+  );
 }
 
 .teamCardTop {
@@ -266,4 +267,88 @@
   font-weight: 700;
   color: light-dark(var(--mantine-color-dark-8), var(--mantine-color-gray-0));
   margin-bottom: 14px;
+}
+
+.teamReviewRow {
+  display: flex;
+  align-items: stretch;
+  gap: 24px;
+}
+
+@media (max-width: var(--mantine-breakpoint-md)) {
+  .teamReviewRow {
+    flex-direction: column;
+  }
+}
+
+.teamReviewMain {
+  flex: 1.2;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.teamReviewStatsCard {
+  flex: 0 0 360px;
+  min-height: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  background: light-dark(
+    var(--mantine-color-gray-0),
+    var(--mantine-color-dark-6)
+  );
+  border: 1px solid
+    light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+  border-radius: var(--mantine-radius-lg);
+}
+
+@media (max-width: var(--mantine-breakpoint-md)) {
+  .teamReviewStatsCard {
+    flex: 1 1 auto;
+  }
+}
+
+.teamReviewStatsStack {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.teamReviewStatRow {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 22px 26px;
+  border-bottom: 1px solid
+    light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+}
+
+.teamReviewStatRow[data-last] {
+  border-bottom: none;
+}
+
+.teamReviewStatLabel {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
+  margin-bottom: 8px;
+}
+
+.teamReviewStatValue {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: light-dark(var(--mantine-color-dark-7), var(--mantine-color-gray-0));
+}
+
+.teamReviewStatSublabel {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
+  margin-top: 4px;
 }
