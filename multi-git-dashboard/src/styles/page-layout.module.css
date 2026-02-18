@@ -1,0 +1,26 @@
+.page {
+  width: 100%;
+  max-width: none;
+  margin: 0 auto;
+  padding-top: 12px;
+}
+
+.pageHeader {
+  margin-bottom: 32px;
+}
+
+.pageTitle {
+  font-size: 3rem; /* 48px – dominant page title */
+  font-weight: 700;
+  line-height: 1.15;
+  color: light-dark(var(--mantine-color-dark-8), var(--mantine-color-gray-0));
+  margin-bottom: 10px;
+}
+
+.pageSubtitle {
+  font-size: 1.125rem; /* 18px */
+  font-weight: 400;
+  line-height: 1.4;
+  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
+  margin-top: 6px;
+}
