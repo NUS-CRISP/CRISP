@@ -17,7 +17,6 @@ import {
   Center,
   Group,
   Loader,
-  ScrollArea,
   Stack,
   Tabs,
   Text,
@@ -27,7 +26,7 @@ import { IconArrowLeft, IconCalendar, IconCode, IconDownload, IconGitPullRequest
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Team as SharedTeam } from '@shared/types/Team';
-import pageLayout from '@/styles/page-layout.module.css';
+import pageLayout from '@/styles/course-page-layout.module.css';
 import classes from '@/styles/team-analytics.module.css';
 import TeamPRList from '@/components/team-analytics/TeamPRList'
 
@@ -243,19 +242,12 @@ const TeamDetail: React.FC<TeamDetailProps> = ({
   ).length;
 
   return (
-    <ScrollArea
-      style={{
-        height: '100vh',
-        paddingRight: '20px',
-        overflowY: 'auto',
-        scrollbarWidth: 'thin',
-      }}
+    <Box
+      className={`${pageLayout.page} ${classes.detailPage}`}
+      pl={20}
+      pr={20}
+      style={{ paddingRight: 36 }}
     >
-      <Box
-        className={`${pageLayout.page} ${classes.detailPage}`}
-        pl={20}
-        pr={20}
-      >
         <Box className={pageLayout.pageHeader}>
           <Title order={1} className={classes.detailTitle}>
             {repoName}
@@ -512,8 +504,7 @@ const TeamDetail: React.FC<TeamDetailProps> = ({
             )}
           </Tabs.Panel>
         </Tabs>
-      </Box>
-    </ScrollArea>
+    </Box>
   );
 };
 

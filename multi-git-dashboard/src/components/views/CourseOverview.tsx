@@ -28,7 +28,7 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
-import pageLayout from '@/styles/page-layout.module.css';
+import pageLayout from '@/styles/course-page-layout.module.css';
 import classes from '@/styles/course-overview.module.css';
 import AllTeams from '../overview/analytics/team/AllTeams';
 

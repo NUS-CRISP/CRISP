@@ -6,7 +6,6 @@ import {
   Card,
   Center,
   Loader,
-  ScrollArea,
   Select,
   SimpleGrid,
   Text,
@@ -20,7 +19,7 @@ import { Status } from '@shared/types/util/Status';
 import { IconDownload, IconSearch } from '@tabler/icons-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import pageLayout from '@/styles/page-layout.module.css';
+import pageLayout from '@/styles/course-page-layout.module.css';
 import classes from '@/styles/team-analytics.module.css';
 
 interface TeamsOverviewProps {
@@ -126,15 +125,7 @@ const TeamsOverview: React.FC<TeamsOverviewProps> = ({
   }
 
   return (
-    <ScrollArea
-      style={{
-        height: '100vh',
-        paddingRight: '20px',
-        overflowY: 'auto',
-        scrollbarWidth: 'thin',
-      }}
-    >
-      <Box className={pageLayout.page} pl={20} pr={20}>
+    <Box className={pageLayout.page} pl={20} pr={20} style={{ paddingRight: 36 }}>
         <Box className={pageLayout.pageHeader}>
           <Box className={classes.headerRow}>
             <Box>
@@ -282,8 +273,7 @@ const TeamsOverview: React.FC<TeamsOverviewProps> = ({
             })}
           </SimpleGrid>
         )}
-      </Box>
-    </ScrollArea>
+    </Box>
   );
 };
 

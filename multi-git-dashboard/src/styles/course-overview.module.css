@@ -165,7 +165,7 @@
     rgba(96, 165, 250, 0.45)
   );
 
-  @mixin hover {
+  .navCard:hover {
     transform: translateY(-4px);
     box-shadow: 0 12px 32px rgba(59, 130, 246, 0.18);
     border-color: light-dark(var(--mantine-color-blue-4), rgba(96, 165, 250, 0.7));
@@ -177,21 +177,21 @@
     var(--mantine-color-violet-3),
     rgba(167, 139, 250, 0.5)
   );
+}
 
-  @mixin hover {
-    box-shadow: 0 12px 32px rgba(124, 58, 237, 0.22);
-    border-color: light-dark(var(--mantine-color-violet-5), rgba(167, 139, 250, 0.8));
-  }
+.navCardFeatured:hover {
+  box-shadow: 0 12px 32px rgba(124, 58, 237, 0.22);
+  border-color: light-dark(var(--mantine-color-violet-5), rgba(167, 139, 250, 0.8));
 }
 
 .navCardDisabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
 
-  @mixin hover {
-    transform: none;
-    box-shadow: none;
-  }
+.navCardDisabled:hover {
+  transform: none;
+  box-shadow: none;
 }
 
 .navIcon {
@@ -234,7 +234,7 @@
   color: var(--mantine-color-blue-filled);
   text-decoration: none;
 
-  @mixin hover {
+  .activityLink:hover {
     text-decoration: underline;
   }
 }

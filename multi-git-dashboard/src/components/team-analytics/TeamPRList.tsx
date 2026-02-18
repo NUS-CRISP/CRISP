@@ -2,7 +2,7 @@ import { DateUtils } from '@/lib/utils';
 import { Accordion, Center, ScrollArea } from '@mantine/core';
 import { TeamData } from '@shared/types/TeamData';
 import PRAccordionItem from '../pr-overview/PRAccordionItem';
-import { ProfileGetter, Team } from './Overview';
+import { ProfileGetter, Team } from '@/components/views/Overview';
 
 export interface TeamPRListProps {
   teamData: TeamData;
