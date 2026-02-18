@@ -1,7 +1,8 @@
+import Navbar from '@/components/Navbar';
 import TeamDetail from '@/components/views/TeamAnalytics';
 import { Course } from '@shared/types/Course';
 import { TeamSet } from '@shared/types/TeamSet';
-import { Text } from '@mantine/core';
+import { Box, Text } from '@mantine/core';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -80,39 +81,39 @@ const TeamDetailPage: React.FC = () => {
     };
   }, [courseId, teamName, fetchCourse, fetchTeamSets]);
 
-  if (!courseId || !teamName) {
-    return <Text>Course or team not specified</Text>;
-  }
-
-  if (status === 'loading') {
-    return (
+  const pageContent =
+    !courseId || !teamName ? (
+      <Text>Course or team not specified</Text>
+    ) : status === 'loading' ? (
       <TeamDetail
         courseId={courseId}
         teamName={teamName}
         status="loading"
       />
-    );
-  }
-
-  if (status === 'error' || !course || !dateUtils) {
-    return (
+    ) : status === 'error' || !course || !dateUtils ? (
       <TeamDetail
         courseId={courseId}
         teamName={teamName}
         status="error"
       />
+    ) : (
+      <TeamDetail
+        courseId={courseId}
+        teamName={teamName}
+        course={course}
+        dateUtils={dateUtils}
+        teamSets={teamSets}
+        status="ready"
+      />
     );
-  }
 
   return (
-    <TeamDetail
-      courseId={courseId}
-      teamName={teamName}
-      course={course}
-      dateUtils={dateUtils}
-      teamSets={teamSets}
-      status="ready"
-    />
+    <Box style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+      <Navbar />
+      <Box style={{ flex: 1, overflow: 'auto', minWidth: 0 }}>
+        {pageContent}
+      </Box>
+    </Box>
   );
 };
 
