@@ -28,7 +28,6 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
-import pageLayout from '@/styles/course-page-layout.module.css';
 import classes from '@/styles/course-overview.module.css';
 import AllTeams from '../overview/analytics/team/AllTeams';
 
@@ -117,18 +116,24 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
   );
 
   const totals = useMemo(() => {
-    const totalCommits = uniqueTeamData.reduce((acc, t) => acc + (t.commits ?? 0), 0);
+    const totalCommits = uniqueTeamData.reduce(
+      (acc, t) => acc + (t.commits ?? 0),
+      0
+    );
     const totalPRs = uniqueTeamData.reduce(
       (acc, t) => acc + (t.pullRequests ?? 0),
       0
     );
 
-    const allPRs: Array<(TeamPR & { repoName: string })> = [];
+    const allPRs: Array<TeamPR & { repoName: string }> = [];
     for (const t of uniqueTeamData) {
-      for (const pr of t.teamPRs ?? []) allPRs.push({ ...pr, repoName: t.repoName });
+      for (const pr of t.teamPRs ?? [])
+        allPRs.push({ ...pr, repoName: t.repoName });
     }
     const openPRs = allPRs.filter(pr => normalizePrState(pr.state) === 'open');
-    const pendingReviews = openPRs.filter(pr => (pr.reviews?.length ?? 0) === 0);
+    const pendingReviews = openPRs.filter(
+      pr => (pr.reviews?.length ?? 0) === 0
+    );
 
     return {
       totalCommits,
@@ -174,9 +179,10 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
   }, [course, totals]);
 
   const recentActivity = useMemo(() => {
-    const allPRs: Array<(TeamPR & { repoName: string })> = [];
+    const allPRs: Array<TeamPR & { repoName: string }> = [];
     for (const t of uniqueTeamData) {
-      for (const pr of t.teamPRs ?? []) allPRs.push({ ...pr, repoName: t.repoName });
+      for (const pr of t.teamPRs ?? [])
+        allPRs.push({ ...pr, repoName: t.repoName });
     }
 
     const withDates = allPRs
@@ -231,12 +237,12 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
         scrollbarWidth: 'thin',
       }}
     >
-      <Box className={pageLayout.page} pl={20} pr={20}>
-        <Box className={pageLayout.pageHeader}>
-          <Title order={1} className={pageLayout.pageTitle}>
+      <Box className={classes.page} pl={20} pr={20}>
+        <Box className={classes.pageHeader}>
+          <Title order={1} className={classes.pageTitle}>
             Course Overview
           </Title>
-          <Text className={pageLayout.pageSubtitle}>
+          <Text c="dimmed" className={classes.pageSubtitle}>
             Manage your course, track progress, and review student performance
           </Text>
         </Box>
@@ -342,7 +348,8 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
                   </Title>
                 </Group>
                 <Text c="dimmed" className={classes.navDescription}>
-                  Set up new assignments and manage assessments for your students
+                  Set up new assignments and manage assessments for your
+                  students
                 </Text>
               </Card>
             ) : (

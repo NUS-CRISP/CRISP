@@ -108,7 +108,7 @@ const TeamDetailPage: React.FC = () => {
     );
 
   return (
-    <Box style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+    <Box style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
       <Navbar />
       <Box style={{ flex: 1, overflow: 'auto', minWidth: 0 }}>
         {pageContent}

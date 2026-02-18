@@ -1,5 +1,5 @@
 import { DateUtils } from '@/lib/utils';
-import { Accordion, Center, ScrollArea } from '@mantine/core';
+import { Accordion, Center } from '@mantine/core';
 import { TeamData } from '@shared/types/TeamData';
 import PRAccordionItem from '../pr-overview/PRAccordionItem';
 import { ProfileGetter, Team } from '@/components/views/Overview';
@@ -29,22 +29,20 @@ const TeamPRList: React.FC<TeamPRListProps> = ({
   }
 
   return (
-    <ScrollArea.Autosize mah="70vh">
-      <Accordion
-        defaultValue={[teamData._id]}
-        multiple
-        variant="separated"
-      >
-        <PRAccordionItem
-          index={0}
-          teamData={teamData}
-          team={team}
-          teamDatas={[teamData]}
-          dateUtils={dateUtils}
-          getStudentNameByGitHandle={getStudentNameByGitHandle}
-        />
-      </Accordion>
-    </ScrollArea.Autosize>
+    <Accordion
+      defaultValue={[teamData._id]}
+      multiple
+      variant="separated"
+    >
+      <PRAccordionItem
+        index={0}
+        teamData={teamData}
+        team={team}
+        teamDatas={[teamData]}
+        dateUtils={dateUtils}
+        getStudentNameByGitHandle={getStudentNameByGitHandle}
+      />
+    </Accordion>
   );
 };
 

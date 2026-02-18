@@ -1,8 +1,9 @@
+import Navbar from '@/components/Navbar';
 import TeamsOverview from '@/components/views/TeamsOverview';
 import { Course } from '@shared/types/Course';
 import { TeamData } from '@shared/types/TeamData';
 import { Status } from '@shared/types/util/Status';
-import { Text } from '@mantine/core';
+import { Box, Text } from '@mantine/core';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
@@ -49,12 +50,17 @@ const TeamAnalyticsPage: React.FC = () => {
   }
 
   return (
-    <TeamsOverview
-      courseId={courseId}
-      course={course}
-      teamDatas={teamDatas}
-      status={status}
-    />
+    <Box style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+      <Navbar />
+      <Box style={{ flex: 1, minWidth: 0, overflow: 'auto' }}>
+        <TeamsOverview
+          courseId={courseId}
+          course={course}
+          teamDatas={teamDatas}
+          status={status}
+        />
+      </Box>
+    </Box>
   );
 };
 

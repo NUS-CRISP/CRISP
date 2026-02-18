@@ -18,8 +18,8 @@ export default function RootLayout({
 
   return (
     <TutorialContextProvider init={initTutorialStage}>
-      {showTopBar && <TopBar />}
       <div className={styles.rootLayout}>
+        {showTopBar && <TopBar />}
         <Head>
           <link rel="shortcut icon" href="/favicon.png" />
         </Head>
