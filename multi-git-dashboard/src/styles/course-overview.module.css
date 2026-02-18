@@ -11,20 +11,6 @@
   padding: 14px 24px;
 }
 
-.backButton {
-  padding: 8px 10px;
-  border-radius: var(--mantine-radius-md);
-  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
-  transition:
-    background-color 160ms ease,
-    color 160ms ease;
-
-  @mixin hover {
-    background: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
-    color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
-  }
-}
-
 .courseHeaderInfo {
   display: flex;
   flex-direction: row;
@@ -41,25 +27,6 @@
 
 .headerRight {
   min-width: 220px;
-}
-
-.page {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding-top: 8px;
-}
-
-.pageHeader {
-  margin-bottom: 28px;
-}
-
-.pageTitle {
-  font-size: 2.5rem;
-  line-height: 1.1;
-}
-
-.pageSubtitle {
-  font-size: 1.05rem;
 }
 
 .overviewRow {
@@ -86,7 +53,8 @@
 }
 
 .overviewChartTitle {
-  margin-bottom: 16px;
+  margin-bottom: 18px;
+  font-size: 1.375rem;
   font-weight: 700;
 }
 
@@ -114,7 +82,7 @@
 }
 
 .statsCard {
-  flex: 0 0 320px;
+  flex: 0 0 360px;
   min-height: 0;
   padding: 0;
   display: flex;
@@ -144,7 +112,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 18px 22px;
+  padding: 22px 26px;
   border-bottom: 1px solid
     light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
 }
@@ -154,16 +122,16 @@
 }
 
 .statLabel {
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .statValue {
-  font-size: 2.25rem;
+  font-size: 2.5rem;
   font-weight: 700;
   line-height: 1.2;
   color: light-dark(var(--mantine-color-dark-7), var(--mantine-color-gray-0));
@@ -237,11 +205,13 @@
 }
 
 .navTitle {
-  margin-top: 14px;
-  margin-bottom: 6px;
+  margin-top: 16px;
+  margin-bottom: 8px;
+  font-size: 1.25rem;
 }
 
 .navDescription {
+  font-size: 1rem;
   line-height: 1.6;
 }
 
