@@ -1,3 +1,4 @@
+/* Deprecated component, this is used by the deprecated team-review page */
 import { DateUtils } from '@/lib/utils';
 import {
   Accordion,

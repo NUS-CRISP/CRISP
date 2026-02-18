@@ -1,4 +1,4 @@
-import TeamDetail from '@/components/views/TeamDetail';
+import TeamDetail from '@/components/views/TeamAnalytics';
 import { Course } from '@shared/types/Course';
 import { TeamSet } from '@shared/types/TeamSet';
 import { Text } from '@mantine/core';
