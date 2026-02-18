@@ -19,7 +19,7 @@ import { Status } from '@shared/types/util/Status';
 import { IconDownload, IconSearch } from '@tabler/icons-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import pageLayout from '@/styles/course-page-layout.module.css';
+import pageLayout from '@/styles/root-layout.module.css';
 import classes from '@/styles/team-analytics.module.css';
 
 interface TeamsOverviewProps {

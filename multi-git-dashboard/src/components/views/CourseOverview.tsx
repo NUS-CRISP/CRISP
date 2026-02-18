@@ -26,9 +26,9 @@ import {
   IconUsersGroup,
 } from '@tabler/icons-react';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import classes from '@/styles/course-overview.module.css';
+import pageLayout from '@/styles/root-layout.module.css';
 import AllTeams from '../overview/analytics/team/AllTeams';
 
 interface OverviewProps {
@@ -65,7 +65,6 @@ const timeAgo = (d: Date) => {
 const normalizePrState = (s?: string) => (s ?? '').trim().toLowerCase();
 
 const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
-  const router = useRouter();
   const permission = hasFacultyPermission();
 
   const [course, setCourse] = useState<Course | null>(null);
@@ -237,12 +236,12 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
         scrollbarWidth: 'thin',
       }}
     >
-      <Box className={classes.page} pl={20} pr={20}>
+      <Box className={pageLayout.page} pl={20} pr={20}>
         <Box className={classes.pageHeader}>
-          <Title order={1} className={classes.pageTitle}>
+          <Title order={1} className={pageLayout.pageTitle}>
             Course Overview
           </Title>
-          <Text c="dimmed" className={classes.pageSubtitle}>
+          <Text c="dimmed" className={pageLayout.pageSubtitle}>
             Manage your course, track progress, and review student performance
           </Text>
         </Box>

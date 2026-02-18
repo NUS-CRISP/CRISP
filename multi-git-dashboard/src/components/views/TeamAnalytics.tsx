@@ -26,7 +26,7 @@ import { IconArrowLeft, IconCalendar, IconCode, IconDownload, IconGitPullRequest
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Team as SharedTeam } from '@shared/types/Team';
-import pageLayout from '@/styles/course-page-layout.module.css';
+import pageLayout from '@/styles/root-layout.module.css';
 import classes from '@/styles/team-analytics.module.css';
 import TeamPRList from '@/components/team-analytics/TeamPRList'
 

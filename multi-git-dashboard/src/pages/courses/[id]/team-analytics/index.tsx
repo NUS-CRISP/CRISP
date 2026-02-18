@@ -1,4 +1,3 @@
-import Navbar from '@/components/Navbar';
 import TeamsOverview from '@/components/views/TeamsOverview';
 import { Course } from '@shared/types/Course';
 import { TeamData } from '@shared/types/TeamData';
@@ -51,7 +50,6 @@ const TeamAnalyticsPage: React.FC = () => {
 
   return (
     <Box style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
-      <Navbar />
       <Box style={{ flex: 1, minWidth: 0, overflow: 'auto' }}>
         <TeamsOverview
           courseId={courseId}
