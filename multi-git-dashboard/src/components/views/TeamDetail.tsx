@@ -3,7 +3,7 @@ import OverviewAccordionItem from '@/components/overview/OverviewAccordionItem';
 import ProjectManagementJiraCard from '@/components/cards/ProjectManagementJiraCard';
 import { CodeAnalysisData } from '@shared/types/CodeAnalysisData';
 import { TeamData } from '@shared/types/TeamData';
-import { DateUtils } from '@/lib/utils';
+import { DateUtils, getInitials, AVATAR_COLORS } from '@/lib/utils';
 import { Course } from '@shared/types/Course';
 import { TeamSet } from '@shared/types/TeamSet';
 import { Profile } from '@shared/types/Profile';
@@ -26,6 +26,7 @@ import { IconArrowLeft, IconCalendar, IconCode, IconDownload, IconUsersGroup } f
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Team as SharedTeam } from '@shared/types/Team';
+import pageLayout from '@/styles/page-layout.module.css';
 import classes from '@/styles/team-analytics.module.css';
 
 export interface Team extends Omit<SharedTeam, 'teamData'> {
@@ -170,8 +171,8 @@ const TeamDetail: React.FC<TeamDetailProps> = ({
 
   if (loading) {
     return (
-      <Box className={classes.detailPage}>
-        <Box className={classes.detailHeader}>
+      <Box className={`${pageLayout.page} ${classes.detailPage}`} pl={20} pr={20}>
+        <Box className={pageLayout.pageHeader}>
           <Anchor
             component={Link}
             href={`/courses/${courseId}/team-analytics`}
@@ -190,8 +191,8 @@ const TeamDetail: React.FC<TeamDetailProps> = ({
 
   if (error) {
     return (
-      <Box className={classes.detailPage}>
-        <Box className={classes.detailHeader}>
+      <Box className={`${pageLayout.page} ${classes.detailPage}`} pl={20} pr={20}>
+        <Box className={pageLayout.pageHeader}>
           <Anchor
             component={Link}
             href={`/courses/${courseId}/team-analytics`}
@@ -210,8 +211,8 @@ const TeamDetail: React.FC<TeamDetailProps> = ({
 
   if (notFound || (fetchStatus === 'done' && !teamData)) {
     return (
-      <Box className={classes.detailPage}>
-        <Box className={classes.detailHeader}>
+      <Box className={`${pageLayout.page} ${classes.detailPage}`} pl={20} pr={20}>
+        <Box className={pageLayout.pageHeader}>
           <Anchor
             component={Link}
             href={`/courses/${courseId}/team-analytics`}
@@ -239,15 +240,6 @@ const TeamDetail: React.FC<TeamDetailProps> = ({
     pr => (pr.reviews?.length ?? 0) > 0
   ).length;
 
-  const getInitials = (s: string) =>
-    s
-      .split(/[\s_.-]/)
-      .filter(Boolean)
-      .map(p => p.charAt(0))
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-
   return (
     <ScrollArea
       style={{
@@ -257,16 +249,8 @@ const TeamDetail: React.FC<TeamDetailProps> = ({
         scrollbarWidth: 'thin',
       }}
     >
-      <Box className={classes.detailPage}>
-        <Box className={classes.detailHeader}>
-          <Anchor
-            component={Link}
-            href={`/courses/${courseId}/team-analytics`}
-            className={classes.backLink}
-          >
-            <IconArrowLeft size={18} />
-            Team Analytics
-          </Anchor>
+      <Box className={`${pageLayout.page} ${classes.detailPage}`} pl={20} pr={20}>
+        <Box className={pageLayout.pageHeader}>
           <Title order={1} className={classes.detailTitle}>
             {repoName}
           </Title>
@@ -279,8 +263,13 @@ const TeamDetail: React.FC<TeamDetailProps> = ({
           <Group className={classes.detailHeaderActions} justify="space-between" wrap="wrap">
             <Group gap="sm">
               <Avatar.Group spacing="sm">
-                {memberHandles.slice(0, 5).map(handle => (
-                  <Avatar key={handle} radius="xl" size="sm" color="blue">
+                {memberHandles.slice(0, 5).map((handle, index) => (
+                  <Avatar
+                    key={handle}
+                    radius="xl"
+                    size="sm"
+                    color={AVATAR_COLORS[index % AVATAR_COLORS.length]}
+                  >
                     {getInitials(handle)}
                   </Avatar>
                 ))}
@@ -294,7 +283,11 @@ const TeamDetail: React.FC<TeamDetailProps> = ({
                 {memberHandles.length} member{memberHandles.length !== 1 ? 's' : ''}
               </Text>
             </Group>
-            <Button variant="filled" size="sm" leftSection={<IconDownload size={14} />}>
+            <Button
+              variant="default"
+              leftSection={<IconDownload size={16} />}
+              className={classes.exportButton}
+            >
               Export Report
             </Button>
           </Group>

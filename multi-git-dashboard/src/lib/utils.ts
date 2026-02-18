@@ -36,6 +36,26 @@ export const getEndOfWeek = (date: Dayjs) =>
   date.isoWeekday(7).hour(23).minute(59).second(59).millisecond(999);
 
 /* String Utils */
+export const getInitials = (name: string): string =>
+  name
+    .split(/[\s_.-]/)
+    .filter(Boolean)
+    .map(part => part.charAt(0))
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+
+export const AVATAR_COLORS = [
+  'blue',
+  'teal',
+  'violet',
+  'grape',
+  'orange',
+  'cyan',
+  'green',
+  'pink',
+] as const;
+
 export const capitalize = <T extends string>(s: T) =>
   (s[0].toUpperCase() + s.slice(1)) as Capitalize<typeof s>;
 

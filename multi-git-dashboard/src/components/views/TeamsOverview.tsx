@@ -5,16 +5,15 @@ import {
   Button,
   Card,
   Center,
-  Group,
   Loader,
   ScrollArea,
   Select,
   SimpleGrid,
-  Stack,
   Text,
   TextInput,
   Title,
 } from '@mantine/core';
+import { getInitials, AVATAR_COLORS } from '@/lib/utils';
 import { Course } from '@shared/types/Course';
 import { TeamData } from '@shared/types/TeamData';
 import { Status } from '@shared/types/util/Status';
@@ -49,16 +48,6 @@ function getTeamStatus(team: TeamData): TeamStatus {
 function getMemberCount(team: TeamData): number {
   const contrib = team.teamContributions ?? {};
   return Object.keys(contrib).length;
-}
-
-function getInitials(name: string): string {
-  return name
-    .split(/[\s_.-]/)
-    .filter(Boolean)
-    .map(part => part.charAt(0))
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
 }
 
 const TeamsOverview: React.FC<TeamsOverviewProps> = ({
@@ -250,12 +239,12 @@ const TeamsOverview: React.FC<TeamsOverviewProps> = ({
                     {memberCount} member{memberCount !== 1 ? 's' : ''}
                   </Text>
                   <Avatar.Group spacing="sm" className={classes.avatarGroup} mt="xs">
-                    {members.slice(0, 4).map(user => (
+                    {members.slice(0, 4).map((user, index) => (
                       <Avatar
                         key={user}
                         radius="xl"
-                        size="sm"
-                        color="blue"
+                        size="lg"
+                        color={AVATAR_COLORS[index % AVATAR_COLORS.length]} // alternate the colours LOL
                         className={classes.avatar}
                       >
                         {getInitials(user)}
