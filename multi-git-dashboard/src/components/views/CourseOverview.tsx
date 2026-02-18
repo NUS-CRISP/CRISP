@@ -28,6 +28,7 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
+import pageLayout from '@/styles/page-layout.module.css';
 import classes from '@/styles/course-overview.module.css';
 import AllTeams from '../overview/analytics/team/AllTeams';
 
@@ -230,12 +231,12 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
         scrollbarWidth: 'thin',
       }}
     >
-      <Box className={classes.page} pl={20} pr={20}>
-        <Box className={classes.pageHeader}>
-          <Title order={1} className={classes.pageTitle}>
+      <Box className={pageLayout.page} pl={20} pr={20}>
+        <Box className={pageLayout.pageHeader}>
+          <Title order={1} className={pageLayout.pageTitle}>
             Course Overview
           </Title>
-          <Text c="dimmed" className={classes.pageSubtitle}>
+          <Text className={pageLayout.pageSubtitle}>
             Manage your course, track progress, and review student performance
           </Text>
         </Box>

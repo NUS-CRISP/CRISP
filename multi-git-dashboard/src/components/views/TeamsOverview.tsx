@@ -2,6 +2,7 @@ import {
   Avatar,
   Badge,
   Box,
+  Button,
   Card,
   Center,
   Group,
@@ -17,9 +18,10 @@ import {
 import { Course } from '@shared/types/Course';
 import { TeamData } from '@shared/types/TeamData';
 import { Status } from '@shared/types/util/Status';
-import { IconSearch } from '@tabler/icons-react';
+import { IconDownload, IconSearch } from '@tabler/icons-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import pageLayout from '@/styles/page-layout.module.css';
 import classes from '@/styles/team-analytics.module.css';
 
 interface TeamsOverviewProps {
@@ -143,25 +145,31 @@ const TeamsOverview: React.FC<TeamsOverviewProps> = ({
         scrollbarWidth: 'thin',
       }}
     >
-      <Box className={classes.page} pl={20} pr={20}>
-        <Box className={classes.pageHeader}>
-          <Group justify="space-between" align="flex-end" wrap="wrap" gap="md">
+      <Box className={pageLayout.page} pl={20} pr={20}>
+        <Box className={pageLayout.pageHeader}>
+          <Box className={classes.headerRow}>
             <Box>
-              <Title order={1} className={classes.pageTitle}>
+              <Title order={1} className={pageLayout.pageTitle}>
                 Team Analytics
               </Title>
-              <Text c="dimmed" className={classes.pageSubtitle}>
-                {course.code}
-                {course.semester ? ` · ${course.semester}` : ''} — View and
-                compare team performance
+              <Text className={pageLayout.pageSubtitle}>
+                Track team performance, code quality, and project progress
               </Text>
             </Box>
-          </Group>
+            <Button
+              variant="default"
+              leftSection={<IconDownload size={16} />}
+              // To implement export function
+              className={classes.exportButton}
+            >
+              Export Report
+            </Button>
+          </Box>
         </Box>
 
         <Box className={classes.filters}>
           <TextInput
-            placeholder="Search by team or repo name..."
+            placeholder="Search teams..."
             leftSection={<IconSearch size={16} />}
             value={search}
             onChange={e => setSearch(e.currentTarget.value)}
@@ -169,27 +177,30 @@ const TeamsOverview: React.FC<TeamsOverviewProps> = ({
           />
           <Select
             label="Status"
-            placeholder="All"
+            placeholder="All Teams"
             value={statusFilter}
             onChange={setStatusFilter}
             data={[
-              { value: 'all', label: 'All teams' },
+              { value: 'all', label: 'All Teams' },
               { value: 'active', label: 'Active' },
               { value: 'review-needed', label: 'Review needed' },
             ]}
             clearable
+            classNames={{ label: classes.filterSelectLabel }}
             className={classes.filterSelect}
           />
           <Select
-            label="Sort by"
+            label="Sort"
+            placeholder="Sort by Name"
             value={sortBy}
             onChange={setSortBy}
             data={[
-              { value: 'name', label: 'Name' },
+              { value: 'name', label: 'Sort by Name' },
               { value: 'prs', label: 'Pull requests' },
               { value: 'commits', label: 'Commits' },
               { value: 'members', label: 'Members' },
             ]}
+            classNames={{ label: classes.filterSelectLabel }}
             className={classes.filterSelect}
           />
         </Box>
@@ -222,60 +233,61 @@ const TeamsOverview: React.FC<TeamsOverviewProps> = ({
                   href={`/courses/${courseId}/team-analytics/${encodeURIComponent(team.repoName)}`}
                   className={classes.teamCard}
                 >
-                  <Group justify="space-between" align="flex-start" wrap="nowrap">
-                    <Box style={{ minWidth: 0 }}>
-                      <Title order={4} className={classes.teamName} lineClamp={1}>
-                        {team.repoName}
-                      </Title>
-                      <Group gap={6} mt={6}>
-                        <Badge
-                          size="sm"
-                          variant="light"
-                          color={teamStatus === 'active' ? 'green' : 'orange'}
-                          className={classes.statusBadge}
-                        >
-                          {teamStatus === 'active' ? 'Active' : 'Review needed'}
-                        </Badge>
-                      </Group>
-                    </Box>
-                    <Avatar.Group spacing="sm" className={classes.avatarGroup}>
-                      {members.slice(0, 4).map(user => (
-                        <Avatar
-                          key={user}
-                          radius="xl"
-                          size="sm"
-                          color="blue"
-                          className={classes.avatar}
-                        >
-                          {getInitials(user)}
-                        </Avatar>
-                      ))}
-                      {members.length > 4 && (
-                        <Avatar radius="xl" size="sm" color="gray">
-                          +{members.length - 4}
-                        </Avatar>
-                      )}
-                    </Avatar.Group>
-                  </Group>
+                  <Box className={classes.teamCardTop}>
+                    <Title order={4} className={classes.teamName} lineClamp={1}>
+                      {team.repoName}
+                    </Title>
+                    <Badge
+                      size="sm"
+                      variant="light"
+                      color={teamStatus === 'active' ? 'green' : 'orange'}
+                      className={classes.statusBadge}
+                    >
+                      {teamStatus === 'active' ? 'Active' : 'Review needed'}
+                    </Badge>
+                  </Box>
+                  <Text className={classes.memberCount}>
+                    {memberCount} member{memberCount !== 1 ? 's' : ''}
+                  </Text>
+                  <Avatar.Group spacing="sm" className={classes.avatarGroup} mt="xs">
+                    {members.slice(0, 4).map(user => (
+                      <Avatar
+                        key={user}
+                        radius="xl"
+                        size="sm"
+                        color="blue"
+                        className={classes.avatar}
+                      >
+                        {getInitials(user)}
+                      </Avatar>
+                    ))}
+                    {members.length > 4 && (
+                      <Avatar radius="xl" size="sm" color="gray">
+                        +{members.length - 4}
+                      </Avatar>
+                    )}
+                  </Avatar.Group>
 
-                  <Stack gap="xs" mt="md" className={classes.stats}>
-                    <Group gap="lg">
-                      <Text size="sm" c="dimmed">
-                        {memberCount} member{memberCount !== 1 ? 's' : ''}
+                  <Box className={classes.statsRow}>
+                    <Box>
+                      <Text className={classes.statValue}>
+                        {formatCompactNumber(team.pullRequests ?? 0)}
                       </Text>
-                      <Text size="sm" c="dimmed">
-                        {formatCompactNumber(team.pullRequests ?? 0)} PRs
+                      <Text className={classes.statLabel}>PRs</Text>
+                    </Box>
+                    <Box>
+                      <Text className={classes.statValue}>
+                        {formatCompactNumber(team.commits ?? 0)}
                       </Text>
-                      <Text size="sm" c="dimmed">
-                        {formatCompactNumber(team.commits ?? 0)} commits
+                      <Text className={classes.statLabel}>Commits</Text>
+                    </Box>
+                    <Box>
+                      <Text className={classes.statValue}>
+                        {formatCompactNumber(team.issues ?? 0)}
                       </Text>
-                    </Group>
-                    <Group gap="md">
-                      <Text size="xs" c="dimmed">
-                        Issues: {formatCompactNumber(team.issues ?? 0)}
-                      </Text>
-                    </Group>
-                  </Stack>
+                      <Text className={classes.statLabel}>Issues</Text>
+                    </Box>
+                  </Box>
                 </Card>
               );
             })}

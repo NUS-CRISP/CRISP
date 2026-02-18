@@ -10,15 +10,19 @@ import { Profile } from '@shared/types/Profile';
 import {
   Accordion,
   Anchor,
+  Avatar,
   Box,
+  Button,
   Center,
+  Group,
   Loader,
   ScrollArea,
+  SimpleGrid,
   Tabs,
   Text,
   Title,
 } from '@mantine/core';
-import { IconArrowLeft, IconCode, IconCalendar, IconUsersGroup } from '@tabler/icons-react';
+import { IconArrowLeft, IconCalendar, IconCode, IconDownload, IconUsersGroup } from '@tabler/icons-react';
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Team as SharedTeam } from '@shared/types/Team';
@@ -227,6 +231,22 @@ const TeamDetail: React.FC<TeamDetailProps> = ({
   const repoName = teamData?.repoName ?? 'Team';
   const teamNumber = team?.number;
   const codeData = teamNumber != null ? codeAnalysisDataForTeam[teamNumber] : undefined;
+  const memberHandles = teamData ? Object.keys(teamData.teamContributions ?? {}) : [];
+  const openPRs = (teamData?.teamPRs ?? []).filter(
+    pr => (pr.state ?? '').toLowerCase() === 'open'
+  );
+  const prsWithReviews = (teamData?.teamPRs ?? []).filter(
+    pr => (pr.reviews?.length ?? 0) > 0
+  ).length;
+
+  const getInitials = (s: string) =>
+    s
+      .split(/[\s_.-]/)
+      .filter(Boolean)
+      .map(p => p.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
 
   return (
     <ScrollArea
@@ -247,15 +267,37 @@ const TeamDetail: React.FC<TeamDetailProps> = ({
             <IconArrowLeft size={18} />
             Team Analytics
           </Anchor>
-          <Title order={2} className={classes.detailTitle}>
+          <Title order={1} className={classes.detailTitle}>
             {repoName}
           </Title>
           {course?.code && (
-            <Text size="sm" c="dimmed">
+            <Text className={classes.detailMeta}>
               {course.code}
               {course.semester ? ` · ${course.semester}` : ''}
             </Text>
           )}
+          <Group className={classes.detailHeaderActions} justify="space-between" wrap="wrap">
+            <Group gap="sm">
+              <Avatar.Group spacing="sm">
+                {memberHandles.slice(0, 5).map(handle => (
+                  <Avatar key={handle} radius="xl" size="sm" color="blue">
+                    {getInitials(handle)}
+                  </Avatar>
+                ))}
+                {memberHandles.length > 5 && (
+                  <Avatar radius="xl" size="sm" color="gray">
+                    +{memberHandles.length - 5}
+                  </Avatar>
+                )}
+              </Avatar.Group>
+              <Text className={classes.memberCount} component="span">
+                {memberHandles.length} member{memberHandles.length !== 1 ? 's' : ''}
+              </Text>
+            </Group>
+            <Button variant="filled" size="sm" leftSection={<IconDownload size={14} />}>
+              Export Report
+            </Button>
+          </Group>
         </Box>
 
         <Tabs defaultValue="team-review" className={classes.detailTabs}>
@@ -274,6 +316,44 @@ const TeamDetail: React.FC<TeamDetailProps> = ({
           <Tabs.Panel value="team-review" pt="md">
             {teamData && dateUtils && (
               <Box className={classes.tabPanel}>
+                <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} className={classes.overviewStatsGrid}>
+                  <Box className={classes.overviewStatCard}>
+                    <Text className={classes.overviewStatCardTitle}>Pull requests</Text>
+                    <Text className={classes.overviewStatCardValue}>
+                      {teamData.pullRequests ?? 0}
+                    </Text>
+                    <Text className={classes.overviewStatCardDetail}>
+                      {openPRs.length} open
+                    </Text>
+                  </Box>
+                  <Box className={classes.overviewStatCard}>
+                    <Text className={classes.overviewStatCardTitle}>Code quality</Text>
+                    <Text className={classes.overviewStatCardValue}>
+                      —
+                    </Text>
+                    <Text className={classes.overviewStatCardDetail}>
+                      From code analysis
+                    </Text>
+                  </Box>
+                  <Box className={classes.overviewStatCard}>
+                    <Text className={classes.overviewStatCardTitle}>Commits</Text>
+                    <Text className={classes.overviewStatCardValue}>
+                      {teamData.commits ?? 0}
+                    </Text>
+                    <Text className={classes.overviewStatCardDetail}>
+                      Total commits
+                    </Text>
+                  </Box>
+                  <Box className={classes.overviewStatCard}>
+                    <Text className={classes.overviewStatCardTitle}>Peer reviews</Text>
+                    <Text className={classes.overviewStatCardValue}>
+                      {prsWithReviews}
+                    </Text>
+                    <Text className={classes.overviewStatCardDetail}>
+                      PRs with reviews
+                    </Text>
+                  </Box>
+                </SimpleGrid>
                 <Accordion multiple variant="separated" defaultValue={[teamData._id]}>
                   <OverviewAccordionItem
                     index={0}
