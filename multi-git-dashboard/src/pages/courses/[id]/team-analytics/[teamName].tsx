@@ -87,9 +87,17 @@ const TeamDetailPage: React.FC = () => {
     !courseId || !teamName ? (
       <Text>Course or team not specified</Text>
     ) : status === 'loading' ? (
-      <TeamAnalyticsDetail courseId={courseId} teamName={teamName} status="loading" />
+      <TeamAnalyticsDetail
+        courseId={courseId}
+        teamName={teamName}
+        status="loading"
+      />
     ) : status === 'error' || !course || !dateUtils ? (
-      <TeamAnalyticsDetail courseId={courseId} teamName={teamName} status="error" />
+      <TeamAnalyticsDetail
+        courseId={courseId}
+        teamName={teamName}
+        status="error"
+      />
     ) : (
       <TeamAnalyticsDetail
         courseId={courseId}

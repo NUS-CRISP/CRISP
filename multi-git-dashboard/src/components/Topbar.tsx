@@ -172,7 +172,7 @@ const TopBar: React.FC = () => {
           {isCourseRoute && backLink && (
             <BackLink href={backLink.href} label={backLink.label} />
           )}
-        </Group> 
+        </Group>
 
         {isCourseRoute && (
           <Group
