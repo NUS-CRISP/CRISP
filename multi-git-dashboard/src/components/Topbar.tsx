@@ -58,8 +58,7 @@ const TopBar: React.FC = () => {
         const code = data.code ?? '';
         const semester = data.semester ?? '';
         const name = data.name ?? '';
-        const meta =
-        code && name ? `${code} ${name}` : code || name || null;
+        const meta = code && name ? `${code} ${name}` : code || name || null;
         setCourseNameCode(meta);
         setCourseMeta(semester);
       } catch {

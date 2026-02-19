@@ -383,7 +383,11 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
                 href={`/courses/${courseId}/repositories`}
                 className={`${classes.navCard} ${classes.navCardSettings}`}
               >
-                <ThemeIcon radius="md" size={80} className={classes.navIconMuted}>
+                <ThemeIcon
+                  radius="md"
+                  size={80}
+                  className={classes.navIconMuted}
+                >
                   <IconSettings size={34} />
                 </ThemeIcon>
                 <Title order={3} className={classes.navTitle}>
