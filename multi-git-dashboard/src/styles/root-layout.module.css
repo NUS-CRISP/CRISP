@@ -36,4 +36,5 @@
   line-height: 1.4;
   color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
   margin-top: 6px;
+  margin-bottom: 20px;
 }

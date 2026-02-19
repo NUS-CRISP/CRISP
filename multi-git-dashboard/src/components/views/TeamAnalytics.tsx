@@ -1,511 +1,280 @@
-import CodeAnalysisAccordionItem from '@/components/code-analysis/CodeAnalysisAccordianItem';
-import OverviewAccordionItem from '@/components/overview/OverviewAccordionItem';
-import ProjectManagementJiraCard from '@/components/cards/ProjectManagementJiraCard';
-import { CodeAnalysisData } from '@shared/types/CodeAnalysisData';
-import { TeamData } from '@shared/types/TeamData';
-import { DateUtils, getInitials, AVATAR_COLORS } from '@/lib/utils';
-import { Course } from '@shared/types/Course';
-import { TeamSet } from '@shared/types/TeamSet';
-import { Profile } from '@shared/types/Profile';
 import {
-  Accordion,
-  Anchor,
   Avatar,
+  Badge,
   Box,
   Button,
   Card,
   Center,
-  Group,
   Loader,
-  Stack,
-  Tabs,
+  Select,
+  SimpleGrid,
   Text,
+  TextInput,
   Title,
 } from '@mantine/core';
-import { IconArrowLeft, IconCalendar, IconCode, IconDownload, IconGitPullRequest, IconUsersGroup } from '@tabler/icons-react';
+import { getInitials, AVATAR_COLORS } from '@/lib/utils';
+import { Course } from '@shared/types/Course';
+import { TeamData } from '@shared/types/TeamData';
+import { Status } from '@shared/types/util/Status';
+import { IconDownload, IconSearch } from '@tabler/icons-react';
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Team as SharedTeam } from '@shared/types/Team';
+import { useMemo, useState } from 'react';
 import pageLayout from '@/styles/root-layout.module.css';
 import classes from '@/styles/team-analytics.module.css';
-import TeamPRList from '@/components/team-analytics/TeamPRList'
 
-export interface Team extends Omit<SharedTeam, 'teamData'> {
-  teamData: string;
-}
-
-type TeamDetailStatus = 'loading' | 'ready' | 'notfound' | 'error';
-
-interface TeamDetailProps {
+interface TeamAnalyticsProps {
   courseId: string;
-  teamName: string;
-  status: TeamDetailStatus;
-  course?: Course | null;
-  dateUtils?: DateUtils | null;
-  teamSets?: TeamSet[];
+  course: Course | null;
+  teamDatas: TeamData[];
+  status: Status;
 }
 
-const TeamDetail: React.FC<TeamDetailProps> = ({
+const formatCompactNumber = (n: number) =>
+  new Intl.NumberFormat('en', { notation: 'compact' }).format(n);
+
+const normalizePrState = (s?: string) => (s ?? '').trim().toLowerCase();
+
+type TeamStatus = 'active' | 'review-needed';
+
+function getTeamStatus(team: TeamData): TeamStatus {
+  const openPRs = (team.teamPRs ?? []).filter(
+    pr => normalizePrState(pr.state) === 'open'
+  );
+  const needsReview = openPRs.some(pr => (pr.reviews?.length ?? 0) === 0);
+  return needsReview ? 'review-needed' : 'active';
+}
+
+function getMemberCount(team: TeamData): number {
+  const contrib = team.teamContributions ?? {};
+  return Object.keys(contrib).length;
+}
+
+const TeamAnalytics: React.FC<TeamAnalyticsProps> = ({
   courseId,
-  teamName,
-  status: initialStatus,
   course,
-  dateUtils,
-  teamSets = [],
+  teamDatas,
+  status,
 }) => {
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [teamDatas, setTeamDatas] = useState<TeamData[]>([]);
-  const [codeAnalysisData, setCodeAnalysisData] = useState<CodeAnalysisData[]>([]);
-  const [studentMap, setStudentMap] = useState<Record<string, Profile>>({});
-  const [fetchStatus, setFetchStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string | null>('all');
+  const [sortBy, setSortBy] = useState<string | null>('name');
 
-  const teamData = useMemo(
-    () => teamDatas.find(d => d.repoName === teamName),
-    [teamDatas, teamName]
-  );
-
-  const team = useMemo(
-    () => (teamData ? teams.find(t => t.teamData === teamData._id) : undefined),
-    [teams, teamData]
-  );
-
-  const teamWithBoard = useMemo(() => {
-    if (!team) return null;
-    for (const ts of teamSets) {
-      const t = ts.teams?.find((tt: { _id: string }) => tt._id === team._id);
-      if (t) return t;
-    }
-    return team;
-  }, [teamSets, team]);
-
-  const getTeamNumberByCodeData = useCallback(
-    (codeDataTeamId: number) => {
-      const relatedTeamData = teamDatas.find(d => d.teamId === codeDataTeamId);
-      if (!relatedTeamData) return null;
-      const relatedTeam = teams.find(t => t.teamData === relatedTeamData._id);
-      return relatedTeam?.number ?? null;
-    },
-    [teamDatas, teams]
-  );
-
-  const codeAnalysisDataForTeam = useMemo(() => {
-    if (!teamData || !team) return {};
-    const filtered = codeAnalysisData.filter(
-      (codeData: CodeAnalysisData) => codeData.teamId === teamData.teamId
-    );
-    const acc: Record<
-      number,
-      Record<
-        string,
-        {
-          metrics: string[];
-          values: string[];
-          types: string[];
-          domains: string[];
-          metricStats: Map<string, { median: number; mean: number }>;
-        }
-      >
-    > = {};
-    for (const codeData of filtered) {
-      const teamNumber = getTeamNumberByCodeData(codeData.teamId);
-      if (teamNumber !== null) {
-        if (!acc[teamNumber]) acc[teamNumber] = {};
-        acc[teamNumber][new Date(codeData.executionTime).toISOString()] = {
-          metrics: codeData.metrics,
-          values: codeData.values,
-          types: codeData.types,
-          domains: codeData.domains,
-          metricStats:
-            codeData.metricStats ||
-            new Map<string, { median: number; mean: number }>(),
-        };
-      }
-    }
-    return acc;
-  }, [codeAnalysisData, teamData, team, getTeamNumberByCodeData]);
-
-  const aiInsights = useMemo(() => {
-    if (!teamData?.aiInsights || !team) return undefined;
-    return teamData.aiInsights;
-  }, [teamData, team]);
-
-  const getStudentNameByGitHandle = useCallback(
-    async (gitHandle: string): Promise<Profile> => {
-      if (studentMap[gitHandle]) return studentMap[gitHandle];
-      const res = await fetch(`/api/user/profile?gitHandle=${gitHandle}`);
-      if (!res.ok) throw new Error('Failed to fetch profile');
-      const profile: Profile = await res.json();
-      setStudentMap(prev => ({ ...prev, [gitHandle]: profile }));
-      return profile;
-    },
-    [studentMap]
-  );
-
-  useEffect(() => {
-    if (initialStatus !== 'ready' || !courseId) return;
-
-    setFetchStatus('loading');
-    Promise.all([
-      fetch(`/api/teams/course/${courseId}`).then(r => (r.ok ? r.json() : [])),
-      fetch(`/api/github/course/${courseId}`).then(r => (r.ok ? r.json() : [])),
-      fetch(`/api/codeanalysis/course/${courseId}`).then(r =>
-        r.ok ? r.json() : []
+  const uniqueTeamData = useMemo(
+    () =>
+      teamDatas.filter(
+        (team, index, self) =>
+          index === self.findIndex(t => t.repoName === team.repoName)
       ),
-    ])
-      .then(([teamsData, teamDatasData, codeData]: [Team[], TeamData[], CodeAnalysisData[]]) => {
-        setTeams(teamsData);
-        setTeamDatas(teamDatasData);
-        setCodeAnalysisData(codeData);
-        setFetchStatus('done');
-      })
-      .catch(() => setFetchStatus('error'));
-  }, [initialStatus, courseId]);
-
-  const notFound =
-    initialStatus === 'ready' &&
-    fetchStatus === 'done' &&
-    (!teamData || (teamDatas.length > 0 && !teamData));
-  const error = initialStatus === 'error' || fetchStatus === 'error';
-  const loading =
-    initialStatus === 'loading' ||
-    (initialStatus === 'ready' && fetchStatus === 'loading');
-
-  if (loading) {
-    return (
-      <Box className={`${pageLayout.page} ${classes.detailPage}`} pl={20} pr={20}>
-        <Box className={pageLayout.pageHeader}>
-          <Anchor
-            component={Link}
-            href={`/courses/${courseId}/team-analytics`}
-            className={classes.backLink}
-          >
-            <IconArrowLeft size={18} />
-            Team Analytics
-          </Anchor>
-        </Box>
-        <Center style={{ minHeight: 300 }}>
-          <Loader />
-        </Center>
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box className={`${pageLayout.page} ${classes.detailPage}`} pl={20} pr={20}>
-        <Box className={pageLayout.pageHeader}>
-          <Anchor
-            component={Link}
-            href={`/courses/${courseId}/team-analytics`}
-            className={classes.backLink}
-          >
-            <IconArrowLeft size={18} />
-            Team Analytics
-          </Anchor>
-        </Box>
-        <Center style={{ minHeight: 200 }}>
-          <Text c="dimmed">Failed to load team data.</Text>
-        </Center>
-      </Box>
-    );
-  }
-
-  if (notFound || (fetchStatus === 'done' && !teamData)) {
-    return (
-      <Box className={`${pageLayout.page} ${classes.detailPage}`} pl={20} pr={20}>
-        <Box className={pageLayout.pageHeader}>
-          <Anchor
-            component={Link}
-            href={`/courses/${courseId}/team-analytics`}
-            className={classes.backLink}
-          >
-            <IconArrowLeft size={18} />
-            Team Analytics
-          </Anchor>
-        </Box>
-        <Center style={{ minHeight: 200 }}>
-          <Text c="dimmed">Team not found.</Text>
-        </Center>
-      </Box>
-    );
-  }
-
-  const repoName = teamData?.repoName ?? 'Team';
-  const teamNumber = team?.number;
-  const codeData = teamNumber != null ? codeAnalysisDataForTeam[teamNumber] : undefined;
-  const memberHandles = teamData ? Object.keys(teamData.teamContributions ?? {}) : [];
-  const openPRs = (teamData?.teamPRs ?? []).filter(
-    pr => (pr.state ?? '').toLowerCase() === 'open'
+    [teamDatas]
   );
-  const prsWithReviews = (teamData?.teamPRs ?? []).filter(
-    pr => (pr.reviews?.length ?? 0) > 0
-  ).length;
+
+  const filteredAndSortedTeams = useMemo(() => {
+    let list = uniqueTeamData;
+
+    const query = search.trim().toLowerCase();
+    if (query) {
+      list = list.filter(team =>
+        team.repoName.toLowerCase().includes(query)
+      );
+    }
+
+    if (statusFilter === 'active') {
+      list = list.filter(team => getTeamStatus(team) === 'active');
+    } else if (statusFilter === 'review-needed') {
+      list = list.filter(team => getTeamStatus(team) === 'review-needed');
+    }
+
+    const sorted = [...list];
+    if (sortBy === 'name') {
+      sorted.sort((a, b) => a.repoName.localeCompare(b.repoName));
+    } else if (sortBy === 'prs') {
+      sorted.sort((a, b) => (b.pullRequests ?? 0) - (a.pullRequests ?? 0));
+    } else if (sortBy === 'commits') {
+      sorted.sort((a, b) => (b.commits ?? 0) - (a.commits ?? 0));
+    } else if (sortBy === 'members') {
+      sorted.sort(
+        (a, b) => getMemberCount(b) - getMemberCount(a)
+      );
+    }
+
+    return sorted;
+  }, [uniqueTeamData, search, statusFilter, sortBy]);
+
+  if (status === Status.Loading) {
+    return (
+      <Center style={{ height: '70vh' }}>
+        <Loader />
+      </Center>
+    );
+  }
+
+  if (status === Status.Error) {
+    return (
+      <Center style={{ height: '70vh' }}>
+        <Text c="dimmed">Failed to load team data.</Text>
+      </Center>
+    );
+  }
+
+  if (!course) {
+    return (
+      <Center style={{ height: '70vh' }}>
+        <Text c="dimmed">Course not available.</Text>
+      </Center>
+    );
+  }
 
   return (
-    <Box
-      className={`${pageLayout.page} ${classes.detailPage}`}
-      pl={20}
-      pr={20}
-      style={{ paddingRight: 36 }}
-    >
+    <Box className={pageLayout.page} pl={20} pr={20} style={{ paddingRight: 36 }}>
         <Box className={pageLayout.pageHeader}>
-          <Title order={1} className={classes.detailTitle}>
-            {repoName}
-          </Title>
-          {course?.code && (
-            <Text className={classes.detailMeta}>
-              {course.code}
-              {course.semester ? ` · ${course.semester}` : ''}
-            </Text>
-          )}
-          <Group
-            className={classes.detailHeaderActions}
-            justify="space-between"
-            wrap="wrap"
-          >
-            <Group gap="sm">
-              <Avatar.Group spacing="sm">
-                {memberHandles.slice(0, 5).map((handle, index) => (
-                  <Avatar
-                    key={handle}
-                    radius="xl"
-                    size="sm"
-                    color={AVATAR_COLORS[index % AVATAR_COLORS.length]}
-                  >
-                    {getInitials(handle)}
-                  </Avatar>
-                ))}
-                {memberHandles.length > 5 && (
-                  <Avatar radius="xl" size="sm" color="gray">
-                    +{memberHandles.length - 5}
-                  </Avatar>
-                )}
-              </Avatar.Group>
-              <Text className={classes.memberCount} component="span">
-                {memberHandles.length} member
-                {memberHandles.length !== 1 ? 's' : ''}
+          <Box className={classes.headerRow}>
+            <Box>
+              <Title order={1} className={pageLayout.pageTitle}>
+                Team Analytics
+              </Title>
+              <Text className={pageLayout.pageSubtitle}>
+                Track team performance, code quality, and project progress
               </Text>
-            </Group>
+            </Box>
             <Button
               variant="default"
               leftSection={<IconDownload size={16} />}
+              // To implement export function
               className={classes.exportButton}
             >
               Export Report
             </Button>
-          </Group>
+          </Box>
         </Box>
 
-        <Tabs defaultValue="team-review" className={classes.detailTabs}>
-          <Tabs.List>
-            <Tabs.Tab
-              value="team-review"
-              leftSection={<IconUsersGroup size={16} />}
-            >
-              Team Review
-            </Tabs.Tab>
-            <Tabs.Tab
-              value="pr-overview"
-              leftSection={<IconGitPullRequest size={16} />}
-            >
-              PR Overview
-            </Tabs.Tab>
-            <Tabs.Tab
-              value="code-analysis"
-              leftSection={<IconCode size={16} />}
-            >
-              Code Analysis
-            </Tabs.Tab>
-            <Tabs.Tab
-              value="project-management"
-              leftSection={<IconCalendar size={16} />}
-            >
-              Project Management
-            </Tabs.Tab>
-          </Tabs.List>
+        <Box className={classes.filters}>
+          <TextInput
+            placeholder="Search teams..."
+            leftSection={<IconSearch size={16} />}
+            value={search}
+            onChange={e => setSearch(e.currentTarget.value)}
+            className={classes.searchInput}
+          />
+          <Select
+            label="Status"
+            placeholder="All Teams"
+            value={statusFilter}
+            onChange={setStatusFilter}
+            data={[
+              { value: 'all', label: 'All Teams' },
+              { value: 'active', label: 'Active' },
+              { value: 'review-needed', label: 'Review needed' },
+            ]}
+            clearable
+            classNames={{ label: classes.filterSelectLabel }}
+            className={classes.filterSelect}
+          />
+          <Select
+            label="Sort"
+            placeholder="Sort by Name"
+            value={sortBy}
+            onChange={setSortBy}
+            data={[
+              { value: 'name', label: 'Sort by Name' },
+              { value: 'prs', label: 'Pull requests' },
+              { value: 'commits', label: 'Commits' },
+              { value: 'members', label: 'Members' },
+            ]}
+            classNames={{ label: classes.filterSelectLabel }}
+            className={classes.filterSelect}
+          />
+        </Box>
 
-          <Tabs.Panel value="team-review" pt="md">
-            {teamData && dateUtils && (
-              <Box className={classes.tabPanel}>
-                <Group
-                  align="stretch"
-                  className={classes.teamReviewRow}
-                  wrap="nowrap"
+        {filteredAndSortedTeams.length === 0 ? (
+          <Card withBorder radius="lg" p="xl" className={classes.emptyState}>
+            <Text c="dimmed" ta="center">
+              {uniqueTeamData.length === 0
+                ? 'No team data yet. Connect repositories and sync GitHub data.'
+                : 'No teams match your filters.'}
+            </Text>
+          </Card>
+        ) : (
+          <SimpleGrid
+            cols={{ base: 1, sm: 2, lg: 3 }}
+            spacing="lg"
+            className={classes.grid}
+          >
+            {filteredAndSortedTeams.map(team => {
+              const teamStatus = getTeamStatus(team);
+              const memberCount = getMemberCount(team);
+              const members = Object.keys(team.teamContributions ?? {});
+
+              return (
+                <Card
+                  key={team._id}
+                  withBorder
+                  radius="lg"
+                  component={Link}
+                  href={`/courses/${courseId}/team-analytics/${encodeURIComponent(team.repoName)}`}
+                  className={classes.teamCard}
                 >
-                  <Box className={classes.teamReviewMain}>
-                    <Accordion
-                      multiple
-                      variant="separated"
-                      defaultValue={[teamData._id]}
+                  <Box className={classes.teamCardTop}>
+                    <Title order={4} className={classes.teamName} lineClamp={1}>
+                      {team.repoName}
+                    </Title>
+                    <Badge
+                      size="sm"
+                      variant="light"
+                      color={teamStatus === 'active' ? 'green' : 'orange'}
+                      className={classes.statusBadge}
                     >
-                      <OverviewAccordionItem
-                        index={0}
-                        teamData={teamData}
-                        team={team ?? undefined}
-                        teamDatas={teamDatas}
-                        dateUtils={dateUtils}
-                        getStudentNameByGitHandle={getStudentNameByGitHandle}
-                      />
-                    </Accordion>
+                      {teamStatus === 'active' ? 'Active' : 'Review needed'}
+                    </Badge>
                   </Box>
-                  <Card
-                    withBorder
-                    radius="lg"
-                    className={classes.teamReviewStatsCard}
-                  >
-                    <Stack gap={0} className={classes.teamReviewStatsStack}>
-                      <Box
-                        className={classes.teamReviewStatRow}
-                        data-last={undefined}
+                  <Text className={classes.memberCount}>
+                    {memberCount} member{memberCount !== 1 ? 's' : ''}
+                  </Text>
+                  <Avatar.Group spacing="sm" className={classes.avatarGroup} mt="xs">
+                    {members.slice(0, 4).map((user, index) => (
+                      <Avatar
+                        key={user}
+                        radius="xl"
+                        size="lg"
+                        color={AVATAR_COLORS[index % AVATAR_COLORS.length]} // alternate the colours LOL
+                        className={classes.avatar}
                       >
-                        <Text className={classes.teamReviewStatLabel}>
-                          Pull requests
-                        </Text>
-                        <Text
-                          className={classes.teamReviewStatValue}
-                          style={{ color: 'var(--mantine-color-grape-6)' }}
-                        >
-                          {teamData.pullRequests ?? 0}
-                        </Text>
-                        <Text
-                          className={classes.teamReviewStatSublabel}
-                          style={{ color: 'var(--mantine-color-grape-5)' }}
-                        >
-                          {openPRs.length} open
-                        </Text>
-                      </Box>
-                      <Box
-                        className={classes.teamReviewStatRow}
-                        data-last={undefined}
-                      >
-                        <Text className={classes.teamReviewStatLabel}>
-                          Issues
-                        </Text>
-                        <Text
-                          className={classes.teamReviewStatValue}
-                          style={{ color: 'var(--mantine-color-blue-6)' }}
-                        >
-                          {teamData.issues ?? 0}
-                        </Text>
-                        <Text
-                          className={classes.teamReviewStatSublabel}
-                          style={{ color: 'var(--mantine-color-blue-5)' }}
-                        >
-                          Open issues
-                        </Text>
-                      </Box>
-                      <Box
-                        className={classes.teamReviewStatRow}
-                        data-last={undefined}
-                      >
-                        <Text className={classes.teamReviewStatLabel}>
-                          Commits
-                        </Text>
-                        <Text
-                          className={classes.teamReviewStatValue}
-                          style={{ color: 'var(--mantine-color-teal-6)' }}
-                        >
-                          {teamData.commits ?? 0}
-                        </Text>
-                        <Text
-                          className={classes.teamReviewStatSublabel}
-                          style={{ color: 'var(--mantine-color-teal-5)' }}
-                        >
-                          Total commits
-                        </Text>
-                      </Box>
-                      <Box className={classes.teamReviewStatRow} data-last>
-                        <Text className={classes.teamReviewStatLabel}>
-                          Peer reviews
-                        </Text>
-                        <Text
-                          className={classes.teamReviewStatValue}
-                          style={{ color: 'var(--mantine-color-orange-6)' }}
-                        >
-                          {prsWithReviews}
-                        </Text>
-                        <Text
-                          className={classes.teamReviewStatSublabel}
-                          style={{ color: 'var(--mantine-color-orange-5)' }}
-                        >
-                          PRs with reviews
-                        </Text>
-                      </Box>
-                    </Stack>
-                  </Card>
-                </Group>
-              </Box>
-            )}
-            {(!teamData || !dateUtils) && (
-              <Center py="xl">
-                <Text c="dimmed">No team review data available.</Text>
-              </Center>
-            )}
-          </Tabs.Panel>
+                        {getInitials(user)}
+                      </Avatar>
+                    ))}
+                    {members.length > 4 && (
+                      <Avatar radius="xl" size="sm" color="gray">
+                        +{members.length - 4}
+                      </Avatar>
+                    )}
+                  </Avatar.Group>
 
-          <Tabs.Panel value="pr-overview" pt="md">
-            {course && dateUtils ? (
-              teamData ? (
-                <TeamPRList
-                  teamData={teamData}
-                  team={team}
-                  dateUtils={dateUtils}
-                  getStudentNameByGitHandle={getStudentNameByGitHandle}
-                />
-              ) : (
-                <Center py="xl">
-                  <Text c="dimmed">No PR data for this team.</Text>
-                </Center>
-              )
-            ) : (
-              <Text>Course not available</Text>
-            )}
-          </Tabs.Panel>
-
-          <Tabs.Panel value="code-analysis" pt="md">
-            {codeData && teamNumber != null ? (
-              <Box className={classes.tabPanel}>
-                <Accordion
-                  multiple
-                  variant="separated"
-                  defaultValue={[teamNumber.toString()]}
-                >
-                  <CodeAnalysisAccordionItem
-                    codeData={codeData}
-                    teamNumber={teamNumber}
-                    aiInsights={aiInsights}
-                    renderTutorialPopover={false}
-                  />
-                </Accordion>
-              </Box>
-            ) : (
-              <Center py="xl">
-                <Text c="dimmed">No code analysis data for this team yet.</Text>
-              </Center>
-            )}
-          </Tabs.Panel>
-
-          <Tabs.Panel value="project-management" pt="md">
-            {teamWithBoard?.board != null ? (
-              <Box className={classes.tabPanel}>
-                <ProjectManagementJiraCard
-                  TA={teamWithBoard.TA ?? null}
-                  jiraBoard={teamWithBoard.board}
-                  renderTutorialPopover={false}
-                />
-              </Box>
-            ) : (
-              <Center py="xl">
-                <Text c="dimmed">
-                  No project board linked for this team. Link a Jira board from
-                  the course Project Management page.
-                </Text>
-              </Center>
-            )}
-          </Tabs.Panel>
-        </Tabs>
+                  <Box className={classes.statsRow}>
+                    <Box>
+                      <Text className={classes.statValue}>
+                        {formatCompactNumber(team.pullRequests ?? 0)}
+                      </Text>
+                      <Text className={classes.statLabel}>PRs</Text>
+                    </Box>
+                    <Box>
+                      <Text className={classes.statValue}>
+                        {formatCompactNumber(team.commits ?? 0)}
+                      </Text>
+                      <Text className={classes.statLabel}>Commits</Text>
+                    </Box>
+                    <Box>
+                      <Text className={classes.statValue}>
+                        {formatCompactNumber(team.issues ?? 0)}
+                      </Text>
+                      <Text className={classes.statLabel}>Issues</Text>
+                    </Box>
+                  </Box>
+                </Card>
+              );
+            })}
+          </SimpleGrid>
+        )}
     </Box>
   );
 };
 
-export default TeamDetail;
+export default TeamAnalytics;

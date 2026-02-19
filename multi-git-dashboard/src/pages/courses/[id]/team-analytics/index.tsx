@@ -1,4 +1,4 @@
-import TeamsOverview from '@/components/views/TeamsOverview';
+import TeamsOverview from '@/components/views/TeamAnalytics';
 import { Course } from '@shared/types/Course';
 import { TeamData } from '@shared/types/TeamData';
 import { Status } from '@shared/types/util/Status';

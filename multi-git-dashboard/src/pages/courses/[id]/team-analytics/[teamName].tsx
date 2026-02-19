@@ -1,5 +1,5 @@
 import Navbar from '@/components/Navbar';
-import TeamDetail from '@/components/views/TeamAnalytics';
+import TeamDetail from '@/components/views/TeamAnalyticsDetail';
 import { Course } from '@shared/types/Course';
 import { TeamSet } from '@shared/types/TeamSet';
 import { Box, Text } from '@mantine/core';
