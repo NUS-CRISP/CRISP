@@ -1,4 +1,4 @@
-import Navbar from '@/components/Navbar';
+import Navbar from '@/components/views/TeamAnalyticsNavbar';
 import TeamAnalyticsDetail from '@/components/views/TeamAnalyticsDetail';
 import { Course } from '@shared/types/Course';
 import { TeamSet } from '@shared/types/TeamSet';
