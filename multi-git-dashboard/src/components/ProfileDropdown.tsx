@@ -29,7 +29,7 @@ export function ProfileDropdown() {
     >
       <Menu
         shadow="md"
-        width={240}
+        width={300}
         position="bottom-end"
         offset={6}
         onChange={setOpened}
@@ -74,10 +74,10 @@ export function ProfileDropdown() {
         <Menu.Dropdown>
           <Menu.Label>
             <div>
-              <Text size="m" fw={500}>
+              <Text size="xl" fw={500}>
                 {session?.user?.name}
               </Text>
-              <Text size="sm" c="dimmed" truncate>
+              <Text size="md" c="dimmed" truncate>
                 {session?.user?.email}
               </Text>
             </div>
@@ -85,6 +85,9 @@ export function ProfileDropdown() {
 
           {session?.user?.crispRole === CRISP_ROLE.Admin && (
             <Menu.Item
+              style={{
+                fontSize: '1.25rem',
+              }}
               color="blue"
               leftSection={
                 <IconShield style={{ width: rem(16), height: rem(16) }} />
@@ -98,6 +101,9 @@ export function ProfileDropdown() {
           <Menu.Divider />
 
           <Menu.Item
+            style={{
+              fontSize: '1.25rem',
+            }}
             leftSection={
               <IconSettings style={{ width: rem(16), height: rem(16) }} />
             }
@@ -109,6 +115,9 @@ export function ProfileDropdown() {
             Account settings
           </Menu.Item>
           <Menu.Item
+            style={{
+              fontSize: '1.25rem',
+            }}
             leftSection={
               <IconBell style={{ width: rem(16), height: rem(16) }} />
             }
@@ -117,6 +126,9 @@ export function ProfileDropdown() {
             Configure Notifications
           </Menu.Item>
           <Menu.Item
+            style={{
+              fontSize: '1.25rem',
+            }}
             color="red"
             leftSection={
               <IconLogout style={{ width: rem(16), height: rem(16) }} />
