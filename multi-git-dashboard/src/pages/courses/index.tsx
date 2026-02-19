@@ -3,7 +3,7 @@ import { useTutorialContext } from '@/components/tutorial/TutorialContext';
 import TutorialPopover from '@/components/tutorial/TutorialPopover';
 import WelcomeMessage from '@/components/views/WelcomeMessage';
 import { hasFacultyPermission } from '@/lib/auth/utils';
-import { Box, Button, Divider, ScrollArea, Text, Title } from '@mantine/core';
+import { Box, Button, ScrollArea, Title } from '@mantine/core';
 import { Course } from '@shared/types/Course';
 import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/router';
@@ -75,7 +75,7 @@ const CourseListPage: React.FC = () => {
     >
       <Box className={pageLayout.page}>
         <Box className={pageLayout.pageHeader}>
-          <Title order={1} className={pageLayout.pageTitle} style= {{ textAlign: 'center' }}>
+          <Title order={1} className={pageLayout.pageTitle} style={{ textAlign: 'center' }}>
             Dashboard
           </Title>
         </Box>

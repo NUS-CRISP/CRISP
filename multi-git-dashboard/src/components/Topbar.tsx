@@ -5,15 +5,14 @@ import {
   Anchor,
   Center,
   Title,
-  ActionIcon,
 } from '@mantine/core';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import classes from '@/styles/course-overview.module.css';
 import ProfileDropdown from './ProfileDropdown';
+import BackLink from './shared/BackLink';
 import CrispLogo from './shared/CrispLogo';
 import CrispIcon from './shared/CrispIcon';
-import { IconArrowLeft } from '@tabler/icons-react';
 
 type Breadcrumb = {
   label: string;
@@ -51,7 +50,6 @@ const TopBar: React.FC = () => {
 
   const courseId = (query.id as string) || undefined;
   const isCourseRoute = pathname.startsWith('/courses/') && !!courseId;
-  const isOverviewRoute = pathname === '/courses/[id]';
 
   const [courseCode, setCourseCode] = useState<string | null>(null);
   const [courseMeta, setCourseMeta] = useState<string | null>(null);
@@ -121,14 +119,27 @@ const TopBar: React.FC = () => {
     return crumbs;
   }, [asPath, courseId, isCourseRoute]);
 
+  const backLink = useMemo(() => {
+    if (!isCourseRoute || !courseId) return null;
+    const url = asPath.split('?')[0];
+    const segments = url.split('/').filter(Boolean);
+    if (segments.length <= 2) {
+      return { href: '/courses', label: 'Dashboard' };
+    }
+    const rest = segments.slice(2);
+    if (rest[0] === 'team-analytics' && rest.length === 1) {
+      return { href: `/courses/${courseId}`, label: 'Course Overview' };
+    }
+    if (rest[0] === 'team-analytics' && rest.length >= 2) {
+      return { href: `/courses/${courseId}/team-analytics`, label: 'All Teams' };
+    }
+    return { href: `/courses/${courseId}`, label: 'Course Overview' };
+  }, [asPath, courseId, isCourseRoute]);
+
   return (
     <Box className={classes.header}>
-      <Group
-        className={classes.headerInner}
-        justify="space-between"
-        wrap="nowrap"
-      >
-        <Group gap={12} wrap="nowrap">
+      <Box className={classes.headerInner} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+        <Group gap={12} wrap="nowrap" style={{ flexShrink: 0 }}>
           <Box
             onClick={() => router.push('/courses')}
             style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
@@ -154,83 +165,78 @@ const TopBar: React.FC = () => {
               <CrispLogo />
             )}
           </Box>
-
-          {isCourseRoute && (
-            <Group gap="l" wrap="nowrap" align="center">
-              {isOverviewRoute && (
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  onClick={() => router.push('/courses')}
-                  aria-label="Back to dashboard"
-                >
-                  <IconArrowLeft size={18} />
-                </ActionIcon>
-              )}
-              <Group
-                className={classes.courseHeaderInfo}
-                gap={12}
-                wrap="nowrap"
-                align="baseline"
-              >
-                {courseCode && (
-                  <Title order={2} className={classes.courseCode}>
-                    {courseCode}
-                  </Title>
-                )}
-                {courseMeta && (
-                  <Title order={4} className={classes.courseMeta}>
-                    {courseMeta}
-                  </Title>
-                )}
-              </Group>
-              {breadcrumbs.length > 0 && (
-                <Group gap={6} wrap="wrap">
-                  {breadcrumbs.map((crumb, index) => {
-                    const isLast = index === breadcrumbs.length - 1;
-                    return (
-                      <Group
-                        key={`${crumb.label}-${index}`}
-                        gap={4}
-                        wrap="nowrap"
-                      >
-                        {index > 0 && (
-                          <Text size="sm" c="dimmed">
-                            »
-                          </Text>
-                        )}
-                        {crumb.href && !isLast ? (
-                          <Anchor
-                            size="sm"
-                            c="dimmed"
-                            onClick={e => {
-                              e.preventDefault();
-                              router.push(crumb.href!);
-                            }}
-                            href={crumb.href}
-                          >
-                            {crumb.label}
-                          </Anchor>
-                        ) : (
-                          <Text
-                            size="sm"
-                            fw={isLast ? 500 : 400}
-                            c={isLast ? undefined : 'dimmed'}
-                          >
-                            {crumb.label}
-                          </Text>
-                        )}
-                      </Group>
-                    );
-                  })}
-                </Group>
-              )}
-            </Group>
+          {isCourseRoute && backLink && (
+            <BackLink href={backLink.href} label={backLink.label} />
           )}
         </Group>
 
-        <ProfileDropdown />
-      </Group>
+        {isCourseRoute && (
+          <Group className={classes.courseHeaderCenter} gap="l" wrap="wrap" align="center" justify="center" style={{ flex: 1, minWidth: 0 }}>
+            <Group
+              className={classes.courseHeaderInfo}
+              gap={12}
+              wrap="nowrap"
+              align="baseline"
+            >
+              {courseCode && (
+                <Title order={2} className={classes.courseCode}>
+                  {courseCode}
+                </Title>
+              )}
+              {courseMeta && (
+                <Title order={4} className={classes.courseMeta}>
+                  {courseMeta}
+                </Title>
+              )}
+            </Group>
+            {breadcrumbs.length > 0 && (
+              <Group gap={6} wrap="wrap" justify="center">
+                {breadcrumbs.map((crumb, index) => {
+                  const isLast = index === breadcrumbs.length - 1;
+                  return (
+                    <Group
+                      key={`${crumb.label}-${index}`}
+                      gap={4}
+                      wrap="nowrap"
+                    >
+                      {index > 0 && (
+                        <Text size="sm" c="dimmed">
+                          »
+                        </Text>
+                      )}
+                      {crumb.href && !isLast ? (
+                        <Anchor
+                          size="sm"
+                          c="dimmed"
+                          onClick={e => {
+                            e.preventDefault();
+                            router.push(crumb.href!);
+                          }}
+                          href={crumb.href}
+                        >
+                          {crumb.label}
+                        </Anchor>
+                      ) : (
+                        <Text
+                          size="sm"
+                          fw={isLast ? 500 : 400}
+                          c={isLast ? undefined : 'dimmed'}
+                        >
+                          {crumb.label}
+                        </Text>
+                      )}
+                    </Group>
+                  );
+                })}
+              </Group>
+            )}
+          </Group>
+        )}
+
+        <Box style={{ flexShrink: 0 }}>
+          <ProfileDropdown />
+        </Box>
+      </Box>
     </Box>
   );
 };

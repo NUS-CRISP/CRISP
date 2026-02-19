@@ -38,3 +38,19 @@
   margin-top: 6px;
   margin-bottom: 20px;
 }
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
+  text-decoration: none;
+  transition: color 160ms ease;
+  margin-bottom: 8px;
+}
+
+.backLink:hover {
+  color: light-dark(var(--mantine-color-blue-6), var(--mantine-color-blue-4));
+}

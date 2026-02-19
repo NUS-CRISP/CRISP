@@ -9,7 +9,6 @@ import { TeamSet } from '@shared/types/TeamSet';
 import { Profile } from '@shared/types/Profile';
 import {
   Accordion,
-  Anchor,
   Avatar,
   Box,
   Button,
@@ -22,8 +21,7 @@ import {
   Text,
   Title,
 } from '@mantine/core';
-import { IconArrowLeft, IconCalendar, IconCode, IconDownload, IconGitPullRequest, IconUsersGroup } from '@tabler/icons-react';
-import Link from 'next/link';
+import { IconCalendar, IconCode, IconDownload, IconGitPullRequest, IconUsersGroup } from '@tabler/icons-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Team as SharedTeam } from '@shared/types/Team';
 import pageLayout from '@/styles/root-layout.module.css';
@@ -173,16 +171,7 @@ const TeamDetail: React.FC<TeamDetailProps> = ({
   if (loading) {
     return (
       <Box className={`${pageLayout.page} ${classes.detailPage}`} pl={20} pr={20}>
-        <Box className={pageLayout.pageHeader}>
-          <Anchor
-            component={Link}
-            href={`/courses/${courseId}/team-analytics`}
-            className={classes.backLink}
-          >
-            <IconArrowLeft size={18} />
-            Team Analytics
-          </Anchor>
-        </Box>
+        <Box className={pageLayout.pageHeader} />
         <Center style={{ minHeight: 300 }}>
           <Loader />
         </Center>
@@ -193,16 +182,7 @@ const TeamDetail: React.FC<TeamDetailProps> = ({
   if (error) {
     return (
       <Box className={`${pageLayout.page} ${classes.detailPage}`} pl={20} pr={20}>
-        <Box className={pageLayout.pageHeader}>
-          <Anchor
-            component={Link}
-            href={`/courses/${courseId}/team-analytics`}
-            className={classes.backLink}
-          >
-            <IconArrowLeft size={18} />
-            Team Analytics
-          </Anchor>
-        </Box>
+        <Box className={pageLayout.pageHeader} />
         <Center style={{ minHeight: 200 }}>
           <Text c="dimmed">Failed to load team data.</Text>
         </Center>
@@ -213,16 +193,7 @@ const TeamDetail: React.FC<TeamDetailProps> = ({
   if (notFound || (fetchStatus === 'done' && !teamData)) {
     return (
       <Box className={`${pageLayout.page} ${classes.detailPage}`} pl={20} pr={20}>
-        <Box className={pageLayout.pageHeader}>
-          <Anchor
-            component={Link}
-            href={`/courses/${courseId}/team-analytics`}
-            className={classes.backLink}
-          >
-            <IconArrowLeft size={18} />
-            Team Analytics
-          </Anchor>
-        </Box>
+        <Box className={pageLayout.pageHeader} />
         <Center style={{ minHeight: 200 }}>
           <Text c="dimmed">Team not found.</Text>
         </Center>
