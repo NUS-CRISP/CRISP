@@ -1,3 +1,4 @@
+/* Deprecated component, this is used by the deprecated team-review page */
 import { DateUtils } from '@/lib/utils';
 import {
   Accordion,
@@ -12,9 +13,9 @@ import { Team as SharedTeam } from '@shared/types/Team';
 import { TeamData } from '@shared/types/TeamData';
 import { Status } from '@shared/types/util/Status';
 import { useEffect, useState } from 'react';
-import PRAccordionItem from '../pr-overview/PRAccordionItem';
-import { useTutorialContext } from '../tutorial/TutorialContext';
-import TutorialPopover from '../tutorial/TutorialPopover';
+import OverviewAccordionItem from '../../overview/OverviewAccordionItem';
+import { useTutorialContext } from '../../tutorial/TutorialContext';
+import TutorialPopover from '../../tutorial/TutorialPopover';
 import { TeamSet } from '@shared/types/TeamSet';
 
 interface OverviewProps {
@@ -30,7 +31,7 @@ export interface Team extends Omit<SharedTeam, 'teamData'> {
 
 export type ProfileGetter = (gitHandle: string) => Promise<Profile>;
 
-const PROverview: React.FC<OverviewProps> = ({
+const TeamReview: React.FC<OverviewProps> = ({
   courseId,
   dateUtils,
   teamSets,
@@ -115,7 +116,6 @@ const PROverview: React.FC<OverviewProps> = ({
         setTeams(fetchedTeams);
         const fetchedTeamDatas = await getTeamDatas();
         setTeamDatas(fetchedTeamDatas);
-        if (teamDatas.length > 0) setActiveTabAndSave(teamSets[0].name);
         setStatus(Status.Idle);
       } catch (error) {
         setStatus(Status.Error);
@@ -133,7 +133,12 @@ const PROverview: React.FC<OverviewProps> = ({
         </Container>
       </Center>
     );
-  if (status === Status.Error) return <Center>No GitHub Data Available</Center>;
+  if (status === Status.Error)
+    return (
+      <TutorialPopover stage={7} position="bottom">
+        <Center>No GitHub Data Available</Center>
+      </TutorialPopover>
+    );
   if (!teams.length || !teamDatas.length)
     return <Center>No teams found.</Center>;
 
@@ -159,7 +164,7 @@ const PROverview: React.FC<OverviewProps> = ({
             position="left"
             disabled={idx !== 0 || curTutorialStage !== 7}
           >
-            <PRAccordionItem
+            <OverviewAccordionItem
               index={idx}
               key={teamData._id}
               team={team}
@@ -196,4 +201,4 @@ const PROverview: React.FC<OverviewProps> = ({
   );
 };
 
-export default PROverview;
+export default TeamReview;

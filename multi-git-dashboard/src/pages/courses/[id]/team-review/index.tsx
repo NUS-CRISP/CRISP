@@ -1,5 +1,5 @@
 /* Deprecated page, everything is now within the team-analytics/[teamName].tsx page */
-import TeamReview from '@/components/views/Overview';
+import TeamReview from '@/components/views/deprecated/Overview';
 import {
   DateUtils,
   getCurrentWeekGenerator,

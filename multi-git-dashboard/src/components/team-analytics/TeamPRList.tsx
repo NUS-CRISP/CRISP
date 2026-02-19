@@ -1,8 +1,8 @@
 import { DateUtils } from '@/lib/utils';
 import { Accordion, Center } from '@mantine/core';
 import { TeamData } from '@shared/types/TeamData';
-import PRAccordionItem from '../pr-overview/PRAccordionItem';
-import { ProfileGetter, Team } from '@/components/views/Overview';
+import PRAccordionItem from '@/components/pr-overview/PRAccordionItem';
+import { ProfileGetter, Team } from '@/components/views/utils';
 
 export interface TeamPRListProps {
   teamData: TeamData;

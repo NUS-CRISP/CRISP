@@ -11,8 +11,8 @@ import {
 import { useDisclosure } from '@mantine/hooks';
 import { TeamSet } from '@shared/types/TeamSet';
 import { useEffect, useState } from 'react';
-import ProjectManagementJiraCard from '../cards/ProjectManagementJiraCard';
-import ConnectTrofosForm from '../../components/forms/ConnectTrofosForm';
+import ProjectManagementJiraCard from '../../cards/ProjectManagementJiraCard';
+import ConnectTrofosForm from '../../forms/ConnectTrofosForm';
 
 interface ProjectManagementProps {
   courseId: string;

@@ -1,4 +1,5 @@
-import CodeAnalysis from '@/components/views/CodeAnalysis';
+/* Deprecated page, everything is now within the team-analytics/[teamName].tsx page */
+import CodeAnalysis from '@/components/views/deprecated/CodeAnalysis';
 import { Container } from '@mantine/core';
 import { useRouter } from 'next/router';
 

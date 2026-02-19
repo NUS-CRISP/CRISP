@@ -29,27 +29,23 @@ import {
   IconUsersGroup,
 } from '@tabler/icons-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Team as SharedTeam } from '@shared/types/Team';
 import pageLayout from '@/styles/root-layout.module.css';
 import classes from '@/styles/team-analytics.module.css';
 import TeamPRList from '@/components/team-analytics/TeamPRList';
+import { Team } from '@/components/views/utils';
 
-export interface Team extends Omit<SharedTeam, 'teamData'> {
-  teamData: string;
-}
+type TeamAnalyticsDetailStatus = 'loading' | 'ready' | 'notfound' | 'error';
 
-type TeamDetailStatus = 'loading' | 'ready' | 'notfound' | 'error';
-
-interface TeamDetailProps {
+interface TeamAnalyticsDetailProps {
   courseId: string;
   teamName: string;
-  status: TeamDetailStatus;
+  status: TeamAnalyticsDetailStatus;
   course?: Course | null;
   dateUtils?: DateUtils | null;
   teamSets?: TeamSet[];
 }
 
-const TeamDetail: React.FC<TeamDetailProps> = ({
+const TeamAnalyticsDetail: React.FC<TeamAnalyticsDetailProps> = ({
   courseId,
   teamName,
   status: initialStatus,
@@ -484,6 +480,7 @@ const TeamDetail: React.FC<TeamDetailProps> = ({
           )}
         </Tabs.Panel>
 
+        {/* TODO: Button for integrating with trofos board, refer to deprecated project management page for reference */}
         <Tabs.Panel value="project-management" pt="md">
           {teamWithBoard?.board != null ? (
             <Box className={classes.tabPanel}>
@@ -507,4 +504,4 @@ const TeamDetail: React.FC<TeamDetailProps> = ({
   );
 };
 
-export default TeamDetail;
+export default TeamAnalyticsDetail;

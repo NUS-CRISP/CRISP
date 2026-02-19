@@ -2,8 +2,8 @@ import { DateUtils, getTutorialHighlightColor } from '@/lib/utils';
 import { Accordion, Center } from '@mantine/core';
 import { TeamData } from '@shared/types/TeamData';
 import { forwardRef } from 'react';
-import PRCard from '../cards/PRCard';
-import { ProfileGetter, Team } from '../views/Overview';
+import PRCard from '@/components/cards/PRCard';
+import { ProfileGetter, Team } from '@/components/views/utils';
 
 interface OverviewAccordionItemProps {
   index: number;

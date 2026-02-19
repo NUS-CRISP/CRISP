@@ -1,5 +1,5 @@
 import Navbar from '@/components/Navbar';
-import TeamDetail from '@/components/views/TeamAnalyticsDetail';
+import TeamAnalyticsDetail from '@/components/views/TeamAnalyticsDetail';
 import { Course } from '@shared/types/Course';
 import { TeamSet } from '@shared/types/TeamSet';
 import { Box, Text } from '@mantine/core';
@@ -87,11 +87,11 @@ const TeamDetailPage: React.FC = () => {
     !courseId || !teamName ? (
       <Text>Course or team not specified</Text>
     ) : status === 'loading' ? (
-      <TeamDetail courseId={courseId} teamName={teamName} status="loading" />
+      <TeamAnalyticsDetail courseId={courseId} teamName={teamName} status="loading" />
     ) : status === 'error' || !course || !dateUtils ? (
-      <TeamDetail courseId={courseId} teamName={teamName} status="error" />
+      <TeamAnalyticsDetail courseId={courseId} teamName={teamName} status="error" />
     ) : (
-      <TeamDetail
+      <TeamAnalyticsDetail
         courseId={courseId}
         teamName={teamName}
         course={course}

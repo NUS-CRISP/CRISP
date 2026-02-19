@@ -3,7 +3,7 @@ import { RangeSlider, Stack, Modal, TextInput, Button } from '@mantine/core';
 import { useState } from 'react';
 import Analytics from '../overview/analytics/Analytics';
 import TutorialPopover from '../tutorial/TutorialPopover';
-import { ProfileGetter, Team } from '../views/Overview';
+import { ProfileGetter, Team } from '../views/deprecated/Overview';
 import { TeamData } from '@shared/types/TeamData';
 
 export interface OverviewProps {
