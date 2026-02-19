@@ -1,5 +1,4 @@
 import { Center, Title } from '@mantine/core';
-import { IconGitBranch } from '@tabler/icons-react';
 import { useRouter } from 'next/router';
 import CrispIcon from './CrispIcon';
 

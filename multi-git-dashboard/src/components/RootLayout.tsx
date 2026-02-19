@@ -1,4 +1,4 @@
-import { EXCLUDE_AUTH_REGEX, EXCLUDE_PEER_REVIEW_REGEX } from '@/middleware';
+import { EXCLUDE_AUTH_REGEX } from '@/middleware';
 import styles from '@styles/root-layout.module.css';
 import Head from 'next/head';
 import { useRouter } from 'next/router';

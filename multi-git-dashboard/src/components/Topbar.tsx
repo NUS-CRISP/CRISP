@@ -1,4 +1,4 @@
-import { Box, Group, Text, Anchor, Center, Title, Stack } from '@mantine/core';
+import { Box, Group, Center, Title, Stack } from '@mantine/core';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import classes from '@/styles/course-overview.module.css';

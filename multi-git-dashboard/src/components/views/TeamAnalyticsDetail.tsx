@@ -228,7 +228,7 @@ const TeamAnalyticsDetail: React.FC<TeamAnalyticsDetailProps> = ({
   const repoName = teamData?.repoName ?? 'Team';
   const teamNumber = team?.number;
   const codeData =
-    teamNumber != null ? codeAnalysisDataForTeam[teamNumber] : undefined;
+    teamNumber !== null ? codeAnalysisDataForTeam[teamNumber ?? 0] : undefined;
   const memberHandles = teamData
     ? Object.keys(teamData.teamContributions ?? {})
     : [];
@@ -458,7 +458,7 @@ const TeamAnalyticsDetail: React.FC<TeamAnalyticsDetailProps> = ({
         </Tabs.Panel>
 
         <Tabs.Panel value="code-analysis" pt="md">
-          {codeData && teamNumber != null ? (
+          {codeData && teamNumber !== null ? (
             <Box className={classes.tabPanel}>
               <Accordion
                 multiple
@@ -482,11 +482,11 @@ const TeamAnalyticsDetail: React.FC<TeamAnalyticsDetailProps> = ({
 
         {/* TODO: Button for integrating with trofos board, refer to deprecated project management page for reference */}
         <Tabs.Panel value="project-management" pt="md">
-          {teamWithBoard?.board != null ? (
+          {teamWithBoard?.board !== null ? (
             <Box className={classes.tabPanel}>
               <ProjectManagementJiraCard
-                TA={teamWithBoard.TA ?? null}
-                jiraBoard={teamWithBoard.board}
+                TA={teamWithBoard?.TA ?? null}
+                jiraBoard={teamWithBoard?.board ?? null}
                 renderTutorialPopover={false}
               />
             </Box>
