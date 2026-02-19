@@ -1,6 +1,7 @@
+import CourseSettingsNavbar from '@/components/CourseSettingsNavbar';
 import TeamsInfo from '@/components/views/TeamsInfo';
 import { hasFacultyPermission } from '@/lib/auth/utils';
-import { Container } from '@mantine/core';
+import { Box, Container } from '@mantine/core';
 import { TeamSet } from '@shared/types/TeamSet';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
@@ -99,19 +100,24 @@ const TimelineListPage: React.FC = () => {
   };
 
   return (
-    <Container>
-      {id && (
-        <TeamsInfo
-          courseId={id}
-          teamSets={teamSets}
-          teachingTeam={teachingTeam}
-          teamDatas={teamDatas}
-          jiraBoards={jiraBoards}
-          hasFacultyPermission={permission}
-          onUpdate={onUpdate}
-        />
-      )}
-    </Container>
+    <Box style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
+      <CourseSettingsNavbar />
+      <Box style={{ flex: 1, overflow: 'auto', minWidth: 0 }}>
+        <Container>
+          {id && (
+            <TeamsInfo
+              courseId={id}
+              teamSets={teamSets}
+              teachingTeam={teachingTeam}
+              teamDatas={teamDatas}
+              jiraBoards={jiraBoards}
+              hasFacultyPermission={permission}
+              onUpdate={onUpdate}
+            />
+          )}
+        </Container>
+      </Box>
+    </Box>
   );
 };
 

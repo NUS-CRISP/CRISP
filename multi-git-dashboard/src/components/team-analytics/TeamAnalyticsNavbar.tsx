@@ -1,6 +1,6 @@
 import { TeamData } from '@shared/types/TeamData';
 import { Box, Center, Loader, Text } from '@mantine/core';
-import { IconArrowLeft, IconMapPin } from '@tabler/icons-react';
+import { IconMapPin } from '@tabler/icons-react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
@@ -54,15 +54,6 @@ const TeamAnalyticsNavbar: React.FC = () => {
 
   return (
     <nav className={classes.teamAnalyticsNavbar}>
-      <Link
-        href={`/courses/${courseId}/team-analytics`}
-        className={classes.teamLink}
-        data-active={!currentTeamName || undefined}
-      >
-        <IconArrowLeft aria-label="Back to Course Teams" size={16} />
-        <span className={classes.teamLinkLabel}>Course Teams</span>
-      </Link>
-
       <Text className={classes.teamsHeader} component="div">
         TEAMS ({uniqueTeamDatas.length})
       </Text>
