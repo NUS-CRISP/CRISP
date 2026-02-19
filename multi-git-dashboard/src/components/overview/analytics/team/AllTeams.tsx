@@ -127,12 +127,7 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
     }));
 
     return (
-      <Card
-        withBorder
-        ref={ref}
-        className={classes.overviewChartCard}
-        p={22}
-      >
+      <Card withBorder ref={ref} className={classes.overviewChartCard} p={22}>
         <Stack gap={0}>
           <Title order={3} className={classes.overviewChartTitle}>
             All Teams Overview
@@ -174,7 +169,9 @@ const AllTeams = forwardRef<HTMLDivElement, AllTeamsProps>(
             <Select
               label="Single Metric for Sorting"
               value={singleMetric}
-              onChange={(value: string | null) => value && setSingleMetric(value)}
+              onChange={(value: string | null) =>
+                value && setSingleMetric(value)
+              }
               data={availableMetrics}
             />
             <MultiSelect

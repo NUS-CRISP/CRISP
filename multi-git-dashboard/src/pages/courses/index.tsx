@@ -75,7 +75,11 @@ const CourseListPage: React.FC = () => {
     >
       <Box className={pageLayout.page}>
         <Box className={pageLayout.pageHeader}>
-          <Title order={1} className={pageLayout.pageTitle} style={{ textAlign: 'center' }}>
+          <Title
+            order={1}
+            className={pageLayout.pageTitle}
+            style={{ textAlign: 'center' }}
+          >
             Dashboard
           </Title>
         </Box>

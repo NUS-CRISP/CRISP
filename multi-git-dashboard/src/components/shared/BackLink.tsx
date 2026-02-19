@@ -10,11 +10,7 @@ interface BackLinkProps {
 
 export default function BackLink({ href, label }: BackLinkProps) {
   return (
-    <Anchor
-      component={Link}
-      href={href}
-      className={pageLayout.backLink}
-    >
+    <Anchor component={Link} href={href} className={pageLayout.backLink}>
       <IconArrowLeft size={14} style={{ flexShrink: 0 }} />
       Back to {label}
     </Anchor>

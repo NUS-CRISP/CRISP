@@ -29,11 +29,7 @@ const TeamPRList: React.FC<TeamPRListProps> = ({
   }
 
   return (
-    <Accordion
-      defaultValue={[teamData._id]}
-      multiple
-      variant="separated"
-    >
+    <Accordion defaultValue={[teamData._id]} multiple variant="separated">
       <PRAccordionItem
         index={0}
         teamData={teamData}

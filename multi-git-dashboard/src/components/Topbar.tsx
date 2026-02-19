@@ -1,11 +1,4 @@
-import {
-  Box,
-  Group,
-  Text,
-  Anchor,
-  Center,
-  Title,
-} from '@mantine/core';
+import { Box, Group, Text, Anchor, Center, Title } from '@mantine/core';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import classes from '@/styles/course-overview.module.css';
@@ -131,14 +124,25 @@ const TopBar: React.FC = () => {
       return { href: `/courses/${courseId}`, label: 'Course Overview' };
     }
     if (rest[0] === 'team-analytics' && rest.length >= 2) {
-      return { href: `/courses/${courseId}/team-analytics`, label: 'All Teams' };
+      return {
+        href: `/courses/${courseId}/team-analytics`,
+        label: 'All Teams',
+      };
     }
     return { href: `/courses/${courseId}`, label: 'Course Overview' };
   }, [asPath, courseId, isCourseRoute]);
 
   return (
     <Box className={classes.header}>
-      <Box className={classes.headerInner} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+      <Box
+        className={classes.headerInner}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 16,
+        }}
+      >
         <Group gap={12} wrap="nowrap" style={{ flexShrink: 0 }}>
           <Box
             onClick={() => router.push('/courses')}
@@ -171,7 +175,14 @@ const TopBar: React.FC = () => {
         </Group>
 
         {isCourseRoute && (
-          <Group className={classes.courseHeaderCenter} gap="l" wrap="wrap" align="center" justify="center" style={{ flex: 1, minWidth: 0 }}>
+          <Group
+            className={classes.courseHeaderCenter}
+            gap="l"
+            wrap="wrap"
+            align="center"
+            justify="center"
+            style={{ flex: 1, minWidth: 0 }}
+          >
             <Group
               className={classes.courseHeaderInfo}
               gap={12}

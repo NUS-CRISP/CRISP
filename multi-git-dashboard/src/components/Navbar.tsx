@@ -11,7 +11,9 @@ const Navbar: React.FC = () => {
   const { pathname, query } = router;
   const courseId = query.id as string | undefined;
   const teamNameParam = query.teamName as string | undefined;
-  const currentTeamName = teamNameParam ? decodeURIComponent(teamNameParam) : null;
+  const currentTeamName = teamNameParam
+    ? decodeURIComponent(teamNameParam)
+    : null;
 
   const isTeamAnalyticsRoute =
     pathname?.includes('team-analytics') && !!courseId;

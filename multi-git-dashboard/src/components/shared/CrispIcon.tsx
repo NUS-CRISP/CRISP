@@ -23,7 +23,7 @@ const CrispIcon: React.FC<{ size?: number }> = ({ size = 46 }) => (
         placeItems: 'center',
       }}
     >
-      <IconGitBranch size={size - 16} color="white"/>
+      <IconGitBranch size={size - 16} color="white" />
     </div>
   </div>
 );

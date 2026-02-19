@@ -22,7 +22,9 @@ const TeamDetailPage: React.FC = () => {
   const [course, setCourse] = useState<Course | null>(null);
   const [dateUtils, setDateUtils] = useState<DateUtils | null>(null);
   const [teamSets, setTeamSets] = useState<TeamSet[]>([]);
-  const [status, setStatus] = useState<'loading' | 'ready' | 'notfound' | 'error'>('loading');
+  const [status, setStatus] = useState<
+    'loading' | 'ready' | 'notfound' | 'error'
+  >('loading');
 
   const fetchCourse = useCallback(async () => {
     if (!courseId) return null;
@@ -85,17 +87,9 @@ const TeamDetailPage: React.FC = () => {
     !courseId || !teamName ? (
       <Text>Course or team not specified</Text>
     ) : status === 'loading' ? (
-      <TeamDetail
-        courseId={courseId}
-        teamName={teamName}
-        status="loading"
-      />
+      <TeamDetail courseId={courseId} teamName={teamName} status="loading" />
     ) : status === 'error' || !course || !dateUtils ? (
-      <TeamDetail
-        courseId={courseId}
-        teamName={teamName}
-        status="error"
-      />
+      <TeamDetail courseId={courseId} teamName={teamName} status="error" />
     ) : (
       <TeamDetail
         courseId={courseId}

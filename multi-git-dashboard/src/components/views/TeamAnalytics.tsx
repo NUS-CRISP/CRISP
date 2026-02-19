@@ -73,9 +73,7 @@ const TeamAnalytics: React.FC<TeamAnalyticsProps> = ({
 
     const query = search.trim().toLowerCase();
     if (query) {
-      list = list.filter(team =>
-        team.repoName.toLowerCase().includes(query)
-      );
+      list = list.filter(team => team.repoName.toLowerCase().includes(query));
     }
 
     if (statusFilter === 'active') {
@@ -92,9 +90,7 @@ const TeamAnalytics: React.FC<TeamAnalyticsProps> = ({
     } else if (sortBy === 'commits') {
       sorted.sort((a, b) => (b.commits ?? 0) - (a.commits ?? 0));
     } else if (sortBy === 'members') {
-      sorted.sort(
-        (a, b) => getMemberCount(b) - getMemberCount(a)
-      );
+      sorted.sort((a, b) => getMemberCount(b) - getMemberCount(a));
     }
 
     return sorted;
@@ -125,154 +121,163 @@ const TeamAnalytics: React.FC<TeamAnalyticsProps> = ({
   }
 
   return (
-    <Box className={pageLayout.page} pl={20} pr={20} style={{ paddingRight: 36 }}>
-        <Box className={pageLayout.pageHeader}>
-          <Box className={classes.headerRow}>
-            <Box>
-              <Title order={1} className={pageLayout.pageTitle}>
-                Team Analytics
-              </Title>
-              <Text className={pageLayout.pageSubtitle}>
-                Track team performance, code quality, and project progress
-              </Text>
-            </Box>
-            <Button
-              variant="default"
-              leftSection={<IconDownload size={16} />}
-              // To implement export function
-              className={classes.exportButton}
-            >
-              Export Report
-            </Button>
-          </Box>
-        </Box>
-
-        <Box className={classes.filters}>
-          <TextInput
-            placeholder="Search teams..."
-            leftSection={<IconSearch size={16} />}
-            value={search}
-            onChange={e => setSearch(e.currentTarget.value)}
-            className={classes.searchInput}
-          />
-          <Select
-            label="Status"
-            placeholder="All Teams"
-            value={statusFilter}
-            onChange={setStatusFilter}
-            data={[
-              { value: 'all', label: 'All Teams' },
-              { value: 'active', label: 'Active' },
-              { value: 'review-needed', label: 'Review needed' },
-            ]}
-            clearable
-            classNames={{ label: classes.filterSelectLabel }}
-            className={classes.filterSelect}
-          />
-          <Select
-            label="Sort"
-            placeholder="Sort by Name"
-            value={sortBy}
-            onChange={setSortBy}
-            data={[
-              { value: 'name', label: 'Sort by Name' },
-              { value: 'prs', label: 'Pull requests' },
-              { value: 'commits', label: 'Commits' },
-              { value: 'members', label: 'Members' },
-            ]}
-            classNames={{ label: classes.filterSelectLabel }}
-            className={classes.filterSelect}
-          />
-        </Box>
-
-        {filteredAndSortedTeams.length === 0 ? (
-          <Card withBorder radius="lg" p="xl" className={classes.emptyState}>
-            <Text c="dimmed" ta="center">
-              {uniqueTeamData.length === 0
-                ? 'No team data yet. Connect repositories and sync GitHub data.'
-                : 'No teams match your filters.'}
+    <Box
+      className={pageLayout.page}
+      pl={20}
+      pr={20}
+      style={{ paddingRight: 36 }}
+    >
+      <Box className={pageLayout.pageHeader}>
+        <Box className={classes.headerRow}>
+          <Box>
+            <Title order={1} className={pageLayout.pageTitle}>
+              Team Analytics
+            </Title>
+            <Text className={pageLayout.pageSubtitle}>
+              Track team performance, code quality, and project progress
             </Text>
-          </Card>
-        ) : (
-          <SimpleGrid
-            cols={{ base: 1, sm: 2, lg: 3 }}
-            spacing="lg"
-            className={classes.grid}
+          </Box>
+          <Button
+            variant="default"
+            leftSection={<IconDownload size={16} />}
+            // To implement export function
+            className={classes.exportButton}
           >
-            {filteredAndSortedTeams.map(team => {
-              const teamStatus = getTeamStatus(team);
-              const memberCount = getMemberCount(team);
-              const members = Object.keys(team.teamContributions ?? {});
+            Export Report
+          </Button>
+        </Box>
+      </Box>
 
-              return (
-                <Card
-                  key={team._id}
-                  withBorder
-                  radius="lg"
-                  component={Link}
-                  href={`/courses/${courseId}/team-analytics/${encodeURIComponent(team.repoName)}`}
-                  className={classes.teamCard}
+      <Box className={classes.filters}>
+        <TextInput
+          placeholder="Search teams..."
+          leftSection={<IconSearch size={16} />}
+          value={search}
+          onChange={e => setSearch(e.currentTarget.value)}
+          className={classes.searchInput}
+        />
+        <Select
+          label="Status"
+          placeholder="All Teams"
+          value={statusFilter}
+          onChange={setStatusFilter}
+          data={[
+            { value: 'all', label: 'All Teams' },
+            { value: 'active', label: 'Active' },
+            { value: 'review-needed', label: 'Review needed' },
+          ]}
+          clearable
+          classNames={{ label: classes.filterSelectLabel }}
+          className={classes.filterSelect}
+        />
+        <Select
+          label="Sort"
+          placeholder="Sort by Name"
+          value={sortBy}
+          onChange={setSortBy}
+          data={[
+            { value: 'name', label: 'Sort by Name' },
+            { value: 'prs', label: 'Pull requests' },
+            { value: 'commits', label: 'Commits' },
+            { value: 'members', label: 'Members' },
+          ]}
+          classNames={{ label: classes.filterSelectLabel }}
+          className={classes.filterSelect}
+        />
+      </Box>
+
+      {filteredAndSortedTeams.length === 0 ? (
+        <Card withBorder radius="lg" p="xl" className={classes.emptyState}>
+          <Text c="dimmed" ta="center">
+            {uniqueTeamData.length === 0
+              ? 'No team data yet. Connect repositories and sync GitHub data.'
+              : 'No teams match your filters.'}
+          </Text>
+        </Card>
+      ) : (
+        <SimpleGrid
+          cols={{ base: 1, sm: 2, lg: 3 }}
+          spacing="lg"
+          className={classes.grid}
+        >
+          {filteredAndSortedTeams.map(team => {
+            const teamStatus = getTeamStatus(team);
+            const memberCount = getMemberCount(team);
+            const members = Object.keys(team.teamContributions ?? {});
+
+            return (
+              <Card
+                key={team._id}
+                withBorder
+                radius="lg"
+                component={Link}
+                href={`/courses/${courseId}/team-analytics/${encodeURIComponent(team.repoName)}`}
+                className={classes.teamCard}
+              >
+                <Box className={classes.teamCardTop}>
+                  <Title order={4} className={classes.teamName} lineClamp={1}>
+                    {team.repoName}
+                  </Title>
+                  <Badge
+                    size="sm"
+                    variant="light"
+                    color={teamStatus === 'active' ? 'green' : 'orange'}
+                    className={classes.statusBadge}
+                  >
+                    {teamStatus === 'active' ? 'Active' : 'Review needed'}
+                  </Badge>
+                </Box>
+                <Text className={classes.memberCount}>
+                  {memberCount} member{memberCount !== 1 ? 's' : ''}
+                </Text>
+                <Avatar.Group
+                  spacing="sm"
+                  className={classes.avatarGroup}
+                  mt="xs"
                 >
-                  <Box className={classes.teamCardTop}>
-                    <Title order={4} className={classes.teamName} lineClamp={1}>
-                      {team.repoName}
-                    </Title>
-                    <Badge
-                      size="sm"
-                      variant="light"
-                      color={teamStatus === 'active' ? 'green' : 'orange'}
-                      className={classes.statusBadge}
+                  {members.slice(0, 4).map((user, index) => (
+                    <Avatar
+                      key={user}
+                      radius="xl"
+                      size="lg"
+                      color={AVATAR_COLORS[index % AVATAR_COLORS.length]} // alternate the colours LOL
+                      className={classes.avatar}
                     >
-                      {teamStatus === 'active' ? 'Active' : 'Review needed'}
-                    </Badge>
-                  </Box>
-                  <Text className={classes.memberCount}>
-                    {memberCount} member{memberCount !== 1 ? 's' : ''}
-                  </Text>
-                  <Avatar.Group spacing="sm" className={classes.avatarGroup} mt="xs">
-                    {members.slice(0, 4).map((user, index) => (
-                      <Avatar
-                        key={user}
-                        radius="xl"
-                        size="lg"
-                        color={AVATAR_COLORS[index % AVATAR_COLORS.length]} // alternate the colours LOL
-                        className={classes.avatar}
-                      >
-                        {getInitials(user)}
-                      </Avatar>
-                    ))}
-                    {members.length > 4 && (
-                      <Avatar radius="xl" size="sm" color="gray">
-                        +{members.length - 4}
-                      </Avatar>
-                    )}
-                  </Avatar.Group>
+                      {getInitials(user)}
+                    </Avatar>
+                  ))}
+                  {members.length > 4 && (
+                    <Avatar radius="xl" size="sm" color="gray">
+                      +{members.length - 4}
+                    </Avatar>
+                  )}
+                </Avatar.Group>
 
-                  <Box className={classes.statsRow}>
-                    <Box>
-                      <Text className={classes.statValue}>
-                        {formatCompactNumber(team.pullRequests ?? 0)}
-                      </Text>
-                      <Text className={classes.statLabel}>PRs</Text>
-                    </Box>
-                    <Box>
-                      <Text className={classes.statValue}>
-                        {formatCompactNumber(team.commits ?? 0)}
-                      </Text>
-                      <Text className={classes.statLabel}>Commits</Text>
-                    </Box>
-                    <Box>
-                      <Text className={classes.statValue}>
-                        {formatCompactNumber(team.issues ?? 0)}
-                      </Text>
-                      <Text className={classes.statLabel}>Issues</Text>
-                    </Box>
+                <Box className={classes.statsRow}>
+                  <Box>
+                    <Text className={classes.statValue}>
+                      {formatCompactNumber(team.pullRequests ?? 0)}
+                    </Text>
+                    <Text className={classes.statLabel}>PRs</Text>
                   </Box>
-                </Card>
-              );
-            })}
-          </SimpleGrid>
-        )}
+                  <Box>
+                    <Text className={classes.statValue}>
+                      {formatCompactNumber(team.commits ?? 0)}
+                    </Text>
+                    <Text className={classes.statLabel}>Commits</Text>
+                  </Box>
+                  <Box>
+                    <Text className={classes.statValue}>
+                      {formatCompactNumber(team.issues ?? 0)}
+                    </Text>
+                    <Text className={classes.statLabel}>Issues</Text>
+                  </Box>
+                </Box>
+              </Card>
+            );
+          })}
+        </SimpleGrid>
+      )}
     </Box>
   );
 };
