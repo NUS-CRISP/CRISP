@@ -11,7 +11,7 @@ import {
   Stack,
   Text,
   ThemeIcon,
-  Title
+  Title,
 } from '@mantine/core';
 import { hasFacultyPermission } from '@/lib/auth/utils';
 import { Course } from '@shared/types/Course';
