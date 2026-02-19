@@ -12,30 +12,30 @@ import CrispIcon from './shared/CrispIcon';
 //   href?: string;
 // };
 
-const formatSegmentLabel = (segment: string) => {
-  if (!segment) return '';
+// const formatSegmentLabel = (segment: string) => {
+//   if (!segment) return '';
 
-  const map: Record<string, string> = {
-    'team-analytics': 'Team Analytics',
-    'peer-review': 'Peer Review',
-    assessments: 'Assessments',
-    repositories: 'Repositories',
-    people: 'People',
-    teams: 'Teams',
-    timeline: 'Timeline',
-    'project-management': 'Project Management',
-    'team-review': 'Team Review',
-    'pr-overview': 'PR Overview',
-    'code-analysis': 'Code Analysis',
-  };
+//   const map: Record<string, string> = {
+//     'team-analytics': 'Team Analytics',
+//     'peer-review': 'Peer Review',
+//     assessments: 'Assessments',
+//     repositories: 'Repositories',
+//     people: 'People',
+//     teams: 'Teams',
+//     timeline: 'Timeline',
+//     'project-management': 'Project Management',
+//     'team-review': 'Team Review',
+//     'pr-overview': 'PR Overview',
+//     'code-analysis': 'Code Analysis',
+//   };
 
-  if (map[segment]) return map[segment];
+//   if (map[segment]) return map[segment];
 
-  return segment
-    .split('-')
-    .map(s => s.charAt(0).toUpperCase() + s.slice(1))
-    .join(' ');
-};
+//   return segment
+//     .split('-')
+//     .map(s => s.charAt(0).toUpperCase() + s.slice(1))
+//     .join(' ');
+// };
 
 const TopBar: React.FC = () => {
   const router = useRouter();
