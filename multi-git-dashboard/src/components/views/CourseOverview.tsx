@@ -296,77 +296,77 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
           <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="lg">
             <Card
               withBorder
-              radius="lg"
+              radius="xl"
               component={Link}
               href={`/courses/${courseId}/team-analytics`}
-              className={classes.navCard}
+              className={`${classes.navCard} ${classes.navCardPrimary}`}
             >
-              <ThemeIcon radius="md" size={52} className={classes.navIcon}>
-                <IconUsersGroup size={24} />
+              <ThemeIcon radius="md" size={80} className={classes.navIcon}>
+                <IconUsersGroup size={34} />
               </ThemeIcon>
               <Title order={3} className={classes.navTitle}>
                 Team Analytics
               </Title>
-              <Text c="dimmed" className={classes.navDescription}>
-                Deep dive into individual teams' performance metrics
+              <Text className={classes.navDescription}>
+                Deep dive into team performance metrics, code quality, and
+                project progress
               </Text>
             </Card>
 
             <Card
               withBorder
-              radius="lg"
+              radius="xl"
               component={Link}
               href={`/courses/${courseId}/peer-review`}
               className={`${classes.navCard} ${classes.navCardFeatured}`}
             >
-              <ThemeIcon radius="md" size={52} className={classes.navIcon}>
-                <IconMessagePlus size={24} />
+              <ThemeIcon radius="md" size={80} className={classes.navIcon}>
+                <IconMessagePlus size={34} />
               </ThemeIcon>
               <Title order={3} className={classes.navTitle}>
                 Peer Review
               </Title>
-              <Text c="dimmed" className={classes.navDescription}>
-                Review peer-to-peer code reviews and provide feedback
+              <Text className={classes.navDescription}>
+                Review peer evaluations and provide feedback
               </Text>
             </Card>
 
             {permission ? (
               <Card
                 withBorder
-                radius="lg"
+                radius="xl"
                 component={Link}
                 href={`/courses/${courseId}/assessments`}
                 className={`${classes.navCard} ${classes.navCardFeatured}`}
               >
-                <ThemeIcon radius="md" size={52} className={classes.navIcon}>
-                  <IconChecklist size={24} />
-                </ThemeIcon>
-                <Group justify="space-between" wrap="nowrap">
-                  <Title order={3} className={classes.navTitle}>
-                    Create assessment
-                  </Title>
-                </Group>
-                <Text c="dimmed" className={classes.navDescription}>
-                  Set up new assignments and manage assessments for your
-                  students
-                </Text>
-              </Card>
-            ) : (
-              <Card
-                withBorder
-                radius="lg"
-                component="div"
-                className={`${classes.navCard} ${classes.navCardFeatured} ${classes.navCardDisabled}`}
-              >
-                <ThemeIcon radius="md" size={52} className={classes.navIcon}>
-                  <IconChecklist size={24} />
+                <ThemeIcon radius="md" size={80} className={classes.navIcon}>
+                  <IconChecklist size={34} />
                 </ThemeIcon>
                 <Group justify="space-between" wrap="nowrap">
                   <Title order={3} className={classes.navTitle}>
                     Create Assessment
                   </Title>
                 </Group>
-                <Text c="dimmed" className={classes.navDescription}>
+                <Text className={classes.navDescription}>
+                  Set up a new assignment or evaluation for your students
+                </Text>
+              </Card>
+            ) : (
+              <Card
+                withBorder
+                radius="xl"
+                component="div"
+                className={`${classes.navCard} ${classes.navCardFeatured} ${classes.navCardDisabled}`}
+              >
+                <ThemeIcon radius="md" size={80} className={classes.navIcon}>
+                  <IconChecklist size={34} />
+                </ThemeIcon>
+                <Group justify="space-between" wrap="nowrap">
+                  <Title order={3} className={classes.navTitle}>
+                    Create Assessment
+                  </Title>
+                </Group>
+                <Text className={classes.navDescription}>
                   Set up a new assignment or evaluation for your students
                 </Text>
                 <Text size="xs" c="dimmed" mt="sm">
@@ -378,22 +378,18 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
             {permission ? (
               <Card
                 withBorder
-                radius="lg"
+                radius="xl"
                 component={Link}
                 href={`/courses/${courseId}/repositories`}
-                className={classes.navCard}
+                className={`${classes.navCard} ${classes.navCardSettings}`}
               >
-                <ThemeIcon
-                  radius="md"
-                  size={52}
-                  className={classes.navIconMuted}
-                >
-                  <IconSettings size={24} />
+                <ThemeIcon radius="md" size={80} className={classes.navIconMuted}>
+                  <IconSettings size={34} />
                 </ThemeIcon>
                 <Title order={3} className={classes.navTitle}>
-                  Course settings
+                  Course Settings
                 </Title>
-                <Text c="dimmed" className={classes.navDescription}>
+                <Text className={classes.navDescription}>
                   Manage people, repositories, timeline, and course
                   configuration
                 </Text>
@@ -401,23 +397,23 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
             ) : (
               <Card
                 withBorder
-                radius="lg"
+                radius="xl"
                 component="div"
-                className={`${classes.navCard} ${classes.navCardDisabled}`}
+                className={`${classes.navCard} ${classes.navCardSettings} ${classes.navCardDisabled}`}
               >
                 <ThemeIcon
                   radius="md"
-                  size={52}
+                  size={80}
                   className={classes.navIconMuted}
                 >
-                  <IconSettings size={24} />
+                  <IconSettings size={34} />
                 </ThemeIcon>
                 <Title order={3} className={classes.navTitle}>
                   Course Settings
                 </Title>
-                <Text c="dimmed" className={classes.navDescription}>
+                <Text className={classes.navDescription}>
                   Manage people, repositories, timeline, and course
-                  configurations
+                  configuration
                 </Text>
                 <Text size="xs" c="dimmed" mt="sm">
                   Available to faculty only

@@ -195,48 +195,103 @@
 }
 
 .navCard {
-  padding: 22px;
+  padding: 1.5rem 1.5rem 2rem;
   cursor: pointer;
   transition:
-    transform 180ms ease,
-    box-shadow 180ms ease,
-    border-color 180ms ease;
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
   text-decoration: none;
   color: inherit;
   position: relative;
   overflow: hidden;
+  border-radius: 16px;
+  border-width: 1px;
+  border-style: solid;
 
   background: light-dark(
-    linear-gradient(135deg, var(--mantine-color-white) 0%, var(--mantine-color-gray-0) 100%),
-    linear-gradient(135deg, #1e1e2e 0%, #18181b 100%)
+    var(--mantine-color-gray-0),
+    var(--mantine-color-dark-6)
   );
   border-color: light-dark(
-    var(--mantine-color-blue-2),
-    rgba(96, 165, 250, 0.45)
+    var(--mantine-color-gray-3),
+    var(--mantine-color-dark-4)
   );
-
-  .navCard:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 32px rgba(59, 130, 246, 0.18);
-    border-color: light-dark(var(--mantine-color-blue-4), rgba(96, 165, 250, 0.7));
-  }
 }
 
+.navCard:hover {
+  transform: translateY(-4px);
+}
+
+/* Primary card (e.g. Team Analytics) – blue glow */
+.navCardPrimary {
+  border-color: light-dark(
+    var(--mantine-color-blue-3),
+    rgba(59, 130, 246, 0.6)
+  );
+}
+
+.navCardPrimary:hover {
+  box-shadow: 0 12px 32px light-dark(
+    rgba(59, 130, 246, 0.25),
+    rgba(59, 130, 246, 0.35)
+  );
+  border-color: light-dark(
+    var(--mantine-color-blue-5),
+    rgba(96, 165, 250, 0.85)
+  );
+}
+
+/* Featured cards (e.g. Peer Review, Create Assessment) – purple glow */
 .navCardFeatured {
   border-color: light-dark(
     var(--mantine-color-violet-3),
-    rgba(167, 139, 250, 0.5)
+    rgba(124, 58, 237, 0.5)
   );
 }
 
 .navCardFeatured:hover {
-  box-shadow: 0 12px 32px rgba(124, 58, 237, 0.22);
-  border-color: light-dark(var(--mantine-color-violet-5), rgba(167, 139, 250, 0.8));
+  box-shadow: 0 12px 32px light-dark(
+    rgba(124, 58, 237, 0.22),
+    rgba(124, 58, 237, 0.4)
+  );
+  border-color: light-dark(
+    var(--mantine-color-violet-5),
+    rgba(167, 139, 250, 0.85)
+  );
+}
+
+/* Settings card – neutral, no accent glow */
+.navCardSettings {
+  border-color: light-dark(
+    var(--mantine-color-gray-4),
+    var(--mantine-color-dark-4)
+  );
+}
+
+.navCardSettings:hover {
+  box-shadow: 0 8px 24px light-dark(
+    rgba(0, 0, 0, 0.08),
+    rgba(0, 0, 0, 0.3)
+  );
+  border-color: light-dark(
+    var(--mantine-color-gray-5),
+    var(--mantine-color-dark-3)
+  );
 }
 
 .navCardDisabled {
-  opacity: 0.6;
+  opacity: 0.55;
   cursor: not-allowed;
+  border-color: light-dark(
+    var(--mantine-color-gray-3),
+    var(--mantine-color-dark-5)
+  ) !important;
+}
+
+.navCardDisabled .navTitle,
+.navCardDisabled .navDescription {
+  color: light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-2)) !important;
 }
 
 .navCardDisabled:hover {
@@ -244,25 +299,50 @@
   box-shadow: none;
 }
 
+/* Icon box – gradient for active cards, rounded */
 .navIcon {
   background: linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%);
   color: white;
+  width: 80px;
+  height: 80px;
+  border-radius: 14px;
+  margin-bottom: 1rem;
 }
 
 .navIconMuted {
-  background: linear-gradient(135deg, #64748b 0%, #475569 100%);
-  color: white;
+  background: light-dark(
+    var(--mantine-color-gray-4),
+    var(--mantine-color-dark-5)
+  );
+  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
+  width: 80px;
+  height: 80px;
+  border-radius: 14px;
+  margin-bottom: 1rem;
+}
+
+.navCardDisabled .navIcon,
+.navCardDisabled .navIconMuted {
+  background: light-dark(
+    var(--mantine-color-gray-3),
+    var(--mantine-color-dark-5)
+  );
+  color: light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-2));
+  filter: grayscale(0.4);
 }
 
 .navTitle {
-  margin-top: 16px;
-  margin-bottom: 8px;
-  font-size: 1.25rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: light-dark(var(--mantine-color-gray-9), var(--mantine-color-dark-0));
 }
 
 .navDescription {
-  font-size: 1rem;
+  font-size: 1.0625rem;
   line-height: 1.6;
+  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
 }
 
 .activityCard {
