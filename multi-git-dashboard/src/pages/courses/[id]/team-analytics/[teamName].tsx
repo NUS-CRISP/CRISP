@@ -1,4 +1,4 @@
-import Navbar from '@/components/views/TeamAnalyticsNavbar';
+import TeamAnalyticsNavbar from '@/components/team-analytics/TeamAnalyticsNavbar';
 import TeamAnalyticsDetail from '@/components/views/TeamAnalyticsDetail';
 import { Course } from '@shared/types/Course';
 import { TeamSet } from '@shared/types/TeamSet';
@@ -111,7 +111,7 @@ const TeamDetailPage: React.FC = () => {
 
   return (
     <Box style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
-      <Navbar />
+      <TeamAnalyticsNavbar />
       <Box style={{ flex: 1, overflow: 'auto', minWidth: 0 }}>
         {pageContent}
       </Box>
