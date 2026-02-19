@@ -463,11 +463,11 @@ const TeamAnalyticsDetail: React.FC<TeamAnalyticsDetailProps> = ({
               <Accordion
                 multiple
                 variant="separated"
-                defaultValue={[teamNumber.toString()]}
+                defaultValue={[teamNumber?.toString() ?? '']}
               >
                 <CodeAnalysisAccordionItem
                   codeData={codeData}
-                  teamNumber={teamNumber}
+                  teamNumber={teamNumber ?? 0}
                   aiInsights={aiInsights}
                   renderTutorialPopover={false}
                 />

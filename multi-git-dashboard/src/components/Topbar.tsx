@@ -7,10 +7,10 @@ import BackLink from './shared/BackLink';
 import CrispLogo from './shared/CrispLogo';
 import CrispIcon from './shared/CrispIcon';
 
-type Breadcrumb = {
-  label: string;
-  href?: string;
-};
+// type Breadcrumb = {
+//   label: string;
+//   href?: string;
+// };
 
 const formatSegmentLabel = (segment: string) => {
   if (!segment) return '';
@@ -75,41 +75,41 @@ const TopBar: React.FC = () => {
     }
   }, [courseId, isCourseRoute]);
 
-  const breadcrumbs: Breadcrumb[] = useMemo(() => {
-    if (!isCourseRoute || !courseId) return [];
+  // const breadcrumbs: Breadcrumb[] = useMemo(() => {
+  //   if (!isCourseRoute || !courseId) return [];
 
-    const url = asPath.split('?')[0];
-    const segments = url.split('/').filter(Boolean);
+  //   const url = asPath.split('?')[0];
+  //   const segments = url.split('/').filter(Boolean);
 
-    // `/courses` or `/courses/[id]` – no breadcrumbs, just course header
-    if (segments.length <= 2) {
-      return [];
-    }
+  //   // `/courses` or `/courses/[id]` – no breadcrumbs, just course header
+  //   if (segments.length <= 2) {
+  //     return [];
+  //   }
 
-    // segments: ['courses', '<id>', ...rest]
-    const rest = segments.slice(2);
+  //   // segments: ['courses', '<id>', ...rest]
+  //   const rest = segments.slice(2);
 
-    const crumbs: Breadcrumb[] = [];
+  //   const crumbs: Breadcrumb[] = [];
 
-    // Always start in-course breadcrumbs from the overview page
-    crumbs.push({ label: 'Overview', href: `/courses/${courseId}` });
+  //   // Always start in-course breadcrumbs from the overview page
+  //   crumbs.push({ label: 'Overview', href: `/courses/${courseId}` });
 
-    rest.forEach((seg, index) => {
-      const isLast = index === rest.length - 1;
-      const label = formatSegmentLabel(seg);
+  //   rest.forEach((seg, index) => {
+  //     const isLast = index === rest.length - 1;
+  //     const label = formatSegmentLabel(seg);
 
-      if (!label) return;
+  //     if (!label) return;
 
-      if (isLast) {
-        crumbs.push({ label });
-      } else {
-        const href = `/${segments.slice(0, 2 + index + 1).join('/')}`;
-        crumbs.push({ label, href });
-      }
-    });
+  //     if (isLast) {
+  //       crumbs.push({ label });
+  //     } else {
+  //       const href = `/${segments.slice(0, 2 + index + 1).join('/')}`;
+  //       crumbs.push({ label, href });
+  //     }
+  //   });
 
-    return crumbs;
-  }, [asPath, courseId, isCourseRoute]);
+  //   return crumbs;
+  // }, [asPath, courseId, isCourseRoute]);
 
   const backLink = useMemo(() => {
     if (!isCourseRoute || !courseId) return null;
