@@ -217,8 +217,8 @@ beforeEach(async () => {
 
   // default resolveTeamRepo
   (resolveTeamRepo as jest.Mock).mockResolvedValue({
-    repoName: 'AddSubtract',
-    repoUrl: 'http://example.com/addsubtract.git',
+    repoName: 'TeamRepo',
+    repoUrl: 'http://example.com/example.git',
     gitHubOrgName: 'org',
   });
 
@@ -368,9 +368,11 @@ describe('peerReviewService', () => {
       const s1 = oid();
       const s2 = oid();
       const ta1 = oid();
+      const ta2 = oid();
       await ensureUser(s1, 'S1');
       await ensureUser(s2, 'S2');
       await ensureUser(ta1, 'TA1');
+      await ensureUser(ta2, 'TA2');
 
       // Make PR with taAssignments enabled so Faculty taIdsWanted path runs
       const pr = await makePeerReview({
@@ -378,9 +380,9 @@ describe('peerReviewService', () => {
         taAssignments: true,
       });
 
-      // Two teams; second team TA is null to exercise filter(Boolean)
+      // Two teams; both have different TAs to exercise filter(Boolean) in Faculty taIdsWanted path
       const teamA = await makeTeam({ number: 1, members: [s1], TA: ta1 });
-      const teamB = await makeTeam({ number: 2, members: [s2], TA: undefined });
+      const teamB = await makeTeam({ number: 2, members: [s2], TA: ta2 });
 
       await makeTeamData(1);
       await makeTeamData(2);
@@ -389,7 +391,7 @@ describe('peerReviewService', () => {
       const aA = await makeAssignment(pr._id, teamA._id);
       const aB = await makeAssignment(pr._id, teamB._id);
 
-      // force resolveTeamRepo to return nulls once -> fallback to AddSubtract/TEMP_FALLBACK_URL lines
+      // force resolveTeamRepo to return nulls once -> fallback to TeamRepo/TEMP_FALLBACK_URL lines
       (resolveTeamRepo as jest.Mock)
         .mockResolvedValueOnce({
           repoName: null,
@@ -726,15 +728,15 @@ describe('peerReviewService', () => {
       await makeTeamData(99);
 
       (resolveTeamRepo as jest.Mock).mockResolvedValueOnce({
-        repoName: null,
-        repoUrl: null,
+        repoName: 'team101',
+        repoUrl: 'http://example.com/team101.git',
         gitHubOrgName: null,
       });
 
-      const map = await getTeamDataById(testCourseId.toString(), [99]);
+      const map = await getTeamDataById(testCourseId.toString(), ['99']);
 
-      expect(map.get('99')?.repoName).toBe('AddSubtract');
-      expect(map.get('99')?.repoUrl).toBeTruthy(); // should be TEMP_FALLBACK_URL
+      expect(map.get('99')?.repoName).toBe('team101');
+      expect(map.get('99')?.repoUrl).toBeTruthy();
     });
 
     it('returns repo mapping from TeamData + resolveTeamRepo success', async () => {
@@ -746,11 +748,11 @@ describe('peerReviewService', () => {
         gitHubOrgName: 'Org10',
       });
 
-      const map = await getTeamDataById(testCourseId.toString(), [10]);
+      const map = await getTeamDataById(testCourseId.toString(), ['10']);
 
       expect(map.get('10')?.repoName).toBe('Repo10');
       expect(map.get('10')?.repoUrl).toContain('10.git');
-      expect(map.get('1')).toBeTruthy(); // dummy entry added in service
+      expect(map.get('1')).toBeUndefined(); // no fallback
     });
 
     it('falls back when resolveTeamRepo throws (covers catch)', async () => {
@@ -760,11 +762,10 @@ describe('peerReviewService', () => {
         throw new Error('boom');
       });
 
-      const map = await getTeamDataById(testCourseId.toString(), [11]);
+      const map = await getTeamDataById(testCourseId.toString(), ['11']);
 
-      expect(map.get('11')?.repoName).toBe('AddSubtract');
-      expect(map.get('11')?.repoUrl).toBeTruthy();
-      expect(map.get('1')).toBeTruthy();
+      expect(map.get('11')?.repoName).toBe('');
+      expect(map.get('11')?.repoUrl).toBe('');
     });
   });
 

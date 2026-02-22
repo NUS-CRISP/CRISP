@@ -159,8 +159,8 @@ beforeEach(async () => {
 
   // default mocks
   (resolveTeamRepo as jest.Mock).mockResolvedValue({
-    repoName: 'AddSubtract',
-    repoUrl: 'http://example.com/addsubtract.git',
+    repoName: 'TeamRepo',
+    repoUrl: 'http://example.com/example.git',
     gitHubOrgName: 'org',
   });
 
@@ -1194,8 +1194,14 @@ describe('peerReviewAssignmentService', () => {
 
       (getTeamDataById as jest.Mock).mockResolvedValue(
         new Map([
-          ['1', { repoName: 'Repo1', repoUrl: 'Url1', gitHubOrgName: 'Org1' }],
-          ['2', { repoName: 'Repo2', repoUrl: 'Url2', gitHubOrgName: 'Org2' }],
+          [
+            t1._id.toString(),
+            { repoName: 'Repo1', repoUrl: 'Url1', gitHubOrgName: 'Org1' },
+          ],
+          [
+            t2._id.toString(),
+            { repoName: 'Repo2', repoUrl: 'Url2', gitHubOrgName: 'Org2' },
+          ],
         ])
       );
 
