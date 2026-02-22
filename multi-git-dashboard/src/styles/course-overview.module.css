@@ -1,0 +1,371 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: light-dark(var(--mantine-color-white), var(--mantine-color-dark-7));
+  border-bottom: 1px solid
+    light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+}
+
+.headerInner {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 24px;
+  min-height: 72px;
+  box-sizing: border-box;
+}
+
+.headerInnerLeft {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.headerInnerCenter {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  min-width: 0;
+}
+
+.headerInnerRight {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.courseHeaderCenter {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+.courseHeaderInfo {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+.headerBackLink {
+  margin: 0;
+}
+
+.headerBackLink a {
+  margin-bottom: 0;
+}
+
+.courseCode {
+  margin: 0;
+  line-height: 1.25;
+}
+
+.courseMeta {
+  margin: 0;
+  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
+  font-weight: 400;
+  line-height: 1.25;
+}
+
+.headerRight {
+  min-width: 220px;
+}
+
+.overviewRow {
+  gap: 24px;
+
+  @media (max-width: var(--mantine-breakpoint-md)) {
+    flex-direction: column;
+  }
+}
+
+.graphCard {
+  flex: 1.2;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* All Teams Overview card – standardised layout */
+.overviewChartCard {
+  margin: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.overviewChartTitle {
+  margin-bottom: 18px;
+  font-size: 1.375rem;
+  font-weight: 700;
+}
+
+.overviewChartButtonWrap {
+  margin-bottom: 20px;
+}
+
+.overviewChartControls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 24px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 640px) {
+  .overviewChartControls {
+    grid-template-columns: 1fr;
+  }
+}
+
+.overviewChartArea {
+  flex: 1;
+  min-height: 360px;
+  padding-right: 20px;
+}
+
+.statsCard {
+  flex: 0 0 360px;
+  min-height: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  background: light-dark(
+    var(--mantine-color-gray-0),
+    var(--mantine-color-dark-6)
+  );
+  border: 1px solid
+    light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+
+  @media (max-width: var(--mantine-breakpoint-md)) {
+    flex: 1 1 auto;
+  }
+}
+
+.statsCardStack {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.statRow {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 22px 26px;
+  border-bottom: 1px solid
+    light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+}
+
+.statRow[data-last] {
+  border-bottom: none;
+}
+
+.statLabel {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
+  margin-bottom: 8px;
+}
+
+.statValue {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: light-dark(var(--mantine-color-dark-7), var(--mantine-color-gray-0));
+}
+
+.statSublabel {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
+  margin-top: 4px;
+}
+
+.navCard {
+  padding: 1.5rem 1.5rem 2rem;
+  cursor: pointer;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  border-width: 1px;
+  border-style: solid;
+
+  background: light-dark(
+    var(--mantine-color-gray-0),
+    var(--mantine-color-dark-6)
+  );
+  border-color: light-dark(
+    var(--mantine-color-gray-3),
+    var(--mantine-color-dark-4)
+  );
+}
+
+.navCard:hover {
+  transform: translateY(-4px);
+}
+
+/* Primary card (e.g. Team Analytics) – blue glow */
+.navCardPrimary {
+  border-color: light-dark(
+    var(--mantine-color-blue-3),
+    rgba(59, 130, 246, 0.6)
+  );
+}
+
+.navCardPrimary:hover {
+  box-shadow: 0 12px 32px light-dark(
+    rgba(59, 130, 246, 0.25),
+    rgba(59, 130, 246, 0.35)
+  );
+  border-color: light-dark(
+    var(--mantine-color-blue-5),
+    rgba(96, 165, 250, 0.85)
+  );
+}
+
+/* Featured cards (e.g. Peer Review, Create Assessment) – purple glow */
+.navCardFeatured {
+  border-color: light-dark(
+    var(--mantine-color-violet-3),
+    rgba(124, 58, 237, 0.5)
+  );
+}
+
+.navCardFeatured:hover {
+  box-shadow: 0 12px 32px light-dark(
+    rgba(124, 58, 237, 0.22),
+    rgba(124, 58, 237, 0.4)
+  );
+  border-color: light-dark(
+    var(--mantine-color-violet-5),
+    rgba(167, 139, 250, 0.85)
+  );
+}
+
+/* Settings card – neutral, no accent glow */
+.navCardSettings {
+  border-color: light-dark(
+    var(--mantine-color-gray-4),
+    var(--mantine-color-dark-4)
+  );
+}
+
+.navCardSettings:hover {
+  box-shadow: 0 8px 24px light-dark(
+    rgba(0, 0, 0, 0.08),
+    rgba(0, 0, 0, 0.3)
+  );
+  border-color: light-dark(
+    var(--mantine-color-gray-5),
+    var(--mantine-color-dark-3)
+  );
+}
+
+.navCardDisabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  border-color: light-dark(
+    var(--mantine-color-gray-3),
+    var(--mantine-color-dark-5)
+  ) !important;
+}
+
+.navCardDisabled .navTitle,
+.navCardDisabled .navDescription {
+  color: light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-2)) !important;
+}
+
+.navCardDisabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Icon box – gradient for active cards, rounded */
+.navIcon {
+  background: linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%);
+  color: white;
+  width: 80px;
+  height: 80px;
+  border-radius: 14px;
+  margin-bottom: 1rem;
+}
+
+.navIconMuted {
+  background: light-dark(
+    var(--mantine-color-gray-4),
+    var(--mantine-color-dark-5)
+  );
+  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
+  width: 80px;
+  height: 80px;
+  border-radius: 14px;
+  margin-bottom: 1rem;
+}
+
+.navCardDisabled .navIcon,
+.navCardDisabled .navIconMuted {
+  background: light-dark(
+    var(--mantine-color-gray-3),
+    var(--mantine-color-dark-5)
+  );
+  color: light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-2));
+  filter: grayscale(0.4);
+}
+
+.navTitle {
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: light-dark(var(--mantine-color-gray-9), var(--mantine-color-dark-0));
+}
+
+.navDescription {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
+}
+
+.activityCard {
+  padding: 6px 10px;
+}
+
+.activityRow {
+  padding: 14px 6px;
+}
+
+.activityIcon {
+  width: 40px;
+  height: 40px;
+}
+
+.activityLink {
+  display: inline-block;
+  margin-top: 4px;
+  color: var(--mantine-color-blue-filled);
+  text-decoration: none;
+
+  .activityLink:hover {
+    text-decoration: underline;
+  }
+}
+

@@ -1,4 +1,5 @@
-import PROverview from '@/components/views/PROverview';
+/* Deprecated page, everything is now within the team-analytics/[teamName].tsx page */
+import PROverview from '@/components/views/deprecated/PROverview';
 import {
   DateUtils,
   getCurrentWeekGenerator,

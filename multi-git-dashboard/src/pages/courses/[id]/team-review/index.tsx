@@ -1,4 +1,5 @@
-import CourseOverview from '@/components/views/CourseOverview';
+/* Deprecated page, everything is now within the team-analytics/[teamName].tsx page */
+import TeamReview from '@/components/views/deprecated/Overview';
 import {
   DateUtils,
   getCurrentWeekGenerator,
@@ -11,6 +12,7 @@ import { Course } from '@shared/types/Course';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
+import { TeamSet } from '@shared/types/TeamSet';
 
 const CourseViewPage: React.FC = () => {
   const router = useRouter();
@@ -22,6 +24,12 @@ const CourseViewPage: React.FC = () => {
 
   const [course, setCourse] = useState<Course>();
   const [dateUtils, setDateUtils] = useState<DateUtils>();
+
+  const { id } = router.query as {
+    id: string;
+  };
+  const teamReviewApiRoute = `/api/courses/${id}/teamsets `;
+  const [teamSets, setTeamSets] = useState<TeamSet[]>([]);
 
   useEffect(() => {
     if (isNewCourse) {
@@ -65,16 +73,45 @@ const CourseViewPage: React.FC = () => {
     }
   }, [courseId, fetchCourse]);
 
+  const fetchTeamSets = async () => {
+    try {
+      const response = await fetch(teamReviewApiRoute);
+      if (!response.ok) {
+        console.error('Error fetching Team Sets:', response.statusText);
+        return;
+      }
+      const data = await response.json();
+      setTeamSets(data);
+    } catch (error) {
+      console.error('Error fetching Team Sets:', error);
+    }
+  };
+
+  const onUpdate = () => {
+    fetchTeamSets();
+  };
+
+  useEffect(() => {
+    if (router.isReady) {
+      fetchTeamSets();
+    }
+  }, [router.isReady]);
+
   return (
     <Container
       style={{
-        height: '100vh',
+        height: 'calc(100dvh - 20px)',
         display: 'flex',
         flexDirection: 'column',
       }}
     >
       {course && dateUtils ? (
-        <CourseOverview courseId={courseId} dateUtils={dateUtils} />
+        <TeamReview
+          courseId={courseId}
+          dateUtils={dateUtils}
+          teamSets={teamSets}
+          onUpdate={onUpdate}
+        />
       ) : (
         <Text>Course not available</Text>
       )}

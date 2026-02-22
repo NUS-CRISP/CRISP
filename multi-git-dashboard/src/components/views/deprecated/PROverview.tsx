@@ -1,3 +1,4 @@
+/* Deprecated component, this was used by the deprecated team-review page `[id]/team-review` */
 import { DateUtils } from '@/lib/utils';
 import {
   Accordion,
@@ -12,9 +13,9 @@ import { Team as SharedTeam } from '@shared/types/Team';
 import { TeamData } from '@shared/types/TeamData';
 import { Status } from '@shared/types/util/Status';
 import { useEffect, useState } from 'react';
-import PRAccordionItem from '../pr-overview/PRAccordionItem';
-import { useTutorialContext } from '../tutorial/TutorialContext';
-import TutorialPopover from '../tutorial/TutorialPopover';
+import PRAccordionItem from '../../pr-overview/PRAccordionItem';
+import { useTutorialContext } from '../../tutorial/TutorialContext';
+import TutorialPopover from '../../tutorial/TutorialPopover';
 import { TeamSet } from '@shared/types/TeamSet';
 
 interface OverviewProps {

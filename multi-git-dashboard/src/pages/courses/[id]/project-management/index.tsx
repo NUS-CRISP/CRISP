@@ -1,7 +1,8 @@
+/* Deprecated page, everything is now within the team-analytics/[teamName].tsx page */
 import { hasFacultyPermission } from '@/lib/auth/utils';
 import { Container } from '@mantine/core';
 import { useRouter } from 'next/router';
-import ProjectManagementInfo from '@/components/views/ProjectManagementInfo';
+import ProjectManagementInfo from '@/components/views/deprecated/ProjectManagementInfo';
 import { useEffect, useState } from 'react';
 import { TeamSet } from '@shared/types/TeamSet';
 

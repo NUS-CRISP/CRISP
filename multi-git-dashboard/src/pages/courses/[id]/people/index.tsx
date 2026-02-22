@@ -1,6 +1,7 @@
+import CourseSettingsNavbar from '@/components/CourseSettingsNavbar';
 import PeopleInfo from '@/components/views/PeopleInfo';
 import { hasFacultyPermission } from '@/lib/auth/utils';
-import { Container } from '@mantine/core';
+import { Box, Container } from '@mantine/core';
 import { User } from '@shared/types/User';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
@@ -88,19 +89,24 @@ const PeopleListPage: React.FC = () => {
   };
 
   return (
-    <Container>
-      {id && (
-        <PeopleInfo
-          courseId={id}
-          faculty={faculty}
-          TAs={TAs}
-          students={students}
-          hasFacultyPermission={permission}
-          accountStatusRecord={accountStatusRecord}
-          onUpdate={onUpdate}
-        />
-      )}
-    </Container>
+    <Box style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
+      <CourseSettingsNavbar />
+      <Box style={{ flex: 1, overflow: 'auto', minWidth: 0 }}>
+        <Container>
+          {id && (
+            <PeopleInfo
+              courseId={id}
+              faculty={faculty}
+              TAs={TAs}
+              students={students}
+              hasFacultyPermission={permission}
+              accountStatusRecord={accountStatusRecord}
+              onUpdate={onUpdate}
+            />
+          )}
+        </Container>
+      </Box>
+    </Box>
   );
 };
 

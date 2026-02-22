@@ -78,6 +78,107 @@ describe('getToken', () => {
     expect(tokenPayload).toHaveProperty('sub', '123');
   });
 
+  describe('chunked cookie reconstruction', () => {
+    beforeEach(() => {
+      (hkdf as unknown as jest.Mock).mockResolvedValue(
+        Buffer.from('x'.repeat(32))
+      );
+    });
+
+    it('reconstructs JWE from multiple cookies with tokenHeader.N and decrypts', async () => {
+      const req = {
+        headers: {
+          cookie:
+            'mockTokenHeader.0=part0; mockTokenHeader.1=part1; mockTokenHeader.2=part2',
+        },
+      } as Request;
+      jest
+        .spyOn(jose, 'jwtDecrypt')
+        .mockResolvedValueOnce({ payload: { sub: '456' } } as any);
+
+      const tokenPayload = await auth.getToken(req);
+      expect(tokenPayload).toHaveProperty('sub', '456');
+      expect(jose.jwtDecrypt).toHaveBeenCalledWith(
+        'part0part1part2',
+        expect.anything()
+      );
+    });
+
+    it('reconstructs JWE when chunks are out of order in cookie string', async () => {
+      const req = {
+        headers: {
+          cookie: 'mockTokenHeader.2=part2; mockTokenHeader.0=part0; mockTokenHeader.1=part1',
+        },
+      } as Request;
+      jest
+        .spyOn(jose, 'jwtDecrypt')
+        .mockResolvedValueOnce({ payload: { sub: '789' } } as any);
+
+      const tokenPayload = await auth.getToken(req);
+      expect(tokenPayload).toHaveProperty('sub', '789');
+      expect(jose.jwtDecrypt).toHaveBeenCalledWith(
+        'part0part1part2',
+        expect.anything()
+      );
+    });
+
+    it('ignores keys with non-finite index (only uses tokenHeader.0, tokenHeader.1, ...)', async () => {
+      const req = {
+        headers: {
+          cookie:
+            'mockTokenHeader.0=A; mockTokenHeader.foo=ignored; mockTokenHeader.1=B',
+        },
+      } as Request;
+      jest
+        .spyOn(jose, 'jwtDecrypt')
+        .mockResolvedValueOnce({ payload: { sub: 'ok' } } as any);
+
+      await auth.getToken(req);
+      expect(jose.jwtDecrypt).toHaveBeenCalledWith('AB', expect.anything());
+    });
+
+    it('throws MissingAuthorizationError when no single cookie and no valid chunks', async () => {
+      const req = {
+        headers: {
+          cookie: 'other=value; another=thing',
+        },
+      } as Request;
+
+      await expect(auth.getToken(req)).rejects.toThrow(MissingAuthorizationError);
+      await expect(auth.getToken(req)).rejects.toThrow(
+        'Missing or invalid auth cookie'
+      );
+      expect(jose.jwtDecrypt).not.toHaveBeenCalled();
+    });
+
+    it('throws MissingAuthorizationError when chunks exist but all have non-string values', async () => {
+      const req = {
+        headers: {
+          cookie: 'other.0=x; other.1=y',
+        },
+      } as Request;
+
+      await expect(auth.getToken(req)).rejects.toThrow(MissingAuthorizationError);
+      expect(jose.jwtDecrypt).not.toHaveBeenCalled();
+    });
+
+    it('prefers single tokenHeader cookie over chunked when both present', async () => {
+      const req = {
+        headers: {
+          cookie:
+            'mockTokenHeader=fullToken; mockTokenHeader.0=chunk0; mockTokenHeader.1=chunk1',
+        },
+      } as Request;
+      jest
+        .spyOn(jose, 'jwtDecrypt')
+        .mockResolvedValueOnce({ payload: { sub: 'single' } } as any);
+
+      const tokenPayload = await auth.getToken(req);
+      expect(tokenPayload).toHaveProperty('sub', 'single');
+      expect(jose.jwtDecrypt).toHaveBeenCalledWith('fullToken', expect.anything());
+    });
+  });
+
   afterEach(() => {
     jest.clearAllMocks();
     delete process.env.NEXTAUTH_SECRET;

@@ -3,12 +3,12 @@ import { useTutorialContext } from '@/components/tutorial/TutorialContext';
 import TutorialPopover from '@/components/tutorial/TutorialPopover';
 import WelcomeMessage from '@/components/views/WelcomeMessage';
 import { hasFacultyPermission } from '@/lib/auth/utils';
-import { Box, Button, ScrollArea } from '@mantine/core';
+import { Box, Button, ScrollArea, Title } from '@mantine/core';
 import { Course } from '@shared/types/Course';
 import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import ProfileDropdown from '@/components/ProfileDropdown';
+import pageLayout from '@/styles/root-layout.module.css';
 
 const CourseListPage: React.FC = () => {
   const apiRoute = '/api/courses';
@@ -73,26 +73,16 @@ const CourseListPage: React.FC = () => {
         scrollbarWidth: 'thin',
       }}
     >
-      <Box pl={20}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '12px',
-            marginBottom: '8px',
-          }}
-        >
-          <h1 style={{ margin: 0 }}>Courses</h1>
-          <div
-            style={{
-              marginLeft: 'auto',
-              width: 'fit-content',
-            }}
+      <Box className={pageLayout.page}>
+        <Box className={pageLayout.pageHeader}>
+          <Title
+            order={1}
+            className={pageLayout.pageTitle}
+            style={{ textAlign: 'center' }}
           >
-            <ProfileDropdown />
-          </div>
-        </div>
+            Dashboard
+          </Title>
+        </Box>
         {courses.length === 0 ? (
           <Box
             style={{

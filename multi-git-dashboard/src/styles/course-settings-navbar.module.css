@@ -1,0 +1,96 @@
+.settingsNavbar {
+  height: 100vh;
+  width: 200px;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  background-color: light-dark(#f1f3f5, #25262b);
+  padding: 12px 0;
+  border-right: 1px solid light-dark(#e9ecef, #373a40);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.backLink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin: 0 8px 8px;
+  border-radius: var(--mantine-radius-md);
+  text-decoration: none;
+  font-size: 13px;
+  color: light-dark(#495057, #ced4da);
+  font-weight: 500;
+  transition: background 0.2s ease, color 0.15s ease;
+}
+
+.backLink:hover {
+  background-color: light-dark(#e9ecef, #373a40);
+  color: light-dark(#212529, #fff);
+}
+
+.sectionTitle {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: light-dark(#868e96, #909296);
+  padding: 12px 16px 6px;
+  text-transform: uppercase;
+}
+
+.linksList {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 4px 8px 12px;
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--mantine-radius-md);
+  text-decoration: none;
+  font-size: 13px;
+  color: light-dark(#212529, #e9ecef);
+  font-weight: 500;
+  transition: background 0.2s ease, color 0.15s ease;
+}
+
+.navLink:hover {
+  background-color: light-dark(#e9ecef, #373a40);
+  color: light-dark(#000, #fff);
+}
+
+.navLink[data-active] {
+  background-color: light-dark(var(--mantine-color-blue-1), var(--mantine-color-blue-9));
+  color: light-dark(var(--mantine-color-blue-8), var(--mantine-color-blue-1));
+}
+
+.navLink[data-active]:hover {
+  background-color: light-dark(var(--mantine-color-blue-2), var(--mantine-color-blue-8));
+  color: light-dark(var(--mantine-color-blue-9), var(--mantine-color-blue-0));
+}
+
+.navLink[data-disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.navLinkIcon {
+  flex-shrink: 0;
+  color: inherit;
+  opacity: 0.9;
+}
+
+.navLinkLabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

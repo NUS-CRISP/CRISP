@@ -1,7 +1,7 @@
 import { IconGitBranch } from '@tabler/icons-react';
 
-// CRISP Logo
-const CrispLogo: React.FC<{ size?: number }> = ({ size = 46 }) => (
+// CRISP Icon
+const CrispIcon: React.FC<{ size?: number }> = ({ size = 46 }) => (
   <div
     style={{
       width: size,
@@ -23,9 +23,9 @@ const CrispLogo: React.FC<{ size?: number }> = ({ size = 46 }) => (
         placeItems: 'center',
       }}
     >
-      <IconGitBranch size={size - 16} />
+      <IconGitBranch size={size - 16} color="white" />
     </div>
   </div>
 );
 
-export default CrispLogo;
+export default CrispIcon;

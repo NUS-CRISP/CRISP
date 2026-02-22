@@ -1,6 +1,7 @@
+import CourseSettingsNavbar from '@/components/CourseSettingsNavbar';
 import TimelineInfo from '@/components/views/TimelineInfo';
 import { hasFacultyPermission } from '@/lib/auth/utils';
-import { Container } from '@mantine/core';
+import { Box, Container } from '@mantine/core';
 import { Milestone, Sprint } from '@shared/types/Course';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
@@ -51,17 +52,22 @@ const TimelineListPage: React.FC = () => {
   };
 
   return (
-    <Container>
-      {id && (
-        <TimelineInfo
-          courseId={id}
-          milestones={milestones}
-          sprints={sprints}
-          hasFacultyPermission={permission}
-          onUpdate={onUpdate}
-        />
-      )}
-    </Container>
+    <Box style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
+      <CourseSettingsNavbar />
+      <Box style={{ flex: 1, overflow: 'auto', minWidth: 0 }}>
+        <Container>
+          {id && (
+            <TimelineInfo
+              courseId={id}
+              milestones={milestones}
+              sprints={sprints}
+              hasFacultyPermission={permission}
+              onUpdate={onUpdate}
+            />
+          )}
+        </Container>
+      </Box>
+    </Box>
   );
 };
 

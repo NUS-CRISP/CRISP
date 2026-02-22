@@ -1,6 +1,7 @@
+import CourseSettingsNavbar from '@/components/CourseSettingsNavbar';
 import RepositoryInfo from '@/components/views/RepositoryInfo';
 import { hasFacultyPermission } from '@/lib/auth/utils';
-import { Container } from '@mantine/core';
+import { Box, Container } from '@mantine/core';
 import { TeamData } from '@shared/types/TeamData';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
@@ -69,17 +70,22 @@ const RepositoryListPage: React.FC = () => {
   };
 
   return (
-    <Container>
-      {id && (
-        <RepositoryInfo
-          courseId={id}
-          repositories={repositories}
-          hasFacultyPermission={permission}
-          onUpdate={onUpdate}
-          teamDataList={teamDatas}
-        />
-      )}
-    </Container>
+    <Box style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
+      <CourseSettingsNavbar />
+      <Box style={{ flex: 1, overflow: 'auto', minWidth: 0 }}>
+        <Container>
+          {id && (
+            <RepositoryInfo
+              courseId={id}
+              repositories={repositories}
+              hasFacultyPermission={permission}
+              onUpdate={onUpdate}
+              teamDataList={teamDatas}
+            />
+          )}
+        </Container>
+      </Box>
+    </Box>
   );
 };
 

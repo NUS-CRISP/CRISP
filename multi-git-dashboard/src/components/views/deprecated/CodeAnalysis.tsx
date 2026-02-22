@@ -4,10 +4,10 @@ import { Team as SharedTeam } from '@shared/types/Team';
 import { TeamData } from '@shared/types/TeamData';
 import { Status } from '@shared/types/util/Status';
 import { useEffect, useState } from 'react';
-import CodeAnalysisAccordianItem from '../code-analysis/CodeAnalysisAccordianItem';
+import CodeAnalysisAccordianItem from '@/components/code-analysis/CodeAnalysisAccordianItem';
 import { hasFacultyPermission } from '@/lib/auth/utils';
 import { useDisclosure } from '@mantine/hooks';
-import EditAIInsightsConfigForm from '../forms/EditAIInsightsConfigForm';
+import EditAIInsightsConfigForm from '@/components/forms/EditAIInsightsConfigForm';
 import { Course } from '@shared/types/Course';
 
 interface CodeAnalysisProps {

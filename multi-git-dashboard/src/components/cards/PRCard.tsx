@@ -12,7 +12,7 @@ import {
 import { useState, useRef } from 'react';
 import PR from '../overview/pr/PR';
 import TutorialPopover from '../tutorial/TutorialPopover';
-import { ProfileGetter, Team } from '../views/Overview';
+import { ProfileGetter, Team } from '../views/deprecated/Overview';
 import { TeamData } from '@shared/types/TeamData';
 import DailyRangeSlider from './DailyRangeSlider';
 import dayjs from 'dayjs';
