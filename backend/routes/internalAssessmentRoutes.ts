@@ -12,6 +12,8 @@ import {
   addQuestionsToAssessmentController,
   reorderQuestionsInInternalAssessment,
   gatherComments,
+  updatePeerReviewAssessment,
+  deletePeerReviewAssessment,
 } from '../controllers/internalAssessmentController';
 import {
   submitAssessment,
@@ -29,7 +31,9 @@ const router = express.Router();
 
 router.get('/:assessmentId', getInternalAssessment);
 router.patch('/:assessmentId', updateInternalAssessment);
+router.put('/:assessmentId/peer-review', updatePeerReviewAssessment);
 router.delete('/:assessmentId', deleteInternalAssessment);
+router.delete('/:assessmentId/peer-review', deletePeerReviewAssessment);
 router.post('/:assessmentId/questions', addQuestionToAssessmentController);
 router.post('/:assessmentId/manyquestions', addQuestionsToAssessmentController);
 router.get('/:assessmentId/questions', getQuestionsByAssessmentIdController);

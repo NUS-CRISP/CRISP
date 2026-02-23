@@ -4,11 +4,13 @@ import {
   NotFoundError,
   MissingAuthorizationError,
 } from '../services/errors';
-import { getAccountId } from '../utils/auth';
+import { getAccountId, verifyRequestPermission, verifyRequestUser } from '../utils/auth';
 import {
   getInternalAssessmentById,
   updateInternalAssessmentById,
+  updatePeerReviewAssessmentById,
   deleteInternalAssessmentById,
+  deletePeerReviewAssessmentById,
   addQuestionToAssessment,
   deleteQuestionById,
   getQuestionsByAssessmentId,
@@ -23,6 +25,8 @@ import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 import { getSubmissionsByAssessment } from '../services/submissionService';
 import { AnswerUnion, TeamMemberSelectionAnswer } from '@models/Answer';
 import UserModel from '@models/User';
+import { handleError } from 'utils/error';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
 /**
  * Controller method to get an internal assessment by its ID.
@@ -93,6 +97,18 @@ export const updateInternalAssessment = async (req: Request, res: Response) => {
   }
 };
 
+export const updatePeerReviewAssessment = async (req: Request, res: Response) => {
+  const { assessmentId } = req.params;
+  const updateData = req.body;
+  try {
+    const accountId = await getAccountId(req);
+    await updatePeerReviewAssessmentById(assessmentId, accountId, updateData);
+    res.status(200).json({ message: 'Peer review assessment updated successfully' });
+  } catch (error) {
+    return handleError(res, error, 'Failed to update peer review: ');
+  }
+};
+
 /**
  * Controller method to delete an internal assessment by its ID.
  *
@@ -117,6 +133,19 @@ export const deleteInternalAssessment = async (req: Request, res: Response) => {
       console.error('Error deleting assessment:', error);
       res.status(500).json({ error: 'Failed to delete assessment' });
     }
+  }
+};
+
+export const deletePeerReviewAssessment = async (req: Request, res: Response) => {
+  const { assessmentId } = req.params;
+  try {
+    const accountId = await getAccountId(req);
+    const deletedRes = await deletePeerReviewAssessmentById(assessmentId, accountId);
+    res.status(200).json({
+      message: `${deletedRes.deletedPeerReviewTitle} deleted successfully`,
+    });
+  } catch (error) {
+    return handleError(res, error, 'Failed to delete peer review: ');
   }
 };
 

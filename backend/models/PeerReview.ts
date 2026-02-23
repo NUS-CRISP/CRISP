@@ -36,9 +36,18 @@ const peerReviewSchema = new Schema<PeerReview>(
       required: true,
       validate: {
         validator: function (this: PeerReview, date: Date) {
-          return date.getTime() > Date.now() && date > this.startDate;
+          // allow past endDate for existing docs (Closed), but still enforce endDate > startDate
+          if (!date || !this.startDate) return false;
+          const afterStart = date > this.startDate;
+
+          // Only enforce "must be future" if PR isn't already closed
+          const now = new Date();
+          const isClosed = now > date;
+          if (isClosed) return afterStart;
+
+          return date.getTime() > Date.now() && afterStart;
         },
-        message: `end date must be in the future and after start date`,
+        message: `end date must be after start date (and in the future for active/upcoming peer reviews)`,
       },
     },
     reviewerType: {

@@ -1,7 +1,7 @@
 import PeerReviewModel from '@models/PeerReview';
 import CourseModel from '@models/Course';
-import { NotFoundError } from './errors';
-import mongoose, { ClientSession, Types } from 'mongoose';
+import { BadRequestError, NotFoundError } from './errors';
+import mongoose, { ClientSession, startSession, Types } from 'mongoose';
 import PeerReviewAssignmentModel from '@models/PeerReviewAssignment';
 import PeerReviewCommentModel from '@models/PeerReviewComment';
 import PeerReviewSubmissionModel, {
@@ -48,6 +48,14 @@ export const getAllPeerReviewsyId = async (courseId: string) => {
 export const getPeerReviewById = async (peerReviewId: string) => {
   const peerReview = await PeerReviewModel.findById(peerReviewId);
   if (!peerReview) throw new NotFoundError('Peer review not found');
+  return peerReview;
+};
+
+export const getPeerReviewByAssessmentId = async (assessmentId: string) => {
+  const peerReview = await PeerReviewModel.findOne({
+    internalAssessmentId: assessmentId,
+  });
+  if (!peerReview) throw new NotFoundError('Peer review not found for assessment');
   return peerReview;
 };
 
@@ -160,7 +168,7 @@ export const getPeerReviewInfoById = async (
   };
 };
 
-export interface CreatePeerReviewData {
+export interface PeerReviewSettings {
   assessmentName: string;
   description: string;
   startDate: Date;
@@ -170,7 +178,7 @@ export interface CreatePeerReviewData {
   taAssignments: boolean;
   minReviews: number;
   maxReviews: number;
-  internalAssessmentId: string;
+  internalAssessmentId?: string;
   taGradingScope: 'AssignedOnly' | 'AllSubmissions';
   gradingStartDate?: Date;
   gradingEndDate?: Date;
@@ -178,7 +186,7 @@ export interface CreatePeerReviewData {
 
 export const createPeerReviewById = async (
   courseId: string,
-  peerReviewData: CreatePeerReviewData,
+  peerReviewData: PeerReviewSettings,
   session: ClientSession
 ) => {
   const course = await CourseModel.findById(courseId);
@@ -283,64 +291,50 @@ export const deletePeerReviewById = async (peerReviewId: string) => {
 
 export const updatePeerReviewById = async (
   peerReviewId: string,
-  userId: string,
-  settingsData: {
-    assessmentName?: string;
-    description?: string;
-    startDate?: Date;
-    endDate?: Date;
-    teamSetId?: string;
-    reviewerType?: 'Individual' | 'Team';
-    taAssignments?: boolean;
-    minReviews?: number;
-    maxReviews?: number;
-  }
+  settingsData: PeerReviewSettings
 ) => {
-  const {
-    assessmentName: title,
-    description,
-    startDate,
-    endDate,
-    teamSetId,
-    reviewerType,
-    taAssignments,
-    minReviews: minReviewsPerReviewer,
-    maxReviews: maxReviewsPerReviewer,
-  } = settingsData;
+  const pr = await PeerReviewModel.findById(peerReviewId);
+  if (!pr) throw new NotFoundError('Peer review not found');
 
-  const updatedPeerReviewData = {
-    ...(title && { title }),
-    ...(description && { description }),
-    ...(startDate && { startDate }),
-    ...(endDate && { endDate }),
-    ...(teamSetId && { teamSetId }),
-    ...(reviewerType && { reviewerType }),
-    ...(taAssignments !== undefined && { taAssignments }),
-    ...(minReviewsPerReviewer !== undefined && { minReviewsPerReviewer }),
-    ...(maxReviewsPerReviewer !== undefined && { maxReviewsPerReviewer }),
-  };
+  // map request -> model fields
+  if (settingsData.assessmentName !== undefined) pr.title = settingsData.assessmentName;
+  if (settingsData.description !== undefined) pr.description = settingsData.description;
 
-  // Update Peer Review
-  const updatedPeerReview = await PeerReviewModel.findByIdAndUpdate(
-    peerReviewId,
-    updatedPeerReviewData,
-    { new: true }
-  );
-  if (!updatedPeerReview) throw new NotFoundError('Peer review not found');
+  if (settingsData.startDate !== undefined) pr.startDate = new Date(settingsData.startDate);
+  if (settingsData.endDate !== undefined) pr.endDate = new Date(settingsData.endDate);
 
-  // Delete existing assignments and re-initialize
-  await deleteAssignmentsByPeerReviewId(peerReviewId);
-  if (teamSetId) {
-    await initialiseAssignments(
-      updatedPeerReview.course.toString(),
-      peerReviewId,
-      teamSetId,
-      null,
-    );
+  if (settingsData.teamSetId !== undefined) pr.teamSetId = settingsData.teamSetId as any;
+  if (settingsData.reviewerType !== undefined) pr.reviewerType = settingsData.reviewerType;
+
+  if (settingsData.taAssignments !== undefined) pr.taAssignments = settingsData.taAssignments;
+  if (settingsData.taGradingScope !== undefined) pr.taGradingScope = settingsData.taGradingScope;
+
+  if (settingsData.minReviews !== undefined) pr.minReviewsPerReviewer = Number(settingsData.minReviews);
+  if (settingsData.maxReviews !== undefined) pr.maxReviewsPerReviewer = Number(settingsData.maxReviews);
+
+  if (settingsData.gradingStartDate !== undefined)
+    pr.gradingStartDate = settingsData.gradingStartDate ? new Date(settingsData.gradingStartDate) : undefined;
+  if (settingsData.gradingEndDate !== undefined)
+    pr.gradingEndDate = settingsData.gradingEndDate ? new Date(settingsData.gradingEndDate) : undefined;
+
+  await pr.save();
+
+  // Only re-initialise assignments when it matters
+  const structuralChanged =
+    (settingsData.teamSetId !== undefined && pr.isModified('teamSetId')) ||
+    (settingsData.reviewerType !== undefined && pr.isModified('reviewerType')) ||
+    (settingsData.taAssignments !== undefined && pr.isModified('taAssignments')) ||
+    (settingsData.minReviews !== undefined && pr.isModified('minReviewsPerReviewer')) ||
+    (settingsData.maxReviews !== undefined && pr.isModified('maxReviewsPerReviewer'));
+
+  if (structuralChanged) {
+    await deleteAssignmentsByPeerReviewId(peerReviewId);
+    await initialiseAssignments(pr.course.toString(), peerReviewId, pr.teamSetId.toString(), null);
   }
 
-  return updatedPeerReview;
+  return pr;
 };
+
 
 /* ----- Sub Functions for GetPeerReviewInfo ----- */
 const buildPeerReviewScopeContext = async (

@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import {
   getAllPeerReviewsyId,
+  getPeerReviewByAssessmentId,
   getPeerReviewInfoById,
-  createPeerReviewById,
   deletePeerReviewById,
   updatePeerReviewById,
 } from '../services/peerReviewService';
@@ -17,6 +17,19 @@ export const getAllPeerReviews = async (req: Request, res: Response) => {
     res.status(200).json(peerReviews);
   } catch (error) {
     return handleError(res, error, 'Failed to get peer reviews');
+  }
+};
+
+export const getPeerReviewByAssessment = async (req: Request, res: Response) => {
+  try {
+    const { account, userCourseRole } = await verifyRequestUser(req);
+    const userId = await verifyRequestPermission(account._id, userCourseRole, []);
+    const peerReviewAssignment = await getPeerReviewByAssessmentId(
+      req.params.assessmentId
+    );
+    res.status(200).json(peerReviewAssignment);
+  } catch (error) {
+    return handleError(res, error, 'Failed to get peer review assignment');
   }
 };
 
@@ -65,7 +78,7 @@ export const updatePeerReview = async (req: Request, res: Response) => {
       COURSE_ROLE.Faculty,
     ]);
 
-    await updatePeerReviewById(req.params.peerReviewId, userId, req.body);
+    await updatePeerReviewById(req.params.peerReviewId, req.body);
     res
       .status(200)
       .json({ message: 'Peer review settings updated successfully' });

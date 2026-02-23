@@ -37,7 +37,8 @@ import {
 } from '@models/Answer';
 import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 import { InternalAssessmentType } from '@shared/types/InternalAssessment';
-import { createPeerReviewById, CreatePeerReviewData } from './peerReviewService';
+import { createPeerReviewById, PeerReviewSettings, updatePeerReviewById, deletePeerReviewById } from './peerReviewService';
+import PeerReviewModel from '@models/PeerReview';
 
 /**
  * Retrieves an internal assessment by ID.
@@ -163,6 +164,64 @@ export const updateInternalAssessmentById = async (
   return updatedAssessment;
 };
 
+export const updatePeerReviewAssessmentById = async (
+  assessmentId: string,
+  accountId: string,
+  updateData: PeerReviewAssessmentData,
+) => {
+  const account = await AccountModel.findById(accountId);
+  if (!account) throw new NotFoundError('Account not found');
+  if (account.crispRole !== CRISP_ROLE.Faculty && account.crispRole !== CRISP_ROLE.Admin)
+    throw new BadRequestError('Unauthorized');
+  
+  const existing = await InternalAssessmentModel.findById(assessmentId).select('assessmentType');
+  if (!existing) throw new NotFoundError('Peer review assessment not found');
+  if (existing.assessmentType !== 'peer_review')
+    throw new BadRequestError('Assessment is not a peer review assessment');
+
+  const updatedAssessmentData = {
+    assessmentName: updateData.assessmentName,
+    description: updateData.description,
+    startDate: updateData.startDate,
+    endDate: updateData.endDate,
+    maxMarks: updateData.maxMarks,
+    scaleToMaxMarks: updateData.scaleToMaxMarks,
+    granularity: updateData.reviewerType.toLowerCase(),
+    areSubmissionsEditable: false,
+  };
+  
+  const updatedAssessment = await InternalAssessmentModel.findByIdAndUpdate(
+    assessmentId,
+    updatedAssessmentData,
+    { new: true }
+  );
+
+  if (!updatedAssessment) throw new NotFoundError('Peer review assessment not found');
+  
+  const pr = await PeerReviewModel.findOne({ internalAssessmentId: assessmentId }).select('_id');
+  if (!pr) throw new NotFoundError('Peer review not found for this assessment');
+
+  const updatedPeerReviewData: PeerReviewSettings = {
+    assessmentName: updateData.assessmentName,
+    description: updateData.description,
+    startDate: updateData.startDate,
+    endDate: updateData.endDate,
+    teamSetId: updateData.teamSetId,
+    reviewerType: updateData.reviewerType,
+    taAssignments: updateData.taAssignments,
+    minReviews: updateData.minReviews,
+    maxReviews: updateData.maxReviews,
+    taGradingScope: updateData.taGradingScope,
+    gradingStartDate: updateData.gradingStartDate,
+    gradingEndDate: updateData.gradingEndDate,
+  }
+  
+  const updatedPeerReview = await updatePeerReviewById(pr._id.toString(), updatedPeerReviewData);
+  if (!updatedPeerReview) throw new NotFoundError('Failed to update peer review with new settings');
+
+  return { updatedAssessment, updatedPeerReview };
+};
+
 /**
  * Deletes an internal assessment along with all associated results,
  * and detaches it from its parent course.
@@ -198,6 +257,21 @@ export const deleteInternalAssessmentById = async (assessmentId: string) => {
   // Finally, delete the assessment itself
   await InternalAssessmentModel.findByIdAndDelete(assessmentId);
 };
+
+export const deletePeerReviewAssessmentById = async (assessmentId: string, accountId: string) => {
+  const account = await AccountModel.findById(accountId);
+  if (!account) throw new NotFoundError('Account not found');
+  if (account.crispRole !== CRISP_ROLE.Faculty && account.crispRole !== CRISP_ROLE.Admin)
+    throw new BadRequestError('Unauthorized');
+    
+  const pr = await PeerReviewModel.findOne({ internalAssessmentId: assessmentId }).select('_id');
+  if (!pr) throw new NotFoundError('Peer review not found for this assessment');
+  
+  const deletedRes = await deletePeerReviewById(pr._id.toString());
+  await deleteInternalAssessmentById(assessmentId);
+  
+  return deletedRes;
+}
 
 /**
  * Bulk-creates multiple internal assessments for a given course,
@@ -446,7 +520,7 @@ export const createPeerReviewAssessmentForCourse = async (
     await course.save({ session });
 
     // 3. Create PeerReview linked to InternalAssessment
-    const createPeerReviewData: CreatePeerReviewData = {
+    const createPeerReviewData: PeerReviewSettings = {
       assessmentName: assessmentName,
       description: description,
       startDate: startDate,
@@ -462,16 +536,16 @@ export const createPeerReviewAssessmentForCourse = async (
       internalAssessmentId: assessment._id.toString(),
     }
     const newPeerReview = await createPeerReviewById(courseId, createPeerReviewData, session);
-    
+
+    await session.commitTransaction();
+    session.endSession();
+
     try {
       await createAssignmentSet(assessment._id.toString(), teamSet._id.toString());
     } catch (e) {
       console.error('createAssignmentSet failed:', e);
     }
-
-    await session.commitTransaction();
-    session.endSession();
-
+    
     return newPeerReview;
   } catch (e) {
     await session.abortTransaction();

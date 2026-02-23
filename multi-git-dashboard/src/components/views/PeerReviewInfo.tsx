@@ -7,21 +7,25 @@ import {
   Modal,
   Text,
   Notification,
+  Group,
+  Button,
+  Card,
+  Stack,
+  Badge,
+  Divider,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Status } from '@shared/types/util/Status';
 import { useEffect, useState, useMemo } from 'react';
-import PeerReviewSettings from '../peer-review/PeerReviewSettings';
 import PeerReviewAccordionItem from '../peer-review/PeerReviewAccordianItem';
 import PeerReviewTAAccordianItem from '../peer-review/PeerReviewTAAccordianItem';
-import DeleteConfirmationModal from '../cards/Modals/DeleteConfirmationModal';
 import { TeamSet } from '@shared/types/TeamSet';
 import { PeerReview, PeerReviewInfoDTO } from '@shared/types/PeerReview';
-import PeerReviewSettingsForm from '../forms/PeerReviewSettingsForm';
 import PeerReviewAssignmentForm from '../forms/PeerReviewAssignmentForm';
-import { showNotification } from '@mantine/notifications';
 import { hasCoursePermission } from '@/lib/auth/utils';
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
+import { useRouter } from 'next/router';
+import { formatDate } from '../../lib/utils';
 
 interface PeerReviewInfoProps {
   courseId: string;
@@ -37,6 +41,12 @@ enum NotificationType {
   Info = 'Info',
   Warning = 'Warning',
 }
+
+const statusColor = (status: string) => {
+  if (status === 'Closed') return 'green';
+  if (status === 'Active') return 'yellow';
+  return 'violet';
+};
 
 const NotificationTypeToColorMap: Record<NotificationType, string> = {
   [NotificationType.Error]: 'red',
@@ -75,6 +85,8 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
   hasFacultyPermission,
   onUpdate,
 }) => {
+  const router = useRouter();
+  
   const baseApiRoute = `/api/peer-review/${courseId}/${peerReview._id}`;
   const baseManualAssignApiRoute = `${baseApiRoute}/manual-assign`;
 
@@ -87,14 +99,6 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
     useState<PeerReviewInfoDTO | null>(null);
 
   const [
-    openedSettingsForm,
-    { open: openSettingsForm, close: closeSettingsForm },
-  ] = useDisclosure(false);
-  const [
-    openedDeleteModal,
-    { open: openDeleteModal, close: closeDeleteModal },
-  ] = useDisclosure(false);
-  const [
     openedAssignmentForm,
     { open: openAssignmentForm, close: closeAssignmentForm },
   ] = useDisclosure(false);
@@ -104,6 +108,9 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
     COURSE_ROLE.Faculty,
     COURSE_ROLE.TA
   );
+  
+  const teamSetName = teamSets.find(ts => ts._id === peerReview.teamSetId)?.name || 'Unknown Team Set';
+  const goToAssessmentManagement = () => router.push(`/courses/${courseId}/internal-assessments/${peerReview.internalAssessmentId}`);
 
   // Fetch Peer Review Info
   const fetchPeerReviewInfo = async () => {
@@ -143,25 +150,6 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
   );
 
   // Handlers
-  const handleDeletePeerReview = async () => {
-    try {
-      const response = await fetch(baseApiRoute, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        console.error('Error deleting peer review:', response.statusText);
-      }
-      onUpdate();
-      showNotification({
-        title: 'Success',
-        message: 'Peer review deleted successfully',
-        color: 'green',
-      });
-    } catch (error) {
-      console.error('Error deleting peer review:', error);
-    }
-  };
-
   const addManualAssignment = async (
     revieweeId: string,
     reviewerId: string,
@@ -241,49 +229,85 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
           {notification.value}
         </Notification>
       )}
-      <PeerReviewSettings
-        peerReview={peerReview}
-        teamSetName={
-          teamSets.find(ts => ts._id === peerReview.teamSetId)?.name ||
-          'Unknown Team Set'
-        }
-        hasFacultyPermission={hasFacultyPermission}
-        onClickUpdate={openSettingsForm}
-        onClickDelete={openDeleteModal}
-        onClickAssign={openAssignmentForm}
-      />
+      
+      <Card withBorder radius="md" p="lg" my="md" style={{ backgroundColor: '#2b2b2b' }}>
+        <Group justify="space-between" align="flex-start" mb="xs">
+          <Stack gap={2}>
+            <Text fw={800} fz="xl">
+              {peerReview.title}
+            </Text>
+            <Text c="dimmed" fz="sm">
+              {peerReview.description || '—'}
+            </Text>
+          </Stack>
+
+          <Group gap="xs">
+            { peerReview.taAssignments ? (
+                <Badge variant="light" color="teal">
+                  TA Reviews Enabled
+                </Badge>
+              ) : (
+                <Badge variant="light" color="red">
+                  TA Reviews Disabled
+                </Badge>
+              )
+            }
+            <Badge variant="light" color={statusColor(peerReview.status)}>{peerReview.status}</Badge>
+            <Badge variant="light">Reviewer Type: {peerReview.reviewerType}</Badge>
+          </Group>
+        </Group>
+
+        <Divider my="sm" />
+
+        <Group justify="space-between" align="flex-end" mt="sm">
+          <Group gap="xl">
+            <Stack gap={2}>
+              <Text fz="xs" c="dimmed">
+                Team Set
+              </Text>
+              <Text fz="sm">{teamSetName}</Text>
+            </Stack>
+
+            <Stack gap={2}>
+              <Text fz="xs" c="dimmed">
+                Review Window
+              </Text>
+              <Text fz="sm">
+                {formatDate(peerReview.startDate)} → {formatDate(peerReview.endDate)}
+              </Text>
+            </Stack>
+
+            <Stack gap={2}>
+              <Text fz="xs" c="dimmed">
+                Reviews / Reviewer
+              </Text>
+              <Text fz="sm">
+                {peerReview.minReviewsPerReviewer} – {peerReview.maxReviewsPerReviewer}
+              </Text>
+            </Stack>
+          </Group>
+
+          {hasFacultyPermission && (
+            <Group gap="sm" mt="md">
+              <Button
+                color="yellow"
+                variant="light"
+                onClick={openAssignmentForm}
+                disabled={peerReview.status === 'Closed'}
+              >
+                Assign All Peer Reviews
+              </Button>
+
+              <Button variant="light" color="blue" onClick={goToAssessmentManagement}>
+                Manage in Assessments
+              </Button>
+            </Group>
+          )}
+        </Group>
+      </Card>
+      
       {hasFacultyPermission && (
         <>
-          <Modal
-            opened={openedSettingsForm}
-            onClose={closeSettingsForm}
-            title="Update Peer Review Settings"
-            centered
-          >
-            <PeerReviewSettingsForm
-              courseId={courseId}
-              peerReview={peerReview}
-              teamSets={teamSets}
-              onSubmit={() => {
-                onUpdate();
-                fetchPeerReviewInfo();
-                closeSettingsForm();
-              }}
-              onClose={closeSettingsForm}
-            />
-          </Modal>
-          <DeleteConfirmationModal
-            opened={openedDeleteModal}
-            onClose={closeDeleteModal}
-            onCancel={closeDeleteModal}
-            onConfirm={() => {
-              handleDeletePeerReview();
-              onUpdate();
-              closeDeleteModal();
-            }}
-            title="Delete Peer Review?"
-            message={`Are you sure you want to delete this ${peerReview.status} Peer Review?`}
-          />
           <Modal
             opened={openedAssignmentForm}
             onClose={closeAssignmentForm}

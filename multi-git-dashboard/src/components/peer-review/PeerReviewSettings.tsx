@@ -9,6 +9,7 @@ import {
   Button,
 } from '@mantine/core';
 import { PeerReview } from '@shared/types/PeerReview';
+import { formatDate } from '../../lib/utils';
 
 interface PeerReviewSettingsProps {
   peerReview: PeerReview;
@@ -16,19 +17,7 @@ interface PeerReviewSettingsProps {
   hasFacultyPermission: boolean;
   onClickUpdate: () => void;
   onClickDelete: () => void;
-  onClickAssign: () => void;
 }
-
-const formatDate = (value: Date | string | null | undefined) => {
-  if (!value) return '—';
-  const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) return '—';
-  return date.toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-};
 
 const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
   peerReview,
@@ -36,7 +25,6 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
   hasFacultyPermission,
   onClickUpdate,
   onClickDelete,
-  onClickAssign,
 }) => {
   const {
     description,
@@ -153,14 +141,6 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
               disabled={status === 'Closed'}
             >
               Delete Peer Review
-            </Button>
-            <Button
-              color="yellow"
-              variant="light"
-              onClick={onClickAssign}
-              disabled={status === 'Closed'}
-            >
-              Assign All Peer Reviews
             </Button>
           </Stack>
         )}
