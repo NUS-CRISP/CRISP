@@ -2,13 +2,16 @@ import mongoose, { Schema, Types, Document } from 'mongoose';
 import { PeerReview as SharedPeerReview } from '@shared/types/PeerReview';
 
 export interface PeerReview
-  extends Omit<SharedPeerReview, '_id' | 'courseId' | 'teamSetId' | 'internalAssessmentId'>,
+  extends Omit<
+      SharedPeerReview,
+      '_id' | 'courseId' | 'teamSetId' | 'internalAssessmentId'
+    >,
     Document {
   _id: Types.ObjectId;
   course: Types.ObjectId;
   teamSetId: Types.ObjectId;
   internalAssessmentId: Types.ObjectId;
-  
+
   computedStatus?: 'Upcoming' | 'Active' | 'Closed';
   computedGradingStatus?: 'NotStarted' | 'InProgress' | 'Completed';
 }
@@ -59,7 +62,7 @@ const peerReviewSchema = new Schema<PeerReview>(
         message: `maxReviewsPerReviewer must be greater than or equal to minReviewsPerReviewer`,
       },
     },
-    
+
     // Assessment-related
     internalAssessmentId: {
       type: Schema.Types.ObjectId,
@@ -95,11 +98,13 @@ peerReviewSchema.virtual('computedStatus').get(function (this: PeerReview) {
   return 'Closed';
 });
 
-peerReviewSchema.virtual('computedGradingStatus').get(function (this: PeerReview) {
+peerReviewSchema.virtual('computedGradingStatus').get(function (
+  this: PeerReview
+) {
   const now = new Date();
   const start = this.gradingStartDate ?? null;
   const end = this.gradingEndDate ?? null;
-  
+
   if (!start && !end) return 'NotStarted';
   if (start && !end) return now < start ? 'NotStarted' : 'InProgress';
   if (!start && end) return now < end ? 'InProgress' : 'Completed';
@@ -108,7 +113,7 @@ peerReviewSchema.virtual('computedGradingStatus').get(function (this: PeerReview
     if (now >= start && now <= end) return 'InProgress';
     return 'Completed';
   }
-  
+
   return 'NotStarted'; // default fallback
 });
 

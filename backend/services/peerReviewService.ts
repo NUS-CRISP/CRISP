@@ -847,6 +847,5 @@ const toAssignedReviewDTO = (
     lastEditedAt: submission.lastEditedAt,
     submittedAt: submission.submittedAt,
     overallComment: submission.overallComment,
-    totalScore: submission.totalScore,
   };
 };

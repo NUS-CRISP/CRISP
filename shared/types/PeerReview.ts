@@ -105,7 +105,6 @@ export interface AssignedReviewDTO {
   submittedAt?: Date;
   
   overallComment?: string;
-  totalScore?: number;
 }
 
 export interface PeerReviewTeamMemberDTO {
@@ -156,15 +155,11 @@ export interface PeerReviewInfoDTO {
 }
 
 // Assessment-related
-export type PeerReviewGradeTarget =
-  | { targetType: "submission"; peerReviewSubmissionId: string }
-  | { targetType: "team"; revieweeTeamId: string };
-
 export interface PeerReviewGradingTask {
   _id: string;
   peerReviewId: string;
+  peerReviewSubmissionId?: string;
   grader: User; // TA/Coordinator who grades this submission
-  target: PeerReviewGradeTarget; // What is being graded (submission or team)
   status: "Assigned" | "InProgress" | "Completed";
   createdAt: Date;
   updatedAt: Date;
@@ -178,12 +173,31 @@ export interface PeerReviewGradingTask {
   assessmentSubmissionId?: string; // The corresponding submission in the InternalAssessment context
 }
 
-export interface PeerReviewTeamResultSummary {
-  peerReviewId: string;
+export interface PeerReviewResultsStudentRow {
+  studentId: string;
+  studentName: string;
   teamId: string;
   teamNumber: number;
-  
-  // Aggregated grading results for the team
-  finalScore?: number;
-  finalFeedback?: string;
+  aggregatedScore: number; // AssessmentResult.averageScore (or computed)
+}
+
+export interface PeerReviewResultsTeamCard {
+  teamId: string;
+  teamNumber: number;
+  teamAggregatedScore: number; // derived from members' aggregatedScore (average)
+  members: Array<{
+    studentId: string;
+    studentName: string;
+    aggregatedScore: number;
+  }>;
+}
+
+export interface PeerReviewResultsDTO {
+  internalAssessmentId: string;
+  peerReviewId: string;
+  reviewerType: 'Individual' | 'Team';
+  maxMarks: number;
+
+  perStudent: PeerReviewResultsStudentRow[];
+  perTeam: PeerReviewResultsTeamCard[];
 }
