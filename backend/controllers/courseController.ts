@@ -41,10 +41,11 @@ import {
 } from '../services/errors';
 import { addStudentsToTeam, addTAsToTeam } from '../services/teamService';
 import { createTeamSet } from '../services/teamSetService';
-import { getAccountId, verifyRequestUser } from '../utils/auth';
-import { addInternalAssessmentsToCourse } from '../services/internalAssessmentService';
-import AccountModel from '@models/Account';
+import { getAccountId, verifyRequestPermission, verifyRequestUser } from '../utils/auth';
+import { addInternalAssessmentsToCourse, createPeerReviewAssessmentForCourse } from '../services/internalAssessmentService';
 import { getUserIdByAccountId } from '../services/accountService';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
+import { handleError } from 'utils/error';
 
 /*----------------------------------------Auth----------------------------------------*/
 export const getMe = async (req: Request, res: Response) => {
@@ -696,6 +697,25 @@ export const getInternalAssessments = async (req: Request, res: Response) => {
       res.status(500).json({ error: 'Failed to get assessments' });
     }
   }
+};
+
+/*----------------------------------------Internal-Assessment (Peer Review)----------------------------------------*/
+export const createPeerReviewAssessment = async (req: Request, res: Response) => {
+  try {
+      const { account, userCourseRole } = await verifyRequestUser(req);
+      await verifyRequestPermission(account._id, userCourseRole, [
+        COURSE_ROLE.Faculty,
+      ]);
+  
+      const newPeerReview = await createPeerReviewAssessmentForCourse(
+        req.params.courseId,
+        req.body
+      );
+      res.status(201).json(newPeerReview);
+    } catch (error) {
+      return handleError(res, error, 'Failed to create peer review');
+    }
+  
 };
 
 /*------------------------------------Project Management------------------------------------*/

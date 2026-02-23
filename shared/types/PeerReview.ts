@@ -9,6 +9,8 @@ export type ReviewerRef =
   | { kind: "User"; userId: string; name: string }
   | { kind: "Team"; teamId: string; teamNumber: number };
 
+export type TAGradingScope = "AssignedOnly" | "AllSubmissions";
+
 export interface RepoNode {
   path: string;
   name: string;
@@ -37,7 +39,7 @@ export interface PeerReview {
   
   // Assessment-related
   internalAssessmentId: string;
-  taGradingScope: "AssignedOnly" | "AllSubmissions";
+  taGradingScope: TAGradingScope;
   gradingStartDate?: Date;
   gradingEndDate?: Date;
   gradingStatus?: "NotStarted" | "InProgress" | "Completed";

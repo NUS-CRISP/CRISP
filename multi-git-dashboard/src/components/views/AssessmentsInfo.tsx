@@ -16,12 +16,13 @@ import AssessmentCard from '../cards/AssessmentCard';
 import CreateAssessmentForm from '../forms/CreateAssessmentForm';
 import InternalAssessmentCard from '../cards/InternalAssessmentCard';
 import TutorialPopover from '../tutorial/TutorialPopover';
+import { TeamSet } from '@shared/types/TeamSet';
 
 interface AssessmentInfoProps {
   courseId: string;
   assessments: Assessment[];
   internalAssessments: InternalAssessment[];
-  teamSetNames: string[];
+  teamSets: TeamSet[];
   onUpdate: () => void;
 }
 
@@ -29,7 +30,7 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
   courseId,
   assessments,
   internalAssessments,
-  teamSetNames,
+  teamSets,
   onUpdate,
 }) => {
   console.log(internalAssessments);
@@ -95,9 +96,10 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
         opened={isCreatingAssessment}
         onClose={toggleForm}
         title="Create Assessment"
+        size="xl"
       >
         <CreateAssessmentForm
-          teamSetNames={teamSetNames}
+          teamSets={teamSets}
           courseId={courseId}
           onAssessmentCreated={handleAssessmentCreated}
         />

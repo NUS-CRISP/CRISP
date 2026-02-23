@@ -1,6 +1,4 @@
 import { Tabs, Container, Button, Modal, Group } from '@mantine/core';
-import PeerReviewSettingsForm from '../forms/PeerReviewSettingsForm';
-import { useDisclosure } from '@mantine/hooks';
 import { TeamSet } from '@shared/types/TeamSet';
 import { PeerReview } from '@shared/types/PeerReview';
 import PeerReviewInfo from './PeerReviewInfo';
@@ -20,33 +18,8 @@ const PeerReviewOverview: React.FC<PeerReviewOverviewProps> = ({
   hasFacultyPermission,
   onUpdate,
 }) => {
-  const [openedCreateForm, { open: openCreateForm, close: closeCreateForm }] =
-    useDisclosure(false);
-
   return (
     <Container>
-      {hasFacultyPermission && (
-        <Group>
-          <Button onClick={openCreateForm}>Create Peer Review</Button>
-          <Modal
-            opened={openedCreateForm}
-            onClose={closeCreateForm}
-            title="Create Peer Review"
-            centered
-          >
-            <PeerReviewSettingsForm
-              courseId={courseId}
-              peerReview={null}
-              teamSets={teamSets}
-              onSubmit={() => {
-                closeCreateForm();
-                onUpdate();
-              }}
-              onClose={closeCreateForm}
-            />
-          </Modal>
-        </Group>
-      )}
       <Tabs mt="md">
         <Tabs.List
           style={{

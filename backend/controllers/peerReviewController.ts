@@ -42,23 +42,6 @@ export const getPeerReviewInfo = async (req: Request, res: Response) => {
   }
 };
 
-export const createPeerReview = async (req: Request, res: Response) => {
-  try {
-    const { account, userCourseRole } = await verifyRequestUser(req);
-    const userId = await verifyRequestPermission(account._id, userCourseRole, [
-      COURSE_ROLE.Faculty,
-    ]);
-
-    const newPeerReview = await createPeerReviewById(
-      req.params.courseId,
-      req.body
-    );
-    res.status(201).json(newPeerReview);
-  } catch (error) {
-    return handleError(res, error, 'Failed to create peer review');
-  }
-};
-
 export const deletePeerReview = async (req: Request, res: Response) => {
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);

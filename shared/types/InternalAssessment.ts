@@ -3,13 +3,13 @@ import { Course } from './Course';
 import { QuestionUnion } from './Question';
 import { TeamSet } from './TeamSet';
 
-export type AssessmentType = 'standard' | 'peer_review';
+export type InternalAssessmentType = 'standard' | 'peer_review';
 
 export interface InternalAssessment {
   _id: string;
   course: Course;
   assessmentName: string;
-  assessmentType: AssessmentType;
+  assessmentType: InternalAssessmentType;
   description: string;
   startDate: Date;
   endDate?: Date;

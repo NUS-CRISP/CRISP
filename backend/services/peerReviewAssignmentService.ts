@@ -3,7 +3,7 @@ import PeerReviewAssignmentModel, {
 } from '@models/PeerReviewAssignment';
 import TeamModel, { Team } from '@models/Team';
 import { BadRequestError, NotFoundError } from './errors';
-import { Types } from 'mongoose';
+import { Types, ClientSession } from 'mongoose';
 import { getPeerReviewById, getTeamDataById } from './peerReviewService';
 import type { AnyBulkWriteOperation } from 'mongodb';
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
@@ -295,32 +295,34 @@ export const removeManualAssignment = async (
 export const initialiseAssignments = async (
   courseId: string,
   peerReviewId: string,
-  teamSetId: string
+  teamSetId: string,
+  session: ClientSession | null
 ) => {
-  const prTeams: Team[] = await TeamModel.find({
+  const teamsQuery = TeamModel.find({
     teamSet: teamSetId,
   }).lean();
+  
+  if (session) teamsQuery.session(session);
+  const prTeams = await teamsQuery;
 
   const prTeamDataById = await getTeamDataById(
     courseId,
     prTeams.map(t => t._id.toString())
   );
-
-  console.log(
-    'during assignment initialisations, peerReviewTeamDataById:',
-    prTeamDataById
-  );
-
-  for (const team of prTeams) {
-    const newAssignment = new PeerReviewAssignmentModel({
-      peerReviewId: peerReviewId,
-      repoName: prTeamDataById.get(team._id.toString())?.repoName,
-      repoUrl: prTeamDataById.get(team._id.toString())?.repoUrl,
+  
+  const docs = prTeams.map(team => {
+    const teamData = prTeamDataById.get(team._id.toString());
+    return {
+      peerReviewId,
+      repoName: teamData?.repoName,
+      repoUrl: teamData?.repoUrl,
       reviewee: team._id,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-    await newAssignment.save();
+      deadline: null,
+    }
+  })
+
+  if (docs.length > 0) {
+    await PeerReviewAssignmentModel.insertMany(docs, { session });
   }
   return;
 };

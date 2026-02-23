@@ -36,6 +36,8 @@ import {
   MultipleResponseAnswer,
 } from '@models/Answer';
 import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
+import { InternalAssessmentType } from '@shared/types/InternalAssessment';
+import { createPeerReviewById, CreatePeerReviewData } from './peerReviewService';
 
 /**
  * Retrieves an internal assessment by ID.
@@ -220,6 +222,7 @@ export const deleteInternalAssessmentById = async (assessmentId: string) => {
  */
 interface InternalAssessmentData {
   assessmentName: string;
+  assessmentType: InternalAssessmentType;
   description: string;
   startDate: Date;
   endDate?: Date;
@@ -247,6 +250,7 @@ export const addInternalAssessmentsToCourse = async (
   for (const data of assessmentsData) {
     const {
       assessmentName,
+      assessmentType,
       description,
       startDate,
       endDate,
@@ -281,6 +285,7 @@ export const addInternalAssessmentsToCourse = async (
     const assessment = new InternalAssessmentModel({
       course: courseId,
       assessmentName,
+      assessmentType,
       description,
       startDate,
       endDate,
@@ -346,6 +351,133 @@ export const addInternalAssessmentsToCourse = async (
 
   await course.save();
   await Promise.all(newAssessments.map(assessment => assessment.save()));
+};
+
+interface PeerReviewAssessmentData {
+  // Shared fields for both internal assessment and peer review objects
+  assessmentName: string;
+  description: string;
+  startDate: Date;
+  endDate: Date;
+  
+  // Peer review fields
+  teamSetId: string;
+  reviewerType: 'Individual' | 'Team';
+  taAssignments: boolean;
+  minReviews: number;
+  maxReviews: number;
+  taGradingScope: 'AssignedOnly' | 'AllSubmissions';
+  gradingStartDate?: Date;
+  gradingEndDate?: Date;
+  
+  // Assessment fields
+  maxMarks?: number;
+  scaleToMaxMarks: boolean;
+}
+
+export const createPeerReviewAssessmentForCourse = async (
+  courseId: string,
+  peerReviewAssessmentData: PeerReviewAssessmentData
+) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  const {
+    assessmentName,
+    description,
+    startDate,
+    endDate,
+    teamSetId,
+    reviewerType,
+    taAssignments,
+    minReviews,
+    maxReviews,
+    taGradingScope,
+    gradingStartDate,
+    gradingEndDate,
+    maxMarks,
+    scaleToMaxMarks,
+  } = peerReviewAssessmentData;
+
+  try {
+    const course = await CourseModel.findById(courseId)
+      .populate('students')
+      .session(session);
+    if (!course) throw new NotFoundError('Course not found');
+
+    const teamSet = await TeamSetModel.findById(teamSetId).session(session);
+    if (!teamSet) throw new NotFoundError('TeamSet not found');
+
+    // 1. Create InternalAssessment (peer_review type)
+    const assessment = await new InternalAssessmentModel({
+      course: courseId,
+      assessmentName: assessmentName,
+      assessmentType: 'peer_review',
+      description: description,
+      startDate: startDate,
+      endDate: endDate,
+      maxMarks: maxMarks,
+      scaleToMaxMarks: scaleToMaxMarks,
+      granularity: reviewerType.toLowerCase(),
+      teamSet: teamSet._id,
+      areSubmissionsEditable: false,
+      results: [],
+      isReleased: false,
+      questions: [], // no questions for peer review
+      questionsTotalMarks: 0,
+      releaseNumber: 0,
+    }).save({ session });
+
+    // 2) Create AssessmentResults for all students
+    const results = await Promise.all(
+      (course.students as any[]).map(student =>
+        new AssessmentResultModel({
+          assessment: assessment._id,
+          student,
+          marks: [],
+          averageScore: 0,
+        }).save({ session })
+      )
+    );
+
+    assessment.results = results.map(r => r._id);
+    await assessment.save({ session });
+
+    course.internalAssessments.push(assessment._id);
+    await course.save({ session });
+
+    // 3. Create PeerReview linked to InternalAssessment
+    const createPeerReviewData: CreatePeerReviewData = {
+      assessmentName: assessmentName,
+      description: description,
+      startDate: startDate,
+      endDate: endDate,
+      teamSetId: teamSetId,
+      reviewerType: reviewerType,
+      taAssignments: taAssignments,
+      minReviews: minReviews,
+      maxReviews: maxReviews,
+      taGradingScope: taGradingScope,
+      gradingStartDate: gradingStartDate,
+      gradingEndDate: gradingEndDate,
+      internalAssessmentId: assessment._id.toString(),
+    }
+    const newPeerReview = await createPeerReviewById(courseId, createPeerReviewData, session);
+    
+    try {
+      await createAssignmentSet(assessment._id.toString(), teamSet._id.toString());
+    } catch (e) {
+      console.error('createAssignmentSet failed:', e);
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return newPeerReview;
+  } catch (e) {
+    await session.abortTransaction();
+    session.endSession();
+    throw e;
+  }
 };
 
 /*-------------------------- Questions ---------------------------------------------*/

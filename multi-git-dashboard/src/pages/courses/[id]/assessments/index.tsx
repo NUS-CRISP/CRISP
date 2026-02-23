@@ -5,6 +5,7 @@ import { InternalAssessment } from '@shared/types/InternalAssessment';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { hasFacultyPermission } from '@/lib/auth/utils';
+import { TeamSet } from '@shared/types/TeamSet';
 
 const AssessmentListPage: React.FC = () => {
   const router = useRouter();
@@ -14,13 +15,13 @@ const AssessmentListPage: React.FC = () => {
 
   const assessmentsApiRoute = `/api/courses/${id}/assessments`;
   const internalAssessmentsApiRoute = `/api/courses/${id}/internal-assessments`;
-  const courseTeamSetNamesApiRoute = `/api/courses/${id}/teamsets/names`;
+  const courseTeamSetNamesApiRoute = `/api/courses/${id}/teamsets`;
 
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [internalAssessments, setInternalAssessments] = useState<
     InternalAssessment[]
   >([]);
-  const [teamSetNames, setTeamSetNames] = useState<string[]>([]);
+  const [teamSets, setTeamSets] = useState<TeamSet[]>([]);
   const permission = hasFacultyPermission();
 
   const onUpdate = () => {
@@ -103,8 +104,8 @@ const AssessmentListPage: React.FC = () => {
       if (!response.ok) {
         console.error('Error fetching team set names:', response.statusText);
       } else {
-        const data: string[] = await response.json();
-        setTeamSetNames(data);
+        const data: TeamSet[] = await response.json();
+        setTeamSets(data);
         console.log('Team Set Names:', data);
       }
     } catch (error) {
@@ -118,7 +119,7 @@ const AssessmentListPage: React.FC = () => {
         courseId={id}
         assessments={assessments}
         internalAssessments={internalAssessments}
-        teamSetNames={teamSetNames}
+        teamSets={teamSets}
         onUpdate={onUpdate}
       />
     </Container>

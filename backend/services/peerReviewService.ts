@@ -1,7 +1,7 @@
 import PeerReviewModel from '@models/PeerReview';
 import CourseModel from '@models/Course';
 import { NotFoundError } from './errors';
-import mongoose, { Types } from 'mongoose';
+import mongoose, { ClientSession, Types } from 'mongoose';
 import PeerReviewAssignmentModel from '@models/PeerReviewAssignment';
 import PeerReviewCommentModel from '@models/PeerReviewComment';
 import PeerReviewSubmissionModel, {
@@ -160,19 +160,26 @@ export const getPeerReviewInfoById = async (
   };
 };
 
+export interface CreatePeerReviewData {
+  assessmentName: string;
+  description: string;
+  startDate: Date;
+  endDate: Date;
+  teamSetId: string;
+  reviewerType: 'Individual' | 'Team';
+  taAssignments: boolean;
+  minReviews: number;
+  maxReviews: number;
+  internalAssessmentId: string;
+  taGradingScope: 'AssignedOnly' | 'AllSubmissions';
+  gradingStartDate?: Date;
+  gradingEndDate?: Date;
+}
+
 export const createPeerReviewById = async (
   courseId: string,
-  peerReviewData: {
-    assessmentName: string;
-    description: string;
-    startDate: Date;
-    endDate: Date;
-    teamSetId: string;
-    reviewerType: 'Individual' | 'Team';
-    taAssignments: boolean;
-    minReviews: number;
-    maxReviews: number;
-  }
+  peerReviewData: CreatePeerReviewData,
+  session: ClientSession
 ) => {
   const course = await CourseModel.findById(courseId);
   if (!course) {
@@ -189,6 +196,10 @@ export const createPeerReviewById = async (
     taAssignments,
     minReviews: minReviewsPerReviewer,
     maxReviews: maxReviewsPerReviewer,
+    internalAssessmentId,
+    taGradingScope,
+    gradingStartDate,
+    gradingEndDate,
   } = peerReviewData;
 
   // Basic validation
@@ -204,6 +215,10 @@ export const createPeerReviewById = async (
     reviewerType,
     minReviewsPerReviewer,
     maxReviewsPerReviewer,
+    internalAssessmentId,
+    taGradingScope,
+    gradingStartDate,
+    gradingEndDate,
   });
   await newPeerReview.save();
 
@@ -211,7 +226,8 @@ export const createPeerReviewById = async (
   await initialiseAssignments(
     courseId,
     newPeerReview._id.toString(),
-    teamSetId
+    teamSetId,
+    session,
   );
 
   console.log('assignments initialised on peer review creation');
@@ -318,7 +334,8 @@ export const updatePeerReviewById = async (
     await initialiseAssignments(
       updatedPeerReview.course.toString(),
       peerReviewId,
-      teamSetId
+      teamSetId,
+      null,
     );
   }
 

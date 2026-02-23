@@ -39,7 +39,7 @@ const internalAssessmentSchema = new Schema<InternalAssessment>({
     required: true,
   },
   teamSet: { type: Schema.Types.ObjectId, ref: 'TeamSet' },
-  areSubmissionsEditable: { type: Boolean, required: true },
+  areSubmissionsEditable: { type: Boolean, required: true, default: false },
   results: [{ type: Schema.Types.ObjectId, ref: 'AssessmentResult' }],
   releaseNumber: { type: Number, required: false, default: 0 },
   isReleased: { type: Boolean, required: true },
