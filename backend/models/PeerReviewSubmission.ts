@@ -62,14 +62,6 @@ const peerReviewSubmissionSchema = new Schema<PeerReviewSubmission>(
     lastEditedAt: { type: Date },
     submittedAt: { type: Date },
     overallComment: { type: String, default: '' },
-
-    scores: {
-      type: Schema.Types.Mixed,
-      default: {},
-    },
-
-    totalScore: { type: Number },
-    feedback: { type: String },
   },
   {
     timestamps: true,

@@ -34,6 +34,12 @@ export interface PeerReview {
   minReviewsPerReviewer: number;
   maxReviewsPerReviewer: number;
   teamSetId: string;
+  
+  // Assessment-related
+  internalAssessmentId: string;
+  gradingStartDate?: Date;
+  gradingEndDate?: Date;
+  gradingStatus?: "NotStarted" | "InProgress" | "Completed";
 }
 
 export interface PeerReviewAssignment {
@@ -63,11 +69,6 @@ export interface PeerReviewSubmission {
   lastEditedAt?: Date;
   submittedAt?: Date;
   overallComment?: string;
-  
-  // For integration with assessment subsequently
-  scores: Record<string, number>;
-  totalScore?: number;
-  feedback?: string;
 }
 
 export interface PeerReviewComment {
@@ -152,4 +153,37 @@ export interface PeerReviewInfoDTO {
   capabilities: {
     assignmentPageTeamIds: string[];
   };
+}
+
+// Assessment-related
+export type PeerReviewGradeTarget =
+  | { targetType: "submission"; peerReviewSubmissionId: string }
+  | { targetType: "team"; revieweeTeamId: string };
+
+export interface PeerReviewGradingTask {
+  _id: string;
+  peerReviewId: string;
+  grader: User; // TA/Coordinator who grades this submission
+  target: PeerReviewGradeTarget; // What is being graded (submission or team)
+  status: "Assigned" | "InProgress" | "Completed";
+  createdAt: Date;
+  updatedAt: Date;
+  
+  // Grading fields (per grader per target)
+  score?: number;
+  feedback?: string;
+  gradedAt?: Date;
+  
+  // Link to Assessment
+  assessmentSubmissionId?: string; // The corresponding submission in the InternalAssessment context
+}
+
+export interface PeerReviewTeamResultSummary {
+  peerReviewId: string;
+  teamId: string;
+  teamNumber: number;
+  
+  // Aggregated grading results for the team
+  finalScore?: number;
+  finalFeedback?: string;
 }

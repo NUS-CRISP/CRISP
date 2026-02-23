@@ -25,6 +25,7 @@ export interface InternalAssessment
 // Schema definition for InternalAssessment
 const internalAssessmentSchema = new Schema<InternalAssessment>({
   course: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
+  assessmentType: { type: String, enum: ['standard', 'peer_review'], required: true, default: 'standard' },
   assessmentName: { type: String, required: true },
   description: { type: String, required: true },
   startDate: { type: Date, required: true },
