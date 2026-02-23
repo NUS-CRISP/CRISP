@@ -70,6 +70,12 @@ const peerReviewSchema = new Schema<PeerReview>(
       required: true,
       index: true,
     },
+    taGradingScope: {
+      type: String,
+      enum: ['AssignedOnly', 'AllSubmissions'],
+      required: true,
+      default: 'AssignedOnly',
+    },
     gradingStartDate: { type: Date, default: null },
     gradingEndDate: {
       type: Date,

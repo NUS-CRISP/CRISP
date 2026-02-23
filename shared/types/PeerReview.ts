@@ -37,6 +37,7 @@ export interface PeerReview {
   
   // Assessment-related
   internalAssessmentId: string;
+  taGradingScope: "AssignedOnly" | "AllSubmissions";
   gradingStartDate?: Date;
   gradingEndDate?: Date;
   gradingStatus?: "NotStarted" | "InProgress" | "Completed";
