@@ -10,6 +10,7 @@ import { hasCoursePermission, hasFacultyPermission } from '@/lib/auth/utils';
 import PeerReviewAssessmentOverview from './PeerReviewAssessmentOverview';
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 import { useSession } from 'next-auth/react';
+import PeerReviewResults from './PeerReviewResults';
 
 interface PeerReviewAssessmentProps {
   assessment: InternalAssessment | null;
@@ -93,17 +94,22 @@ const PeerReviewAssessment: React.FC<PeerReviewAssessmentProps> = ({
           />
         </Tabs.Panel>
 
-        <Tabs.Panel value="Submissions">
-          <PeerReviewSubmissions
-            courseId={id}
-            assessmentId={assessmentId}
-            hasFacultyPermission={isFaculty}
-          />
-        </Tabs.Panel>
+        {true &&
+          <Tabs.Panel value="Submissions">
+            <PeerReviewSubmissions
+              courseId={id}
+              assessmentId={assessmentId}
+              hasFacultyPermission={isFaculty}
+            />
+          </Tabs.Panel>
+        }
 
-        {isTAOrFaculty &&
+        {true &&
           <Tabs.Panel value="Results">
-            <>Results content coming soon...</>
+            <PeerReviewResults
+              courseId={id}
+              assessmentId={assessmentId}
+            />
           </Tabs.Panel>
         }
       </Tabs>

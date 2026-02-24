@@ -2,10 +2,11 @@ import { Request, Response } from 'express';
 import { verifyRequestPermission, verifyRequestUser } from '../utils/auth';
 import {
   getPeerReviewByAssessmentId,
+  getPeerReviewSubmissionsForAssessmentById,
+  getPeerReviewResultsForAssessmentById,
   updatePeerReviewAssessmentById,
   deletePeerReviewAssessmentById,
   createPeerReviewAssessmentForCourse,
-  getPeerReviewSubmissionsForAssessmentById,
 } from '../services/peerReviewAssessmentService';
 import { handleError } from 'utils/error';
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
@@ -86,3 +87,14 @@ export const getPeerReviewSubmissionsForAssessment = async (req: Request, res: R
   }
 };
 
+/* ------------------------------- Peer Review Assessment Results ------------------------------- */
+export const getPeerReviewResultsForAssessment = async (req: Request, res: Response) => {
+  try {
+    const { account, userCourseRole } = await verifyRequestUser(req);
+    await verifyRequestPermission(account._id, userCourseRole, [COURSE_ROLE.Faculty, COURSE_ROLE.TA]);
+    const resultsDto = await getPeerReviewResultsForAssessmentById(req.params.assessmentId);
+    res.status(200).json(resultsDto);
+  } catch (error) {
+    return handleError(res, error, 'Failed to get peer review results for assessment');
+  }
+};

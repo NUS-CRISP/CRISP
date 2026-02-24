@@ -161,7 +161,7 @@ export interface PeerReviewInfoDTO {
 export interface PeerReviewGradingTask {
   _id: string;
   peerReviewId: string;
-  peerReviewSubmissionId?: string;
+  peerReviewSubmissionId: string;
   grader: User; // TA/Coordinator who grades this submission
   status: "Assigned" | "InProgress" | "Completed";
   createdAt: Date;
@@ -181,17 +181,17 @@ export interface PeerReviewResultsStudentRow {
   studentName: string;
   teamId: string;
   teamNumber: number;
-  aggregatedScore: number; // AssessmentResult.averageScore (or computed)
+  aggregatedScore: number | null; // AssessmentResult.averageScore (or computed)
 }
 
 export interface PeerReviewResultsTeamCard {
   teamId: string;
   teamNumber: number;
-  teamAggregatedScore: number; // derived from members' aggregatedScore (average)
+  teamAggregatedScore: number | null; // derived from members' aggregatedScore (average)
   members: Array<{
     studentId: string;
     studentName: string;
-    aggregatedScore: number;
+    aggregatedScore: number | null;
   }>;
 }
 

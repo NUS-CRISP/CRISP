@@ -32,6 +32,7 @@ const peerReviewGradingTaskSchema = new Schema<PeerReviewGradingTask>(
     peerReviewSubmissionId: {
       type: Schema.Types.ObjectId,
       ref: 'PeerReviewSubmission',
+      required: true,
       index: true,
     },
 

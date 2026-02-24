@@ -9,6 +9,8 @@ import {
   TextInput,
   SegmentedControl,
   Text,
+  Container,
+  Divider,
 } from '@mantine/core';
 import { IconSearch } from '@tabler/icons-react';
 import {
@@ -149,101 +151,105 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
   if (!dto) return <Text>No data.</Text>;
 
   return (
-    <Stack gap="md" my="md">
-      <Group justify="space-between" align="flex-end">
-        <div>
-          <Text fw={700} fz="lg">
-            Review Submissions
-          </Text>
+    <Container pt="6px">
+      <Stack gap="md" mt="md" mb="xs">
+        <Group justify="space-between" align="flex-end">
+          <div>
+            <Text fw={700} fz="lg">
+              Review Submissions
+            </Text>
+            <Text fz="sm" c="dimmed">
+              {hasFacultyPermission
+                ? 'All reviewer submissions for this peer review assessment.'
+                : 'Submissions you are assigned to grade.'}
+            </Text>
+          </div>
+
           <Text fz="sm" c="dimmed">
-            {hasFacultyPermission
-              ? 'All reviewer submissions for this peer review assessment.'
-              : 'Submissions you are assigned to grade.'}
+            Showing {filteredItems.length} / {dto.items.length}
           </Text>
-        </div>
+        </Group>
 
-        <Text fz="sm" c="dimmed">
-          Showing {filteredItems.length} / {dto.items.length}
-        </Text>
-      </Group>
+        <Group gap="sm" align="flex-end" wrap="wrap">
+          <TextInput
+            leftSection={<IconSearch size={16} />}
+            label="Search"
+            placeholder="Reviewer, team, repo, grader..."
+            value={search}
+            onChange={e => setSearch(e.currentTarget.value)}
+            w={300}
+          />
 
-      <Group gap="sm" align="flex-end" wrap="wrap">
-        <TextInput
-          leftSection={<IconSearch size={16} />}
-          label="Search"
-          placeholder="Reviewer, team, repo, grader..."
-          value={search}
-          onChange={e => setSearch(e.currentTarget.value)}
-          w={280}
-        />
+          <Select
+            label="Reviewee Team"
+            placeholder="All teams"
+            data={revieweeOptions}
+            value={revieweeTeamId}
+            onChange={setRevieweeTeamId}
+            clearable
+            searchable
+            nothingFoundMessage="No teams"
+            w={180}
+          />
 
-        <Select
-          label="Reviewee Team"
-          placeholder="All teams"
-          data={revieweeOptions}
-          value={revieweeTeamId}
-          onChange={setRevieweeTeamId}
-          clearable
-          searchable
-          nothingFoundMessage="No teams"
-          w={220}
-        />
+          <Select
+            label="Reviewer Kind"
+            data={[
+              { value: 'All', label: 'All' },
+              { value: 'Student', label: 'Student' },
+              { value: 'Team', label: 'Team' },
+              { value: 'TA', label: 'TA' },
+            ]}
+            value={reviewerKindFilter}
+            onChange={v => setReviewerKindFilter((v as ReviewerKindFilter) || 'All')}
+            w={160}
+          />
 
-        <Select
-          label="Reviewer Kind"
-          data={[
-            { value: 'All', label: 'All' },
-            { value: 'Student', label: 'Student' },
-            { value: 'Team', label: 'Team' },
-            { value: 'TA', label: 'TA' },
-          ]}
-          value={reviewerKindFilter}
-          onChange={v => setReviewerKindFilter((v as ReviewerKindFilter) || 'All')}
-          w={160}
-        />
+          <Select
+            label="Status"
+            data={[
+              { value: 'All', label: 'All' },
+              { value: 'NotStarted', label: 'Not started' },
+              { value: 'Draft', label: 'Draft' },
+              { value: 'Submitted', label: 'Submitted' },
+            ]}
+            value={statusFilter}
+            onChange={v => setStatusFilter((v as StatusFilter) || 'All')}
+            w={160}
+          />
 
-        <Select
-          label="Status"
-          data={[
-            { value: 'All', label: 'All' },
-            { value: 'NotStarted', label: 'Not started' },
-            { value: 'Draft', label: 'Draft' },
-            { value: 'Submitted', label: 'Submitted' },
-          ]}
-          value={statusFilter}
-          onChange={v => setStatusFilter((v as StatusFilter) || 'All')}
-          w={160}
-        />
-
-        <SegmentedControl
-          value={gradingFilter}
-          onChange={v => setGradingFilter(v as GradingFilter)}
-          data={[
-            { value: 'All', label: 'All' },
-            { value: 'Ungraded', label: 'Ungraded' },
-            { value: 'HasGrades', label: 'Has grades' },
-          ]}
-        />
-      </Group>
-
-      <Stack gap="sm">
-        {filteredItems.length > 0
-          ? filteredItems.map((item: PeerReviewSubmissionListItemDTO) => (
-              <PeerReviewSubmissionCard
-                key={item.peerReviewSubmissionId}
-                courseId={courseId}
-                assessmentId={assessmentId}
-                item={item}
-                maxMarks={dto.maxMarks}
-                // for now both faculty and TA can click grade; you can tighten later
-                canGrade={true}
-                onAfterAction={fetchSubmissions}
-              />
-            ))
-          : <Center>No submissions found.</Center>
-        }
+          <SegmentedControl
+            value={gradingFilter}
+            onChange={v => setGradingFilter(v as GradingFilter)}
+            data={[
+              { value: 'All', label: 'All' },
+              { value: 'Ungraded', label: 'Ungraded' },
+              { value: 'HasGrades', label: 'Has grades' },
+            ]}
+          />
+        </Group>
+        
+        <Divider my="xs" />
+        
+        <Stack gap="sm">
+          {filteredItems.length > 0
+            ? filteredItems.map((item: PeerReviewSubmissionListItemDTO) => (
+                <PeerReviewSubmissionCard
+                  key={item.peerReviewSubmissionId}
+                  courseId={courseId}
+                  assessmentId={assessmentId}
+                  item={item}
+                  maxMarks={dto.maxMarks}
+                  // for now both faculty and TA can click grade; you can tighten later
+                  canGrade={true}
+                  onAfterAction={fetchSubmissions}
+                />
+              ))
+            : <Center>No submissions found.</Center>
+          }
+        </Stack>
       </Stack>
-    </Stack>
+    </Container>
   );
 };
 

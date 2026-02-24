@@ -9,7 +9,7 @@ import AssessmentResultModel from '@models/AssessmentResult';
 import { deleteInternalAssessmentById } from './internalAssessmentService';
 import { createPeerReviewById, PeerReviewSettings, updatePeerReviewById, deletePeerReviewById } from './peerReviewService';
 import PeerReviewModel from '@models/PeerReview';
-import { PeerReviewSubmissionListItemDTO, PeerReviewSubmissionsDTO, ReviewerRef } from '@shared/types/PeerReview';
+import { PeerReviewResultsDTO, PeerReviewResultsStudentRow, PeerReviewResultsTeamCard, PeerReviewSubmissionListItemDTO, PeerReviewSubmissionsDTO, ReviewerRef } from '@shared/types/PeerReview';
 import PeerReviewSubmissionModel from '@models/PeerReviewSubmission';
 import PeerReviewAssignmentModel from '@models/PeerReviewAssignment';
 import TeamModel from '@models/Team';
@@ -383,4 +383,200 @@ export const getPeerReviewSubmissionsForAssessmentById = async (
     maxMarks: assessment.maxMarks ?? 0,
     items,
   };
+};
+
+/* ------------------------------- Peer Review Assessment Results ------------------------------- */
+
+const avgOrNull = (xs: number[]) => xs.length === 0 ? null : xs.reduce((a, b) => a + b, 0) / xs.length;
+
+/**
+ * Computes peer review results from PeerReviewSubmission + PeerReviewGradingTask,
+ * RETURNS DTO for UI, and PERSISTS per-student published score into AssessmentResult.averageScore.
+ */
+export const getPeerReviewResultsForAssessmentById = async (
+  assessmentId: string,
+): Promise<PeerReviewResultsDTO> => {
+  const assessment = await InternalAssessmentModel.findById(assessmentId)
+    .select('_id assessmentType maxMarks teamSet results')
+    .lean();
+
+  if (!assessment) throw new NotFoundError('Assessment not found');
+  if (assessment.assessmentType !== 'peer_review')
+    throw new BadRequestError('Not a peer review assessment');
+  if (!assessment.teamSet) throw new BadRequestError('Peer review assessment missing teamSet');
+
+  const peerReview = await PeerReviewModel.findOne({
+    internalAssessmentId: assessmentId,
+  })
+    .select('_id reviewerType internalAssessmentId')
+    .lean();
+
+  if (!peerReview) throw new NotFoundError('Peer review not found for assessment');
+
+  // Load team set with teams + members (names for DTO)
+  const teamSet = await TeamSetModel.findById(assessment.teamSet)
+    .populate({
+      path: 'teams',
+      model: 'Team',
+      populate: { path: 'members', model: 'User' },
+    })
+    .lean() as any;
+
+  if (!teamSet) throw new NotFoundError('Team set not found');
+
+  const teams: any[] = teamSet.teams ?? [];
+
+  // Build membership maps
+  const studentToTeam = new Map<
+    string,
+    { teamId: string; teamNumber: number; studentName: string }
+  >();
+  const teamToMembers = new Map<
+    string,
+    Array<{ studentId: string; studentName: string }>
+  >();
+
+  for (const t of teams) {
+    const tid = String(t._id);
+    const members = (t.members ?? []).map((m: any) => ({
+      studentId: String(m._id),
+      studentName: m.name ?? 'Unknown',
+    }));
+    teamToMembers.set(tid, members);
+    for (const m of members) {
+      studentToTeam.set(m.studentId, {
+        teamId: tid,
+        teamNumber: t.number,
+        studentName: m.studentName,
+      });
+    }
+  }
+
+  // Load peer review submissions (exclude TA reviewers from student results)
+  const submissions = await PeerReviewSubmissionModel.find({
+    peerReviewId: oid(String(peerReview._id)),
+    reviewerKind: { $in: ['Student', 'Team'] },
+  })
+    .select('_id reviewerKind reviewerUserId reviewerTeamId')
+    .lean();
+
+  const submissionIds = submissions.map(s => s._id);
+
+  // Load completed grading tasks with scores
+  const tasks = await PeerReviewGradingTaskModel.find({
+    peerReviewId: oid(String(peerReview._id)),
+    peerReviewSubmissionId: { $in: submissionIds },
+    status: 'Completed',
+    score: { $ne: null },
+  })
+    .select('peerReviewSubmissionId score')
+    .lean();
+
+  // submissionId -> [scores]
+  const scoresBySubmission = new Map<string, number[]>();
+  for (const t of tasks) {
+    if (!t.peerReviewSubmissionId) continue;
+    const sid = String(t.peerReviewSubmissionId);
+    const arr = scoresBySubmission.get(sid) ?? [];
+    arr.push(Number(t.score));
+    scoresBySubmission.set(sid, arr);
+  }
+
+  // reviewerKey -> [submissionGrade]
+  const gradesByReviewer = new Map<string, number[]>();
+  for (const s of submissions) {
+    const sid = String(s._id);
+    const submissionGrade = avgOrNull(scoresBySubmission.get(sid) ?? []);
+    if (submissionGrade === null) continue; // ignore ungraded submissions
+
+    const reviewerKey =
+      s.reviewerKind === 'Team'
+        ? `T:${String(s.reviewerTeamId)}`
+        : `U:${String(s.reviewerUserId)}`;
+
+    const arr = gradesByReviewer.get(reviewerKey) ?? [];
+    arr.push(submissionGrade);
+    gradesByReviewer.set(reviewerKey, arr);
+  }
+
+  // reviewerKey -> aggregated reviewer score
+  const aggregatedByReviewer = new Map<string, number | null>();
+  for (const [k, xs] of gradesByReviewer.entries()) {
+    aggregatedByReviewer.set(k, avgOrNull(xs));
+  }
+
+  // Build per-student DTO rows for ALL students in the team set
+  const perStudent: PeerReviewResultsStudentRow[] = [];
+
+  for (const [studentId, info] of studentToTeam.entries()) {
+    let aggregatedScore: number | null = null;
+
+    if (peerReview.reviewerType === 'Individual') {
+      aggregatedScore = aggregatedByReviewer.get(`U:${studentId}`) ?? null;
+    } else {
+      aggregatedScore = aggregatedByReviewer.get(`T:${info.teamId}`) ?? null;
+    }
+
+    perStudent.push({
+      studentId,
+      studentName: info.studentName,
+      teamId: info.teamId,
+      teamNumber: info.teamNumber,
+      aggregatedScore,
+    });
+  }
+
+  // Build per-team cards (derive team score from graded members only)
+  const perTeam: PeerReviewResultsTeamCard[] = teams.map(t => {
+    const tid = String(t._id);
+    const members = (teamToMembers.get(tid) ?? []).map(m => {
+      const row = perStudent.find(r => r.studentId === m.studentId);
+      return {
+        studentId: m.studentId,
+        studentName: m.studentName,
+        aggregatedScore: row?.aggregatedScore ?? null,
+      };
+    });
+
+    const gradedScores = members
+      .map(m => m.aggregatedScore)
+      .filter((x): x is number => typeof x === 'number');
+
+    return {
+      teamId: tid,
+      teamNumber: t.number,
+      teamAggregatedScore: avgOrNull(gradedScores),
+      members,
+    };
+  });
+
+  // Sort for stable UI
+  perStudent.sort(
+    (a, b) => a.teamNumber - b.teamNumber || a.studentName.localeCompare(b.studentName)
+  );
+  perTeam.sort((a, b) => a.teamNumber - b.teamNumber);
+
+  const dto: PeerReviewResultsDTO = {
+    internalAssessmentId: String(assessment._id),
+    peerReviewId: String(peerReview._id),
+    reviewerType: peerReview.reviewerType,
+    maxMarks: Number(assessment.maxMarks ?? 0),
+    perStudent,
+    perTeam,
+  };
+
+  // persist to AssessmentResult.averageScore
+  // store 0 for ungraded because schema doesn't allow null
+  const bulkOps = perStudent.map(r => ({
+    updateOne: {
+      filter: { assessment: oid(assessmentId), student: oid(r.studentId) },
+      update: { $set: { averageScore: r.aggregatedScore ?? 0 } },
+    },
+  }));
+
+  if (bulkOps.length > 0) {
+    await AssessmentResultModel.bulkWrite(bulkOps, { ordered: false });
+  }
+
+  return dto;
 };
