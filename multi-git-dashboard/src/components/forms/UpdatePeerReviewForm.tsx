@@ -54,7 +54,7 @@ const UpdatePeerReviewForm: React.FC<UpdatePeerReviewFormProps> = ({
 }) => {
   const submit = async (payload: NormalizedPeerReviewBasePayload) => {
     const res = await fetch(
-      `/api/internal-assessments/${internalAssessment._id}/peer-review`,
+      `/api/peer-review-assessments/${internalAssessment._id}/peer-review`,
       {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },

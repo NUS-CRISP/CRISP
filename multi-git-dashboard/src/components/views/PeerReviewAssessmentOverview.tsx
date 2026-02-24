@@ -59,7 +59,7 @@ const PeerReviewAssessmentOverview: React.FC<PeerReviewAssessmentOverviewProps> 
     setError(null);
     try {
       const prRes = await fetch(
-        `/api/peer-review/${courseId}/${assessment?._id}`,
+        `/api/peer-review-assessments/${courseId}/${assessment?._id}`,
         { method: 'GET' }
       );
       const prBody = await prRes.json();
@@ -88,7 +88,7 @@ const PeerReviewAssessmentOverview: React.FC<PeerReviewAssessmentOverviewProps> 
   const handleDelete = async () => {
     try {
       const res = await fetch(
-        `/api/internal-assessments/${assessment?._id}/peer-review`,
+        `/api/peer-review-assessments/${courseId}/${assessment?._id}/peer-review`,
         { method: 'DELETE' }
       );
       const body = await res.json();

@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import {
   getAllPeerReviewsyId,
-  getPeerReviewByAssessmentId,
   getPeerReviewInfoById,
   deletePeerReviewById,
   updatePeerReviewById,
@@ -17,19 +16,6 @@ export const getAllPeerReviews = async (req: Request, res: Response) => {
     res.status(200).json(peerReviews);
   } catch (error) {
     return handleError(res, error, 'Failed to get peer reviews');
-  }
-};
-
-export const getPeerReviewByAssessment = async (req: Request, res: Response) => {
-  try {
-    const { account, userCourseRole } = await verifyRequestUser(req);
-    const userId = await verifyRequestPermission(account._id, userCourseRole, []);
-    const peerReviewAssignment = await getPeerReviewByAssessmentId(
-      req.params.assessmentId
-    );
-    res.status(200).json(peerReviewAssignment);
-  } catch (error) {
-    return handleError(res, error, 'Failed to get peer review assignment');
   }
 };
 

@@ -18,7 +18,7 @@ const CreatePeerReviewForm: React.FC<CreatePeerReviewFormProps> = ({
 }) => {
   const submit = async (payload: NormalizedPeerReviewBasePayload) => {
     const res = await fetch(
-      `/api/courses/${courseId}/internal-assessments/peer-review`,
+      `/api/peer-review-assessments/${courseId}/peer-review`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

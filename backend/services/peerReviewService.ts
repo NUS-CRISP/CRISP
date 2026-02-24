@@ -51,14 +51,6 @@ export const getPeerReviewById = async (peerReviewId: string) => {
   return peerReview;
 };
 
-export const getPeerReviewByAssessmentId = async (assessmentId: string) => {
-  const peerReview = await PeerReviewModel.findOne({
-    internalAssessmentId: assessmentId,
-  });
-  if (!peerReview) throw new NotFoundError('Peer review not found for assessment');
-  return peerReview;
-};
-
 // Get peer review info by ID, scoped to the user's role and permissions
 export const getPeerReviewInfoById = async (
   userId: string,

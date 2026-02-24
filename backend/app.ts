@@ -22,6 +22,7 @@ import submissionRoutes from './routes/submissionRoutes';
 import assessmentAssignmentSetRoutes from './routes/assessmentAssignmentSetRoutes';
 import assessmentResultRoutes from './routes/assessmentResultRoutes';
 import peerReviewRoutes from './routes/peerReviewRoutes';
+import peerReviewAssessmentRoutes from './routes/peerReviewAssessmentRoutes';
 import setupAIInsightsJob from './jobs/aiInsightsJob';
 import notificationRoutes from './routes/notificationRoutes';
 import setupTutorialDataJob from './jobs/tutorialDataJob';
@@ -71,6 +72,7 @@ app.use('/api/assignment-sets', assessmentAssignmentSetRoutes);
 app.use('/api/codeanalysis', codeAnalysisRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/peer-review', peerReviewRoutes);
+app.use('/api/peer-review-assessments', peerReviewAssessmentRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
