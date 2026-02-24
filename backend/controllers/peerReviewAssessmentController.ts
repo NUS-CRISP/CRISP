@@ -5,14 +5,17 @@ import {
   updatePeerReviewAssessmentById,
   deletePeerReviewAssessmentById,
   createPeerReviewAssessmentForCourse,
+  getPeerReviewSubmissionsForAssessmentById,
 } from '../services/peerReviewAssessmentService';
 import { handleError } from 'utils/error';
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
+/* ------------------------------- Peer Review Assessment ------------------------------- */
+
 export const getPeerReviewByAssessment = async (req: Request, res: Response) => {
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
-    const userId = await verifyRequestPermission(account._id, userCourseRole, []);
+    await verifyRequestPermission(account._id, userCourseRole, [COURSE_ROLE.Faculty, COURSE_ROLE.TA]);
     const peerReviewAssignment = await getPeerReviewByAssessmentId(
       req.params.assessmentId
     );
@@ -67,6 +70,19 @@ export const deletePeerReviewAssessment = async (req: Request, res: Response) =>
     });
   } catch (error) {
     return handleError(res, error, 'Failed to delete peer review: ');
+  }
+};
+
+/* ------------------------------- Peer Review Assessment Submissions ------------------------------- */
+
+export const getPeerReviewSubmissionsForAssessment = async (req: Request, res: Response) => {
+  try {
+    const { account, userCourseRole } = await verifyRequestUser(req);
+    await verifyRequestPermission(account._id, userCourseRole, [COURSE_ROLE.Faculty, COURSE_ROLE.TA]);
+    const submissions = await getPeerReviewSubmissionsForAssessmentById(req.params.assessmentId);
+    res.status(200).json(submissions);
+  } catch (error) {
+    return handleError(res, error, 'Failed to get peer review submissions for assessment');
   }
 };
 

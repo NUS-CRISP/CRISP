@@ -2,14 +2,23 @@
 import InternalAssessmentModel from '../models/InternalAssessment';
 import CourseModel from '../models/Course';
 import { NotFoundError, BadRequestError } from './errors';
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import TeamSetModel from '@models/TeamSet';
 import { createAssignmentSet } from './assessmentAssignmentSetService';
 import AssessmentResultModel from '@models/AssessmentResult';
-import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 import { deleteInternalAssessmentById } from './internalAssessmentService';
 import { createPeerReviewById, PeerReviewSettings, updatePeerReviewById, deletePeerReviewById } from './peerReviewService';
 import PeerReviewModel from '@models/PeerReview';
+import { PeerReviewSubmissionListItemDTO, PeerReviewSubmissionsDTO, ReviewerRef } from '@shared/types/PeerReview';
+import PeerReviewSubmissionModel from '@models/PeerReviewSubmission';
+import PeerReviewAssignmentModel from '@models/PeerReviewAssignment';
+import TeamModel from '@models/Team';
+import UserModel from '@models/User';
+import { PeerReviewGradingTaskModel } from '@models/PeerReviewGradingTask';
+
+const oid = (s: string) => new Types.ObjectId(s);
+
+/* ------------------------------- Peer Review Assessment ------------------------------- */
 
 export const getPeerReviewByAssessmentId = async (assessmentId: string) => {
   const peerReview = await PeerReviewModel.findOne({
@@ -17,7 +26,7 @@ export const getPeerReviewByAssessmentId = async (assessmentId: string) => {
   });
   if (!peerReview) throw new NotFoundError('Peer review not found for assessment');
   return peerReview;
-};
+};  
 
 interface PeerReviewAssessmentData {
   // Shared fields for both internal assessment and peer review objects
@@ -207,3 +216,171 @@ export const deletePeerReviewAssessmentById = async (assessmentId: string) => {
   
   return deletedRes;
 }
+
+/* ------------------------------- Peer Review Assessment Submissions ------------------------------- */
+
+const lastActivityAt = (s: any) => s.submittedAt ?? s.lastEditedAt ?? s.startedAt ?? s.createdAt;
+
+export const getPeerReviewSubmissionsForAssessmentById = async (
+  assessmentId: string,
+): Promise<PeerReviewSubmissionsDTO> => {
+  const assessment = await InternalAssessmentModel.findById(assessmentId).select(
+    '_id assessmentType maxMarks'
+  );
+  if (!assessment) throw new NotFoundError('Assessment not found');
+  if (assessment.assessmentType !== 'peer_review')
+    throw new BadRequestError('Not a peer review assessment');
+
+  const peerReview = await PeerReviewModel.findOne({
+    internalAssessmentId: assessmentId,
+  }).select(
+    '_id reviewerType taAssignments taGradingScope internalAssessmentId'
+  );
+  if (!peerReview) throw new NotFoundError('Peer review not found for assessment');
+
+  const submissions = await PeerReviewSubmissionModel.find({
+    peerReviewId: peerReview._id,
+  })
+    .lean();
+
+  // Load assignments + reviewee team numbers + repo
+  const assignmentIds = submissions.map(s => s.peerReviewAssignmentId);
+  const assignments = await PeerReviewAssignmentModel.find({
+    _id: { $in: assignmentIds },
+  })
+    .select('_id reviewee repoName repoUrl')
+    .lean();
+
+  const assignmentById = new Map(assignments.map(a => [String(a._id), a]));
+  const revieweeTeamIds = assignments.map(a => a.reviewee);
+  const revieweeTeams = await TeamModel.find({ _id: { $in: revieweeTeamIds } })
+    .select('_id number')
+    .lean();
+  const teamNumberById = new Map(revieweeTeams.map(t => [String(t._id), t.number]));
+
+  // Reviewer lookups
+  const reviewerUserIds = submissions
+    .filter(s => s.reviewerUserId)
+    .map(s => String(s.reviewerUserId));
+  const reviewerTeamIds = submissions
+    .filter(s => s.reviewerTeamId)
+    .map(s => String(s.reviewerTeamId));
+
+  const [reviewerUsers, reviewerTeams] = await Promise.all([
+    reviewerUserIds.length
+      ? UserModel.find({ _id: { $in: reviewerUserIds.map(oid) } })
+          .select('_id name')
+          .lean()
+      : Promise.resolve([]),
+    reviewerTeamIds.length
+      ? TeamModel.find({ _id: { $in: reviewerTeamIds.map(oid) } })
+          .select('_id number')
+          .lean()
+      : Promise.resolve([]),
+  ]);
+
+  const userNameById = new Map(reviewerUsers.map(u => [String(u._id), u.name]));
+  const reviewerTeamNumberById = new Map(
+    reviewerTeams.map(t => [String(t._id), t.number])
+  );
+
+  // Grading tasks summary (per submission)
+  const subIds = submissions.map(s => s._id);
+  const tasks = await PeerReviewGradingTaskModel.find({
+    peerReviewId: peerReview._id,
+    peerReviewSubmissionId: { $in: subIds },
+  })
+    .select('peerReviewSubmissionId grader status gradedAt')
+    .populate('grader', '_id name')
+    .lean();
+
+  const tasksBySubmissionId = new Map<string, any[]>();
+  for (const t of tasks) {
+    const sid = String(t.peerReviewSubmissionId);
+    const arr = tasksBySubmissionId.get(sid) ?? [];
+    arr.push(t);
+    tasksBySubmissionId.set(sid, arr);
+  }
+
+  const items: PeerReviewSubmissionListItemDTO[] = submissions.map(s => {
+    const assignment = assignmentById.get(String(s.peerReviewAssignmentId));
+    const revieweeTeamId = assignment ? String(assignment.reviewee) : '';
+    const revieweeTeamNumber = teamNumberById.get(revieweeTeamId) ?? -1;
+
+    const reviewer: ReviewerRef =
+      s.reviewerKind === 'Team' && s.reviewerTeamId
+        ? {
+            kind: 'Team',
+            teamId: String(s.reviewerTeamId),
+            teamNumber: reviewerTeamNumberById.get(String(s.reviewerTeamId)) ?? -1,
+          }
+        : {
+            kind: 'User',
+            userId: String(s.reviewerUserId ?? ''),
+            name: userNameById.get(String(s.reviewerUserId ?? '')) ?? 'Unknown',
+          };
+
+    const ts = tasksBySubmissionId.get(String(s._id)) ?? [];
+    const gradersMap = new Map<string, { id: string; name: string }>();
+    let lastGradedAt: Date | undefined = undefined;
+    let completedCount = 0;
+    let inProgressCount = 0;
+    let assignedCount = 0;
+
+    for (const t of ts) {
+      const g = t.grader as any;
+      if (g?._id) gradersMap.set(String(g._id), { id: String(g._id), name: g.name });
+      if (t.status === 'Completed') completedCount++;
+      else if (t.status === 'InProgress') inProgressCount++;
+      else assignedCount++;
+
+      if (t.gradedAt) {
+        const d = new Date(t.gradedAt);
+        if (!lastGradedAt || d > lastGradedAt) lastGradedAt = d;
+      }
+    }
+
+    return {
+      peerReviewId: String(s.peerReviewId),
+      peerReviewSubmissionId: String(s._id),
+      peerReviewAssignmentId: String(s.peerReviewAssignmentId),
+      internalAssessmentId: String(peerReview.internalAssessmentId),
+
+      revieweeTeam: { teamId: revieweeTeamId, teamNumber: revieweeTeamNumber },
+      repo: { repoName: assignment?.repoName ?? '', repoUrl: assignment?.repoUrl ?? '' },
+
+      reviewer,
+      reviewerKind: s.reviewerKind,
+
+      status: s.status,
+      startedAt: s.startedAt,
+      lastEditedAt: s.lastEditedAt,
+      submittedAt: s.submittedAt,
+      createdAt: s.createdAt,
+
+      lastActivityAt: lastActivityAt(s),
+
+      grading: {
+        count: ts.length,
+        completedCount,
+        inProgressCount,
+        assignedCount,
+        graders: Array.from(gradersMap.values()),
+        lastGradedAt,
+      },
+    };
+  });
+
+  // Sort most recent activity first
+  items.sort((a, b) => new Date(b.lastActivityAt).getTime() - new Date(a.lastActivityAt).getTime());
+
+  return {
+    internalAssessmentId: String(assessment._id),
+    peerReviewId: String(peerReview._id),
+    reviewerType: peerReview.reviewerType,
+    taAssignments: peerReview.taAssignments,
+    taGradingScope: peerReview.taGradingScope,
+    maxMarks: assessment.maxMarks ?? 0,
+    items,
+  };
+};

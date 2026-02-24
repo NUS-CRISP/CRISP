@@ -38,7 +38,6 @@ import {
   removeRepository,
   updateRepository,
   addTAsAndTeams,
-  createPeerReviewAssessment,
 } from '../controllers/courseController';
 
 import { noCache } from '../middleware/noCache';
@@ -83,6 +82,5 @@ router.get('/:id/project-management', getProjectManagementBoard);
 router.get('/:id/jira-registration-status', getCourseJiraRegistrationStatus);
 router.get('/:id/internal-assessments', getInternalAssessments);
 router.post('/:id/internal-assessments', addInternalAssessments);
-router.post('/:courseId/internal-assessments/peer-review', createPeerReviewAssessment);
 
 export default router;

@@ -1,5 +1,4 @@
 import {
-  Button,
   Center,
   Container,
   Group,
@@ -7,10 +6,6 @@ import {
   Modal,
   Notification,
   Text,
-  Card,
-  Stack,
-  Divider,
-  SimpleGrid,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useEffect, useState } from 'react';
@@ -20,7 +15,7 @@ import { InternalAssessment } from '@shared/types/InternalAssessment';
 import DeleteConfirmationModal from '../cards/Modals/DeleteConfirmationModal';
 import UpdatePeerReviewForm from '../forms/UpdatePeerReviewForm';
 import PeerReviewSettings from '../peer-review/PeerReviewSettings';
-import { formatDate } from '../../lib/utils';
+import PeerReviewAssessmentDetail from './PeerReviewAssessmentDetail';
 
 interface PeerReviewAssessmentOverviewProps {
   courseId: string;
@@ -156,54 +151,9 @@ const PeerReviewAssessmentOverview: React.FC<PeerReviewAssessmentOverviewProps> 
         onClickUpdate={openUpdateModal}
         onClickDelete={openDeleteModal}
       />
-
-      <Card withBorder radius="md" p="lg">
-        <Stack gap="xs">
-          <Text fw={600} fz="sm">
-            Assessment Details
-          </Text>
-          <Divider />
-
-          <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="sm">
-            <Stack gap={2}>
-              <Text fz="xs" c="dimmed">
-                Max Marks
-              </Text>
-              <Text fz="sm">{assessment.maxMarks}</Text>
-
-              <Text fz="xs" c="dimmed" mt="sm">
-                Scale to max marks
-              </Text>
-              <Text fz="sm">{assessment.scaleToMaxMarks ? 'Yes' : 'No'}</Text>
-            </Stack>
-
-            <Stack gap={2}>
-              <Text fz="xs" c="dimmed">
-                Assessment Start
-              </Text>
-              <Text fz="sm">{formatDate(assessment.startDate)}</Text>
-
-              <Text fz="xs" c="dimmed" mt="sm">
-                Assessment End
-              </Text>
-              <Text fz="sm">{formatDate(assessment.endDate)}</Text>
-            </Stack>
-
-            <Stack gap={2}>
-              <Text fz="xs" c="dimmed">
-                Release Status
-              </Text>
-              <Text fz="sm">{assessment.isReleased ? 'Released' : 'Not released'}</Text>
-
-              <Text fz="xs" c="dimmed" mt="sm">
-                Release Number
-              </Text>
-              <Text fz="sm">{assessment.releaseNumber}</Text>
-            </Stack>
-          </SimpleGrid>
-        </Stack>
-      </Card>
-
+      
+      <PeerReviewAssessmentDetail assessment={assessment} />
+      
       <Modal
         opened={openedUpdateModal}
         onClose={closeUpdateModal}

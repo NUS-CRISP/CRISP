@@ -27,7 +27,6 @@ const InternalAssessmentBaseDetail: React.FC<InternalAssessmentBaseDetailProps> 
     id: string;
     assessmentId: string;
   };
-  const assessmentsApiRoute = `/api/internal-assessments/${assessmentId}`;
   const questionsApiRoute = `/api/internal-assessments/${assessmentId}/questions`;
   const teachingTeamApiRoute = `/api/courses/${id}/teachingteam`;
 

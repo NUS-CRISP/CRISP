@@ -204,3 +204,46 @@ export interface PeerReviewResultsDTO {
   perStudent: PeerReviewResultsStudentRow[];
   perTeam: PeerReviewResultsTeamCard[];
 }
+
+export interface PeerReviewGradingSummary {
+  count: number;
+  completedCount: number;
+  inProgressCount: number;
+  assignedCount: number;
+  graders: Array<{ id: string; name: string }>;
+  lastGradedAt?: Date;
+}
+
+export interface PeerReviewSubmissionListItemDTO {
+  peerReviewId: string;
+  peerReviewAssignmentId: string;
+  peerReviewSubmissionId: string;
+  internalAssessmentId: string;
+  
+  revieweeTeam: { teamId: string; teamNumber: number };
+  repo: { repoName: string; repoUrl: string };
+  
+  reviewer: ReviewerRef;
+  reviewerKind: "Student" | "Team" | "TA";
+  
+  status: PeerReviewSubmission['status'];
+  startedAt?: Date;
+  lastEditedAt?: Date;
+  submittedAt?: Date;
+  createdAt: Date;
+  lastActivityAt: Date;
+  
+  grading: PeerReviewGradingSummary;
+}
+
+export interface PeerReviewSubmissionsDTO {
+  internalAssessmentId: string;
+  peerReviewId: string;
+  
+  reviewerType: ReviewerType;
+  taAssignments: boolean;
+  taGradingScope: TAGradingScope;
+  maxMarks: number;
+  
+  items: PeerReviewSubmissionListItemDTO[];
+}

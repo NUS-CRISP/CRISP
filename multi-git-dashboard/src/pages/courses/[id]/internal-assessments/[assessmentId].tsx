@@ -2,14 +2,12 @@ import { Container } from '@mantine/core';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { InternalAssessment } from '@shared/types/InternalAssessment';
-import { hasFacultyPermission } from '@/lib/auth/utils';
 import InternalAssessmentBaseDetail from '@/components/views/InternalAssessmentBaseDetail';
-import PeerReviewAssessmentOverview from '@/components/views/PeerReviewAssessmentOverview';
+import PeerReviewAssessment from '@/components/views/PeerReviewAssessment';
 
 const InternalAssessmentPage: React.FC = () => {
   const router = useRouter();
   const { id, assessmentId } = router.query as { id: string; assessmentId: string };
-  const permission = hasFacultyPermission();
 
   const assessmentsApiRoute = useMemo(
     () => (assessmentId ? `/api/internal-assessments/${assessmentId}` : ''),
@@ -45,15 +43,9 @@ const InternalAssessmentPage: React.FC = () => {
   return (
     <Container>
       {assessmentType === 'peer_review' ? (
-        <PeerReviewAssessmentOverview
-          courseId={id}
+        <PeerReviewAssessment
           assessment={assessment}
-          hasFacultyPermission={permission}
-          onUpdated={fetchAssessment}
-          onDeleted={() => {
-            // parent decides how to navigate away after delete
-            router.push(`/courses/${id}/assessments`);
-          }}
+          fetchAssessment={fetchAssessment}
         />
       ) : (
         <InternalAssessmentBaseDetail
