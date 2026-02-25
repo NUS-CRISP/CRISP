@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Button,
@@ -17,8 +16,7 @@ import { Virtuoso } from 'react-virtuoso';
 import {
   PeerReviewResultsDTO,
   PeerReviewResultsStudentRow,
-  PeerReviewResultsTeamCard,
-} from '@shared/types/PeerReview';
+} from '@shared/types/PeerReviewAssessment';
 import { IconSearch } from '@tabler/icons-react';
 import PeerReviewStudentRowCard from '../cards/PeerReviewStudentRowCard';
 import PeerReviewTeamCard from '../cards/PeerReviewTeamCard';
@@ -78,7 +76,6 @@ const PeerReviewResults: React.FC<PeerReviewResultsProps> = ({ courseId, assessm
 
   useEffect(() => {
     fetchResults();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [assessmentId]);
 
   // ---- filtering + sorting ----

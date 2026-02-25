@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import InternalAssessmentModel from '../models/InternalAssessment';
 import CourseModel from '../models/Course';
-import { NotFoundError, BadRequestError } from './errors';
+import { NotFoundError, BadRequestError, MissingAuthorizationError } from './errors';
 import mongoose, { Types } from 'mongoose';
 import TeamSetModel from '@models/TeamSet';
 import { createAssignmentSet } from './assessmentAssignmentSetService';
@@ -9,12 +9,15 @@ import AssessmentResultModel from '@models/AssessmentResult';
 import { deleteInternalAssessmentById } from './internalAssessmentService';
 import { createPeerReviewById, PeerReviewSettings, updatePeerReviewById, deletePeerReviewById } from './peerReviewService';
 import PeerReviewModel from '@models/PeerReview';
-import { PeerReviewResultsDTO, PeerReviewResultsStudentRow, PeerReviewResultsTeamCard, PeerReviewSubmissionListItemDTO, PeerReviewSubmissionsDTO, ReviewerRef } from '@shared/types/PeerReview';
+import { ReviewerRef } from '@shared/types/PeerReview';
+import { PeerReviewGradingDTO, PeerReviewMyGradingTaskDTO, PeerReviewResultsDTO, PeerReviewResultsStudentRow, PeerReviewResultsTeamCard, PeerReviewSubmissionListItemDTO, PeerReviewSubmissionsDTO } from '@shared/types/PeerReviewAssessment';
 import PeerReviewSubmissionModel from '@models/PeerReviewSubmission';
 import PeerReviewAssignmentModel from '@models/PeerReviewAssignment';
 import TeamModel from '@models/Team';
 import UserModel from '@models/User';
 import { PeerReviewGradingTaskModel } from '@models/PeerReviewGradingTask';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
+import { getPeerReviewCommentsBySubmissionId } from './peerReviewCommentsService';
 
 const oid = (s: string) => new Types.ObjectId(s);
 
@@ -41,7 +44,6 @@ interface PeerReviewAssessmentData {
   taAssignments: boolean;
   minReviews: number;
   maxReviews: number;
-  taGradingScope: 'AssignedOnly' | 'AllSubmissions';
   gradingStartDate?: Date;
   gradingEndDate?: Date;
   
@@ -66,7 +68,6 @@ export const createPeerReviewAssessmentForCourse = async (
     taAssignments,
     minReviews,
     maxReviews,
-    taGradingScope,
     gradingStartDate,
     gradingEndDate,
     maxMarks,
@@ -131,7 +132,6 @@ export const createPeerReviewAssessmentForCourse = async (
       taAssignments: taAssignments,
       minReviews: minReviews,
       maxReviews: maxReviews,
-      taGradingScope: taGradingScope,
       gradingStartDate: gradingStartDate,
       gradingEndDate: gradingEndDate,
       internalAssessmentId: assessment._id.toString(),
@@ -196,7 +196,6 @@ export const updatePeerReviewAssessmentById = async (
     taAssignments: updateData.taAssignments,
     minReviews: updateData.minReviews,
     maxReviews: updateData.maxReviews,
-    taGradingScope: updateData.taGradingScope,
     gradingStartDate: updateData.gradingStartDate,
     gradingEndDate: updateData.gradingEndDate,
   }
@@ -223,6 +222,8 @@ const lastActivityAt = (s: any) => s.submittedAt ?? s.lastEditedAt ?? s.startedA
 
 export const getPeerReviewSubmissionsForAssessmentById = async (
   assessmentId: string,
+  userId: string,
+  userCourseRole: string,
 ): Promise<PeerReviewSubmissionsDTO> => {
   const assessment = await InternalAssessmentModel.findById(assessmentId).select(
     '_id assessmentType maxMarks'
@@ -234,17 +235,46 @@ export const getPeerReviewSubmissionsForAssessmentById = async (
   const peerReview = await PeerReviewModel.findOne({
     internalAssessmentId: assessmentId,
   }).select(
-    '_id reviewerType taAssignments taGradingScope internalAssessmentId'
+    '_id reviewerType taAssignments internalAssessmentId'
   );
   if (!peerReview) throw new NotFoundError('Peer review not found for assessment');
+  
+  let allowedSubmissionIds: Types.ObjectId[] | null = null;
+  if (userCourseRole === COURSE_ROLE.TA) {
+    const myTasks = await PeerReviewGradingTaskModel.find({
+      peerReviewId: peerReview._id,
+      grader: oid(userId),
+      peerReviewSubmissionId: { $exists: true },
+    })
+      .select('peerReviewSubmissionId')
+      .lean();
+
+    const ids = myTasks
+      .map(t => t.peerReviewSubmissionId)
+      .filter(Boolean) as Types.ObjectId[];
+
+    // If TA has no tasks, they see nothing (empty list)
+    allowedSubmissionIds = ids.length ? ids : [];
+  }
 
   const submissions = await PeerReviewSubmissionModel.find({
     peerReviewId: peerReview._id,
-  })
-    .lean();
-
+    ...(allowedSubmissionIds ? { _id: { $in: allowedSubmissionIds } } : {}),
+  }).lean();
+  
+  if (userCourseRole === COURSE_ROLE.TA && submissions.length === 0) {
+    return {
+      internalAssessmentId: String(assessment._id),
+      peerReviewId: String(peerReview._id),
+      reviewerType: peerReview.reviewerType,
+      taAssignments: peerReview.taAssignments,
+      maxMarks: assessment.maxMarks ?? 0,
+      items: [],
+    };
+  }
+  
   // Load assignments + reviewee team numbers + repo
-  const assignmentIds = submissions.map(s => s.peerReviewAssignmentId);
+  const assignmentIds = Array.from(new Set(submissions.map(s => String(s.peerReviewAssignmentId)))).map(oid);
   const assignments = await PeerReviewAssignmentModel.find({
     _id: { $in: assignmentIds },
   })
@@ -252,28 +282,37 @@ export const getPeerReviewSubmissionsForAssessmentById = async (
     .lean();
 
   const assignmentById = new Map(assignments.map(a => [String(a._id), a]));
-  const revieweeTeamIds = assignments.map(a => a.reviewee);
+  const revieweeTeamIds = Array.from(new Set(assignments.map(a => String(a.reviewee)))).map(oid);
   const revieweeTeams = await TeamModel.find({ _id: { $in: revieweeTeamIds } })
     .select('_id number')
     .lean();
   const teamNumberById = new Map(revieweeTeams.map(t => [String(t._id), t.number]));
 
   // Reviewer lookups
-  const reviewerUserIds = submissions
-    .filter(s => s.reviewerUserId)
-    .map(s => String(s.reviewerUserId));
-  const reviewerTeamIds = submissions
-    .filter(s => s.reviewerTeamId)
-    .map(s => String(s.reviewerTeamId));
+  const reviewerUserIds = Array.from(
+    new Set(
+      submissions
+        .filter(s => s.reviewerUserId)
+        .map(s => String(s.reviewerUserId))
+    )
+  ).map(oid);
+
+  const reviewerTeamIds = Array.from(
+    new Set(
+      submissions
+        .filter(s => s.reviewerTeamId)
+        .map(s => String(s.reviewerTeamId))
+    )
+  ).map(oid);
 
   const [reviewerUsers, reviewerTeams] = await Promise.all([
     reviewerUserIds.length
-      ? UserModel.find({ _id: { $in: reviewerUserIds.map(oid) } })
+      ? UserModel.find({ _id: { $in: reviewerUserIds } })
           .select('_id name')
           .lean()
       : Promise.resolve([]),
     reviewerTeamIds.length
-      ? TeamModel.find({ _id: { $in: reviewerTeamIds.map(oid) } })
+      ? TeamModel.find({ _id: { $in: reviewerTeamIds } })
           .select('_id number')
           .lean()
       : Promise.resolve([]),
@@ -286,10 +325,14 @@ export const getPeerReviewSubmissionsForAssessmentById = async (
 
   // Grading tasks summary (per submission)
   const subIds = submissions.map(s => s._id);
-  const tasks = await PeerReviewGradingTaskModel.find({
+  const taskQuery: any = {
     peerReviewId: peerReview._id,
     peerReviewSubmissionId: { $in: subIds },
-  })
+  }
+  
+  if (userCourseRole === COURSE_ROLE.TA) taskQuery.grader = oid(userId);
+  
+  const tasks = await PeerReviewGradingTaskModel.find(taskQuery)
     .select('peerReviewSubmissionId grader status gradedAt')
     .populate('grader', '_id name')
     .lean();
@@ -365,7 +408,7 @@ export const getPeerReviewSubmissionsForAssessmentById = async (
         completedCount,
         inProgressCount,
         assignedCount,
-        graders: Array.from(gradersMap.values()),
+        graders: Array.from(gradersMap.values()).sort((a,b) => a.name.localeCompare(b.name)),
         lastGradedAt,
       },
     };
@@ -379,7 +422,6 @@ export const getPeerReviewSubmissionsForAssessmentById = async (
     peerReviewId: String(peerReview._id),
     reviewerType: peerReview.reviewerType,
     taAssignments: peerReview.taAssignments,
-    taGradingScope: peerReview.taGradingScope,
     maxMarks: assessment.maxMarks ?? 0,
     items,
   };
@@ -579,4 +621,139 @@ export const getPeerReviewResultsForAssessmentById = async (
   }
 
   return dto;
+};
+
+/* ------------------------------- Peer Review Assessment Grading ------------------------------- */
+
+export const getPeerReviewGradingDTO = async (
+  userId: string,
+  userCourseRole: string,
+  assessmentId: string,
+  peerReviewSubmissionId: string
+) => {
+  const assessment = await InternalAssessmentModel.findById(assessmentId)
+    .select('_id assessmentType maxMarks')
+    .lean();
+  if (!assessment) throw new NotFoundError('Assessment not found');
+  if (assessment.assessmentType !== 'peer_review')
+    throw new BadRequestError('Not a peer review assessment');
+
+  const peerReview = await PeerReviewModel.findOne({ internalAssessmentId: assessmentId })
+    .select('_id title reviewerType internalAssessmentId')
+    .lean();
+  if (!peerReview) throw new NotFoundError('Peer review not found for assessment');
+
+  const submission = await PeerReviewSubmissionModel.findById(peerReviewSubmissionId)
+    .select('_id peerReviewId peerReviewAssignmentId reviewerKind reviewerUserId reviewerTeamId status startedAt lastEditedAt submittedAt createdAt')
+    .lean();
+  if (!submission) throw new NotFoundError('Peer review submission not found');
+
+  if (String(submission.peerReviewId) !== String(peerReview._id)) {
+    throw new BadRequestError('Submission does not belong to this peer review assessment');
+  }
+
+  // TA must be assigned a grading task
+  let myTaskDoc: any | null = null;
+  if (userCourseRole === COURSE_ROLE.TA) {
+    myTaskDoc = await PeerReviewGradingTaskModel.findOne({
+      peerReviewId: peerReview._id,
+      peerReviewSubmissionId: submission._id,
+      grader: oid(userId),
+    }).lean();
+
+    if (!myTaskDoc) {
+      throw new MissingAuthorizationError('Not assigned to grade this submission');
+    }
+  } else if (userCourseRole === COURSE_ROLE.Faculty) {
+    myTaskDoc = await PeerReviewGradingTaskModel.findOne({
+      peerReviewId: peerReview._id,
+      peerReviewSubmissionId: submission._id,
+      grader: oid(userId),
+    }).lean();
+  } else {
+    throw new MissingAuthorizationError('Access denied');
+  }
+
+  const assignment = await PeerReviewAssignmentModel.findById(submission.peerReviewAssignmentId)
+    .select('_id reviewee repoName repoUrl')
+    .lean();
+  if (!assignment) throw new NotFoundError('Peer review assignment not found');
+
+  const revieweeTeam = await TeamModel.findById(assignment.reviewee)
+    .select('_id number')
+    .lean();
+  if (!revieweeTeam) throw new NotFoundError('Reviewee team not found');
+
+  // reviewer identity
+  let reviewer:
+    | { kind: 'Team'; teamId: string; teamNumber: number; reviewerKind: 'Team' }
+    | { kind: 'User'; userId: string; name: string; reviewerKind: 'Student' | 'TA' };
+
+  if (submission.reviewerKind === 'Team') {
+    const team = await TeamModel.findById(submission.reviewerTeamId).select('_id number').lean();
+    reviewer = {
+      kind: 'Team',
+      teamId: String(submission.reviewerTeamId),
+      teamNumber: team?.number ?? -1,
+      reviewerKind: 'Team',
+    };
+  } else {
+    const u = await UserModel.findById(submission.reviewerUserId).select('_id name').lean();
+    reviewer = {
+      kind: 'User',
+      userId: String(submission.reviewerUserId),
+      name: u?.name ?? 'Unknown',
+      reviewerKind: submission.reviewerKind as 'Student' | 'TA',
+    };
+  }
+
+  // Retrieve comments
+  const comments = await getPeerReviewCommentsBySubmissionId(
+    userId,
+    userCourseRole,
+    assessmentId,
+    peerReviewSubmissionId
+  );
+
+  const myGradingTask: PeerReviewMyGradingTaskDTO | null = myTaskDoc
+    ? {
+        _id: String(myTaskDoc._id),
+        status: myTaskDoc.status,
+        score: myTaskDoc.score,
+        feedback: myTaskDoc.feedback,
+        gradedAt: myTaskDoc.gradedAt,
+        createdAt: myTaskDoc.createdAt,
+        updatedAt: myTaskDoc.updatedAt,
+      }
+    : null;
+
+  return {
+    internalAssessmentId: String(assessment._id),
+    peerReviewId: String(peerReview._id),
+    peerReviewSubmissionId: String(submission._id),
+
+    maxMarks: Number(assessment.maxMarks ?? 0),
+
+    peerReviewTitle: peerReview.title,
+    reviewerType: peerReview.reviewerType,
+
+    submission: {
+      status: submission.status,
+      startedAt: submission.startedAt,
+      lastEditedAt: submission.lastEditedAt,
+      submittedAt: submission.submittedAt,
+      createdAt: submission.createdAt,
+    },
+
+    reviewer,
+
+    assignment: {
+      peerReviewAssignmentId: String(assignment._id),
+      revieweeTeam: { teamId: String(revieweeTeam._id), teamNumber: revieweeTeam.number },
+      repo: { repoName: assignment.repoName, repoUrl: assignment.repoUrl },
+    },
+
+    comments,
+    myGradingTask,
+  };
 };

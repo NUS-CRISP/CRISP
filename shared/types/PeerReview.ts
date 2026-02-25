@@ -9,8 +9,6 @@ export type ReviewerRef =
   | { kind: "User"; userId: string; name: string }
   | { kind: "Team"; teamId: string; teamNumber: number };
 
-export type TAGradingScope = "AssignedOnly" | "AllSubmissions";
-
 export interface RepoNode {
   path: string;
   name: string;
@@ -39,7 +37,6 @@ export interface PeerReview {
   
   // Assessment-related
   internalAssessmentId: string;
-  taGradingScope: TAGradingScope;
   gradingStartDate?: Date;
   gradingEndDate?: Date;
   gradingStatus?: "NotStarted" | "InProgress" | "Completed";
@@ -155,95 +152,4 @@ export interface PeerReviewInfoDTO {
   capabilities: {
     assignmentPageTeamIds: string[];
   };
-}
-
-// Assessment-related
-export interface PeerReviewGradingTask {
-  _id: string;
-  peerReviewId: string;
-  peerReviewSubmissionId: string;
-  grader: User; // TA/Coordinator who grades this submission
-  status: "Assigned" | "InProgress" | "Completed";
-  createdAt: Date;
-  updatedAt: Date;
-  
-  // Grading fields (per grader per target)
-  score?: number;
-  feedback?: string;
-  gradedAt?: Date;
-  
-  // Link to Assessment
-  assessmentSubmissionId?: string; // The corresponding submission in the InternalAssessment context
-}
-
-export interface PeerReviewResultsStudentRow {
-  studentId: string;
-  studentName: string;
-  teamId: string;
-  teamNumber: number;
-  aggregatedScore: number | null; // AssessmentResult.averageScore (or computed)
-}
-
-export interface PeerReviewResultsTeamCard {
-  teamId: string;
-  teamNumber: number;
-  teamAggregatedScore: number | null; // derived from members' aggregatedScore (average)
-  members: Array<{
-    studentId: string;
-    studentName: string;
-    aggregatedScore: number | null;
-  }>;
-}
-
-export interface PeerReviewResultsDTO {
-  internalAssessmentId: string;
-  peerReviewId: string;
-  reviewerType: 'Individual' | 'Team';
-  maxMarks: number;
-
-  perStudent: PeerReviewResultsStudentRow[];
-  perTeam: PeerReviewResultsTeamCard[];
-}
-
-export interface PeerReviewGradingSummary {
-  count: number;
-  completedCount: number;
-  inProgressCount: number;
-  assignedCount: number;
-  graders: Array<{ id: string; name: string }>;
-  lastGradedAt?: Date;
-}
-
-export interface PeerReviewSubmissionListItemDTO {
-  peerReviewId: string;
-  peerReviewAssignmentId: string;
-  peerReviewSubmissionId: string;
-  internalAssessmentId: string;
-  
-  revieweeTeam: { teamId: string; teamNumber: number };
-  repo: { repoName: string; repoUrl: string };
-  
-  reviewer: ReviewerRef;
-  reviewerKind: "Student" | "Team" | "TA";
-  
-  status: PeerReviewSubmission['status'];
-  startedAt?: Date;
-  lastEditedAt?: Date;
-  submittedAt?: Date;
-  createdAt: Date;
-  lastActivityAt: Date;
-  
-  grading: PeerReviewGradingSummary;
-}
-
-export interface PeerReviewSubmissionsDTO {
-  internalAssessmentId: string;
-  peerReviewId: string;
-  
-  reviewerType: ReviewerType;
-  taAssignments: boolean;
-  taGradingScope: TAGradingScope;
-  maxMarks: number;
-  
-  items: PeerReviewSubmissionListItemDTO[];
 }

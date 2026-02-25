@@ -16,7 +16,7 @@ import { IconSearch } from '@tabler/icons-react';
 import {
   PeerReviewSubmissionsDTO,
   PeerReviewSubmissionListItemDTO,
-} from '@shared/types/PeerReview';
+} from '@shared/types/PeerReviewAssessment';
 import PeerReviewSubmissionCard from '../cards/PeerReviewSubmissionCard';
 
 type StatusFilter = 'All' | 'NotStarted' | 'Draft' | 'Submitted';
@@ -68,7 +68,6 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
 
   useEffect(() => {
     fetchSubmissions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId, assessmentId]);
 
   const revieweeOptions = useMemo(() => {
@@ -224,7 +223,7 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
             data={[
               { value: 'All', label: 'All' },
               { value: 'Ungraded', label: 'Ungraded' },
-              { value: 'HasGrades', label: 'Has grades' },
+              { value: 'HasGrades', label: 'Graded' },
             ]}
           />
         </Group>

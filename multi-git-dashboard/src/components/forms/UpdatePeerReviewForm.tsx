@@ -27,7 +27,6 @@ function toInitialValues(peerReview: PeerReview, assessment: InternalAssessment)
     reviewerType: peerReview.reviewerType,
 
     taAssignments: Boolean(peerReview.taAssignments),
-    taGradingScope: (peerReview as any).taGradingScope ?? 'AssignedOnly',
 
     minReviews: peerReview.minReviewsPerReviewer ?? 0,
     maxReviews: peerReview.maxReviewsPerReviewer ?? 1,

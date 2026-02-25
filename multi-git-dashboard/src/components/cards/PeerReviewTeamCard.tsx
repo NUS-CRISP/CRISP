@@ -1,5 +1,5 @@
 import { Card, Group, Stack, Text, Badge } from '@mantine/core';
-import { PeerReviewResultsTeamCard } from '@shared/types/PeerReview';
+import { PeerReviewResultsTeamCard } from '@shared/types/PeerReviewAssessment';
 
 const formatScore = (v: number | null | undefined) => {
   if (v === null || v === undefined) return 'Not yet graded';
@@ -7,7 +7,7 @@ const formatScore = (v: number | null | undefined) => {
 };
 
 const PeerReviewTeamCard = ({ team }: { team: PeerReviewResultsTeamCard }) => (
-  <Card withBorder radius="md" p="md" mb="sm">
+  <Card withBorder radius="md" p="md" mb="sm" mr="xs">
     <Group justify="space-between" align="flex-start" mb="xs">
       <Stack gap={2}>
         <Text fw={700}>Team {team.teamNumber}</Text>

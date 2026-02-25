@@ -1,5 +1,5 @@
 import mongoose, { Schema, Types, Document } from 'mongoose';
-import { PeerReviewGradingTask as SharedPeerReviewGradingTask } from '@shared/types/PeerReview';
+import { PeerReviewGradingTask as SharedPeerReviewGradingTask } from '@shared/types/PeerReviewAssessment';
 
 export interface PeerReviewGradingTask
   extends Omit<
@@ -10,7 +10,7 @@ export interface PeerReviewGradingTask
   _id: Types.ObjectId;
   peerReviewId: Types.ObjectId;
   peerReviewSubmissionId?: Types.ObjectId;
-  graderUserId: Types.ObjectId;
+  grader: Types.ObjectId;
 }
 
 const peerReviewGradingTaskSchema = new Schema<PeerReviewGradingTask>(
@@ -22,7 +22,7 @@ const peerReviewGradingTaskSchema = new Schema<PeerReviewGradingTask>(
       index: true,
     },
 
-    graderUserId: {
+    grader: {
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
@@ -62,9 +62,9 @@ const peerReviewGradingTaskSchema = new Schema<PeerReviewGradingTask>(
   }
 );
 
-// Uniqueness: one task per (peerReviewId, graderUserId, submission) when targetType=submission
+// Uniqueness: one task per (peerReviewId, submission, grader) when targetType=submission
 peerReviewGradingTaskSchema.index(
-  { peerReviewId: 1, peerReviewSubmissionId: 1, graderUserId: 1 },
+  { peerReviewId: 1, peerReviewSubmissionId: 1, grader: 1 },
   { unique: true }
 );
 

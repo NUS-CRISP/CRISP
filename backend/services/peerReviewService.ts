@@ -171,7 +171,6 @@ export interface PeerReviewSettings {
   minReviews: number;
   maxReviews: number;
   internalAssessmentId?: string;
-  taGradingScope: 'AssignedOnly' | 'AllSubmissions';
   gradingStartDate?: Date;
   gradingEndDate?: Date;
 }
@@ -197,7 +196,6 @@ export const createPeerReviewById = async (
     minReviews: minReviewsPerReviewer,
     maxReviews: maxReviewsPerReviewer,
     internalAssessmentId,
-    taGradingScope,
     gradingStartDate,
     gradingEndDate,
   } = peerReviewData;
@@ -216,7 +214,6 @@ export const createPeerReviewById = async (
     minReviewsPerReviewer,
     maxReviewsPerReviewer,
     internalAssessmentId,
-    taGradingScope,
     gradingStartDate,
     gradingEndDate,
   });
@@ -299,7 +296,6 @@ export const updatePeerReviewById = async (
   if (settingsData.reviewerType !== undefined) pr.reviewerType = settingsData.reviewerType;
 
   if (settingsData.taAssignments !== undefined) pr.taAssignments = settingsData.taAssignments;
-  if (settingsData.taGradingScope !== undefined) pr.taGradingScope = settingsData.taGradingScope;
 
   if (settingsData.minReviews !== undefined) pr.minReviewsPerReviewer = Number(settingsData.minReviews);
   if (settingsData.maxReviews !== undefined) pr.maxReviewsPerReviewer = Number(settingsData.maxReviews);

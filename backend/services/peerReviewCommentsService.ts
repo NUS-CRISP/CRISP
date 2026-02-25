@@ -9,12 +9,13 @@ import {
   MissingAuthorizationError,
 } from './errors';
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
-import { PeerReview } from '@models/PeerReview';
+import PeerReviewModel, { PeerReview } from '@models/PeerReview';
 import { getPeerReviewById } from './peerReviewService';
 import {
   fetchSubmissionForAssignment,
   assertSubmissionWritableByCaller,
 } from './peerReviewSubmissionService';
+import { PeerReviewGradingTaskModel } from '@models/PeerReviewGradingTask';
 
 const ASSIGNMENT_NOT_FOUND = 'Peer review assignment not found';
 const COMMENT_NOT_FOUND = 'Peer review comment not found';
@@ -86,6 +87,47 @@ export const getPeerReviewCommentsByAssignmentId = async (
   throw new MissingAuthorizationError(UNAUTHORIZED_TO_VIEW_COMMENTS);
 };
 
+export const getPeerReviewCommentsBySubmissionId = async (
+  userId: string,
+  userCourseRole: string,
+  assessmentId: string,
+  peerReviewSubmissionId: string
+) => {
+  const pr = await PeerReviewModel.findOne({ internalAssessmentId: assessmentId })
+    .select('_id')
+    .lean();
+  if (!pr) throw new NotFoundError('Peer review not found for assessment');
+
+  const submission = await PeerReviewSubmissionModel.findById(peerReviewSubmissionId)
+    .select('_id peerReviewId peerReviewAssignmentId')
+    .lean();
+  if (!submission) throw new NotFoundError('Peer review submission not found');
+
+  if (String(submission.peerReviewId) !== String(pr._id)) {
+    throw new BadRequestError('Submission does not belong to this peer review assessment');
+  }
+
+  if (userCourseRole === COURSE_ROLE.TA) {
+    const hasTask = await PeerReviewGradingTaskModel.exists({
+      peerReviewId: pr._id,
+      peerReviewSubmissionId: submission._id,
+      grader: oid(userId),
+    });
+    if (!hasTask) {
+      throw new MissingAuthorizationError('Not assigned to grade this submission');
+    }
+  }
+
+  // Return comments for THIS submission only
+  const comments = await PeerReviewCommentModel.find({
+    peerReviewSubmissionId: submission._id,
+  })
+    .populate('author', '_id name')
+    .lean();
+
+  return comments
+};
+
 export const addPeerReviewCommentByAssignmentId = async (
   userId: string,
   userCourseRole: string,
@@ -130,6 +172,7 @@ export const addPeerReviewCommentByAssignmentId = async (
   const newComment = new PeerReviewCommentModel({
     peerReviewId: assignment.peerReviewId,
     peerReviewAssignmentId: assignmentId,
+    peerReviewSubmissionId: submissionId,
     createdAt: Date.now(),
     filePath,
     startLine,

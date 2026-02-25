@@ -14,7 +14,7 @@ import {
 import { useForm } from '@mantine/form';
 import { useMemo, useRef, useEffect, useState } from 'react';
 import { showNotification } from '@mantine/notifications';
-import { ReviewerType, TAGradingScope } from '@shared/types/PeerReview';
+import { ReviewerType } from '@shared/types/PeerReview';
 import { TeamSet } from '@shared/types/TeamSet';
 
 export interface PeerReviewBaseFormValues {
@@ -25,7 +25,6 @@ export interface PeerReviewBaseFormValues {
   teamSetId: string;
   reviewerType: ReviewerType;
   taAssignments: boolean;
-  taGradingScope: TAGradingScope;
   minReviews: string | number;
   maxReviews: string | number;
 
@@ -62,7 +61,6 @@ export type NormalizedPeerReviewBasePayload = {
   teamSetId: string;
   reviewerType: ReviewerType;
   taAssignments: boolean;
-  taGradingScope: TAGradingScope;
   minReviews: number;
   maxReviews: number;
   maxMarks: number;
@@ -93,7 +91,6 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
     teamSetId: '',
     reviewerType: 'Individual',
     taAssignments: false,
-    taGradingScope: 'AssignedOnly',
     minReviews: 0,
     maxReviews: 1,
     maxMarks: 10,
@@ -160,7 +157,6 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
     reviewerType: values.reviewerType,
 
     taAssignments: Boolean(values.taAssignments),
-    taGradingScope: values.taAssignments ? values.taGradingScope : 'AssignedOnly',
 
     minReviews: Number(values.minReviews ?? 0),
     maxReviews: Number(values.maxReviews ?? 1),
@@ -175,7 +171,6 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
   useEffect(() => {
     form.setValues(mergedInitial);
     originalValuesRef.current = normalize(mergedInitial);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mergedInitial]);
 
   const handleSubmit = async () => {
@@ -273,16 +268,6 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
         <Text fw={600} fz="sm" mt="md" mb="xs">
           TA Grading Scope
         </Text>
-        <Radio.Group
-          value={form.values.taGradingScope}
-          onChange={val => form.setFieldValue('taGradingScope', val as TAGradingScope)}
-          ml="4px"
-        >
-          <Group>
-            <Radio label="Assigned Only" value="AssignedOnly" />
-            <Radio label="All Submissions" value="AllSubmissions" />
-          </Group>
-        </Radio.Group>
 
         <TextInput
           withAsterisk
