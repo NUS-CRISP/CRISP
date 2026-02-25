@@ -11,6 +11,7 @@ import {
   Text,
   Container,
   Divider,
+  ScrollArea,
 } from '@mantine/core';
 import { IconSearch } from '@tabler/icons-react';
 import {
@@ -230,23 +231,25 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
         
         <Divider my="xs" />
         
-        <Stack gap="sm">
-          {filteredItems.length > 0
-            ? filteredItems.map((item: PeerReviewSubmissionListItemDTO) => (
-                <PeerReviewSubmissionCard
-                  key={item.peerReviewSubmissionId}
-                  courseId={courseId}
-                  assessmentId={assessmentId}
-                  item={item}
-                  maxMarks={dto.maxMarks}
-                  // for now both faculty and TA can click grade; you can tighten later
-                  canGrade={true}
-                  onAfterAction={fetchSubmissions}
-                />
-              ))
-            : <Center>No submissions found.</Center>
-          }
-        </Stack>
+        <ScrollArea style={{ height: 'calc(100vh - 380px)' }} pb="lg" scrollbarSize={8} offsetScrollbars>
+          <Stack gap="sm">
+            {filteredItems.length > 0
+              ? filteredItems.map((item: PeerReviewSubmissionListItemDTO) => (
+                  <PeerReviewSubmissionCard
+                    key={item.peerReviewSubmissionId}
+                    courseId={courseId}
+                    assessmentId={assessmentId}
+                    item={item}
+                    maxMarks={dto.maxMarks}
+                    // for now both faculty and TA can click grade; you can tighten later
+                    canGrade={true}
+                    onAfterAction={fetchSubmissions}
+                  />
+                ))
+              : <Center>No submissions found.</Center>
+            }
+          </Stack>
+        </ScrollArea>
       </Stack>
     </Container>
   );

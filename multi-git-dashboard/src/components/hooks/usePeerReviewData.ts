@@ -62,20 +62,20 @@ export default function usePeerReviewData({
 
   const scheduleTouchDraft = useCallback(() => {
     if (!canEdit) return;
-    if (!submission) return;
+    if (userCourseRole === COURSE_ROLE.Faculty || (userCourseRole === COURSE_ROLE.TA && isSupervisorTA)) return;
     if (touchDraftTimer.current) clearTimeout(touchDraftTimer.current);
 
     touchDraftTimer.current = setTimeout(async () => {
       try {
         setSaveState('Saving');
         const updated = await apiTouchDraft(courseId, assignmentId);
-        setSubmission(updated);
+        if (updated) setSubmission(updated);
         setSaveState('Saved');
       } catch {
         setSaveState('Error');
       }
     }, 900);
-  }, [canEdit, courseId, assignmentId, submission]);
+  }, [canEdit, courseId, assignmentId, userCourseRole, isSupervisorTA]);
 
   // Initial load of data
   useEffect(() => {
@@ -220,7 +220,7 @@ export default function usePeerReviewData({
       scheduleTouchDraft();
       await refreshComments();
     },
-    [canEdit, scheduleTouchDraft, courseId, assignmentId, refreshComments]
+    [canEdit, scheduleTouchDraft, courseId, assignmentId, refreshComments, submission]
   );
 
   const deleteComment = useCallback(
@@ -235,7 +235,7 @@ export default function usePeerReviewData({
       scheduleTouchDraft();
       setComments(prev => prev.filter(c => c._id !== commentId));
     },
-    [canEdit, scheduleTouchDraft, courseId, assignmentId]
+    [canEdit, scheduleTouchDraft, courseId, assignmentId, submission]
   );
 
   const flagComment = useCallback(

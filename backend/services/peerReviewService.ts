@@ -349,14 +349,19 @@ const loadAssignmentsState = async (
   const assignmentsOfTeam: Record<string, RevieweeAssignmentsDTO> = {};
 
   for (const a of assignmentDocs) {
-    const reviewee = await TeamModel.findById(a.reviewee);
+    const reviewee = await TeamModel.findById(a.reviewee)
+      .populate('TA', '_id name')
+      .lean();
     const { repoName, repoUrl } = await resolveTeamRepo(
       courseId,
       a.reviewee.toString()
     );
     if (!reviewee) continue;
 
-    const teamTA = await UserModel.findById(reviewee.TA);
+    const revieweeTA = reviewee.TA && typeof reviewee.TA === 'object'
+      ? { ...reviewee.TA, _id: reviewee.TA._id.toString() }
+      : null;
+
     const assignmentDto: PeerReviewAssignment = {
       _id: a._id.toString(),
       peerReviewId: a.peerReviewId.toString(),
@@ -364,9 +369,9 @@ const loadAssignmentsState = async (
       updatedAt: a.updatedAt,
       deadline: a.deadline ?? null,
       reviewee: {
-        ...reviewee.toObject(),
+        ...(reviewee as any),
         _id: reviewee._id.toString(),
-        TA: teamTA!.toObject(),
+        TA: revieweeTA as any,
       },
       repoName: repoName,
       repoUrl: repoUrl ?? TEMP_FALLBACK_URL,
@@ -470,12 +475,19 @@ const addMissingAssignmentsForSubmissions = async (
   }).lean();
 
   for (const a of extra) {
-    const reviewee = await TeamModel.findById(a.reviewee);
+    const reviewee = await TeamModel.findById(a.reviewee)
+      .populate('TA', '_id name')
+      .lean();
     const { repoName, repoUrl } = await resolveTeamRepo(
       courseId,
       a.reviewee.toString()
     );
     if (!reviewee) continue;
+
+    const revieweeTA = reviewee.TA && typeof reviewee.TA === 'object'
+      ? { ...reviewee.TA, _id: reviewee.TA._id.toString() }
+      : null;
+
     assignmentById.set(a._id.toString(), {
       _id: a._id.toString(),
       peerReviewId: a.peerReviewId.toString(),
@@ -483,8 +495,9 @@ const addMissingAssignmentsForSubmissions = async (
       updatedAt: a.updatedAt,
       deadline: a.deadline ?? null,
       reviewee: {
-        ...reviewee.toObject(),
+        ...(reviewee as any),
         _id: reviewee._id.toString(),
+        TA: revieweeTA as any,
       },
       repoName: repoName,
       repoUrl: repoUrl ?? TEMP_FALLBACK_URL,

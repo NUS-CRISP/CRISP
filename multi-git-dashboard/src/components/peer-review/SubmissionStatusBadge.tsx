@@ -51,7 +51,7 @@ const SubmissionStatusBadge: React.FC<SubmissionStatusBadgeProps> = ({
       size="lg"
       color={colourByStatus[submission.status] || 'gray'}
     >
-      {submission.status}
+      {submission.status === 'NotStarted' ? 'Not Started' : submission.status}
     </Badge>
   );
 };

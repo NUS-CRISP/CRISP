@@ -27,41 +27,52 @@ const PeerReviewAssignments: React.FC<PeerReviewAssignmentsProps> = ({
 
   return (
     <Stack gap="sm" my="xs">
-      {assignments.map(a => (
-        <Group
-          key={a.assignment._id}
-          gap={4}
-          justify="flex-start"
-          wrap="nowrap"
-        >
-          <Button
-            size="compact-xs"
-            variant="light"
-            color="blue"
-            onClick={() =>
-              router.push(
-                `${router.asPath.replace(/\/$/, '')}/${a.assignment._id}`
-              )
-            }
+      {assignments.map(a => {
+        const teamNumber =
+          (a.assignment.reviewee as Partial<Team> | undefined)?.number ??
+          (a.assignment.reviewee as { teamNumber?: number } | undefined)
+            ?.teamNumber ??
+          'Unknown';
+        const taName =
+          (a.assignment.reviewee as Partial<Team> | undefined)?.TA?.name ??
+          'Unassigned';
+
+        return (
+          <Group
+            key={a.assignment._id}
+            gap={4}
+            justify="flex-start"
+            wrap="nowrap"
           >
-            Assignment: Team {a.assignment.reviewee.number}
-            {hasFacultyPermission && ` (TA: ${a.assignment.reviewee.TA.name})`}
-          </Button>
-          {hasFacultyPermission && (
-            <>
-              <ActionIcon
-                variant="light"
-                color="red"
-                onClick={() => onDelete(a.assignment.reviewee)}
-                style={{ cursor: 'pointer' }}
-                size="sm"
-              >
-                <IconTrash size={12} />
-              </ActionIcon>
-            </>
-          )}
-        </Group>
-      ))}
+            <Button
+              size="compact-xs"
+              variant="light"
+              color="blue"
+              onClick={() =>
+                router.push(
+                  `${router.asPath.replace(/\/$/, '')}/${a.assignment._id}`
+                )
+              }
+            >
+              Assignment: Team {teamNumber}
+              {hasFacultyPermission && ` (TA: ${taName})`}
+            </Button>
+            {hasFacultyPermission && (
+              <>
+                <ActionIcon
+                  variant="light"
+                  color="red"
+                  onClick={() => onDelete(a.assignment.reviewee as Team)}
+                  style={{ cursor: 'pointer' }}
+                  size="sm"
+                >
+                  <IconTrash size={12} />
+                </ActionIcon>
+              </>
+            )}
+          </Group>
+        );
+      })}
     </Stack>
   );
 };

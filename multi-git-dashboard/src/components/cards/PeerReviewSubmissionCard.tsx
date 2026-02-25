@@ -2,7 +2,7 @@ import React from 'react';
 import { Badge, Button, Card, Group, Stack, Text, Anchor } from '@mantine/core';
 import { IconExternalLink, IconPencil, IconEye } from '@tabler/icons-react';
 import { useRouter } from 'next/router';
-import { PeerReviewSubmissionListItemDTO } from '@shared/types/PeerReview';
+import { PeerReviewSubmissionListItemDTO } from '@shared/types/PeerReviewAssessment';
 
 const formatDateTime = (value?: Date | string) => {
   if (!value) return '—';
@@ -41,25 +41,26 @@ const PeerReviewSubmissionCard: React.FC<Props> = ({
 
   const gradersLabel =
     item.grading!.count === 0
-      ? 'Not assigned'
+      ? 'Not Assigned'
       : item.grading?.graders.map(g => g.name).join(', ');
 
-  // TODO: placeholder until actual grading view implemented
   const openGradingView = () => {
     router.push(
-      `/courses/${courseId}/internal-assessments/${assessmentId}` // link to be updated
+      `/courses/${courseId}/internal-assessments/${assessmentId}/peer-review/${item.peerReviewSubmissionId}`
     );
   };
 
   return (
-    <Card withBorder shadow="sm" radius="md" p="md">
+    <Card withBorder shadow="sm" radius="md" p="md" mr="xs">
       <Group justify="space-between" align="flex-start">
         <Stack gap={4}>
           <Group gap="xs">
             <Text fw={600}>
               Reviewer: {reviewerLabel} ({item.reviewerKind})
             </Text>
-            <Badge color={statusColor(item.status)}>{item.status}</Badge>
+            <Badge color={statusColor(item.status)}>
+              {item.status === "NotStarted" ? "Not Started" : item.status}
+            </Badge>
           </Group>
 
           <Text fz="sm" c="dimmed">
@@ -78,7 +79,7 @@ const PeerReviewSubmissionCard: React.FC<Props> = ({
                 fz="sm"
               >
                 {item.repo.repoName || item.repo.repoUrl}{' '}
-                <IconExternalLink size={14} style={{ marginLeft: 4 }} />
+                <IconExternalLink size={14} />
               </Anchor>
             ) : (
               <Text fz="sm" c="dimmed">
@@ -94,7 +95,7 @@ const PeerReviewSubmissionCard: React.FC<Props> = ({
 
         <Stack gap={6} align="flex-end">
           <Badge variant="light">
-            Grades: {item.grading.completedCount}/{item.grading.count}
+            Grade: {item.grading.completedCount}/{item.grading.count}
           </Badge>
           <Text fz="xs" c="dimmed" style={{ maxWidth: 260, textAlign: 'right' }}>
             Graders: {gradersLabel}
