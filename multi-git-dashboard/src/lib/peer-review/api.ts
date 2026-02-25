@@ -5,6 +5,13 @@ import {
 } from '@shared/types/PeerReview';
 import { PeerReviewGradingDTO, PeerReviewMyGradingTaskDTO } from '@shared/types/PeerReviewAssessment';
 
+type PeerReviewAssignmentWithViewContext = PeerReviewAssignment & {
+  viewContext?: {
+    isReviewee?: boolean;
+    isSupervisorTA?: boolean;
+  };
+};
+
 // API Calls for Peer Review Feature
 
 /* ----- Peer Review Assignment API Calls ----- */
@@ -19,11 +26,11 @@ export const apiFetchSubmissionsForAssignment = async (
       headers: { 'Content-Type': 'application/json' },
     });
     if (!response.ok) {
-      console.error('Error fetching submissions:', response.statusText);
+      console.error('Error fetching submissions');
       return [];
     }
-    const submissions: PeerReviewSubmission[] = await response.json();
-    return submissions;
+    const data = await response.json();
+    return data;
   } catch (err) {
     console.error('Error fetching submissions: ', err);
     return [];
@@ -34,7 +41,7 @@ export const apiTouchDraft = async (
   courseId: string,
   peerReviewAssignmentId: string
 ): Promise<PeerReviewSubmission | null> => {
-  const touchDraftApiRoute = `/api/peer-review/${courseId}/${peerReviewAssignmentId}/submission`;
+  const touchDraftApiRoute = `/api/peer-review/${courseId}/${peerReviewAssignmentId}/submissions`;
   try {
     const response = await fetch(touchDraftApiRoute, {
       method: 'PUT',
@@ -43,8 +50,8 @@ export const apiTouchDraft = async (
     if (!response.ok) {
       throw new Error('Failed to touch draft');
     }
-    const updatedSubmission: PeerReviewSubmission = await response.json();
-    return updatedSubmission;
+    const data = await response.json();
+    return data;
   } catch (err) {
     console.error('Error touching draft: ', err);
     return null;
@@ -55,7 +62,7 @@ export const apiSubmitReview = async (
   courseId: string,
   peerReviewAssignmentId: string
 ): Promise<PeerReviewSubmission | null> => {
-  const submitReviewApiRoute = `/api/peer-review/${courseId}/${peerReviewAssignmentId}/submission/submit`;
+  const submitReviewApiRoute = `/api/peer-review/${courseId}/${peerReviewAssignmentId}/submissions/submit`;
   try {
     const response = await fetch(submitReviewApiRoute, {
       method: 'POST',
@@ -64,8 +71,8 @@ export const apiSubmitReview = async (
     if (!response.ok) {
       throw new Error('Failed to submit review');
     }
-    const submittedSubmission: PeerReviewSubmission = await response.json();
-    return submittedSubmission;
+    const data = await response.json();
+    return data;
   } catch (err) {
     console.error('Error submitting review: ', err);
     return null;
@@ -76,7 +83,7 @@ export const apiSubmitReview = async (
 export const apiFetchPeerReviewAssignment = async (
   courseId: string,
   peerReviewAssignmentId: string
-): Promise<PeerReviewAssignment | null> => {
+): Promise<PeerReviewAssignmentWithViewContext | null> => {
   const peerReviewAssignmentApiRoute = `/api/peer-review/${courseId}/${peerReviewAssignmentId}/assignment`;
   try {
     const response = await fetch(peerReviewAssignmentApiRoute, {
@@ -86,8 +93,8 @@ export const apiFetchPeerReviewAssignment = async (
     if (!response.ok) {
       throw new Error('Failed to fetch peer review assignment');
     }
-    const assignment: PeerReviewAssignment = await response.json();
-    return assignment;
+    const data = await response.json();
+    return data;
   } catch (err) {
     console.error('Error fetching peer review assignment: ', err);
     return null;
@@ -107,11 +114,11 @@ export const apiFetchComments = async (
       headers: { 'Content-Type': 'application/json' },
     });
     if (!response.ok) {
-      console.error('Error fetching comments:', response.statusText);
+      console.error('Error fetching comments');
       return [];
     }
-    const comments: PeerReviewComment[] = await response.json();
-    return comments;
+    const data = await response.json();
+    return data;
   } catch (err) {
     console.error('Error fetching comments: ', err);
     return [];
@@ -144,8 +151,8 @@ export const apiAddComment = async (
     if (!response.ok) {
       throw new Error('Failed to save comment');
     }
-    const savedComment: PeerReviewComment = await response.json();
-    return savedComment;
+    const data = await response.json();
+    return data;
   } catch (err) {
     console.error('Error saving comment: ', err);
     throw new Error('Failed to save comment: ' + (err as Error).message);
@@ -209,7 +216,7 @@ export const apiFlagComment = async (
   const flagCommentApiRoute = `/api/peer-review/${courseId}/${peerReviewAssignmentId}/comments/${commentId}/flag`;
   try {
     const response = await fetch(flagCommentApiRoute, {
-      method: 'POST',
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ flagStatus: isFlag, flagReason: reason }),
     });
@@ -237,8 +244,8 @@ export const apiFetchGradingDTO = async (
     if (!response.ok) {
       throw new Error('Failed to fetch grading data');
     }
-    const gradingDto: PeerReviewGradingDTO = await response.json();
-    return gradingDto;
+    const data = await response.json();
+    return data;
   } catch (err) {
     console.error('Error fetching grading data: ', err);
     return null;
@@ -258,8 +265,8 @@ export const apiStartGradingTask = async (
     if (!response.ok) {
       throw new Error('Failed to start grading task');
     }
-    const gradingTask: PeerReviewMyGradingTaskDTO = await response.json();
-    return gradingTask;
+    const data = await response.json();
+    return data;
   } catch (err) {
     console.error('Error starting grading task: ', err);
     return null;
@@ -283,8 +290,8 @@ export const apiSaveGradingTaskDraft = async (
     if (!response.ok) {
       throw new Error('Failed to save grading draft');
     }
-    const updatedTask: PeerReviewMyGradingTaskDTO = await response.json();
-    return updatedTask;
+    const data = await response.json();
+    return data;
   } catch (err) {
     console.error('Error saving grading draft: ', err);
     return null;
@@ -304,8 +311,8 @@ export const apiSubmitGradingTask = async (
     if (!response.ok) {
       throw new Error('Failed to submit grading task');
     }
-    const updatedTask: PeerReviewMyGradingTaskDTO = await response.json();
-    return updatedTask;
+    const data = await response.json();
+    return data;
   } catch (err) {
     console.error('Error submitting grading task: ', err);
     return null;

@@ -37,6 +37,7 @@ interface PeerReviewCommentSidebarProps {
   onDeleteComment: (commentId: string) => void;
   onFlagComment: (commentId: string) => void;
   selectedLines?: { start: number; end: number } | null;
+  readOnly?: boolean;
 }
 
 const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
@@ -50,6 +51,7 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
   onDeleteComment,
   onFlagComment,
   selectedLines,
+  readOnly = false,
 }) => {
   const [opened, setOpened] = useState(true);
   const [newComment, setNewComment] = useState('');
@@ -143,7 +145,7 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
           type="auto"
           scrollbarSize={1}
         >
-          {selectedLines && (
+          {selectedLines && !readOnly && (
             <Box mr="8px">
               <Textarea
                 placeholder={`Add comment for lines ${selectedLines.start}-${selectedLines.end}...`}
@@ -187,7 +189,7 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
                 mb={4}
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  {c.author?.name && (
+                  {!readOnly && c.author?.name && (
                     <Text fw={500} lh={1.2}>
                       {c.author.name}
                     </Text>
@@ -196,7 +198,7 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
                     {c.updatedAt && new Date(c.updatedAt).toLocaleDateString()}
                   </Text>
                 </div>
-                {user?.userId === c.author?._id && (
+                {user?.userId === c.author?._id && !readOnly && (
                   <Group
                     gap={4}
                     wrap="nowrap"

@@ -186,13 +186,20 @@ export const resolveTeamRepo = async (courseId: string, teamId: string) => {
   if (!team) throw new NotFoundError('Team not found');
 
   const teamData = await TeamDataModel.findById(team.teamData);
-  if (!teamData) throw new NotFoundError('Team data not found');
-
+  
+  // If no teamData, use team number and fallback URL
+  if (!teamData) {
+    return {
+      repoName: team.number.toString(),
+      repoUrl: TEMP_FALLBACK_URL,
+      gitHubOrgName: 'N/A',
+    };
+  }
+  
   const repoName = teamData.repoName ?? team.number.toString();
 
   // GitHub Org Course: build URL from org + repoName
   if (course.courseType === 'GitHubOrg') {
-    console.log('Course is GitHubOrg type');
     return {
       repoName,
       repoUrl: `https://github.com/${course.gitHubOrgName}/${repoName}`,
@@ -201,7 +208,6 @@ export const resolveTeamRepo = async (courseId: string, teamId: string) => {
   }
 
   // Normal Course: find repo URL from gitHubRepoLinks
-  console.log('Course is normal type');
   const links = (course.gitHubRepoLinks ?? []).map(normalizeGitHubUrl);
   const match = links.find(l => extractRepoNameFromUrl(l) === repoName);
   return {

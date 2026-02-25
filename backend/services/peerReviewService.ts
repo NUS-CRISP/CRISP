@@ -79,8 +79,6 @@ export const getPeerReviewInfoById = async (
     ctx.scopedTeamIds
   );
 
-  console.log('Loaded assignmentState:', assignmentState);
-
   const reviewerScope = computeReviewerScope(
     userId,
     userCourseRole,
@@ -88,8 +86,6 @@ export const getPeerReviewInfoById = async (
     peerReview.taAssignments,
     ctx.scopedTeams
   );
-
-  console.log('Computed reviewerScope:', reviewerScope);
 
   const submissions = await loadSubmissionsForScope(
     peerReviewId,
@@ -99,8 +95,6 @@ export const getPeerReviewInfoById = async (
     reviewerScope.scopedReviewerTeamIds,
     reviewerScope.taIdsWanted
   );
-
-  console.log('Loaded submissions:', submissions);
 
   await addMissingAssignmentsForSubmissions(
     courseId,
@@ -114,9 +108,7 @@ export const getPeerReviewInfoById = async (
     reviewerScope.taIdsWanted,
     ctx.usersById
   );
-
-  console.log('Built assignedReviewMaps:', assignedReviewMaps);
-
+  
   if (userCourseRole !== COURSE_ROLE.Student) {
     populateAssignmentsOfTeamReviewers(
       assignmentState.assignmentsOfTeam,
@@ -127,11 +119,6 @@ export const getPeerReviewInfoById = async (
     );
   }
 
-  console.log(
-    'AFTER POPULATION, assignmentState.assignmentsOfTeam:',
-    assignmentState.assignmentsOfTeam
-  );
-
   const teams = buildTeamsDTO(
     peerReview.reviewerType,
     ctx.scopedTeams,
@@ -140,15 +127,6 @@ export const getPeerReviewInfoById = async (
     assignedReviewMaps.memberAssignedMap,
     assignedReviewMaps.teamAssignedMap
   );
-
-  console.log('peerReviewId:', peerReviewId);
-  console.log('peerReview.reviewerType:', peerReview.reviewerType);
-  console.log('teams:', teams);
-  console.log(
-    'assignmentState.assignmentsOfTeam:',
-    assignmentState.assignmentsOfTeam
-  );
-  console.log('TAAssignments:', assignedReviewMaps.assignmentsForTAs);
 
   return {
     _id: peerReviewId,
@@ -372,18 +350,10 @@ const loadAssignmentsState = async (
 
   for (const a of assignmentDocs) {
     const reviewee = await TeamModel.findById(a.reviewee);
-    console.log(
-      'Processing assignment for reviewee team ID:',
-      a.reviewee.toString()
-    );
     const { repoName, repoUrl } = await resolveTeamRepo(
       courseId,
       a.reviewee.toString()
     );
-    console.log('Resolved repo for team', a.reviewee.toString(), ':', {
-      repoName,
-      repoUrl,
-    });
     if (!reviewee) continue;
 
     const teamTA = await UserModel.findById(reviewee.TA);
@@ -755,41 +725,23 @@ const getScopedTeams = async (
 };
 
 export const getTeamDataById = async (courseId: string, teamIds: string[]) => {
-  const entries = (
-    await Promise.all(
-      teamIds.map(async teamId => {
-        try {
-          const { repoName, repoUrl, gitHubOrgName } = await resolveTeamRepo(
-            courseId,
-            teamId
-          );
-          console.log('Resolved team data for teamId', teamId, ':', {
-            repoName,
-            repoUrl,
-            gitHubOrgName,
-          });
-
-          return [
-            teamId,
-            {
-              gitHubOrgName: gitHubOrgName,
-              repoName: repoName,
-              repoUrl: repoUrl,
-            },
-          ] as const;
-        } catch {
-          return [
-            teamId,
-            {
-              gitHubOrgName: '',
-              repoName: '',
-              repoUrl: '',
-            },
-          ] as const;
-        }
-      })
-    )
-  ).filter(Boolean);
+  const entries = await Promise.all(
+    teamIds.map(async teamId => {
+      const { repoName, repoUrl, gitHubOrgName } = await resolveTeamRepo(
+        courseId,
+        teamId
+      );
+      
+      return [
+        teamId,
+        {
+          gitHubOrgName: gitHubOrgName,
+          repoName: repoName,
+          repoUrl: repoUrl,
+        },
+      ] as const;
+    })
+  );
 
   const teamDataById = new Map(entries);
   return teamDataById;

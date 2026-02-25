@@ -1,4 +1,4 @@
-import { Tabs, Container, Button, Modal, Group } from '@mantine/core';
+import { Tabs, Container, Button, Modal, Group, ScrollArea } from '@mantine/core';
 import { TeamSet } from '@shared/types/TeamSet';
 import { PeerReview } from '@shared/types/PeerReview';
 import PeerReviewInfo from './PeerReviewInfo';
@@ -11,6 +11,7 @@ interface PeerReviewOverviewProps {
   onUpdate: () => void;
 }
 
+
 const PeerReviewOverview: React.FC<PeerReviewOverviewProps> = ({
   courseId,
   teamSets,
@@ -18,9 +19,11 @@ const PeerReviewOverview: React.FC<PeerReviewOverviewProps> = ({
   hasFacultyPermission,
   onUpdate,
 }) => {
+  const defaultTab = peerReviews[0]?._id || 'default';
+  
   return (
     <Container>
-      <Tabs mt="md">
+      <Tabs mt="md" defaultValue={defaultTab}>
         <Tabs.List
           style={{
             justifyContent: 'center',
@@ -41,13 +44,20 @@ const PeerReviewOverview: React.FC<PeerReviewOverviewProps> = ({
 
         {peerReviews.map(pr => (
           <Tabs.Panel key={pr._id} value={pr._id} pt="xs">
-            <PeerReviewInfo
-              courseId={courseId}
-              teamSets={teamSets}
-              peerReview={pr}
-              hasFacultyPermission={hasFacultyPermission}
-              onUpdate={onUpdate}
-            />
+            <ScrollArea
+              style={{ height: 'calc(100vh - 180px)' }}
+              scrollbarSize={8}
+              offsetScrollbars
+              pb="md"
+            >
+              <PeerReviewInfo
+                courseId={courseId}
+                teamSets={teamSets}
+                peerReview={pr}
+                hasFacultyPermission={hasFacultyPermission}
+                onUpdate={onUpdate}
+              />
+            </ScrollArea>
           </Tabs.Panel>
         ))}
       </Tabs>

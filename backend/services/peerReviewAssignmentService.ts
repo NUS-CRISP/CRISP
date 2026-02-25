@@ -67,6 +67,38 @@ export const getPeerReviewAssignmentById = async (
   );
 };
 
+export const getPeerReviewAssignmentWithViewContext = async (
+  userCourseRole: string,
+  userId: string,
+  assignmentId: string
+) => {
+  const assignment = await getPeerReviewAssignmentById(
+    userCourseRole,
+    userId,
+    assignmentId
+  );
+
+  const revieweeTeam = await TeamModel.findById(assignment.reviewee)
+    .select('_id members TA')
+    .lean();
+
+  const isReviewee =
+    userCourseRole === COURSE_ROLE.Student &&
+    Boolean(revieweeTeam?.members?.map(String).includes(userId));
+
+  const isSupervisorTA =
+    userCourseRole === COURSE_ROLE.TA &&
+    Boolean(revieweeTeam?.TA?.toString() === userId);
+
+  return {
+    assignment,
+    viewContext: {
+      isReviewee,
+      isSupervisorTA,
+    },
+  };
+};
+
 // Assign peer reviews for a given peer review ID
 export const assignPeerReviews = async (
   courseId: string,
@@ -624,11 +656,11 @@ const upsertAndLoadAssignments = async (
 ) => {
   const now = new Date();
   const ops: AnyBulkWriteOperation[] = prTeamIds.map(reviewee => {
-    const { repoName, repoUrl } = teamIdToRepoMap.get(reviewee) ?? {
-      repoName: 'no repo',
-      repoUrl: 'no repo',
-      gitHubOrgName: '',
-    };
+    const teamData = teamIdToRepoMap.get(reviewee);
+    if (!teamData) {
+      throw new Error(`Team data not found for reviewee ${reviewee}`);
+    }
+    const { repoName, repoUrl } = teamData;
     return {
       updateOne: {
         filter: { peerReviewId: oid(peerReviewId), reviewee: oid(reviewee) },

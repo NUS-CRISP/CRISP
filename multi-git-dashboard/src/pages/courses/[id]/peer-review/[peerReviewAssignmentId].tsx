@@ -9,6 +9,7 @@ import {
   Box,
   Card,
   Button,
+  Badge,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import DeleteConfirmationModal from '@/components/cards/Modals/DeleteConfirmationModal';
@@ -72,6 +73,7 @@ const PeerReviewDetail: React.FC = () => {
     submission,
     canEdit,
     saveState,
+    isReviewee,
 
     openFile,
     addComment,
@@ -404,7 +406,6 @@ const PeerReviewDetail: React.FC = () => {
   // Update comment handler
   const handleUpdateComment = useCallback(
     async (commentId: string, newComment: string) => {
-      if (!canEdit) return false;
       if (updatingCommentId) return false;
       if (!newComment.trim()) return false;
 
@@ -434,7 +435,7 @@ const PeerReviewDetail: React.FC = () => {
         setUpdatingCommentId(null);
       }
     },
-    [canEdit, updatingCommentId, updateComment]
+    [updatingCommentId, updateComment, comments]
   );
 
   // Delete comment handler
@@ -455,7 +456,7 @@ const PeerReviewDetail: React.FC = () => {
         renderFocusedAndStaticDecos(remainingIds);
       }
       notifications.show({
-        color: 'orange',
+        color: 'red',
         title: 'Comment deleted successfully!',
         message: 'Your comment has been deleted.',
       });
@@ -544,6 +545,8 @@ const PeerReviewDetail: React.FC = () => {
   if (!peerReviewAssignment) return <Center>Unable to load assignment.</Center>;
   if (!repoTree) return <Center>No repository tree found.</Center>;
 
+  const isReadOnly = isReviewee;
+
   return (
     <Container fluid className={classes.wrapper}>
       <Group className={classes.header} justify="space-between">
@@ -565,11 +568,18 @@ const PeerReviewDetail: React.FC = () => {
         </Group>
         <Group gap="xs">
           <SaveStateBadge canEdit={canEdit} saveState={saveState} />
-          <SubmissionStatusBadge
-            userCourseRole={me.userCourseRole}
-            submission={submission}
-          />
-          {true && ( // To change to check for a submission
+          {isReadOnly && (
+            <Badge color="gray" variant="light" radius="md" size="lg">
+              Read-only (Reviewee)
+            </Badge>
+          )}
+          {!isReadOnly &&
+            <SubmissionStatusBadge
+              userCourseRole={me.userCourseRole}
+              submission={submission}
+            />
+          }
+          {!isReadOnly && submission && ( // To change to check for a submission
             <Button
               leftSection={<IconSend size={16} />}
               radius="md"
@@ -647,6 +657,7 @@ const PeerReviewDetail: React.FC = () => {
               ? { start: activeWidget.start, end: activeWidget.end }
               : null
           }
+          readOnly={isReadOnly}
         />
         <SubmitReviewConfirmationModal
           opened={submitReviewModalOpened}

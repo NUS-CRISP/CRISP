@@ -29,6 +29,13 @@ type UsePeerReviewDataArgs = {
   userCourseRole?: string;
 };
 
+type PeerReviewAssignmentWithViewContext = PeerReviewAssignment & {
+  viewContext?: {
+    isReviewee?: boolean;
+    isSupervisorTA?: boolean;
+  };
+};
+
 export default function usePeerReviewData({
   courseId,
   assignmentId,
@@ -36,7 +43,7 @@ export default function usePeerReviewData({
 }: UsePeerReviewDataArgs) {
   const [loading, setLoading] = useState(true);
   const [peerReviewAssignment, setPeerReviewAssignment] =
-    useState<PeerReviewAssignment | null>(null);
+    useState<PeerReviewAssignmentWithViewContext | null>(null);
   const [repoTree, setRepoTree] = useState<RepoNode | null>(null);
   const [currFile, setCurrFile] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState<Record<string, string>>({});
@@ -49,10 +56,13 @@ export default function usePeerReviewData({
     'Idle' | 'Saving' | 'Saved' | 'Error'
   >('Idle');
   const [canEdit, setCanEdit] = useState(false);
+  const [isReviewee, setIsReviewee] = useState(false);
+  const [isSupervisorTA, setIsSupervisorTA] = useState(false);
   const touchDraftTimer = useRef<NodeJS.Timeout | null>(null);
 
   const scheduleTouchDraft = useCallback(() => {
     if (!canEdit) return;
+    if (!submission) return;
     if (touchDraftTimer.current) clearTimeout(touchDraftTimer.current);
 
     touchDraftTimer.current = setTimeout(async () => {
@@ -65,7 +75,7 @@ export default function usePeerReviewData({
         setSaveState('Error');
       }
     }, 900);
-  }, [canEdit, courseId, assignmentId]);
+  }, [canEdit, courseId, assignmentId, submission]);
 
   // Initial load of data
   useEffect(() => {
@@ -84,23 +94,41 @@ export default function usePeerReviewData({
         );
         if (cancelled) return;
 
+        const viewContext = prAssignment?.viewContext;
+        const revieweeView = Boolean(viewContext?.isReviewee);
+        const supervisorView = Boolean(viewContext?.isSupervisorTA);
+        setIsReviewee(revieweeView);
+        setIsSupervisorTA(supervisorView);
+
         const submissions: PeerReviewSubmission[] =
           await apiFetchSubmissionsForAssignment(courseId, assignmentId);
         if (cancelled) return;
         const mySubmission =
-          userCourseRole === COURSE_ROLE.Student
+          userCourseRole === COURSE_ROLE.Student ||
+          userCourseRole === COURSE_ROLE.TA
             ? (submissions?.[0] ?? null)
             : null;
         setSubmission(mySubmission);
-        setCanEdit(
-          (userCourseRole === COURSE_ROLE.Student ||
-            userCourseRole === COURSE_ROLE.Faculty) &&
-            mySubmission?.status !== 'Submitted'
-        );
+        const canEditNow = (() => {
+          if (userCourseRole === COURSE_ROLE.Faculty) return true;
+          if (revieweeView) return false;
+          if (userCourseRole === COURSE_ROLE.TA && supervisorView) return true;
+          if (userCourseRole === COURSE_ROLE.TA) {
+            return Boolean(mySubmission && mySubmission.status !== 'Submitted');
+          }
+          if (userCourseRole === COURSE_ROLE.Student) {
+            return Boolean(mySubmission && mySubmission.status !== 'Submitted');
+          }
+          return false;
+        })();
+        setCanEdit(canEditNow);
 
-        const tree = await fetchGithubRepoStructure(
-          prAssignment?.repoUrl ?? ''
-        );
+        const repoUrl = prAssignment?.repoUrl;
+        if (!repoUrl) {
+          throw new Error('Repository URL not found for this assignment.');
+        }
+
+        const tree = await fetchGithubRepoStructure(repoUrl);
         if (cancelled) return;
 
         const comments = await apiFetchComments(courseId, assignmentId);
@@ -240,7 +268,10 @@ export default function usePeerReviewData({
       assignmentId
     );
     const mySubmission =
-      userCourseRole === COURSE_ROLE.Student ? (updated?.[0] ?? null) : null;
+      userCourseRole === COURSE_ROLE.Student ||
+      userCourseRole === COURSE_ROLE.TA
+        ? (updated?.[0] ?? null)
+        : null;
     setSubmission(mySubmission);
     setCanEdit(false);
   }, [canEdit, courseId, assignmentId, userCourseRole]);
@@ -260,6 +291,8 @@ export default function usePeerReviewData({
     submission,
     canEdit,
     saveState,
+    isReviewee,
+    isSupervisorTA,
 
     setCurrFile,
     openFile,

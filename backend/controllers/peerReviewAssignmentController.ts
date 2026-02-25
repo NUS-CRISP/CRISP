@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import {
   getPeerReviewAssignmentById,
+  getPeerReviewAssignmentWithViewContext,
   assignPeerReviews,
   addManualAssignment,
   removeManualAssignment,
@@ -19,12 +20,17 @@ export const getPeerReviewAssignment = async (req: Request, res: Response) => {
     );
     const { courseId, peerReviewAssignmentId } = req.params;
 
-    const assignment = await getPeerReviewAssignmentById(
-      userCourseRole,
-      userId,
-      peerReviewAssignmentId
-    );
-    res.status(200).json(assignment);
+    const { assignment, viewContext } =
+      await getPeerReviewAssignmentWithViewContext(
+        userCourseRole,
+        userId,
+        peerReviewAssignmentId
+      );
+    const payload = {
+      ...assignment.toObject(),
+      viewContext,
+    };
+    res.status(200).json(payload);
   } catch (error) {
     return handleError(res, error, 'Failed to get peer review assignment');
   }

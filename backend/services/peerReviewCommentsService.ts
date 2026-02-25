@@ -145,6 +145,7 @@ export const addPeerReviewCommentByAssignmentId = async (
     assignment.peerReviewId.toString()
   );
   assertPeerReviewNotClosed(peerReview);
+  const reviewee = await fetchReviewee(assignment.reviewee.toString());
 
   // Parse data
   const { filePath, startLine, endLine, comment } = commentData;
@@ -159,6 +160,12 @@ export const addPeerReviewCommentByAssignmentId = async (
   }
 
   if (userCourseRole !== COURSE_ROLE.Faculty) {
+    const isSupervisingTA =
+      userCourseRole === COURSE_ROLE.TA &&
+      reviewee.TA?.toString() === userId;
+    if (isSupervisingTA) {
+      // TA supervisors can comment without a submission
+    } else {
     if (!submissionId) {
       throw new BadRequestError('Submission ID is required to add comment');
     }
@@ -167,12 +174,13 @@ export const addPeerReviewCommentByAssignmentId = async (
       assignmentId
     );
     await assertSubmissionWritableByCaller(userId, userCourseRole, submission);
+    }
   }
 
   const newComment = new PeerReviewCommentModel({
     peerReviewId: assignment.peerReviewId,
     peerReviewAssignmentId: assignmentId,
-    peerReviewSubmissionId: submissionId,
+    ...(submissionId && { peerReviewSubmissionId: submissionId }),
     createdAt: Date.now(),
     filePath,
     startLine,
@@ -194,24 +202,46 @@ export const updatePeerReviewCommentById = async (
   updatedComment: string,
   submissionId: string
 ) => {
-  if (userCourseRole !== COURSE_ROLE.Faculty) {
-    if (!submissionId)
-      throw new BadRequestError('Submission ID is required to delete comment');
-    const submission = await fetchSubmissionForAssignment(
-      submissionId,
-      assignmentId
-    );
-    if (submission.status === 'Submitted')
-      throw new BadRequestError('Cannot delete comments on submitted reviews');
-    await assertSubmissionWritableByCaller(userId, userCourseRole, submission);
-  }
-
   const comment = await PeerReviewCommentModel.findById(commentId);
   if (!comment) throw new NotFoundError(COMMENT_NOT_FOUND);
-  if (
-    userCourseRole !== COURSE_ROLE.Faculty &&
-    comment.peerReviewSubmissionId.toString() !== submissionId
-  )
+
+  // Faculty can update any comment
+  if (userCourseRole === COURSE_ROLE.Faculty) {
+    if (updatedComment.trim().length === 0)
+      throw new BadRequestError('Comment text cannot be empty');
+    comment.comment = updatedComment;
+    comment.updatedAt = new Date();
+    await comment.save();
+    return;
+  }
+
+  // TAs can update any comment for teams they supervise
+  if (userCourseRole === COURSE_ROLE.TA) {
+    const assignment = await fetchAssignment(assignmentId);
+    const reviewee = await fetchReviewee(assignment.reviewee.toString());
+    const isSupervisingTA = reviewee.TA?.toString() === userId;
+    if (isSupervisingTA) {
+      if (updatedComment.trim().length === 0)
+        throw new BadRequestError('Comment text cannot be empty');
+      comment.comment = updatedComment;
+      comment.updatedAt = new Date();
+      await comment.save();
+      return;
+    }
+  }
+
+  // Non-supervisors must provide submissionId
+  if (!submissionId)
+    throw new BadRequestError('Submission ID is required to update comment');
+  const submission = await fetchSubmissionForAssignment(
+    submissionId,
+    assignmentId
+  );
+  if (submission.status === 'Submitted')
+    throw new BadRequestError('Cannot update comments on submitted reviews');
+  await assertSubmissionWritableByCaller(userId, userCourseRole, submission);
+
+  if (comment.peerReviewSubmissionId?.toString() !== submissionId)
     throw new BadRequestError(
       'Comment does not belong to the provided submission'
     );
@@ -219,7 +249,7 @@ export const updatePeerReviewCommentById = async (
   const peerReview = await getPeerReviewById(comment.peerReviewId.toString());
   assertPeerReviewNotClosed(peerReview);
 
-  // Only can update own comments, no matter the role
+  // Only can update own comments for non-supervisors
   if (userId !== comment.author.toString())
     throw new MissingAuthorizationError(UNAUTHORIZED_TO_UPDATE_COMMENTS);
 
