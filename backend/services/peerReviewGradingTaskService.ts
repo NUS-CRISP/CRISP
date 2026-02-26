@@ -3,6 +3,9 @@ import PeerReviewGradingTaskModel from '@models/PeerReviewGradingTask';
 import PeerReviewModel from '@models/PeerReview';
 import PeerReviewSubmissionModel from '@models/PeerReviewSubmission';
 import InternalAssessmentModel from '@models/InternalAssessment';
+import CourseModel from '@models/Course';
+import TeamModel from '@models/Team';
+import PeerReviewAssignmentModel from '@models/PeerReviewAssignment';
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 import {
   BadRequestError,
@@ -154,4 +157,199 @@ export const submitGradingTaskById = async (
   task.gradedAt = new Date();
   await task.save();
   return task;
+};
+
+/* ------------------------------- Bulk Grader Assignment ------------------------------- */
+
+export const bulkAssignGradersByAssessmentId = async (
+  courseId: string,
+  assessmentId: string,
+  numGradersPerSubmission: number,
+  allowSupervisingTAs: boolean
+) => {
+  const assessment = await InternalAssessmentModel.findById(assessmentId)
+    .select('_id assessmentType course')
+    .lean();
+  if (!assessment) throw new NotFoundError('Assessment not found');
+  if (assessment.assessmentType !== 'peer_review')
+    throw new BadRequestError('Not a peer review assessment');
+  if (String(assessment.course) !== courseId)
+    throw new BadRequestError('Assessment does not belong to this course');
+
+  const peerReview = await PeerReviewModel.findOne({
+    internalAssessmentId: assessmentId,
+  })
+    .select('_id')
+    .lean();
+  if (!peerReview) throw new NotFoundError('Peer review not found for assessment');
+
+  // Fetch TAs from course
+  const course = await CourseModel.findById(courseId).select('TAs').lean();
+  if (!course) throw new NotFoundError('Course not found');
+
+  const TAs = (course.TAs ?? []).map(ta => String(ta));
+  if (TAs.length === 0) {
+    throw new BadRequestError('No TAs available for grading assignment');
+  }
+
+  if (numGradersPerSubmission > TAs.length) {
+    throw new BadRequestError(
+      `Cannot assign ${numGradersPerSubmission} graders per submission when only ${TAs.length} TAs available`
+    );
+  }
+
+  // Build TA -> supervisingTeamIds map if needed
+  const taSupervisingTeams = new Map<string, Set<string>>();
+  if (!allowSupervisingTAs) {
+    const teams = await TeamModel.find({ TA: { $in: TAs.map(oid) } })
+      .select('_id TA')
+      .lean();
+    for (const t of teams) {
+      if (!t.TA) continue;
+      const taId = String(t.TA);
+      const teamSet = taSupervisingTeams.get(taId) ?? new Set<string>();
+      teamSet.add(String(t._id));
+      taSupervisingTeams.set(taId, teamSet);
+    }
+  }
+
+  // Load all submissions for this peer review (exclude TA reviewers)
+  const submissions = await PeerReviewSubmissionModel.find({
+    peerReviewId: peerReview._id,
+    reviewerKind: { $in: ['Student', 'Team'] },
+  })
+    .select('_id peerReviewAssignmentId')
+    .lean();
+
+  if (submissions.length === 0) {
+    throw new BadRequestError('No submissions found for this peer review');
+  }
+
+  // Load assignments to get reviewee team IDs
+  const assignmentIds = submissions.map(s => s.peerReviewAssignmentId);
+  const assignments = await PeerReviewAssignmentModel.find({
+    _id: { $in: assignmentIds },
+  })
+    .select('_id reviewee')
+    .lean();
+
+  const assignmentMap = new Map(assignments.map(a => [String(a._id), String(a.reviewee)]));
+
+  // Delete existing grading tasks for this peer review
+  await PeerReviewGradingTaskModel.deleteMany({
+    peerReviewId: peerReview._id,
+  });
+
+  // Round-robin assignment with conflict avoidance
+  const tasksToCreate: any[] = [];
+  let taIndex = 0;
+
+  for (const submission of submissions) {
+    const revieweeTeamId = assignmentMap.get(String(submission.peerReviewAssignmentId));
+    const assignedGraders = new Set<string>();
+
+    for (let i = 0; i < numGradersPerSubmission; i++) {
+      let attempts = 0;
+      let candidateTA: string | null = null;
+
+      while (attempts < TAs.length) {
+        const candidate = TAs[taIndex % TAs.length];
+        taIndex++;
+        attempts++;
+
+        // Skip if already assigned to this submission
+        if (assignedGraders.has(candidate)) continue;
+
+        // Check supervisor conflict if needed
+        if (!allowSupervisingTAs && revieweeTeamId) {
+          const supervisedTeams = taSupervisingTeams.get(candidate);
+          if (supervisedTeams?.has(revieweeTeamId)) continue;
+        }
+
+        candidateTA = candidate;
+        break;
+      }
+
+      if (!candidateTA) {
+        // Could not find enough eligible TAs for this submission
+        throw new BadRequestError(
+          `Unable to assign ${numGradersPerSubmission} graders to all submissions with current constraints`
+        );
+      }
+
+      assignedGraders.add(candidateTA);
+      tasksToCreate.push({
+        peerReviewId: peerReview._id,
+        peerReviewSubmissionId: submission._id,
+        grader: oid(candidateTA),
+        status: 'Assigned',
+      });
+    }
+  }
+
+  // Bulk insert new tasks
+  await PeerReviewGradingTaskModel.insertMany(tasksToCreate);
+
+  return {
+    assignedCount: tasksToCreate.length,
+    submissionsCount: submissions.length,
+  };
+};
+
+/* ------------------------------- Manual Grader Assignment ------------------------------- */
+
+export const manualAssignGraderToSubmission = async (
+  assessmentId: string,
+  submissionId: string,
+  graderId: string
+) => {
+  const { peerReviewId, submissionId: resolvedSubmissionId } =
+    await resolvePeerReviewAndSubmission(assessmentId, submissionId);
+
+  // Check if grading task already exists
+  const existing = await PeerReviewGradingTaskModel.findOne({
+    peerReviewId,
+    peerReviewSubmissionId: resolvedSubmissionId,
+    grader: oid(graderId),
+  });
+
+  if (existing) {
+    throw new BadRequestError('Grader already assigned to this submission');
+  }
+
+  const created = await new PeerReviewGradingTaskModel({
+    peerReviewId,
+    peerReviewSubmissionId: resolvedSubmissionId,
+    grader: oid(graderId),
+    status: 'Assigned',
+  }).save();
+
+  return created;
+};
+
+export const manualUnassignGraderFromSubmission = async (
+  assessmentId: string,
+  submissionId: string,
+  graderId: string
+) => {
+  const { peerReviewId, submissionId: resolvedSubmissionId } =
+    await resolvePeerReviewAndSubmission(assessmentId, submissionId);
+
+  const task = await PeerReviewGradingTaskModel.findOne({
+    peerReviewId,
+    peerReviewSubmissionId: resolvedSubmissionId,
+    grader: oid(graderId),
+  });
+
+  if (!task) {
+    throw new NotFoundError('Grading task not found for this grader and submission');
+  }
+
+  if (task.status === 'Completed') {
+    throw new BadRequestError('Cannot unassign grader from a completed grading task');
+  }
+
+  await PeerReviewGradingTaskModel.deleteOne({ _id: task._id });
+
+  return { deleted: true };
 };

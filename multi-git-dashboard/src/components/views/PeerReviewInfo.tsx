@@ -242,18 +242,22 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
           </Stack>
 
           <Group gap="xs">
-            { peerReview.taAssignments ? (
-                <Badge variant="light" color="teal">
-                  TA Reviews Enabled
-                </Badge>
-              ) : (
-                <Badge variant="light" color="red">
-                  TA Reviews Disabled
-                </Badge>
-              )
-            }
+            {hasFacultyPermission && (
+              <>
+                { peerReview.taAssignments ? (
+                    <Badge variant="light" color="teal">
+                      TA Reviews Enabled
+                    </Badge>
+                  ) : (
+                    <Badge variant="light" color="red">
+                      TA Reviews Disabled
+                    </Badge>
+                  )
+                }
+                <Badge variant="light">Reviewer Type: {peerReview.reviewerType}</Badge>
+              </>
+            )}
             <Badge variant="light" color={statusColor(peerReview.status)}>{peerReview.status}</Badge>
-            <Badge variant="light">Reviewer Type: {peerReview.reviewerType}</Badge>
           </Group>
         </Group>
 
@@ -337,7 +341,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
         <Center mt={150}>
           <Loader />
         </Center>
-      ) : (
+      ) : hasFacultyPermission || peerReview.status === 'Active' ? (
         <ScrollArea.Autosize mah={750} scrollbarSize={8}>
           <Accordion
             defaultValue={['teaching-assistants']}
@@ -382,6 +386,12 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
             ))}
           </Accordion>
         </ScrollArea.Autosize>
+      ) : (
+        <Card withBorder radius="md" p="lg" my="md">
+          <Text c="dimmed" ta="center">
+            Peer review assignments will be available when the review period begins.
+          </Text>
+        </Card>
       )}
     </Container>
   );

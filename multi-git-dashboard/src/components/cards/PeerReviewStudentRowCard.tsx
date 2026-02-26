@@ -1,5 +1,5 @@
 import { Card, Group, Stack, Text, Badge } from '@mantine/core';
-import { PeerReviewResultsStudentRow } from '@shared/types/PeerReview';
+import { PeerReviewResultsStudentRow } from '@shared/types/PeerReviewAssessment';
 
 const PeerReviewStudentRowCard = ({ row }: { row: PeerReviewResultsStudentRow }) => {
   const graded = row.aggregatedScore !== null && row.aggregatedScore !== undefined;
@@ -8,8 +8,6 @@ const PeerReviewStudentRowCard = ({ row }: { row: PeerReviewResultsStudentRow })
     <Card
       withBorder
       radius="md"
-      mr="xs"
-      mb="sm"
     >
       <Group justify="space-between" align="center">
         <Group align="center" gap="md">

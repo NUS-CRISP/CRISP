@@ -49,6 +49,14 @@ export interface PeerReviewSubmissionsDTO {
   maxMarks: number;
   
   items: PeerReviewSubmissionListItemDTO[];
+  
+  // Pagination metadata
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
 }
 
 // For Results
@@ -79,6 +87,14 @@ export interface PeerReviewResultsDTO {
 
   perStudent: PeerReviewResultsStudentRow[];
   perTeam: PeerReviewResultsTeamCard[];
+
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    viewMode: 'perStudent' | 'perTeam';
+  };
 }
 
 export interface PeerReviewGradingSummary {

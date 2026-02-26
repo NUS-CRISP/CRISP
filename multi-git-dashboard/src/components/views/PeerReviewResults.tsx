@@ -11,6 +11,9 @@ import {
   Container,
   Stack,
   Divider,
+  Card,
+  ScrollArea,
+  Pagination,
 } from '@mantine/core';
 import { Virtuoso } from 'react-virtuoso';
 import {
@@ -40,6 +43,8 @@ const PeerReviewResults: React.FC<PeerReviewResultsProps> = ({ courseId, assessm
   const [viewMode, setViewMode] = useState<ViewMode>('perStudent');
   const [sortCriterion, setSortCriterion] = useState<SortCriterion>('teamNumber');
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState<string>('20');
 
   // CSV modals
   const [isResultFormOpen, setIsResultFormOpen] = useState(false);
@@ -59,8 +64,13 @@ const PeerReviewResults: React.FC<PeerReviewResultsProps> = ({ courseId, assessm
     setIsLoading(true);
     setError(null);
     try {
+      const params = new URLSearchParams({
+        viewMode,
+        page: page.toString(),
+        limit,
+      });
       const res = await fetch(
-        `/api/peer-review-assessments/${courseId}/${assessmentId}/results`,
+        `/api/peer-review-assessments/${courseId}/${assessmentId}/results?${params}`,
         { method: 'GET' }
       );
       const text = await res.text();
@@ -76,7 +86,7 @@ const PeerReviewResults: React.FC<PeerReviewResultsProps> = ({ courseId, assessm
 
   useEffect(() => {
     fetchResults();
-  }, [assessmentId]);
+  }, [assessmentId, courseId, viewMode, page, limit]);
 
   // ---- filtering + sorting ----
   const filteredStudents = useMemo(() => {
@@ -293,92 +303,143 @@ const PeerReviewResults: React.FC<PeerReviewResultsProps> = ({ courseId, assessm
 
   const countText =
     viewMode === 'perStudent'
-      ? `${filteredStudents.length} / ${dto.perStudent.length}`
-      : `${filteredTeams.length} / ${dto.perTeam.length}`;
+      ? `${filteredStudents.length} / ${dto.pagination.total}`
+      : `${filteredTeams.length} / ${dto.pagination.total}`;
 
   return (
-    <Container pt="6px">
-      <Stack gap="md" my="md">
-        <Group justify="space-between" align="flex-end">
-          <div>
-            <Text fw={700} fz="lg">
-              Peer Review Results
-            </Text>
-            <Text fz="sm" c="dimmed">
-                View the results of the peer review assessment.
-            </Text>
-          </div>
+    <Container pt="6px" pb="lg">
+      <ScrollArea
+        style={{ height: 'calc(100vh - 180px)' }}
+        scrollbarSize={8}
+        offsetScrollbars
+        pb="md"
+      >
+        <Stack gap="md" my="md" mr="xs">
+          <Card withBorder radius="md" p="md">
+            <Group justify="space-between" align="flex-start" wrap="wrap">
+              <Stack gap={4}>
+                <Group gap="xs" align="center">
+                  <Text fw={800} fz="xl">
+                    Peer review results
+                  </Text>
+                </Group>
+                <Text fz="sm" c="dimmed">
+                  View the results of the peer review assessment.
+                </Text>
+              </Stack>
 
-          <Text fz="sm" c="dimmed">
-            Showing {countText}
-          </Text>
-        </Group>
-        
-        <Group gap="sm" align="flex-end" wrap="wrap">
-          <TextInput
-            label="Search"
-            placeholder="Student, ID, team…"
-            leftSection={<IconSearch size={16} />}
-            value={search}
-            onChange={e => setSearch(e.currentTarget.value)}
-            style={{ width: 320 }}
-          />
-          
-          <Select
-            value={sortCriterion}
-            label="Sort by"
-            onChange={value => setSortCriterion((value as SortCriterion) || 'teamNumber')}
-            data={[
-              { value: 'teamNumber', label: 'Team Number' },
-              { value: 'name', label: 'Name' },
-              { value: 'studentId', label: 'Student ID' },
-              { value: 'marks', label: 'Score' },
-            ]}
-            placeholder="Sort by"
-            style={{ width: 200 }}
-          />
-          <Button variant="light" onClick={() => setIsResultFormOpen(true)}>
-            Download CSV
-          </Button>
-          <Button variant="light" onClick={() => setIsMapModalOpen(true)}>
-            Map to ID
-          </Button>
-          <SegmentedControl
-            value={viewMode}
-            onChange={v => setViewMode(v as ViewMode)}
-            data={[
-              { value: 'perStudent', label: 'Per-student' },
-              { value: 'perTeam', label: 'Per-team' },
-            ]}
-          />
-        </Group>
-        <Divider mt="xs" />
-        <div
-          style={{
-            height: 'calc(100vh - 350px)', // adjust if needed
-            minHeight: 420,
-            paddingBottom: 16,
-          }}
-        >
-          {viewMode === 'perStudent' ? (
-            <Virtuoso
-              data={filteredStudents}
-              itemContent={(_, row) => <PeerReviewStudentRowCard row={row} />}
-              style={{ height: '100%', width: '100%', scrollbarWidth: 'thin' }}
-              increaseViewportBy={{ top: 0, bottom: 200 }}
-              components={{ Footer: () => <div style={{ height: 24 }} /> }}
-            />
-          ) : (
-            <Virtuoso
-              data={filteredTeams}
-              itemContent={(_, team) => <PeerReviewTeamCard team={team} />}
-              style={{ height: '100%', width: '100%', scrollbarWidth: 'thin' }}
-              increaseViewportBy={{ top: 0, bottom: 200 }}
-              components={{ Footer: () => <div style={{ height: 24 }} /> }}
-            />
-          )}
-        </div>
-      </Stack>
+              <Group gap="sm">
+                <Button variant="light" onClick={() => setIsResultFormOpen(true)}>
+                  Download CSV
+                </Button>
+                <Button variant="light" onClick={() => setIsMapModalOpen(true)}>
+                  Map to ID
+                </Button>
+              </Group>
+            </Group>
+
+            <Divider my="sm" />
+
+            <Group gap="sm" align="flex-end" justify="space-between" wrap="wrap">
+              <Group>
+                <TextInput
+                  label="Search"
+                  placeholder="Student, ID, team…"
+                  leftSection={<IconSearch size={16} />}
+                  value={search}
+                  onChange={e => setSearch(e.currentTarget.value)}
+                  w={360}
+                />
+
+                <Select
+                  value={sortCriterion}
+                  label="Sort by"
+                  onChange={value =>
+                    setSortCriterion((value as SortCriterion) || 'teamNumber')
+                  }
+                  data={[
+                    { value: 'teamNumber', label: 'Team Number' },
+                    { value: 'name', label: 'Name' },
+                    { value: 'studentId', label: 'Student ID' },
+                    { value: 'marks', label: 'Score' },
+                  ]}
+                  placeholder="Sort by"
+                  w={200}
+                />
+              </Group>
+
+              <SegmentedControl
+                value={viewMode}
+                onChange={v => {
+                  setViewMode(v as ViewMode);
+                  setPage(1);
+                }}
+                data={[
+                  { value: 'perStudent', label: 'Per-student' },
+                  { value: 'perTeam', label: 'Per-team' },
+                ]}
+                size="sm"
+              />
+            </Group>
+          </Card>
+
+          <Stack gap="xs">
+            {viewMode === 'perStudent' ? (
+              filteredStudents.length > 0 ? (
+                filteredStudents.map((row) => (
+                  <PeerReviewStudentRowCard key={row.studentId} row={row} />
+                ))
+              ) : (
+                <Text c="dimmed" ta="center" mt="md">
+                  No students to display.
+                </Text>
+              )
+            ) : (
+              filteredTeams.length > 0 ? (
+                filteredTeams.map((team) => (
+                  <PeerReviewTeamCard key={team.teamId} team={team} />
+                ))
+              ) : (
+                <Text c="dimmed" ta="center" mt="md">
+                  No teams to display.
+                </Text>
+              )
+            )}
+          </Stack>
+
+          <Group justify="space-between" align="center" wrap="wrap">
+            <Group gap="sm" align="center">
+              <Text fz="sm" c="dimmed">
+                Showing {countText}
+              </Text>
+              <Select
+                value={limit}
+                onChange={val => {
+                  setLimit(val || '20');
+                  setPage(1);
+                }}
+                data={[
+                  { value: '10', label: '10 / page' },
+                  { value: '20', label: '20 / page' },
+                  { value: '50', label: '50 / page' },
+                  { value: '100', label: '100 / page' },
+                ]}
+                size="xs"
+                w={120}
+              />
+            </Group>
+
+            {dto.pagination.totalPages > 1 && (
+              <Pagination
+                value={page}
+                onChange={setPage}
+                total={dto.pagination.totalPages}
+                size="md"
+              />
+            )}
+          </Group>
+        </Stack>
+      </ScrollArea>
       
       {/* Modal for Download Results */}
       <DownloadResultsCsvModal

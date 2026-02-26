@@ -177,6 +177,7 @@ const PeerReviewGradingDetailPage: React.FC = () => {
 
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [gradeOpen, setGradeOpen] = useState(false);
+  const [savingGrade, setSavingGrade] = useState(false);
 
   if (!ready || !me) return <Center>Loading...</Center>;
   if (loading) return <Center>Loading...</Center>;
@@ -204,7 +205,6 @@ const PeerReviewGradingDetailPage: React.FC = () => {
   const canStartGrading = me.userCourseRole === 'Faculty' && !myTask;
   const canGrade = !!myTask;
   
-  const [savingGrade, setSavingGrade] = useState(false);
   const handleSaveGrading = async () => {
     try {
       setSavingGrade(true);

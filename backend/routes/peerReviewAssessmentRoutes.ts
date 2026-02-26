@@ -11,6 +11,9 @@ import {
   startGradingTaskForFaculty,
   updatePeerReviewGradingTask,
   submitPeerReviewGradingTask,
+  bulkAssignGraders,
+  manualAssignGrader,
+  manualUnassignGrader,
 } from '../controllers/peerReviewAssessmentController';
 
 const router = express.Router();
@@ -33,5 +36,10 @@ router.get('/:courseId/:assessmentId/submissions/:submissionId/grading-task', ge
 router.post('/:courseId/:assessmentId/submissions/:submissionId/start-grading', startGradingTaskForFaculty);
 router.patch('/:courseId/:assessmentId/grading-tasks/:taskId', updatePeerReviewGradingTask);
 router.post('/:courseId/:assessmentId/grading-tasks/:taskId/submit', submitPeerReviewGradingTask);
+
+// Grader Assignment
+router.post('/:courseId/:assessmentId/assign-graders', bulkAssignGraders);
+router.post('/:courseId/:assessmentId/submissions/:submissionId/assign-grader', manualAssignGrader);
+router.delete('/:courseId/:assessmentId/submissions/:submissionId/graders/:graderId', manualUnassignGrader);
 
 export default router;

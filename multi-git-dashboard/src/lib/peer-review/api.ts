@@ -40,7 +40,7 @@ export const apiFetchSubmissionsForAssignment = async (
 export const apiTouchDraft = async (
   courseId: string,
   peerReviewAssignmentId: string
-): Promise<PeerReviewSubmission | null> => {
+): Promise<PeerReviewSubmission> => {
   const touchDraftApiRoute = `/api/peer-review/${courseId}/${peerReviewAssignmentId}/submissions`;
   try {
     const response = await fetch(touchDraftApiRoute, {
@@ -54,7 +54,7 @@ export const apiTouchDraft = async (
     return data;
   } catch (err) {
     console.error('Error touching draft: ', err);
-    return null;
+    throw err;
   }
 };
 
@@ -236,19 +236,24 @@ export const apiFetchGradingDTO = async (
   assessmentId: string,
   peerReviewSubmissionId: string
 ): Promise<PeerReviewGradingDTO | null> => {
-  const gradingDtoApiRoute = `/api/peer-review/${courseId}/${assessmentId}/submissions/${peerReviewSubmissionId}`;
+  const gradingDtoApiRoute = `/api/peer-review-assessments/${courseId}/${assessmentId}/submissions/${peerReviewSubmissionId}`;
   try {
     const response = await fetch(gradingDtoApiRoute, {
       method: 'GET',
     });
+    const text = await response.text();
     if (!response.ok) {
-      throw new Error('Failed to fetch grading data');
+      throw new Error(text || response.statusText || 'Failed to fetch grading data');
     }
-    const data = await response.json();
-    return data;
+    if (!text) return null;
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      throw new Error('Invalid grading data response');
+    }
   } catch (err) {
     console.error('Error fetching grading data: ', err);
-    return null;
+    throw err;
   }
 };
 
@@ -257,7 +262,7 @@ export const apiStartGradingTask = async (
   assessmentId: string,
   peerReviewSubmissionId: string
 ): Promise<PeerReviewMyGradingTaskDTO | null> => {
-  const startGradingApiRoute = `/api/peer-review/${courseId}/${assessmentId}/submissions/${peerReviewSubmissionId}/start-grading`;
+  const startGradingApiRoute = `/api/peer-review-assessments/${courseId}/${assessmentId}/submissions/${peerReviewSubmissionId}/start-grading`;
   try {
     const response = await fetch(startGradingApiRoute, {
       method: 'POST',
@@ -280,7 +285,7 @@ export const apiSaveGradingTaskDraft = async (
   score: number,
   feedback: string
 ): Promise<PeerReviewMyGradingTaskDTO | null> => {
-  const saveDraftApiRoute = `/api/peer-review/${courseId}/${assessmentId}/grading-tasks/${gradingTaskId}`;
+  const saveDraftApiRoute = `/api/peer-review-assessments/${courseId}/${assessmentId}/grading-tasks/${gradingTaskId}`;
   try {
     const response = await fetch(saveDraftApiRoute, {
       method: 'PATCH',
@@ -303,7 +308,7 @@ export const apiSubmitGradingTask = async (
   assessmentId: string,
   gradingTaskId: string
 ): Promise<PeerReviewMyGradingTaskDTO | null> => {
-  const submitGradingApiRoute = `/api/peer-review/${courseId}/${assessmentId}/grading-tasks/${gradingTaskId}/submit`;
+  const submitGradingApiRoute = `/api/peer-review-assessments/${courseId}/${assessmentId}/grading-tasks/${gradingTaskId}/submit`;
   try {
     const response = await fetch(submitGradingApiRoute, {
       method: 'POST',

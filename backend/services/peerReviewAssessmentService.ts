@@ -224,6 +224,8 @@ export const getPeerReviewSubmissionsForAssessmentById = async (
   assessmentId: string,
   userId: string,
   userCourseRole: string,
+  page: number = 1,
+  limit: number = 20,
 ): Promise<PeerReviewSubmissionsDTO> => {
   const assessment = await InternalAssessmentModel.findById(assessmentId).select(
     '_id assessmentType maxMarks'
@@ -270,6 +272,12 @@ export const getPeerReviewSubmissionsForAssessmentById = async (
       taAssignments: peerReview.taAssignments,
       maxMarks: assessment.maxMarks ?? 0,
       items: [],
+      pagination: {
+        total: 0,
+        page,
+        limit,
+        totalPages: 0,
+      },
     };
   }
   
@@ -417,13 +425,26 @@ export const getPeerReviewSubmissionsForAssessmentById = async (
   // Sort most recent activity first
   items.sort((a, b) => new Date(b.lastActivityAt).getTime() - new Date(a.lastActivityAt).getTime());
 
+  // Apply pagination
+  const total = items.length;
+  const totalPages = Math.ceil(total / limit);
+  const startIdx = (page - 1) * limit;
+  const endIdx = startIdx + limit;
+  const paginatedItems = items.slice(startIdx, endIdx);
+
   return {
     internalAssessmentId: String(assessment._id),
     peerReviewId: String(peerReview._id),
     reviewerType: peerReview.reviewerType,
     taAssignments: peerReview.taAssignments,
     maxMarks: assessment.maxMarks ?? 0,
-    items,
+    items: paginatedItems,
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages,
+    },
   };
 };
 
@@ -437,6 +458,9 @@ const avgOrNull = (xs: number[]) => xs.length === 0 ? null : xs.reduce((a, b) =>
  */
 export const getPeerReviewResultsForAssessmentById = async (
   assessmentId: string,
+  viewMode: 'perStudent' | 'perTeam' = 'perStudent',
+  page: number = 1,
+  limit: number = 20,
 ): Promise<PeerReviewResultsDTO> => {
   const assessment = await InternalAssessmentModel.findById(assessmentId)
     .select('_id assessmentType maxMarks teamSet results')
@@ -598,13 +622,32 @@ export const getPeerReviewResultsForAssessmentById = async (
   );
   perTeam.sort((a, b) => a.teamNumber - b.teamNumber);
 
+  const total = viewMode === 'perStudent' ? perStudent.length : perTeam.length;
+  const totalPages = Math.ceil(total / limit);
+  const startIdx = (page - 1) * limit;
+  const endIdx = startIdx + limit;
+
+  const perStudentPaged = viewMode === 'perStudent'
+    ? perStudent.slice(startIdx, endIdx)
+    : [];
+  const perTeamPaged = viewMode === 'perTeam'
+    ? perTeam.slice(startIdx, endIdx)
+    : [];
+
   const dto: PeerReviewResultsDTO = {
     internalAssessmentId: String(assessment._id),
     peerReviewId: String(peerReview._id),
     reviewerType: peerReview.reviewerType,
     maxMarks: Number(assessment.maxMarks ?? 0),
-    perStudent,
-    perTeam,
+    perStudent: perStudentPaged,
+    perTeam: perTeamPaged,
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages,
+      viewMode,
+    },
   };
 
   // persist to AssessmentResult.averageScore

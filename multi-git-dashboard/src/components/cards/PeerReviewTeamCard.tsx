@@ -7,7 +7,7 @@ const formatScore = (v: number | null | undefined) => {
 };
 
 const PeerReviewTeamCard = ({ team }: { team: PeerReviewResultsTeamCard }) => (
-  <Card withBorder radius="md" p="md" mb="sm" mr="xs">
+  <Card withBorder radius="md" p="md">
     <Group justify="space-between" align="flex-start" mb="xs">
       <Stack gap={2}>
         <Text fw={700}>Team {team.teamNumber}</Text>
