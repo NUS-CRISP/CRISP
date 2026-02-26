@@ -36,6 +36,26 @@ export const getEndOfWeek = (date: Dayjs) =>
   date.isoWeekday(7).hour(23).minute(59).second(59).millisecond(999);
 
 /* String Utils */
+export const getInitials = (name: string): string =>
+  name
+    .split(/[\s_.-]/)
+    .filter(Boolean)
+    .map(part => part.charAt(0))
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+
+export const AVATAR_COLORS = [
+  'blue',
+  'teal',
+  'violet',
+  'grape',
+  'orange',
+  'cyan',
+  'green',
+  'pink',
+] as const;
+
 export const capitalize = <T extends string>(s: T) =>
   (s[0].toUpperCase() + s.slice(1)) as Capitalize<typeof s>;
 
@@ -95,8 +115,8 @@ export const tutorialContents = [
   'You can drag the slider to change the week range of the analytics and PR views.',
   'Access the PR page here.',
   'This is the PR view. Here you can see the PRs submitted by this each team member, and the details of each PR. You can also filter PRs by various criteria.',
-  'Access the Class Overview page here.',
-  'This is the Class Overview page. Here you can see the PRs, commits and issues by each team. You can also customise the view as needed using the filters.',
+  'Access the Course Overview page here.',
+  'This is the Course Overview page. Here you can see the PRs, commits and issues by each team. You can also customise the view as needed using the filters.',
   'Access the Code Analysis page here.',
   'This is the Code Analysis overview view. Here you can see the code quality metrics for each team.',
   "This is the predicted rank of the team based on the weighted sum of various metrics. According to the CRISP team's research, this is a statistically significant indicator of the team's grade.",

@@ -1,7 +1,7 @@
-import { Assessment } from './Assessment';
-import { InternalAssessment } from './InternalAssessment';
-import { TeamSet } from './TeamSet';
-import { User } from './User';
+import { Assessment } from "./Assessment";
+import { InternalAssessment } from "./InternalAssessment";
+import { TeamSet } from "./TeamSet";
+import { User } from "./User";
 
 export interface Sprint {
   number: number;
@@ -24,6 +24,8 @@ export enum CourseType {
   Normal = 'Normal',
 }
 
+export type CourseStatus = 'draft' | 'active';
+
 export interface Course {
   _id: string;
   name: string;
@@ -31,6 +33,8 @@ export interface Course {
   semester: string;
   startDate: Date;
   durationWeeks: number;
+  draftStep?: number; // if present, then course is still in draft stage and can be continued
+  status?: CourseStatus;
   faculty: User[];
   TAs: User[];
   students: User[];
@@ -41,7 +45,7 @@ export interface Course {
   milestones: Milestone[];
   courseType: CourseType;
   // GitHub Repo for non GitHub Org
-  gitHubRepoLinks: String[]
+  gitHubRepoLinks: String[];
   // start 'GitHubOrg' fields
   gitHubOrgName?: string;
   repoNameFilter?: string;
@@ -65,5 +69,5 @@ export interface Course {
     apiKey: string;
     frequency: string;
     startDate: Date;
-  }
+  };
 }

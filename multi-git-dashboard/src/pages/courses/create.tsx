@@ -1,0 +1,527 @@
+import { Box, Button, Group, Title } from '@mantine/core';
+import { useForm } from '@mantine/form';
+import { notifications } from '@mantine/notifications';
+import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
+import { CourseType } from '@shared/types/Course';
+
+import { CourseDetailsSetup } from '@/components/create-course/CourseDetailsSetup';
+import { CourseReposSetup } from '@/components/create-course/CourseReposSetup';
+import type { CreateCourseFormValues } from '@/components/create-course/types';
+import { CourseAISetup } from '@/components/create-course/CourseAISetup';
+import { CourseReviewSummary } from '@/components/create-course/CourseReviewSummary';
+import ProgressBar from '@/components/create-course/ProgressBar';
+import {
+  InstallationStatus,
+  modelOptions,
+} from '@/components/create-course/constants';
+import PeopleInfoContainer from '@/components/views/PeopleInfoContainer';
+import TeamsInfoContainer from '@/components/views/TeamsInfoContainer';
+import StepIntro from '@/components/create-course/StepIntro';
+import {
+  IconFlag,
+  IconGitBranch,
+  IconHierarchy2,
+  IconListDetails,
+  IconRobot,
+  IconUsers,
+} from '@tabler/icons-react';
+
+const TOTAL_STEPS = 6;
+
+const CreateCoursePage = () => {
+  const router = useRouter();
+  const [step, setStep] = useState(0);
+  const [courseId, setCourseId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const [appInstallationStatus, setAppInstallationStatus] =
+    useState<InstallationStatus>(InstallationStatus.IDLE);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const form = useForm<CreateCourseFormValues>({
+    initialValues: {
+      name: '',
+      code: '',
+      semester: '',
+      startDate: null,
+      duration: 13,
+      courseType: CourseType.GitHubOrg,
+      gitHubOrgName: '',
+      repoNameFilter: '',
+      installationId: '',
+      isOn: true,
+      customisedAI: false,
+      provider: '',
+      model: '',
+      apiKey: '',
+      frequency: '',
+      aiStartDate: null,
+    },
+    validate: {
+      name: (value: string) =>
+        value.trim().length > 0 ? null : 'Course name is required',
+      code: (value: string) =>
+        value.trim().length > 0 ? null : 'Course code is required',
+      semester: (value: string) =>
+        value.trim().length > 0 ? null : 'Semester is required',
+      startDate: (value: Date | null) =>
+        value ? null : 'Start date is required',
+      duration: (value: number) => (value ? null : 'Duration is required'),
+      courseType: (value: CourseType) =>
+        value ? null : 'Course type is required',
+      gitHubOrgName: (value: string, values: CreateCourseFormValues) =>
+        values.courseType === CourseType.Normal ||
+        (values.courseType === CourseType.GitHubOrg &&
+          appInstallationStatus === InstallationStatus.SUCCESS)
+          ? null
+          : 'GitHub Organisation name is required',
+      repoNameFilter: (value: string, values: CreateCourseFormValues) =>
+        values.courseType === CourseType.Normal ||
+        (values.courseType === CourseType.GitHubOrg &&
+          appInstallationStatus === InstallationStatus.SUCCESS)
+          ? null
+          : 'Repo name filter is required',
+      provider: (value: string, values: CreateCourseFormValues) =>
+        values.isOn && values.customisedAI
+          ? value && value.trim().length > 0
+            ? null
+            : 'Provider is required'
+          : null,
+      model: (value: string, values: CreateCourseFormValues) =>
+        values.isOn &&
+        values.customisedAI &&
+        values.provider &&
+        modelOptions[values.provider]?.includes(value)
+          ? null
+          : values.customisedAI
+            ? 'Model is missing / invalid'
+            : null,
+      apiKey: (value: string, values: CreateCourseFormValues) =>
+        values.isOn &&
+        values.customisedAI &&
+        values.provider &&
+        values.model &&
+        value.trim().length > 0
+          ? null
+          : values.customisedAI
+            ? 'Model is missing / invalid'
+            : null,
+      frequency: (value: string, values: CreateCourseFormValues) =>
+        values.isOn
+          ? value.trim().length
+            ? null
+            : 'Frequency is required'
+          : null,
+      aiStartDate: (value: Date | null, values: CreateCourseFormValues) =>
+        values.isOn ? (value ? null : 'Start date is required') : null,
+    },
+  });
+
+  const stepFields: (keyof CreateCourseFormValues)[][] = [
+    ['name', 'code', 'semester', 'startDate', 'duration'], // Course details
+    [], // People
+    [], // Team allocation
+    ['courseType', 'gitHubOrgName', 'repoNameFilter'], // Repositories
+    ['frequency', 'aiStartDate', 'provider', 'model', 'apiKey'], // AI insights
+    [], // Review
+  ];
+
+  const apiRoute = '/api/courses';
+
+  const validateCurrentStep = (): boolean => {
+    const fields = stepFields[step];
+    if (fields.length === 0) return true;
+    let valid = true;
+    for (const field of fields) {
+      const result = form.validateField(field);
+      if (result.hasError) valid = false;
+    }
+    return valid;
+  };
+
+  const checkAppInstallation = async (orgName: string) => {
+    const checkAppInstallationApiRoute = '/api/github/check-installation';
+    setAppInstallationStatus(InstallationStatus.LOADING);
+    setErrorMessage('');
+    try {
+      const response = await fetch(checkAppInstallationApiRoute, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orgName }),
+      });
+      if (!response.ok) {
+        setAppInstallationStatus(InstallationStatus.ERROR);
+        const errorData = await response.json();
+        setErrorMessage(errorData.message || 'An error occurred');
+        return;
+      }
+      const { installationId } = await response.json();
+      form.setFieldValue('installationId', installationId);
+      setAppInstallationStatus(InstallationStatus.SUCCESS);
+    } catch (error) {
+      console.error('Error checking app installation:', error);
+      setAppInstallationStatus(InstallationStatus.ERROR);
+      setErrorMessage('Failed to connect to the server');
+    }
+  };
+
+  // If navigated with /courses/create?courseId=..., load existing draft
+  useEffect(() => {
+    if (!router.isReady) return;
+    const idParam = router.query.courseId;
+    const id = Array.isArray(idParam) ? idParam[0] : idParam;
+    if (!id) return;
+    setCourseId(id);
+    const loadDraft = async () => {
+      try {
+        const res = await fetch(`/api/courses/${id}`);
+        if (!res.ok) return;
+        const course = await res.json();
+        form.setValues({
+          name: course.name ?? '',
+          code: course.code ?? '',
+          semester: course.semester ?? '',
+          startDate: course.startDate ? new Date(course.startDate) : null,
+          duration: course.durationWeeks ?? 13,
+          courseType: course.courseType ?? CourseType.GitHubOrg,
+          gitHubOrgName: course.gitHubOrgName ?? '',
+          repoNameFilter: course.repoNameFilter ?? '',
+          installationId: course.installationId?.toString() ?? '',
+          isOn: course.aiInsights?.isOn ?? true,
+          customisedAI: !!(
+            course.aiInsights?.provider || course.aiInsights?.model
+          ),
+          provider: course.aiInsights?.provider ?? '',
+          model: course.aiInsights?.model ?? '',
+          apiKey: course.aiInsights?.apiKey ?? '',
+          frequency: course.aiInsights?.frequency ?? '',
+          aiStartDate: course.aiInsights?.startDate
+            ? new Date(course.aiInsights.startDate)
+            : null,
+        });
+        const lastStep = course.draftStep ?? -1;
+        setStep(Math.min(lastStep + 1, TOTAL_STEPS - 1));
+        if (course.installationId) {
+          setAppInstallationStatus(InstallationStatus.SUCCESS);
+        }
+      } catch (e) {
+        console.error('Error loading draft:', e);
+      }
+    };
+    loadDraft();
+  }, [router.isReady, router.query.courseId, form]);
+
+  const saveCurrentStep = async (publish = false) => {
+    const body: Record<string, unknown> = {};
+    // Build partial payload depending on `step`
+    if (step === 0) {
+      const v = form.values;
+      Object.assign(body, {
+        name: v.name,
+        code: v.code,
+        semester: v.semester,
+        startDate: v.startDate,
+        duration: v.duration,
+        courseType: v.courseType,
+        status: 'draft',
+        draftStep: 0,
+      });
+    } else if (step === 3) {
+      const v = form.values;
+      Object.assign(body, {
+        courseType: v.courseType,
+        gitHubOrgName:
+          v.courseType === CourseType.GitHubOrg ? v.gitHubOrgName : undefined,
+        repoNameFilter:
+          v.courseType === CourseType.GitHubOrg ? v.repoNameFilter : undefined,
+        installationId: v.installationId ? Number(v.installationId) : undefined,
+        draftStep: 3,
+      });
+    } else if (step === 4) {
+      const v = form.values;
+      Object.assign(body, {
+        status: 'draft',
+        draftStep: 4,
+        aiInsights: {
+          isOn: v.isOn,
+          provider: v.customisedAI ? v.provider : undefined,
+          model: v.customisedAI ? v.model : undefined,
+          apiKey: v.customisedAI ? v.apiKey : undefined,
+          frequency: v.frequency || undefined,
+          startDate: v.aiStartDate ?? undefined,
+        },
+      });
+    } else if (step === TOTAL_STEPS - 1) {
+      if (publish) {
+        Object.assign(body, {
+          status: 'active',
+        });
+      } else {
+        Object.assign(body, {
+          status: 'draft',
+          draftStep: 5,
+        });
+      }
+    } else {
+      body.draftStep = step;
+    }
+
+    setLoading(true);
+    try {
+      if (!courseId) {
+        // first save: create draft
+        const res = await fetch(apiRoute, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to create course');
+        setCourseId(data._id);
+        if (publish) router.push(`/courses/${data._id}?new=true`);
+      } else {
+        // subsequent saves: update
+        const res = await fetch(`${apiRoute}/${courseId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to update course');
+        if (publish) router.push(`/courses/${courseId}?new=true`);
+      }
+    } catch (error) {
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to save course. Please try again.',
+        color: 'red',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNext = async () => {
+    if (!validateCurrentStep()) return;
+
+    await saveCurrentStep(false);
+    setStep(s => Math.min(s + 1, TOTAL_STEPS - 1));
+  };
+
+  const handlePublish = async () => {
+    // on last step: save + publish
+    await saveCurrentStep(true);
+  };
+
+  const handleCancel = () => {
+    router.push('/courses');
+  };
+
+  return (
+    <Box
+      p="lg"
+      style={{
+        minHeight: '100vh',
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        boxSizing: 'border-box',
+        alignItems: 'center',
+      }}
+    >
+      <Box
+        style={{
+          fontSize: '1.5rem',
+          width: '100%',
+          maxWidth: 1200,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        <Title
+          order={1}
+          mb="xl"
+          style={{ fontSize: '3rem', textAlign: 'center' }}
+        >
+          Create Course
+        </Title>
+
+        <ProgressBar step={step} setStep={setStep} />
+
+        {/* Get respective step content */}
+        <Box
+          mt="xl"
+          style={{
+            flex: 1,
+            width: '100%',
+            maxWidth: 800,
+            display: 'flex',
+            flexDirection: 'column',
+            padding: '20px 96px',
+            margin: '0 auto',
+          }}
+        >
+          {/* Step 0: Course details */}
+          {step === 0 && (
+            <>
+              <StepIntro
+                icon={<IconListDetails size={25} />}
+                title="Course Details"
+                description="Set up the basic information for your course, such as its name, code, semester, and duration.
+                This helps identify your course and determines when it will run. You can edit these details later if needed."
+              />
+              <CourseDetailsSetup form={form} />
+            </>
+          )}
+
+          {/* Step 1: People */}
+          {step === 1 && (
+            <>
+              <StepIntro
+                icon={<IconUsers size={25} />}
+                title="Add People"
+                description="Invite Faculty staff, Teaching Assistants (TAs), and students to your course.
+                You can edit course participants again later if needed."
+              />
+              <Box mt="md">
+                <PeopleInfoContainer courseId={courseId ?? ''} />
+              </Box>
+            </>
+          )}
+
+          {/* Step 2: Team allocation */}
+          {step === 2 && (
+            <>
+              <StepIntro
+                icon={<IconHierarchy2 size={25} />}
+                title="Team Allocation"
+                description="Organise students and TAs into teams.
+                You can reconfigure teams later from the course's Teams page."
+              />
+              <Box mt="md">
+                <TeamsInfoContainer courseId={courseId ?? ''} />
+              </Box>
+            </>
+          )}
+
+          {/* Step 3: Repositories */}
+          {step === 3 && (
+            <>
+              <StepIntro
+                icon={<IconGitBranch size={25} />}
+                title="Repositories"
+                description="Choose how student repositories are linked to this course.
+                If you’re using GitHub organisations, we’ll help you verify access and automatically sync repositories for analysis."
+              />
+              <CourseReposSetup
+                form={form}
+                appInstallationStatus={
+                  appInstallationStatus === InstallationStatus.LOADING
+                    ? 'loading'
+                    : appInstallationStatus === InstallationStatus.SUCCESS
+                      ? 'success'
+                      : appInstallationStatus === InstallationStatus.ERROR
+                        ? 'error'
+                        : 'idle'
+                }
+                errorMessage={errorMessage}
+                onOrgNameChange={value => {
+                  form.setFieldValue('gitHubOrgName', value);
+                  form.setFieldValue('installationId', '');
+                  setAppInstallationStatus(InstallationStatus.IDLE);
+                  setErrorMessage('');
+                }}
+                onVerifyClick={() =>
+                  checkAppInstallation(form.values.gitHubOrgName)
+                }
+              />
+            </>
+          )}
+
+          {/* Step 4: AI Insights */}
+          {step === 4 && (
+            <>
+              <StepIntro
+                icon={<IconRobot size={25} />}
+                title="AI Insights"
+                description="Enable AI-powered insights to analyse team activity and code metrics over time.
+                You can use the default settings or customise the AI provider, model, and update frequency."
+              />
+              <CourseAISetup form={form} modelOptions={modelOptions} />
+            </>
+          )}
+
+          {/* Step 5: Review & confirm */}
+          {step === 5 && (
+            <>
+              <StepIntro
+                icon={<IconFlag size={25} />}
+                title="Review & Confirm"
+                description="Once confirmed, your course will be officially activated in CRISP!"
+              />
+              <CourseReviewSummary form={form} />
+            </>
+          )}
+        </Box>
+
+        {/* Bottom actions - fixed footer */}
+        <Box
+          component="footer"
+          style={{
+            position: 'fixed',
+            left: 0,
+            right: 0,
+            bottom: 0,
+            padding: '12px 24px',
+            background:
+              'linear-gradient(to top, var(--mantine-color-body), transparent)',
+            backdropFilter: 'blur(6px)',
+            borderTop:
+              '1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4))',
+            zIndex: 20,
+          }}
+        >
+          <Group
+            justify="space-between"
+            style={{ maxWidth: 1200, margin: '0 auto' }}
+          >
+            <Group>
+              <Button
+                size="xl"
+                variant="default"
+                onClick={() => setStep(s => Math.max(s - 1, 0))}
+                disabled={loading || step === 0}
+              >
+                Back
+              </Button>
+              <Button
+                size="xl"
+                variant="default"
+                onClick={handleCancel}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+            </Group>
+            <Button
+              size="xl"
+              onClick={step === TOTAL_STEPS - 1 ? handlePublish : handleNext}
+              loading={loading}
+            >
+              {step === TOTAL_STEPS - 1
+                ? 'Confirm & Create'
+                : 'Save & Continue'}
+            </Button>
+          </Group>
+        </Box>
+      </Box>
+    </Box>
+  );
+};
+
+export default CreateCoursePage;

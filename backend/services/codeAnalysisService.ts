@@ -2,11 +2,11 @@ import codeAnalysisDataModel from '@models/CodeAnalysisData';
 import { NotFoundError } from './errors';
 import AccountModel from '@models/Account';
 import CourseModel from '@models/Course';
-import Role from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 import TeamSetModel from '@models/TeamSet';
 import TeamModel from '@models/Team';
 import { TeamData } from '@models/TeamData';
-import CourseRole from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
 export const fetchAllCodeAnalysisData = async () => {
   return await codeAnalysisDataModel.find({});
@@ -47,9 +47,9 @@ export const getAuthorizedCodeAnalysisDataByCourse = async (
   );
 
   if (
-    crispRole === Role.Faculty ||
-    crispRole === Role.Admin ||
-    crispRole === Role.TrialUser
+    crispRole === CRISP_ROLE.Faculty ||
+    crispRole === CRISP_ROLE.Admin ||
+    crispRole === CRISP_ROLE.TrialUser
   ) {
     if (!course.gitHubOrgName) {
       throw new NotFoundError('Course GitHub organization not found');
@@ -70,9 +70,9 @@ export const getAuthorizedCodeAnalysisDataByCourse = async (
     });
     return sortedDatas;
   } else if (
-    crispRole === Role.Normal &&
+    crispRole === CRISP_ROLE.Normal &&
     courseRoleTuple.length > 0 &&
-    courseRoleTuple[0].courseRole === CourseRole.TA
+    courseRoleTuple[0].courseRole === COURSE_ROLE.TA
   ) {
     const teamSets = await TeamSetModel.find({ course: courseId });
     if (!teamSets || teamSets.length === 0) {

@@ -1,39 +1,26 @@
+import AuthShell from '@/components/auth/AuthShell';
 import { logLogin } from '@/lib/auth/utils';
 import {
   Alert,
   Anchor,
   Button,
-  Container,
-  Group,
-  Paper,
+  Divider,
   PasswordInput,
   Text,
   TextInput,
-  Title,
+  Stack,
 } from '@mantine/core';
-import { IconInfoCircle } from '@tabler/icons-react';
+import { IconInfoCircle, IconAt, IconLock } from '@tabler/icons-react';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 const SignInPage: React.FC = () => {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showAlert, setShowAlert] = useState(!!router.query.success);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    if (showAlert) {
-      const timer = setTimeout(() => {
-        setShowAlert(false);
-        router.push('/auth/signin');
-      }, 3000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [showAlert, router]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,68 +41,81 @@ const SignInPage: React.FC = () => {
 
   const showError = (message: string) => {
     setError(message);
-    setTimeout(() => setError(''), 5000);
   };
 
   return (
-    <Container size={420} my={40}>
-      <Title ta="center">Welcome back!</Title>
-      <Text c="dimmed" size="sm" ta="center" mt={5}>
+    <AuthShell title="Welcome back!" subtitle="">
+      <Text c="dimmed" size="sm" my={5}>
         Don't have an account yet?{' '}
         <Anchor size="sm" component={Link} href="/auth/register">
-          Create account
+          Create an account
         </Anchor>
       </Text>
-      <Paper withBorder shadow="md" p={30} mt={30} radius="md">
-        {router.query.success && (
-          <Alert
-            variant="light"
-            color="green"
-            withCloseButton
-            onClose={() => {
-              setShowAlert(false);
-              router.push('/auth/signin');
-            }}
-            icon={<IconInfoCircle />}
-            mb={15}
-          >
-            Account created successfully! Please wait for your account to be
-            approved.
-          </Alert>
-        )}
-        {error && (
-          <Alert variant="light" color="red" icon={<IconInfoCircle />} mb={15}>
-            {error}
-          </Alert>
-        )}
-        <form onSubmit={handleSignIn}>
+      {router.query.success && (
+        <Alert
+          variant="light"
+          color="green"
+          withCloseButton
+          onClose={() => {
+            router.push('/auth/signin');
+          }}
+          icon={<IconInfoCircle />}
+          mb={15}
+        >
+          <Text c="white">Account created successfully!</Text>
+          <Text c="white">Please wait for admin approval.</Text>
+        </Alert>
+      )}
+      {error && (
+        <Alert
+          variant="light"
+          color="red"
+          icon={<IconInfoCircle />}
+          mb={15}
+          withCloseButton
+          onClose={() => {
+            setError('');
+            router.push('/auth/signin');
+          }}
+        >
+          <Text c="white">{error}</Text>
+        </Alert>
+      )}
+      <form onSubmit={handleSignIn}>
+        <Stack gap="sm">
           <TextInput
             label="Email"
-            placeholder="Email"
+            placeholder="name@u.nus.edu"
+            withAsterisk
+            leftSection={<IconAt size={18} />}
             value={email}
             onChange={event => setEmail(event.currentTarget.value)}
             required
           />
           <PasswordInput
             label="Password"
-            placeholder="Password"
+            placeholder="Your password"
+            withAsterisk
+            leftSection={<IconLock size={18} />}
             value={password}
             onChange={event => setPassword(event.currentTarget.value)}
             required
-            mt="md"
           />
-          <Group justify="space-between" mt="lg">
-            {/* <Checkbox label="Remember me" /> */}
-            <Anchor href="#" size="sm">
-              Forgot password?
-            </Anchor>
-          </Group>
-          <Button type="submit" fullWidth mt="xl">
+          {/* TODO: forgot password not implemented yet! */}
+          <Anchor href="#" size="sm">
+            Forgot password?
+          </Anchor>
+          <Button type="submit" mt="xs">
             Sign in
           </Button>
-        </form>
-      </Paper>
-    </Container>
+          <Divider label="or" labelPosition="center" my="sm" />
+          {/* TODO: Not implemented yet! Log in with SSO */}
+          <Button variant="light" color="gray" type="button" onClick={() => {}}>
+            Log in with SSO
+          </Button>
+        </Stack>
+      </form>
+    </AuthShell>
   );
 };
 

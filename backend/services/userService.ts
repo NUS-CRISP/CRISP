@@ -2,7 +2,7 @@ import AccountModel from '@models/Account';
 import UserModel from '@models/User';
 import { Profile } from '@shared/types/Profile';
 import { BadRequestError, NotFoundError } from './errors';
-import CrispRole from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 
 // TODO
 // Nephelite's note:
@@ -20,8 +20,8 @@ export const editUser = async (
     throw new NotFoundError('Account not found');
   }
   if (
-    account.crispRole !== CrispRole.Admin &&
-    account.crispRole !== CrispRole.Faculty
+    account.crispRole !== CRISP_ROLE.Admin &&
+    account.crispRole !== CRISP_ROLE.Faculty
   ) {
     throw new BadRequestError('Unauthorized');
   }

@@ -4,6 +4,7 @@ import AccountModel from '../../models/Account';
 import CourseModel from '../../models/Course';
 import TeamModel from '../../models/Team';
 import TeamSetModel from '../../models/TeamSet';
+import TeamDataModel from '../../models/TeamData';
 import UserModel from '../../models/User';
 import { BadRequestError, NotFoundError } from '../../services/errors';
 import {
@@ -14,9 +15,10 @@ import {
   getTeamsByTAIdAndCourseId,
   removeMembersById,
   updateTeamById,
+  resolveTeamRepo,
 } from '../../services/teamService';
-import CrispRole from '@shared/types/auth/CrispRole';
-import CourseRole from '@shared/types/auth/CourseRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
 let mongo: MongoMemoryServer;
 
@@ -84,7 +86,7 @@ async function createStudentUser(userData: any) {
   const account = new AccountModel({
     email: `${userData.identifier}@example.com`,
     password: 'hashedpassword',
-    crispRole: CrispRole.Normal,
+    crispRole: CRISP_ROLE.Normal,
     user: user._id,
     isApproved: true,
   });
@@ -103,7 +105,7 @@ async function createTAUser(userData: any) {
   const account = new AccountModel({
     email: `${userData.identifier}@example.com`,
     password: 'hashedpassword',
-    crispRole: CrispRole.Normal,
+    crispRole: CRISP_ROLE.Normal,
     user: user._id,
     isApproved: true,
   });
@@ -151,11 +153,11 @@ describe('teamService', () => {
       await ta2.save();
       ta1Acc.courseRoles.push({
         course: course._id.toString(),
-        courseRole: CourseRole.TA,
+        courseRole: COURSE_ROLE.TA,
       });
       ta2Acc.courseRoles.push({
         course: course._id.toString(),
-        courseRole: CourseRole.TA,
+        courseRole: COURSE_ROLE.TA,
       });
       await ta1Acc.save();
       await ta2Acc.save();
@@ -232,7 +234,7 @@ describe('teamService', () => {
       await ta.save();
       taAcc.courseRoles.push({
         course: course._id.toString(),
-        courseRole: CourseRole.TA,
+        courseRole: COURSE_ROLE.TA,
       });
       await taAcc.save();
       course.TAs.push(ta._id);
@@ -456,7 +458,7 @@ describe('teamService', () => {
       await student.save();
       studentAcc.courseRoles.push({
         course: course._id.toString(),
-        courseRole: CourseRole.Student,
+        courseRole: COURSE_ROLE.Student,
       });
       await studentAcc.save();
       course.students.push(student._id);
@@ -521,7 +523,7 @@ describe('teamService', () => {
       await student.save();
       studentAcc.courseRoles.push({
         course: course._id.toString(),
-        courseRole: CourseRole.Student,
+        courseRole: COURSE_ROLE.Student,
       });
       await studentAcc.save();
       course.students.push(student._id);
@@ -556,7 +558,7 @@ describe('teamService', () => {
       await ta.save();
       taAcc.courseRoles.push({
         course: course._id.toString(),
-        courseRole: CourseRole.TA,
+        courseRole: COURSE_ROLE.TA,
       });
       await taAcc.save();
       course.TAs.push(ta._id);
@@ -618,7 +620,7 @@ describe('teamService', () => {
       await ta.save();
       taAcc.courseRoles.push({
         course: course._id.toString(),
-        courseRole: CourseRole.TA,
+        courseRole: COURSE_ROLE.TA,
       });
       await taAcc.save();
       course.TAs.push(ta._id);
@@ -670,6 +672,173 @@ describe('teamService', () => {
       await expect(
         removeMembersById(team._id.toHexString(), userId)
       ).rejects.toThrow(NotFoundError);
+    });
+  });
+
+  describe('resolveTeamRepo', () => {
+    it('should throw NotFoundError if course does not exist', async () => {
+      const nonExistentCourseId = new mongoose.Types.ObjectId().toHexString();
+      const team = await createTestTeam(commonTeamDetails);
+
+      await expect(
+        resolveTeamRepo(nonExistentCourseId, team._id.toHexString())
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should throw NotFoundError if team does not exist', async () => {
+      const course = await createTestCourse(commonCourseDetails);
+      const nonExistentTeamId = new mongoose.Types.ObjectId().toHexString();
+
+      await expect(
+        resolveTeamRepo(course._id.toHexString(), nonExistentTeamId)
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should throw NotFoundError if team data does not exist', async () => {
+      const course = await createTestCourse(commonCourseDetails);
+      const team = await createTestTeam(commonTeamDetails);
+      // team.teamData is not set, so resolveTeamRepo should throw
+
+      await expect(
+        resolveTeamRepo(course._id.toHexString(), team._id.toHexString())
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should resolve repo for GitHubOrg course type', async () => {
+      const course = new CourseModel({
+        name: 'GitHub Org Course',
+        code: 'CS201',
+        semester: 'Spring 2026',
+        startDate: new Date('2026-01-01'),
+        courseType: 'GitHubOrg',
+        gitHubOrgName: 'test-org',
+      });
+      await course.save();
+
+      const teamData = new TeamDataModel({
+        teamId: 1,
+        course: course._id,
+        gitHubOrgName: 'test-org',
+        repoName: 'test-repo',
+        commits: 0,
+        weeklyCommits: [[0]],
+        issues: 0,
+        pullRequests: 0,
+        updatedIssues: [],
+        teamContributions: new Map(),
+        teamPRs: [],
+        milestones: [],
+      });
+      await teamData.save();
+
+      const team = new TeamModel({
+        number: 1,
+        teamSet: new mongoose.Types.ObjectId(),
+        members: [],
+        teamData: teamData._id,
+      });
+      await team.save();
+
+      const result = await resolveTeamRepo(
+        course._id.toHexString(),
+        team._id.toHexString()
+      );
+
+      expect(result.repoName).toBe('test-repo');
+      expect(result.repoUrl).toBe('https://github.com/test-org/test-repo');
+      expect(result.gitHubOrgName).toBe('test-org');
+    });
+
+    it('should resolve repo for Normal course type with matching repo link', async () => {
+      const course = new CourseModel({
+        name: 'Normal Course',
+        code: 'CS301',
+        semester: 'Spring 2026',
+        startDate: new Date('2026-01-01'),
+        courseType: 'Normal',
+        gitHubRepoLinks: [
+          'https://github.com/user/test-repo',
+          'https://github.com/user/another-repo',
+        ],
+      });
+      await course.save();
+
+      const teamData = new TeamDataModel({
+        teamId: 2,
+        course: course._id,
+        gitHubOrgName: 'N/A',
+        repoName: 'test-repo',
+        commits: 0,
+        weeklyCommits: [[0]],
+        issues: 0,
+        pullRequests: 0,
+        updatedIssues: [],
+        teamContributions: new Map(),
+        teamPRs: [],
+        milestones: [],
+      });
+      await teamData.save();
+
+      const team = new TeamModel({
+        number: 2,
+        teamSet: new mongoose.Types.ObjectId(),
+        members: [],
+        teamData: teamData._id,
+      });
+      await team.save();
+
+      const result = await resolveTeamRepo(
+        course._id.toHexString(),
+        team._id.toHexString()
+      );
+
+      expect(result.repoName).toBe('test-repo');
+      expect(result.repoUrl).toContain('test-repo');
+      expect(result.gitHubOrgName).toBe('N/A');
+    });
+
+    it('should fall back to TEMP_FALLBACK_URL when repo link not found', async () => {
+      const course = new CourseModel({
+        name: 'Normal Course',
+        code: 'CS401',
+        semester: 'Spring 2026',
+        startDate: new Date('2026-01-01'),
+        courseType: 'Normal',
+        gitHubRepoLinks: ['https://github.com/user/other-repo'],
+      });
+      await course.save();
+
+      const teamData = new TeamDataModel({
+        teamId: 3,
+        course: course._id,
+        gitHubOrgName: 'N/A',
+        repoName: 'test-repo',
+        commits: 0,
+        weeklyCommits: [[0]],
+        issues: 0,
+        pullRequests: 0,
+        updatedIssues: [],
+        teamContributions: new Map(),
+        teamPRs: [],
+        milestones: [],
+      });
+      await teamData.save();
+
+      const team = new TeamModel({
+        number: 3,
+        teamSet: new mongoose.Types.ObjectId(),
+        members: [],
+        teamData: teamData._id,
+      });
+      await team.save();
+
+      const result = await resolveTeamRepo(
+        course._id.toHexString(),
+        team._id.toHexString()
+      );
+
+      expect(result.repoName).toBe('test-repo');
+      expect(result.repoUrl).toBe('https://github.com/gongg21/AddSubtract.git');
     });
   });
 });

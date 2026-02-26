@@ -1,3 +1,4 @@
+// CURRENTLY DEPRECATED, USING TAAndTeamForm so that TAs can be directly assigned to teams
 import { Box, Button, Divider, Notification, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useState } from 'react';

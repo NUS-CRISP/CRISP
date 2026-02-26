@@ -1,7 +1,56 @@
 .rootLayout {
   display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 .content {
-  flex-grow: 1;
+  flex: 1;
+}
+
+.page {
+  width: 90%;
+  max-width: none;
+  margin: 0 auto;
+  padding-top: 12px;
+}
+
+.pageHeader {
+  margin-bottom: 32px;
+}
+
+.pageTitle {
+  font-size: 3rem;
+  /* 48px – dominant page title */
+  font-weight: 700;
+  line-height: 1.15;
+  color: light-dark(var(--mantine-color-dark-8), var(--mantine-color-gray-0));
+  margin-bottom: 10px;
+}
+
+.pageSubtitle {
+  font-size: 1.125rem;
+  /* 18px */
+  font-weight: 400;
+  line-height: 1.4;
+  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
+  margin-top: 6px;
+  margin-bottom: 20px;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
+  text-decoration: none;
+  transition: color 160ms ease;
+  margin-bottom: 8px;
+}
+
+.backLink:hover {
+  color: light-dark(var(--mantine-color-blue-6), var(--mantine-color-blue-4));
 }

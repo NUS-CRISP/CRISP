@@ -11,12 +11,14 @@ import {
 } from '@mantine/core';
 import RepositoryForm from '../forms/RepositoryForm';
 import UpdateRepositoryForm from '../forms/UpdateRepositoryForm';
+import { TeamData } from '@shared/types/TeamData';
 
 interface RepositoryInfoProps {
   courseId: string;
   repositories: string[];
   hasFacultyPermission: boolean;
   onUpdate: () => void;
+  teamDataList: TeamData[];
 }
 
 const RepositoryInfo: React.FC<RepositoryInfoProps> = ({
@@ -24,6 +26,7 @@ const RepositoryInfo: React.FC<RepositoryInfoProps> = ({
   repositories,
   hasFacultyPermission,
   onUpdate,
+  teamDataList,
 }) => {
   const [isAddingRepository, setIsAddingRepository] = useState(false);
   const [isEditingRepository, setIsEditingRepository] = useState(false);
@@ -75,7 +78,10 @@ const RepositoryInfo: React.FC<RepositoryInfoProps> = ({
     setSelectedRepositoryIndex(null);
     onUpdate();
   };
-
+  const repoOptions = teamDataList.map(teamData => ({
+    value: teamData._id,
+    label: teamData.repoName,
+  }));
   return (
     <Container>
       {hasFacultyPermission && (
@@ -110,8 +116,29 @@ const RepositoryInfo: React.FC<RepositoryInfoProps> = ({
           onRepositoryUpdated={handleUpdate}
         />
       </Modal>
+      <Divider label="Synced Repositories" size="lg" />
 
-      <Divider label="Public GitHub Repositories" size="lg" />
+      {repoOptions.length > 0 ? (
+        <Table>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th style={{ textAlign: 'left' }}>Repo Name</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {repoOptions.map((repoOption, index) => (
+              <Table.Tr key={index}>
+                <Table.Td>{repoOption.label}</Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      ) : (
+        <Text>No team data available</Text>
+      )}
+
+      <Space h="md" />
+      <Divider label="Public GitHub Repository Links" size="lg" />
 
       {repositories.length > 0 ? (
         <Table>

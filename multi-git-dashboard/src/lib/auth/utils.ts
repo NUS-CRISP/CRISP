@@ -1,8 +1,5 @@
-import CrispRoles, { CrispRole } from '@shared/types/auth/CrispRole';
-import CourseRoles, {
-  CourseRole,
-  CourseRoleTuple,
-} from '@shared/types/auth/CourseRole';
+import { CRISP_ROLE, CrispRole } from '@shared/types/auth/CrispRole';
+import { CourseRole, CourseRoleTuple } from '@shared/types/auth/CourseRole';
 import { useSession } from 'next-auth/react';
 
 export const hasPermission = (...CrispRoles: CrispRole[]) => {
@@ -14,7 +11,7 @@ export const hasPermission = (...CrispRoles: CrispRole[]) => {
 };
 
 export const hasFacultyPermission = () =>
-  hasPermission(CrispRoles.Admin, CrispRoles.Faculty);
+  hasPermission(CRISP_ROLE.Admin, CRISP_ROLE.Faculty);
 
 export const hasCoursePermission = (
   courseId: string,
@@ -22,18 +19,11 @@ export const hasCoursePermission = (
 ) => {
   const { data: session } = useSession();
   return (
-    (session?.user.courseRoles &&
-      CourseRoles.includes(
-        session.user.courseRoles.filter(
-          (r: CourseRoleTuple) => r.course === courseId
-        )[1]
-      )) ||
-    false
+    session?.user.courseRoles
+      .filter((r: CourseRoleTuple) => r.course === courseId)
+      .some((r: CourseRoleTuple) => CourseRoles.includes(r.courseRole)) || false
   );
 };
-
-export const hasCourseFacultyPermission = (courseId: string) =>
-  hasCoursePermission(courseId, CourseRoles.Faculty);
 
 export const isTrialUser = (...CrispRoles: CrispRole[]) => {
   const { data: session } = useSession();
@@ -43,7 +33,7 @@ export const isTrialUser = (...CrispRoles: CrispRole[]) => {
   );
 };
 
-export const isTrial = () => isTrialUser(CrispRoles.TrialUser);
+export const isTrial = () => isTrialUser(CRISP_ROLE.TrialUser);
 
 export const logLogin = async () => {
   const res = await fetch('/api/metrics/login', {
@@ -54,4 +44,18 @@ export const logLogin = async () => {
   if (!res.ok) {
     console.error('Failed to log login event:', res.statusText);
   }
+};
+
+export const getMe = async (courseId: string) => {
+  const res = await fetch(`/api/courses/${courseId}/me`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  if (!res.ok) {
+    console.error('Failed to fetch user data:', res.statusText);
+    return null;
+  }
+
+  return res.json();
 };

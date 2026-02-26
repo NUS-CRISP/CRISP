@@ -3,6 +3,7 @@ import { config } from 'dotenv';
 import express, { Express } from 'express';
 import setupCodeAnalysisJob from './jobs/codeAnalysisJob';
 import setupGitHubJob from './jobs/githubJob';
+import setupPublicGitHubJob from './jobs/publicGithubJob';
 import setupJiraJob from './jobs/jiraJob';
 import setupTrofosJob from './jobs/trofosJob';
 import accountRoutes from './routes/accountRoutes';
@@ -20,6 +21,7 @@ import { connectToDatabase } from './utils/database';
 import submissionRoutes from './routes/submissionRoutes';
 import assessmentAssignmentSetRoutes from './routes/assessmentAssignmentSetRoutes';
 import assessmentResultRoutes from './routes/assessmentResultRoutes';
+import peerReviewRoutes from './routes/peerReviewRoutes';
 import setupAIInsightsJob from './jobs/aiInsightsJob';
 import notificationRoutes from './routes/notificationRoutes';
 import setupTutorialDataJob from './jobs/tutorialDataJob';
@@ -37,6 +39,7 @@ const setupApp = async () => {
   setupDataIntegrityJob();
   setupTutorialDataJob();
   setupGitHubJob();
+  setupPublicGitHubJob();
   setupJiraJob();
   setupTrofosJob();
   setupCodeAnalysisJob();
@@ -67,6 +70,7 @@ app.use('/api/assessment-results', assessmentResultRoutes);
 app.use('/api/assignment-sets', assessmentAssignmentSetRoutes);
 app.use('/api/codeanalysis', codeAnalysisRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/peer-review', peerReviewRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);

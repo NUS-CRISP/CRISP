@@ -1,10 +1,10 @@
-const CrispRole = {
-  Admin: 'admin',
-  TrialUser: 'Trial User',
-  Faculty: 'Faculty',
-  Normal: 'Normal'
+// The inconsistent naming format is irritating but we will need to run migrations
+// to fix the naming format. 
+export const CRISP_ROLE = {
+  Admin: "admin",
+  TrialUser: "Trial User",
+  Faculty: "Faculty",
+  Normal: "Normal", // Normal is used for students and TAs
 } as const;
 
-export type CrispRole = (typeof CrispRole)[keyof typeof CrispRole];
-
-export default CrispRole;
+export type CrispRole = (typeof CRISP_ROLE)[keyof typeof CRISP_ROLE];

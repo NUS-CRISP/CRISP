@@ -1,4 +1,4 @@
-import CourseRole from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 import AccountModel from '../models/Account';
 import CourseModel from '../models/Course';
 import TeamModel, { Team } from '../models/Team';
@@ -6,6 +6,10 @@ import TeamSetModel from '../models/TeamSet';
 import UserModel from '../models/User';
 import { BadRequestError, NotFoundError } from './errors';
 import { getTeamSetsByCourseId } from './teamSetService';
+import TeamDataModel from '@models/TeamData';
+import { extractRepoNameFromUrl, normalizeGitHubUrl } from '../utils/github';
+
+const TEMP_FALLBACK_URL = 'https://github.com/gongg21/AddSubtract.git'; // temporary for development
 
 export const getTeamsByCourseId = async (courseId: string) => {
   const teamSets = await getTeamSetsByCourseId(courseId);
@@ -71,7 +75,7 @@ export const addStudentsToTeam = async (courseId: string, students: any[]) => {
       !account ||
       account.courseRoles.filter(r => r.course === courseId).length === 0 ||
       account.courseRoles.filter(r => r.course === courseId)[0].courseRole !==
-        CourseRole.Student ||
+        COURSE_ROLE.Student ||
       !student.enrolledCourses.includes(course._id) ||
       !course.students.some(s => s._id.equals(student._id)) ||
       !studentData.teamSet ||
@@ -125,7 +129,7 @@ export const addTAsToTeam = async (courseId: string, tas: any[]) => {
       !account ||
       account.courseRoles.filter(r => r.course === courseId).length === 0 ||
       account.courseRoles.filter(r => r.course === courseId)[0].courseRole !==
-        CourseRole.TA ||
+        COURSE_ROLE.TA ||
       !ta.enrolledCourses.includes(course._id) ||
       !course.TAs.some(t => t._id.equals(ta._id)) ||
       !taData.teamSet ||
@@ -171,4 +175,38 @@ export const removeMembersById = async (teamId: string, userId: string) => {
   }
   team.members = team.members?.filter(member => !member._id.equals(user._id));
   await team.save();
+};
+
+/* ----- Repository-related functions ----- */
+export const resolveTeamRepo = async (courseId: string, teamId: string) => {
+  const course = await CourseModel.findById(courseId);
+  if (!course) throw new NotFoundError('Course not found');
+
+  const team = await TeamModel.findById(teamId);
+  if (!team) throw new NotFoundError('Team not found');
+
+  const teamData = await TeamDataModel.findById(team.teamData);
+  if (!teamData) throw new NotFoundError('Team data not found');
+
+  const repoName = teamData.repoName ?? team.number.toString();
+
+  // GitHub Org Course: build URL from org + repoName
+  if (course.courseType === 'GitHubOrg') {
+    console.log('Course is GitHubOrg type');
+    return {
+      repoName,
+      repoUrl: `https://github.com/${course.gitHubOrgName}/${repoName}`,
+      gitHubOrgName: course.gitHubOrgName ?? 'Unknown GitHub Org',
+    };
+  }
+
+  // Normal Course: find repo URL from gitHubRepoLinks
+  console.log('Course is normal type');
+  const links = (course.gitHubRepoLinks ?? []).map(normalizeGitHubUrl);
+  const match = links.find(l => extractRepoNameFromUrl(l) === repoName);
+  return {
+    repoName,
+    repoUrl: match ?? TEMP_FALLBACK_URL,
+    gitHubOrgName: 'N/A',
+  };
 };

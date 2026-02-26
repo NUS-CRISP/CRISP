@@ -3,19 +3,16 @@ import { useTutorialContext } from '@/components/tutorial/TutorialContext';
 import TutorialPopover from '@/components/tutorial/TutorialPopover';
 import WelcomeMessage from '@/components/views/WelcomeMessage';
 import { hasFacultyPermission } from '@/lib/auth/utils';
-import { Box, Button, Modal, ScrollArea } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
+import { Box, Button, ScrollArea, Title } from '@mantine/core';
 import { Course } from '@shared/types/Course';
 import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import CreateCourseForm from '../../components/forms/CreateCourseForm';
+import pageLayout from '@/styles/root-layout.module.css';
 
 const CourseListPage: React.FC = () => {
   const apiRoute = '/api/courses';
   const permission = hasFacultyPermission();
-
-  const [opened, { open, close }] = useDisclosure(false);
 
   const { curTutorialStage, startTutorial } = useTutorialContext();
 
@@ -70,18 +67,62 @@ const CourseListPage: React.FC = () => {
     <ScrollArea
       style={{
         height: '100vh',
+        paddingTop: '8px',
         paddingRight: '20px',
         overflowY: 'auto',
         scrollbarWidth: 'thin',
       }}
     >
-      <Modal opened={opened} onClose={close} title="Course Creation">
-        <CreateCourseForm />
-      </Modal>
-      <Box pl={20}>
-        <h1>Courses</h1>
+      <Box className={pageLayout.page}>
+        <Box className={pageLayout.pageHeader}>
+          <Title
+            order={1}
+            className={pageLayout.pageTitle}
+            style={{ textAlign: 'center' }}
+          >
+            Dashboard
+          </Title>
+        </Box>
         {courses.length === 0 ? (
-          <p>No courses to show</p>
+          <Box
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textAlign: 'center',
+              padding: '32px',
+              borderRadius: '12px',
+              border:
+                '1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4))',
+              background:
+                'light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6))',
+              color:
+                'light-dark(var(--mantine-color-gray-9), var(--mantine-color-gray-0))',
+              minHeight: '220px',
+            }}
+          >
+            <div>
+              <h2 style={{ margin: '0 0 8px' }}>No courses yet</h2>
+              <p
+                style={{
+                  margin: '0 0 16px',
+                  color:
+                    'light-dark(var(--mantine-color-gray-6), var(--mantine-color-gray-3))',
+                }}
+              >
+                You haven’t been added to any courses. Once you’re enrolled,
+                they’ll show up here.
+              </p>
+              {permission && (
+                <Button
+                  onClick={() => router.push('/courses/create')}
+                  variant="filled"
+                >
+                  Create a course
+                </Button>
+              )}
+            </div>
+          </Box>
         ) : (
           <div
             style={{
@@ -102,6 +143,13 @@ const CourseListPage: React.FC = () => {
                   key={course._id}
                   course={course}
                   isTutorial={idx === 0 && curTutorialStage === 4}
+                  onContinueDraft={
+                    course.status === 'draft'
+                      ? id => {
+                          router.push(`/courses/create?courseId=${id}`);
+                        }
+                      : undefined
+                  }
                 />
               </TutorialPopover>
             ))}
@@ -109,7 +157,11 @@ const CourseListPage: React.FC = () => {
         )}
         {permission && (
           <div>
-            <Button onClick={open} mt={16} mb={20}>
+            <Button
+              onClick={() => router.push('/courses/create')}
+              mt={16}
+              mb={20}
+            >
               Create Course
             </Button>
           </div>

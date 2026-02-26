@@ -1,5 +1,5 @@
 import clientPromise from '@/lib/mongodb';
-import CrispRole from '@shared/types/auth/CrispRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
 import bcrypt from 'bcrypt';
 import {
   GetServerSidePropsContext,
@@ -33,14 +33,15 @@ export const authOptions: AuthOptions = {
           .db(process.env.DB_NAME)
           .collection('accounts');
 
-        if (credentials?.type === CrispRole.TrialUser) {
+        if (credentials?.type === CRISP_ROLE.TrialUser) {
           const trialAccount = await accountsCollection.findOne({
-            crispRole: CrispRole.TrialUser,
+            crispRole: CRISP_ROLE.TrialUser,
           });
           return {
             id: process.env.NEXT_PUBLIC_TRIAL_USER_ID || '',
-            name: CrispRole.TrialUser,
-            crispRole: CrispRole.TrialUser,
+            name: CRISP_ROLE.TrialUser,
+            email: 'trial@example.com',
+            crispRole: CRISP_ROLE.TrialUser,
             courseRoles: trialAccount!.courseRoles,
           };
         }
@@ -80,6 +81,7 @@ export const authOptions: AuthOptions = {
         return {
           id: account._id.toString(),
           name: user?.name || '',
+          email: email || '',
           crispRole: account.crispRole,
           courseRoles: account.courseRoles,
         };
@@ -93,6 +95,7 @@ export const authOptions: AuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.email = user.email;
         token.crispRole = user.crispRole;
         token.courseRoles = user.courseRoles;
       }
@@ -102,11 +105,15 @@ export const authOptions: AuthOptions = {
       if (token.name) {
         session.user.name = token.name;
       }
+      if (token.email) {
+        session.user.email = token.email;
+      }
       session.user.crispRole = token.crispRole;
       session.user.courseRoles = token.courseRoles;
       return {
         user: {
           name: token.name,
+          email: token.email,
           crispRole: token.crispRole,
           courseRoles: token.courseRoles,
         },

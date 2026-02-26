@@ -25,3 +25,12 @@ export const getTeamMembers = async (teamId: number) => {
 
   return new Set(teamMembersGitHandles);
 };
+
+export const normalizeGitHubUrl = (url: String) => url.replace(/\/+$/, '');
+
+export const extractRepoNameFromUrl = (url: String) => {
+  const m = normalizeGitHubUrl(url).match(
+    /^https?:\/\/github\.com\/[^/]+\/([^/]+?)(?:\.git)?$/i
+  );
+  return m?.[1] ?? null;
+};

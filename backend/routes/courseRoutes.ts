@@ -1,5 +1,6 @@
 import express from 'express';
 import {
+  getMe,
   addAssessments,
   getCourseCode,
   getAssessments,
@@ -8,6 +9,7 @@ import {
   addSprint,
   addStudents,
   addStudentsToTeams,
+  addStudentsToCourseAndTeams,
   addTAs,
   addTAsToTeams,
   addTeamSet,
@@ -35,12 +37,14 @@ import {
   addRepositories,
   removeRepository,
   updateRepository,
+  addTAsAndTeams,
 } from '../controllers/courseController';
 
 import { noCache } from '../middleware/noCache';
 
 const router = express.Router();
 
+router.get('/:courseId/me', getMe);
 router.post('/', createCourse);
 router.get('/', noCache, getCourses);
 router.get('/:id', getCourse);
@@ -52,9 +56,11 @@ router.post('/:id/faculty', addFaculty);
 router.patch('/:id/faculty', updateFaculty);
 router.delete('/:id/faculty/:userId', removeFaculty);
 router.post('/:id/students', addStudents);
+router.post('/:id/students/teams', addStudentsToCourseAndTeams);
 router.patch('/:id/students', updateStudents);
 router.delete('/:id/students/:userId', removeStudents);
 router.post('/:id/tas', addTAs);
+router.post('/:id/tas/teams', addTAsAndTeams);
 router.patch('/:id/tas', updateTAs);
 router.delete('/:id/tas/:userId', removeTAs);
 router.get('/:id/people', getPeople);

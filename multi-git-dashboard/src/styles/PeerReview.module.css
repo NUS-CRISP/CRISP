@@ -1,0 +1,232 @@
+.wrapper {
+  padding: 20px;
+  max-width: 100%;
+}
+
+.wrapper :global(.monaco-editor .margin) {
+  padding-left: 8px;
+}
+
+.wrapper :global(.monaco-editor .margin .glyph-margin) {
+  width: 6px;
+}
+
+.wrapper :global(.monaco-editor .margin),
+.wrapper :global(.monaco-editor .glyph-margin),
+.wrapper :global(.monaco-editor .margin-view-overlays),
+.wrapper :global(.monaco-editor .line-numbers) {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  pointer-events: none !important;
+}
+
+/* Layout */
+.returnButton {
+  cursor: pointer;
+  border: solid 1px #505050;
+  border-radius: 6px;
+  width: 50px;
+  height: 24px;
+  transition: background-color 0.2s ease;
+}
+
+.returnButton:hover {
+  background-color: #707070;
+}
+
+.repositoryBox {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  height: 100%;
+  border: 1px solid #505050;
+  border-radius: 6px;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.repositoryScrollArea {
+  width: 180px;
+  overflow-x: auto;
+  overflow-y: auto;
+  white-space: nowrap;
+  height: 100%;
+  padding-top: 8px;
+}
+
+.repositoryScrollArea * {
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.repositoryTitle {
+  text-align: center;
+  font-weight: 700;
+  font-size: 14;
+  border-bottom-style: solid;
+  border-bottom-width: 1px;
+  padding: 16px 0px 10px 0px;
+  overflow: hidden;
+  color: dimgray;
+}
+
+.header {
+  padding-bottom: 5px;
+  margin-bottom: 5px;
+  display: flex;
+  align-content: flex-start;
+}
+
+.body {
+  height: 90vh;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.editorTitle {
+  font-size: 16px;
+  font-weight: bold;
+  font-family: 'ui-monospace';
+  border-bottom-style: solid;
+  border-bottom-width: 1px;
+  padding-bottom: 12px;
+  overflow: hidden;
+}
+
+.editorBox {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+}
+
+.editorCard {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  border: 0.5px solid #505050;
+  border-radius: 8px;
+}
+
+/* Line Selection and Highlighting */
+.commentWidget {
+  position: absolute;
+  left: 60px;
+  z-index: 1000px;
+  width: 300px;
+}
+
+.commentedRange {
+  background: rgba(255, 200, 0, 0.2);
+}
+
+.reviewLineHighlight {
+  background: rgba(3, 102, 214, 0.08);
+  border-radius: 2px;
+}
+
+.reviewLineMargin {
+  border-left: 3px solid #0366d6;
+}
+
+.reviewLineIcon {
+  width: 20px;
+  height: 20px;
+  background: url('/plus.svg') no-repeat center center;
+  background-size: contain;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+/* Comments Related */
+
+.commentSidebarCard {
+  transition: width 0.2s ease;
+  height: '100%';
+  display: flex;
+  flex-direction: column;
+  background-color: #1e1e1e;
+  border-radius: 8px;
+}
+
+.commentSidebarToggleButton {
+  position: absolute;
+  z-index: 10;
+  background: #2d2d2d;
+  background-color: transparent;
+  margin-bottom: 12px;
+}
+
+.commentSidebarTitle {
+  font-size: 16px;
+  border-bottom-style: solid;
+  border-bottom-width: 1px;
+  padding-bottom: 8px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.commentSidebarScrollarea {
+  overflow-x: auto;
+  overflow-y: auto;
+  padding-top: 8px;
+  margin-top: 4px;
+  min-height: 0;
+  flex: 1;
+}
+
+.commentCard {
+  --cc-accent: rgba(255, 255, 255, 0.22);
+  --cc-tint: rgba(255, 255, 255, 0.08);
+
+  padding: 12px;
+  margin: 4px 4px 10px 4px;
+  cursor: pointer;
+
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-left: 6px solid var(--cc-accent);
+  transition: background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.commentCard:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.commentCardFocused {
+  border-color: color-mix(in srgb, var(--cc-accent) 80%, rgba(255,255,255,0.18));
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--cc-accent) 40%, transparent);
+}
+
+.focusedCommentHighlight {
+  background-color: rgba(66, 192, 255, 0.194);
+  border-left: 2px solid #66ccff;
+}
+
+.commentedLineHint {
+  background: rgba(66, 59, 21, 0.182);
+}
+
+.commentEditButton {
+  background-color: transparent;
+}
+
+.commentDeleteButton {
+  background-color: transparent;
+}
+
+.commentFlagButton {
+  background-color: transparent;
+}
+
+.commentDeleteButton:hover {
+  background-color: #8a8a8a;
+}
+
+.commentText {
+  white-space: pre-wrap;
+  overflow-wrap: normal;
+  word-break: break-word;
+}

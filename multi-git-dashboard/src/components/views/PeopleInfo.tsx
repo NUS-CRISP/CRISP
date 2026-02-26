@@ -10,13 +10,13 @@ import {
   Text,
 } from '@mantine/core';
 import FacultyForm from '../forms/FacultyForm';
-import TAForm from '../forms/TAForm';
-import StudentForm from '../forms/StudentForm';
+import StudentAndTeamForm from '../forms/StudentAndTeamForm';
 import CSVExport from '../csv/CSVExport';
 import UpdateUserForm from '../forms/UpdateUserForm';
-import Role from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 import { User } from '@shared/types/User';
 import UpdateUserCSVForm from '../forms/UpdateUserCSVForm';
+import TAAndTeamForm from '../forms/TAAndTeamForm';
 
 interface PeopleInfoProps {
   courseId: string;
@@ -69,11 +69,11 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
   const handleDeleteUser = async (userId: string, role: string) => {
     try {
       let apiRoute = '';
-      if (role === Role.Faculty) {
+      if (role === COURSE_ROLE.Faculty) {
         apiRoute = `${apiRouteFaculty}${userId}`;
-      } else if (role === Role.TA) {
+      } else if (role === COURSE_ROLE.TA) {
         apiRoute = `${apiRouteTAs}${userId}`;
-      } else if (role === Role.Student) {
+      } else if (role === COURSE_ROLE.Student) {
         apiRoute = `${apiRouteStudents}${userId}`;
       } else {
         console.error('Invalid role:', role);
@@ -156,14 +156,17 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
         <FacultyForm courseId={courseId} onFacultyCreated={handleUpdate} />
       </Modal>
       <Modal opened={isAddingTA} onClose={toggleAddTA} title="Add TA">
-        <TAForm courseId={courseId} onTACreated={handleUpdate} />
+        <TAAndTeamForm courseId={courseId} onTACreated={handleUpdate} />
       </Modal>
       <Modal
         opened={isAddingStudent}
         onClose={toggleAddStudent}
         title="Add Student"
       >
-        <StudentForm courseId={courseId} onStudentCreated={handleUpdate} />
+        <StudentAndTeamForm
+          courseId={courseId}
+          onStudentCreated={handleUpdate}
+        />
       </Modal>
       <Modal
         opened={isExportingData}
@@ -201,14 +204,14 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
       >
         <UpdateUserCSVForm
           courseId={courseId}
-          role={Role.Faculty}
+          role={COURSE_ROLE.Faculty}
           onUpdate={handleUpdate}
         />
       </Modal>
       <Modal opened={isUpdatingTA} onClose={toggleUpdateTA} title="Update TA">
         <UpdateUserCSVForm
           courseId={courseId}
-          role={Role.TA}
+          role={COURSE_ROLE.TA}
           onUpdate={handleUpdate}
         />
       </Modal>
@@ -219,7 +222,7 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
       >
         <UpdateUserCSVForm
           courseId={courseId}
-          role={Role.Student}
+          role={COURSE_ROLE.Student}
           onUpdate={handleUpdate}
         />
       </Modal>
@@ -274,7 +277,7 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
                       variant="light"
                       color="red"
                       onClick={() =>
-                        handleDeleteUser(facultyMember._id, Role.Faculty)
+                        handleDeleteUser(facultyMember._id, COURSE_ROLE.Faculty)
                       }
                     >
                       Remove
@@ -346,7 +349,7 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
                       size="compact-xs"
                       variant="light"
                       color="red"
-                      onClick={() => handleDeleteUser(TA._id, Role.TA)}
+                      onClick={() => handleDeleteUser(TA._id, COURSE_ROLE.TA)}
                     >
                       Remove
                     </Button>
@@ -415,7 +418,7 @@ const PeopleInfo: React.FC<PeopleInfoProps> = ({
                       variant="light"
                       color="red"
                       onClick={() =>
-                        handleDeleteUser(student._id, Role.Student)
+                        handleDeleteUser(student._id, COURSE_ROLE.Student)
                       }
                     >
                       Remove

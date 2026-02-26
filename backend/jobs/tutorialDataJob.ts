@@ -24,8 +24,8 @@ import TeamSetModel from '@models/TeamSet';
 import UserModel, { User } from '@models/User';
 import { JiraBoard } from '@shared/types/JiraData';
 import { MultipleChoiceOption } from '@shared/types/Question';
-import CrispRole from '@shared/types/auth/CrispRole';
-import CourseRole from '@shared/types/auth/CourseRole';
+import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
 const START_DATE_STRING = '2024-10-10T20:13:24Z';
 
@@ -52,7 +52,7 @@ export const setupTutorialDataJob = async () => {
     const trialAccountDoc = new AccountModel({
       email: 'trial@example.com',
       password: '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
-      role: CrispRole.TrialUser,
+      crispRole: CRISP_ROLE.TrialUser,
       isApproved: true,
       wantsEmailNotifications: false,
       wantsTelegramNotifications: false,
@@ -62,7 +62,7 @@ export const setupTutorialDataJob = async () => {
   }
 
   const adminAccount = await AccountModel.findOne({
-    crispRole: CrispRole.Admin,
+    crispRole: CRISP_ROLE.Admin,
   }).populate('user');
   if (!adminAccount || !adminAccount.user) {
     throw new Error(
@@ -157,13 +157,13 @@ export const setupTutorialDataJob = async () => {
 
   trialAccount.courseRoles.push({
     course: trialCourse._id.toString(),
-    courseRole: CourseRole.Faculty,
+    courseRole: COURSE_ROLE.Faculty,
   });
   await trialAccount.save();
 
   adminAccount.courseRoles.push({
     course: trialCourse._id.toString(),
-    courseRole: CourseRole.Faculty,
+    courseRole: COURSE_ROLE.Faculty,
   });
   await adminAccount.save();
 
@@ -193,7 +193,7 @@ export const setupTutorialDataJob = async () => {
         email: `${identifier}@example.com`,
         password:
           '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
-        crispRole: CrispRole.Normal,
+        crispRole: CRISP_ROLE.Normal,
         isApproved: true,
         wantsEmailNotifications: false,
         wantsTelegramNotifications: false,
@@ -211,7 +211,7 @@ export const setupTutorialDataJob = async () => {
             email: `${identifier}@example.com`,
             password:
               '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
-            crispRole: CrispRole.Normal,
+            crispRole: CRISP_ROLE.Normal,
             isApproved: true,
             wantsEmailNotifications: false,
             wantsTelegramNotifications: false,
@@ -221,7 +221,7 @@ export const setupTutorialDataJob = async () => {
         }
         studentAccount.courseRoles.push({
           course: trialCourse._id.toString(),
-          courseRole: CourseRole.Student,
+          courseRole: COURSE_ROLE.Student,
         });
         await studentUser.save();
         await studentAccount.save();
@@ -2479,7 +2479,7 @@ export const setupTutorialDataJob = async () => {
           email: `${spec.identifier}@example.com`,
           password:
             '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
-          crispRole: CrispRole.Normal,
+          crispRole: CRISP_ROLE.Normal,
           isApproved: true,
           wantsEmailNotifications: false,
           wantsTelegramNotifications: false,
@@ -2497,7 +2497,7 @@ export const setupTutorialDataJob = async () => {
               email: `${spec.identifier}@example.com`,
               password:
                 '$2b$10$UslurkMG9ujw5vqMWqvxheF4zLmWE78XZ9QAeEW637GiyLvXk3EG6',
-              crispRole: CrispRole.Normal,
+              crispRole: CRISP_ROLE.Normal,
               isApproved: true,
               wantsEmailNotifications: false,
               wantsTelegramNotifications: false,
@@ -2507,7 +2507,7 @@ export const setupTutorialDataJob = async () => {
           }
           studentAccount.courseRoles.push({
             course: trialCourse._id.toString(),
-            courseRole: CourseRole.Student,
+            courseRole: COURSE_ROLE.Student,
           });
           await studentAccount.save();
           await newStudent.save();
