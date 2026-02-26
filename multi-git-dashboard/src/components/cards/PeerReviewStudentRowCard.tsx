@@ -16,7 +16,7 @@ const PeerReviewStudentRowCard = ({ row }: { row: PeerReviewResultsStudentRow })
               width: 6,
               height: 46,
               borderRadius: 8,
-              background: 'rgba(255,255,255,0.10)',
+              backgroundColor: graded ? '#4CAF50' : 'gray',
             }}
           />
           <Stack gap={2}>
@@ -32,8 +32,7 @@ const PeerReviewStudentRowCard = ({ row }: { row: PeerReviewResultsStudentRow })
         <Stack gap={6} align="flex-end">
           <Badge
             variant="light"
-            color={graded ? 'green' : 'gray'}
-            style={{ letterSpacing: 0.6 }}
+            color={graded ? 'green' : 'orange'}
           >
             {graded ? 'GRADED' : 'NOT YET GRADED'}
           </Badge>

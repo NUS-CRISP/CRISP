@@ -15,7 +15,6 @@ import {
   ScrollArea,
   Pagination,
 } from '@mantine/core';
-import { Virtuoso } from 'react-virtuoso';
 import {
   PeerReviewResultsDTO,
   PeerReviewResultsStudentRow,
@@ -25,6 +24,7 @@ import PeerReviewStudentRowCard from '../cards/PeerReviewStudentRowCard';
 import PeerReviewTeamCard from '../cards/PeerReviewTeamCard';
 import DownloadResultsCsvModal from '../cards/Modals/DownloadResultsCsvModal';
 import MapResultsToIdModal from '../cards/Modals/MapResultsToIdModal';
+import ResultsPaginationDisplay from '../peer-review/ResultsPaginationDisplay';
 
 interface PeerReviewResultsProps {
   courseId: string;
@@ -382,7 +382,7 @@ const PeerReviewResults: React.FC<PeerReviewResultsProps> = ({ courseId, assessm
               />
             </Group>
           </Card>
-
+          
           <Stack gap="xs">
             {viewMode === 'perStudent' ? (
               filteredStudents.length > 0 ? (
@@ -407,37 +407,17 @@ const PeerReviewResults: React.FC<PeerReviewResultsProps> = ({ courseId, assessm
             )}
           </Stack>
 
-          <Group justify="space-between" align="center" wrap="wrap">
-            <Group gap="sm" align="center">
-              <Text fz="sm" c="dimmed">
-                Showing {countText}
-              </Text>
-              <Select
-                value={limit}
-                onChange={val => {
-                  setLimit(val || '20');
-                  setPage(1);
-                }}
-                data={[
-                  { value: '10', label: '10 / page' },
-                  { value: '20', label: '20 / page' },
-                  { value: '50', label: '50 / page' },
-                  { value: '100', label: '100 / page' },
-                ]}
-                size="xs"
-                w={120}
-              />
-            </Group>
-
-            {dto.pagination.totalPages > 1 && (
-              <Pagination
-                value={page}
-                onChange={setPage}
-                total={dto.pagination.totalPages}
-                size="md"
-              />
-            )}
-          </Group>
+         <ResultsPaginationDisplay
+            numResultsDisplay={countText}
+            limit={limit}
+            page={page}
+            totalPages={dto.pagination.totalPages}
+            onLimitChange={val => {
+              setLimit(val);
+              setPage(1);
+            }}
+            onPageChange={setPage}
+          />
         </Stack>
       </ScrollArea>
       

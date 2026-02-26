@@ -17,7 +17,7 @@ const PeerReviewTeamCard = ({ team }: { team: PeerReviewResultsTeamCard }) => (
       </Stack>
 
       <Stack gap={6} align="flex-end">
-        <Badge variant="light">
+        <Badge variant="light" color={team.teamAggregatedScore === null ? 'orange' : 'green'}>
           {team.teamAggregatedScore === null ? 'Not yet graded' : 'Graded'}
         </Badge>
         <Text fw={800}>{formatScore(team.teamAggregatedScore)}</Text>

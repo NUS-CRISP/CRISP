@@ -26,6 +26,7 @@ import {
 } from '@shared/types/PeerReviewAssessment';
 import PeerReviewSubmissionCard from '../cards/PeerReviewSubmissionCard';
 import AssignGradersModal from '../cards/Modals/AssignGradersModal';
+import ResultsPaginationDisplay from '../peer-review/ResultsPaginationDisplay';
 
 type StatusFilter = 'All' | 'NotStarted' | 'Draft' | 'Submitted';
 type ReviewerKindFilter = 'All' | 'Student' | 'Team' | 'TA';
@@ -331,39 +332,18 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
               : <Center>No submissions found.</Center>
             }
           </Stack>
-
-          <Group justify="space-between" align="center" wrap="wrap">
-            <Group gap="sm" align="center">
-              <Text fz="sm" c="dimmed">
-                Showing {filteredItems.length} / {dto.pagination.total}
-              </Text>
-              <Select
-                value={limit}
-                onChange={val => {
-                  setLimit(val || '20');
-                  setPage(1);
-                }}
-                data={[
-                  { value: '10', label: '10 / page' },
-                  { value: '20', label: '20 / page' },
-                  { value: '50', label: '50 / page' },
-                  { value: '100', label: '100 / page' },
-                ]}
-                size="xs"
-                w={120}
-              />
-            </Group>
-
-            {dto.pagination.totalPages > 1 && (
-              <Pagination
-                value={page}
-                onChange={setPage}
-                total={dto.pagination.totalPages}
-                size="md"
-              />
-            )}
-          </Group>
-
+          
+          <ResultsPaginationDisplay
+            numResultsDisplay={`${filteredItems.length} / ${dto.pagination.total}`}
+            limit={limit}
+            page={page}
+            totalPages={dto.pagination.totalPages}
+            onLimitChange={val => {
+              setLimit(val);
+              setPage(1);
+            }}
+            onPageChange={setPage}
+          />
         </Stack>
       </ScrollArea>
       <AssignGradersModal
