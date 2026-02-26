@@ -47,26 +47,36 @@ const TAAndTeamForm: React.FC<TAAndTeamFormProps> = ({
       setError('Team Number must be an integer');
       return;
     }
-    const response = await fetch(apiRoute, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        items: [
-          {
-            identifier: form.values.identifier,
-            name: form.values.name,
-            gitHandle: form.values.gitHandle,
-            email: form.values.email,
-            ...(tn !== undefined ? { teamNumber: tn } : {}),
-          },
-        ],
-      }),
-    });
+    try {
+      const response = await fetch(apiRoute, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          items: [
+            {
+              identifier: form.values.identifier,
+              name: form.values.name,
+              gitHandle: form.values.gitHandle,
+              email: form.values.email,
+              ...(tn !== undefined ? { teamNumber: tn } : {}),
+            },
+          ],
+        }),
+      });
 
-    await response.json();
-    onTACreated();
+      if (!response.ok) {
+        setError('Failed to add TA. Please try again.');
+        return;
+      }
+
+      await response.json();
+      onTACreated();
+    } catch (error) {
+      console.error('Error adding TA:', error);
+      setError('An error occurred. Please try again.');
+    }
   };
 
   const transformTAData = (rows: unknown[]) => {

@@ -243,8 +243,9 @@ export const addStudentsToCourseAndTeam = async (
   }>('students');
   if (!course) throw new NotFoundError('Course not found');
 
+  const teamAssignments: { student: User; teamNumber: number }[] = [];
+
   for (const r of rows) {
-    // 1) Add students to course
     const studentId = r.identifier;
     let student = await UserModel.findOne({ identifier: studentId });
     let studentAccount = null as any;
@@ -302,42 +303,47 @@ export const addStudentsToCourseAndTeam = async (
     }
 
     if (r.teamNumber !== undefined && r.teamNumber !== null) {
-      const teamSetName = DEFAULT_TEAMSET_NAME;
-      const teamSet = await TeamSetModel.findOne({
-        course: course._id,
-        name: teamSetName,
-      });
-
-      if (!teamSet) throw new NotFoundError('TeamSet not found');
-
-      let team = await TeamModel.findOne({
-        number: r.teamNumber,
-        teamSet: teamSet._id,
-      });
-
-      if (!team) {
-        team = new TeamModel({
-          number: r.teamNumber,
-          teamSet: teamSet._id,
-          members: [],
-        });
-        await team.save();
-
-        await TeamSetModel.updateOne(
-          { _id: teamSet._id },
-          { $addToSet: { teams: team._id } }
-        );
-      }
-
-      // Add member to team
-      await TeamModel.updateOne(
-        { _id: team._id },
-        { $addToSet: { members: student._id } }
-      );
+      teamAssignments.push({ student, teamNumber: r.teamNumber });
     }
   }
 
+  // Save course first so students are persisted even if team assignment fails
   await course.save();
+
+  // Now handle team assignments
+  for (const { student, teamNumber } of teamAssignments) {
+    const teamSet = await TeamSetModel.findOne({
+      course: course._id,
+      name: DEFAULT_TEAMSET_NAME,
+    });
+
+    if (!teamSet) throw new NotFoundError('TeamSet not found');
+
+    let team = await TeamModel.findOne({
+      number: teamNumber,
+      teamSet: teamSet._id,
+    });
+
+    if (!team) {
+      team = new TeamModel({
+        number: teamNumber,
+        teamSet: teamSet._id,
+        members: [],
+      });
+      await team.save();
+
+      await TeamSetModel.updateOne(
+        { _id: teamSet._id },
+        { $addToSet: { teams: team._id } }
+      );
+    }
+
+    await TeamModel.updateOne(
+      { _id: team._id },
+      { $addToSet: { members: student._id } }
+    );
+  }
+
   return { ok: true };
 };
 
@@ -471,6 +477,8 @@ export const addTAAndTeamToCourse = async (
   );
   if (!course) throw new NotFoundError('Course not found');
 
+  const teamAssignments: { ta: User; teamNumber: number }[] = [];
+
   for (const TAData of TADataList) {
     const taId = TAData.identifier;
 
@@ -534,43 +542,47 @@ export const addTAAndTeamToCourse = async (
       (course.TAs as any).push(ta);
     }
 
-    // 2) Allocate team if specified
     if (TAData.teamNumber !== undefined && TAData.teamNumber !== null) {
-      const teamSetName = DEFAULT_TEAMSET_NAME;
-
-      const teamSet = await TeamSetModel.findOne({
-        course: course._id,
-        name: teamSetName,
-      });
-      if (!teamSet) throw new NotFoundError('TeamSet not found');
-
-      let team = await TeamModel.findOne({
-        number: TAData.teamNumber,
-        teamSet: teamSet._id,
-      });
-
-      if (!team) {
-        team = new TeamModel({
-          number: TAData.teamNumber,
-          teamSet: teamSet._id,
-          members: [],
-          TA: null,
-        });
-        await team.save();
-
-        await TeamSetModel.updateOne(
-          { _id: teamSet._id },
-          { $addToSet: { teams: team._id } }
-        );
-      }
-
-      // Assign TA
-      team.TA = ta._id;
-      await team.save();
+      teamAssignments.push({ ta, teamNumber: TAData.teamNumber });
     }
   }
 
+  // Save course first so TAs are persisted even if team assignment fails
   await course.save();
+
+  // Now handle team assignments
+  for (const { ta, teamNumber } of teamAssignments) {
+    const teamSet = await TeamSetModel.findOne({
+      course: course._id,
+      name: DEFAULT_TEAMSET_NAME,
+    });
+    if (!teamSet) throw new NotFoundError('TeamSet not found');
+
+    let team = await TeamModel.findOne({
+      number: teamNumber,
+      teamSet: teamSet._id,
+    });
+
+    if (!team) {
+      team = new TeamModel({
+        number: teamNumber,
+        teamSet: teamSet._id,
+        members: [],
+        TA: null,
+      });
+      await team.save();
+
+      await TeamSetModel.updateOne(
+        { _id: teamSet._id },
+        { $addToSet: { teams: team._id } }
+      );
+    }
+
+    // Assign TA
+    team.TA = ta._id;
+    await team.save();
+  }
+
   return { ok: true };
 };
 
