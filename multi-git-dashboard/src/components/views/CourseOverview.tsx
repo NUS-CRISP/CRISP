@@ -6,7 +6,6 @@ import {
   Divider,
   Group,
   Loader,
-  ScrollArea,
   SimpleGrid,
   Stack,
   Text,
@@ -227,12 +226,9 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
   }
 
   return (
-    <ScrollArea
+    <Box
       style={{
-        height: '100vh',
         paddingRight: '20px',
-        overflowY: 'auto',
-        scrollbarWidth: 'thin',
       }}
     >
       <Box className={pageLayout.page} pl={20} pr={20}>
@@ -501,7 +497,7 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
           </Card>
         </Box>
       </Box>
-    </ScrollArea>
+    </Box>
   );
 };
 
