@@ -344,6 +344,8 @@ const CreateCoursePage = () => {
           maxWidth: 1200,
           display: 'flex',
           flexDirection: 'column',
+          // Ensure content is not hidden behind the fixed footer
+          paddingBottom: '96px',
         }}
       >
         <Title
