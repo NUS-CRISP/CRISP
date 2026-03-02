@@ -241,53 +241,7 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
           </Text>
         </Box>
 
-        <Group align="stretch" className={classes.overviewRow}>
-          <Box className={classes.graphCard}>
-            <AllTeams teamDatas={teamDatas} />
-          </Box>
-
-          <Card withBorder radius="lg" className={classes.statsCard}>
-            <Stack gap={0} className={classes.statsCardStack}>
-              {stats.map((s, idx) => (
-                <Box
-                  key={s.label}
-                  className={classes.statRow}
-                  data-last={idx === stats.length - 1 || undefined}
-                >
-                  <Text className={classes.statLabel}>{s.label}</Text>
-                  <Text
-                    className={classes.statValue}
-                    style={
-                      s.color
-                        ? {
-                            color: `var(--mantine-color-${s.color}-6)`,
-                          }
-                        : undefined
-                    }
-                  >
-                    {s.value}
-                  </Text>
-                  {s.sublabel && (
-                    <Text
-                      className={classes.statSublabel}
-                      style={
-                        s.color
-                          ? {
-                              color: `var(--mantine-color-${s.color}-5)`,
-                            }
-                          : undefined
-                      }
-                    >
-                      {s.sublabel}
-                    </Text>
-                  )}
-                </Box>
-              ))}
-            </Stack>
-          </Card>
-        </Group>
-
-        <Box mt={24}>
+        <Box mt={24} mb={24}>
           <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md">
             <Card
               withBorder
@@ -421,6 +375,52 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
             )}
           </SimpleGrid>
         </Box>
+
+        <Group align="stretch" className={classes.overviewRow}>
+          <Box className={classes.graphCard}>
+            <AllTeams teamDatas={teamDatas} />
+          </Box>
+
+          <Card withBorder radius="lg" className={classes.statsCard}>
+            <Stack gap={0} className={classes.statsCardStack}>
+              {stats.map((s, idx) => (
+                <Box
+                  key={s.label}
+                  className={classes.statRow}
+                  data-last={idx === stats.length - 1 || undefined}
+                >
+                  <Text className={classes.statLabel}>{s.label}</Text>
+                  <Text
+                    className={classes.statValue}
+                    style={
+                      s.color
+                        ? {
+                            color: `var(--mantine-color-${s.color}-6)`,
+                          }
+                        : undefined
+                    }
+                  >
+                    {s.value}
+                  </Text>
+                  {s.sublabel && (
+                    <Text
+                      className={classes.statSublabel}
+                      style={
+                        s.color
+                          ? {
+                              color: `var(--mantine-color-${s.color}-5)`,
+                            }
+                          : undefined
+                      }
+                    >
+                      {s.sublabel}
+                    </Text>
+                  )}
+                </Box>
+              ))}
+            </Stack>
+          </Card>
+        </Group>
 
         <Box mt={30} pb={24}>
           <Group justify="space-between" mb="md">
