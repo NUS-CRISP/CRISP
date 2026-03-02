@@ -27,7 +27,7 @@ interface PeerReviewTAAccordionItemProps {
     label: string;
   }[];
   TAToAssignments: TAToAssignmentsMap;
-  hasFacultyPermission: boolean;
+  isFaculty: boolean;
   addManualAssignment: (
     revieweeId: string,
     reviewerId: string,
@@ -47,7 +47,7 @@ const PeerReviewTAAccordionItem = forwardRef<
   ({
     teams,
     TAToAssignments,
-    hasFacultyPermission,
+    isFaculty,
     addManualAssignment,
     deleteManualAssignment,
   }) => {
@@ -111,7 +111,7 @@ const PeerReviewTAAccordionItem = forwardRef<
                         <Text>
                           {info.taName} ({taAssignedCount[taId]})
                         </Text>
-                        {hasFacultyPermission && (
+                        {isFaculty && (
                           <AddManualAssignmentBox
                             assignedCount={taAssignedCount[taId] ?? 0}
                             dropdownOptions={getTaOptions(taId)}
@@ -125,7 +125,7 @@ const PeerReviewTAAccordionItem = forwardRef<
                       </Group>
                       <PeerReviewAssignments
                         assignments={info.assignedReviews}
-                        hasFacultyPermission={hasFacultyPermission}
+                        isFaculty={isFaculty}
                         onDelete={(reviewee: Team) => {
                           setToBeDeletedReviewer({
                             reviewee,

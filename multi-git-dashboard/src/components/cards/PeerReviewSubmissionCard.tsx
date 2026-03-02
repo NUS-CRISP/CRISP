@@ -24,7 +24,7 @@ interface Props {
   item: PeerReviewSubmissionListItemDTO;
   maxMarks: number;
   canGrade: boolean;
-  hasFacultyPermission: boolean;
+  isFaculty: boolean;
   onAfterAction?: () => void;
 }
 
@@ -33,7 +33,7 @@ const PeerReviewSubmissionCard: React.FC<Props> = ({
   assessmentId,
   item,
   canGrade,
-  hasFacultyPermission,
+  isFaculty,
   onAfterAction,
 }) => {
   const router = useRouter();
@@ -190,7 +190,7 @@ const PeerReviewSubmissionCard: React.FC<Props> = ({
           <Badge variant="light">
             Grade: {item.grading.completedCount}/{item.grading.count}
           </Badge>
-          {hasFacultyPermission && item.grading.graders.length > 0 ? (
+          {isFaculty && item.grading.graders.length > 0 ? (
             <Stack gap={4} align="flex-end">
               <Text fz="xs" c="dimmed">Graders:</Text>
               {item.grading.graders.map(grader => (
@@ -222,7 +222,7 @@ const PeerReviewSubmissionCard: React.FC<Props> = ({
       </Group>
 
       <Group justify="flex-end" mt="md">
-        {hasFacultyPermission && (
+        {isFaculty && (
           <Menu
             position="bottom-end"
             withinPortal

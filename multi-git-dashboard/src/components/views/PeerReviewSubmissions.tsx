@@ -14,9 +14,7 @@ import {
   Button,
   Collapse,
   ScrollArea,
-  Pagination,
   Card,
-  Badge,
 } from '@mantine/core';
 import { IconSearch, IconUserPlus, IconFilter } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
@@ -35,13 +33,13 @@ type GradingFilter = 'All' | 'Ungraded' | 'HasGrades';
 interface PeerReviewSubmissionsProps {
   courseId: string;
   assessmentId: string;
-  hasFacultyPermission: boolean;
+  isFaculty: boolean;
 }
 
 const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
   courseId,
   assessmentId,
-  hasFacultyPermission,
+  isFaculty,
 }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -205,14 +203,14 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
                   Review submissions
                 </Text>
                 <Text fz="sm" c="dimmed">
-                  {hasFacultyPermission
+                  {isFaculty
                     ? 'All reviewer submissions for this peer review assessment.'
                     : 'Submissions you are assigned to grade.'}
                 </Text>
               </Stack>
 
               <Group gap="sm">
-                {hasFacultyPermission && (
+                {isFaculty && (
                   <Button
                     leftSection={<IconUserPlus size={16} />}
                     onClick={openAssignModal}
@@ -325,7 +323,7 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
                     item={item}
                     maxMarks={dto.maxMarks}
                     canGrade={true}
-                    hasFacultyPermission={hasFacultyPermission}
+                    isFaculty={isFaculty}
                     onAfterAction={fetchSubmissions}
                   />
                 ))

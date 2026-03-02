@@ -20,7 +20,7 @@ import PeerReviewAssessmentDetail from './PeerReviewAssessmentDetail';
 interface PeerReviewAssessmentOverviewProps {
   courseId: string;
   assessment: InternalAssessment | null;
-  hasFacultyPermission: boolean;
+  isFaculty: boolean;
   onUpdated: () => void;
   onDeleted: () => void;
 }
@@ -28,7 +28,7 @@ interface PeerReviewAssessmentOverviewProps {
 const PeerReviewAssessmentOverview: React.FC<PeerReviewAssessmentOverviewProps> = ({
   courseId,
   assessment,
-  hasFacultyPermission,
+  isFaculty,
   onUpdated,
   onDeleted,
 }) => {
@@ -147,7 +147,7 @@ const PeerReviewAssessmentOverview: React.FC<PeerReviewAssessmentOverviewProps> 
       <PeerReviewSettings
         peerReview={peerReview}
         teamSetName={teamSetName}
-        hasFacultyPermission={hasFacultyPermission}
+        isFaculty={isFaculty}
         onClickUpdate={openUpdateModal}
         onClickDelete={openDeleteModal}
       />

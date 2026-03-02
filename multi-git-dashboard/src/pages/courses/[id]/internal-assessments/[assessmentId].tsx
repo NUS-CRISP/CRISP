@@ -1,13 +1,16 @@
-import { Container } from '@mantine/core';
+import { Center, Container } from '@mantine/core';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { InternalAssessment } from '@shared/types/InternalAssessment';
 import InternalAssessmentBaseDetail from '@/components/views/InternalAssessmentBaseDetail';
 import PeerReviewAssessment from '@/components/views/PeerReviewAssessment';
+import { hasFacultyPermission, hasTAPermission } from '@/lib/auth/utils';
 
 const InternalAssessmentPage: React.FC = () => {
   const router = useRouter();
   const { id, assessmentId } = router.query as { id: string; assessmentId: string };
+  const isFaculty = hasFacultyPermission();
+  const isTA = hasTAPermission(id);
 
   const assessmentsApiRoute = useMemo(
     () => (assessmentId ? `/api/internal-assessments/${assessmentId}` : ''),
@@ -42,17 +45,22 @@ const InternalAssessmentPage: React.FC = () => {
 
   return (
     <Container>
-      {assessmentType === 'peer_review' ? (
+      {assessmentType === 'peer_review' && (isFaculty || isTA) ? (
         <PeerReviewAssessment
           assessment={assessment}
           fetchAssessment={fetchAssessment}
+          isFaculty={isFaculty}
+          isTA={isTA}
         />
-      ) : (
+      ) : (isFaculty ? (
         <InternalAssessmentBaseDetail
           assessment={assessment}
           fetchAssessment={fetchAssessment}
+          isFaculty={isFaculty}
         />
-      )}
+      ) : (
+        <Center>You do not have permission to view this assessment.</Center>
+      ))}
     </Container>
   );
 };

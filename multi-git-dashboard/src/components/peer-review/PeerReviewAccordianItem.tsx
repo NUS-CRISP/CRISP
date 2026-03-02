@@ -34,7 +34,7 @@ interface PeerReviewAccordionItemProps {
   assignmentOfTeam: RevieweeAssignmentsDTO | null;
   reviewerType: 'Individual' | 'Team';
   maxReviewsPerReviewer: number;
-  hasFacultyPermission: boolean;
+  isFaculty: boolean;
   addManualAssignment: (
     revieweeId: string,
     reviewerId: string,
@@ -56,7 +56,7 @@ const PeerReviewAccordionItem = forwardRef<
     teams,
     assignmentOfTeam,
     reviewerType,
-    hasFacultyPermission,
+    isFaculty,
     maxReviewsPerReviewer,
     addManualAssignment,
     deleteManualAssignment,
@@ -187,7 +187,7 @@ const PeerReviewAccordionItem = forwardRef<
                     <Text fw={600}>
                       Team Assignments ({numberOfTeamAssignments})
                     </Text>
-                    {hasFacultyPermission && (
+                    {isFaculty && (
                       <AddManualAssignmentBox
                         assignedCount={teamAssignedCount}
                         dropdownOptions={teamOptions}
@@ -202,7 +202,7 @@ const PeerReviewAccordionItem = forwardRef<
                   <Divider />
                   <PeerReviewAssignments
                     assignments={currentTeam.assignedReviewsToTeam}
-                    hasFacultyPermission={hasFacultyPermission}
+                    isFaculty={isFaculty}
                     onDelete={(reviewee: Team) =>
                       handleDelete(reviewee, currentTeam)
                     }
@@ -218,7 +218,7 @@ const PeerReviewAccordionItem = forwardRef<
                       <Text>{m.name}</Text>
 
                       {reviewerType === 'Individual' &&
-                        hasFacultyPermission && (
+                        isFaculty && (
                           <AddManualAssignmentBox
                             assignedCount={memberAssignedCount[m.userId] ?? 0}
                             dropdownOptions={getMemberOptions(m.userId)}
@@ -235,7 +235,7 @@ const PeerReviewAccordionItem = forwardRef<
                       <>
                         <PeerReviewAssignments
                           assignments={m.assignedReviews}
-                          hasFacultyPermission={hasFacultyPermission}
+                          isFaculty={isFaculty}
                           onDelete={(reviewee: Team) =>
                             handleDelete(reviewee, m)
                           }
@@ -278,7 +278,7 @@ const PeerReviewAccordionItem = forwardRef<
                   </Button>
                 </Stack>
               )}
-              {hasFacultyPermission && (
+              {isFaculty && (
                 <Stack gap={4}>
                   <Text fw={600} size="md">
                     Reviewers for Team ({numberOfReviewers})

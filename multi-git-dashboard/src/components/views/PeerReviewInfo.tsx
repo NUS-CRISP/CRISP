@@ -22,16 +22,15 @@ import PeerReviewTAAccordianItem from '../peer-review/PeerReviewTAAccordianItem'
 import { TeamSet } from '@shared/types/TeamSet';
 import { PeerReview, PeerReviewInfoDTO } from '@shared/types/PeerReview';
 import PeerReviewAssignmentForm from '../forms/PeerReviewAssignmentForm';
-import { hasCoursePermission } from '@/lib/auth/utils';
-import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 import { useRouter } from 'next/router';
 import { formatDate } from '../../lib/utils';
+import { hasTAPermission } from '@/lib/auth/utils';
 
 interface PeerReviewInfoProps {
   courseId: string;
   teamSets: TeamSet[];
   peerReview: PeerReview;
-  hasFacultyPermission: boolean;
+  isFaculty: boolean;
   onUpdate: () => void;
 }
 
@@ -82,10 +81,11 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
   courseId,
   teamSets,
   peerReview,
-  hasFacultyPermission,
+  isFaculty,
   onUpdate,
 }) => {
   const router = useRouter();
+  const isTA = hasTAPermission(courseId);
   
   const baseApiRoute = `/api/peer-review/${courseId}/${peerReview._id}`;
   const baseManualAssignApiRoute = `${baseApiRoute}/manual-assign`;
@@ -102,12 +102,6 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
     openedAssignmentForm,
     { open: openAssignmentForm, close: closeAssignmentForm },
   ] = useDisclosure(false);
-
-  const isTAOrFaculty = hasCoursePermission(
-    courseId,
-    COURSE_ROLE.Faculty,
-    COURSE_ROLE.TA
-  );
   
   const teamSetName = teamSets.find(ts => ts._id === peerReview.teamSetId)?.name || 'Unknown Team Set';
   const goToAssessmentManagement = () => router.push(`/courses/${courseId}/internal-assessments/${peerReview.internalAssessmentId}`);
@@ -242,7 +236,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
           </Stack>
 
           <Group gap="xs">
-            {hasFacultyPermission && (
+            {isFaculty && (
               <>
                 { peerReview.taAssignments ? (
                     <Badge variant="light" color="teal">
@@ -291,7 +285,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
             </Stack>
           </Group>
 
-          {hasFacultyPermission && (
+          {isFaculty && (
             <Group gap="sm" mt="md">
               <Button
                 color="yellow"
@@ -310,8 +304,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
         </Group>
       </Card>
       
-      {hasFacultyPermission && (
-        <>
+      {isFaculty && (
           <Modal
             opened={openedAssignmentForm}
             onClose={closeAssignmentForm}
@@ -333,7 +326,6 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
               onClose={closeAssignmentForm}
             />
           </Modal>
-        </>
       )}
       {peerReviewInfo && !peerReviewInfo.teams ? (
         <Text>No teams found.</Text>
@@ -341,7 +333,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
         <Center mt={150}>
           <Loader />
         </Center>
-      ) : hasFacultyPermission || peerReview.status === 'Active' ? (
+      ) : isFaculty || isTA || peerReview.status === 'Active' ? (
         <ScrollArea.Autosize mah={750} scrollbarSize={8}>
           <Accordion
             defaultValue={['teaching-assistants']}
@@ -350,7 +342,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
             multiple
             variant="separated"
           >
-            {isTAOrFaculty && peerReview.taAssignments && (
+            {peerReview.taAssignments && (
               <PeerReviewTAAccordianItem
                 teams={peerReviewInfo.teams.map(t => ({
                   value: t.teamId,
@@ -358,7 +350,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
                   label: `Team ${t.teamNumber}`,
                 }))}
                 TAToAssignments={peerReviewInfo.TAAssignments}
-                hasFacultyPermission={hasFacultyPermission}
+                isFaculty={isFaculty}
                 addManualAssignment={addManualAssignment}
                 deleteManualAssignment={deleteManualAssignment}
               />
@@ -378,7 +370,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
                     peerReviewInfo.assignmentsOfTeam[team.teamId]
                   }
                   maxReviewsPerReviewer={peerReview.maxReviewsPerReviewer}
-                  hasFacultyPermission={hasFacultyPermission}
+                  isFaculty={isFaculty}
                   addManualAssignment={addManualAssignment}
                   deleteManualAssignment={deleteManualAssignment}
                 />

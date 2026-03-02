@@ -7,7 +7,7 @@ interface PeerReviewOverviewProps {
   courseId: string;
   teamSets: TeamSet[];
   peerReviews: PeerReview[];
-  hasFacultyPermission: boolean;
+  isFaculty: boolean;
   onUpdate: () => void;
 }
 
@@ -16,7 +16,7 @@ const PeerReviewOverview: React.FC<PeerReviewOverviewProps> = ({
   courseId,
   teamSets,
   peerReviews,
-  hasFacultyPermission,
+  isFaculty,
   onUpdate,
 }) => {
   const defaultTab = peerReviews[0]?._id || 'default';
@@ -54,7 +54,7 @@ const PeerReviewOverview: React.FC<PeerReviewOverviewProps> = ({
                 courseId={courseId}
                 teamSets={teamSets}
                 peerReview={pr}
-                hasFacultyPermission={hasFacultyPermission}
+                isFaculty={isFaculty}
                 onUpdate={onUpdate}
               />
             </ScrollArea>

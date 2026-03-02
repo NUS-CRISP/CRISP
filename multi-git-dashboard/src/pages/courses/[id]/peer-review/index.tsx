@@ -17,7 +17,7 @@ const PeerReviewListPage: React.FC = () => {
 
   const [teamSets, setTeamSets] = useState<TeamSet[]>([]);
   const [peerReviews, setPeerReviews] = useState<PeerReview[]>([]);
-  const hasPermission = hasFacultyPermission();
+  const isFaculty = hasFacultyPermission();
 
   // Callback to refresh peer reviews after creating, updating, or deleting
   const onUpdate = () => {
@@ -80,7 +80,7 @@ const PeerReviewListPage: React.FC = () => {
         courseId={id}
         teamSets={teamSets}
         peerReviews={peerReviews}
-        hasFacultyPermission={hasPermission}
+        isFaculty={isFaculty}
         onUpdate={onUpdate}
       />
     </Container>

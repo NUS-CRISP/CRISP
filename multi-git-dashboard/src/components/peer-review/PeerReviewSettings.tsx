@@ -14,7 +14,7 @@ import { formatDate } from '../../lib/utils';
 interface PeerReviewSettingsProps {
   peerReview: PeerReview;
   teamSetName: string;
-  hasFacultyPermission: boolean;
+  isFaculty: boolean;
   onClickUpdate: () => void;
   onClickDelete: () => void;
 }
@@ -22,7 +22,7 @@ interface PeerReviewSettingsProps {
 const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
   peerReview,
   teamSetName,
-  hasFacultyPermission,
+  isFaculty,
   onClickUpdate,
   onClickDelete,
 }) => {
@@ -65,7 +65,7 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
             {status}
           </Badge>
           <Badge variant="outline">Reviewer Type: {reviewerType}</Badge>
-          {hasFacultyPermission && (
+          {isFaculty && (
             <Badge variant="light" color={taAssignments ? 'teal' : 'red'}>
               TA Reviews: {taAssignments ? 'Enabled' : 'Disabled'}
             </Badge>
@@ -91,7 +91,7 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
             <Text fz="sm">{formatDate(startDate)}</Text>
           </Stack>
 
-          {hasFacultyPermission && (
+          {isFaculty && (
             <>
               <Stack gap={2}>
                 <Text fz="xs" c="dimmed">
@@ -115,7 +115,7 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
             </Text>
             <Text fz="sm">{formatDate(endDate)}</Text>
           </Stack>
-          {hasFacultyPermission && (
+          {isFaculty && (
             <Stack gap={2}>
               <Text fz="xs" c="dimmed">
                 Max. Reviews / Reviewer
@@ -124,7 +124,7 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
             </Stack>
           )}
         </Stack>
-        {hasFacultyPermission && (
+        {isFaculty && (
           <Stack mt="sm">
             <Button
               onClick={onClickUpdate}

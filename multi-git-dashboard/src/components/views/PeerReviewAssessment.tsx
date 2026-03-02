@@ -6,32 +6,24 @@ import { useEffect, useState } from 'react';
 import { InternalAssessment } from '@shared/types/InternalAssessment';
 import PeerReviewSubmissions from './PeerReviewSubmissions';
 import { useRouter } from 'next/router';
-import { hasCoursePermission, hasFacultyPermission } from '@/lib/auth/utils';
 import PeerReviewAssessmentOverview from './PeerReviewAssessmentOverview';
-import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
-import { useSession } from 'next-auth/react';
 import PeerReviewResults from './PeerReviewResults';
 
 interface PeerReviewAssessmentProps {
   assessment: InternalAssessment | null;
   fetchAssessment: () => void;
+  isFaculty: boolean;
+  isTA: boolean;
 }
 
 const PeerReviewAssessment: React.FC<PeerReviewAssessmentProps> = ({
   assessment,
   fetchAssessment,
+  isFaculty,
+  isTA,
 }) => {
   const router = useRouter();
   const { id, assessmentId } = router.query as { id: string; assessmentId: string };
-  const isFaculty = hasFacultyPermission();
-  const isTAOrFaculty = hasCoursePermission(
-    id,
-    [COURSE_ROLE.Faculty, COURSE_ROLE.TA]
-  );
-  const { data: session } = useSession();
-  const userCourseRole = session?.user.courseRoles.find(
-    cr => cr.course.toString() === id
-  )?.courseRole;
   
   const [activeTab, setActiveTab] = useState<string>('Overview');
   const setActiveTabAndSave = (tabName: string) => {
@@ -85,7 +77,7 @@ const PeerReviewAssessment: React.FC<PeerReviewAssessmentProps> = ({
           <PeerReviewAssessmentOverview
             courseId={id}
             assessment={assessment}
-            hasFacultyPermission={isFaculty}
+            isFaculty={isFaculty}
             onUpdated={fetchAssessment}
             onDeleted={() => {
               // parent decides how to navigate away after delete
@@ -94,17 +86,17 @@ const PeerReviewAssessment: React.FC<PeerReviewAssessmentProps> = ({
           />
         </Tabs.Panel>
 
-        {true &&
+        {(isFaculty || isTA) &&
           <Tabs.Panel value="Submissions">
             <PeerReviewSubmissions
               courseId={id}
               assessmentId={assessmentId}
-              hasFacultyPermission={isFaculty}
+              isFaculty={isFaculty}
             />
           </Tabs.Panel>
         }
 
-        {true &&
+        {(isFaculty || isTA) &&
           <Tabs.Panel value="Results">
             <PeerReviewResults
               courseId={id}

@@ -6,13 +6,13 @@ import { Team } from '@shared/types/Team';
 
 interface PeerReviewAssignmentsProps {
   assignments: AssignedReviewDTO[];
-  hasFacultyPermission: boolean;
+  isFaculty: boolean;
   onDelete: (reviewee: Team) => void;
 }
 
 const PeerReviewAssignments: React.FC<PeerReviewAssignmentsProps> = ({
   assignments,
-  hasFacultyPermission,
+  isFaculty,
   onDelete,
 }) => {
   const router = useRouter();
@@ -55,20 +55,18 @@ const PeerReviewAssignments: React.FC<PeerReviewAssignmentsProps> = ({
               }
             >
               Assignment: Team {teamNumber}
-              {hasFacultyPermission && ` (TA: ${taName})`}
+              {isFaculty && ` (TA: ${taName})`}
             </Button>
-            {hasFacultyPermission && (
-              <>
-                <ActionIcon
-                  variant="light"
-                  color="red"
-                  onClick={() => onDelete(a.assignment.reviewee as Team)}
-                  style={{ cursor: 'pointer' }}
-                  size="sm"
-                >
-                  <IconTrash size={12} />
-                </ActionIcon>
-              </>
+            {isFaculty && (
+              <ActionIcon
+                variant="light"
+                color="red"
+                onClick={() => onDelete(a.assignment.reviewee as Team)}
+                style={{ cursor: 'pointer' }}
+                size="sm"
+              >
+                <IconTrash size={12} />
+              </ActionIcon>
             )}
           </Group>
         );

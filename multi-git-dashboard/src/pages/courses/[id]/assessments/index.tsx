@@ -4,11 +4,13 @@ import { Assessment } from '@shared/types/Assessment';
 import { InternalAssessment } from '@shared/types/InternalAssessment';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { hasFacultyPermission } from '@/lib/auth/utils';
+import { useSession } from 'next-auth/react';
+import { hasTAPermission, hasFacultyPermission } from '@/lib/auth/utils';
 import { TeamSet } from '@shared/types/TeamSet';
 
 const AssessmentListPage: React.FC = () => {
   const router = useRouter();
+  const { status } = useSession();
   const { id } = router.query as {
     id: string;
   };
@@ -22,7 +24,8 @@ const AssessmentListPage: React.FC = () => {
     InternalAssessment[]
   >([]);
   const [teamSets, setTeamSets] = useState<TeamSet[]>([]);
-  const permission = hasFacultyPermission();
+  const isFaculty = hasFacultyPermission();
+  const isTA = hasTAPermission(id);
 
   const onUpdate = () => {
     fetchAssessments();
@@ -31,12 +34,12 @@ const AssessmentListPage: React.FC = () => {
   };
 
   useEffect(() => {
-    if (router.isReady) {
+    if (router.isReady && status !== 'loading') {
       fetchAssessments();
       fetchInternalAssessments();
       fetchTeamSetNames();
     }
-  }, [router.isReady]);
+  }, [router.isReady, status, id]);
 
   const fetchAssessments = async () => {
     try {
@@ -78,7 +81,7 @@ const AssessmentListPage: React.FC = () => {
         const data: InternalAssessment[] = await response.json();
         console.log('Internal Assessments:', data);
 
-        if (permission) {
+        if (isFaculty || isTA) {
           setInternalAssessments(data);
         } else {
           const releasedAssessments = data.filter(

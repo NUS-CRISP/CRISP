@@ -19,9 +19,10 @@ import TakeAssessmentInline from '@/components/views/TakeAssessmentInline';
 interface InternalAssessmentBaseDetailProps {
   assessment: InternalAssessment | null;
   fetchAssessment: () => Promise<void>;
+  isFaculty: boolean;
 }
 
-const InternalAssessmentBaseDetail: React.FC<InternalAssessmentBaseDetailProps> = ({ assessment, fetchAssessment }) => {
+const InternalAssessmentBaseDetail: React.FC<InternalAssessmentBaseDetailProps> = ({ assessment, fetchAssessment, isFaculty}) => {
   const router = useRouter();
   const { id, assessmentId } = router.query as {
     id: string;
@@ -42,7 +43,6 @@ const InternalAssessmentBaseDetail: React.FC<InternalAssessmentBaseDetailProps> 
   const [assessmentResults, setAssessmentResults] = useState<
     AssessmentResult[]
   >([]);
-  const permission = hasFacultyPermission();
 
   const fetchTeamsAndCreateUserMap = useCallback(async () => {
     try {
@@ -228,7 +228,7 @@ const InternalAssessmentBaseDetail: React.FC<InternalAssessmentBaseDetailProps> 
       fetchQuestions();
       fetchTeachingTeam();
       fetchTeamsAndCreateUserMap();
-      if (permission) {
+      if (isFaculty) {
         fetchAssessmentResults();
       }
     }
@@ -238,7 +238,7 @@ const InternalAssessmentBaseDetail: React.FC<InternalAssessmentBaseDetailProps> 
     fetchTeachingTeam,
     fetchTeamsAndCreateUserMap,
     fetchAssessmentResults,
-    permission,
+    isFaculty,
   ]);
 
   const addQuestion = (qNo: number): Question => {
@@ -345,7 +345,7 @@ const InternalAssessmentBaseDetail: React.FC<InternalAssessmentBaseDetailProps> 
               Overview
             </Tabs.Tab>
 
-            {permission && (
+            {isFaculty && (
               <Tabs.Tab
                 value="Questions"
                 onClick={() => setActiveTabAndSave('Questions')}
@@ -354,7 +354,7 @@ const InternalAssessmentBaseDetail: React.FC<InternalAssessmentBaseDetailProps> 
               </Tabs.Tab>
             )}
 
-            {permission && (
+            {isFaculty && (
               <Tabs.Tab
                 value="Internal Results"
                 onClick={() => setActiveTabAndSave('Internal Results')}
@@ -372,7 +372,7 @@ const InternalAssessmentBaseDetail: React.FC<InternalAssessmentBaseDetailProps> 
                 <AssessmentInternalOverview
                   courseId={id}
                   assessment={assessment}
-                  hasFacultyPermission={permission}
+                  hasFacultyPermission={isFaculty}
                   onUpdateAssessment={fetchAssessment}
                   questions={questions}
                   userIdToNameMap={userIdToNameMap}
@@ -392,7 +392,7 @@ const InternalAssessmentBaseDetail: React.FC<InternalAssessmentBaseDetailProps> 
               )}
           </Tabs.Panel>
 
-          {permission && (
+          {isFaculty && (
             <Tabs.Panel value="Questions">
               <AssessmentInternalForm
                 assessment={assessment}
@@ -405,7 +405,7 @@ const InternalAssessmentBaseDetail: React.FC<InternalAssessmentBaseDetailProps> 
             </Tabs.Panel>
           )}
 
-          {permission &&
+          {isFaculty &&
             assessmentResults &&
             assessmentResults.length > 0 &&
             assessment && (
