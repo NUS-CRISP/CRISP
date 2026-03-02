@@ -80,7 +80,7 @@
 }
 
 .overviewRow {
-  gap: 24px;
+  gap: 18px;
 
   @media (max-width: var(--mantine-breakpoint-md)) {
     flex-direction: column;
@@ -103,20 +103,20 @@
 }
 
 .overviewChartTitle {
-  margin-bottom: 18px;
-  font-size: 1.375rem;
+  margin-bottom: 14px;
+  font-size: 1.2rem;
   font-weight: 700;
 }
 
 .overviewChartButtonWrap {
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
 
 .overviewChartControls {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px 24px;
-  margin-bottom: 24px;
+  gap: 12px 18px;
+  margin-bottom: 18px;
 }
 
 @media (max-width: 640px) {
@@ -127,12 +127,12 @@
 
 .overviewChartArea {
   flex: 1;
-  min-height: 360px;
-  padding-right: 20px;
+  min-height: 300px;
+  padding-right: 12px;
 }
 
 .statsCard {
-  flex: 0 0 360px;
+  flex: 0 0 300px;
   min-height: 0;
   padding: 0;
   display: flex;
@@ -172,30 +172,30 @@
 }
 
 .statLabel {
-  font-size: 0.9375rem;
+  font-size: 0.9rem;
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .statValue {
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 700;
   line-height: 1.2;
   color: light-dark(var(--mantine-color-dark-7), var(--mantine-color-gray-0));
 }
 
 .statSublabel {
-  font-size: 0.9375rem;
+  font-size: 0.8rem;
   font-weight: 500;
   color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
   margin-top: 4px;
 }
 
 .navCard {
-  padding: 1.5rem 1.5rem 2rem;
+  padding: 1.2rem 1.2rem 1.4rem;
   cursor: pointer;
   transition:
     transform 0.25s ease,
@@ -303,10 +303,10 @@
 .navIcon {
   background: linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%);
   color: white;
-  width: 80px;
-  height: 80px;
-  border-radius: 14px;
-  margin-bottom: 1rem;
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  margin-bottom: 0.75rem;
 }
 
 .navIconMuted {
@@ -315,10 +315,10 @@
     var(--mantine-color-dark-5)
   );
   color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
-  width: 80px;
-  height: 80px;
-  border-radius: 14px;
-  margin-bottom: 1rem;
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  margin-bottom: 0.75rem;
 }
 
 .navCardDisabled .navIcon,
@@ -332,16 +332,16 @@
 }
 
 .navTitle {
-  margin-top: 0.75rem;
-  margin-bottom: 0.75rem;
-  font-size: 1.75rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 1.4rem;
   font-weight: 600;
   color: light-dark(var(--mantine-color-gray-9), var(--mantine-color-dark-0));
 }
 
 .navDescription {
-  font-size: 1.0625rem;
-  line-height: 1.6;
+  font-size: 0.95rem;
+  line-height: 1.45;
   color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
 }
 

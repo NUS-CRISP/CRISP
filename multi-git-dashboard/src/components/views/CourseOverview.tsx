@@ -287,8 +287,8 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
           </Card>
         </Group>
 
-        <Box mt={30}>
-          <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="lg">
+        <Box mt={24}>
+          <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md">
             <Card
               withBorder
               radius="xl"
@@ -296,8 +296,8 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
               href={`/courses/${courseId}/team-analytics`}
               className={`${classes.navCard} ${classes.navCardPrimary}`}
             >
-              <ThemeIcon radius="md" size={80} className={classes.navIcon}>
-                <IconUsersGroup size={34} />
+              <ThemeIcon radius="md" size={64} className={classes.navIcon}>
+                <IconUsersGroup size={28} />
               </ThemeIcon>
               <Title order={3} className={classes.navTitle}>
                 Team Analytics
@@ -315,8 +315,8 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
               href={`/courses/${courseId}/peer-review`}
               className={`${classes.navCard} ${classes.navCardFeatured}`}
             >
-              <ThemeIcon radius="md" size={80} className={classes.navIcon}>
-                <IconMessagePlus size={34} />
+              <ThemeIcon radius="md" size={64} className={classes.navIcon}>
+                <IconMessagePlus size={28} />
               </ThemeIcon>
               <Title order={3} className={classes.navTitle}>
                 Peer Review
@@ -334,8 +334,8 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
                 href={`/courses/${courseId}/assessments`}
                 className={`${classes.navCard} ${classes.navCardFeatured}`}
               >
-                <ThemeIcon radius="md" size={80} className={classes.navIcon}>
-                  <IconChecklist size={34} />
+                <ThemeIcon radius="md" size={64} className={classes.navIcon}>
+                  <IconChecklist size={28} />
                 </ThemeIcon>
                 <Group justify="space-between" wrap="nowrap">
                   <Title order={3} className={classes.navTitle}>
@@ -353,8 +353,8 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
                 component="div"
                 className={`${classes.navCard} ${classes.navCardFeatured} ${classes.navCardDisabled}`}
               >
-                <ThemeIcon radius="md" size={80} className={classes.navIcon}>
-                  <IconChecklist size={34} />
+                <ThemeIcon radius="md" size={64} className={classes.navIcon}>
+                  <IconChecklist size={28} />
                 </ThemeIcon>
                 <Group justify="space-between" wrap="nowrap">
                   <Title order={3} className={classes.navTitle}>
@@ -380,10 +380,10 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
               >
                 <ThemeIcon
                   radius="md"
-                  size={80}
+                  size={64}
                   className={classes.navIconMuted}
                 >
-                  <IconSettings size={34} />
+                  <IconSettings size={28} />
                 </ThemeIcon>
                 <Title order={3} className={classes.navTitle}>
                   Course Settings
@@ -402,10 +402,10 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
               >
                 <ThemeIcon
                   radius="md"
-                  size={80}
+                  size={64}
                   className={classes.navIconMuted}
                 >
-                  <IconSettings size={34} />
+                  <IconSettings size={28} />
                 </ThemeIcon>
                 <Title order={3} className={classes.navTitle}>
                   Course Settings
@@ -422,7 +422,7 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
           </SimpleGrid>
         </Box>
 
-        <Box mt={40} pb={30}>
+        <Box mt={30} pb={24}>
           <Group justify="space-between" mb="md">
             <Title order={2}>Recent activity</Title>
             <Text size="sm" c="dimmed">

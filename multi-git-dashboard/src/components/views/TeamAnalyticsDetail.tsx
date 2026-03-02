@@ -244,7 +244,7 @@ const TeamAnalyticsDetail: React.FC<TeamAnalyticsDetailProps> = ({
       className={`${pageLayout.page} ${classes.detailPage}`}
       pl={20}
       pr={20}
-      style={{ paddingRight: 36 }}
+      style={{ paddingRight: 24 }}
     >
       <Box className={pageLayout.pageHeader}>
         <Title order={1} className={classes.detailTitle}>
