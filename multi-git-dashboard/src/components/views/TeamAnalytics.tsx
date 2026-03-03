@@ -2,7 +2,6 @@ import {
   Avatar,
   Badge,
   Box,
-  Button,
   Card,
   Center,
   Loader,
@@ -16,7 +15,7 @@ import { getInitials, AVATAR_COLORS } from '@/lib/utils';
 import { Course } from '@shared/types/Course';
 import { TeamData } from '@shared/types/TeamData';
 import { Status } from '@shared/types/util/Status';
-import { IconDownload, IconSearch } from '@tabler/icons-react';
+import { IconSearch } from '@tabler/icons-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import pageLayout from '@/styles/root-layout.module.css';
@@ -137,14 +136,14 @@ const TeamAnalytics: React.FC<TeamAnalyticsProps> = ({
               Track team performance, code quality, and project progress
             </Text>
           </Box>
-          <Button
+          {/* <Button
             variant="default"
             leftSection={<IconDownload size={16} />}
             // To implement export function
             className={classes.exportButton}
           >
             Export Report
-          </Button>
+          </Button> */}
         </Box>
       </Box>
 
