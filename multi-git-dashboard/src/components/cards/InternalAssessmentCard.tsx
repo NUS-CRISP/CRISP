@@ -1,4 +1,4 @@
-import { Card, Text, Badge, Box } from '@mantine/core';
+import { Card, Text, Badge, Box, Group } from '@mantine/core';
 
 interface InternalAssessmentCardProps {
   assessmentName: string;
@@ -23,6 +23,21 @@ const InternalAssessmentCard: React.FC<InternalAssessmentCardProps> = ({
       day: 'numeric',
     });
   };
+  
+  const now = new Date();
+  const start = new Date(startDate);
+  const end = endDate ? new Date(endDate) : null;
+  
+  const assessmentStatus = now < start
+    ? 'Upcoming'
+    : (end && now > end)
+      ? 'Closed'
+      : 'Active';
+  const statusColor = assessmentStatus === 'Closed'
+    ? 'red'
+    : assessmentStatus === 'Active'
+      ? 'green'
+      : 'yellow';
 
   return (
     <Card shadow="sm" padding="lg" radius="md" my={6} withBorder>
@@ -37,12 +52,19 @@ const InternalAssessmentCard: React.FC<InternalAssessmentCardProps> = ({
           <Text size="lg" style={{ fontWeight: 500 }}>
             {assessmentName}
           </Text>
-          <Badge
-            color={granularity === 'team' ? 'blue' : 'green'}
-            variant="filled"
-          >
-            {granularity === 'team' ? 'Team' : 'Individual'}
-          </Badge>
+          <Group gap="xs">
+            <Badge
+              color={statusColor}
+            >
+              {assessmentStatus}
+            </Badge>
+            <Badge
+              color={granularity === 'team' ? 'blue' : 'green'}
+              variant="light"
+            >
+              {granularity === 'team' ? 'Team' : 'Individual'}
+            </Badge>
+          </Group>
         </div>
 
         <Text size="sm" color="dimmed" style={{ marginBottom: '8px' }}>

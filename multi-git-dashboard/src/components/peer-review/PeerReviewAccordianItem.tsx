@@ -23,6 +23,7 @@ import AddManualAssignmentBox from './AddManualAssignmentBox';
 
 interface PeerReviewAccordionItemProps {
   currentTeam: PeerReviewTeamDTO;
+  currentUserId?: string;
   teams: {
     value: string;
     TA: {
@@ -35,6 +36,7 @@ interface PeerReviewAccordionItemProps {
   reviewerType: 'Individual' | 'Team';
   maxReviewsPerReviewer: number;
   isFaculty: boolean;
+  isTA: boolean;
   addManualAssignment: (
     revieweeId: string,
     reviewerId: string,
@@ -53,10 +55,12 @@ const PeerReviewAccordionItem = forwardRef<
 >(
   ({
     currentTeam,
+    currentUserId,
     teams,
     assignmentOfTeam,
     reviewerType,
     isFaculty,
+    isTA,
     maxReviewsPerReviewer,
     addManualAssignment,
     deleteManualAssignment,
@@ -212,39 +216,44 @@ const PeerReviewAccordionItem = forwardRef<
               <Stack gap={4}>
                 <Text fw={600}>Members ({numberOfMembers})</Text>
                 <Divider />
-                {currentTeam.members.map(m => (
-                  <ScrollArea key={m.userId}>
-                    <Group justify="space-between" mt={4}>
-                      <Text>{m.name}</Text>
+                {currentTeam.members.map(m => {
+                  const isCurrentUser = m.userId === currentUserId;
+                  const shouldShowAssignments = isFaculty || isTA || isCurrentUser;
+                  
+                  return (
+                    <ScrollArea key={m.userId}>
+                      <Group justify="space-between" mt={4}>
+                        <Text>{m.name}</Text>
 
-                      {reviewerType === 'Individual' &&
-                        isFaculty && (
-                          <AddManualAssignmentBox
-                            assignedCount={memberAssignedCount[m.userId] ?? 0}
-                            dropdownOptions={getMemberOptions(m.userId)}
-                            maxReviewsPerReviewer={maxReviewsPerReviewer}
-                            reviewerId={m.userId}
-                            addManualAssignment={(reviewee, reviewer) =>
-                              addManualAssignment(reviewee, reviewer, false)
+                        {reviewerType === 'Individual' &&
+                          isFaculty && (
+                            <AddManualAssignmentBox
+                              assignedCount={memberAssignedCount[m.userId] ?? 0}
+                              dropdownOptions={getMemberOptions(m.userId)}
+                              maxReviewsPerReviewer={maxReviewsPerReviewer}
+                              reviewerId={m.userId}
+                              addManualAssignment={(reviewee, reviewer) =>
+                                addManualAssignment(reviewee, reviewer, false)
+                              }
+                            />
+                          )}
+                      </Group>
+
+                      {reviewerType === 'Individual' && shouldShowAssignments && (
+                        <>
+                          <PeerReviewAssignments
+                            assignments={m.assignedReviews}
+                            isFaculty={isFaculty}
+                            onDelete={(reviewee: Team) =>
+                              handleDelete(reviewee, m)
                             }
                           />
-                        )}
-                    </Group>
-
-                    {reviewerType === 'Individual' && (
-                      <>
-                        <PeerReviewAssignments
-                          assignments={m.assignedReviews}
-                          isFaculty={isFaculty}
-                          onDelete={(reviewee: Team) =>
-                            handleDelete(reviewee, m)
-                          }
-                        />
-                        <Divider />
-                      </>
-                    )}
-                  </ScrollArea>
-                ))}
+                        </>
+                      )}
+                      <Divider mt={6} />
+                    </ScrollArea>
+                  );
+                })}
               </Stack>
             </Stack>
             <Stack>

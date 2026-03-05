@@ -7,6 +7,7 @@ import {
   Notification,
   Text,
 } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
 import { useDisclosure } from '@mantine/hooks';
 import { useEffect, useState } from 'react';
 import { TeamSet } from '@shared/types/TeamSet';
@@ -90,6 +91,12 @@ const PeerReviewAssessmentOverview: React.FC<PeerReviewAssessmentOverviewProps> 
       if (!res.ok) throw new Error(body?.message ?? res.statusText);
 
       closeDeleteModal();
+      notifications.show({
+        title: 'Peer Review Deleted',
+        message: 'Deleted successfully.',
+        color: 'green',
+        autoClose: 3000,
+      });
       onDeleted();
     } catch (e) {
       setError((e as Error).message ?? 'Failed to delete');

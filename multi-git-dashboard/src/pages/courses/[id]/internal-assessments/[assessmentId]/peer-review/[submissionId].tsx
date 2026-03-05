@@ -179,8 +179,7 @@ const PeerReviewGradingDetailPage: React.FC = () => {
   const [gradeOpen, setGradeOpen] = useState(false);
   const [savingGrade, setSavingGrade] = useState(false);
 
-  if (!ready || !me) return <Center>Loading...</Center>;
-  if (loading) return <Center>Loading...</Center>;
+  if (!ready || !me || loading) return <Center>Loading...</Center>;
 
   const repo =
     (dto as any)?.repo ?? (dto as any)?.assignment?.repo ?? { repoName: '', repoUrl: '' };
@@ -199,11 +198,12 @@ const PeerReviewGradingDetailPage: React.FC = () => {
       : reviewer.name
     : 'Reviewer';
 
-  const peerReviewTitle = (dto as any)?.peerReviewTitle ?? 'Peer Review';
   const maxMarks = Number((dto as any)?.maxMarks ?? 0);
 
   const canStartGrading = me.userCourseRole === 'Faculty' && !myTask;
-  const canGrade = !!myTask;
+  const canGrade = !!myTask && (myTask.status === 'Assigned' || myTask.status === 'InProgress');
+  
+  const gradingStatusColor = myTask?.status === 'Assigned' ? 'yellow' : myTask?.status === 'InProgress' ? 'blue' : 'green';
   
   const handleSaveGrading = async () => {
     try {
@@ -261,28 +261,24 @@ const PeerReviewGradingDetailPage: React.FC = () => {
             onClick={() => router.back()}
             className={classes.returnButton}
           />
-          <IconListDetails style={{ opacity: 0.8 }} />
-          <Title order={4}>{peerReviewTitle}</Title>
-          <Badge variant="outline">{reviewerLabel}</Badge>
+          <Title order={4}></Title>
+          <Badge variant="light" color="teal" h="27px" radius="md">Reviewer: {reviewerLabel}</Badge>
           {revieweeTeam && (
-            <Badge variant="light">
+            <Badge color="teal" variant="light" h="27px" radius="md">
+              <Group gap="6px">
               Reviewee: Team {revieweeTeam.teamNumber}
+              {repo?.repoUrl && (
+                <Anchor href={repo.repoUrl} target="_blank" rel="noreferrer" underline="never">
+                  <Text fw="bold" fz="xs">({repo.repoName})</Text>
+                </Anchor>
+              )}
+              </Group>
             </Badge>
-          )}
-          {repo?.repoUrl && (
-            <Anchor href={repo.repoUrl} target="_blank" rel="noreferrer" underline="never">
-              <Text fw={600}>{repo.repoName}</Text>
-            </Anchor>
           )}
         </Group>
 
         <Group gap="xs">
           {/* Small status indicator for graders */}
-          {myTask && (
-            <Badge variant="light">
-              Grading: {myTask.status}
-            </Badge>
-          )}
           {saveState !== 'Idle' && (
             <Badge
               color={
@@ -292,19 +288,26 @@ const PeerReviewGradingDetailPage: React.FC = () => {
                     ? 'yellow'
                     : 'red'
               }
-              variant="outline"
+              radius="md"
+              h="27px"
+              variant="light"
             >
               {saveState}
             </Badge>
           )}
-
+          {myTask && (
+            <Badge variant="light" color={gradingStatusColor} h="27px" radius="md">
+              Grading: {myTask.status === "InProgress" ? "In Progress" : myTask.status}
+            </Badge>
+          )}
           <Button
             leftSection={<IconClipboardList size={16} />}
             radius="md"
             size="xs"
             fz="sm"
             h="27px"
-            variant="light"
+            color="yellow"
+            variant='light'
             onClick={() => setSummaryOpen(true)}
           >
             Review Summary
@@ -347,7 +350,7 @@ const PeerReviewGradingDetailPage: React.FC = () => {
               h="27px"
               onClick={() => setGradeOpen(true)}
             >
-              Grade
+              Submit Grade
             </Button>
           )}
         </Group>

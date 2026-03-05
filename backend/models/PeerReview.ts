@@ -20,12 +20,6 @@ const peerReviewSchema = new Schema<PeerReview>(
   {
     // Basic info
     course: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
-    status: {
-      type: String,
-      enum: ['Upcoming', 'Active', 'Closed'],
-      required: true,
-      default: 'Upcoming',
-    },
 
     // Settings
     title: { type: String, required: true },
@@ -105,6 +99,11 @@ peerReviewSchema.virtual('computedStatus').get(function (this: PeerReview) {
   if (now < this.startDate) return 'Upcoming';
   if (now >= this.startDate && now <= this.endDate) return 'Active';
   return 'Closed';
+});
+
+// Map 'status' to 'computedStatus' for backwards compatibility
+peerReviewSchema.virtual('status').get(function (this: PeerReview) {
+  return this.computedStatus;
 });
 
 peerReviewSchema.virtual('computedGradingStatus').get(function (

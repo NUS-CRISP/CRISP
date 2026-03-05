@@ -103,7 +103,10 @@ export const getAuthorizedTeamDataByCourse = async (
     }
     const teams = await TeamModel.find({
       teamSet: { $in: teamSets.map(ts => ts._id) },
-      TA: user,
+      $or: [
+        { TA: user },
+        { members: user._id }
+      ]
     }).populate<{ teamData: TeamData }>({
       path: 'teamData',
       options: { sort: { repoName: 1 } },

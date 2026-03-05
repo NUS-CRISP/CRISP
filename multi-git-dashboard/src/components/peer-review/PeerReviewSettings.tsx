@@ -56,15 +56,15 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
           <Badge
             color={
               status === 'Closed'
-                ? 'green'
+                ? 'red'
                 : status === 'Active'
-                  ? 'yellow'
-                  : 'violet'
+                  ? 'green'
+                  : 'yellow'
             }
           >
             {status}
           </Badge>
-          <Badge variant="outline">Reviewer Type: {reviewerType}</Badge>
+          <Badge variant="light">Reviewer Type: {reviewerType}</Badge>
           {isFaculty && (
             <Badge variant="light" color={taAssignments ? 'teal' : 'red'}>
               TA Reviews: {taAssignments ? 'Enabled' : 'Disabled'}

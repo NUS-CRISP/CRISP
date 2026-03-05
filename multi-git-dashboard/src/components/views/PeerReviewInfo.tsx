@@ -24,7 +24,7 @@ import { PeerReview, PeerReviewInfoDTO } from '@shared/types/PeerReview';
 import PeerReviewAssignmentForm from '../forms/PeerReviewAssignmentForm';
 import { useRouter } from 'next/router';
 import { formatDate } from '../../lib/utils';
-import { hasTAPermission } from '@/lib/auth/utils';
+import { getMe, hasTAPermission } from '@/lib/auth/utils';
 
 interface PeerReviewInfoProps {
   courseId: string;
@@ -42,9 +42,9 @@ enum NotificationType {
 }
 
 const statusColor = (status: string) => {
-  if (status === 'Closed') return 'green';
-  if (status === 'Active') return 'yellow';
-  return 'violet';
+  if (status === 'Closed') return 'red';
+  if (status === 'Active') return 'green';
+  return 'yellow';
 };
 
 const NotificationTypeToColorMap: Record<NotificationType, string> = {
@@ -86,6 +86,13 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
 }) => {
   const router = useRouter();
   const isTA = hasTAPermission(courseId);
+  const [me, setMe] = useState<{ userId: string; userCourseRole: string } | null>(null);
+    useEffect(() => {
+      (async () => {
+        const userData = await getMe(courseId);
+        if (userData) setMe(userData);
+      })();
+    }, [courseId]);
   
   const baseApiRoute = `/api/peer-review/${courseId}/${peerReview._id}`;
   const baseManualAssignApiRoute = `${baseApiRoute}/manual-assign`;
@@ -223,7 +230,6 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
           {notification.value}
         </Notification>
       )}
-      
       <Card withBorder radius="md" p="lg" my="md" style={{ backgroundColor: '#2b2b2b' }}>
         <Group justify="space-between" align="flex-start" mb="xs">
           <Stack gap={2}>
@@ -235,23 +241,19 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
             </Text>
           </Stack>
 
-          <Group gap="xs">
-            {isFaculty && (
-              <>
-                { peerReview.taAssignments ? (
-                    <Badge variant="light" color="teal">
-                      TA Reviews Enabled
-                    </Badge>
-                  ) : (
-                    <Badge variant="light" color="red">
-                      TA Reviews Disabled
-                    </Badge>
-                  )
-                }
-                <Badge variant="light">Reviewer Type: {peerReview.reviewerType}</Badge>
-              </>
+          <Group gap="xs" mt={6}>
+            <Badge color={statusColor(peerReview.status)}>{peerReview.status}</Badge>
+            {isFaculty && (peerReview.taAssignments ? (
+                <Badge variant="light" color="teal">
+                  TA Reviews Enabled
+                </Badge>
+              ) : (
+                <Badge variant="light" color="red">
+                  TA Reviews Disabled
+                </Badge>
+              )
             )}
-            <Badge variant="light" color={statusColor(peerReview.status)}>{peerReview.status}</Badge>
+            <Badge variant="light">Reviewer Type: {peerReview.reviewerType}</Badge>
           </Group>
         </Group>
 
@@ -356,32 +358,36 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
               />
             )}
             {peerReviewInfo.teams.map(team => (
-              <>
-                <PeerReviewAccordionItem
-                  key={team.teamId}
-                  currentTeam={team}
-                  teams={peerReviewInfo.teams.map(t => ({
-                    value: t.teamId,
-                    TA: t.TA,
-                    label: `Team ${t.teamNumber}`,
-                  }))}
-                  reviewerType={peerReviewInfo.reviewerType}
-                  assignmentOfTeam={
-                    peerReviewInfo.assignmentsOfTeam[team.teamId]
-                  }
-                  maxReviewsPerReviewer={peerReview.maxReviewsPerReviewer}
-                  isFaculty={isFaculty}
-                  addManualAssignment={addManualAssignment}
-                  deleteManualAssignment={deleteManualAssignment}
-                />
-              </>
+              <PeerReviewAccordionItem
+                key={team.teamId}
+                currentTeam={team}
+                currentUserId={me?.userId}
+                teams={peerReviewInfo.teams.map(t => ({
+                  value: t.teamId,
+                  TA: t.TA,
+                  label: `Team ${t.teamNumber}`,
+                }))}
+                reviewerType={peerReviewInfo.reviewerType}
+                assignmentOfTeam={
+                  peerReviewInfo.assignmentsOfTeam[team.teamId]
+                }
+                maxReviewsPerReviewer={peerReview.maxReviewsPerReviewer}
+                isFaculty={isFaculty}
+                isTA={isTA}
+                addManualAssignment={addManualAssignment}
+                deleteManualAssignment={deleteManualAssignment}
+              />
             ))}
           </Accordion>
         </ScrollArea.Autosize>
       ) : (
         <Card withBorder radius="md" p="lg" my="md">
           <Text c="dimmed" ta="center">
-            Peer review assignments will be available when the review period begins.
+            {peerReview.status === 'Closed' ? (
+              "This peer review is closed."
+            ) : (
+              "Peer review assignments will be available when the review period begins."
+            )}
           </Text>
         </Card>
       )}

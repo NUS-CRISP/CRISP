@@ -30,6 +30,7 @@ import { getMe } from '@/lib/auth/utils';
 import SubmissionStatusBadge from '@/components/peer-review/SubmissionStatusBadge';
 import SaveStateBadge from '@/components/peer-review/SaveStateBadge';
 import SubmitReviewConfirmationModal from '@/components/cards/Modals/SubmitReviewConfirmationModal';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -579,7 +580,7 @@ const PeerReviewDetail: React.FC = () => {
               submission={submission}
             />
           }
-          {!isReadOnly && submission && ( // To change to check for a submission
+          {!isReadOnly && submission && me.userCourseRole === COURSE_ROLE.Student && (
             <Button
               leftSection={<IconSend size={16} />}
               radius="md"
