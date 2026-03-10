@@ -3,7 +3,10 @@ import {
   PeerReviewComment,
   PeerReviewSubmission,
 } from '@shared/types/PeerReview';
-import { PeerReviewGradingDTO, PeerReviewMyGradingTaskDTO } from '@shared/types/PeerReviewAssessment';
+import {
+  PeerReviewGradingDTO,
+  PeerReviewMyGradingTaskDTO,
+} from '@shared/types/PeerReviewAssessment';
 
 type PeerReviewAssignmentWithViewContext = PeerReviewAssignment & {
   viewContext?: {
@@ -243,7 +246,9 @@ export const apiFetchGradingDTO = async (
     });
     const text = await response.text();
     if (!response.ok) {
-      throw new Error(text || response.statusText || 'Failed to fetch grading data');
+      throw new Error(
+        text || response.statusText || 'Failed to fetch grading data'
+      );
     }
     if (!text) return null;
     try {

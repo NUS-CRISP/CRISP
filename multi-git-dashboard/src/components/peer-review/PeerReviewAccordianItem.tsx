@@ -223,41 +223,42 @@ const PeerReviewAccordionItem = forwardRef<
                 <Divider />
                 {currentTeam.members.map(m => {
                   const isCurrentUser = m.userId === currentUserId;
-                  const shouldShowAssignments = isFaculty || isTA || isCurrentUser;
-                  
+                  const shouldShowAssignments =
+                    isFaculty || isTA || isCurrentUser;
+
                   return (
                     <ScrollArea key={m.userId}>
                       <Group justify="space-between" mt={4}>
                         <Text>{m.name}</Text>
 
-                        {reviewerType === 'Individual' &&
-                          isFaculty && (
-                            <AddManualAssignmentBox
-                              assignedCount={memberAssignedCount[m.userId] ?? 0}
-                              dropdownOptions={getMemberOptions(m.userId)}
-                              maxReviewsPerReviewer={maxReviewsPerReviewer}
-                              reviewerId={m.userId}
-                              addManualAssignment={(reviewee, reviewer) =>
-                                addManualAssignment(reviewee, reviewer, false)
-                              }
-                            />
-                          )}
-                      </Group>
-
-                      {reviewerType === 'Individual' && shouldShowAssignments && (
-                        <>
-                          <PeerReviewAssignments
-                            assignments={m.assignedReviews}
-                            isFaculty={isFaculty}
-                            isTA={isTA}
-                            currentUserId={currentUserId}
-                            taReviewerAssignmentIds={taReviewerAssignmentIds}
-                            onDelete={(reviewee: Team) =>
-                              handleDelete(reviewee, m)
+                        {reviewerType === 'Individual' && isFaculty && (
+                          <AddManualAssignmentBox
+                            assignedCount={memberAssignedCount[m.userId] ?? 0}
+                            dropdownOptions={getMemberOptions(m.userId)}
+                            maxReviewsPerReviewer={maxReviewsPerReviewer}
+                            reviewerId={m.userId}
+                            addManualAssignment={(reviewee, reviewer) =>
+                              addManualAssignment(reviewee, reviewer, false)
                             }
                           />
-                        </>
-                      )}
+                        )}
+                      </Group>
+
+                      {reviewerType === 'Individual' &&
+                        shouldShowAssignments && (
+                          <>
+                            <PeerReviewAssignments
+                              assignments={m.assignedReviews}
+                              isFaculty={isFaculty}
+                              isTA={isTA}
+                              currentUserId={currentUserId}
+                              taReviewerAssignmentIds={taReviewerAssignmentIds}
+                              onDelete={(reviewee: Team) =>
+                                handleDelete(reviewee, m)
+                              }
+                            />
+                          </>
+                        )}
                       <Divider mt={6} />
                     </ScrollArea>
                   );
@@ -330,7 +331,12 @@ const PeerReviewAccordionItem = forwardRef<
                               )
                             )
                           : assignmentOfTeam.reviewers.teams.map(reviewer => (
-                              <Badge size="sm" key={`team-${reviewer.teamId}`} variant="light" radius="sm">
+                              <Badge
+                                size="sm"
+                                key={`team-${reviewer.teamId}`}
+                                variant="light"
+                                radius="sm"
+                              >
                                 Team {reviewer.teamNumber}
                               </Badge>
                             ))}

@@ -186,7 +186,7 @@ export const resolveTeamRepo = async (courseId: string, teamId: string) => {
   if (!team) throw new NotFoundError('Team not found');
 
   const teamData = await TeamDataModel.findById(team.teamData);
-  
+
   // If no teamData, use team number and fallback URL
   if (!teamData) {
     return {
@@ -195,7 +195,7 @@ export const resolveTeamRepo = async (courseId: string, teamId: string) => {
       gitHubOrgName: 'N/A',
     };
   }
-  
+
   const repoName = teamData.repoName ?? team.number.toString();
 
   // GitHub Org Course: build URL from org + repoName

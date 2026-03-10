@@ -108,7 +108,7 @@ export const getPeerReviewInfoById = async (
     reviewerScope.taIdsWanted,
     ctx.usersById
   );
-  
+
   if (userCourseRole !== COURSE_ROLE.Student) {
     populateAssignmentsOfTeamReviewers(
       assignmentState.assignmentsOfTeam,
@@ -202,7 +202,7 @@ export const createPeerReviewById = async (
     courseId,
     newPeerReview._id.toString(),
     teamSetId,
-    session,
+    session
   );
 
   console.log('assignments initialised on peer review creation');
@@ -265,42 +265,64 @@ export const updatePeerReviewById = async (
 
   // Determine if assignment structure should be reset BEFORE save()
   const structuralChanged =
-    (settingsData.teamSetId !== undefined && String(pr.teamSetId) !== String(settingsData.teamSetId)) ||
-    (settingsData.reviewerType !== undefined && pr.reviewerType !== settingsData.reviewerType) ||
-    (settingsData.taAssignments !== undefined && pr.taAssignments !== settingsData.taAssignments) ||
-    (settingsData.minReviews !== undefined && pr.minReviewsPerReviewer !== Number(settingsData.minReviews)) ||
-    (settingsData.maxReviews !== undefined && pr.maxReviewsPerReviewer !== Number(settingsData.maxReviews));
+    (settingsData.teamSetId !== undefined &&
+      String(pr.teamSetId) !== String(settingsData.teamSetId)) ||
+    (settingsData.reviewerType !== undefined &&
+      pr.reviewerType !== settingsData.reviewerType) ||
+    (settingsData.taAssignments !== undefined &&
+      pr.taAssignments !== settingsData.taAssignments) ||
+    (settingsData.minReviews !== undefined &&
+      pr.minReviewsPerReviewer !== Number(settingsData.minReviews)) ||
+    (settingsData.maxReviews !== undefined &&
+      pr.maxReviewsPerReviewer !== Number(settingsData.maxReviews));
 
   // map request -> model fields
-  if (settingsData.assessmentName !== undefined) pr.title = settingsData.assessmentName;
-  if (settingsData.description !== undefined) pr.description = settingsData.description;
+  if (settingsData.assessmentName !== undefined)
+    pr.title = settingsData.assessmentName;
+  if (settingsData.description !== undefined)
+    pr.description = settingsData.description;
 
-  if (settingsData.startDate !== undefined) pr.startDate = new Date(settingsData.startDate);
-  if (settingsData.endDate !== undefined) pr.endDate = new Date(settingsData.endDate);
+  if (settingsData.startDate !== undefined)
+    pr.startDate = new Date(settingsData.startDate);
+  if (settingsData.endDate !== undefined)
+    pr.endDate = new Date(settingsData.endDate);
 
-  if (settingsData.teamSetId !== undefined) pr.teamSetId = settingsData.teamSetId as any;
-  if (settingsData.reviewerType !== undefined) pr.reviewerType = settingsData.reviewerType;
+  if (settingsData.teamSetId !== undefined)
+    pr.teamSetId = settingsData.teamSetId as any;
+  if (settingsData.reviewerType !== undefined)
+    pr.reviewerType = settingsData.reviewerType;
 
-  if (settingsData.taAssignments !== undefined) pr.taAssignments = settingsData.taAssignments;
+  if (settingsData.taAssignments !== undefined)
+    pr.taAssignments = settingsData.taAssignments;
 
-  if (settingsData.minReviews !== undefined) pr.minReviewsPerReviewer = Number(settingsData.minReviews);
-  if (settingsData.maxReviews !== undefined) pr.maxReviewsPerReviewer = Number(settingsData.maxReviews);
+  if (settingsData.minReviews !== undefined)
+    pr.minReviewsPerReviewer = Number(settingsData.minReviews);
+  if (settingsData.maxReviews !== undefined)
+    pr.maxReviewsPerReviewer = Number(settingsData.maxReviews);
 
   if (settingsData.gradingStartDate !== undefined)
-    pr.gradingStartDate = settingsData.gradingStartDate ? new Date(settingsData.gradingStartDate) : undefined;
+    pr.gradingStartDate = settingsData.gradingStartDate
+      ? new Date(settingsData.gradingStartDate)
+      : undefined;
   if (settingsData.gradingEndDate !== undefined)
-    pr.gradingEndDate = settingsData.gradingEndDate ? new Date(settingsData.gradingEndDate) : undefined;
+    pr.gradingEndDate = settingsData.gradingEndDate
+      ? new Date(settingsData.gradingEndDate)
+      : undefined;
 
   await pr.save();
 
   if (structuralChanged) {
     await deleteAssignmentsByPeerReviewId(peerReviewId);
-    await initialiseAssignments(pr.course.toString(), peerReviewId, pr.teamSetId.toString(), null);
+    await initialiseAssignments(
+      pr.course.toString(),
+      peerReviewId,
+      pr.teamSetId.toString(),
+      null
+    );
   }
 
   return pr;
 };
-
 
 /* ----- Sub Functions for GetPeerReviewInfo ----- */
 const buildPeerReviewScopeContext = async (
@@ -358,9 +380,10 @@ const loadAssignmentsState = async (
     );
     if (!reviewee) continue;
 
-    const revieweeTA = reviewee.TA && typeof reviewee.TA === 'object'
-      ? { ...reviewee.TA, _id: reviewee.TA._id.toString() }
-      : null;
+    const revieweeTA =
+      reviewee.TA && typeof reviewee.TA === 'object'
+        ? { ...reviewee.TA, _id: reviewee.TA._id.toString() }
+        : null;
 
     const assignmentDto: PeerReviewAssignment = {
       _id: a._id.toString(),
@@ -484,9 +507,10 @@ const addMissingAssignmentsForSubmissions = async (
     );
     if (!reviewee) continue;
 
-    const revieweeTA = reviewee.TA && typeof reviewee.TA === 'object'
-      ? { ...reviewee.TA, _id: reviewee.TA._id.toString() }
-      : null;
+    const revieweeTA =
+      reviewee.TA && typeof reviewee.TA === 'object'
+        ? { ...reviewee.TA, _id: reviewee.TA._id.toString() }
+        : null;
 
     assignmentById.set(a._id.toString(), {
       _id: a._id.toString(),
@@ -638,7 +662,7 @@ const buildTeamsDTO = (
 ) => {
   return scopedTeams.map(team => {
     const teamData = teamDataById.get(team.id);
-    const taName = team.taId ? usersById.get(team.taId) ?? '' : '';
+    const taName = team.taId ? (usersById.get(team.taId) ?? '') : '';
 
     const members: PeerReviewTeamMemberDTO[] = team.memberIds.map(memberId => ({
       userId: memberId,
@@ -647,7 +671,7 @@ const buildTeamsDTO = (
     }));
 
     const assignedReviewsToTeam =
-      reviewerType === 'Team' ? teamAssignedMap.get(team.id) ?? [] : [];
+      reviewerType === 'Team' ? (teamAssignedMap.get(team.id) ?? []) : [];
 
     return {
       teamId: team.id,
@@ -744,7 +768,7 @@ export const getTeamDataById = async (courseId: string, teamIds: string[]) => {
         courseId,
         teamId
       );
-      
+
       return [
         teamId,
         {

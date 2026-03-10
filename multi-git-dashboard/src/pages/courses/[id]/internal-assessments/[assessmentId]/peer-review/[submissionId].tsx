@@ -37,7 +37,9 @@ import { getMe } from '@/lib/auth/utils';
 import usePeerReviewGradingData from '@/components/hooks/usePeerReviewGradingData';
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
-const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
+const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
+  ssr: false,
+});
 
 const PeerReviewGradingDetailPage: React.FC = () => {
   const router = useRouter();
@@ -54,7 +56,10 @@ const PeerReviewGradingDetailPage: React.FC = () => {
     typeof submissionId === 'string';
 
   // Current User
-  const [me, setMe] = useState<{ userId: string; userCourseRole: string } | null>(null);
+  const [me, setMe] = useState<{
+    userId: string;
+    userCourseRole: string;
+  } | null>(null);
   useEffect(() => {
     if (!ready) return;
     (async () => {
@@ -62,7 +67,7 @@ const PeerReviewGradingDetailPage: React.FC = () => {
       if (userData) setMe(userData);
     })();
   }, [ready, id]);
-  
+
   const isFaculty = me?.userCourseRole === COURSE_ROLE.Faculty;
   const isTA = me?.userCourseRole === COURSE_ROLE.TA;
 
@@ -119,13 +124,18 @@ const PeerReviewGradingDetailPage: React.FC = () => {
 
     setFocusedCommentIds(focusedIds);
     const focusedSet = new Set(focusedIds);
-    const fileComments = (commentsRef.current ?? []).filter((c: any) => c.filePath === file);
+    const fileComments = (commentsRef.current ?? []).filter(
+      (c: any) => c.filePath === file
+    );
 
     const focusDecos = fileComments
       .filter((c: any) => focusedSet.has(c._id))
       .map((c: any) => ({
         range: new monaco.Range(c.startLine, 1, c.endLine, 1),
-        options: { isWholeLine: true, className: classes.focusedCommentHighlight },
+        options: {
+          isWholeLine: true,
+          className: classes.focusedCommentHighlight,
+        },
       }));
 
     const staticDecos = fileComments
@@ -135,14 +145,26 @@ const PeerReviewGradingDetailPage: React.FC = () => {
         options: { isWholeLine: true, className: classes.commentedLineHint },
       }));
 
-    focusedDecosRef.current = editor.deltaDecorations(focusedDecosRef.current, focusDecos);
-    staticDecosRef.current = editor.deltaDecorations(staticDecosRef.current, staticDecos);
+    focusedDecosRef.current = editor.deltaDecorations(
+      focusedDecosRef.current,
+      focusDecos
+    );
+    staticDecosRef.current = editor.deltaDecorations(
+      staticDecosRef.current,
+      staticDecos
+    );
   }, []);
 
   useEffect(() => {
     if (!editorRef.current || !currFile || !currentCode) return;
-    focusedDecosRef.current = editorRef.current.deltaDecorations(focusedDecosRef.current, []);
-    staticDecosRef.current = editorRef.current.deltaDecorations(staticDecosRef.current, []);
+    focusedDecosRef.current = editorRef.current.deltaDecorations(
+      focusedDecosRef.current,
+      []
+    );
+    staticDecosRef.current = editorRef.current.deltaDecorations(
+      staticDecosRef.current,
+      []
+    );
     renderFocusedAndStaticDecos([]);
   }, [currFile, currentCode, comments, renderFocusedAndStaticDecos]);
 
@@ -165,8 +187,12 @@ const PeerReviewGradingDetailPage: React.FC = () => {
       ) {
         const line = e.target.position.lineNumber;
         const file = currFileRef.current;
-        const fileComments = commentsRef.current.filter((c: any) => c.filePath === file);
-        const clicked = fileComments.filter((c: any) => c.startLine <= line && c.endLine >= line);
+        const fileComments = commentsRef.current.filter(
+          (c: any) => c.filePath === file
+        );
+        const clicked = fileComments.filter(
+          (c: any) => c.startLine <= line && c.endLine >= line
+        );
         renderFocusedAndStaticDecos(clicked.map((c: any) => c._id));
         return;
       }
@@ -187,16 +213,17 @@ const PeerReviewGradingDetailPage: React.FC = () => {
 
   if (!ready || !me || loading) return <Center>Loading...</Center>;
 
-  const repo =
-    (dto as any)?.repo ?? (dto as any)?.assignment?.repo ?? { repoName: '', repoUrl: '' };
+  const repo = (dto as any)?.repo ??
+    (dto as any)?.assignment?.repo ?? { repoName: '', repoUrl: '' };
   const revieweeTeam =
-    (dto as any)?.revieweeTeam ?? (dto as any)?.assignment?.revieweeTeam ?? null;
-  const reviewer =
-    (dto as any)?.reviewer ?? null;
-  const submission =
-    (dto as any)?.submission ?? null;
+    (dto as any)?.revieweeTeam ??
+    (dto as any)?.assignment?.revieweeTeam ??
+    null;
+  const reviewer = (dto as any)?.reviewer ?? null;
+  const submission = (dto as any)?.submission ?? null;
 
-  if (!dto || !repoTree) return <Center>Unable to load grading console.</Center>;
+  if (!dto || !repoTree)
+    return <Center>Unable to load grading console.</Center>;
 
   const reviewerLabel = reviewer
     ? reviewer.kind === 'Team'
@@ -214,20 +241,21 @@ const PeerReviewGradingDetailPage: React.FC = () => {
   const isPeerReviewActive = peerReviewStatus === 'Active';
 
   const canStartGrading =
-    isPeerReviewActive &&
-    isFaculty &&
-    !myTask &&
-    isSubmitted;
+    isPeerReviewActive && isFaculty && !myTask && isSubmitted;
   const canGrade =
     isPeerReviewActive &&
     !!myTask &&
     (myTask.status === 'Assigned' || myTask.status === 'InProgress');
   const gradingTasks = ((dto as any)?.gradingTasks ?? []) as any[];
-  const canViewGradingSummary =
-    isFaculty || myTask?.status === 'Completed';
-  
-  const gradingStatusColor = myTask?.status === 'Assigned' ? 'yellow' : myTask?.status === 'InProgress' ? 'blue' : 'green';
-  
+  const canViewGradingSummary = isFaculty || myTask?.status === 'Completed';
+
+  const gradingStatusColor =
+    myTask?.status === 'Assigned'
+      ? 'yellow'
+      : myTask?.status === 'InProgress'
+        ? 'blue'
+        : 'green';
+
   const handleSaveGrading = async () => {
     try {
       setSavingGrade(true);
@@ -249,8 +277,8 @@ const PeerReviewGradingDetailPage: React.FC = () => {
     } finally {
       setSavingGrade(false);
     }
-  }
-  
+  };
+
   const handleSubmitGrading = async () => {
     try {
       setSavingGrade(true);
@@ -275,7 +303,7 @@ const PeerReviewGradingDetailPage: React.FC = () => {
     } finally {
       setSavingGrade(false);
     }
-  }
+  };
 
   return (
     <Container fluid className={classes.wrapper}>
@@ -286,16 +314,25 @@ const PeerReviewGradingDetailPage: React.FC = () => {
             className={classes.returnButton}
           />
           <Title order={4}></Title>
-          <Badge variant="light" color="teal" h="27px" radius="md">Reviewer: {reviewerLabel}</Badge>
+          <Badge variant="light" color="teal" h="27px" radius="md">
+            Reviewer: {reviewerLabel}
+          </Badge>
           {revieweeTeam && (
             <Badge color="teal" variant="light" h="27px" radius="md">
               <Group gap="6px">
-              Reviewee: Team {revieweeTeam.teamNumber}
-              {repo?.repoUrl && (
-                <Anchor href={repo.repoUrl} target="_blank" rel="noreferrer" underline="never">
-                  <Text fw="bold" fz="xs">({repo.repoName})</Text>
-                </Anchor>
-              )}
+                Reviewee: Team {revieweeTeam.teamNumber}
+                {repo?.repoUrl && (
+                  <Anchor
+                    href={repo.repoUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    underline="never"
+                  >
+                    <Text fw="bold" fz="xs">
+                      ({repo.repoName})
+                    </Text>
+                  </Anchor>
+                )}
               </Group>
             </Badge>
           )}
@@ -305,7 +342,8 @@ const PeerReviewGradingDetailPage: React.FC = () => {
           {/* Submission status indicator, only when peer review is active */}
           {isPeerReviewActive && !isSubmitted && (
             <Badge variant="light" color="orange" h="27px" radius="md">
-              Submission: {submission?.status === 'Draft' ? 'Draft' : 'Not Started'}
+              Submission:{' '}
+              {submission?.status === 'Draft' ? 'Draft' : 'Not Started'}
             </Badge>
           )}
           {/* Peer review status indicator, only when peer review is not active */}
@@ -332,8 +370,14 @@ const PeerReviewGradingDetailPage: React.FC = () => {
             </Badge>
           )}
           {myTask && (
-            <Badge variant="light" color={gradingStatusColor} h="27px" radius="md">
-              Grading: {myTask.status === "InProgress" ? "In Progress" : myTask.status}
+            <Badge
+              variant="light"
+              color={gradingStatusColor}
+              h="27px"
+              radius="md"
+            >
+              Grading:{' '}
+              {myTask.status === 'InProgress' ? 'In Progress' : myTask.status}
             </Badge>
           )}
           <Button
@@ -343,7 +387,7 @@ const PeerReviewGradingDetailPage: React.FC = () => {
             fz="sm"
             h="27px"
             color="yellow"
-            variant='light'
+            variant="light"
             onClick={() => setSummaryOpen(true)}
           >
             Review Summary
@@ -410,7 +454,10 @@ const PeerReviewGradingDetailPage: React.FC = () => {
       <Group className={classes.body}>
         <Box className={classes.repositoryBox}>
           <Text className={classes.repositoryTitle}>Repository</Text>
-          <ScrollArea className={classes.repositoryScrollArea} scrollbarSize={4}>
+          <ScrollArea
+            className={classes.repositoryScrollArea}
+            scrollbarSize={4}
+          >
             <PeerReviewFileTree
               repoNode={repoTree}
               currFile={currFile!}
@@ -456,7 +503,9 @@ const PeerReviewGradingDetailPage: React.FC = () => {
         {/* Read-only */}
         <PeerReviewCommentSidebar
           user={me}
-          comments={(comments ?? []).filter((c: any) => c.filePath === currFile)}
+          comments={(comments ?? []).filter(
+            (c: any) => c.filePath === currFile
+          )}
           focusedComments={focusedCommentIds}
           onFocusComment={(comment: any) => {
             renderFocusedAndStaticDecos([comment._id]);

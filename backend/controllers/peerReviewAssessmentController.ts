@@ -11,10 +11,10 @@ import {
 } from '../services/peerReviewAssessmentService';
 import { handleError } from '../utils/error';
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
-import { 
-  getGradingTaskForSubmissionById, 
-  startGradingTaskForFacultyById, 
-  submitGradingTaskById, 
+import {
+  getGradingTaskForSubmissionById,
+  startGradingTaskForFacultyById,
+  submitGradingTaskById,
   updateGradingTaskById,
   bulkAssignGradersByAssessmentId,
   manualAssignGraderToSubmission,
@@ -23,10 +23,16 @@ import {
 
 /* ------------------------------- Peer Review Assessment ------------------------------- */
 
-export const getPeerReviewByAssessment = async (req: Request, res: Response) => {
+export const getPeerReviewByAssessment = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
-    await verifyRequestPermission(account._id, userCourseRole, [COURSE_ROLE.Faculty, COURSE_ROLE.TA]);
+    await verifyRequestPermission(account._id, userCourseRole, [
+      COURSE_ROLE.Faculty,
+      COURSE_ROLE.TA,
+    ]);
     const peerReviewAssignment = await getPeerReviewByAssessmentId(
       req.params.assessmentId
     );
@@ -36,24 +42,30 @@ export const getPeerReviewByAssessment = async (req: Request, res: Response) => 
   }
 };
 
-export const createPeerReviewAssessment = async (req: Request, res: Response) => {
+export const createPeerReviewAssessment = async (
+  req: Request,
+  res: Response
+) => {
   try {
-      const { account, userCourseRole } = await verifyRequestUser(req);
-      await verifyRequestPermission(account._id, userCourseRole, [
-        COURSE_ROLE.Faculty,
-      ]);
-  
-      const newPeerReview = await createPeerReviewAssessmentForCourse(
-        req.params.courseId,
-        req.body
-      );
-      res.status(201).json(newPeerReview);
-    } catch (error) {
-      return handleError(res, error, 'Failed to create peer review');
-    }  
+    const { account, userCourseRole } = await verifyRequestUser(req);
+    await verifyRequestPermission(account._id, userCourseRole, [
+      COURSE_ROLE.Faculty,
+    ]);
+
+    const newPeerReview = await createPeerReviewAssessmentForCourse(
+      req.params.courseId,
+      req.body
+    );
+    res.status(201).json(newPeerReview);
+  } catch (error) {
+    return handleError(res, error, 'Failed to create peer review');
+  }
 };
 
-export const updatePeerReviewAssessment = async (req: Request, res: Response) => {
+export const updatePeerReviewAssessment = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
     await verifyRequestPermission(account._id, userCourseRole, [
@@ -62,13 +74,18 @@ export const updatePeerReviewAssessment = async (req: Request, res: Response) =>
     const { assessmentId } = req.params;
     const updateData = req.body;
     await updatePeerReviewAssessmentById(assessmentId, updateData);
-    res.status(200).json({ message: 'Peer review assessment updated successfully' });
+    res
+      .status(200)
+      .json({ message: 'Peer review assessment updated successfully' });
   } catch (error) {
     return handleError(res, error, 'Failed to update peer review: ');
   }
 };
 
-export const deletePeerReviewAssessment = async (req: Request, res: Response) => {
+export const deletePeerReviewAssessment = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
     await verifyRequestPermission(account._id, userCourseRole, [
@@ -86,34 +103,51 @@ export const deletePeerReviewAssessment = async (req: Request, res: Response) =>
 
 /* ------------------------------- Peer Review Assessment Submissions ------------------------------- */
 
-export const getPeerReviewSubmissionsForAssessment = async (req: Request, res: Response) => {
+export const getPeerReviewSubmissionsForAssessment = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
-    const userId = await verifyRequestPermission(account._id, userCourseRole, [COURSE_ROLE.Faculty, COURSE_ROLE.TA]);
-    
+    const userId = await verifyRequestPermission(account._id, userCourseRole, [
+      COURSE_ROLE.Faculty,
+      COURSE_ROLE.TA,
+    ]);
+
     // Parse pagination params
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
-    
+
     const submissions = await getPeerReviewSubmissionsForAssessmentById(
-      req.params.assessmentId, 
-      userId, 
+      req.params.assessmentId,
+      userId,
       userCourseRole,
       page,
       limit
     );
     res.status(200).json(submissions);
   } catch (error) {
-    return handleError(res, error, 'Failed to get peer review submissions for assessment');
+    return handleError(
+      res,
+      error,
+      'Failed to get peer review submissions for assessment'
+    );
   }
 };
 
 /* ------------------------------- Peer Review Assessment Results ------------------------------- */
-export const getPeerReviewResultsForAssessment = async (req: Request, res: Response) => {
+export const getPeerReviewResultsForAssessment = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
-    await verifyRequestPermission(account._id, userCourseRole, [COURSE_ROLE.Faculty, COURSE_ROLE.TA]);
-    const viewMode = (req.query.viewMode as 'perStudent' | 'perTeam') || 'perStudent';
+    await verifyRequestPermission(account._id, userCourseRole, [
+      COURSE_ROLE.Faculty,
+      COURSE_ROLE.TA,
+    ]);
+    const viewMode =
+      (req.query.viewMode as 'perStudent' | 'perTeam') || 'perStudent';
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
 
@@ -125,19 +159,25 @@ export const getPeerReviewResultsForAssessment = async (req: Request, res: Respo
     );
     res.status(200).json(resultsDto);
   } catch (error) {
-    return handleError(res, error, 'Failed to get peer review results for assessment');
+    return handleError(
+      res,
+      error,
+      'Failed to get peer review results for assessment'
+    );
   }
 };
 
 /* ------------------------------- Peer Review Assessment Grading ------------------------------- */
-export const getPeerReviewSubmissionForGrading = async (req: Request, res: Response) => {
+export const getPeerReviewSubmissionForGrading = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
-    const userId = await verifyRequestPermission(
-      account._id,
-      userCourseRole,
-      [COURSE_ROLE.Faculty, COURSE_ROLE.TA]
-    );
+    const userId = await verifyRequestPermission(account._id, userCourseRole, [
+      COURSE_ROLE.Faculty,
+      COURSE_ROLE.TA,
+    ]);
 
     const gradingDto = await getPeerReviewGradingDTO(
       userId,
@@ -148,18 +188,24 @@ export const getPeerReviewSubmissionForGrading = async (req: Request, res: Respo
 
     res.status(200).json(gradingDto);
   } catch (error) {
-    return handleError(res, error, 'Failed to get peer review submission for grading');
+    return handleError(
+      res,
+      error,
+      'Failed to get peer review submission for grading'
+    );
   }
 };
 
-export const getPeerReviewGradingTaskForSubmission = async (req: Request, res: Response) => {
+export const getPeerReviewGradingTaskForSubmission = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
-    const userId = await verifyRequestPermission(
-      account._id,
-      userCourseRole,
-      [COURSE_ROLE.Faculty, COURSE_ROLE.TA]
-    );
+    const userId = await verifyRequestPermission(account._id, userCourseRole, [
+      COURSE_ROLE.Faculty,
+      COURSE_ROLE.TA,
+    ]);
 
     const gradingDto = await getGradingTaskForSubmissionById(
       userId,
@@ -174,14 +220,15 @@ export const getPeerReviewGradingTaskForSubmission = async (req: Request, res: R
   }
 };
 
-export const startGradingTaskForFaculty = async (req: Request, res: Response) => {
+export const startGradingTaskForFaculty = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
-    const userId = await verifyRequestPermission(
-      account._id,
-      userCourseRole,
-      [COURSE_ROLE.Faculty]
-    );
+    const userId = await verifyRequestPermission(account._id, userCourseRole, [
+      COURSE_ROLE.Faculty,
+    ]);
 
     const gradingTask = await startGradingTaskForFacultyById(
       userId,
@@ -195,14 +242,16 @@ export const startGradingTaskForFaculty = async (req: Request, res: Response) =>
   }
 };
 
-export const updatePeerReviewGradingTask = async (req: Request, res: Response) => {
+export const updatePeerReviewGradingTask = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
-    const userId = await verifyRequestPermission(
-      account._id,
-      userCourseRole,
-      [COURSE_ROLE.Faculty, COURSE_ROLE.TA]
-    );
+    const userId = await verifyRequestPermission(account._id, userCourseRole, [
+      COURSE_ROLE.Faculty,
+      COURSE_ROLE.TA,
+    ]);
 
     const updatedGradingTask = await updateGradingTaskById(
       userId,
@@ -216,18 +265,20 @@ export const updatePeerReviewGradingTask = async (req: Request, res: Response) =
   }
 };
 
-export const submitPeerReviewGradingTask = async (req: Request, res: Response) => {
+export const submitPeerReviewGradingTask = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
-    const userId = await verifyRequestPermission(
-      account._id,
-      userCourseRole,
-      [COURSE_ROLE.Faculty, COURSE_ROLE.TA]
-    );
+    const userId = await verifyRequestPermission(account._id, userCourseRole, [
+      COURSE_ROLE.Faculty,
+      COURSE_ROLE.TA,
+    ]);
 
     const submittedGradingTask = await submitGradingTaskById(
       userId,
-      req.params.taskId,
+      req.params.taskId
     );
 
     res.status(200).json(submittedGradingTask);
@@ -241,12 +292,16 @@ export const submitPeerReviewGradingTask = async (req: Request, res: Response) =
 export const bulkAssignGraders = async (req: Request, res: Response) => {
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
-    await verifyRequestPermission(account._id, userCourseRole, [COURSE_ROLE.Faculty]);
+    await verifyRequestPermission(account._id, userCourseRole, [
+      COURSE_ROLE.Faculty,
+    ]);
 
     const { numGradersPerSubmission, allowSupervisingTAs } = req.body;
 
     if (!numGradersPerSubmission || numGradersPerSubmission < 1) {
-      return res.status(400).json({ message: 'numGradersPerSubmission must be >= 1' });
+      return res
+        .status(400)
+        .json({ message: 'numGradersPerSubmission must be >= 1' });
     }
 
     const result = await bulkAssignGradersByAssessmentId(
@@ -265,7 +320,9 @@ export const bulkAssignGraders = async (req: Request, res: Response) => {
 export const manualAssignGrader = async (req: Request, res: Response) => {
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
-    await verifyRequestPermission(account._id, userCourseRole, [COURSE_ROLE.Faculty]);
+    await verifyRequestPermission(account._id, userCourseRole, [
+      COURSE_ROLE.Faculty,
+    ]);
 
     const { graderId } = req.body;
 
@@ -288,7 +345,9 @@ export const manualAssignGrader = async (req: Request, res: Response) => {
 export const manualUnassignGrader = async (req: Request, res: Response) => {
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
-    await verifyRequestPermission(account._id, userCourseRole, [COURSE_ROLE.Faculty]);
+    await verifyRequestPermission(account._id, userCourseRole, [
+      COURSE_ROLE.Faculty,
+    ]);
 
     const result = await manualUnassignGraderFromSubmission(
       req.params.assessmentId,

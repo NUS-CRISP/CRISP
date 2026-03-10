@@ -52,7 +52,7 @@ const ResultsPaginationDisplay: React.FC<ResultsPaginationDisplayProps> = ({
         />
       )}
     </Group>
-  )
-}
+  );
+};
 
 export default ResultsPaginationDisplay;

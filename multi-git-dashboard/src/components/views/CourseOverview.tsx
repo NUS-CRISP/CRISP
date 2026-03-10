@@ -331,7 +331,7 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
               </Text>
             </Card>
 
-            {(isFaculty || isTA) ? (
+            {isFaculty || isTA ? (
               <Card
                 withBorder
                 radius="xl"

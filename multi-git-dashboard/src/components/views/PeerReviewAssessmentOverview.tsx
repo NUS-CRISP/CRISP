@@ -26,17 +26,13 @@ interface PeerReviewAssessmentOverviewProps {
   onDeleted: () => void;
 }
 
-const PeerReviewAssessmentOverview: React.FC<PeerReviewAssessmentOverviewProps> = ({
-  courseId,
-  assessment,
-  isFaculty,
-  onUpdated,
-  onDeleted,
-}) => {
+const PeerReviewAssessmentOverview: React.FC<
+  PeerReviewAssessmentOverviewProps
+> = ({ courseId, assessment, isFaculty, onUpdated, onDeleted }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [peerReview, setPeerReview] = useState<PeerReview | null>(null);
-  
+
   // Temp fetch of team sets here, will shift up to parent later
   const [teamSets, setTeamSets] = useState<TeamSet[]>([]);
 
@@ -60,13 +56,13 @@ const PeerReviewAssessmentOverview: React.FC<PeerReviewAssessmentOverviewProps> 
       );
       const prBody = await prRes.json();
       if (!prRes.ok) throw new Error(prBody?.message ?? prRes.statusText);
-      
-      const teamSets = await fetch(
-        `/api/courses/${courseId}/teamsets`,
-        { method: 'GET' }
-      );
+
+      const teamSets = await fetch(`/api/courses/${courseId}/teamsets`, {
+        method: 'GET',
+      });
       const teamSetsBody = await teamSets.json();
-      if (!teamSets.ok) throw new Error(teamSetsBody?.message ?? teamSets.statusText);
+      if (!teamSets.ok)
+        throw new Error(teamSetsBody?.message ?? teamSets.statusText);
 
       setTeamSets(teamSetsBody);
       setPeerReview(prBody);
@@ -158,9 +154,9 @@ const PeerReviewAssessmentOverview: React.FC<PeerReviewAssessmentOverviewProps> 
         onClickUpdate={openUpdateModal}
         onClickDelete={openDeleteModal}
       />
-      
+
       <PeerReviewAssessmentDetail assessment={assessment} />
-      
+
       <Modal
         opened={openedUpdateModal}
         onClose={closeUpdateModal}
@@ -192,6 +188,6 @@ const PeerReviewAssessmentOverview: React.FC<PeerReviewAssessmentOverviewProps> 
       />
     </Container>
   );
-}
+};
 
 export default PeerReviewAssessmentOverview;

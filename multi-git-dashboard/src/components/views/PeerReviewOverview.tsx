@@ -1,4 +1,11 @@
-import { Tabs, Container, Button, Modal, Group, ScrollArea } from '@mantine/core';
+import {
+  Tabs,
+  Container,
+  Button,
+  Modal,
+  Group,
+  ScrollArea,
+} from '@mantine/core';
 import { TeamSet } from '@shared/types/TeamSet';
 import { PeerReview } from '@shared/types/PeerReview';
 import PeerReviewInfo from './PeerReviewInfo';
@@ -11,7 +18,6 @@ interface PeerReviewOverviewProps {
   onUpdate: () => void;
 }
 
-
 const PeerReviewOverview: React.FC<PeerReviewOverviewProps> = ({
   courseId,
   teamSets,
@@ -20,7 +26,7 @@ const PeerReviewOverview: React.FC<PeerReviewOverviewProps> = ({
   onUpdate,
 }) => {
   const defaultTab = peerReviews[0]?._id || 'default';
-  
+
   return (
     <Container>
       <Tabs mt="md" defaultValue={defaultTab}>

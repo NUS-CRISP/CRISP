@@ -62,7 +62,11 @@ export default function usePeerReviewData({
 
   const scheduleTouchDraft = useCallback(() => {
     if (!canEdit) return;
-    if (userCourseRole === COURSE_ROLE.Faculty || (userCourseRole === COURSE_ROLE.TA && isSupervisorTA)) return;
+    if (
+      userCourseRole === COURSE_ROLE.Faculty ||
+      (userCourseRole === COURSE_ROLE.TA && isSupervisorTA)
+    )
+      return;
     if (touchDraftTimer.current) clearTimeout(touchDraftTimer.current);
 
     touchDraftTimer.current = setTimeout(async () => {
@@ -221,7 +225,14 @@ export default function usePeerReviewData({
       scheduleTouchDraft();
       await refreshComments();
     },
-    [canEdit, scheduleTouchDraft, courseId, assignmentId, refreshComments, submission]
+    [
+      canEdit,
+      scheduleTouchDraft,
+      courseId,
+      assignmentId,
+      refreshComments,
+      submission,
+    ]
   );
 
   const deleteComment = useCallback(

@@ -20,12 +20,15 @@ const TASK_NOT_FOUND = 'Grading task not found';
 const NOT_ASSIGNED = 'Not assigned to grade this submission';
 
 const assertPeerReviewActive = async (peerReviewId: Types.ObjectId) => {
-  const pr = await PeerReviewModel.findById(peerReviewId)
-    .select('startDate endDate status');
+  const pr = await PeerReviewModel.findById(peerReviewId).select(
+    'startDate endDate status'
+  );
   if (!pr) throw new NotFoundError('Peer review not found');
 
   if (pr.status !== 'Active') {
-    throw new BadRequestError('Grading is only available while the peer review is Active');
+    throw new BadRequestError(
+      'Grading is only available while the peer review is Active'
+    );
   }
 };
 
@@ -45,24 +48,32 @@ const resolvePeerReviewAndSubmission = async (
   })
     .select('_id')
     .lean();
-  if (!peerReview) throw new NotFoundError('Peer review not found for assessment');
+  if (!peerReview)
+    throw new NotFoundError('Peer review not found for assessment');
 
-  const submission = await PeerReviewSubmissionModel.findById(peerReviewSubmissionId)
+  const submission = await PeerReviewSubmissionModel.findById(
+    peerReviewSubmissionId
+  )
     .select('_id peerReviewId')
     .lean();
   if (!submission) throw new NotFoundError('Peer review submission not found');
 
-  if (String((submission as any).peerReviewId) !== String((peerReview as any)._id)) {
+  if (
+    String((submission as any).peerReviewId) !== String((peerReview as any)._id)
+  ) {
     throw new BadRequestError('Submission does not belong to this peer review');
   }
 
-  return { peerReviewId: (peerReview as any)._id as Types.ObjectId, submissionId: (submission as any)._id as Types.ObjectId };
+  return {
+    peerReviewId: (peerReview as any)._id as Types.ObjectId,
+    submissionId: (submission as any)._id as Types.ObjectId,
+  };
 };
 
 export const startGradingTaskForFacultyById = async (
   userId: string,
   assessmentId: string,
-  peerReviewSubmissionId: string,
+  peerReviewSubmissionId: string
 ) => {
   const { peerReviewId, submissionId } = await resolvePeerReviewAndSubmission(
     assessmentId,
@@ -101,7 +112,7 @@ export const getGradingTaskForSubmissionById = async (
   userId: string,
   userCourseRole: string,
   assessmentId: string,
-  peerReviewSubmissionId: string,
+  peerReviewSubmissionId: string
 ) => {
   const { peerReviewId, submissionId } = await resolvePeerReviewAndSubmission(
     assessmentId,
@@ -124,7 +135,7 @@ export const getGradingTaskForSubmissionById = async (
 export const updateGradingTaskById = async (
   userId: string,
   taskId: string,
-  patch: { score?: number | null; feedback?: string | null },
+  patch: { score?: number | null; feedback?: string | null }
 ) => {
   const task = await PeerReviewGradingTaskModel.findById(taskId);
   if (!task) throw new NotFoundError(TASK_NOT_FOUND);
@@ -158,10 +169,7 @@ export const updateGradingTaskById = async (
   return task;
 };
 
-export const submitGradingTaskById = async (
-  userId: string,
-  taskId: string,
-) => {
+export const submitGradingTaskById = async (userId: string, taskId: string) => {
   const task = await PeerReviewGradingTaskModel.findById(taskId);
   if (!task) throw new NotFoundError(TASK_NOT_FOUND);
   await assertPeerReviewActive(task.peerReviewId as Types.ObjectId);
@@ -203,7 +211,8 @@ export const bulkAssignGradersByAssessmentId = async (
   })
     .select('_id')
     .lean();
-  if (!peerReview) throw new NotFoundError('Peer review not found for assessment');
+  if (!peerReview)
+    throw new NotFoundError('Peer review not found for assessment');
 
   // Fetch TAs from course
   const course = await CourseModel.findById(courseId).select('TAs').lean();
@@ -255,7 +264,9 @@ export const bulkAssignGradersByAssessmentId = async (
     .select('_id reviewee')
     .lean();
 
-  const assignmentMap = new Map(assignments.map(a => [String(a._id), String(a.reviewee)]));
+  const assignmentMap = new Map(
+    assignments.map(a => [String(a._id), String(a.reviewee)])
+  );
 
   // Delete existing grading tasks for this peer review
   await PeerReviewGradingTaskModel.deleteMany({
@@ -267,7 +278,9 @@ export const bulkAssignGradersByAssessmentId = async (
   let taIndex = 0;
 
   for (const submission of submissions) {
-    const revieweeTeamId = assignmentMap.get(String(submission.peerReviewAssignmentId));
+    const revieweeTeamId = assignmentMap.get(
+      String(submission.peerReviewAssignmentId)
+    );
     const assignedGraders = new Set<string>();
 
     for (let i = 0; i < numGradersPerSubmission; i++) {
@@ -337,7 +350,9 @@ export const manualAssignGraderToSubmission = async (
   const { peerReviewId, submissionId: resolvedSubmissionId } =
     await resolvePeerReviewAndSubmission(assessmentId, submissionId);
 
-  const submission = await PeerReviewSubmissionModel.findById(resolvedSubmissionId)
+  const submission = await PeerReviewSubmissionModel.findById(
+    resolvedSubmissionId
+  )
     .select('reviewerKind reviewerUserId')
     .lean();
   if (!submission) {
@@ -349,7 +364,9 @@ export const manualAssignGraderToSubmission = async (
     submission.reviewerUserId &&
     String(submission.reviewerUserId) === graderId
   ) {
-    throw new BadRequestError('Cannot assign a TA to grade their own submission');
+    throw new BadRequestError(
+      'Cannot assign a TA to grade their own submission'
+    );
   }
 
   // Check if grading task already exists
@@ -388,7 +405,9 @@ export const manualUnassignGraderFromSubmission = async (
   });
 
   if (!task) {
-    throw new NotFoundError('Grading task not found for this grader and submission');
+    throw new NotFoundError(
+      'Grading task not found for this grader and submission'
+    );
   }
 
   // Allow deletion of any task status (including Completed ones), FE shows confirmation modal

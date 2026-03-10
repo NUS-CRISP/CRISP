@@ -41,19 +41,29 @@ const PeerReviewGradeSubmissionModal: React.FC<Props> = ({
   const canSubmit = !disabled && score !== '' && typeof score === 'number';
 
   return (
-    <Modal opened={opened} onClose={onClose} title="Grade Submission" centered size="md">
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      title="Grade Submission"
+      centered
+      size="md"
+    >
       <Stack gap="sm">
         <Group justify="space-between">
           <Text size="sm" c="dimmed">
             Enter a score and optional feedback.
           </Text>
-          {task && <Badge variant="light">{task.status === "InProgress" ? "In Progress" : task.status}</Badge>}
+          {task && (
+            <Badge variant="light">
+              {task.status === 'InProgress' ? 'In Progress' : task.status}
+            </Badge>
+          )}
         </Group>
 
         <NumberInput
           label={`Score (0 - ${maxMarks})`}
           value={score}
-          onChange={(v) => {
+          onChange={v => {
             if (typeof v === 'number') onChangeScore(v);
             else if (v === '') onChangeScore('');
             else {
@@ -89,11 +99,7 @@ const PeerReviewGradeSubmissionModal: React.FC<Props> = ({
             Save Draft
           </Button>
 
-          <Button
-            disabled={!canSubmit}
-            loading={saving}
-            onClick={onSubmit}
-          >
+          <Button disabled={!canSubmit} loading={saving} onClick={onSubmit}>
             Submit Grade
           </Button>
         </Group>

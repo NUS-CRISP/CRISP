@@ -28,7 +28,8 @@ const AssignGradersModal: React.FC<AssignGradersModalProps> = ({
   onAssigned,
 }) => {
   const [numGraders, setNumGraders] = useState<number>(1);
-  const [allowSupervisingTAs, setAllowSupervisingTAs] = useState<boolean>(false);
+  const [allowSupervisingTAs, setAllowSupervisingTAs] =
+    useState<boolean>(false);
   const [loading, setLoading] = useState(false);
   const [taCount, setTaCount] = useState<number>(0);
 
@@ -110,7 +111,7 @@ const AssignGradersModal: React.FC<AssignGradersModalProps> = ({
           min={1}
           max={taCount}
           value={numGraders}
-          onChange={(val) => setNumGraders(Number(val) || 1)}
+          onChange={val => setNumGraders(Number(val) || 1)}
           required
         />
 
@@ -118,7 +119,7 @@ const AssignGradersModal: React.FC<AssignGradersModalProps> = ({
           label="Allow TAs to grade their own supervising teams"
           description="If disabled, TAs will not be assigned to grade submissions from teams they supervise."
           checked={allowSupervisingTAs}
-          onChange={(e) => setAllowSupervisingTAs(e.currentTarget.checked)}
+          onChange={e => setAllowSupervisingTAs(e.currentTarget.checked)}
         />
 
         <Group justify="flex-end" mt="md">

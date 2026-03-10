@@ -102,18 +102,24 @@ export const getPeerReviewCommentsBySubmissionId = async (
   assessmentId: string,
   peerReviewSubmissionId: string
 ) => {
-  const pr = await PeerReviewModel.findOne({ internalAssessmentId: assessmentId })
+  const pr = await PeerReviewModel.findOne({
+    internalAssessmentId: assessmentId,
+  })
     .select('_id')
     .lean();
   if (!pr) throw new NotFoundError('Peer review not found for assessment');
 
-  const submission = await PeerReviewSubmissionModel.findById(peerReviewSubmissionId)
+  const submission = await PeerReviewSubmissionModel.findById(
+    peerReviewSubmissionId
+  )
     .select('_id peerReviewId peerReviewAssignmentId')
     .lean();
   if (!submission) throw new NotFoundError('Peer review submission not found');
 
   if (String(submission.peerReviewId) !== String(pr._id)) {
-    throw new BadRequestError('Submission does not belong to this peer review assessment');
+    throw new BadRequestError(
+      'Submission does not belong to this peer review assessment'
+    );
   }
 
   if (userCourseRole === COURSE_ROLE.TA) {
@@ -123,7 +129,9 @@ export const getPeerReviewCommentsBySubmissionId = async (
       grader: oid(userId),
     });
     if (!hasTask) {
-      throw new MissingAuthorizationError('Not assigned to grade this submission');
+      throw new MissingAuthorizationError(
+        'Not assigned to grade this submission'
+      );
     }
   }
 
@@ -170,19 +178,22 @@ export const addPeerReviewCommentByAssignmentId = async (
 
   if (userCourseRole !== COURSE_ROLE.Faculty) {
     const isSupervisingTA =
-      userCourseRole === COURSE_ROLE.TA &&
-      reviewee.TA?.toString() === userId;
+      userCourseRole === COURSE_ROLE.TA && reviewee.TA?.toString() === userId;
     if (isSupervisingTA) {
       // TA supervisors can comment without a submission
     } else {
-    if (!submissionId) {
-      throw new BadRequestError('Submission ID is required to add comment');
-    }
-    const submission = await fetchSubmissionForAssignment(
-      submissionId,
-      assignmentId
-    );
-    await assertSubmissionWritableByCaller(userId, userCourseRole, submission);
+      if (!submissionId) {
+        throw new BadRequestError('Submission ID is required to add comment');
+      }
+      const submission = await fetchSubmissionForAssignment(
+        submissionId,
+        assignmentId
+      );
+      await assertSubmissionWritableByCaller(
+        userId,
+        userCourseRole,
+        submission
+      );
     }
   }
 
@@ -405,11 +416,18 @@ const findCommentsVisible = async (
   userCourseRole: string,
   canModerateAll: boolean
 ) => {
-  const comments = await PeerReviewCommentModel.find({ peerReviewAssignmentId: assignmentId })
+  const comments = await PeerReviewCommentModel.find({
+    peerReviewAssignmentId: assignmentId,
+  })
     .populate('author', 'name')
     .lean();
 
-  return decorateCommentsForViewer(comments, userId, userCourseRole, canModerateAll);
+  return decorateCommentsForViewer(
+    comments,
+    userId,
+    userCourseRole,
+    canModerateAll
+  );
 };
 
 const findCommentsForSubmissionVisible = async (

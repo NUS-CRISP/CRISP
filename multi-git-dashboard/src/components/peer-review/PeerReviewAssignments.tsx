@@ -43,12 +43,18 @@ const PeerReviewAssignments: React.FC<PeerReviewAssignmentsProps> = ({
           (a.assignment.reviewee as Partial<Team> | undefined)?.TA?.name ??
           'Unassigned';
 
-        const revieweeTAId =
-          (a.assignment.reviewee as Partial<Team> | undefined)?.TA?._id;
-        const isSupervisingTA =
-          Boolean(isTA && currentUserId && revieweeTAId && String(revieweeTAId) === String(currentUserId));
-        const isAssignedTAReviewer =
-          Boolean(isTA && taReviewerAssignmentIds.includes(a.assignment._id));
+        const revieweeTAId = (
+          a.assignment.reviewee as Partial<Team> | undefined
+        )?.TA?._id;
+        const isSupervisingTA = Boolean(
+          isTA &&
+          currentUserId &&
+          revieweeTAId &&
+          String(revieweeTAId) === String(currentUserId)
+        );
+        const isAssignedTAReviewer = Boolean(
+          isTA && taReviewerAssignmentIds.includes(a.assignment._id)
+        );
         const disableNavigation = Boolean(
           isTA && !isSupervisingTA && !isAssignedTAReviewer
         );
@@ -75,12 +81,24 @@ const PeerReviewAssignments: React.FC<PeerReviewAssignmentsProps> = ({
               {isFaculty && ` (TA: ${taName})`}
             </Button>
             {a.status === 'Submitted' && (
-              <Badge color="green" variant="light" size="sm" radius="sm" h="21.5px">
+              <Badge
+                color="green"
+                variant="light"
+                size="sm"
+                radius="sm"
+                h="21.5px"
+              >
                 Submitted
               </Badge>
             )}
             {a.status === 'Draft' && (
-              <Badge color="yellow" variant="light" size="sm" radius="sm" h="21.5px">
+              <Badge
+                color="yellow"
+                variant="light"
+                size="sm"
+                radius="sm"
+                h="21.5px"
+              >
                 Draft
               </Badge>
             )}

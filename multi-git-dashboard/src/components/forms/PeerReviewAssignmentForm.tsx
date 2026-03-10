@@ -209,7 +209,8 @@ const PeerReviewAssignmentForm: React.FC<PeerReviewAssignmentFormProps> = ({
             Are you sure you want to assign peer reviews? <br />
             Existing submissions, comments, and grading progress (including
             draft/completed grades) will be deleted.
-            <br /><br />
+            <br />
+            <br />
             <strong>This action cannot be undone.</strong>
           </Text>
           <Group justify="flex-end">

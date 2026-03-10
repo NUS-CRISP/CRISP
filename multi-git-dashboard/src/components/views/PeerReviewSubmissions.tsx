@@ -55,15 +55,20 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
   const [search, setSearch] = useState('');
   const [graderFilter, setGraderFilter] = useState<string | null>(null);
 
-  const [assignModalOpened, { open: openAssignModal, close: closeAssignModal }] =
-    useDisclosure(false);
+  const [
+    assignModalOpened,
+    { open: openAssignModal, close: closeAssignModal },
+  ] = useDisclosure(false);
   const [filtersOpened, { toggle: toggleFilters }] = useDisclosure(false);
 
   // Pagination state
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState<string>('20');
-  
-  const [me, setMe] = useState<{ userId: string; userCourseRole: string }>({ userId: '', userCourseRole: '' });
+
+  const [me, setMe] = useState<{ userId: string; userCourseRole: string }>({
+    userId: '',
+    userCourseRole: '',
+  });
   useEffect(() => {
     (async () => {
       const userData = await getMe(courseId);
@@ -79,7 +84,7 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
         page: '1',
         limit: '10000',
       });
-      
+
       const res = await fetch(
         `/api/peer-review-assessments/${courseId}/${assessmentId}/submissions?${params}`,
         { method: 'GET' }
@@ -136,7 +141,10 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
 
     return dto.items.filter(item => {
       if (statusFilter !== 'All' && item.status !== statusFilter) return false;
-      if (reviewerKindFilter !== 'All' && item.reviewerKind !== reviewerKindFilter)
+      if (
+        reviewerKindFilter !== 'All' &&
+        item.reviewerKind !== reviewerKindFilter
+      )
         return false;
 
       // "Ungraded" means no completed grade yet.
@@ -149,11 +157,17 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
       if (revieweeTeamId && item.revieweeTeam.teamId !== revieweeTeamId)
         return false;
 
-      if (graderFilter && !item.grading.graders.some(g => g.id === graderFilter))
+      if (
+        graderFilter &&
+        !item.grading.graders.some(g => g.id === graderFilter)
+      )
         return false;
 
       // My grading filter - only show submissions I'm grading or have graded
-      if (myGradingFilter && !item.grading.graders.some(g => g.id === me.userId))
+      if (
+        myGradingFilter &&
+        !item.grading.graders.some(g => g.id === me.userId)
+      )
         return false;
 
       if (!q) return true;
@@ -205,7 +219,8 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
   const filteredTotal = filteredItems.length;
   const localLimit = Number(limit) || 20;
   const filteredTotalPages = Math.ceil(filteredTotal / localLimit);
-  const safePage = filteredTotalPages > 0 ? Math.min(page, filteredTotalPages) : 1;
+  const safePage =
+    filteredTotalPages > 0 ? Math.min(page, filteredTotalPages) : 1;
   const startIdx = (safePage - 1) * localLimit;
   const endIdx = startIdx + localLimit;
   const paginatedFilteredItems = filteredItems.slice(startIdx, endIdx);
@@ -273,7 +288,12 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
 
             <Divider my="sm" />
 
-            <Group gap="sm" align="flex-end" justify="space-between" wrap="wrap">
+            <Group
+              gap="sm"
+              align="flex-end"
+              justify="space-between"
+              wrap="wrap"
+            >
               <TextInput
                 leftSection={<IconSearch size={16} />}
                 label="Search"
@@ -286,7 +306,7 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
               <Group gap="sm">
                 {isFaculty && (
                   <Button
-                    variant='light'
+                    variant="light"
                     size="sm"
                     color="yellow"
                     onClick={() => setMyGradingFilter(!myGradingFilter)}
@@ -346,7 +366,9 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
                       { value: 'Submitted', label: 'Submitted' },
                     ]}
                     value={statusFilter}
-                    onChange={v => setStatusFilter((v as StatusFilter) || 'All')}
+                    onChange={v =>
+                      setStatusFilter((v as StatusFilter) || 'All')
+                    }
                     w={160}
                   />
 
@@ -365,10 +387,11 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
               </Stack>
             </Collapse>
           </Card>
-          
+
           <Stack gap="sm">
-            {paginatedFilteredItems.length > 0
-              ? paginatedFilteredItems.map((item: PeerReviewSubmissionListItemDTO) => (
+            {paginatedFilteredItems.length > 0 ? (
+              paginatedFilteredItems.map(
+                (item: PeerReviewSubmissionListItemDTO) => (
                   <PeerReviewSubmissionCard
                     key={item.peerReviewSubmissionId}
                     courseId={courseId}
@@ -380,11 +403,13 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
                     isFaculty={isFaculty}
                     onAfterAction={fetchSubmissions}
                   />
-                ))
-              : <Center>No submissions found.</Center>
-            }
+                )
+              )
+            ) : (
+              <Center>No submissions found.</Center>
+            )}
           </Stack>
-          
+
           <ResultsPaginationDisplay
             numResultsDisplay={`${paginatedFilteredItems.length} / ${filteredItems.length}`}
             limit={limit}

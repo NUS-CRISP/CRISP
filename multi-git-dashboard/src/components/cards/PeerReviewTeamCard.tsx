@@ -23,19 +23,22 @@ const PeerReviewTeamCard = ({
       </Stack>
 
       <Stack gap={6} align="flex-end">
-        <Badge variant="light" color={team.teamAggregatedScore === null ? 'orange' : 'green'}>
+        <Badge
+          variant="light"
+          color={team.teamAggregatedScore === null ? 'orange' : 'green'}
+        >
           {team.teamAggregatedScore === null ? 'Not yet graded' : 'Graded'}
         </Badge>
-        <Text fw={800}>{formatScore(team.teamAggregatedScore)} / {formatScore(maxMarks)}</Text>
+        <Text fw={800}>
+          {formatScore(team.teamAggregatedScore)} / {formatScore(maxMarks)}
+        </Text>
       </Stack>
     </Group>
 
     <Stack gap={6}>
       {team.members.map(m => (
         <Group key={m.studentId} justify="space-between">
-          <Text fz="sm">
-            {m.studentName}
-          </Text>
+          <Text fz="sm">{m.studentName}</Text>
           <Text fz="sm" fw={600}>
             {formatScore(m.aggregatedScore)}
           </Text>

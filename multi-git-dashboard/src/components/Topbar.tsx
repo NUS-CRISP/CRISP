@@ -131,8 +131,8 @@ const TopBar: React.FC = () => {
     if (rest[0] === 'internal-assessments' && rest.length >= 2) {
       return {
         href: `/courses/${courseId}/assessments`,
-        label: 'Assessments'
-      }
+        label: 'Assessments',
+      };
     }
     return { href: `/courses/${courseId}`, label: 'Course Overview' };
   }, [asPath, courseId, isCourseRoute]);

@@ -22,7 +22,9 @@ interface InternalAssessmentBaseDetailProps {
   isFaculty: boolean;
 }
 
-const InternalAssessmentBaseDetail: React.FC<InternalAssessmentBaseDetailProps> = ({ assessment, fetchAssessment, isFaculty}) => {
+const InternalAssessmentBaseDetail: React.FC<
+  InternalAssessmentBaseDetailProps
+> = ({ assessment, fetchAssessment, isFaculty }) => {
   const router = useRouter();
   const { id, assessmentId } = router.query as {
     id: string;

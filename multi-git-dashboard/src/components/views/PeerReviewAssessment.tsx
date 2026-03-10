@@ -1,7 +1,4 @@
-import {
-  Container,
-  Tabs,
-} from '@mantine/core';
+import { Container, Tabs } from '@mantine/core';
 import { useEffect, useState } from 'react';
 import { InternalAssessment } from '@shared/types/InternalAssessment';
 import PeerReviewSubmissions from './PeerReviewSubmissions';
@@ -23,14 +20,20 @@ const PeerReviewAssessment: React.FC<PeerReviewAssessmentProps> = ({
   isTA,
 }) => {
   const router = useRouter();
-  const { id, assessmentId } = router.query as { id: string; assessmentId: string };
-  
+  const { id, assessmentId } = router.query as {
+    id: string;
+    assessmentId: string;
+  };
+
   const [activeTab, setActiveTab] = useState<string>('Overview');
   const setActiveTabAndSave = (tabName: string) => {
     setActiveTab(tabName);
-    localStorage.setItem(`activePeerReviewAssessmentTab_${assessmentId}`, tabName);
+    localStorage.setItem(
+      `activePeerReviewAssessmentTab_${assessmentId}`,
+      tabName
+    );
   };
-  
+
   useEffect(() => {
     const savedTab = localStorage.getItem(
       `activePeerReviewAssessmentTab_${assessmentId}`
@@ -42,7 +45,7 @@ const PeerReviewAssessment: React.FC<PeerReviewAssessmentProps> = ({
       setActiveTab(savedTab);
     }
   }, [assessmentId]);
-  
+
   return (
     <Container pt="md">
       <Tabs value={activeTab}>
@@ -86,7 +89,7 @@ const PeerReviewAssessment: React.FC<PeerReviewAssessmentProps> = ({
           />
         </Tabs.Panel>
 
-        {(isFaculty || isTA) &&
+        {(isFaculty || isTA) && (
           <Tabs.Panel value="Submissions">
             <PeerReviewSubmissions
               courseId={id}
@@ -94,19 +97,16 @@ const PeerReviewAssessment: React.FC<PeerReviewAssessmentProps> = ({
               isFaculty={isFaculty}
             />
           </Tabs.Panel>
-        }
+        )}
 
-        {(isFaculty || isTA) &&
+        {(isFaculty || isTA) && (
           <Tabs.Panel value="Results">
-            <PeerReviewResults
-              courseId={id}
-              assessmentId={assessmentId}
-            />
+            <PeerReviewResults courseId={id} assessmentId={assessmentId} />
           </Tabs.Panel>
-        }
+        )}
       </Tabs>
     </Container>
-  )
-}
+  );
+};
 
 export default PeerReviewAssessment;

@@ -1,4 +1,12 @@
-import { Modal, Stack, Card, Group, Text, Badge, ScrollArea } from '@mantine/core';
+import {
+  Modal,
+  Stack,
+  Card,
+  Group,
+  Text,
+  Badge,
+  ScrollArea,
+} from '@mantine/core';
 import type { PeerReviewGradingTaskSummaryDTO } from '@shared/types/PeerReviewAssessment';
 
 type PeerReviewGradingSummaryModalProps = {
@@ -15,13 +23,9 @@ const statusColor: Record<string, string> = {
   Completed: 'green',
 };
 
-const PeerReviewGradingSummaryModal: React.FC<PeerReviewGradingSummaryModalProps> = ({
-  opened,
-  onClose,
-  maxMarks,
-  tasks,
-  isFaculty,
-}) => {
+const PeerReviewGradingSummaryModal: React.FC<
+  PeerReviewGradingSummaryModalProps
+> = ({ opened, onClose, maxMarks, tasks, isFaculty }) => {
   return (
     <Modal
       opened={opened}
@@ -50,15 +54,22 @@ const PeerReviewGradingSummaryModal: React.FC<PeerReviewGradingSummaryModalProps
                       </Text>
                     )}
                   </Stack>
-                  <Badge variant="light" color={statusColor[task.status] || 'gray'}>
+                  <Badge
+                    variant="light"
+                    color={statusColor[task.status] || 'gray'}
+                  >
                     {task.status === 'InProgress' ? 'In Progress' : task.status}
                   </Badge>
                 </Group>
 
                 <Group gap="xl" mb="xs">
                   <Text size="sm">
-                    <Text span fw={600}>Score:</Text>{' '}
-                    {typeof task.score === 'number' ? `${task.score} / ${maxMarks}` : 'N/A'}
+                    <Text span fw={600}>
+                      Score:
+                    </Text>{' '}
+                    {typeof task.score === 'number'
+                      ? `${task.score} / ${maxMarks}`
+                      : 'N/A'}
                   </Text>
                 </Group>
 

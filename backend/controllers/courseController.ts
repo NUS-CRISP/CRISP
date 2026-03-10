@@ -41,11 +41,9 @@ import {
 } from '../services/errors';
 import { addStudentsToTeam, addTAsToTeam } from '../services/teamService';
 import { createTeamSet } from '../services/teamSetService';
-import { getAccountId, verifyRequestPermission, verifyRequestUser } from '../utils/auth';
+import { getAccountId, verifyRequestUser } from '../utils/auth';
 import { addInternalAssessmentsToCourse } from '../services/internalAssessmentService';
 import { getUserIdByAccountId } from '../services/accountService';
-import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
-import { handleError } from 'utils/error';
 
 /*----------------------------------------Auth----------------------------------------*/
 export const getMe = async (req: Request, res: Response) => {

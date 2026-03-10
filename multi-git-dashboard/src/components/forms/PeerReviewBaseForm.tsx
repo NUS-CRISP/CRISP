@@ -112,37 +112,48 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
       startDate: v => (!v ? 'Start date is required' : null),
       endDate: v => {
         if (!v) return 'End date is required';
-        if (form.values.startDate && new Date(v) <= new Date(form.values.startDate))
+        if (
+          form.values.startDate &&
+          new Date(v) <= new Date(form.values.startDate)
+        )
           return 'End date must be after start date';
         return null;
       },
       teamSetId: v => (!v ? 'Please select a Team Set' : null),
       minReviews: v => {
         const num = typeof v === 'number' ? v : Number(v);
-        if (!Number.isInteger(num) || num < 0) return 'Minimum reviews must be a non-negative integer';
-        if (num > Number(form.values.maxReviews)) return 'Minimum reviews cannot exceed maximum reviews';
+        if (!Number.isInteger(num) || num < 0)
+          return 'Minimum reviews must be a non-negative integer';
+        if (num > Number(form.values.maxReviews))
+          return 'Minimum reviews cannot exceed maximum reviews';
         return null;
       },
       maxReviews: v => {
         const num = typeof v === 'number' ? v : Number(v);
-        if (!Number.isInteger(num) || num < 1) return 'Maximum reviews must be a positive integer';
-        if (num < Number(form.values.minReviews)) return 'Maximum reviews cannot be less than minimum reviews';
+        if (!Number.isInteger(num) || num < 1)
+          return 'Maximum reviews must be a positive integer';
+        if (num < Number(form.values.minReviews))
+          return 'Maximum reviews cannot be less than minimum reviews';
         return null;
       },
       maxMarks: v => {
         const num = typeof v === 'number' ? v : Number(v);
-        if (Number.isNaN(num) || num < 0) return 'Max marks must be 0 or greater';
+        if (Number.isNaN(num) || num < 0)
+          return 'Max marks must be 0 or greater';
         return null;
       },
       gradingEndDate: v => {
         if (!v) return null;
-        if (form.values.gradingStartDate && new Date(v) <= new Date(form.values.gradingStartDate))
+        if (
+          form.values.gradingStartDate &&
+          new Date(v) <= new Date(form.values.gradingStartDate)
+        )
           return 'Grading end date must be after grading start date';
         return null;
       },
     },
   });
-  
+
   // Store original values to compare on submit and avoid unnecessary API calls when nothing changed
   type Normalized = NormalizedPeerReviewBasePayload;
   const originalValuesRef = useRef<Normalized | null>(null);
@@ -183,8 +194,10 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
       originalValuesRef.current = payload;
 
       showNotification({
-        title: mode === 'create' ? 'Peer Review Created' : 'Peer Review Updated',
-        message: mode === 'create' ? 'Created successfully.' : 'Updated successfully.',
+        title:
+          mode === 'create' ? 'Peer Review Created' : 'Peer Review Updated',
+        message:
+          mode === 'create' ? 'Created successfully.' : 'Updated successfully.',
         color: 'green',
       });
     } catch (e) {
@@ -207,7 +220,12 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
   return (
     <>
       {error && (
-        <Notification title="Request failed" color="red" onClose={() => setError(null)} mb="md">
+        <Notification
+          title="Request failed"
+          color="red"
+          onClose={() => setError(null)}
+          mb="md"
+        >
           {error}
         </Notification>
       )}
@@ -217,12 +235,34 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
           Peer Review Settings
         </Text>
         <Divider mb="md" />
-        
-        <TextInput withAsterisk label="Peer Review Title" {...form.getInputProps('assessmentName')} mb="xs" />
-        <Textarea withAsterisk label="Description" {...form.getInputProps('description')} mb="xs" />
 
-        <TextInput withAsterisk label="Start Date" {...form.getInputProps('startDate')} type="date" mb="xs" />
-        <TextInput withAsterisk label="End Date" {...form.getInputProps('endDate')} type="date" mb="xs" />
+        <TextInput
+          withAsterisk
+          label="Peer Review Title"
+          {...form.getInputProps('assessmentName')}
+          mb="xs"
+        />
+        <Textarea
+          withAsterisk
+          label="Description"
+          {...form.getInputProps('description')}
+          mb="xs"
+        />
+
+        <TextInput
+          withAsterisk
+          label="Start Date"
+          {...form.getInputProps('startDate')}
+          type="date"
+          mb="xs"
+        />
+        <TextInput
+          withAsterisk
+          label="End Date"
+          {...form.getInputProps('endDate')}
+          type="date"
+          mb="xs"
+        />
 
         <Text fw={600} fz="sm" mt="md" mb="xs">
           Team Set for this Peer Review
@@ -242,7 +282,9 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
         </Text>
         <Radio.Group
           value={form.values.reviewerType}
-          onChange={value => form.setFieldValue('reviewerType', value as ReviewerType)}
+          onChange={value =>
+            form.setFieldValue('reviewerType', value as ReviewerType)
+          }
           ml="4px"
         >
           <Group>
@@ -259,7 +301,7 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
           onChange={val => form.setFieldValue('taAssignments', val === 'yes')}
           ml="4px"
         >
-          <Group gap='28px'>
+          <Group gap="28px">
             <Radio label="Yes" value="yes" />
             <Radio label="No" value="no" />
           </Group>
@@ -310,8 +352,18 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
           </Group>
         </Radio.Group>
 
-        <TextInput label="Grading Start Date" {...form.getInputProps('gradingStartDate')} type="date" mb="xs" />
-        <TextInput label="Grading End Date" {...form.getInputProps('gradingEndDate')} type="date" mb="xs" />
+        <TextInput
+          label="Grading Start Date"
+          {...form.getInputProps('gradingStartDate')}
+          type="date"
+          mb="xs"
+        />
+        <TextInput
+          label="Grading End Date"
+          {...form.getInputProps('gradingEndDate')}
+          type="date"
+          mb="xs"
+        />
 
         <Group justify="flex-start" mt="md" pb="md" gap="xs">
           <Button type="submit">{submitLabel}</Button>
@@ -324,6 +376,6 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
       </form>
     </>
   );
-}
+};
 
 export default PeerReviewBaseForm;

@@ -35,7 +35,7 @@ const CreateAssessmentForm: React.FC<CreateAssessmentFormProps> = ({
             onAssessmentCreated={onAssessmentCreated}
           />
         </Tabs.Panel>
-        
+
         <Tabs.Panel value="peerReview" pt="xs">
           <CreatePeerReviewForm
             courseId={courseId}

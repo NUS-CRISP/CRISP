@@ -8,7 +8,10 @@ import { hasFacultyPermission, hasTAPermission } from '@/lib/auth/utils';
 
 const InternalAssessmentPage: React.FC = () => {
   const router = useRouter();
-  const { id, assessmentId } = router.query as { id: string; assessmentId: string };
+  const { id, assessmentId } = router.query as {
+    id: string;
+    assessmentId: string;
+  };
   const isFaculty = hasFacultyPermission();
   const isTA = hasTAPermission(id);
 
@@ -16,7 +19,7 @@ const InternalAssessmentPage: React.FC = () => {
     () => (assessmentId ? `/api/internal-assessments/${assessmentId}` : ''),
     [assessmentId]
   );
-  
+
   const [assessment, setAssessment] = useState<InternalAssessment | null>(null);
 
   const fetchAssessment = useCallback(async () => {
@@ -52,7 +55,7 @@ const InternalAssessmentPage: React.FC = () => {
           isFaculty={isFaculty}
           isTA={isTA}
         />
-      ) : (isFaculty ? (
+      ) : isFaculty ? (
         <InternalAssessmentBaseDetail
           assessment={assessment}
           fetchAssessment={fetchAssessment}
@@ -60,7 +63,7 @@ const InternalAssessmentPage: React.FC = () => {
         />
       ) : (
         <Center>You do not have permission to view this assessment.</Center>
-      ))}
+      )}
     </Container>
   );
 };

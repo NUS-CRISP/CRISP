@@ -16,7 +16,10 @@ interface UpdatePeerReviewFormProps {
   onClose?: () => void;
 }
 
-function toInitialValues(peerReview: PeerReview, assessment: InternalAssessment): Partial<PeerReviewBaseFormValues> {
+function toInitialValues(
+  peerReview: PeerReview,
+  assessment: InternalAssessment
+): Partial<PeerReviewBaseFormValues> {
   return {
     assessmentName: peerReview.title ?? '',
     description: peerReview.description ?? '',
@@ -35,7 +38,9 @@ function toInitialValues(peerReview: PeerReview, assessment: InternalAssessment)
     scaleToMaxMarks: Boolean(assessment.scaleToMaxMarks),
 
     gradingStartDate: (peerReview as any).gradingStartDate
-      ? new Date((peerReview as any).gradingStartDate).toISOString().slice(0, 10)
+      ? new Date((peerReview as any).gradingStartDate)
+          .toISOString()
+          .slice(0, 10)
       : '',
     gradingEndDate: (peerReview as any).gradingEndDate
       ? new Date((peerReview as any).gradingEndDate).toISOString().slice(0, 10)
@@ -79,6 +84,6 @@ const UpdatePeerReviewForm: React.FC<UpdatePeerReviewFormProps> = ({
       onSubmit={submit}
     />
   );
-}
+};
 
 export default UpdatePeerReviewForm;

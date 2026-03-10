@@ -34,14 +34,18 @@ interface PeerReviewResultsProps {
 type ViewMode = 'perStudent' | 'perTeam';
 type SortCriterion = 'name' | 'studentId' | 'marks' | 'teamNumber';
 
-const PeerReviewResults: React.FC<PeerReviewResultsProps> = ({ courseId, assessmentId }) => {
+const PeerReviewResults: React.FC<PeerReviewResultsProps> = ({
+  courseId,
+  assessmentId,
+}) => {
   const [dto, setDto] = useState<PeerReviewResultsDTO | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // UI state
   const [viewMode, setViewMode] = useState<ViewMode>('perStudent');
-  const [sortCriterion, setSortCriterion] = useState<SortCriterion>('teamNumber');
+  const [sortCriterion, setSortCriterion] =
+    useState<SortCriterion>('teamNumber');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState<string>('20');
@@ -96,7 +100,8 @@ const PeerReviewResults: React.FC<PeerReviewResultsProps> = ({ courseId, assessm
 
     if (q) {
       arr = arr.filter(r => {
-        const hay = `${r.studentName} ${r.studentId} team ${r.teamNumber}`.toLowerCase();
+        const hay =
+          `${r.studentName} ${r.studentId} team ${r.teamNumber}`.toLowerCase();
         return hay.includes(q);
       });
     }
@@ -117,7 +122,11 @@ const PeerReviewResults: React.FC<PeerReviewResultsProps> = ({ courseId, assessm
         break;
       case 'teamNumber':
       default:
-        arr.sort((a, b) => a.teamNumber - b.teamNumber || a.studentName.localeCompare(b.studentName));
+        arr.sort(
+          (a, b) =>
+            a.teamNumber - b.teamNumber ||
+            a.studentName.localeCompare(b.studentName)
+        );
         break;
     }
 
@@ -229,13 +238,17 @@ const PeerReviewResults: React.FC<PeerReviewResultsProps> = ({ courseId, assessm
       }
 
       const headers = parseCSVLine(lines[0]).map(h => h.trim());
-      const idIndex = headers.findIndex(h => h.toLowerCase() === mapIdHeader.toLowerCase());
+      const idIndex = headers.findIndex(
+        h => h.toLowerCase() === mapIdHeader.toLowerCase()
+      );
       if (idIndex === -1) {
         alert(`ID header "${mapIdHeader}" not found in CSV file.`);
         return;
       }
 
-      let resultIndex = headers.findIndex(h => h.toLowerCase() === mapResultHeader.toLowerCase());
+      let resultIndex = headers.findIndex(
+        h => h.toLowerCase() === mapResultHeader.toLowerCase()
+      );
       if (resultIndex === -1) {
         headers.push(mapResultHeader);
         resultIndex = headers.length - 1;
@@ -256,7 +269,9 @@ const PeerReviewResults: React.FC<PeerReviewResultsProps> = ({ courseId, assessm
         );
 
         const resultText =
-          row && row.aggregatedScore !== null ? row.aggregatedScore.toFixed(2) : 'N/A';
+          row && row.aggregatedScore !== null
+            ? row.aggregatedScore.toFixed(2)
+            : 'N/A';
 
         if (cols.length > resultIndex) cols[resultIndex] = resultText;
         else cols.push(resultText);
@@ -329,7 +344,10 @@ const PeerReviewResults: React.FC<PeerReviewResultsProps> = ({ courseId, assessm
               </Stack>
 
               <Group gap="sm">
-                <Button variant="light" onClick={() => setIsResultFormOpen(true)}>
+                <Button
+                  variant="light"
+                  onClick={() => setIsResultFormOpen(true)}
+                >
                   Download CSV
                 </Button>
                 <Button variant="light" onClick={() => setIsMapModalOpen(true)}>
@@ -340,7 +358,12 @@ const PeerReviewResults: React.FC<PeerReviewResultsProps> = ({ courseId, assessm
 
             <Divider my="sm" />
 
-            <Group gap="sm" align="flex-end" justify="space-between" wrap="wrap">
+            <Group
+              gap="sm"
+              align="flex-end"
+              justify="space-between"
+              wrap="wrap"
+            >
               <Group>
                 <TextInput
                   label="Search"
@@ -382,11 +405,11 @@ const PeerReviewResults: React.FC<PeerReviewResultsProps> = ({ courseId, assessm
               />
             </Group>
           </Card>
-          
+
           <Stack gap="xs">
             {viewMode === 'perStudent' ? (
               filteredStudents.length > 0 ? (
-                filteredStudents.map((row) => (
+                filteredStudents.map(row => (
                   <PeerReviewStudentRowCard
                     key={row.studentId}
                     row={row}
@@ -398,24 +421,22 @@ const PeerReviewResults: React.FC<PeerReviewResultsProps> = ({ courseId, assessm
                   No students to display.
                 </Text>
               )
+            ) : filteredTeams.length > 0 ? (
+              filteredTeams.map(team => (
+                <PeerReviewTeamCard
+                  key={team.teamId}
+                  team={team}
+                  maxMarks={dto.maxMarks}
+                />
+              ))
             ) : (
-              filteredTeams.length > 0 ? (
-                filteredTeams.map((team) => (
-                  <PeerReviewTeamCard
-                    key={team.teamId}
-                    team={team}
-                    maxMarks={dto.maxMarks}
-                  />
-                ))
-              ) : (
-                <Text c="dimmed" ta="center" mt="md">
-                  No teams to display.
-                </Text>
-              )
+              <Text c="dimmed" ta="center" mt="md">
+                No teams to display.
+              </Text>
             )}
           </Stack>
 
-         <ResultsPaginationDisplay
+          <ResultsPaginationDisplay
             numResultsDisplay={countText}
             limit={limit}
             page={page}
@@ -428,7 +449,7 @@ const PeerReviewResults: React.FC<PeerReviewResultsProps> = ({ courseId, assessm
           />
         </Stack>
       </ScrollArea>
-      
+
       {/* Modal for Download Results */}
       <DownloadResultsCsvModal
         opened={isResultFormOpen}

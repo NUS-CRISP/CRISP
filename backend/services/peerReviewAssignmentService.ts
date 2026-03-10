@@ -37,8 +37,9 @@ export const getPeerReviewAssignmentById = async (
   // Backfill repo metadata on read when missing.
   // This prevents broken reviewer flow when legacy/incomplete assignment docs exist.
   if (courseId && (!assignment.repoUrl || !assignment.repoName)) {
-    const revieweeId = ((assignment.reviewee as any)?._id ?? assignment.reviewee)
-      ?.toString?.();
+    const revieweeId = (
+      (assignment.reviewee as any)?._id ?? assignment.reviewee
+    )?.toString?.();
 
     if (revieweeId) {
       const { repoName, repoUrl } = await resolveTeamRepo(courseId, revieweeId);
@@ -373,7 +374,7 @@ export const initialiseAssignments = async (
   const teamsQuery = TeamModel.find({
     teamSet: teamSetId,
   }).lean();
-  
+
   if (session) teamsQuery.session(session);
   const prTeams = await teamsQuery;
 
@@ -381,7 +382,7 @@ export const initialiseAssignments = async (
     courseId,
     prTeams.map(t => t._id.toString())
   );
-  
+
   const docs = prTeams.map(team => {
     const teamData = prTeamDataById.get(team._id.toString());
     return {
@@ -390,8 +391,8 @@ export const initialiseAssignments = async (
       repoUrl: teamData?.repoUrl,
       reviewee: team._id,
       deadline: null,
-    }
-  })
+    };
+  });
 
   if (docs.length > 0) {
     await PeerReviewAssignmentModel.insertMany(docs, { session });
@@ -720,7 +721,9 @@ const createFreshSubmissions = async (
 
     if (assignDefault) {
       if (reviewerType === 'Individual') {
-        const students = Array.from(assignedStudentsForTeam.get(reviewee) ?? []);
+        const students = Array.from(
+          assignedStudentsForTeam.get(reviewee) ?? []
+        );
         for (const reviewerUserId of students) {
           docs.push({
             peerReviewId: oid(peerReviewId),

@@ -20,9 +20,15 @@ const DownloadResultsCsvModal: React.FC<DownloadResultsCsvModalProps> = ({
   defaultHeaders,
   onDownload,
 }) => {
-  const [studentHeader, setStudentHeader] = useState(defaultHeaders?.studentHeader ?? 'Student');
-  const [idHeader, setIdHeader] = useState(defaultHeaders?.idHeader ?? 'SIS User ID');
-  const [marksHeader, setMarksHeader] = useState(defaultHeaders?.marksHeader ?? 'Average Marks');
+  const [studentHeader, setStudentHeader] = useState(
+    defaultHeaders?.studentHeader ?? 'Student'
+  );
+  const [idHeader, setIdHeader] = useState(
+    defaultHeaders?.idHeader ?? 'SIS User ID'
+  );
+  const [marksHeader, setMarksHeader] = useState(
+    defaultHeaders?.marksHeader ?? 'Average Marks'
+  );
 
   useEffect(() => {
     if (!opened) return;
@@ -32,10 +38,15 @@ const DownloadResultsCsvModal: React.FC<DownloadResultsCsvModalProps> = ({
   }, [opened, defaultHeaders]);
 
   return (
-    <Modal opened={opened} onClose={onClose} title="Results CSV Options" centered>
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      title="Results CSV Options"
+      centered
+    >
       <Text size="sm">
-        Provide the column headers for the results CSV. The CSV will include columns
-        for student name, ID, and average marks.
+        Provide the column headers for the results CSV. The CSV will include
+        columns for student name, ID, and average marks.
       </Text>
 
       <Group gap="md" mt="md">

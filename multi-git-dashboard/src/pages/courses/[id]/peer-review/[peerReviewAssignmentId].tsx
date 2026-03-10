@@ -577,29 +577,29 @@ const PeerReviewDetail: React.FC = () => {
               Read-only (Reviewee)
             </Badge>
           )}
-          {!isReadOnly &&
+          {!isReadOnly && (
             <SubmissionStatusBadge
               userCourseRole={me.userCourseRole}
               submission={submission}
               isSupervisorTA={isSupervisorTA}
             />
-          }
+          )}
           {!isReadOnly &&
             submission &&
             (me.userCourseRole === COURSE_ROLE.Student ||
               me.userCourseRole === COURSE_ROLE.TA) && (
-            <Button
-              leftSection={<IconSend size={16} />}
-              radius="md"
-              size="xs"
-              fz="sm"
-              h="27px"
-              disabled={!canEdit || submission?.status === 'Submitted'}
-              onClick={() => setSubmitReviewModalOpened(true)}
-            >
-              Submit Review
-            </Button>
-          )}
+              <Button
+                leftSection={<IconSend size={16} />}
+                radius="md"
+                size="xs"
+                fz="sm"
+                h="27px"
+                disabled={!canEdit || submission?.status === 'Submitted'}
+                onClick={() => setSubmitReviewModalOpened(true)}
+              >
+                Submit Review
+              </Button>
+            )}
         </Group>
       </Group>
       <Group className={classes.body}>

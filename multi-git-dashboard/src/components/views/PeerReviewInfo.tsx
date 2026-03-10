@@ -86,14 +86,17 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
 }) => {
   const router = useRouter();
   const isTA = hasTAPermission(courseId);
-  const [me, setMe] = useState<{ userId: string; userCourseRole: string } | null>(null);
+  const [me, setMe] = useState<{
+    userId: string;
+    userCourseRole: string;
+  } | null>(null);
   useEffect(() => {
     (async () => {
       const userData = await getMe(courseId);
       if (userData) setMe(userData);
     })();
   }, [courseId]);
-  
+
   const baseApiRoute = `/api/peer-review/${courseId}/${peerReview._id}`;
   const baseManualAssignApiRoute = `${baseApiRoute}/manual-assign`;
 
@@ -109,9 +112,14 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
     openedAssignmentForm,
     { open: openAssignmentForm, close: closeAssignmentForm },
   ] = useDisclosure(false);
-  
-  const teamSetName = teamSets.find(ts => ts._id === peerReview.teamSetId)?.name || 'Unknown Team Set';
-  const goToAssessmentManagement = () => router.push(`/courses/${courseId}/internal-assessments/${peerReview.internalAssessmentId}`);
+
+  const teamSetName =
+    teamSets.find(ts => ts._id === peerReview.teamSetId)?.name ||
+    'Unknown Team Set';
+  const goToAssessmentManagement = () =>
+    router.push(
+      `/courses/${courseId}/internal-assessments/${peerReview.internalAssessmentId}`
+    );
 
   // Fetch Peer Review Info
   const fetchPeerReviewInfo = async () => {
@@ -151,7 +159,8 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
   );
 
   const myTAReviewerAssignmentIds = useMemo(() => {
-    if (!isTA || !me?.userId || !peerReviewInfo?.TAAssignments) return [] as string[];
+    if (!isTA || !me?.userId || !peerReviewInfo?.TAAssignments)
+      return [] as string[];
     const mine = peerReviewInfo.TAAssignments[me.userId];
     if (!mine?.assignedReviews) return [] as string[];
     return mine.assignedReviews.map(a => a.assignment._id);
@@ -237,7 +246,13 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
           {notification.value}
         </Notification>
       )}
-      <Card withBorder radius="md" p="lg" my="md" style={{ backgroundColor: '#2b2b2b' }}>
+      <Card
+        withBorder
+        radius="md"
+        p="lg"
+        my="md"
+        style={{ backgroundColor: '#2b2b2b' }}
+      >
         <Group justify="space-between" align="flex-start" mb="xs">
           <Stack gap={2}>
             <Text fw={800} fz="xl">
@@ -249,8 +264,11 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
           </Stack>
 
           <Group gap="xs" mt={6}>
-            <Badge color={statusColor(peerReview.status)}>{peerReview.status}</Badge>
-            {isFaculty && (peerReview.taAssignments ? (
+            <Badge color={statusColor(peerReview.status)}>
+              {peerReview.status}
+            </Badge>
+            {isFaculty &&
+              (peerReview.taAssignments ? (
                 <Badge variant="light" color="teal">
                   TA Reviews Enabled
                 </Badge>
@@ -258,9 +276,10 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
                 <Badge variant="light" color="red">
                   TA Reviews Disabled
                 </Badge>
-              )
-            )}
-            <Badge variant="light">Reviewer Type: {peerReview.reviewerType}</Badge>
+              ))}
+            <Badge variant="light">
+              Reviewer Type: {peerReview.reviewerType}
+            </Badge>
           </Group>
         </Group>
 
@@ -280,7 +299,8 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
                 Review Window
               </Text>
               <Text fz="sm">
-                {formatDate(peerReview.startDate)} → {formatDate(peerReview.endDate)}
+                {formatDate(peerReview.startDate)} →{' '}
+                {formatDate(peerReview.endDate)}
               </Text>
             </Stack>
 
@@ -289,7 +309,8 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
                 Reviews / Reviewer
               </Text>
               <Text fz="sm">
-                {peerReview.minReviewsPerReviewer} – {peerReview.maxReviewsPerReviewer}
+                {peerReview.minReviewsPerReviewer} –{' '}
+                {peerReview.maxReviewsPerReviewer}
               </Text>
             </Stack>
           </Group>
@@ -305,36 +326,40 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
                 Assign All Peer Reviews
               </Button>
 
-              <Button variant="light" color="blue" onClick={goToAssessmentManagement}>
+              <Button
+                variant="light"
+                color="blue"
+                onClick={goToAssessmentManagement}
+              >
                 Manage in Assessments
               </Button>
             </Group>
           )}
         </Group>
       </Card>
-      
+
       {isFaculty && (
-          <Modal
-            opened={openedAssignmentForm}
+        <Modal
+          opened={openedAssignmentForm}
+          onClose={closeAssignmentForm}
+          title="Assign Peer Reviews"
+          centered
+        >
+          <PeerReviewAssignmentForm
+            courseId={courseId}
+            peerReviewId={peerReview._id}
+            reviewerType={peerReview.reviewerType}
+            taAssignmentsEnabled={!!peerReview.taAssignments}
+            minReviewsPerReviewer={peerReview.minReviewsPerReviewer}
+            maxReviewsPerReviewer={peerReview.maxReviewsPerReviewer}
+            onAssign={() => {
+              onUpdate();
+              fetchPeerReviewInfo();
+              closeAssignmentForm();
+            }}
             onClose={closeAssignmentForm}
-            title="Assign Peer Reviews"
-            centered
-          >
-            <PeerReviewAssignmentForm
-              courseId={courseId}
-              peerReviewId={peerReview._id}
-              reviewerType={peerReview.reviewerType}
-              taAssignmentsEnabled={!!peerReview.taAssignments}
-              minReviewsPerReviewer={peerReview.minReviewsPerReviewer}
-              maxReviewsPerReviewer={peerReview.maxReviewsPerReviewer}
-              onAssign={() => {
-                onUpdate();
-                fetchPeerReviewInfo();
-                closeAssignmentForm();
-              }}
-              onClose={closeAssignmentForm}
-            />
-          </Modal>
+          />
+        </Modal>
       )}
       {peerReviewInfo && !peerReviewInfo.teams ? (
         <Text>No teams found.</Text>
@@ -342,7 +367,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
         <Center mt={150}>
           <Loader />
         </Center>
-      ) : (isFaculty || (isTA && peerReview.status === 'Active')) ? (
+      ) : isFaculty || (isTA && peerReview.status === 'Active') ? (
         <ScrollArea.Autosize mah={750} scrollbarSize={8}>
           <Accordion
             defaultValue={['teaching-assistants']}
@@ -376,9 +401,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
                   label: `Team ${t.teamNumber}`,
                 }))}
                 reviewerType={peerReviewInfo.reviewerType}
-                assignmentOfTeam={
-                  peerReviewInfo.assignmentsOfTeam[team.teamId]
-                }
+                assignmentOfTeam={peerReviewInfo.assignmentsOfTeam[team.teamId]}
                 maxReviewsPerReviewer={peerReview.maxReviewsPerReviewer}
                 isFaculty={isFaculty}
                 isTA={isTA}
@@ -391,11 +414,9 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
       ) : (
         <Card withBorder radius="md" p="lg" my="md">
           <Text c="dimmed" ta="center">
-            {peerReview.status === 'Closed' ? (
-              "This peer review is closed."
-            ) : (
-              "Peer review assignments will be available when the review period begins."
-            )}
+            {peerReview.status === 'Closed'
+              ? 'This peer review is closed.'
+              : 'Peer review assignments will be available when the review period begins.'}
           </Text>
         </Card>
       )}

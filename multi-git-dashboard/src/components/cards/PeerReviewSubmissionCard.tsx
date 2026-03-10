@@ -1,6 +1,23 @@
 import React, { useState } from 'react';
-import { Badge, Button, Card, Group, Stack, Text, Anchor, ActionIcon, Menu, Loader } from '@mantine/core';
-import { IconExternalLink, IconPencil, IconEye, IconUserPlus, IconX } from '@tabler/icons-react';
+import {
+  Badge,
+  Button,
+  Card,
+  Group,
+  Stack,
+  Text,
+  Anchor,
+  ActionIcon,
+  Menu,
+  Loader,
+} from '@mantine/core';
+import {
+  IconExternalLink,
+  IconPencil,
+  IconEye,
+  IconUserPlus,
+  IconX,
+} from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 import { useRouter } from 'next/router';
 import { PeerReviewSubmissionListItemDTO } from '@shared/types/PeerReviewAssessment';
@@ -41,11 +58,19 @@ const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
 }) => {
   const router = useRouter();
   const [assigningGrader, setAssigningGrader] = useState(false);
-  const [unassigningGrader, setUnassigningGrader] = useState<string | null>(null);
-  const [confirmUnassignGrader, setConfirmUnassignGrader] = useState<{ id: string; name: string; status: string } | null>(null);
-  const [availableTAs, setAvailableTAs] = useState<Array<{ id: string; name: string }>>([]);
+  const [unassigningGrader, setUnassigningGrader] = useState<string | null>(
+    null
+  );
+  const [confirmUnassignGrader, setConfirmUnassignGrader] = useState<{
+    id: string;
+    name: string;
+    status: string;
+  } | null>(null);
+  const [availableTAs, setAvailableTAs] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
   const [loadingTAs, setLoadingTAs] = useState(false);
-  
+
   const isSubmissionSubmitted = item.status === 'Submitted';
   const isPeerReviewActive = peerReviewStatus === 'Active';
   const isPeerReviewClosed = peerReviewStatus === 'Closed';
@@ -53,12 +78,12 @@ const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
   const isMyGradingInProgress = myGrader?.status === 'InProgress';
   const isMyGradingCompleted = myGrader?.status === 'Completed';
   const isMyGradingAssigned = myGrader?.status === 'Assigned';
-  
+
   // Button logic
   let buttonColor: string;
   let buttonIcon: JSX.Element;
   let buttonText: string;
-  
+
   if (!isPeerReviewActive || !isSubmissionSubmitted) {
     // Not submitted - both Faculty and TAs can only view
     buttonColor = 'blue';
@@ -99,7 +124,10 @@ const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
       const res = await fetch(`/api/courses/${courseId}/people`);
       if (!res.ok) throw new Error('Failed to fetch TAs');
       const data = await res.json();
-      const tas = (data.TAs || []).map((ta: any) => ({ id: ta._id, name: ta.name }));
+      const tas = (data.TAs || []).map((ta: any) => ({
+        id: ta._id,
+        name: ta.name,
+      }));
       setAvailableTAs(tas);
     } catch (err) {
       notifications.show({
@@ -153,7 +181,11 @@ const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
 
     // Show confirmation modal for InProgress or Completed tasks
     if (grader.status === 'InProgress' || grader.status === 'Completed') {
-      setConfirmUnassignGrader({ id: graderId, name: grader.name, status: grader.status });
+      setConfirmUnassignGrader({
+        id: graderId,
+        name: grader.name,
+        status: grader.status,
+      });
       return;
     }
 
@@ -221,7 +253,7 @@ const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
               Reviewer: {reviewerLabel} ({item.reviewerKind})
             </Text>
             <Badge color={submissionStatusColor(item.status)}>
-              {item.status === "NotStarted" ? "Not Started" : item.status}
+              {item.status === 'NotStarted' ? 'Not Started' : item.status}
             </Badge>
           </Group>
 
@@ -261,7 +293,9 @@ const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
           </Badge>
           {isFaculty && item.grading.graders.length > 0 ? (
             <Stack gap={4} align="flex-end">
-              <Text fz="xs" c="dimmed">Graders:</Text>
+              <Text fz="xs" c="dimmed">
+                Graders:
+              </Text>
               {item.grading.graders.map(grader => (
                 <Group key={grader.id} gap={4}>
                   <Text fz="xs">{grader.name}</Text>
@@ -279,7 +313,11 @@ const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
               ))}
             </Stack>
           ) : (
-            <Text fz="xs" c="dimmed" style={{ maxWidth: 260, textAlign: 'right' }}>
+            <Text
+              fz="xs"
+              c="dimmed"
+              style={{ maxWidth: 260, textAlign: 'right' }}
+            >
               Graders: {gradersLabel}
             </Text>
           )}
@@ -293,11 +331,7 @@ const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
 
       <Group justify="flex-end" mt="md">
         {isFaculty && (
-          <Menu
-            position="bottom-end"
-            withinPortal
-            onOpen={fetchTAs}
-          >
+          <Menu position="bottom-end" withinPortal onOpen={fetchTAs}>
             <Menu.Target>
               <Button
                 variant="subtle"
@@ -340,9 +374,7 @@ const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
                   ta =>
                     item.grading.graders.some(g => g.id === ta.id) ||
                     isOwnReviewerSubmissionForTA(ta.id)
-                ) && (
-                  <Menu.Item disabled>All TAs already assigned</Menu.Item>
-                )}
+                ) && <Menu.Item disabled>All TAs already assigned</Menu.Item>}
             </Menu.Dropdown>
           </Menu>
         )}
@@ -367,9 +399,11 @@ const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
           }
         }}
         title={`Remove ${confirmUnassignGrader?.name} as a grader?`}
-        message={confirmUnassignGrader
-          ? `Are you sure you want to unassign ${confirmUnassignGrader.name}? This will delete their ${confirmUnassignGrader.status === 'Completed' ? 'completed grade' : 'in-progress work'}.`
-          : ''}
+        message={
+          confirmUnassignGrader
+            ? `Are you sure you want to unassign ${confirmUnassignGrader.name}? This will delete their ${confirmUnassignGrader.status === 'Completed' ? 'completed grade' : 'in-progress work'}.`
+            : ''
+        }
       />
     </Card>
   );

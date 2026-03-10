@@ -213,57 +213,58 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
                     {c.updatedAt && new Date(c.updatedAt).toLocaleDateString()}
                   </Text>
                 </div>
-                {(c.canManage || user?.userId === c.author?._id) && !readOnly && (
-                  <Group
-                    gap={4}
-                    wrap="nowrap"
-                    style={{ alignSelf: 'flex-start', flexShrink: 0 }}
-                  >
-                    {editingId === c._id ? (
-                      <>
-                        <ActionIcon
-                          size={24}
-                          disabled={!editComment.trim()}
-                          onClick={() => handleEditSave(c._id)}
-                        >
-                          <IconCheck size={14} />
-                        </ActionIcon>
-                        <ActionIcon
-                          size={24}
-                          color="gray"
-                          onClick={handleEditCancel}
-                        >
-                          <IconX size={14} />
-                        </ActionIcon>
-                      </>
-                    ) : (
-                      <>
-                        <ActionIcon
-                          size={24}
-                          className={classes.commentEditButton}
-                          color="blue"
-                          onClick={() => handleEditStart(c._id, c.comment)}
-                        >
-                          <IconPencil size={14} />
-                        </ActionIcon>
-                        <ActionIcon
-                          size={24}
-                          className={classes.commentDeleteButton}
-                          onClick={() => onDeleteComment(c._id)}
-                        >
-                          <IconTrash size={14} />
-                        </ActionIcon>
-                        <ActionIcon
-                          size={24}
-                          className={classes.commentFlagButton}
-                          onClick={() => onFlagComment(c._id)}
-                        >
-                          <IconFlag size={14} />
-                        </ActionIcon>
-                      </>
-                    )}
-                  </Group>
-                )}
+                {(c.canManage || user?.userId === c.author?._id) &&
+                  !readOnly && (
+                    <Group
+                      gap={4}
+                      wrap="nowrap"
+                      style={{ alignSelf: 'flex-start', flexShrink: 0 }}
+                    >
+                      {editingId === c._id ? (
+                        <>
+                          <ActionIcon
+                            size={24}
+                            disabled={!editComment.trim()}
+                            onClick={() => handleEditSave(c._id)}
+                          >
+                            <IconCheck size={14} />
+                          </ActionIcon>
+                          <ActionIcon
+                            size={24}
+                            color="gray"
+                            onClick={handleEditCancel}
+                          >
+                            <IconX size={14} />
+                          </ActionIcon>
+                        </>
+                      ) : (
+                        <>
+                          <ActionIcon
+                            size={24}
+                            className={classes.commentEditButton}
+                            color="blue"
+                            onClick={() => handleEditStart(c._id, c.comment)}
+                          >
+                            <IconPencil size={14} />
+                          </ActionIcon>
+                          <ActionIcon
+                            size={24}
+                            className={classes.commentDeleteButton}
+                            onClick={() => onDeleteComment(c._id)}
+                          >
+                            <IconTrash size={14} />
+                          </ActionIcon>
+                          <ActionIcon
+                            size={24}
+                            className={classes.commentFlagButton}
+                            onClick={() => onFlagComment(c._id)}
+                          >
+                            <IconFlag size={14} />
+                          </ActionIcon>
+                        </>
+                      )}
+                    </Group>
+                  )}
               </Group>
 
               {editingId === c._id ? (

@@ -1,10 +1,4 @@
-import {
-  Text,
-  Card,
-  Stack,
-  Divider,
-  SimpleGrid,
-} from '@mantine/core';
+import { Text, Card, Stack, Divider, SimpleGrid } from '@mantine/core';
 import { InternalAssessment } from '@shared/types/InternalAssessment';
 import { formatDate } from '../../lib/utils';
 
@@ -12,7 +6,9 @@ interface PeerReviewAssessmentDetailProps {
   assessment: InternalAssessment;
 }
 
-const PeerReviewAssessmentDetail: React.FC<PeerReviewAssessmentDetailProps> = ({ assessment }) => {
+const PeerReviewAssessmentDetail: React.FC<PeerReviewAssessmentDetailProps> = ({
+  assessment,
+}) => {
   return (
     <Card withBorder radius="md" p="lg">
       <Stack gap="xs">
@@ -50,7 +46,9 @@ const PeerReviewAssessmentDetail: React.FC<PeerReviewAssessmentDetailProps> = ({
             <Text fz="xs" c="dimmed">
               Release Status
             </Text>
-            <Text fz="sm">{assessment.isReleased ? 'Released' : 'Not released'}</Text>
+            <Text fz="sm">
+              {assessment.isReleased ? 'Released' : 'Not released'}
+            </Text>
 
             <Text fz="xs" c="dimmed" mt="sm">
               Release Number
@@ -60,7 +58,7 @@ const PeerReviewAssessmentDetail: React.FC<PeerReviewAssessmentDetailProps> = ({
         </SimpleGrid>
       </Stack>
     </Card>
-  )
-}
+  );
+};
 
 export default PeerReviewAssessmentDetail;

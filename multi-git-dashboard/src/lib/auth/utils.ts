@@ -1,5 +1,8 @@
 import { CRISP_ROLE, CrispRole } from '@shared/types/auth/CrispRole';
-import { COURSE_ROLE, CourseRole, CourseRoleTuple } from '@shared/types/auth/CourseRole';
+import {
+  COURSE_ROLE,
+  CourseRole,
+} from '@shared/types/auth/CourseRole';
 import { useSession } from 'next-auth/react';
 
 export const hasPermission = (...CrispRoles: CrispRole[]) => {
@@ -19,7 +22,7 @@ export const hasTAPermission = (courseId: string) => {
     cr => cr.course.toString() === courseId
   )?.courseRole;
   return (userCourseRole && userCourseRole === COURSE_ROLE.TA) || false;
-}
+};
 
 export const hasCoursePermission = (
   courseId: string,
@@ -29,7 +32,7 @@ export const hasCoursePermission = (
   const userCourseRole = session?.user.courseRoles.find(
     cr => cr.course.toString() === courseId
   )?.courseRole;
-  return (userCourseRole && authorisedRoles.includes(userCourseRole));
+  return userCourseRole && authorisedRoles.includes(userCourseRole);
 };
 
 export const isTrialUser = (...CrispRoles: CrispRole[]) => {

@@ -19,8 +19,12 @@ const MapResultsToIdModal: React.FC<MapResultsToIdModalProps> = ({
   defaultConfig,
   onMap,
 }) => {
-  const [idHeader, setIdHeader] = useState(defaultConfig?.idHeader ?? 'SIS User ID');
-  const [resultHeader, setResultHeader] = useState(defaultConfig?.resultHeader ?? 'Result');
+  const [idHeader, setIdHeader] = useState(
+    defaultConfig?.idHeader ?? 'SIS User ID'
+  );
+  const [resultHeader, setResultHeader] = useState(
+    defaultConfig?.resultHeader ?? 'Result'
+  );
   const [file, setFile] = useState<File | null>(null);
 
   useEffect(() => {
@@ -31,10 +35,16 @@ const MapResultsToIdModal: React.FC<MapResultsToIdModalProps> = ({
   }, [opened, defaultConfig]);
 
   return (
-    <Modal opened={opened} onClose={onClose} title="Map Results to CSV" centered>
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      title="Map Results to CSV"
+      centered
+    >
       <Text size="sm">
-        Upload a CSV file that includes a column with student IDs. Specify the column header
-        (e.g., "SIS User ID") and the header for the new results column (e.g., "Result").
+        Upload a CSV file that includes a column with student IDs. Specify the
+        column header (e.g., "SIS User ID") and the header for the new results
+        column (e.g., "Result").
       </Text>
 
       <Group gap="md" mt="md">

@@ -69,11 +69,16 @@ export default function usePeerReviewGradingData({
     setError(null);
 
     try {
-      const res = await apiFetchGradingDTO(courseId, assessmentId, peerReviewSubmissionId);
+      const res = await apiFetchGradingDTO(
+        courseId,
+        assessmentId,
+        peerReviewSubmissionId
+      );
       if (!res) throw new Error('Failed to fetch grading data');
       setDto(res);
-      
-      const repoUrl = (res as any).repo?.repoUrl ?? (res as any).assignment?.repo?.repoUrl;
+
+      const repoUrl =
+        (res as any).repo?.repoUrl ?? (res as any).assignment?.repo?.repoUrl;
       if (!repoUrl) throw new Error('Missing repoUrl in grading DTO');
 
       const dtoComments =
@@ -81,7 +86,9 @@ export default function usePeerReviewGradingData({
       setComments(dtoComments);
 
       const task =
-        ((res as any).myGradingTask as PeerReviewMyGradingTaskDTO | undefined) ??
+        ((res as any).myGradingTask as
+          | PeerReviewMyGradingTaskDTO
+          | undefined) ??
         ((res as any).myTask as PeerReviewMyGradingTaskDTO | undefined) ??
         null;
       setMyTask(task);
@@ -135,7 +142,11 @@ export default function usePeerReviewGradingData({
   // ---- grading actions ----
   const startGrading = useCallback(async () => {
     setError(null);
-    const t = await apiStartGradingTask(courseId, assessmentId, peerReviewSubmissionId);
+    const t = await apiStartGradingTask(
+      courseId,
+      assessmentId,
+      peerReviewSubmissionId
+    );
     if (!t) {
       setError('Failed to start grading task');
       return null;
@@ -226,7 +237,11 @@ export default function usePeerReviewGradingData({
     }
 
     setError(null);
-    const updated = await apiSubmitGradingTask(courseId, assessmentId, myTask._id);
+    const updated = await apiSubmitGradingTask(
+      courseId,
+      assessmentId,
+      myTask._id
+    );
 
     if (!updated) {
       setError('Failed to submit grading');

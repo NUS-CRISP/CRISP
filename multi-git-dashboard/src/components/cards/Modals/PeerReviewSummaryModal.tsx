@@ -1,4 +1,13 @@
-import { Modal, Text, ScrollArea, Group, Button, Stack, Divider, Badge } from '@mantine/core';
+import {
+  Modal,
+  Text,
+  ScrollArea,
+  Group,
+  Button,
+  Stack,
+  Divider,
+  Badge,
+} from '@mantine/core';
 import { useMemo } from 'react';
 
 type Props = {
@@ -15,7 +24,13 @@ type Props = {
   onNavigate: (filePath: string, line: number) => void;
 };
 
-const PeerReviewSummaryModal: React.FC<Props> = ({ opened, onClose, repoName, comments, onNavigate }) => {
+const PeerReviewSummaryModal: React.FC<Props> = ({
+  opened,
+  onClose,
+  repoName,
+  comments,
+  onNavigate,
+}) => {
   const grouped = useMemo(() => {
     const map = new Map<string, any[]>();
     for (const c of comments) {
@@ -32,7 +47,13 @@ const PeerReviewSummaryModal: React.FC<Props> = ({ opened, onClose, repoName, co
   }, [comments]);
 
   return (
-    <Modal opened={opened} onClose={onClose} title={`Review Summary — ${repoName}`} centered size="lg">
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      title={`Review Summary — ${repoName}`}
+      centered
+      size="lg"
+    >
       <Text size="sm" c="dimmed" mb="sm">
         Click an entry to jump to that file and line range.
       </Text>
