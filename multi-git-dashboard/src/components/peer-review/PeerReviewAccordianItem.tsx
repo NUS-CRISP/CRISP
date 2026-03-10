@@ -305,8 +305,7 @@ const PeerReviewAccordionItem = forwardRef<
                   {assignmentOfTeam && numberOfReviewers > 0 ? (
                     <ScrollArea
                       style={{
-                        minHeight: '124px',
-                        maxHeight: '272px',
+                        height: '272px',
                         border: 'solid 1px',
                         borderColor: '#505050',
                         borderRadius: '6px',

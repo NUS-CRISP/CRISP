@@ -8,6 +8,7 @@ import {
   ScrollArea,
   ActionIcon,
   Box,
+  Tooltip,
 } from '@mantine/core';
 import {
   IconChevronLeft,
@@ -190,9 +191,23 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
                   {!readOnly && (c.displayAuthorName || c.author?.name) && (
-                    <Text fw={500} lh={1.2}>
-                      {c.displayAuthorName ?? c.author.name}
-                    </Text>
+                    <Tooltip
+                      label={c.displayAuthorName ?? c.author?.name}
+                      withArrow
+                      position="top-start"
+                    >
+                      <Text
+                        fw={500}
+                        lh={1.2}
+                        style={{
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
+                        {c.displayAuthorName ?? c.author.name}
+                      </Text>
+                    </Tooltip>
                   )}
                   <Text size="xs" c="dimmed" mt={4}>
                     {c.updatedAt && new Date(c.updatedAt).toLocaleDateString()}
@@ -202,7 +217,7 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
                   <Group
                     gap={4}
                     wrap="nowrap"
-                    style={{ alignSelf: 'flex-start' }}
+                    style={{ alignSelf: 'flex-start', flexShrink: 0 }}
                   >
                     {editingId === c._id ? (
                       <>

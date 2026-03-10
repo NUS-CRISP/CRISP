@@ -387,7 +387,11 @@ const PeerReviewResults: React.FC<PeerReviewResultsProps> = ({ courseId, assessm
             {viewMode === 'perStudent' ? (
               filteredStudents.length > 0 ? (
                 filteredStudents.map((row) => (
-                  <PeerReviewStudentRowCard key={row.studentId} row={row} />
+                  <PeerReviewStudentRowCard
+                    key={row.studentId}
+                    row={row}
+                    maxMarks={dto.maxMarks}
+                  />
                 ))
               ) : (
                 <Text c="dimmed" ta="center" mt="md">
@@ -397,7 +401,11 @@ const PeerReviewResults: React.FC<PeerReviewResultsProps> = ({ courseId, assessm
             ) : (
               filteredTeams.length > 0 ? (
                 filteredTeams.map((team) => (
-                  <PeerReviewTeamCard key={team.teamId} team={team} />
+                  <PeerReviewTeamCard
+                    key={team.teamId}
+                    team={team}
+                    maxMarks={dto.maxMarks}
+                  />
                 ))
               ) : (
                 <Text c="dimmed" ta="center" mt="md">

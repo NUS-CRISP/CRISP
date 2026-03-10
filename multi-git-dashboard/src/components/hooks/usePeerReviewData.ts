@@ -104,10 +104,11 @@ export default function usePeerReviewData({
           await apiFetchSubmissionsForAssignment(courseId, assignmentId);
         if (cancelled) return;
         const mySubmission =
-          userCourseRole === COURSE_ROLE.Student ||
-          userCourseRole === COURSE_ROLE.TA
+          userCourseRole === COURSE_ROLE.Student
             ? (submissions?.[0] ?? null)
-            : null;
+            : userCourseRole === COURSE_ROLE.TA && !supervisorView
+              ? (submissions?.[0] ?? null)
+              : null;
         setSubmission(mySubmission);
         const canEditNow = (() => {
           if (userCourseRole === COURSE_ROLE.Faculty) return true;
@@ -268,13 +269,14 @@ export default function usePeerReviewData({
       assignmentId
     );
     const mySubmission =
-      userCourseRole === COURSE_ROLE.Student ||
-      userCourseRole === COURSE_ROLE.TA
+      userCourseRole === COURSE_ROLE.Student
         ? (updated?.[0] ?? null)
-        : null;
+        : userCourseRole === COURSE_ROLE.TA && !isSupervisorTA
+          ? (updated?.[0] ?? null)
+          : null;
     setSubmission(mySubmission);
     setCanEdit(false);
-  }, [canEdit, courseId, assignmentId, userCourseRole]);
+  }, [canEdit, courseId, assignmentId, userCourseRole, isSupervisorTA]);
 
   const currentCode = useMemo(() => {
     if (!currFile) return '// No file selected';

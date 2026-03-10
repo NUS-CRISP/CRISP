@@ -47,7 +47,7 @@ const PeerReviewGradeSubmissionModal: React.FC<Props> = ({
           <Text size="sm" c="dimmed">
             Enter a score and optional feedback.
           </Text>
-          {task && <Badge variant="light">{task.status}</Badge>}
+          {task && <Badge variant="light">{task.status === "InProgress" ? "In Progress" : task.status}</Badge>}
         </Group>
 
         <NumberInput

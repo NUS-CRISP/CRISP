@@ -1,4 +1,4 @@
-import { ActionIcon, Button, Group, Text, Stack } from '@mantine/core';
+import { ActionIcon, Button, Group, Text, Stack, Badge } from '@mantine/core';
 import { IconTrash } from '@tabler/icons-react';
 import { useRouter } from 'next/router';
 import { AssignedReviewDTO } from '@shared/types/PeerReview';
@@ -74,6 +74,16 @@ const PeerReviewAssignments: React.FC<PeerReviewAssignmentsProps> = ({
               Assignment: Team {teamNumber}
               {isFaculty && ` (TA: ${taName})`}
             </Button>
+            {a.status === 'Submitted' && (
+              <Badge color="green" variant="light" size="sm" radius="sm" h="21.5px">
+                Submitted
+              </Badge>
+            )}
+            {a.status === 'Draft' && (
+              <Badge color="yellow" variant="light" size="sm" radius="sm" h="21.5px">
+                Draft
+              </Badge>
+            )}
             {isFaculty && (
               <ActionIcon
                 variant="light"

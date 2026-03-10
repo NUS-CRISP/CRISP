@@ -43,6 +43,7 @@ export interface PeerReviewSubmissionListItemDTO {
 export interface PeerReviewSubmissionsDTO {
   internalAssessmentId: string;
   peerReviewId: string;
+  peerReviewStatus: 'Upcoming' | 'Active' | 'Closed';
   
   reviewerType: ReviewerType;
   taAssignments: boolean;
@@ -127,10 +128,22 @@ export interface PeerReviewMyGradingTaskDTO {
   updatedAt: Date;
 }
 
+export interface PeerReviewGradingTaskSummaryDTO {
+  _id: string;
+  grader: { id: string; name: string };
+  status: 'Assigned' | 'InProgress' | 'Completed';
+  score?: number;
+  feedback?: string;
+  gradedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface PeerReviewGradingDTO {
   internalAssessmentId: string;
   peerReviewId: string;
   peerReviewSubmissionId: string;
+  peerReviewStatus: 'Upcoming' | 'Active' | 'Closed';
 
   maxMarks: number;
   peerReviewTitle: string;
@@ -151,4 +164,7 @@ export interface PeerReviewGradingDTO {
 
   // TA sees this (must exist); Faculty may have null until they create on demand
   myGradingTask: PeerReviewMyGradingTaskDTO | null;
+
+  // TA sees their own summary item; Faculty sees all graders for this submission
+  gradingTasks: PeerReviewGradingTaskSummaryDTO[];
 }

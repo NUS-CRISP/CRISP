@@ -342,7 +342,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
         <Center mt={150}>
           <Loader />
         </Center>
-      ) : isFaculty || isTA || peerReview.status === 'Active' ? (
+      ) : (isFaculty || (isTA && peerReview.status === 'Active')) ? (
         <ScrollArea.Autosize mah={750} scrollbarSize={8}>
           <Accordion
             defaultValue={['teaching-assistants']}

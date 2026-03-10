@@ -1,7 +1,7 @@
 import { Card, Group, Stack, Text, Badge } from '@mantine/core';
 import { PeerReviewResultsStudentRow } from '@shared/types/PeerReviewAssessment';
 
-const PeerReviewStudentRowCard = ({ row }: { row: PeerReviewResultsStudentRow }) => {
+const PeerReviewStudentRowCard = ({ row, maxMarks }: { row: PeerReviewResultsStudentRow; maxMarks: number }) => {
   const graded = row.aggregatedScore !== null && row.aggregatedScore !== undefined;
 
   return (
@@ -38,7 +38,7 @@ const PeerReviewStudentRowCard = ({ row }: { row: PeerReviewResultsStudentRow })
           </Badge>
 
           <Text fw={800} fz="xl" mr="sm">
-            {graded ? row.aggregatedScore!.toFixed(2) : '—'}
+            {graded ? row.aggregatedScore!.toFixed(2) : '-'} / {maxMarks.toFixed(2)}
           </Text>
         </Stack>
       </Group>

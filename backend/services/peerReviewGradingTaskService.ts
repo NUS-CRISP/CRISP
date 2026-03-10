@@ -19,6 +19,16 @@ const ACCESS_DENIED = 'Access denied';
 const TASK_NOT_FOUND = 'Grading task not found';
 const NOT_ASSIGNED = 'Not assigned to grade this submission';
 
+const assertPeerReviewActive = async (peerReviewId: Types.ObjectId) => {
+  const pr = await PeerReviewModel.findById(peerReviewId)
+    .select('startDate endDate status');
+  if (!pr) throw new NotFoundError('Peer review not found');
+
+  if (pr.status !== 'Active') {
+    throw new BadRequestError('Grading is only available while the peer review is Active');
+  }
+};
+
 const resolvePeerReviewAndSubmission = async (
   assessmentId: string,
   peerReviewSubmissionId: string
@@ -58,6 +68,7 @@ export const startGradingTaskForFacultyById = async (
     assessmentId,
     peerReviewSubmissionId
   );
+  await assertPeerReviewActive(peerReviewId);
 
   // Check submission status - can only start grading submitted reviews
   const submission = await PeerReviewSubmissionModel.findById(submissionId)
@@ -117,6 +128,7 @@ export const updateGradingTaskById = async (
 ) => {
   const task = await PeerReviewGradingTaskModel.findById(taskId);
   if (!task) throw new NotFoundError(TASK_NOT_FOUND);
+  await assertPeerReviewActive(task.peerReviewId as Types.ObjectId);
 
   // Only the grader can modify their task
   if (String(task.grader) !== String(oid(userId))) {
@@ -152,6 +164,7 @@ export const submitGradingTaskById = async (
 ) => {
   const task = await PeerReviewGradingTaskModel.findById(taskId);
   if (!task) throw new NotFoundError(TASK_NOT_FOUND);
+  await assertPeerReviewActive(task.peerReviewId as Types.ObjectId);
 
   if (String(task.grader) !== String(oid(userId))) {
     throw new MissingAuthorizationError(ACCESS_DENIED);

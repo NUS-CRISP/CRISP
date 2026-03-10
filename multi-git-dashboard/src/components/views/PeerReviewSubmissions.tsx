@@ -76,8 +76,8 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
     setError(null);
     try {
       const params = new URLSearchParams({
-        page: page.toString(),
-        limit: limit,
+        page: '1',
+        limit: '10000',
       });
       
       const res = await fetch(
@@ -99,7 +99,7 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
 
   useEffect(() => {
     fetchSubmissions();
-  }, [courseId, assessmentId, page, limit]);
+  }, [courseId, assessmentId]);
 
   const revieweeOptions = useMemo(() => {
     if (!dto) return [];
@@ -139,8 +139,12 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
       if (reviewerKindFilter !== 'All' && item.reviewerKind !== reviewerKindFilter)
         return false;
 
-      if (gradingFilter === 'Ungraded' && item.grading.count > 0) return false;
-      if (gradingFilter === 'HasGrades' && item.grading.count === 0) return false;
+      // "Ungraded" means no completed grade yet.
+      // "Graded" means at least one completed grade.
+      if (gradingFilter === 'Ungraded' && item.grading.completedCount > 0)
+        return false;
+      if (gradingFilter === 'HasGrades' && item.grading.completedCount === 0)
+        return false;
 
       if (revieweeTeamId && item.revieweeTeam.teamId !== revieweeTeamId)
         return false;
@@ -184,6 +188,27 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
     myGradingFilter,
     me.userId,
   ]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [
+    search,
+    statusFilter,
+    reviewerKindFilter,
+    gradingFilter,
+    revieweeTeamId,
+    graderFilter,
+    myGradingFilter,
+  ]);
+
+  const filteredTotal = filteredItems.length;
+  const localLimit = Number(limit) || 20;
+  const filteredTotalPages = Math.ceil(filteredTotal / localLimit);
+  const safePage = filteredTotalPages > 0 ? Math.min(page, filteredTotalPages) : 1;
+  const startIdx = (safePage - 1) * localLimit;
+  const endIdx = startIdx + localLimit;
+  const paginatedFilteredItems = filteredItems.slice(startIdx, endIdx);
 
   if (loading) {
     return (
@@ -316,7 +341,7 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
                     label="Status"
                     data={[
                       { value: 'All', label: 'All' },
-                      { value: 'NotStarted', label: 'Not started' },
+                      { value: 'NotStarted', label: 'Not Started' },
                       { value: 'Draft', label: 'Draft' },
                       { value: 'Submitted', label: 'Submitted' },
                     ]}
@@ -342,13 +367,14 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
           </Card>
           
           <Stack gap="sm">
-            {filteredItems.length > 0
-              ? filteredItems.map((item: PeerReviewSubmissionListItemDTO) => (
+            {paginatedFilteredItems.length > 0
+              ? paginatedFilteredItems.map((item: PeerReviewSubmissionListItemDTO) => (
                   <PeerReviewSubmissionCard
                     key={item.peerReviewSubmissionId}
                     courseId={courseId}
                     userId={me.userId}
                     assessmentId={assessmentId}
+                    peerReviewStatus={dto.peerReviewStatus}
                     item={item}
                     maxMarks={dto.maxMarks}
                     isFaculty={isFaculty}
@@ -360,10 +386,10 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
           </Stack>
           
           <ResultsPaginationDisplay
-            numResultsDisplay={`${filteredItems.length} / ${dto.pagination.total}`}
+            numResultsDisplay={`${paginatedFilteredItems.length} / ${filteredItems.length}`}
             limit={limit}
-            page={page}
-            totalPages={dto.pagination.totalPages}
+            page={safePage}
+            totalPages={filteredTotalPages}
             onLimitChange={val => {
               setLimit(val);
               setPage(1);

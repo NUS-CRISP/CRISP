@@ -29,11 +29,13 @@ import PeerReviewFileTree from '@/components/peer-review/PeerReviewFileTree';
 import PeerReviewCommentSidebar from '@/components/peer-review/PeerReviewCommentSidebar';
 import PeerReviewSummaryModal from '@/components/cards/Modals/PeerReviewSummaryModal';
 import PeerReviewGradeSubmissionModal from '@/components/cards/Modals/PeerReviewGradeSubmissionModal';
+import PeerReviewGradingSummaryModal from '@/components/cards/Modals/PeerReviewGradingSummaryModal';
 
 import { getLanguageForFile } from '@/lib/peer-review/utils';
 import { getMe } from '@/lib/auth/utils';
 
 import usePeerReviewGradingData from '@/components/hooks/usePeerReviewGradingData';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
@@ -60,6 +62,9 @@ const PeerReviewGradingDetailPage: React.FC = () => {
       if (userData) setMe(userData);
     })();
   }, [ready, id]);
+  
+  const isFaculty = me?.userCourseRole === COURSE_ROLE.Faculty;
+  const isTA = me?.userCourseRole === COURSE_ROLE.TA;
 
   const {
     loading,
@@ -176,6 +181,7 @@ const PeerReviewGradingDetailPage: React.FC = () => {
   }, []);
 
   const [summaryOpen, setSummaryOpen] = useState(false);
+  const [gradingSummaryOpen, setGradingSummaryOpen] = useState(false);
   const [gradeOpen, setGradeOpen] = useState(false);
   const [savingGrade, setSavingGrade] = useState(false);
 
@@ -200,9 +206,25 @@ const PeerReviewGradingDetailPage: React.FC = () => {
 
   const maxMarks = Number((dto as any)?.maxMarks ?? 0);
   const isSubmitted = submission?.status === 'Submitted';
+  const peerReviewStatus = (dto as any)?.peerReviewStatus as
+    | 'Upcoming'
+    | 'Active'
+    | 'Closed'
+    | undefined;
+  const isPeerReviewActive = peerReviewStatus === 'Active';
 
-  const canStartGrading = me.userCourseRole === 'Faculty' && !myTask && isSubmitted;
-  const canGrade = !!myTask && (myTask.status === 'Assigned' || myTask.status === 'InProgress');
+  const canStartGrading =
+    isPeerReviewActive &&
+    isFaculty &&
+    !myTask &&
+    isSubmitted;
+  const canGrade =
+    isPeerReviewActive &&
+    !!myTask &&
+    (myTask.status === 'Assigned' || myTask.status === 'InProgress');
+  const gradingTasks = ((dto as any)?.gradingTasks ?? []) as any[];
+  const canViewGradingSummary =
+    isFaculty || myTask?.status === 'Completed';
   
   const gradingStatusColor = myTask?.status === 'Assigned' ? 'yellow' : myTask?.status === 'InProgress' ? 'blue' : 'green';
   
@@ -211,7 +233,7 @@ const PeerReviewGradingDetailPage: React.FC = () => {
       setSavingGrade(true);
 
       // faculty on-demand: ensure task exists
-      if (!myTask && me.userCourseRole === 'Faculty') {
+      if (!myTask && isFaculty) {
         const t = await startGrading();
         if (!t) return;
       }
@@ -233,7 +255,7 @@ const PeerReviewGradingDetailPage: React.FC = () => {
     try {
       setSavingGrade(true);
 
-      if (!myTask && me.userCourseRole === 'Faculty') {
+      if (!myTask && isFaculty) {
         const t = await startGrading();
         if (!t) return;
       }
@@ -248,6 +270,7 @@ const PeerReviewGradingDetailPage: React.FC = () => {
           message: 'Grade has been submitted.',
         });
         setGradeOpen(false);
+        router.push(`/courses/${id}/internal-assessments/${assessmentId}`);
       }
     } finally {
       setSavingGrade(false);
@@ -279,10 +302,16 @@ const PeerReviewGradingDetailPage: React.FC = () => {
         </Group>
 
         <Group gap="xs">
-          {/* Submission status indicator */}
-          {!isSubmitted && (
+          {/* Submission status indicator, only when peer review is active */}
+          {isPeerReviewActive && !isSubmitted && (
             <Badge variant="light" color="orange" h="27px" radius="md">
               Submission: {submission?.status === 'Draft' ? 'Draft' : 'Not Started'}
+            </Badge>
+          )}
+          {/* Peer review status indicator, only when peer review is not active */}
+          {peerReviewStatus && !isPeerReviewActive && (
+            <Badge variant="light" color="gray" h="27px" radius="md">
+              Peer Review: {peerReviewStatus} (read-only)
             </Badge>
           )}
           {/* Small status indicator for graders */}
@@ -320,6 +349,21 @@ const PeerReviewGradingDetailPage: React.FC = () => {
             Review Summary
           </Button>
 
+          {canViewGradingSummary && (
+            <Button
+              leftSection={<IconClipboardList size={16} />}
+              radius="md"
+              size="xs"
+              fz="sm"
+              h="27px"
+              color="grape"
+              variant="light"
+              onClick={() => setGradingSummaryOpen(true)}
+            >
+              Grading Summary
+            </Button>
+          )}
+
           {canStartGrading && (
             <Button
               leftSection={<IconPencil size={16} />}
@@ -345,7 +389,7 @@ const PeerReviewGradingDetailPage: React.FC = () => {
                 setGradeOpen(true);
               }}
             >
-              Start grading
+              Start Grading
             </Button>
           )}
 
@@ -452,6 +496,14 @@ const PeerReviewGradingDetailPage: React.FC = () => {
         saving={savingGrade}
         onSave={handleSaveGrading}
         onSubmit={handleSubmitGrading}
+      />
+
+      <PeerReviewGradingSummaryModal
+        opened={gradingSummaryOpen}
+        onClose={() => setGradingSummaryOpen(false)}
+        maxMarks={maxMarks}
+        tasks={gradingTasks}
+        isFaculty={isFaculty}
       />
 
       {error && (

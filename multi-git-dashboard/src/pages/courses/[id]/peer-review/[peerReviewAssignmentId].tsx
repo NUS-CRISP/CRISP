@@ -75,6 +75,7 @@ const PeerReviewDetail: React.FC = () => {
     canEdit,
     saveState,
     isReviewee,
+    isSupervisorTA,
 
     openFile,
     addComment,
@@ -531,6 +532,8 @@ const PeerReviewDetail: React.FC = () => {
         title: 'Review submitted successfully!',
         message: 'Your peer review has been submitted.',
       });
+      // Redirect to peer review info page
+      router.push(`/courses/${id}/peer-review`);
     } catch (error) {
       notifications.show({
         color: 'red',
@@ -540,7 +543,7 @@ const PeerReviewDetail: React.FC = () => {
     } finally {
       setSubmitting(false);
     }
-  }, [submitReview]);
+  }, [submitReview, router, id]);
 
   if (loading || !me) return <Center>Loading...</Center>;
   if (!peerReviewAssignment) return <Center>Unable to load assignment.</Center>;
@@ -578,9 +581,13 @@ const PeerReviewDetail: React.FC = () => {
             <SubmissionStatusBadge
               userCourseRole={me.userCourseRole}
               submission={submission}
+              isSupervisorTA={isSupervisorTA}
             />
           }
-          {!isReadOnly && submission && me.userCourseRole === COURSE_ROLE.Student && (
+          {!isReadOnly &&
+            submission &&
+            (me.userCourseRole === COURSE_ROLE.Student ||
+              me.userCourseRole === COURSE_ROLE.TA) && (
             <Button
               leftSection={<IconSend size={16} />}
               radius="md"

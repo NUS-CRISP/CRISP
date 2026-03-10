@@ -22,6 +22,7 @@ const submissionStatusColor = (status: string) => {
 interface PeerReviewSubmissionCardProps {
   courseId: string;
   assessmentId: string;
+  peerReviewStatus: 'Upcoming' | 'Active' | 'Closed';
   userId: string;
   item: PeerReviewSubmissionListItemDTO;
   maxMarks: number;
@@ -32,6 +33,7 @@ interface PeerReviewSubmissionCardProps {
 const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
   courseId,
   assessmentId,
+  peerReviewStatus,
   userId,
   item,
   isFaculty,
@@ -45,6 +47,8 @@ const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
   const [loadingTAs, setLoadingTAs] = useState(false);
   
   const isSubmissionSubmitted = item.status === 'Submitted';
+  const isPeerReviewActive = peerReviewStatus === 'Active';
+  const isPeerReviewClosed = peerReviewStatus === 'Closed';
   const myGrader = item.grading.graders.find(g => g.id === userId);
   const isMyGradingInProgress = myGrader?.status === 'InProgress';
   const isMyGradingCompleted = myGrader?.status === 'Completed';
@@ -55,7 +59,7 @@ const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
   let buttonIcon: JSX.Element;
   let buttonText: string;
   
-  if (!isSubmissionSubmitted) {
+  if (!isPeerReviewActive || !isSubmissionSubmitted) {
     // Not submitted - both Faculty and TAs can only view
     buttonColor = 'blue';
     buttonIcon = <IconEye size={16} />;
@@ -265,6 +269,7 @@ const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
                     size="xs"
                     color="red"
                     variant="subtle"
+                    disabled={isPeerReviewClosed}
                     onClick={() => handleUnassignGrader(grader.id)}
                     loading={unassigningGrader === grader.id}
                   >
@@ -298,6 +303,7 @@ const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
                 variant="subtle"
                 size="sm"
                 leftSection={<IconUserPlus size={16} />}
+                disabled={isPeerReviewClosed}
                 loading={assigningGrader || loadingTAs}
               >
                 Assign Grader

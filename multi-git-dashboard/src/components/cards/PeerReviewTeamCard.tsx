@@ -6,7 +6,13 @@ const formatScore = (v: number | null | undefined) => {
   return Number.isFinite(v) ? v.toFixed(2) : '—';
 };
 
-const PeerReviewTeamCard = ({ team }: { team: PeerReviewResultsTeamCard }) => (
+const PeerReviewTeamCard = ({
+  team,
+  maxMarks,
+}: {
+  team: PeerReviewResultsTeamCard;
+  maxMarks: number;
+}) => (
   <Card withBorder radius="md" p="md">
     <Group justify="space-between" align="flex-start" mb="xs">
       <Stack gap={2}>
@@ -20,7 +26,7 @@ const PeerReviewTeamCard = ({ team }: { team: PeerReviewResultsTeamCard }) => (
         <Badge variant="light" color={team.teamAggregatedScore === null ? 'orange' : 'green'}>
           {team.teamAggregatedScore === null ? 'Not yet graded' : 'Graded'}
         </Badge>
-        <Text fw={800}>{formatScore(team.teamAggregatedScore)}</Text>
+        <Text fw={800}>{formatScore(team.teamAggregatedScore)} / {formatScore(maxMarks)}</Text>
       </Stack>
     </Group>
 
