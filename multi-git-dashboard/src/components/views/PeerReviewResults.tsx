@@ -13,7 +13,6 @@ import {
   Divider,
   Card,
   ScrollArea,
-  Pagination,
 } from '@mantine/core';
 import {
   PeerReviewResultsDTO,

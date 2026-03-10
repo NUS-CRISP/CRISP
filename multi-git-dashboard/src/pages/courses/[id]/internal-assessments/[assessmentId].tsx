@@ -44,7 +44,7 @@ const InternalAssessmentPage: React.FC = () => {
     if (router.isReady) fetchAssessment();
   }, [router.isReady, fetchAssessment]);
 
-  const assessmentType = (assessment as any)?.assessmentType ?? 'standard';
+  const assessmentType = assessment?.assessmentType ?? 'standard';
 
   return (
     <Container>

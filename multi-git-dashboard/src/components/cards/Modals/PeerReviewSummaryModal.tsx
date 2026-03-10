@@ -10,21 +10,23 @@ import {
 } from '@mantine/core';
 import { useMemo } from 'react';
 
-type Props = {
+type PeerReviewCommentForSummary = {
+  _id: string;
+  filePath: string;
+  startLine: number;
+  endLine: number;
+  comment: string;
+}
+
+type PeerReviewSummaryModalProps = {
   opened: boolean;
   onClose: () => void;
   repoName: string;
-  comments: Array<{
-    _id: string;
-    filePath: string;
-    startLine: number;
-    endLine: number;
-    comment: string;
-  }>;
+  comments: PeerReviewCommentForSummary[];
   onNavigate: (filePath: string, line: number) => void;
 };
 
-const PeerReviewSummaryModal: React.FC<Props> = ({
+const PeerReviewSummaryModal: React.FC<PeerReviewSummaryModalProps> = ({
   opened,
   onClose,
   repoName,
@@ -32,7 +34,7 @@ const PeerReviewSummaryModal: React.FC<Props> = ({
   onNavigate,
 }) => {
   const grouped = useMemo(() => {
-    const map = new Map<string, any[]>();
+    const map = new Map<string, PeerReviewCommentForSummary[]>();
     for (const c of comments) {
       const arr = map.get(c.filePath) ?? [];
       arr.push(c);
@@ -71,7 +73,7 @@ const PeerReviewSummaryModal: React.FC<Props> = ({
                 </Group>
                 <Divider mb="sm" />
                 <Stack gap="xs">
-                  {items.map((c: any) => (
+                  {items.map((c: PeerReviewCommentForSummary) => (
                     <Button
                       key={c._id}
                       variant="subtle"

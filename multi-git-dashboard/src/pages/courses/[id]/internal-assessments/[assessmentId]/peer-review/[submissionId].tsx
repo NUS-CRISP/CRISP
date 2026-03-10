@@ -14,7 +14,6 @@ import {
 import { notifications } from '@mantine/notifications';
 import {
   IconArrowLeft,
-  IconListDetails,
   IconClipboardList,
   IconPencil,
 } from '@tabler/icons-react';
@@ -36,6 +35,7 @@ import { getMe } from '@/lib/auth/utils';
 
 import usePeerReviewGradingData from '@/components/hooks/usePeerReviewGradingData';
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
+import { PeerReviewComment } from '@shared/types/PeerReview';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -69,7 +69,7 @@ const PeerReviewGradingDetailPage: React.FC = () => {
   }, [ready, id]);
 
   const isFaculty = me?.userCourseRole === COURSE_ROLE.Faculty;
-  const isTA = me?.userCourseRole === COURSE_ROLE.TA;
+  // const isTA = me?.userCourseRole === COURSE_ROLE.TA;
 
   const {
     loading,
@@ -106,11 +106,11 @@ const PeerReviewGradingDetailPage: React.FC = () => {
   const staticDecosRef = useRef<string[]>([]);
   const [focusedCommentIds, setFocusedCommentIds] = useState<string[]>([]);
 
-  const commentsRef = useRef<any[]>([]);
+  const commentsRef = useRef<PeerReviewComment[]>([]);
   const currFileRef = useRef<string | null>(null);
 
   useEffect(() => {
-    commentsRef.current = comments as any[];
+    commentsRef.current = comments;
   }, [comments]);
   useEffect(() => {
     currFileRef.current = currFile ?? null;
@@ -125,12 +125,12 @@ const PeerReviewGradingDetailPage: React.FC = () => {
     setFocusedCommentIds(focusedIds);
     const focusedSet = new Set(focusedIds);
     const fileComments = (commentsRef.current ?? []).filter(
-      (c: any) => c.filePath === file
+      c => c.filePath === file
     );
 
     const focusDecos = fileComments
-      .filter((c: any) => focusedSet.has(c._id))
-      .map((c: any) => ({
+      .filter(c => focusedSet.has(c._id))
+      .map(c => ({
         range: new monaco.Range(c.startLine, 1, c.endLine, 1),
         options: {
           isWholeLine: true,
@@ -139,8 +139,8 @@ const PeerReviewGradingDetailPage: React.FC = () => {
       }));
 
     const staticDecos = fileComments
-      .filter((c: any) => !focusedSet.has(c._id))
-      .map((c: any) => ({
+      .filter(c => !focusedSet.has(c._id))
+      .map(c => ({
         range: new monaco.Range(c.startLine, 1, c.endLine, 1),
         options: { isWholeLine: true, className: classes.commentedLineHint },
       }));
@@ -188,12 +188,12 @@ const PeerReviewGradingDetailPage: React.FC = () => {
         const line = e.target.position.lineNumber;
         const file = currFileRef.current;
         const fileComments = commentsRef.current.filter(
-          (c: any) => c.filePath === file
+          c => c.filePath === file
         );
         const clicked = fileComments.filter(
-          (c: any) => c.startLine <= line && c.endLine >= line
+          c => c.startLine <= line && c.endLine >= line
         );
-        renderFocusedAndStaticDecos(clicked.map((c: any) => c._id));
+        renderFocusedAndStaticDecos(clicked.map(c => c._id));
         return;
       }
       renderFocusedAndStaticDecos([]);
@@ -213,14 +213,11 @@ const PeerReviewGradingDetailPage: React.FC = () => {
 
   if (!ready || !me || loading) return <Center>Loading...</Center>;
 
-  const repo = (dto as any)?.repo ??
-    (dto as any)?.assignment?.repo ?? { repoName: '', repoUrl: '' };
-  const revieweeTeam =
-    (dto as any)?.revieweeTeam ??
-    (dto as any)?.assignment?.revieweeTeam ??
+  const repo = dto?.assignment?.repo ?? { repoName: '', repoUrl: '' };
+  const revieweeTeam = dto?.assignment?.revieweeTeam ??
     null;
-  const reviewer = (dto as any)?.reviewer ?? null;
-  const submission = (dto as any)?.submission ?? null;
+  const reviewer = dto?.reviewer ?? null;
+  const submission = dto?.submission ?? null;
 
   if (!dto || !repoTree)
     return <Center>Unable to load grading console.</Center>;
@@ -231,9 +228,9 @@ const PeerReviewGradingDetailPage: React.FC = () => {
       : reviewer.name
     : 'Reviewer';
 
-  const maxMarks = Number((dto as any)?.maxMarks ?? 0);
+  const maxMarks = Number(dto?.maxMarks ?? 0);
   const isSubmitted = submission?.status === 'Submitted';
-  const peerReviewStatus = (dto as any)?.peerReviewStatus as
+  const peerReviewStatus = dto?.peerReviewStatus as
     | 'Upcoming'
     | 'Active'
     | 'Closed'
@@ -246,7 +243,7 @@ const PeerReviewGradingDetailPage: React.FC = () => {
     isPeerReviewActive &&
     !!myTask &&
     (myTask.status === 'Assigned' || myTask.status === 'InProgress');
-  const gradingTasks = ((dto as any)?.gradingTasks ?? []) as any[];
+  const gradingTasks = dto?.gradingTasks ?? [];
   const canViewGradingSummary = isFaculty || myTask?.status === 'Completed';
 
   const gradingStatusColor =
@@ -504,10 +501,10 @@ const PeerReviewGradingDetailPage: React.FC = () => {
         <PeerReviewCommentSidebar
           user={me}
           comments={(comments ?? []).filter(
-            (c: any) => c.filePath === currFile
+            c => c.filePath === currFile
           )}
           focusedComments={focusedCommentIds}
-          onFocusComment={(comment: any) => {
+          onFocusComment={comment => {
             renderFocusedAndStaticDecos([comment._id]);
             editorRef.current?.revealLineInCenter?.(comment.startLine);
           }}
@@ -524,7 +521,7 @@ const PeerReviewGradingDetailPage: React.FC = () => {
         opened={summaryOpen}
         onClose={() => setSummaryOpen(false)}
         repoName={repo?.repoName ?? ''}
-        comments={comments as any[]}
+        comments={comments}
         onNavigate={(filePath, line) => {
           openFile(filePath);
           setTimeout(() => {
@@ -537,7 +534,7 @@ const PeerReviewGradingDetailPage: React.FC = () => {
         opened={gradeOpen}
         onClose={() => setGradeOpen(false)}
         maxMarks={maxMarks}
-        task={myTask as any}
+        task={myTask}
         score={score}
         feedback={feedback}
         onChangeScore={setScore}

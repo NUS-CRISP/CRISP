@@ -6,7 +6,6 @@ import AssessmentInternalForm from '@/components/views/AssessmentInternalForm';
 import AssessmentInternalResults from '@/components/views/AssessmentInternalResults';
 import { InternalAssessment } from '@shared/types/InternalAssessment';
 import { User } from '@shared/types/User';
-import { hasFacultyPermission } from '@/lib/auth/utils';
 import { Question } from '@shared/types/Question';
 import {
   AssignedTeam,

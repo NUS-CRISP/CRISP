@@ -77,19 +77,15 @@ export default function usePeerReviewGradingData({
       if (!res) throw new Error('Failed to fetch grading data');
       setDto(res);
 
-      const repoUrl =
-        (res as any).repo?.repoUrl ?? (res as any).assignment?.repo?.repoUrl;
+      const repoUrl = res.assignment?.repo?.repoUrl;
       if (!repoUrl) throw new Error('Missing repoUrl in grading DTO');
 
       const dtoComments =
-        ((res as any).comments as PeerReviewComment[] | undefined) ?? [];
+        (res.comments as PeerReviewComment[] | undefined) ?? [];
       setComments(dtoComments);
 
       const task =
-        ((res as any).myGradingTask as
-          | PeerReviewMyGradingTaskDTO
-          | undefined) ??
-        ((res as any).myTask as PeerReviewMyGradingTaskDTO | undefined) ??
+        (res.myGradingTask as PeerReviewMyGradingTaskDTO | undefined) ??
         null;
       setMyTask(task);
 
@@ -122,7 +118,7 @@ export default function usePeerReviewGradingData({
   const openFile = useCallback(
     async (filePath: string) => {
       const repoUrl =
-        (dto as any)?.repo?.repoUrl ?? (dto as any)?.assignment?.repo?.repoUrl;
+        dto?.assignment?.repo?.repoUrl;
       if (!repoUrl) return;
 
       setCurrFile(filePath);

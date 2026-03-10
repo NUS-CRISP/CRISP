@@ -1,9 +1,6 @@
 import {
   Tabs,
   Container,
-  Button,
-  Modal,
-  Group,
   ScrollArea,
 } from '@mantine/core';
 import { TeamSet } from '@shared/types/TeamSet';

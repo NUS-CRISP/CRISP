@@ -22,6 +22,7 @@ import { notifications } from '@mantine/notifications';
 import { useRouter } from 'next/router';
 import { PeerReviewSubmissionListItemDTO } from '@shared/types/PeerReviewAssessment';
 import DeleteConfirmationModal from './Modals/DeleteConfirmationModal';
+import { User } from '@shared/types/User';
 
 const formatDateTime = (value?: Date | string) => {
   if (!value) return '—';
@@ -124,7 +125,7 @@ const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
       const res = await fetch(`/api/courses/${courseId}/people`);
       if (!res.ok) throw new Error('Failed to fetch TAs');
       const data = await res.json();
-      const tas = (data.TAs || []).map((ta: any) => ({
+      const tas = (data.TAs || []).map((ta: User) => ({
         id: ta._id,
         name: ta.name,
       }));

@@ -3,7 +3,6 @@ import {
   Text,
   Select,
   Pagination,
-  SegmentedControl,
 } from '@mantine/core';
 
 interface ResultsPaginationDisplayProps {

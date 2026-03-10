@@ -37,13 +37,13 @@ function toInitialValues(
     maxMarks: assessment.maxMarks ?? 0,
     scaleToMaxMarks: Boolean(assessment.scaleToMaxMarks),
 
-    gradingStartDate: (peerReview as any).gradingStartDate
-      ? new Date((peerReview as any).gradingStartDate)
+    gradingStartDate: peerReview.gradingStartDate
+      ? new Date(peerReview.gradingStartDate)
           .toISOString()
           .slice(0, 10)
       : '',
-    gradingEndDate: (peerReview as any).gradingEndDate
-      ? new Date((peerReview as any).gradingEndDate).toISOString().slice(0, 10)
+    gradingEndDate: peerReview.gradingEndDate
+      ? new Date(peerReview.gradingEndDate).toISOString().slice(0, 10)
       : '',
   };
 }

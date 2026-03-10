@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Modal,
   Stack,
-  Text,
   NumberInput,
   Switch,
   Button,
@@ -81,7 +80,7 @@ const AssignGradersModal: React.FC<AssignGradersModalProps> = ({
       notifications.show({
         color: 'green',
         title: 'Success',
-        message: `Graders assigned to all submissions.`,
+        message: 'Graders assigned to all submissions.',
       });
 
       onAssigned();

@@ -70,7 +70,6 @@ export type NormalizedPeerReviewBasePayload = {
 };
 
 const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
-  courseId,
   teamSets,
   mode,
   initialValues,
