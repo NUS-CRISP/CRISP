@@ -38,9 +38,7 @@ function toInitialValues(
     scaleToMaxMarks: Boolean(assessment.scaleToMaxMarks),
 
     gradingStartDate: peerReview.gradingStartDate
-      ? new Date(peerReview.gradingStartDate)
-          .toISOString()
-          .slice(0, 10)
+      ? new Date(peerReview.gradingStartDate).toISOString().slice(0, 10)
       : '',
     gradingEndDate: peerReview.gradingEndDate
       ? new Date(peerReview.gradingEndDate).toISOString().slice(0, 10)

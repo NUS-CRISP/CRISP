@@ -84,9 +84,7 @@ export default function usePeerReviewGradingData({
         (res.comments as PeerReviewComment[] | undefined) ?? [];
       setComments(dtoComments);
 
-      const task =
-        (res.myGradingTask as PeerReviewMyGradingTaskDTO | undefined) ??
-        null;
+      const task = res.myGradingTask;
       setMyTask(task);
 
       setScore(typeof task?.score === 'number' ? task!.score : '');
@@ -117,8 +115,7 @@ export default function usePeerReviewGradingData({
 
   const openFile = useCallback(
     async (filePath: string) => {
-      const repoUrl =
-        dto?.assignment?.repo?.repoUrl;
+      const repoUrl = dto?.assignment?.repo?.repoUrl;
       if (!repoUrl) return;
 
       setCurrFile(filePath);

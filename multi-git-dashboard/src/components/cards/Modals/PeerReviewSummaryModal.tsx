@@ -16,7 +16,7 @@ type PeerReviewCommentForSummary = {
   startLine: number;
   endLine: number;
   comment: string;
-}
+};
 
 type PeerReviewSummaryModalProps = {
   opened: boolean;

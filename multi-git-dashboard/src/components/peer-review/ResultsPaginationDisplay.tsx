@@ -1,9 +1,4 @@
-import {
-  Group,
-  Text,
-  Select,
-  Pagination,
-} from '@mantine/core';
+import { Group, Text, Select, Pagination } from '@mantine/core';
 
 interface ResultsPaginationDisplayProps {
   numResultsDisplay: string;

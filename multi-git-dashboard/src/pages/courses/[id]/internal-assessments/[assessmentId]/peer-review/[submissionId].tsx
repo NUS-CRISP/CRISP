@@ -214,8 +214,7 @@ const PeerReviewGradingDetailPage: React.FC = () => {
   if (!ready || !me || loading) return <Center>Loading...</Center>;
 
   const repo = dto?.assignment?.repo ?? { repoName: '', repoUrl: '' };
-  const revieweeTeam = dto?.assignment?.revieweeTeam ??
-    null;
+  const revieweeTeam = dto?.assignment?.revieweeTeam ?? null;
   const reviewer = dto?.reviewer ?? null;
   const submission = dto?.submission ?? null;
 
@@ -500,9 +499,7 @@ const PeerReviewGradingDetailPage: React.FC = () => {
         {/* Read-only */}
         <PeerReviewCommentSidebar
           user={me}
-          comments={(comments ?? []).filter(
-            c => c.filePath === currFile
-          )}
+          comments={(comments ?? []).filter(c => c.filePath === currFile)}
           focusedComments={focusedCommentIds}
           onFocusComment={comment => {
             renderFocusedAndStaticDecos([comment._id]);

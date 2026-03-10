@@ -1,8 +1,4 @@
-import {
-  Tabs,
-  Container,
-  ScrollArea,
-} from '@mantine/core';
+import { Tabs, Container, ScrollArea } from '@mantine/core';
 import { TeamSet } from '@shared/types/TeamSet';
 import { PeerReview } from '@shared/types/PeerReview';
 import PeerReviewInfo from './PeerReviewInfo';
