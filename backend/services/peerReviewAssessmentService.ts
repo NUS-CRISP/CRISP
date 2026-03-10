@@ -372,7 +372,7 @@ export const getPeerReviewSubmissionsForAssessmentById = async (
           };
 
     const ts = tasksBySubmissionId.get(String(s._id)) ?? [];
-    const gradersMap = new Map<string, { id: string; name: string }>();
+    const gradersMap = new Map<string, { id: string; name: string, status: 'Assigned' | 'InProgress' | 'Completed' }>();
     let lastGradedAt: Date | undefined = undefined;
     let completedCount = 0;
     let inProgressCount = 0;
@@ -380,7 +380,7 @@ export const getPeerReviewSubmissionsForAssessmentById = async (
 
     for (const t of ts) {
       const g = t.grader as any;
-      if (g?._id) gradersMap.set(String(g._id), { id: String(g._id), name: g.name });
+      if (g?._id) gradersMap.set(String(g._id), { id: String(g._id), name: g.name, status: t.status });
       if (t.status === 'Completed') completedCount++;
       else if (t.status === 'InProgress') inProgressCount++;
       else assignedCount++;

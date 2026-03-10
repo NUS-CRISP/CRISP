@@ -263,6 +263,14 @@ export const updatePeerReviewById = async (
   const pr = await PeerReviewModel.findById(peerReviewId);
   if (!pr) throw new NotFoundError('Peer review not found');
 
+  // Determine if assignment structure should be reset BEFORE save()
+  const structuralChanged =
+    (settingsData.teamSetId !== undefined && String(pr.teamSetId) !== String(settingsData.teamSetId)) ||
+    (settingsData.reviewerType !== undefined && pr.reviewerType !== settingsData.reviewerType) ||
+    (settingsData.taAssignments !== undefined && pr.taAssignments !== settingsData.taAssignments) ||
+    (settingsData.minReviews !== undefined && pr.minReviewsPerReviewer !== Number(settingsData.minReviews)) ||
+    (settingsData.maxReviews !== undefined && pr.maxReviewsPerReviewer !== Number(settingsData.maxReviews));
+
   // map request -> model fields
   if (settingsData.assessmentName !== undefined) pr.title = settingsData.assessmentName;
   if (settingsData.description !== undefined) pr.description = settingsData.description;
@@ -284,14 +292,6 @@ export const updatePeerReviewById = async (
     pr.gradingEndDate = settingsData.gradingEndDate ? new Date(settingsData.gradingEndDate) : undefined;
 
   await pr.save();
-
-  // Only re-initialise assignments when it matters
-  const structuralChanged =
-    (settingsData.teamSetId !== undefined && pr.isModified('teamSetId')) ||
-    (settingsData.reviewerType !== undefined && pr.isModified('reviewerType')) ||
-    (settingsData.taAssignments !== undefined && pr.isModified('taAssignments')) ||
-    (settingsData.minReviews !== undefined && pr.isModified('minReviewsPerReviewer')) ||
-    (settingsData.maxReviews !== undefined && pr.isModified('maxReviewsPerReviewer'));
 
   if (structuralChanged) {
     await deleteAssignmentsByPeerReviewId(peerReviewId);

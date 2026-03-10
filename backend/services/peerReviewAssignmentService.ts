@@ -11,6 +11,8 @@ import { MissingAuthorizationError } from './errors';
 import PeerReviewSubmissionModel, {
   PeerReviewSubmission,
 } from '@models/PeerReviewSubmission';
+import PeerReviewCommentModel from '@models/PeerReviewComment';
+import PeerReviewGradingTaskModel from '@models/PeerReviewGradingTask';
 import { resolveTeamRepo } from './teamService';
 
 export interface NormalizedTeam {
@@ -25,11 +27,26 @@ const oid = (s: string) => new Types.ObjectId(s);
 export const getPeerReviewAssignmentById = async (
   userCourseRole: string,
   userId: string,
-  assignmentId: string
+  assignmentId: string,
+  courseId?: string
 ) => {
   const assignment =
     await PeerReviewAssignmentModel.findById(assignmentId).populate('reviewee');
   if (!assignment) throw new NotFoundError('Peer review assignment not found');
+
+  // Backfill repo metadata on read when missing.
+  // This prevents broken reviewer flow when legacy/incomplete assignment docs exist.
+  if (courseId && (!assignment.repoUrl || !assignment.repoName)) {
+    const revieweeId = ((assignment.reviewee as any)?._id ?? assignment.reviewee)
+      ?.toString?.();
+
+    if (revieweeId) {
+      const { repoName, repoUrl } = await resolveTeamRepo(courseId, revieweeId);
+      assignment.repoName = repoName;
+      assignment.repoUrl = repoUrl;
+      await assignment.save();
+    }
+  }
 
   // Faculty can access all assignments
   if (userCourseRole === COURSE_ROLE.Faculty) return assignment;
@@ -47,10 +64,31 @@ export const getPeerReviewAssignmentById = async (
   if (userCourseRole === COURSE_ROLE.Student) {
     // Check if student is part of the reviewee team
     const revieweeTeam = await TeamModel.findById(assignment.reviewee)
-      .select('_id members')
+      .select('_id members teamSet')
       .lean();
     const isMember = (revieweeTeam!.members ?? []).map(String).includes(userId);
     if (revieweeTeam && isMember) return assignment;
+
+    // Team-reviewer mode: student can access if their home team is assigned
+    // as reviewer for this assignment (reviewerKind = Team)
+    if (revieweeTeam?.teamSet) {
+      const myTeam = await TeamModel.findOne({
+        teamSet: revieweeTeam.teamSet,
+        members: oid(userId),
+      })
+        .select('_id')
+        .lean();
+
+      if (myTeam) {
+        const isTeamReviewer = await PeerReviewSubmissionModel.exists({
+          peerReviewAssignmentId: oid(assignmentId),
+          reviewerKind: 'Team',
+          reviewerTeamId: myTeam._id,
+        });
+
+        if (isTeamReviewer) return assignment;
+      }
+    }
   }
 
   if (userCourseRole === COURSE_ROLE.TA) {
@@ -70,12 +108,14 @@ export const getPeerReviewAssignmentById = async (
 export const getPeerReviewAssignmentWithViewContext = async (
   userCourseRole: string,
   userId: string,
-  assignmentId: string
+  assignmentId: string,
+  courseId?: string
 ) => {
   const assignment = await getPeerReviewAssignmentById(
     userCourseRole,
     userId,
-    assignmentId
+    assignmentId,
+    courseId
   );
 
   const revieweeTeam = await TeamModel.findById(assignment.reviewee)
@@ -619,14 +659,15 @@ const updateDBAssignmentsAndSubmissions = async (
     teamIdToRepoMap
   );
 
-  // 2. Load existing submissions for these assignments (so we can do partial updates)
-  const existing = await loadExistingSubmissions(
-    peerReviewId,
-    Array.from(assignmentByReviewee.values()).map(a => a._id.toString())
-  );
+  // 2. Full reset of reviewer progress state before re-assignment
+  //    - delete all previous comments
+  //    - delete all previous grading tasks
+  //    - delete all previous submissions
+  await resetPeerReviewProgressData(peerReviewId);
 
-  // 3. Build desired reviewer sets per assignment (based on assignDefault/assignTAs flags)
-  const desired = buildDesiredReviewerSets(
+  // 3. Create fresh blank submissions for the new assignment result
+  await createFreshSubmissions(
+    peerReviewId,
     reviewerType,
     taAssignmentsEnabled,
     assignDefault,
@@ -635,15 +676,100 @@ const updateDBAssignmentsAndSubmissions = async (
     assignmentByReviewee,
     assignedStudentsForTeam,
     assignedTeamsForTeam,
-    assignedTAsForTeam,
-    existing
+    assignedTAsForTeam
   );
 
-  // 4. Compute diffs and apply (bulk ops)
-  await applySubmissionDiffs(peerReviewId, desired, existing);
-
-  // 5. Remove assignments (and their submissions) for teams no longer in prTeamIds
+  // 4. Remove assignments (and their submissions) for teams no longer in prTeamIds
   await deleteStaleAssignmentsAndSubmissions(peerReviewId, prTeamIds);
+};
+
+const resetPeerReviewProgressData = async (peerReviewId: string) => {
+  const peerReviewIdObj = oid(peerReviewId);
+
+  await PeerReviewCommentModel.deleteMany({
+    peerReviewId: peerReviewIdObj,
+  });
+
+  await PeerReviewGradingTaskModel.deleteMany({
+    peerReviewId: peerReviewIdObj,
+  });
+
+  await PeerReviewSubmissionModel.deleteMany({
+    peerReviewId: peerReviewIdObj,
+  });
+};
+
+const createFreshSubmissions = async (
+  peerReviewId: string,
+  reviewerType: string,
+  taAssignmentsEnabled: boolean,
+  assignDefault: boolean,
+  assignTAs: boolean,
+  prTeamIds: string[],
+  assignmentByReviewee: Map<string, PeerReviewAssignment>,
+  assignedStudentsForTeam: Map<string, Set<string>>,
+  assignedTeamsForTeam: Map<string, Set<string>>,
+  assignedTAsForTeam: Map<string, Set<string>>
+) => {
+  const now = new Date();
+  const docs: any[] = [];
+
+  for (const reviewee of prTeamIds) {
+    const assignment = assignmentByReviewee.get(reviewee);
+    if (!assignment) continue;
+
+    if (assignDefault) {
+      if (reviewerType === 'Individual') {
+        const students = Array.from(assignedStudentsForTeam.get(reviewee) ?? []);
+        for (const reviewerUserId of students) {
+          docs.push({
+            peerReviewId: oid(peerReviewId),
+            peerReviewAssignmentId: assignment._id,
+            reviewerKind: 'Student',
+            reviewerUserId: oid(reviewerUserId),
+            status: 'NotStarted',
+            createdAt: now,
+            updatedAt: now,
+            scores: {},
+          });
+        }
+      } else if (reviewerType === 'Team') {
+        const teams = Array.from(assignedTeamsForTeam.get(reviewee) ?? []);
+        for (const reviewerTeamId of teams) {
+          docs.push({
+            peerReviewId: oid(peerReviewId),
+            peerReviewAssignmentId: assignment._id,
+            reviewerKind: 'Team',
+            reviewerTeamId: oid(reviewerTeamId),
+            status: 'NotStarted',
+            createdAt: now,
+            updatedAt: now,
+            scores: {},
+          });
+        }
+      }
+    }
+
+    if (taAssignmentsEnabled && assignTAs) {
+      const tas = Array.from(assignedTAsForTeam.get(reviewee) ?? []);
+      for (const reviewerUserId of tas) {
+        docs.push({
+          peerReviewId: oid(peerReviewId),
+          peerReviewAssignmentId: assignment._id,
+          reviewerKind: 'TA',
+          reviewerUserId: oid(reviewerUserId),
+          status: 'NotStarted',
+          createdAt: now,
+          updatedAt: now,
+          scores: {},
+        });
+      }
+    }
+  }
+
+  if (docs.length > 0) {
+    await PeerReviewSubmissionModel.insertMany(docs, { ordered: true });
+  }
 };
 
 const upsertAndLoadAssignments = async (

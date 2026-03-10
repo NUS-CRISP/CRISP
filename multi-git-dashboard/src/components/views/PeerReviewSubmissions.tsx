@@ -25,6 +25,7 @@ import {
 import PeerReviewSubmissionCard from '../cards/PeerReviewSubmissionCard';
 import AssignGradersModal from '../cards/Modals/AssignGradersModal';
 import ResultsPaginationDisplay from '../peer-review/ResultsPaginationDisplay';
+import { getMe } from '@/lib/auth/utils';
 
 type StatusFilter = 'All' | 'NotStarted' | 'Draft' | 'Submitted';
 type ReviewerKindFilter = 'All' | 'Student' | 'Team' | 'TA';
@@ -50,6 +51,7 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
   const [reviewerKindFilter, setReviewerKindFilter] =
     useState<ReviewerKindFilter>('All');
   const [gradingFilter, setGradingFilter] = useState<GradingFilter>('All');
+  const [myGradingFilter, setMyGradingFilter] = useState<boolean>(false);
   const [search, setSearch] = useState('');
   const [graderFilter, setGraderFilter] = useState<string | null>(null);
 
@@ -60,6 +62,14 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
   // Pagination state
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState<string>('20');
+  
+  const [me, setMe] = useState<{ userId: string; userCourseRole: string }>({ userId: '', userCourseRole: '' });
+  useEffect(() => {
+    (async () => {
+      const userData = await getMe(courseId);
+      if (userData) setMe(userData);
+    })();
+  }, [courseId]);
 
   const fetchSubmissions = async () => {
     setLoading(true);
@@ -138,6 +148,10 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
       if (graderFilter && !item.grading.graders.some(g => g.id === graderFilter))
         return false;
 
+      // My grading filter - only show submissions I'm grading or have graded
+      if (myGradingFilter && !item.grading.graders.some(g => g.id === me.userId))
+        return false;
+
       if (!q) return true;
 
       const reviewerText =
@@ -167,6 +181,8 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
     gradingFilter,
     revieweeTeamId,
     graderFilter,
+    myGradingFilter,
+    me.userId,
   ]);
 
   if (loading) {
@@ -242,16 +258,28 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
                 w={360}
               />
 
-              <SegmentedControl
-                value={gradingFilter}
-                onChange={v => setGradingFilter(v as GradingFilter)}
-                data={[
-                  { value: 'All', label: 'All' },
-                  { value: 'Ungraded', label: 'Ungraded' },
-                  { value: 'HasGrades', label: 'Graded' },
-                ]}
-                size="sm"
-              />
+              <Group gap="sm">
+                {isFaculty && (
+                  <Button
+                    variant='light'
+                    size="sm"
+                    color="yellow"
+                    onClick={() => setMyGradingFilter(!myGradingFilter)}
+                  >
+                    {myGradingFilter ? 'Show All' : 'My Grading'}
+                  </Button>
+                )}
+                <SegmentedControl
+                  value={gradingFilter}
+                  onChange={v => setGradingFilter(v as GradingFilter)}
+                  data={[
+                    { value: 'All', label: 'All' },
+                    { value: 'Ungraded', label: 'Ungraded' },
+                    { value: 'HasGrades', label: 'Graded' },
+                  ]}
+                  size="sm"
+                />
+              </Group>
             </Group>
 
             <Collapse in={filtersOpened}>
@@ -319,10 +347,10 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
                   <PeerReviewSubmissionCard
                     key={item.peerReviewSubmissionId}
                     courseId={courseId}
+                    userId={me.userId}
                     assessmentId={assessmentId}
                     item={item}
                     maxMarks={dto.maxMarks}
-                    canGrade={true}
                     isFaculty={isFaculty}
                     onAfterAction={fetchSubmissions}
                   />

@@ -199,8 +199,9 @@ const PeerReviewGradingDetailPage: React.FC = () => {
     : 'Reviewer';
 
   const maxMarks = Number((dto as any)?.maxMarks ?? 0);
+  const isSubmitted = submission?.status === 'Submitted';
 
-  const canStartGrading = me.userCourseRole === 'Faculty' && !myTask;
+  const canStartGrading = me.userCourseRole === 'Faculty' && !myTask && isSubmitted;
   const canGrade = !!myTask && (myTask.status === 'Assigned' || myTask.status === 'InProgress');
   
   const gradingStatusColor = myTask?.status === 'Assigned' ? 'yellow' : myTask?.status === 'InProgress' ? 'blue' : 'green';
@@ -278,6 +279,12 @@ const PeerReviewGradingDetailPage: React.FC = () => {
         </Group>
 
         <Group gap="xs">
+          {/* Submission status indicator */}
+          {!isSubmitted && (
+            <Badge variant="light" color="orange" h="27px" radius="md">
+              Submission: {submission?.status === 'Draft' ? 'Draft' : 'Not Started'}
+            </Badge>
+          )}
           {/* Small status indicator for graders */}
           {saveState !== 'Idle' && (
             <Badge

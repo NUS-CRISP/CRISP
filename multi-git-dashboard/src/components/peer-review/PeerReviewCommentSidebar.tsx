@@ -189,16 +189,16 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
                 mb={4}
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  {!readOnly && c.author?.name && (
+                  {!readOnly && (c.displayAuthorName || c.author?.name) && (
                     <Text fw={500} lh={1.2}>
-                      {c.author.name}
+                      {c.displayAuthorName ?? c.author.name}
                     </Text>
                   )}
                   <Text size="xs" c="dimmed" mt={4}>
                     {c.updatedAt && new Date(c.updatedAt).toLocaleDateString()}
                   </Text>
                 </div>
-                {user?.userId === c.author?._id && !readOnly && (
+                {(c.canManage || user?.userId === c.author?._id) && !readOnly && (
                   <Group
                     gap={4}
                     wrap="nowrap"

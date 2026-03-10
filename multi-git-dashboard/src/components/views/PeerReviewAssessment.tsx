@@ -54,7 +54,7 @@ const PeerReviewAssessment: React.FC<PeerReviewAssessmentProps> = ({
             Overview
           </Tabs.Tab>
 
-          {true && (
+          {(isFaculty || isTA) && (
             <Tabs.Tab
               value="Submissions"
               onClick={() => setActiveTabAndSave('Submissions')}
@@ -63,7 +63,7 @@ const PeerReviewAssessment: React.FC<PeerReviewAssessmentProps> = ({
             </Tabs.Tab>
           )}
 
-          {true && (
+          {isFaculty && (
             <Tabs.Tab
               value="Results"
               onClick={() => setActiveTabAndSave('Results')}

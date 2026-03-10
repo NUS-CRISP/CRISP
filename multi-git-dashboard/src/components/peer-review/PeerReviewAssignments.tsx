@@ -7,12 +7,18 @@ import { Team } from '@shared/types/Team';
 interface PeerReviewAssignmentsProps {
   assignments: AssignedReviewDTO[];
   isFaculty: boolean;
+  isTA?: boolean;
+  currentUserId?: string;
+  taReviewerAssignmentIds?: string[];
   onDelete: (reviewee: Team) => void;
 }
 
 const PeerReviewAssignments: React.FC<PeerReviewAssignmentsProps> = ({
   assignments,
   isFaculty,
+  isTA = false,
+  currentUserId,
+  taReviewerAssignmentIds = [],
   onDelete,
 }) => {
   const router = useRouter();
@@ -37,6 +43,16 @@ const PeerReviewAssignments: React.FC<PeerReviewAssignmentsProps> = ({
           (a.assignment.reviewee as Partial<Team> | undefined)?.TA?.name ??
           'Unassigned';
 
+        const revieweeTAId =
+          (a.assignment.reviewee as Partial<Team> | undefined)?.TA?._id;
+        const isSupervisingTA =
+          Boolean(isTA && currentUserId && revieweeTAId && String(revieweeTAId) === String(currentUserId));
+        const isAssignedTAReviewer =
+          Boolean(isTA && taReviewerAssignmentIds.includes(a.assignment._id));
+        const disableNavigation = Boolean(
+          isTA && !isSupervisingTA && !isAssignedTAReviewer
+        );
+
         return (
           <Group
             key={a.assignment._id}
@@ -48,6 +64,7 @@ const PeerReviewAssignments: React.FC<PeerReviewAssignmentsProps> = ({
               size="compact-xs"
               variant="light"
               color="blue"
+              disabled={disableNavigation}
               onClick={() =>
                 router.push(
                   `${router.asPath.replace(/\/$/, '')}/${a.assignment._id}`

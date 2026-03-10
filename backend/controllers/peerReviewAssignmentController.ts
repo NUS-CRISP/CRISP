@@ -24,7 +24,8 @@ export const getPeerReviewAssignment = async (req: Request, res: Response) => {
       await getPeerReviewAssignmentWithViewContext(
         userCourseRole,
         userId,
-        peerReviewAssignmentId
+        peerReviewAssignmentId,
+        courseId
       );
     const payload = {
       ...assignment.toObject(),

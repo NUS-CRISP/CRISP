@@ -24,6 +24,7 @@ import AddManualAssignmentBox from './AddManualAssignmentBox';
 interface PeerReviewAccordionItemProps {
   currentTeam: PeerReviewTeamDTO;
   currentUserId?: string;
+  taReviewerAssignmentIds?: string[];
   teams: {
     value: string;
     TA: {
@@ -56,6 +57,7 @@ const PeerReviewAccordionItem = forwardRef<
   ({
     currentTeam,
     currentUserId,
+    taReviewerAssignmentIds,
     teams,
     assignmentOfTeam,
     reviewerType,
@@ -207,6 +209,9 @@ const PeerReviewAccordionItem = forwardRef<
                   <PeerReviewAssignments
                     assignments={currentTeam.assignedReviewsToTeam}
                     isFaculty={isFaculty}
+                    isTA={isTA}
+                    currentUserId={currentUserId}
+                    taReviewerAssignmentIds={taReviewerAssignmentIds}
                     onDelete={(reviewee: Team) =>
                       handleDelete(reviewee, currentTeam)
                     }
@@ -244,6 +249,9 @@ const PeerReviewAccordionItem = forwardRef<
                           <PeerReviewAssignments
                             assignments={m.assignedReviews}
                             isFaculty={isFaculty}
+                            isTA={isTA}
+                            currentUserId={currentUserId}
+                            taReviewerAssignmentIds={taReviewerAssignmentIds}
                             onDelete={(reviewee: Team) =>
                               handleDelete(reviewee, m)
                             }
@@ -316,13 +324,14 @@ const PeerReviewAccordionItem = forwardRef<
                                   size="sm"
                                   variant="light"
                                   key={`user-${reviewer.userId}`}
+                                  radius="sm"
                                 >
                                   {reviewer.name}
                                 </Badge>
                               )
                             )
                           : assignmentOfTeam.reviewers.teams.map(reviewer => (
-                              <Badge size="sm" key={`team-${reviewer.teamId}`}>
+                              <Badge size="sm" key={`team-${reviewer.teamId}`} variant="light" radius="sm">
                                 Team {reviewer.teamNumber}
                               </Badge>
                             ))}
@@ -332,6 +341,7 @@ const PeerReviewAccordionItem = forwardRef<
                             color="yellow"
                             variant="light"
                             size="sm"
+                            radius="sm"
                           >
                             TA: {reviewer.name}
                           </Badge>

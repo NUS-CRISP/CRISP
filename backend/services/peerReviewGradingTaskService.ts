@@ -59,6 +59,15 @@ export const startGradingTaskForFacultyById = async (
     peerReviewSubmissionId
   );
 
+  // Check submission status - can only start grading submitted reviews
+  const submission = await PeerReviewSubmissionModel.findById(submissionId)
+    .select('status')
+    .lean();
+  if (!submission) throw new NotFoundError('Submission not found');
+  if (submission.status !== 'Submitted') {
+    throw new BadRequestError('Cannot start grading for unsubmitted reviews');
+  }
+
   const existing = await PeerReviewGradingTaskModel.findOne({
     peerReviewId,
     peerReviewSubmissionId: submissionId,
@@ -216,9 +225,9 @@ export const bulkAssignGradersByAssessmentId = async (
   // Load all submissions for this peer review (exclude TA reviewers)
   const submissions = await PeerReviewSubmissionModel.find({
     peerReviewId: peerReview._id,
-    reviewerKind: { $in: ['Student', 'Team'] },
+    reviewerKind: { $in: ['Student', 'Team', 'TA'] },
   })
-    .select('_id peerReviewAssignmentId')
+    .select('_id peerReviewAssignmentId reviewerKind reviewerUserId')
     .lean();
 
   if (submissions.length === 0) {
@@ -259,6 +268,15 @@ export const bulkAssignGradersByAssessmentId = async (
 
         // Skip if already assigned to this submission
         if (assignedGraders.has(candidate)) continue;
+
+        // Never assign a TA to grade their own reviewer submission
+        if (
+          submission.reviewerKind === 'TA' &&
+          submission.reviewerUserId &&
+          String(submission.reviewerUserId) === candidate
+        ) {
+          continue;
+        }
 
         // Check supervisor conflict if needed
         if (!allowSupervisingTAs && revieweeTeamId) {
@@ -306,6 +324,21 @@ export const manualAssignGraderToSubmission = async (
   const { peerReviewId, submissionId: resolvedSubmissionId } =
     await resolvePeerReviewAndSubmission(assessmentId, submissionId);
 
+  const submission = await PeerReviewSubmissionModel.findById(resolvedSubmissionId)
+    .select('reviewerKind reviewerUserId')
+    .lean();
+  if (!submission) {
+    throw new NotFoundError('Peer review submission not found');
+  }
+
+  if (
+    submission.reviewerKind === 'TA' &&
+    submission.reviewerUserId &&
+    String(submission.reviewerUserId) === graderId
+  ) {
+    throw new BadRequestError('Cannot assign a TA to grade their own submission');
+  }
+
   // Check if grading task already exists
   const existing = await PeerReviewGradingTaskModel.findOne({
     peerReviewId,
@@ -345,10 +378,7 @@ export const manualUnassignGraderFromSubmission = async (
     throw new NotFoundError('Grading task not found for this grader and submission');
   }
 
-  if (task.status === 'Completed') {
-    throw new BadRequestError('Cannot unassign grader from a completed grading task');
-  }
-
+  // Allow deletion of any task status (including Completed ones), FE shows confirmation modal
   await PeerReviewGradingTaskModel.deleteOne({ _id: task._id });
 
   return { deleted: true };

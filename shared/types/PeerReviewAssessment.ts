@@ -102,7 +102,7 @@ export interface PeerReviewGradingSummary {
   completedCount: number;
   inProgressCount: number;
   assignedCount: number;
-  graders: Array<{ id: string; name: string }>;
+  graders: Array<{ id: string; name: string, status: 'Assigned' | 'InProgress' | 'Completed' }>;
   lastGradedAt?: Date;
 }
 

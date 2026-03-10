@@ -87,12 +87,12 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
   const router = useRouter();
   const isTA = hasTAPermission(courseId);
   const [me, setMe] = useState<{ userId: string; userCourseRole: string } | null>(null);
-    useEffect(() => {
-      (async () => {
-        const userData = await getMe(courseId);
-        if (userData) setMe(userData);
-      })();
-    }, [courseId]);
+  useEffect(() => {
+    (async () => {
+      const userData = await getMe(courseId);
+      if (userData) setMe(userData);
+    })();
+  }, [courseId]);
   
   const baseApiRoute = `/api/peer-review/${courseId}/${peerReview._id}`;
   const baseManualAssignApiRoute = `${baseApiRoute}/manual-assign`;
@@ -149,6 +149,13 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
     'peer-review-accordion',
     values
   );
+
+  const myTAReviewerAssignmentIds = useMemo(() => {
+    if (!isTA || !me?.userId || !peerReviewInfo?.TAAssignments) return [] as string[];
+    const mine = peerReviewInfo.TAAssignments[me.userId];
+    if (!mine?.assignedReviews) return [] as string[];
+    return mine.assignedReviews.map(a => a.assignment._id);
+  }, [isTA, me?.userId, peerReviewInfo?.TAAssignments]);
 
   // Handlers
   const addManualAssignment = async (
@@ -344,7 +351,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
             multiple
             variant="separated"
           >
-            {peerReview.taAssignments && (
+            {(isFaculty || isTA) && peerReview.taAssignments && (
               <PeerReviewTAAccordianItem
                 teams={peerReviewInfo.teams.map(t => ({
                   value: t.teamId,
@@ -362,6 +369,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
                 key={team.teamId}
                 currentTeam={team}
                 currentUserId={me?.userId}
+                taReviewerAssignmentIds={myTAReviewerAssignmentIds}
                 teams={peerReviewInfo.teams.map(t => ({
                   value: t.teamId,
                   TA: t.TA,

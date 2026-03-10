@@ -84,6 +84,8 @@ export interface PeerReviewComment {
   endLine: number;
   
   author: User;
+  displayAuthorName?: string;
+  canManage?: boolean;
   authorCourseRole: CourseRole;
   comment: string;
   

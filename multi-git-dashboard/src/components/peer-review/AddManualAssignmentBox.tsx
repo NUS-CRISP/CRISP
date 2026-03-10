@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Group, Button, Select } from '@mantine/core';
-import { IconPlus } from '@tabler/icons-react';
+import { Group, Button, Menu, Text } from '@mantine/core';
+import { IconUserPlus } from '@tabler/icons-react';
 
 interface AddManualAssignmentBoxProps {
   assignedCount: number;
@@ -17,38 +17,49 @@ const AddManualAssignmentBox: React.FC<AddManualAssignmentBoxProps> = ({
   reviewerId,
   addManualAssignment,
 }) => {
-  const [addChoice, setAddChoice] = useState<string | null>(null);
+  const [opened, setOpened] = useState(false);
+  const isMaxReached = assignedCount >= maxReviewsPerReviewer;
 
   return (
-    <Group align="end" gap={4}>
-      <Select
-        placeholder={
-          assignedCount >= maxReviewsPerReviewer
-            ? 'Max reviews reached'
-            : 'Select team to review'
-        }
-        data={dropdownOptions}
-        value={addChoice}
-        onChange={setAddChoice}
-        searchable
-        clearable
-        nothingFoundMessage="No teams"
-        w={200}
-        size="xs"
-        disabled={assignedCount >= maxReviewsPerReviewer}
-      />
-      <Button
-        disabled={!addChoice || assignedCount >= maxReviewsPerReviewer}
-        onClick={() => {
-          if (!addChoice) return;
-          // reviewer = current team; reviewee = selected team
-          addManualAssignment(addChoice, reviewerId);
-          setAddChoice(null);
-        }}
-        size="xs"
+    <Group>
+      <Menu
+        withinPortal
+        position="bottom-end"
+        opened={opened}
+        onChange={setOpened}
       >
-        <IconPlus size={12} />
-      </Button>
+        <Menu.Target>
+          <Button
+            size="xs"
+            variant="light"
+            leftSection={<IconUserPlus size={14} />}
+            disabled={isMaxReached}
+          >
+            {isMaxReached ? 'Max reviews reached' : 'Assign'}
+          </Button>
+        </Menu.Target>
+        <Menu.Dropdown>
+          {dropdownOptions.length === 0 ? (
+            <Menu.Item disabled>
+              <Text fz="sm" c="dimmed">
+                No teams available
+              </Text>
+            </Menu.Item>
+          ) : (
+            dropdownOptions.map(option => (
+              <Menu.Item
+                key={option.value}
+                onClick={() => {
+                  addManualAssignment(option.value, reviewerId);
+                  setOpened(false);
+                }}
+              >
+                {option.label}
+              </Menu.Item>
+            ))
+          )}
+        </Menu.Dropdown>
+      </Menu>
     </Group>
   );
 };
