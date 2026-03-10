@@ -1,16 +1,14 @@
 import PeerReviewAssignmentModel, {
   PeerReviewAssignment,
 } from '@models/PeerReviewAssignment';
-import TeamModel, { Team } from '@models/Team';
+import TeamModel from '@models/Team';
 import { BadRequestError, NotFoundError } from './errors';
 import { Types, ClientSession } from 'mongoose';
 import { getPeerReviewById, getTeamDataById } from './peerReviewService';
 import type { AnyBulkWriteOperation } from 'mongodb';
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 import { MissingAuthorizationError } from './errors';
-import PeerReviewSubmissionModel, {
-  PeerReviewSubmission,
-} from '@models/PeerReviewSubmission';
+import PeerReviewSubmissionModel from '@models/PeerReviewSubmission';
 import PeerReviewCommentModel from '@models/PeerReviewComment';
 import PeerReviewGradingTaskModel from '@models/PeerReviewGradingTask';
 import { resolveTeamRepo } from './teamService';
@@ -28,26 +26,11 @@ export const getPeerReviewAssignmentById = async (
   userCourseRole: string,
   userId: string,
   assignmentId: string,
-  courseId?: string
+  _courseId?: string
 ) => {
   const assignment =
     await PeerReviewAssignmentModel.findById(assignmentId).populate('reviewee');
   if (!assignment) throw new NotFoundError('Peer review assignment not found');
-
-  // Backfill repo metadata on read when missing.
-  // This prevents broken reviewer flow when legacy/incomplete assignment docs exist.
-  if (courseId && (!assignment.repoUrl || !assignment.repoName)) {
-    const revieweeId = (
-      (assignment.reviewee as any)?._id ?? assignment.reviewee
-    )?.toString?.();
-
-    if (revieweeId) {
-      const { repoName, repoUrl } = await resolveTeamRepo(courseId, revieweeId);
-      assignment.repoName = repoName;
-      assignment.repoUrl = repoUrl;
-      await assignment.save();
-    }
-  }
 
   // Faculty can access all assignments
   if (userCourseRole === COURSE_ROLE.Faculty) return assignment;
@@ -785,10 +768,7 @@ const upsertAndLoadAssignments = async (
 ) => {
   const now = new Date();
   const ops: AnyBulkWriteOperation[] = prTeamIds.map(reviewee => {
-    const teamData = teamIdToRepoMap.get(reviewee);
-    if (!teamData) {
-      throw new Error(`Team data not found for reviewee ${reviewee}`);
-    }
+    const teamData = teamIdToRepoMap.get(reviewee)!;
     const { repoName, repoUrl } = teamData;
     return {
       updateOne: {
@@ -823,239 +803,6 @@ const upsertAndLoadAssignments = async (
     finalMap.set(a.reviewee.toString(), a);
   }
   return finalMap;
-};
-
-const loadExistingSubmissions = async (
-  peerReviewId: string,
-  assignmentIds: string[]
-) => {
-  const subs = await PeerReviewSubmissionModel.find({
-    peerReviewId: oid(peerReviewId),
-    peerReviewAssignmentId: { $in: assignmentIds.map(oid) },
-  })
-    .select(
-      '_id peerReviewAssignmentId reviewerKind reviewerUserId reviewerTeamId status'
-    )
-    .lean();
-
-  // Key: assignmentId -> { Student: Set(userId), Team: Set(teamId), TA: Set(userId) }
-  const byAssignment = new Map<
-    string,
-    { Student: Set<string>; Team: Set<string>; TA: Set<string> }
-  >();
-
-  for (const s of subs) {
-    const aid = s.peerReviewAssignmentId.toString();
-    if (!byAssignment.has(aid)) {
-      byAssignment.set(aid, {
-        Student: new Set(),
-        Team: new Set(),
-        TA: new Set(),
-      });
-    }
-    const entry = byAssignment.get(aid)!;
-
-    if (s.reviewerKind === 'Student' && s.reviewerUserId)
-      entry.Student.add(s.reviewerUserId.toString());
-    if (s.reviewerKind === 'TA' && s.reviewerUserId)
-      entry.TA.add(s.reviewerUserId.toString());
-    if (s.reviewerKind === 'Team' && s.reviewerTeamId)
-      entry.Team.add(s.reviewerTeamId.toString());
-  }
-
-  return { subs, byAssignment };
-};
-
-const buildDesiredReviewerSets = (
-  reviewerType: string,
-  taAssignmentsEnabled: boolean,
-  assignDefault: boolean,
-  assignTAs: boolean,
-  prTeamIds: string[],
-  assignmentByReviewee: Map<string, PeerReviewAssignment>,
-  assignedStudentsForTeam: Map<string, Set<string>>,
-  assignedTeamsForTeam: Map<string, Set<string>>,
-  assignedTAsForTeam: Map<string, Set<string>>,
-  existing: {
-    subs: PeerReviewSubmission[];
-    byAssignment: Map<
-      string,
-      { Student: Set<string>; Team: Set<string>; TA: Set<string> }
-    >;
-  }
-) => {
-  const desired = new Map<
-    string,
-    { Student: Set<string>; Team: Set<string>; TA: Set<string> }
-  >();
-
-  for (const reviewee of prTeamIds) {
-    const assignment = assignmentByReviewee.get(reviewee);
-    const assignmentId = assignment!._id.toString();
-
-    const prev = existing.byAssignment.get(assignmentId) ?? {
-      Student: new Set<string>(),
-      Team: new Set<string>(),
-      TA: new Set<string>(),
-    };
-
-    // Default group: Student/Team reviewers
-    const nextStudent =
-      reviewerType === 'Individual'
-        ? assignDefault
-          ? new Set(Array.from(assignedStudentsForTeam.get(reviewee) ?? []))
-          : prev.Student
-        : new Set<string>();
-
-    const nextTeam =
-      reviewerType === 'Team'
-        ? assignDefault
-          ? new Set(Array.from(assignedTeamsForTeam.get(reviewee) ?? []))
-          : prev.Team
-        : new Set<string>();
-
-    // TA group
-    const nextTA = !taAssignmentsEnabled
-      ? new Set<string>()
-      : assignTAs
-        ? new Set(Array.from(assignedTAsForTeam.get(reviewee) ?? []))
-        : prev.TA;
-
-    desired.set(assignmentId, {
-      Student: nextStudent,
-      Team: nextTeam,
-      TA: nextTA,
-    });
-  }
-
-  return desired;
-};
-
-const applySubmissionDiffs = async (
-  peerReviewId: string,
-  desired: Map<
-    string,
-    { Student: Set<string>; Team: Set<string>; TA: Set<string> }
-  >,
-  existing: {
-    subs: PeerReviewSubmission[];
-    byAssignment: Map<
-      string,
-      { Student: Set<string>; Team: Set<string>; TA: Set<string> }
-    >;
-  }
-) => {
-  const now = new Date();
-  const ops: AnyBulkWriteOperation[] = [];
-
-  for (const [assignmentId, want] of desired.entries()) {
-    const have = existing.byAssignment.get(assignmentId) ?? {
-      Student: new Set<string>(),
-      Team: new Set<string>(),
-      TA: new Set<string>(),
-    };
-
-    // Student diffs
-    diffSets(have.Student, want.Student).forEach(d => {
-      ops.push({
-        deleteMany: {
-          filter: {
-            peerReviewId: oid(peerReviewId),
-            peerReviewAssignmentId: oid(assignmentId),
-            reviewerKind: 'Student',
-            reviewerUserId: oid(d),
-          },
-        },
-      });
-    });
-    diffSets(want.Student, have.Student).forEach(d => {
-      ops.push({
-        insertOne: {
-          document: {
-            peerReviewId: oid(peerReviewId),
-            peerReviewAssignmentId: oid(assignmentId),
-            reviewerKind: 'Student',
-            reviewerUserId: oid(d),
-            status: 'NotStarted',
-            createdAt: now,
-            updatedAt: now,
-            scores: {}, // safe default
-          },
-        },
-      });
-    });
-
-    // Team diffs
-    diffSets(have.Team, want.Team).forEach(d => {
-      ops.push({
-        deleteMany: {
-          filter: {
-            peerReviewId: oid(peerReviewId),
-            peerReviewAssignmentId: oid(assignmentId),
-            reviewerKind: 'Team',
-            reviewerTeamId: oid(d),
-          },
-        },
-      });
-    });
-    diffSets(want.Team, have.Team).forEach(d => {
-      ops.push({
-        insertOne: {
-          document: {
-            peerReviewId: oid(peerReviewId),
-            peerReviewAssignmentId: oid(assignmentId),
-            reviewerKind: 'Team',
-            reviewerTeamId: oid(d),
-            status: 'NotStarted',
-            createdAt: now,
-            updatedAt: now,
-            scores: {},
-          },
-        },
-      });
-    });
-
-    // TA diffs
-    diffSets(have.TA, want.TA).forEach(d => {
-      ops.push({
-        deleteMany: {
-          filter: {
-            peerReviewId: oid(peerReviewId),
-            peerReviewAssignmentId: oid(assignmentId),
-            reviewerKind: 'TA',
-            reviewerUserId: oid(d),
-          },
-        },
-      });
-    });
-    diffSets(want.TA, have.TA).forEach(d => {
-      ops.push({
-        insertOne: {
-          document: {
-            peerReviewId: oid(peerReviewId),
-            peerReviewAssignmentId: oid(assignmentId),
-            reviewerKind: 'TA',
-            reviewerUserId: oid(d),
-            status: 'NotStarted',
-            createdAt: now,
-            updatedAt: now,
-            scores: {},
-          },
-        },
-      });
-    });
-  }
-
-  if (ops.length > 0) {
-    await PeerReviewSubmissionModel.bulkWrite(ops, { ordered: true });
-  }
-};
-
-const diffSets = (a: Set<string>, b: Set<string>) => {
-  // returns elements in a but not in b
-  const out: string[] = [];
-  for (const x of a) if (!b.has(x)) out.push(x);
-  return out;
 };
 
 const deleteStaleAssignmentsAndSubmissions = async (

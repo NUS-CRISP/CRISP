@@ -653,6 +653,43 @@ describe('peerReviewService', () => {
       );
     });
 
+    it('updates description, review window, reviewerType and review limits', async () => {
+      const pr = await makePeerReview({
+        description: 'old description',
+        reviewerType: 'Individual',
+        minReviewsPerReviewer: 1,
+        maxReviewsPerReviewer: 2,
+      });
+
+      const newStart = new Date('2026-04-01T00:00:00.000Z');
+      const newEnd = new Date('2026-04-30T00:00:00.000Z');
+
+      const updated = await updatePeerReviewById(pr._id.toString(), {
+        description: 'new description',
+        startDate: newStart,
+        endDate: newEnd,
+        reviewerType: 'Team',
+        minReviews: 3,
+        maxReviews: 5,
+      } as any);
+
+      expect(updated.description).toBe('new description');
+      expect(updated.startDate.toISOString()).toBe(newStart.toISOString());
+      expect(updated.endDate.toISOString()).toBe(newEnd.toISOString());
+      expect(updated.reviewerType).toBe('Team');
+      expect(updated.minReviewsPerReviewer).toBe(3);
+      expect(updated.maxReviewsPerReviewer).toBe(5);
+      expect(deleteAssignmentsByPeerReviewId).toHaveBeenCalledWith(
+        pr._id.toString()
+      );
+      expect(initialiseAssignments).toHaveBeenCalledWith(
+        testCourseId.toString(),
+        pr._id.toString(),
+        pr.teamSetId.toString(),
+        null
+      );
+    });
+
     it('clears grading windows when null values are provided', async () => {
       const pr = await makePeerReview({
         gradingStartDate: new Date('2026-03-01T00:00:00.000Z'),
@@ -944,6 +981,179 @@ describe('peerReviewService', () => {
   });
 
   describe('Helper functions - direct unit tests for branch coverage', () => {
+    it('getPeerReviewById throws NotFoundError when peer review is missing', async () => {
+      await expect(getPeerReviewById(oidStr())).rejects.toBeInstanceOf(
+        NotFoundError
+      );
+    });
+
+    it('loadAssignmentsState skips assignment when reviewee is missing', async () => {
+      const { __testables } = require('../../services/peerReviewService');
+      const prId = oid();
+      const missingTeamId = oid();
+
+      await makeAssignment(prId, missingTeamId);
+
+      (resolveTeamRepo as jest.Mock).mockResolvedValueOnce({
+        repoName: 'RecoveredRepo',
+        repoUrl: 'http://example.com/recovered.git',
+        gitHubOrgName: 'OrgX',
+      });
+
+      const state = await __testables.loadAssignmentsState(
+        testCourseId.toString(),
+        prId.toString(),
+        [missingTeamId.toString()]
+      );
+
+      expect(state.assignmentById.size).toBe(0);
+      expect(Object.keys(state.assignmentsOfTeam)).toHaveLength(0);
+    });
+
+    it('buildAssignedReviewMaps ignores team/TA submissions whose assignment is missing', () => {
+      const { __testables } = require('../../services/peerReviewService');
+      const missingAssignmentId = oid();
+
+      const submissions = {
+        studentSubs: [],
+        teamSubs: [
+          {
+            _id: oid(),
+            peerReviewAssignmentId: missingAssignmentId,
+            reviewerTeamId: oid(),
+            status: 'Draft',
+          } as any,
+        ],
+        taSubs: [
+          {
+            _id: oid(),
+            peerReviewAssignmentId: missingAssignmentId,
+            reviewerUserId: oid(),
+            status: 'Draft',
+          } as any,
+        ],
+      };
+
+      const assignmentById = new Map();
+      const usersById = new Map<string, string>();
+      const taIdsWanted = ['ta1'];
+
+      const out = __testables.buildAssignedReviewMaps(
+        submissions,
+        assignmentById,
+        taIdsWanted,
+        usersById
+      );
+
+      expect(out.teamAssignedMap.size).toBe(0);
+      expect(out.assignmentsForTAs.ta1).toBeTruthy();
+      expect(out.assignmentsForTAs.ta1.assignedReviews).toEqual([]);
+    });
+
+    it('populateAssignmentsOfTeamReviewers covers continue branches for missing assignment/team/reviewer ids', () => {
+      const { __testables } = require('../../services/peerReviewService');
+      const existingTeamId = oidStr();
+      const missingTeamId = oidStr();
+
+      const assignmentPresentExistingTeam = {
+        _id: oidStr(),
+        reviewee: { _id: existingTeamId },
+      } as any;
+      const assignmentPresentMissingTeam = {
+        _id: oidStr(),
+        reviewee: { _id: missingTeamId },
+      } as any;
+
+      const assignmentById = new Map<string, any>([
+        [assignmentPresentExistingTeam._id, assignmentPresentExistingTeam],
+        [assignmentPresentMissingTeam._id, assignmentPresentMissingTeam],
+      ]);
+
+      const assignmentsOfTeam: Record<string, any> = {
+        [existingTeamId]: {
+          assignment: assignmentPresentExistingTeam,
+          reviewers: { students: [], teams: [], TAs: [] },
+        },
+      };
+
+      const submissions = {
+        // student loop: !assignment, !assignmentsOfTeam[revieweeTeamId], !rid
+        studentSubs: [
+          {
+            _id: oid(),
+            peerReviewAssignmentId: oid(), // missing assignment
+            reviewerUserId: oid(),
+            status: 'Draft',
+          } as any,
+          {
+            _id: oid(),
+            peerReviewAssignmentId: assignmentPresentMissingTeam._id,
+            reviewerUserId: oid(),
+            status: 'Draft',
+          } as any,
+          {
+            _id: oid(),
+            peerReviewAssignmentId: assignmentPresentExistingTeam._id,
+            status: 'Draft', // reviewerUserId missing
+          } as any,
+        ],
+
+        // team loop: !assignment, !assignmentsOfTeam[revieweeTeamId], !tid
+        teamSubs: [
+          {
+            _id: oid(),
+            peerReviewAssignmentId: oid(), // missing assignment
+            reviewerTeamId: oid(),
+            status: 'Draft',
+          } as any,
+          {
+            _id: oid(),
+            peerReviewAssignmentId: assignmentPresentMissingTeam._id,
+            reviewerTeamId: oid(),
+            status: 'Draft',
+          } as any,
+          {
+            _id: oid(),
+            peerReviewAssignmentId: assignmentPresentExistingTeam._id,
+            status: 'Draft', // reviewerTeamId missing
+          } as any,
+        ],
+
+        // ta loop: !assignment, !assignmentsOfTeam[revieweeTeamId], !rid
+        taSubs: [
+          {
+            _id: oid(),
+            peerReviewAssignmentId: oid(), // missing assignment
+            reviewerUserId: oid(),
+            status: 'Draft',
+          } as any,
+          {
+            _id: oid(),
+            peerReviewAssignmentId: assignmentPresentMissingTeam._id,
+            reviewerUserId: oid(),
+            status: 'Draft',
+          } as any,
+          {
+            _id: oid(),
+            peerReviewAssignmentId: assignmentPresentExistingTeam._id,
+            status: 'Draft', // reviewerUserId missing
+          } as any,
+        ],
+      };
+
+      __testables.populateAssignmentsOfTeamReviewers(
+        assignmentsOfTeam,
+        submissions,
+        assignmentById,
+        new Map<string, string>(),
+        new Map<string, number>()
+      );
+
+      expect(assignmentsOfTeam[existingTeamId].reviewers.students).toHaveLength(0);
+      expect(assignmentsOfTeam[existingTeamId].reviewers.teams).toHaveLength(0);
+      expect(assignmentsOfTeam[existingTeamId].reviewers.TAs).toHaveLength(0);
+    });
+
     it('emptyPeerReviewInfo returns correct structure for Individual and Team reviewer types', () => {
       const { __testables } = require('../../services/peerReviewService');
       const prId = oidStr();

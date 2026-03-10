@@ -9,6 +9,7 @@ import PeerReviewSubmissionModel from '../../models/PeerReviewSubmission';
 
 import {
   getPeerReviewAssignmentById,
+  getPeerReviewAssignmentWithViewContext,
   assignPeerReviews,
   addManualAssignment,
   removeManualAssignment,
@@ -1349,6 +1350,42 @@ describe('peerReviewAssignmentService', () => {
       );
 
       expect(got._id.toString()).toBe(assignment._id.toString());
+    });
+  });
+
+  describe('getPeerReviewAssignmentWithViewContext', () => {
+    it('returns isReviewee=true for student in reviewee team', async () => {
+      const prId = oid();
+      const studentId = oid();
+      const revieweeTeam = await makeTeam({ members: [studentId] });
+      const assignment = await makeAssignment(prId, revieweeTeam._id);
+
+      const result = await getPeerReviewAssignmentWithViewContext(
+        COURSE_ROLE.Student,
+        studentId.toString(),
+        assignment._id.toString()
+      );
+
+      expect(result.assignment._id.toString()).toBe(assignment._id.toString());
+      expect(result.viewContext.isReviewee).toBe(true);
+      expect(result.viewContext.isSupervisorTA).toBe(false);
+    });
+
+    it('returns isSupervisorTA=true for supervising TA', async () => {
+      const prId = oid();
+      const taId = oid();
+      const revieweeTeam = await makeTeam({ TA: taId, members: [oid()] });
+      const assignment = await makeAssignment(prId, revieweeTeam._id);
+
+      const result = await getPeerReviewAssignmentWithViewContext(
+        COURSE_ROLE.TA,
+        taId.toString(),
+        assignment._id.toString()
+      );
+
+      expect(result.assignment._id.toString()).toBe(assignment._id.toString());
+      expect(result.viewContext.isReviewee).toBe(false);
+      expect(result.viewContext.isSupervisorTA).toBe(true);
     });
   });
 
