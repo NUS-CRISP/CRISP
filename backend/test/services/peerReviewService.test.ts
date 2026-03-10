@@ -20,6 +20,7 @@ import {
   deletePeerReviewById,
   updatePeerReviewById,
   getTeamDataById,
+  __testables,
 } from '../../services/peerReviewService';
 
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
@@ -121,6 +122,7 @@ const makePeerReview = async (overrides: Partial<any> = {}) => {
   return new PeerReviewModel({
     course: testCourseId,
     teamSetId: testTeamSetId,
+    internalAssessmentId: oid(),
     title: 'PR',
     description: 'desc',
     startDate: new Date(now - 60_000),
@@ -571,17 +573,19 @@ describe('peerReviewService', () => {
         startDate: new Date(Date.now() + 60_000),
         endDate: new Date(Date.now() + 120_000),
         teamSetId: testTeamSetId.toString(),
+        internalAssessmentId: oidStr(),
         reviewerType: 'Individual',
         taAssignments: false,
         minReviews: 1,
         maxReviews: 2,
-      });
+      }, null as any);
 
       expect(pr._id).toBeDefined();
       expect(initialiseAssignments).toHaveBeenCalledWith(
         testCourseId.toString(),
         pr._id.toString(),
-        testTeamSetId.toString()
+        testTeamSetId.toString(),
+        null
       );
     });
 
@@ -593,11 +597,12 @@ describe('peerReviewService', () => {
           startDate: new Date(),
           endDate: new Date(Date.now() + 60_000),
           teamSetId: testTeamSetId.toString(),
+          internalAssessmentId: oidStr(),
           reviewerType: 'Individual',
           taAssignments: false,
           minReviews: 1,
           maxReviews: 2,
-        })
+        }, null as any)
       ).rejects.toBeInstanceOf(NotFoundError);
     });
   });
@@ -609,11 +614,11 @@ describe('peerReviewService', () => {
         teamSetId: testTeamSetId,
       });
 
-      const updated = await updatePeerReviewById(pr._id.toString(), oidStr(), {
+      const updated = await updatePeerReviewById(pr._id.toString(), {
         assessmentName: 'New Title',
         teamSetId: testTeamSetId.toString(),
         taAssignments: true,
-      });
+      } as any);
 
       expect(updated.title).toBe('New Title');
       expect(deleteAssignmentsByPeerReviewId).toHaveBeenCalledWith(
@@ -622,27 +627,64 @@ describe('peerReviewService', () => {
       expect(initialiseAssignments).toHaveBeenCalledWith(
         testCourseId.toString(),
         pr._id.toString(),
-        testTeamSetId.toString()
+        testTeamSetId.toString(),
+        null
       );
     });
 
-    it('updates peer review but does NOT reinitialise when teamSetId omitted', async () => {
-      const pr = await makePeerReview({ title: 'Old' });
+    it('updates grading windows when dates are provided', async () => {
+      const pr = await makePeerReview({
+        gradingStartDate: undefined,
+        gradingEndDate: undefined,
+      });
+      const gradingStartDate = new Date('2026-02-01T00:00:00.000Z');
+      const gradingEndDate = new Date('2026-02-15T00:00:00.000Z');
 
-      const updated = await updatePeerReviewById(pr._id.toString(), oidStr(), {
-        assessmentName: 'New Title',
+      const updated = await updatePeerReviewById(pr._id.toString(), {
+        gradingStartDate,
+        gradingEndDate,
+      } as any);
+
+      expect(updated.gradingStartDate?.toISOString()).toBe(
+        gradingStartDate.toISOString()
+      );
+      expect(updated.gradingEndDate?.toISOString()).toBe(
+        gradingEndDate.toISOString()
+      );
+    });
+
+    it('clears grading windows when null values are provided', async () => {
+      const pr = await makePeerReview({
+        gradingStartDate: new Date('2026-03-01T00:00:00.000Z'),
+        gradingEndDate: new Date('2026-03-15T00:00:00.000Z'),
       });
 
+      const updated = await updatePeerReviewById(pr._id.toString(), {
+        gradingStartDate: null,
+        gradingEndDate: null,
+      } as any);
+
+      expect(updated.gradingStartDate).toBeUndefined();
+      expect(updated.gradingEndDate).toBeUndefined();
+      expect(deleteAssignmentsByPeerReviewId).not.toHaveBeenCalled();
+      expect(initialiseAssignments).not.toHaveBeenCalled();
+    });
+
+    it('updates peer review without resetting assignments when only title changes', async () => {
+      const pr = await makePeerReview({ title: 'Old' });
+
+      const updated = await updatePeerReviewById(pr._id.toString(), {
+        assessmentName: 'New Title',
+      } as any);
+
       expect(updated.title).toBe('New Title');
-      expect(deleteAssignmentsByPeerReviewId).toHaveBeenCalledWith(
-        pr._id.toString()
-      );
+      expect(deleteAssignmentsByPeerReviewId).not.toHaveBeenCalled();
       expect(initialiseAssignments).not.toHaveBeenCalled();
     });
 
     it('throws NotFound when peer review missing', async () => {
       await expect(
-        updatePeerReviewById(oidStr(), oidStr(), { assessmentName: 'x' })
+        updatePeerReviewById(oidStr(), { assessmentName: 'x' } as any)
       ).rejects.toBeInstanceOf(NotFoundError);
     });
   });
@@ -755,17 +797,16 @@ describe('peerReviewService', () => {
       expect(map.get('1')).toBeUndefined(); // no fallback
     });
 
-    it('falls back when resolveTeamRepo throws (covers catch)', async () => {
+    it('throws when resolveTeamRepo throws', async () => {
       await makeTeamData(11);
 
       (resolveTeamRepo as jest.Mock).mockImplementation(async () => {
         throw new Error('boom');
       });
 
-      const map = await getTeamDataById(testCourseId.toString(), ['11']);
-
-      expect(map.get('11')?.repoName).toBe('');
-      expect(map.get('11')?.repoUrl).toBe('');
+      await expect(
+        getTeamDataById(testCourseId.toString(), ['11'])
+      ).rejects.toThrow('boom');
     });
   });
 
@@ -899,6 +940,267 @@ describe('peerReviewService', () => {
       const dtoB = info.teams.find(t => t.teamId === teamB._id.toString());
       expect(dtoB).toBeTruthy();
       expect(dtoB?.assignedReviewsToTeam.length).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  describe('Helper functions - direct unit tests for branch coverage', () => {
+    it('emptyPeerReviewInfo returns correct structure for Individual and Team reviewer types', () => {
+      const { __testables } = require('../../services/peerReviewService');
+      const prId = oidStr();
+      
+      const individual = __testables.emptyPeerReviewInfo(prId, 'Individual');
+      expect(individual._id).toBe(prId);
+      expect(individual.teams).toEqual([]);
+      expect(individual.assignmentsOfTeam).toEqual({});
+      expect(individual.reviewerType).toBe('Individual');
+
+      const team = __testables.emptyPeerReviewInfo(prId, 'Team');
+      expect(team.reviewerType).toBe('Team');
+    });
+
+    it('getScopedTeamIds: Student with no team returns empty', async () => {
+      const { __testables } = require('../../services/peerReviewService');
+      const studentId = oidStr();
+
+      const result = await __testables.getScopedTeamIds(
+        studentId,
+        COURSE_ROLE.Student,
+        testTeamSetId.toString()
+      );
+      
+      expect(result.teamIds).toEqual([]);
+      expect(result.filterByTA).toBeUndefined();
+    });
+
+    it('getScopedTeamIds: TA with assigned teams returns filterByTA', async () => {
+      const { __testables } = require('../../services/peerReviewService');
+      const ta1 = oid();
+      const team1 = await makeTeam({ number: 5, TA: ta1 });
+
+      const result = await __testables.getScopedTeamIds(
+        ta1.toString(),
+        COURSE_ROLE.TA,
+        testTeamSetId.toString()
+      );
+
+      expect(result.teamIds).toContain(team1._id.toString());
+      expect(result.filterByTA).toBe(ta1.toString());
+    });
+
+    it('getScopedTeamIds: Faculty returns all teams in teamSet without filterByTA', async () => {
+      const { __testables } = require('../../services/peerReviewService');
+      const team1 = await makeTeam({ number: 6 });
+      const team2 = await makeTeam({ number: 7 });
+
+      const result = await __testables.getScopedTeamIds(
+        oidStr(),
+        COURSE_ROLE.Faculty,
+        testTeamSetId.toString()
+      );
+
+      expect(result.teamIds).toContain(team1._id.toString());
+      expect(result.teamIds).toContain(team2._id.toString());
+      expect(result.filterByTA).toBeUndefined();
+    });
+
+    it('getScopedTeams: handles teams with null TA and empty members', async () => {
+      const { __testables } = require('../../services/peerReviewService');
+      const team = await makeTeam({ number: 8, TA: null, members: [] });
+
+      const result = await __testables.getScopedTeams(
+        testTeamSetId.toString(),
+        [team._id.toString()]
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0].taId).toBeNull();
+      expect(result[0].memberIds).toEqual([]);
+    });
+
+    it('getScopedTeams: empty teamIds returns empty list', async () => {
+      const { __testables } = require('../../services/peerReviewService');
+
+      const result = await __testables.getScopedTeams(testTeamSetId.toString(), []);
+
+      expect(result).toEqual([]);
+    });
+
+    it('pushReviewer: does nothing when entry does not exist', () => {
+      const { __testables } = require('../../services/peerReviewService');
+      const assignmentsOfTeam = {};
+
+      __testables.pushReviewer(assignmentsOfTeam, 'nonexistent-id', 'Student', {
+        userId: 'user1',
+        name: 'John',
+        teamId: '',
+        teamNumber: 1,
+        status: 'Draft',
+      });
+
+      expect(Object.keys(assignmentsOfTeam)).toEqual([]);
+    });
+
+    it('pushReviewer: pushes Student reviewer', () => {
+      const { __testables } = require('../../services/peerReviewService');
+      const revieweeTeamId = 'team123';
+      const assignmentsOfTeam = {
+        [revieweeTeamId]: {
+          assignment: {} as any,
+          reviewers: { students: [], teams: [], TAs: [] },
+        },
+      };
+
+      __testables.pushReviewer(assignmentsOfTeam, revieweeTeamId, 'Student', {
+        userId: 'user1',
+        name: 'John',
+        teamId: '',
+        teamNumber: 1,
+        status: 'Submitted',
+      });
+
+      expect(assignmentsOfTeam[revieweeTeamId].reviewers.students).toHaveLength(1);
+      expect((assignmentsOfTeam[revieweeTeamId].reviewers.students[0] as any).userId).toBe('user1');
+    });
+
+    it('pushReviewer: pushes Team reviewer', () => {
+      const { __testables } = require('../../services/peerReviewService');
+      const revieweeTeamId = 'team123';
+      const assignmentsOfTeam = {
+        [revieweeTeamId]: {
+          assignment: {} as any,
+          reviewers: { students: [], teams: [], TAs: [] },
+        },
+      };
+
+      __testables.pushReviewer(assignmentsOfTeam, revieweeTeamId, 'Team', {
+        userId: '',
+        name: '',
+        teamId: 'reviewer-team',
+        teamNumber: 2,
+        status: 'Draft',
+      });
+
+      expect(assignmentsOfTeam[revieweeTeamId].reviewers.teams).toHaveLength(1);
+      expect((assignmentsOfTeam[revieweeTeamId].reviewers.teams[0] as any).teamId).toBe('reviewer-team');
+    });
+
+    it('pushReviewer: pushes TA reviewer', () => {
+      const { __testables } = require('../../services/peerReviewService');
+      const revieweeTeamId = 'team123';
+      const assignmentsOfTeam = {
+        [revieweeTeamId]: {
+          assignment: {} as any,
+          reviewers: { students: [], teams: [], TAs: [] },
+        },
+      };
+
+      __testables.pushReviewer(assignmentsOfTeam, revieweeTeamId, 'TA', {
+        userId: 'ta-user1',
+        name: 'TA John',
+        teamId: '',
+        teamNumber: -1,
+        status: 'Submitted',
+      });
+
+      expect(assignmentsOfTeam[revieweeTeamId].reviewers.TAs).toHaveLength(1);
+      expect((assignmentsOfTeam[revieweeTeamId].reviewers.TAs[0] as any).name).toBe('TA John');
+    });
+
+    it('toAssignedReviewDTO: returns null when assignment not found', () => {
+      const { __testables } = require('../../services/peerReviewService');
+      const assignmentById = new Map();
+      const submission = {
+        _id: oid(),
+        peerReviewAssignmentId: oid(),
+        status: 'Draft',
+      } as any;
+
+      const result = __testables.toAssignedReviewDTO(submission, assignmentById);
+
+      expect(result).toBeNull();
+    });
+
+    it('toAssignedReviewDTO: returns DTO when assignment found', () => {
+      const { __testables } = require('../../services/peerReviewService');
+      const submissionId = oid();
+      const assignmentId = oid();
+      const mockAssignment = { _id: assignmentId.toString() } as any;
+      const assignmentById = new Map([[assignmentId.toString(), mockAssignment]]);
+      const submission = {
+        _id: submissionId,
+        peerReviewAssignmentId: assignmentId,
+        status: 'Submitted',
+        startedAt: new Date(),
+        lastEditedAt: new Date(),
+        submittedAt: new Date(),
+        overallComment: 'Good work',
+      } as any;
+
+      const result = __testables.toAssignedReviewDTO(submission, assignmentById);
+
+      expect(result).not.toBeNull();
+      expect(result?.submissionId).toBe(submissionId.toString());
+      expect(result?.status).toBe('Submitted');
+      expect(result?.assignment).toBe(mockAssignment);
+    });
+
+    it('computeReviewerScope: Student returns single user, no TAs', () => {
+      const { __testables } = require('../../services/peerReviewService');
+      const userId = oidStr();
+      const scopedTeams = [
+        { id: 't1', number: 1, memberIds: [userId, 'other1'], taId: 'ta1' },
+        { id: 't2', number: 2, memberIds: ['other2'], taId: 'ta2' },
+      ];
+
+      const result = __testables.computeReviewerScope(
+        userId,
+        COURSE_ROLE.Student,
+        'Individual',
+        false,
+        scopedTeams
+      );
+
+      expect(result.scopedMemberIds).toEqual([userId]);
+      expect(result.scopedReviewerTeamIds).toEqual(['t1', 't2']);
+      expect(result.taIdsWanted).toEqual([]);
+    });
+
+    it('computeReviewerScope: Faculty gets all members and all TAs when enabled', () => {
+      const { __testables } = require('../../services/peerReviewService');
+      const scopedTeams = [
+        { id: 't1', number: 1, memberIds: ['u1', 'u2'], taId: 'ta1' },
+        { id: 't2', number: 2, memberIds: ['u3'], taId: 'ta2' },
+      ];
+
+      const result = __testables.computeReviewerScope(
+        oidStr(),
+        COURSE_ROLE.Faculty,
+        'Individual',
+        true,
+        scopedTeams
+      );
+
+      expect(result.scopedMemberIds).toContain('u1');
+      expect(result.scopedMemberIds).toContain('u2');
+      expect(result.scopedMemberIds).toContain('u3');
+      expect(result.taIdsWanted).toContain('ta1');
+      expect(result.taIdsWanted).toContain('ta2');
+    });
+
+    it('computeReviewerScope: TA gets only self as reviewer when enabled', () => {
+      const { __testables } = require('../../services/peerReviewService');
+      const taId = oidStr();
+      const scopedTeams = [{ id: 't1', number: 1, memberIds: ['u1'], taId }];
+
+      const result = __testables.computeReviewerScope(
+        taId,
+        COURSE_ROLE.TA,
+        'Individual',
+        true,
+        scopedTeams
+      );
+
+      expect(result.taIdsWanted).toEqual([taId]);
     });
   });
 });

@@ -9,7 +9,7 @@ import {
   createPeerReviewAssessmentForCourse,
   getPeerReviewGradingDTO,
 } from '../services/peerReviewAssessmentService';
-import { handleError } from 'utils/error';
+import { handleError } from '../utils/error';
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 import { 
   getGradingTaskForSubmissionById, 
@@ -19,7 +19,7 @@ import {
   bulkAssignGradersByAssessmentId,
   manualAssignGraderToSubmission,
   manualUnassignGraderFromSubmission,
-} from 'services/peerReviewGradingTaskService';
+} from '../services/peerReviewGradingTaskService';
 
 /* ------------------------------- Peer Review Assessment ------------------------------- */
 

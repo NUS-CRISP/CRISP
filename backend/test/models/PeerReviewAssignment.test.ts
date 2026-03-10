@@ -4,6 +4,7 @@ import mongoose, { ConnectOptions, Types } from 'mongoose';
 import CourseModel from '../../models/Course';
 import TeamSetModel from '../../models/TeamSet';
 import TeamModel from '../../models/Team';
+import InternalAssessmentModel from '../../models/InternalAssessment';
 import PeerReviewModel from '../../models/PeerReview';
 import PeerReviewAssignmentModel from '../../models/PeerReviewAssignment';
 
@@ -11,6 +12,7 @@ let mongoServer: MongoMemoryServer;
 
 let testCourseId: Types.ObjectId;
 let testTeamSetId: Types.ObjectId;
+let testAssessmentId: Types.ObjectId;
 let testPeerReviewId: Types.ObjectId;
 let testRevieweeTeamId: Types.ObjectId;
 
@@ -26,6 +28,7 @@ beforeAll(async () => {
 beforeEach(async () => {
   await PeerReviewAssignmentModel.deleteMany({});
   await PeerReviewModel.deleteMany({});
+  await InternalAssessmentModel.deleteMany({});
   await TeamModel.deleteMany({});
   await TeamSetModel.deleteMany({});
   await CourseModel.deleteMany({});
@@ -45,10 +48,29 @@ beforeEach(async () => {
   }).save();
   testTeamSetId = teamSet._id;
 
+  const assessment = await new InternalAssessmentModel({
+    course: course._id,
+    assessmentType: 'peer_review',
+    assessmentName: 'Peer Review Assessment',
+    description: 'desc',
+    startDate: new Date('2026-01-01'),
+    endDate: new Date('2026-12-31'),
+    maxMarks: 10,
+    scaleToMaxMarks: true,
+    granularity: 'individual',
+    teamSet: teamSet._id,
+    areSubmissionsEditable: false,
+    isReleased: false,
+    questions: [],
+    results: [],
+  }).save();
+  testAssessmentId = assessment._id;
+
   const now = Date.now();
   const peerReview = await new PeerReviewModel({
     course: testCourseId,
     teamSetId: testTeamSetId,
+    internalAssessmentId: testAssessmentId,
     title: 'PR Title',
     description: 'PR Desc',
     startDate: new Date(now + 60_000),
@@ -162,6 +184,7 @@ describe('PeerReviewAssignmentModel', () => {
     const otherPeerReview = await new PeerReviewModel({
       course: testCourseId,
       teamSetId: testTeamSetId,
+      internalAssessmentId: testAssessmentId,
       title: 'PR Title 2',
       startDate: new Date(now + 60_000),
       endDate: new Date(now + 120_000),

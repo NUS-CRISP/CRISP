@@ -121,8 +121,6 @@ peerReviewSchema.virtual('computedGradingStatus').get(function (
     if (now >= start && now <= end) return 'InProgress';
     return 'Completed';
   }
-
-  return 'NotStarted'; // default fallback
 });
 
 const PeerReviewModel = mongoose.model<PeerReview>(

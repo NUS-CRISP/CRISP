@@ -813,3 +813,17 @@ const toAssignedReviewDTO = (
     overallComment: submission.overallComment,
   };
 };
+
+export const __testables = {
+  emptyPeerReviewInfo,
+  getScopedTeamIds,
+  getScopedTeams,
+  loadAssignmentsState,
+  computeReviewerScope,
+  addMissingAssignmentsForSubmissions,
+  buildAssignedReviewMaps,
+  populateAssignmentsOfTeamReviewers,
+  buildTeamsDTO,
+  pushReviewer,
+  toAssignedReviewDTO,
+};

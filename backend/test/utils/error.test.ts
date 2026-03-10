@@ -19,7 +19,7 @@ describe('handleError', () => {
     handleError(res, err, 'fallback');
 
     expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json).toHaveBeenCalledWith({ message: 'missing' });
+    expect(res.json).toHaveBeenCalledWith({ message: 'missing: Not found' });
   });
 
   it('returns 400 for BadRequestError', () => {
@@ -37,7 +37,7 @@ describe('handleError', () => {
     handleError(res, err, 'fallback');
 
     expect(res.status).toHaveBeenCalledWith(403);
-    expect(res.json).toHaveBeenCalledWith({ message: 'nope' });
+    expect(res.json).toHaveBeenCalledWith({ message: 'nope: Unauthorized' });
   });
 
   it('returns 500 + logs for unknown error', () => {
@@ -49,7 +49,7 @@ describe('handleError', () => {
 
     expect(spy).toHaveBeenCalledWith('fallback msg', err);
     expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.json).toHaveBeenCalledWith({ message: 'fallback msg' });
+    expect(res.json).toHaveBeenCalledWith({ message: 'fallback msg: Internal server error' });
 
     spy.mockRestore();
   });
@@ -62,7 +62,7 @@ describe('handleError', () => {
 
     expect(spy).toHaveBeenCalledWith('fallback msg', 'oops');
     expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.json).toHaveBeenCalledWith({ message: 'fallback msg' });
+    expect(res.json).toHaveBeenCalledWith({ message: 'fallback msg: Internal server error' });
 
     spy.mockRestore();
   });
