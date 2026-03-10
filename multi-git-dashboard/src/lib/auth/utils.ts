@@ -1,8 +1,5 @@
 import { CRISP_ROLE, CrispRole } from '@shared/types/auth/CrispRole';
-import {
-  COURSE_ROLE,
-  CourseRole,
-} from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE, CourseRole } from '@shared/types/auth/CourseRole';
 import { useSession } from 'next-auth/react';
 
 export const hasPermission = (...CrispRoles: CrispRole[]) => {
