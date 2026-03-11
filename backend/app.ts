@@ -27,6 +27,7 @@ import setupAIInsightsJob from './jobs/aiInsightsJob';
 import notificationRoutes from './routes/notificationRoutes';
 import setupTutorialDataJob from './jobs/tutorialDataJob';
 import setupNotificationJob from './jobs/notificationJob';
+import setupPeerReviewNotificationJob from './jobs/peerReviewNotificationJob';
 import setupDataIntegrityJob, {
   runDataIntegrityCheck,
 } from './jobs/dataIntegrityJob';
@@ -46,6 +47,7 @@ const setupApp = async () => {
   setupCodeAnalysisJob();
   setupAIInsightsJob();
   setupNotificationJob();
+  setupPeerReviewNotificationJob();
 };
 setupApp();
 
