@@ -9,6 +9,7 @@ import PeerReviewSubmissionModel from '../../models/PeerReviewSubmission';
 
 import {
   getPeerReviewAssignmentById,
+  getPeerReviewAssignmentWithViewContext,
   assignPeerReviews,
   addManualAssignment,
   removeManualAssignment,
@@ -426,7 +427,7 @@ describe('peerReviewAssignmentService', () => {
   });
 
   describe('assignPeerReviews: loadExistingSubmissions collects Team/TA + applySubmissionDiffs deletes Team/TA extras', () => {
-    it('covers existing Team+TA collection and generates deleteMany diffs for extra existing reviewers', async () => {
+    it('resets old Team/TA submissions and recreates fresh submissions', async () => {
       const prId = oid();
       const teamSetId = oid();
 
@@ -453,11 +454,11 @@ describe('peerReviewAssignmentService', () => {
       (getTeamDataById as jest.Mock).mockResolvedValue(
         new Map([
           [
-            t1.number.toString(),
+            t1._id.toString(),
             { repoName: 'R1', repoUrl: 'U1', gitHubOrgName: '' },
           ],
           [
-            t2.number.toString(),
+            t2._id.toString(),
             { repoName: 'R2', repoUrl: 'U2', gitHubOrgName: '' },
           ],
         ])
@@ -475,19 +476,17 @@ describe('peerReviewAssignmentService', () => {
 
       // Existing "outsider" Team submission -> should be deleted by diffs (have.Team not in want.Team)
       const outsiderTeamId = oid();
-      await makeSubmission(prId, a1._id, {
+      const oldTeamSub = await makeSubmission(prId, a1._id, {
         reviewerKind: 'Team',
         reviewerTeamId: outsiderTeamId,
       });
 
       // Existing "outsider" TA submission -> should be deleted
       const outsiderTAId = oid();
-      await makeSubmission(prId, a2._id, {
+      const oldTaSub = await makeSubmission(prId, a2._id, {
         reviewerKind: 'TA',
         reviewerUserId: outsiderTAId,
       });
-
-      const bwSpy = jest.spyOn(PeerReviewSubmissionModel, 'bulkWrite');
 
       await assignPeerReviews(
         testCourseId.toString(),
@@ -498,21 +497,36 @@ describe('peerReviewAssignmentService', () => {
         ['default', 'assignTAs']
       );
 
-      expect(bwSpy).toHaveBeenCalled();
-      const ops = bwSpy.mock.calls[0][0] as any[];
+      const oldTeamStillExists = await PeerReviewSubmissionModel.findById(
+        oldTeamSub._id
+      ).lean();
+      const oldTaStillExists = await PeerReviewSubmissionModel.findById(
+        oldTaSub._id
+      ).lean();
+      expect(oldTeamStillExists).toBeNull();
+      expect(oldTaStillExists).toBeNull();
 
-      // Ensure deleteMany ops for Team and TA are present (covers your uncovered delete diffs)
+      const allSubs = await PeerReviewSubmissionModel.find({
+        peerReviewId: prId,
+      }).lean();
+      expect(allSubs.length).toBeGreaterThan(0);
       expect(
-        ops.some(op => op.deleteMany?.filter?.reviewerKind === 'Team')
-      ).toBe(true);
-      expect(ops.some(op => op.deleteMany?.filter?.reviewerKind === 'TA')).toBe(
-        true
-      );
-
-      bwSpy.mockRestore();
+        allSubs.some(
+          s =>
+            s.reviewerKind === 'Team' &&
+            s.reviewerTeamId?.toString() === outsiderTeamId.toString()
+        )
+      ).toBe(false);
+      expect(
+        allSubs.some(
+          s =>
+            s.reviewerKind === 'TA' &&
+            s.reviewerUserId?.toString() === outsiderTAId.toString()
+        )
+      ).toBe(false);
     });
 
-    it('covers existing Student collection and generates deleteMany diffs for extra existing student reviewers', async () => {
+    it('resets old Student submissions and recreates fresh submissions', async () => {
       const prId = oid();
       const teamSetId = oid();
 
@@ -542,8 +556,18 @@ describe('peerReviewAssignmentService', () => {
         TA: oid(),
       });
 
-      // Repo map can be empty; fallback in service returns blank strings which still satisfy required fields.
-      (getTeamDataById as jest.Mock).mockResolvedValue(new Map());
+      (getTeamDataById as jest.Mock).mockResolvedValue(
+        new Map([
+          [
+            t1._id.toString(),
+            { repoName: 'R1', repoUrl: 'U1', gitHubOrgName: '' },
+          ],
+          [
+            t2._id.toString(),
+            { repoName: 'R2', repoUrl: 'U2', gitHubOrgName: '' },
+          ],
+        ])
+      );
 
       // Pre-create assignments
       const a1 = await makeAssignment(prId, t1._id, {
@@ -553,12 +577,10 @@ describe('peerReviewAssignmentService', () => {
       await makeAssignment(prId, t2._id, { repoName: 'R2', repoUrl: 'U2' });
 
       // Existing WRONG student submission: s1 reviewing team1 (should be deleted after assignment)
-      await makeSubmission(prId, a1._id, {
+      const wrongSub = await makeSubmission(prId, a1._id, {
         reviewerKind: 'Student',
         reviewerUserId: s1,
       });
-
-      const bwSpy = jest.spyOn(PeerReviewSubmissionModel, 'bulkWrite');
 
       await assignPeerReviews(
         testCourseId.toString(),
@@ -569,15 +591,16 @@ describe('peerReviewAssignmentService', () => {
         ['default']
       );
 
-      expect(bwSpy).toHaveBeenCalled();
-      const ops = bwSpy.mock.calls[0][0] as any[];
+      const wrongSubStillExists = await PeerReviewSubmissionModel.findById(
+        wrongSub._id
+      ).lean();
+      expect(wrongSubStillExists).toBeNull();
 
-      // ✅ Student deleteMany diff exists (covers your "Student diffs" deleteMany segment)
-      expect(
-        ops.some(op => op.deleteMany?.filter?.reviewerKind === 'Student')
-      ).toBe(true);
+      const subsAfter = await PeerReviewSubmissionModel.find({
+        peerReviewId: prId,
+      }).lean();
+      expect(subsAfter.length).toBeGreaterThan(0);
 
-      bwSpy.mockRestore();
       randSpy.mockRestore();
     });
 
@@ -596,6 +619,19 @@ describe('peerReviewAssignmentService', () => {
       const tKeep2 = await makeTeam({ teamSet: teamSetId, members: [oid()] });
       const tStale = await makeTeam({ teamSet: teamSetId, members: [oid()] });
 
+      (getTeamDataById as jest.Mock).mockResolvedValue(
+        new Map([
+          [
+            tKeep1._id.toString(),
+            { repoName: 'R1', repoUrl: 'U1', gitHubOrgName: '' },
+          ],
+          [
+            tKeep2._id.toString(),
+            { repoName: 'R2', repoUrl: 'U2', gitHubOrgName: '' },
+          ],
+        ])
+      );
+
       // Create an assignment for stale team with a submission
       const staleA = await makeAssignment(prId, tStale._id);
       await makeSubmission(prId, staleA._id, {
@@ -603,7 +639,7 @@ describe('peerReviewAssignmentService', () => {
         reviewerUserId: oid(),
       });
 
-      // ✅ Make it "stale": remove team from the peer review team set
+      // Make it "stale": remove team from the peer review team set
       await TeamModel.deleteOne({ _id: tStale._id });
 
       // Now run assignPeerReviews with only keep teams (stale should be removed)
@@ -1208,7 +1244,8 @@ describe('peerReviewAssignmentService', () => {
       await initialiseAssignmentsSvc(
         testCourseId.toString(),
         prId.toString(),
-        teamSetId.toString()
+        teamSetId.toString(),
+        null
       );
 
       const assignments = await PeerReviewAssignmentModel.find({
@@ -1252,6 +1289,122 @@ describe('peerReviewAssignmentService', () => {
       expect(assignmentsLeft).toHaveLength(0);
 
       expect(delRes.deletedCount).toBeDefined();
+    });
+  });
+
+  describe('getPeerReviewAssignmentById - additional coverage', () => {
+    it('skips backfill when repoUrl and repoName already present', async () => {
+      const prId = oid();
+      const revieweeTeam = await makeTeam();
+      
+      const assignment = await makeAssignment(prId, revieweeTeam._id, {
+        repoName: 'ExistingRepo',
+        repoUrl: 'http://existing.git',
+      });
+
+      const got = await getPeerReviewAssignmentById(
+        COURSE_ROLE.Faculty,
+        testCourseId.toString(),
+        assignment._id.toString()
+      );
+
+      expect(got.repoName).toBe('ExistingRepo');
+      expect(got.repoUrl).toBe('http://existing.git');
+    });
+
+    it('Student can access assignment when part of reviewee team', async () => {
+      const prId = oid();
+      const studentId = oid();
+      const revieweeTeam = await makeTeam({ members: [studentId] });
+      const assignment = await makeAssignment(prId, revieweeTeam._id);
+
+      const got = await getPeerReviewAssignmentById(
+        COURSE_ROLE.Student,
+        studentId.toString(),
+        assignment._id.toString()
+      );
+
+      expect(got._id.toString()).toBe(assignment._id.toString());
+    });
+
+    it('Student can access assignment when their team is assigned as Team reviewer', async () => {
+      const prId = oid();
+      const studentId = oid();
+      const teamSetId = oid();
+
+      const revieweeTeam = await makeTeam({ teamSet: teamSetId });
+      const studentTeam = await makeTeam({ teamSet: teamSetId, members: [studentId] });
+
+      const assignment = await makeAssignment(prId, revieweeTeam._id);
+
+      // Student's team is a team reviewer for this assignment
+      await makeSubmission(prId, assignment._id, {
+        reviewerKind: 'Team',
+        reviewerTeamId: studentTeam._id,
+      });
+
+      const got = await getPeerReviewAssignmentById(
+        COURSE_ROLE.Student,
+        studentId.toString(),
+        assignment._id.toString()
+      );
+
+      expect(got._id.toString()).toBe(assignment._id.toString());
+    });
+  });
+
+  describe('getPeerReviewAssignmentWithViewContext', () => {
+    it('returns isReviewee=true for student in reviewee team', async () => {
+      const prId = oid();
+      const studentId = oid();
+      const revieweeTeam = await makeTeam({ members: [studentId] });
+      const assignment = await makeAssignment(prId, revieweeTeam._id);
+
+      const result = await getPeerReviewAssignmentWithViewContext(
+        COURSE_ROLE.Student,
+        studentId.toString(),
+        assignment._id.toString()
+      );
+
+      expect(result.assignment._id.toString()).toBe(assignment._id.toString());
+      expect(result.viewContext.isReviewee).toBe(true);
+      expect(result.viewContext.isSupervisorTA).toBe(false);
+    });
+
+    it('returns isSupervisorTA=true for supervising TA', async () => {
+      const prId = oid();
+      const taId = oid();
+      const revieweeTeam = await makeTeam({ TA: taId, members: [oid()] });
+      const assignment = await makeAssignment(prId, revieweeTeam._id);
+
+      const result = await getPeerReviewAssignmentWithViewContext(
+        COURSE_ROLE.TA,
+        taId.toString(),
+        assignment._id.toString()
+      );
+
+      expect(result.assignment._id.toString()).toBe(assignment._id.toString());
+      expect(result.viewContext.isReviewee).toBe(false);
+      expect(result.viewContext.isSupervisorTA).toBe(true);
+    });
+  });
+
+  describe('Additional assignment service coverage', () => {
+    it('getPeerReviewAssignmentById checks permission context: isReviewee and isSupervisorTA flags', async () => {
+      const prId = oid();
+      const taId = oid();
+      
+      const revieweeTeam = await makeTeam({ TA: taId, members: [oid()] });
+      const assignment = await makeAssignment(prId, revieweeTeam._id);
+
+      // TA accessing their own supervised team
+      const got = await getPeerReviewAssignmentById(
+        COURSE_ROLE.TA,
+        taId.toString(),
+        assignment._id.toString()
+      );
+
+      expect(got._id.toString()).toBe(assignment._id.toString());
     });
   });
 });

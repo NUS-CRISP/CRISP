@@ -29,6 +29,7 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
           <>
             {message}
             <br />
+            <br />
           </>
         )}
         This action cannot be undone.

@@ -2,7 +2,8 @@ import mongoose, { Schema, Types, Document } from 'mongoose';
 import { PeerReviewSubmission as SharedPeerReviewSubmission } from '@shared/types/PeerReview';
 
 export interface PeerReviewSubmission
-  extends Omit<
+  extends
+    Omit<
       SharedPeerReviewSubmission,
       '_id' | 'peerReviewId' | 'peerReviewAssignmentId' | 'reviewerId'
     >,
@@ -62,14 +63,6 @@ const peerReviewSubmissionSchema = new Schema<PeerReviewSubmission>(
     lastEditedAt: { type: Date },
     submittedAt: { type: Date },
     overallComment: { type: String, default: '' },
-
-    scores: {
-      type: Schema.Types.Mixed,
-      default: {},
-    },
-
-    totalScore: { type: Number },
-    feedback: { type: String },
   },
   {
     timestamps: true,

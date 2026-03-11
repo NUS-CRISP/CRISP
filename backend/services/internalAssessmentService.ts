@@ -36,6 +36,7 @@ import {
   MultipleResponseAnswer,
 } from '@models/Answer';
 import { CRISP_ROLE } from '@shared/types/auth/CrispRole';
+import { InternalAssessmentType } from '@shared/types/InternalAssessment';
 
 /**
  * Retrieves an internal assessment by ID.
@@ -220,6 +221,7 @@ export const deleteInternalAssessmentById = async (assessmentId: string) => {
  */
 interface InternalAssessmentData {
   assessmentName: string;
+  assessmentType: InternalAssessmentType;
   description: string;
   startDate: Date;
   endDate?: Date;
@@ -247,6 +249,7 @@ export const addInternalAssessmentsToCourse = async (
   for (const data of assessmentsData) {
     const {
       assessmentName,
+      assessmentType,
       description,
       startDate,
       endDate,
@@ -281,6 +284,7 @@ export const addInternalAssessmentsToCourse = async (
     const assessment = new InternalAssessmentModel({
       course: courseId,
       assessmentName,
+      assessmentType,
       description,
       startDate,
       endDate,

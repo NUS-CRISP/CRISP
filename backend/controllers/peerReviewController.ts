@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import {
   getAllPeerReviewsyId,
   getPeerReviewInfoById,
-  createPeerReviewById,
   deletePeerReviewById,
   updatePeerReviewById,
 } from '../services/peerReviewService';
@@ -42,23 +41,6 @@ export const getPeerReviewInfo = async (req: Request, res: Response) => {
   }
 };
 
-export const createPeerReview = async (req: Request, res: Response) => {
-  try {
-    const { account, userCourseRole } = await verifyRequestUser(req);
-    const userId = await verifyRequestPermission(account._id, userCourseRole, [
-      COURSE_ROLE.Faculty,
-    ]);
-
-    const newPeerReview = await createPeerReviewById(
-      req.params.courseId,
-      req.body
-    );
-    res.status(201).json(newPeerReview);
-  } catch (error) {
-    return handleError(res, error, 'Failed to create peer review');
-  }
-};
-
 export const deletePeerReview = async (req: Request, res: Response) => {
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
@@ -82,7 +64,7 @@ export const updatePeerReview = async (req: Request, res: Response) => {
       COURSE_ROLE.Faculty,
     ]);
 
-    await updatePeerReviewById(req.params.peerReviewId, userId, req.body);
+    await updatePeerReviewById(req.params.peerReviewId, req.body);
     res
       .status(200)
       .json({ message: 'Peer review settings updated successfully' });

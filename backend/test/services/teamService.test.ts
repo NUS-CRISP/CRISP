@@ -694,14 +694,18 @@ describe('teamService', () => {
       ).rejects.toThrow(NotFoundError);
     });
 
-    it('should throw NotFoundError if team data does not exist', async () => {
+    it('should return fallback data if team data does not exist', async () => {
       const course = await createTestCourse(commonCourseDetails);
       const team = await createTestTeam(commonTeamDetails);
-      // team.teamData is not set, so resolveTeamRepo should throw
+      // team.teamData is not set, so resolveTeamRepo should return fallback
 
-      await expect(
-        resolveTeamRepo(course._id.toHexString(), team._id.toHexString())
-      ).rejects.toThrow(NotFoundError);
+      const result = await resolveTeamRepo(
+        course._id.toHexString(),
+        team._id.toHexString()
+      );
+      expect(result.repoName).toBe(team.number.toString());
+      expect(result.repoUrl).toBe('https://github.com/gongg21/AddSubtract.git');
+      expect(result.gitHubOrgName).toBe('N/A');
     });
 
     it('should resolve repo for GitHubOrg course type', async () => {

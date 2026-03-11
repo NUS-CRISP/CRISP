@@ -43,7 +43,6 @@ import { addStudentsToTeam, addTAsToTeam } from '../services/teamService';
 import { createTeamSet } from '../services/teamSetService';
 import { getAccountId, verifyRequestUser } from '../utils/auth';
 import { addInternalAssessmentsToCourse } from '../services/internalAssessmentService';
-import AccountModel from '@models/Account';
 import { getUserIdByAccountId } from '../services/accountService';
 
 /*----------------------------------------Auth----------------------------------------*/

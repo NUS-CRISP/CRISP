@@ -9,12 +9,13 @@ import {
   MissingAuthorizationError,
 } from './errors';
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
-import { PeerReview } from '@models/PeerReview';
+import PeerReviewModel, { PeerReview } from '@models/PeerReview';
 import { getPeerReviewById } from './peerReviewService';
 import {
   fetchSubmissionForAssignment,
   assertSubmissionWritableByCaller,
 } from './peerReviewSubmissionService';
+import { PeerReviewGradingTaskModel } from '@models/PeerReviewGradingTask';
 
 const ASSIGNMENT_NOT_FOUND = 'Peer review assignment not found';
 const COMMENT_NOT_FOUND = 'Peer review comment not found';
@@ -43,7 +44,7 @@ export const getPeerReviewCommentsByAssignmentId = async (
 
   // Course coordinators can view all comments
   if (userCourseRole === COURSE_ROLE.Faculty) {
-    return findCommentsVisible(assignmentId);
+    return findCommentsVisible(assignmentId, userId, userCourseRole, true);
   }
 
   // Students can only view their own comments in their own assignments and own team repository
@@ -61,14 +62,19 @@ export const getPeerReviewCommentsByAssignmentId = async (
     );
 
     if (submission) {
-      return findMyCommentsVisible(assignmentId, userId);
+      return findCommentsForSubmissionVisible(
+        submission._id.toString(),
+        userId,
+        userCourseRole
+      );
     }
   }
 
   // TAs: see all comments for supervising teams, only own comments for reviewing teams
   if (userCourseRole === COURSE_ROLE.TA) {
     const isSupervisingTA = reviewee.TA?.toString() === userId;
-    if (isSupervisingTA) return findCommentsVisible(assignmentId);
+    if (isSupervisingTA)
+      return findCommentsVisible(assignmentId, userId, userCourseRole, true);
 
     const submission = await findSubmissionForUserOnAssignment(
       userId,
@@ -80,10 +86,63 @@ export const getPeerReviewCommentsByAssignmentId = async (
     );
 
     if (submission) {
-      return findMyCommentsVisible(assignmentId, userId);
+      return findCommentsForSubmissionVisible(
+        submission._id.toString(),
+        userId,
+        userCourseRole
+      );
     }
   }
   throw new MissingAuthorizationError(UNAUTHORIZED_TO_VIEW_COMMENTS);
+};
+
+export const getPeerReviewCommentsBySubmissionId = async (
+  userId: string,
+  userCourseRole: string,
+  assessmentId: string,
+  peerReviewSubmissionId: string
+) => {
+  const pr = await PeerReviewModel.findOne({
+    internalAssessmentId: assessmentId,
+  })
+    .select('_id')
+    .lean();
+  if (!pr) throw new NotFoundError('Peer review not found for assessment');
+
+  const submission = await PeerReviewSubmissionModel.findById(
+    peerReviewSubmissionId
+  )
+    .select('_id peerReviewId peerReviewAssignmentId')
+    .lean();
+  if (!submission) throw new NotFoundError('Peer review submission not found');
+
+  if (String(submission.peerReviewId) !== String(pr._id)) {
+    throw new BadRequestError(
+      'Submission does not belong to this peer review assessment'
+    );
+  }
+
+  if (userCourseRole === COURSE_ROLE.TA) {
+    const hasTask = await PeerReviewGradingTaskModel.exists({
+      peerReviewId: pr._id,
+      peerReviewSubmissionId: submission._id,
+      grader: oid(userId),
+    });
+    if (!hasTask) {
+      throw new MissingAuthorizationError(
+        'Not assigned to grade this submission'
+      );
+    }
+  }
+
+  // Return comments for THIS submission only
+  const comments = await PeerReviewCommentModel.find({
+    peerReviewSubmissionId: submission._id,
+  })
+    .populate('author', '_id name')
+    .lean();
+
+  return decorateCommentsForViewer(comments, userId, userCourseRole, false);
 };
 
 export const addPeerReviewCommentByAssignmentId = async (
@@ -103,6 +162,7 @@ export const addPeerReviewCommentByAssignmentId = async (
     assignment.peerReviewId.toString()
   );
   assertPeerReviewNotClosed(peerReview);
+  const reviewee = await fetchReviewee(assignment.reviewee.toString());
 
   // Parse data
   const { filePath, startLine, endLine, comment } = commentData;
@@ -117,19 +177,30 @@ export const addPeerReviewCommentByAssignmentId = async (
   }
 
   if (userCourseRole !== COURSE_ROLE.Faculty) {
-    if (!submissionId) {
-      throw new BadRequestError('Submission ID is required to add comment');
+    const isSupervisingTA =
+      userCourseRole === COURSE_ROLE.TA && reviewee.TA?.toString() === userId;
+    if (isSupervisingTA) {
+      // TA supervisors can comment without a submission
+    } else {
+      if (!submissionId) {
+        throw new BadRequestError('Submission ID is required to add comment');
+      }
+      const submission = await fetchSubmissionForAssignment(
+        submissionId,
+        assignmentId
+      );
+      await assertSubmissionWritableByCaller(
+        userId,
+        userCourseRole,
+        submission
+      );
     }
-    const submission = await fetchSubmissionForAssignment(
-      submissionId,
-      assignmentId
-    );
-    await assertSubmissionWritableByCaller(userId, userCourseRole, submission);
   }
 
   const newComment = new PeerReviewCommentModel({
     peerReviewId: assignment.peerReviewId,
     peerReviewAssignmentId: assignmentId,
+    ...(submissionId && { peerReviewSubmissionId: submissionId }),
     createdAt: Date.now(),
     filePath,
     startLine,
@@ -151,24 +222,46 @@ export const updatePeerReviewCommentById = async (
   updatedComment: string,
   submissionId: string
 ) => {
-  if (userCourseRole !== COURSE_ROLE.Faculty) {
-    if (!submissionId)
-      throw new BadRequestError('Submission ID is required to delete comment');
-    const submission = await fetchSubmissionForAssignment(
-      submissionId,
-      assignmentId
-    );
-    if (submission.status === 'Submitted')
-      throw new BadRequestError('Cannot delete comments on submitted reviews');
-    await assertSubmissionWritableByCaller(userId, userCourseRole, submission);
-  }
-
   const comment = await PeerReviewCommentModel.findById(commentId);
   if (!comment) throw new NotFoundError(COMMENT_NOT_FOUND);
-  if (
-    userCourseRole !== COURSE_ROLE.Faculty &&
-    comment.peerReviewSubmissionId.toString() !== submissionId
-  )
+
+  // Faculty can update any comment
+  if (userCourseRole === COURSE_ROLE.Faculty) {
+    if (updatedComment.trim().length === 0)
+      throw new BadRequestError('Comment text cannot be empty');
+    comment.comment = updatedComment;
+    comment.updatedAt = new Date();
+    await comment.save();
+    return;
+  }
+
+  // TAs can update any comment for teams they supervise
+  if (userCourseRole === COURSE_ROLE.TA) {
+    const assignment = await fetchAssignment(assignmentId);
+    const reviewee = await fetchReviewee(assignment.reviewee.toString());
+    const isSupervisingTA = reviewee.TA?.toString() === userId;
+    if (isSupervisingTA) {
+      if (updatedComment.trim().length === 0)
+        throw new BadRequestError('Comment text cannot be empty');
+      comment.comment = updatedComment;
+      comment.updatedAt = new Date();
+      await comment.save();
+      return;
+    }
+  }
+
+  // Non-supervisors must provide submissionId
+  if (!submissionId)
+    throw new BadRequestError('Submission ID is required to update comment');
+  const submission = await fetchSubmissionForAssignment(
+    submissionId,
+    assignmentId
+  );
+  if (submission.status === 'Submitted')
+    throw new BadRequestError('Cannot update comments on submitted reviews');
+  await assertSubmissionWritableByCaller(userId, userCourseRole, submission);
+
+  if (comment.peerReviewSubmissionId?.toString() !== submissionId)
     throw new BadRequestError(
       'Comment does not belong to the provided submission'
     );
@@ -176,9 +269,18 @@ export const updatePeerReviewCommentById = async (
   const peerReview = await getPeerReviewById(comment.peerReviewId.toString());
   assertPeerReviewNotClosed(peerReview);
 
-  // Only can update own comments, no matter the role
-  if (userId !== comment.author.toString())
-    throw new MissingAuthorizationError(UNAUTHORIZED_TO_UPDATE_COMMENTS);
+  // Team reviewer mode: any member of the reviewer team can update team comments
+  if (
+    userCourseRole === COURSE_ROLE.Student &&
+    submission.reviewerKind === 'Team'
+  ) {
+    if (!submission.reviewerTeamId)
+      throw new MissingAuthorizationError(UNAUTHORIZED_TO_UPDATE_COMMENTS);
+  } else {
+    // Non-team mode: only author can update
+    if (userId !== comment.author.toString())
+      throw new MissingAuthorizationError(UNAUTHORIZED_TO_UPDATE_COMMENTS);
+  }
 
   if (updatedComment.trim().length === 0)
     throw new BadRequestError('Comment text cannot be empty');
@@ -232,12 +334,18 @@ export const deletePeerReviewCommentById = async (
     );
   await assertSubmissionWritableByCaller(userId, userCourseRole, submission);
 
-  // Students and TAs can only delete own comments if they are the reviewer
+  // Team reviewer mode: any member of the reviewer team can delete team comments
   if (
-    (userCourseRole === COURSE_ROLE.Student ||
-      userCourseRole === COURSE_ROLE.TA) &&
-    userId === comment.author.toString()
-  )
+    userCourseRole === COURSE_ROLE.Student &&
+    submission.reviewerKind === 'Team'
+  ) {
+    if (!submission.reviewerTeamId)
+      throw new MissingAuthorizationError(UNAUTHORIZED_TO_DELETE_COMMENTS);
+    return await PeerReviewCommentModel.deleteOne({ _id: commentId });
+  }
+
+  // Individual student/TA reviewers can only delete own comments
+  if (userId === comment.author.toString())
     return await PeerReviewCommentModel.deleteOne({ _id: commentId });
 
   throw new MissingAuthorizationError(UNAUTHORIZED_TO_DELETE_COMMENTS);
@@ -302,19 +410,108 @@ const findCommentsAnonymous = async (assignmentId: string) => {
     .lean();
 };
 
-const findCommentsVisible = async (assignmentId: string) => {
-  return PeerReviewCommentModel.find({ peerReviewAssignmentId: assignmentId })
-    .populate('author', 'name')
-    .lean();
-};
-
-const findMyCommentsVisible = async (assignmentId: string, userId: string) => {
-  return PeerReviewCommentModel.find({
+const findCommentsVisible = async (
+  assignmentId: string,
+  userId: string,
+  userCourseRole: string,
+  canModerateAll: boolean
+) => {
+  const comments = await PeerReviewCommentModel.find({
     peerReviewAssignmentId: assignmentId,
-    author: userId,
   })
     .populate('author', 'name')
     .lean();
+
+  return decorateCommentsForViewer(
+    comments,
+    userId,
+    userCourseRole,
+    canModerateAll
+  );
+};
+
+const findCommentsForSubmissionVisible = async (
+  submissionId: string,
+  userId: string,
+  userCourseRole: string
+) => {
+  const comments = await PeerReviewCommentModel.find({
+    peerReviewSubmissionId: submissionId,
+  })
+    .populate('author', '_id name')
+    .lean();
+
+  return decorateCommentsForViewer(comments, userId, userCourseRole, false);
+};
+
+const decorateCommentsForViewer = async (
+  comments: any[],
+  userId: string,
+  userCourseRole: string,
+  canModerateAll: boolean
+) => {
+  if (!comments?.length) return comments;
+
+  const submissionIds = Array.from(
+    new Set(
+      comments
+        .map(c => c.peerReviewSubmissionId)
+        .filter(Boolean)
+        .map((id: any) => String(id))
+    )
+  ).map(oid);
+
+  const submissions = submissionIds.length
+    ? await PeerReviewSubmissionModel.find({ _id: { $in: submissionIds } })
+        .select('_id reviewerKind reviewerTeamId')
+        .lean()
+    : [];
+
+  const submissionById = new Map(submissions.map(s => [String(s._id), s]));
+
+  const reviewerTeamIds = Array.from(
+    new Set(
+      submissions
+        .filter(s => s.reviewerKind === 'Team' && s.reviewerTeamId)
+        .map(s => String(s.reviewerTeamId))
+    )
+  ).map(oid);
+
+  const reviewerTeams = reviewerTeamIds.length
+    ? await TeamModel.find({ _id: { $in: reviewerTeamIds } })
+        .select('_id number members')
+        .lean()
+    : [];
+
+  const reviewerTeamById = new Map(reviewerTeams.map(t => [String(t._id), t]));
+
+  return comments.map(c => {
+    const submission = c.peerReviewSubmissionId
+      ? submissionById.get(String(c.peerReviewSubmissionId))
+      : null;
+
+    let displayAuthorName = c.author?.name;
+    let canManage = canModerateAll;
+
+    if (submission?.reviewerKind === 'Team' && submission.reviewerTeamId) {
+      const team = reviewerTeamById.get(String(submission.reviewerTeamId));
+      if (team) {
+        displayAuthorName = `Team ${team.number}`;
+        const isTeamMember = (team.members ?? []).map(String).includes(userId);
+        if (userCourseRole === COURSE_ROLE.Student && isTeamMember) {
+          canManage = true;
+        }
+      }
+    } else if (!canManage) {
+      canManage = String(c.author?._id) === userId;
+    }
+
+    return {
+      ...c,
+      displayAuthorName,
+      canManage,
+    };
+  });
 };
 
 const assertPeerReviewNotClosed = (peerReview: PeerReview) => {

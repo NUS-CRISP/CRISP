@@ -27,7 +27,7 @@ interface PeerReviewTAAccordionItemProps {
     label: string;
   }[];
   TAToAssignments: TAToAssignmentsMap;
-  hasFacultyPermission: boolean;
+  isFaculty: boolean;
   addManualAssignment: (
     revieweeId: string,
     reviewerId: string,
@@ -47,7 +47,7 @@ const PeerReviewTAAccordionItem = forwardRef<
   ({
     teams,
     TAToAssignments,
-    hasFacultyPermission,
+    isFaculty,
     addManualAssignment,
     deleteManualAssignment,
   }) => {
@@ -96,13 +96,12 @@ const PeerReviewTAAccordionItem = forwardRef<
     return (
       <Accordion.Item key={'teaching-assistants'} value={'teaching-assistants'}>
         <Accordion.Control>
-          <Text fw={600}>Teaching Assistants</Text>
+          <Text fw={600}>TA Assignments</Text>
         </Accordion.Control>
         <Accordion.Panel>
           <Group display="flex" align="flex-start">
             <Stack gap="sm" display="flex" flex="1">
               <Stack gap={8}>
-                <Text fw={600}>TA Assignments</Text>
                 <Divider />
                 {taEntries.length > 0 ? (
                   taEntries.map(([taId, info]) => (
@@ -111,7 +110,7 @@ const PeerReviewTAAccordionItem = forwardRef<
                         <Text>
                           {info.taName} ({taAssignedCount[taId]})
                         </Text>
-                        {hasFacultyPermission && (
+                        {isFaculty && (
                           <AddManualAssignmentBox
                             assignedCount={taAssignedCount[taId] ?? 0}
                             dropdownOptions={getTaOptions(taId)}
@@ -125,7 +124,7 @@ const PeerReviewTAAccordionItem = forwardRef<
                       </Group>
                       <PeerReviewAssignments
                         assignments={info.assignedReviews}
-                        hasFacultyPermission={hasFacultyPermission}
+                        isFaculty={isFaculty}
                         onDelete={(reviewee: Team) => {
                           setToBeDeletedReviewer({
                             reviewee,

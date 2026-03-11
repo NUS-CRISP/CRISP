@@ -1,6 +1,4 @@
-import { Tabs, Container, Button, Modal, Group } from '@mantine/core';
-import PeerReviewSettingsForm from '../forms/PeerReviewSettingsForm';
-import { useDisclosure } from '@mantine/hooks';
+import { Tabs, Container, ScrollArea } from '@mantine/core';
 import { TeamSet } from '@shared/types/TeamSet';
 import { PeerReview } from '@shared/types/PeerReview';
 import PeerReviewInfo from './PeerReviewInfo';
@@ -9,7 +7,7 @@ interface PeerReviewOverviewProps {
   courseId: string;
   teamSets: TeamSet[];
   peerReviews: PeerReview[];
-  hasFacultyPermission: boolean;
+  isFaculty: boolean;
   onUpdate: () => void;
 }
 
@@ -17,37 +15,14 @@ const PeerReviewOverview: React.FC<PeerReviewOverviewProps> = ({
   courseId,
   teamSets,
   peerReviews,
-  hasFacultyPermission,
+  isFaculty,
   onUpdate,
 }) => {
-  const [openedCreateForm, { open: openCreateForm, close: closeCreateForm }] =
-    useDisclosure(false);
+  const defaultTab = peerReviews[0]?._id || 'default';
 
   return (
     <Container>
-      {hasFacultyPermission && (
-        <Group>
-          <Button onClick={openCreateForm}>Create Peer Review</Button>
-          <Modal
-            opened={openedCreateForm}
-            onClose={closeCreateForm}
-            title="Create Peer Review"
-            centered
-          >
-            <PeerReviewSettingsForm
-              courseId={courseId}
-              peerReview={null}
-              teamSets={teamSets}
-              onSubmit={() => {
-                closeCreateForm();
-                onUpdate();
-              }}
-              onClose={closeCreateForm}
-            />
-          </Modal>
-        </Group>
-      )}
-      <Tabs mt="md">
+      <Tabs mt="md" defaultValue={defaultTab}>
         <Tabs.List
           style={{
             justifyContent: 'center',
@@ -68,13 +43,20 @@ const PeerReviewOverview: React.FC<PeerReviewOverviewProps> = ({
 
         {peerReviews.map(pr => (
           <Tabs.Panel key={pr._id} value={pr._id} pt="xs">
-            <PeerReviewInfo
-              courseId={courseId}
-              teamSets={teamSets}
-              peerReview={pr}
-              hasFacultyPermission={hasFacultyPermission}
-              onUpdate={onUpdate}
-            />
+            <ScrollArea
+              style={{ height: 'calc(100vh - 180px)' }}
+              scrollbarSize={8}
+              offsetScrollbars
+              pb="md"
+            >
+              <PeerReviewInfo
+                courseId={courseId}
+                teamSets={teamSets}
+                peerReview={pr}
+                isFaculty={isFaculty}
+                onUpdate={onUpdate}
+              />
+            </ScrollArea>
           </Tabs.Panel>
         ))}
       </Tabs>

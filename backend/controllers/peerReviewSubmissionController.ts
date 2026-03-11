@@ -64,17 +64,17 @@ export const putMySubmissionDraft = async (req: Request, res: Response) => {
       userCourseRole,
       []
     );
-    const { courseId, assignmentId } = req.params;
+    const { courseId, peerReviewAssignmentId } = req.params;
 
     const updated = await updateMySubmissionDraft(
       userId,
       userCourseRole,
-      assignmentId
+      peerReviewAssignmentId
     );
 
     res.status(200).json(updated);
   } catch (err) {
-    handleError(res, err, 'Failed to save submission draft');
+    return handleError(res, err, 'Failed to save submission draft');
   }
 };
 
@@ -86,16 +86,16 @@ export const postSubmitMySubmission = async (req: Request, res: Response) => {
       userCourseRole,
       []
     );
-    const { courseId, assignmentId } = req.params;
+    const { courseId, peerReviewAssignmentId } = req.params;
 
     const submitted = await submitMySubmission(
       userId,
       userCourseRole,
-      assignmentId
+      peerReviewAssignmentId
     );
 
     res.status(200).json(submitted);
   } catch (err) {
-    handleError(res, err, 'Failed to submit submission');
+    return handleError(res, err, 'Failed to submit submission');
   }
 };

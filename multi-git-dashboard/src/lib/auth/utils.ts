@@ -1,5 +1,5 @@
 import { CRISP_ROLE, CrispRole } from '@shared/types/auth/CrispRole';
-import { CourseRole, CourseRoleTuple } from '@shared/types/auth/CourseRole';
+import { COURSE_ROLE, CourseRole } from '@shared/types/auth/CourseRole';
 import { useSession } from 'next-auth/react';
 
 export const hasPermission = (...CrispRoles: CrispRole[]) => {
@@ -13,16 +13,23 @@ export const hasPermission = (...CrispRoles: CrispRole[]) => {
 export const hasFacultyPermission = () =>
   hasPermission(CRISP_ROLE.Admin, CRISP_ROLE.Faculty);
 
+export const hasTAPermission = (courseId: string) => {
+  const { data: session } = useSession();
+  const userCourseRole = session?.user.courseRoles.find(
+    cr => cr.course.toString() === courseId
+  )?.courseRole;
+  return (userCourseRole && userCourseRole === COURSE_ROLE.TA) || false;
+};
+
 export const hasCoursePermission = (
   courseId: string,
-  ...CourseRoles: CourseRole[]
+  authorisedRoles: CourseRole[]
 ) => {
   const { data: session } = useSession();
-  return (
-    session?.user.courseRoles
-      .filter((r: CourseRoleTuple) => r.course === courseId)
-      .some((r: CourseRoleTuple) => CourseRoles.includes(r.courseRole)) || false
-  );
+  const userCourseRole = session?.user.courseRoles.find(
+    cr => cr.course.toString() === courseId
+  )?.courseRole;
+  return userCourseRole && authorisedRoles.includes(userCourseRole);
 };
 
 export const isTrialUser = (...CrispRoles: CrispRole[]) => {

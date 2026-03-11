@@ -2,8 +2,10 @@ import { Box, Stack, Text, rem } from '@mantine/core';
 import classes from '@styles/ContactIcons.module.css';
 import { IconAt, IconMapPin, IconSun } from '@tabler/icons-react';
 
-interface ContactIconProps
-  extends Omit<React.ComponentPropsWithoutRef<'div'>, 'title'> {
+interface ContactIconProps extends Omit<
+  React.ComponentPropsWithoutRef<'div'>,
+  'title'
+> {
   icon: typeof IconSun;
   title: React.ReactNode;
   description: React.ReactNode;

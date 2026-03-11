@@ -4,24 +4,28 @@ import { Assessment } from '@shared/types/Assessment';
 import { InternalAssessment } from '@shared/types/InternalAssessment';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { hasFacultyPermission } from '@/lib/auth/utils';
+import { useSession } from 'next-auth/react';
+import { hasTAPermission, hasFacultyPermission } from '@/lib/auth/utils';
+import { TeamSet } from '@shared/types/TeamSet';
 
 const AssessmentListPage: React.FC = () => {
   const router = useRouter();
+  const { status } = useSession();
   const { id } = router.query as {
     id: string;
   };
 
   const assessmentsApiRoute = `/api/courses/${id}/assessments`;
   const internalAssessmentsApiRoute = `/api/courses/${id}/internal-assessments`;
-  const courseTeamSetNamesApiRoute = `/api/courses/${id}/teamsets/names`;
+  const courseTeamSetNamesApiRoute = `/api/courses/${id}/teamsets`;
 
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [internalAssessments, setInternalAssessments] = useState<
     InternalAssessment[]
   >([]);
-  const [teamSetNames, setTeamSetNames] = useState<string[]>([]);
-  const permission = hasFacultyPermission();
+  const [teamSets, setTeamSets] = useState<TeamSet[]>([]);
+  const isFaculty = hasFacultyPermission();
+  const isTA = hasTAPermission(id);
 
   const onUpdate = () => {
     fetchAssessments();
@@ -30,12 +34,12 @@ const AssessmentListPage: React.FC = () => {
   };
 
   useEffect(() => {
-    if (router.isReady) {
+    if (router.isReady && status !== 'loading') {
       fetchAssessments();
       fetchInternalAssessments();
       fetchTeamSetNames();
     }
-  }, [router.isReady]);
+  }, [router.isReady, status, id]);
 
   const fetchAssessments = async () => {
     try {
@@ -77,7 +81,7 @@ const AssessmentListPage: React.FC = () => {
         const data: InternalAssessment[] = await response.json();
         console.log('Internal Assessments:', data);
 
-        if (permission) {
+        if (isFaculty || isTA) {
           setInternalAssessments(data);
         } else {
           const releasedAssessments = data.filter(
@@ -103,8 +107,8 @@ const AssessmentListPage: React.FC = () => {
       if (!response.ok) {
         console.error('Error fetching team set names:', response.statusText);
       } else {
-        const data: string[] = await response.json();
-        setTeamSetNames(data);
+        const data: TeamSet[] = await response.json();
+        setTeamSets(data);
         console.log('Team Set Names:', data);
       }
     } catch (error) {
@@ -118,7 +122,7 @@ const AssessmentListPage: React.FC = () => {
         courseId={id}
         assessments={assessments}
         internalAssessments={internalAssessments}
-        teamSetNames={teamSetNames}
+        teamSets={teamSets}
         onUpdate={onUpdate}
       />
     </Container>

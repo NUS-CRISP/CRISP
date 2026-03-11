@@ -5,6 +5,7 @@ import CourseModel from '../../models/Course';
 import TeamSetModel from '../../models/TeamSet';
 import TeamModel from '../../models/Team';
 import UserModel from '../../models/User';
+import InternalAssessmentModel from '../../models/InternalAssessment';
 import PeerReviewModel from '../../models/PeerReview';
 import PeerReviewAssignmentModel from '../../models/PeerReviewAssignment';
 import PeerReviewCommentModel from '../../models/PeerReviewComment';
@@ -13,6 +14,7 @@ let mongoServer: MongoMemoryServer;
 
 let testCourseId: Types.ObjectId;
 let testTeamSetId: Types.ObjectId;
+let testAssessmentId: Types.ObjectId;
 let testPeerReviewId: Types.ObjectId;
 let testAssignmentId: Types.ObjectId;
 let testAuthorId: Types.ObjectId;
@@ -31,6 +33,7 @@ beforeEach(async () => {
   await PeerReviewCommentModel.deleteMany({});
   await PeerReviewAssignmentModel.deleteMany({});
   await PeerReviewModel.deleteMany({});
+  await InternalAssessmentModel.deleteMany({});
   await TeamModel.deleteMany({});
   await TeamSetModel.deleteMany({});
   await UserModel.deleteMany({});
@@ -51,6 +54,24 @@ beforeEach(async () => {
   }).save();
   testTeamSetId = teamSet._id;
 
+  const assessment = await new InternalAssessmentModel({
+    course: course._id,
+    assessmentType: 'peer_review',
+    assessmentName: 'Peer Review Assessment',
+    description: 'desc',
+    startDate: new Date('2026-01-01'),
+    endDate: new Date('2026-12-31'),
+    maxMarks: 10,
+    scaleToMaxMarks: true,
+    granularity: 'individual',
+    teamSet: teamSet._id,
+    areSubmissionsEditable: false,
+    isReleased: false,
+    questions: [],
+    results: [],
+  }).save();
+  testAssessmentId = assessment._id;
+
   const reviewee = await new TeamModel({
     teamSet: testTeamSetId,
     number: 1,
@@ -60,6 +81,7 @@ beforeEach(async () => {
   const peerReview = await new PeerReviewModel({
     course: testCourseId,
     teamSetId: testTeamSetId,
+    internalAssessmentId: testAssessmentId,
     title: 'PR Title',
     startDate: new Date(now + 60000),
     endDate: new Date(now + 120000),

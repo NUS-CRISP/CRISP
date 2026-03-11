@@ -2,14 +2,12 @@ import type { Request, Response } from 'express';
 import {
   getAllPeerReviews,
   getPeerReviewInfo,
-  createPeerReview,
   deletePeerReview,
   updatePeerReview,
 } from '../../controllers/peerReviewController';
 import {
   getAllPeerReviewsyId,
   getPeerReviewInfoById,
-  createPeerReviewById,
   deletePeerReviewById,
   updatePeerReviewById,
 } from '../../services/peerReviewService';
@@ -19,7 +17,6 @@ import { handleError } from '../../utils/error';
 jest.mock('../../services/peerReviewService', () => ({
   getAllPeerReviewsyId: jest.fn(),
   getPeerReviewInfoById: jest.fn(),
-  createPeerReviewById: jest.fn(),
   deletePeerReviewById: jest.fn(),
   updatePeerReviewById: jest.fn(),
 }));
@@ -140,54 +137,6 @@ describe('peerReviewController', () => {
     });
   });
 
-  describe('createPeerReview', () => {
-    it('returns 201 with created peer review', async () => {
-      (verifyRequestUser as jest.Mock).mockResolvedValue({
-        account: { _id: 'acc1' },
-        userCourseRole: 'Faculty',
-      });
-      (verifyRequestPermission as jest.Mock).mockResolvedValue('u1');
-      (createPeerReviewById as jest.Mock).mockResolvedValue({ _id: 'pr1' });
-
-      const req = makeReq({
-        params: { courseId: 'c1' } as any,
-        body: { title: 'New PR' },
-      });
-      const res = makeRes();
-
-      await createPeerReview(req, res);
-
-      expect(verifyRequestUser).toHaveBeenCalledWith(req);
-      // just ensure it enforces faculty gating via verifyRequestPermission call
-      expect(verifyRequestPermission).toHaveBeenCalledWith(
-        'acc1',
-        'Faculty',
-        expect.any(Array)
-      );
-      expect(createPeerReviewById).toHaveBeenCalledWith('c1', {
-        title: 'New PR',
-      });
-      expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith({ _id: 'pr1' });
-    });
-
-    it('calls handleError on failure', async () => {
-      const err = new Error('boom');
-      (verifyRequestUser as jest.Mock).mockRejectedValue(err);
-
-      const req = makeReq({ params: { courseId: 'c1' } as any });
-      const res = makeRes();
-
-      await createPeerReview(req, res);
-
-      expect(handleError).toHaveBeenCalledWith(
-        res,
-        err,
-        'Failed to create peer review'
-      );
-    });
-  });
-
   describe('deletePeerReview', () => {
     it('returns 200 with success message', async () => {
       (verifyRequestUser as jest.Mock).mockResolvedValue({
@@ -240,7 +189,6 @@ describe('peerReviewController', () => {
         account: { _id: 'acc1' },
         userCourseRole: 'Faculty',
       });
-      (verifyRequestPermission as jest.Mock).mockResolvedValue('u1');
       (updatePeerReviewById as jest.Mock).mockResolvedValue(undefined);
 
       const req = makeReq({
@@ -257,7 +205,7 @@ describe('peerReviewController', () => {
         'Faculty',
         expect.any(Array)
       );
-      expect(updatePeerReviewById).toHaveBeenCalledWith('pr1', 'u1', {
+      expect(updatePeerReviewById).toHaveBeenCalledWith('pr1', {
         title: 'Updated',
       });
 

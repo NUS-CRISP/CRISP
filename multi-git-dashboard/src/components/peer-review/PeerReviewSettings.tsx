@@ -9,34 +9,22 @@ import {
   Button,
 } from '@mantine/core';
 import { PeerReview } from '@shared/types/PeerReview';
+import { formatDate } from '../../lib/utils';
 
 interface PeerReviewSettingsProps {
   peerReview: PeerReview;
   teamSetName: string;
-  hasFacultyPermission: boolean;
+  isFaculty: boolean;
   onClickUpdate: () => void;
   onClickDelete: () => void;
-  onClickAssign: () => void;
 }
-
-const formatDate = (value: Date | string | null | undefined) => {
-  if (!value) return '—';
-  const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) return '—';
-  return date.toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-};
 
 const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
   peerReview,
   teamSetName,
-  hasFacultyPermission,
+  isFaculty,
   onClickUpdate,
   onClickDelete,
-  onClickAssign,
 }) => {
   const {
     description,
@@ -68,16 +56,16 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
           <Badge
             color={
               status === 'Closed'
-                ? 'green'
+                ? 'red'
                 : status === 'Active'
-                  ? 'yellow'
-                  : 'violet'
+                  ? 'green'
+                  : 'yellow'
             }
           >
             {status}
           </Badge>
-          <Badge variant="outline">Reviewer Type: {reviewerType}</Badge>
-          {hasFacultyPermission && (
+          <Badge variant="light">Reviewer Type: {reviewerType}</Badge>
+          {isFaculty && (
             <Badge variant="light" color={taAssignments ? 'teal' : 'red'}>
               TA Reviews: {taAssignments ? 'Enabled' : 'Disabled'}
             </Badge>
@@ -103,7 +91,7 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
             <Text fz="sm">{formatDate(startDate)}</Text>
           </Stack>
 
-          {hasFacultyPermission && (
+          {isFaculty && (
             <>
               <Stack gap={2}>
                 <Text fz="xs" c="dimmed">
@@ -127,7 +115,7 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
             </Text>
             <Text fz="sm">{formatDate(endDate)}</Text>
           </Stack>
-          {hasFacultyPermission && (
+          {isFaculty && (
             <Stack gap={2}>
               <Text fz="xs" c="dimmed">
                 Max. Reviews / Reviewer
@@ -136,7 +124,7 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
             </Stack>
           )}
         </Stack>
-        {hasFacultyPermission && (
+        {isFaculty && (
           <Stack mt="sm">
             <Button
               onClick={onClickUpdate}
@@ -153,14 +141,6 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
               disabled={status === 'Closed'}
             >
               Delete Peer Review
-            </Button>
-            <Button
-              color="yellow"
-              variant="light"
-              onClick={onClickAssign}
-              disabled={status === 'Closed'}
-            >
-              Assign All Peer Reviews
             </Button>
           </Stack>
         )}

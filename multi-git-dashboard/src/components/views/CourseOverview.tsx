@@ -13,7 +13,7 @@ import {
   ThemeIcon,
   Title,
 } from '@mantine/core';
-import { hasFacultyPermission } from '@/lib/auth/utils';
+import { hasFacultyPermission, hasTAPermission } from '@/lib/auth/utils';
 import { Course } from '@shared/types/Course';
 import { TeamData, TeamPR } from '@shared/types/TeamData';
 import { Status } from '@shared/types/util/Status';
@@ -64,7 +64,8 @@ const timeAgo = (d: Date) => {
 const normalizePrState = (s?: string) => (s ?? '').trim().toLowerCase();
 
 const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
-  const permission = hasFacultyPermission();
+  const isFaculty = hasFacultyPermission();
+  const isTA = hasTAPermission(courseId);
 
   const [course, setCourse] = useState<Course | null>(null);
   const [teamDatas, setTeamDatas] = useState<TeamData[]>([]);
@@ -330,7 +331,7 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
               </Text>
             </Card>
 
-            {permission ? (
+            {isFaculty || isTA ? (
               <Card
                 withBorder
                 radius="xl"
@@ -343,7 +344,7 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
                 </ThemeIcon>
                 <Group justify="space-between" wrap="nowrap">
                   <Title order={3} className={classes.navTitle}>
-                    Create Assessment
+                    Assessments
                   </Title>
                 </Group>
                 <Text className={classes.navDescription}>
@@ -362,19 +363,19 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
                 </ThemeIcon>
                 <Group justify="space-between" wrap="nowrap">
                   <Title order={3} className={classes.navTitle}>
-                    Create Assessment
+                    Assessments
                   </Title>
                 </Group>
                 <Text className={classes.navDescription}>
                   Set up a new assignment or evaluation for your students
                 </Text>
                 <Text size="xs" c="dimmed" mt="sm">
-                  Available to faculty only
+                  Available to faculty and TAs only
                 </Text>
               </Card>
             )}
 
-            {permission ? (
+            {isFaculty ? (
               <Card
                 withBorder
                 radius="xl"

@@ -2,12 +2,14 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose, { ConnectOptions, Types } from 'mongoose';
 import CourseModel from '../../models/Course';
 import TeamSetModel from '../../models/TeamSet';
+import InternalAssessmentModel from '../../models/InternalAssessment';
 import PeerReviewModel from '../../models/PeerReview';
 
 let mongoServer: MongoMemoryServer;
 
 let testCourseId: Types.ObjectId;
 let testTeamSetId: Types.ObjectId;
+let testAssessmentId: Types.ObjectId;
 
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
@@ -20,6 +22,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await PeerReviewModel.deleteMany({});
+  await InternalAssessmentModel.deleteMany({});
   await TeamSetModel.deleteMany({});
   await CourseModel.deleteMany({});
 
@@ -38,6 +41,25 @@ beforeEach(async () => {
 
   testCourseId = course._id;
   testTeamSetId = teamSet._id;
+
+  const assessment = await new InternalAssessmentModel({
+    course: course._id,
+    assessmentType: 'peer_review',
+    assessmentName: 'Peer Review Assessment',
+    description: 'desc',
+    startDate: new Date('2026-01-01'),
+    endDate: new Date('2026-12-31'),
+    maxMarks: 10,
+    scaleToMaxMarks: true,
+    granularity: 'individual',
+    teamSet: teamSet._id,
+    areSubmissionsEditable: false,
+    isReleased: false,
+    questions: [],
+    results: [],
+  }).save();
+
+  testAssessmentId = assessment._id;
 });
 
 afterAll(async () => {
@@ -56,6 +78,7 @@ describe('PeerReviewModel', () => {
     return {
       course: testCourseId,
       teamSetId: testTeamSetId,
+      internalAssessmentId: testAssessmentId,
       title: 'PR Title',
       description: 'PR Desc',
       startDate,
@@ -104,6 +127,22 @@ describe('PeerReviewModel', () => {
     await expect(pr.save()).rejects.toThrow();
   });
 
+  it('should reject when endDate exists but startDate is missing', async () => {
+    const pr = new PeerReviewModel({
+      course: testCourseId,
+      teamSetId: testTeamSetId,
+      internalAssessmentId: testAssessmentId,
+      title: 'PR Title',
+      endDate: new Date(Date.now() + 60000),
+      reviewerType: 'Individual',
+      taAssignments: false,
+      minReviewsPerReviewer: 1,
+      maxReviewsPerReviewer: 2,
+    });
+
+    await expect(pr.save()).rejects.toThrow();
+  });
+
   it('should enforce endDate after startDate', async () => {
     const now = Date.now();
     const pr = new PeerReviewModel(
@@ -114,11 +153,11 @@ describe('PeerReviewModel', () => {
     );
 
     await expect(pr.save()).rejects.toThrow(
-      /end date must be in the future and after start date/i
+      /end date must be after start date/i
     );
   });
 
-  it('should enforce endDate in the future', async () => {
+  it('should allow past endDate for already closed peer reviews', async () => {
     const now = Date.now();
     const pr = new PeerReviewModel(
       makeValidPeerReview({
@@ -127,9 +166,32 @@ describe('PeerReviewModel', () => {
       })
     );
 
-    await expect(pr.save()).rejects.toThrow(
-      /end date must be in the future and after start date/i
+    const saved = await pr.save();
+    expect(saved.computedStatus).toBe('Closed');
+  });
+
+  it('should allow gradingEndDate without gradingStartDate', async () => {
+    const pr = new PeerReviewModel(
+      makeValidPeerReview({
+        gradingStartDate: null,
+        gradingEndDate: new Date(Date.now() + 300000),
+      })
     );
+
+    const saved = await pr.save();
+    expect(saved.gradingEndDate).toBeInstanceOf(Date);
+  });
+
+  it('should enforce gradingEndDate after gradingStartDate', async () => {
+    const now = Date.now();
+    const pr = new PeerReviewModel(
+      makeValidPeerReview({
+        gradingStartDate: new Date(now + 300000),
+        gradingEndDate: new Date(now + 240000),
+      })
+    );
+
+    await expect(pr.save()).rejects.toThrow(/gradingEndDate must be after gradingStartDate/i);
   });
 
   it('should enforce minReviewsPerReviewer >= 0', async () => {
@@ -217,6 +279,90 @@ describe('PeerReviewModel', () => {
 
     const json = pr.toJSON() as any;
     expect(json.computedStatus).toBe('Active');
+
+    jest.useRealTimers();
+  });
+
+  it('should compute computedGradingStatus = NotStarted when no grading dates exist', () => {
+    const pr = new PeerReviewModel(makeValidPeerReview());
+    expect(pr.computedGradingStatus).toBe('NotStarted');
+  });
+
+  it('should compute computedGradingStatus from gradingStartDate only', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2030-01-02T12:00:00.000Z'));
+
+    const beforeStart = new PeerReviewModel(
+      makeValidPeerReview({
+        gradingStartDate: new Date('2030-01-03T00:00:00.000Z'),
+        gradingEndDate: null,
+      })
+    );
+    expect(beforeStart.computedGradingStatus).toBe('NotStarted');
+
+    const afterStart = new PeerReviewModel(
+      makeValidPeerReview({
+        gradingStartDate: new Date('2030-01-02T00:00:00.000Z'),
+        gradingEndDate: null,
+      })
+    );
+    expect(afterStart.computedGradingStatus).toBe('InProgress');
+
+    jest.useRealTimers();
+  });
+
+  it('should compute computedGradingStatus from gradingEndDate only', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2030-01-02T12:00:00.000Z'));
+
+    const beforeEnd = new PeerReviewModel(
+      makeValidPeerReview({
+        gradingStartDate: null,
+        gradingEndDate: new Date('2030-01-03T00:00:00.000Z'),
+      })
+    );
+    expect(beforeEnd.computedGradingStatus).toBe('InProgress');
+
+    const afterEnd = new PeerReviewModel(
+      makeValidPeerReview({
+        gradingStartDate: null,
+        gradingEndDate: new Date('2030-01-02T00:00:00.000Z'),
+      })
+    );
+    expect(afterEnd.computedGradingStatus).toBe('Completed');
+
+    jest.useRealTimers();
+  });
+
+  it('should compute computedGradingStatus when gradingStartDate and gradingEndDate both exist', () => {
+    jest.useFakeTimers();
+
+    jest.setSystemTime(new Date('2030-01-01T12:00:00.000Z'));
+    const beforeWindow = new PeerReviewModel(
+      makeValidPeerReview({
+        gradingStartDate: new Date('2030-01-02T00:00:00.000Z'),
+        gradingEndDate: new Date('2030-01-03T00:00:00.000Z'),
+      })
+    );
+    expect(beforeWindow.computedGradingStatus).toBe('NotStarted');
+
+    jest.setSystemTime(new Date('2030-01-02T12:00:00.000Z'));
+    const inWindow = new PeerReviewModel(
+      makeValidPeerReview({
+        gradingStartDate: new Date('2030-01-02T00:00:00.000Z'),
+        gradingEndDate: new Date('2030-01-03T00:00:00.000Z'),
+      })
+    );
+    expect(inWindow.computedGradingStatus).toBe('InProgress');
+
+    jest.setSystemTime(new Date('2030-01-04T00:00:00.000Z'));
+    const afterWindow = new PeerReviewModel(
+      makeValidPeerReview({
+        gradingStartDate: new Date('2030-01-02T00:00:00.000Z'),
+        gradingEndDate: new Date('2030-01-03T00:00:00.000Z'),
+      })
+    );
+    expect(afterWindow.computedGradingStatus).toBe('Completed');
 
     jest.useRealTimers();
   });

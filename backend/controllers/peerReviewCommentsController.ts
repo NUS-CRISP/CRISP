@@ -43,13 +43,12 @@ export const addPeerReviewComment = async (req: Request, res: Response) => {
       userCourseRole,
       []
     );
-    const assignmentId = req.params.peerReviewAssignmentId;
     const { comment: commentData, submissionId } = req.body;
 
     const newComment = await addPeerReviewCommentByAssignmentId(
       userId,
       userCourseRole,
-      assignmentId,
+      req.params.peerReviewAssignmentId,
       submissionId,
       commentData
     );

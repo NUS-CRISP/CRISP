@@ -207,11 +207,14 @@ const PeerReviewAssignmentForm: React.FC<PeerReviewAssignmentFormProps> = ({
         >
           <Text size="sm" c="dimmed" mb="md">
             Are you sure you want to assign peer reviews? <br />
-            Existing assignments (if any) will be deleted and new assignments
-            will be made. <strong>This action cannot be undone.</strong>
+            Existing submissions, comments, and grading progress (including
+            draft/completed grades) will be deleted.
+            <br />
+            <br />
+            <strong>This action cannot be undone.</strong>
           </Text>
           <Group justify="flex-end">
-            <Button color="blue" onClick={handleSubmit}>
+            <Button color="yellow" onClick={handleSubmit}>
               Confirm Assign
             </Button>
             <Button variant="default" onClick={closeConfirmForm}>
