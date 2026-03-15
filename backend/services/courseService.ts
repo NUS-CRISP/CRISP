@@ -10,6 +10,7 @@ import { BadRequestError, NotFoundError } from './errors';
 import { InternalAssessment } from '@shared/types/InternalAssessment';
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 import { DEFAULT_TEAMSET_NAME } from '@shared/types/TeamSet';
+import { DEFAULT_PASSWORD_HASH } from './accountService';
 
 /*----------------------------------------Course----------------------------------------*/
 export const createNewCourse = async (courseData: any, accountId: string) => {
@@ -189,6 +190,7 @@ export const addStudentsToCourse = async (
         crispRole: CRISP_ROLE.Normal,
         isApproved: false,
         user: student._id,
+        password: DEFAULT_PASSWORD_HASH,
       });
       await newAccount.save();
       studentAccount = newAccount;
@@ -200,6 +202,7 @@ export const addStudentsToCourse = async (
           crispRole: CRISP_ROLE.Normal,
           isApproved: false,
           user: student._id,
+          password: DEFAULT_PASSWORD_HASH,
         });
         await newAccount.save();
         studentAccount = newAccount;
@@ -262,6 +265,7 @@ export const addStudentsToCourseAndTeam = async (
         crispRole: CRISP_ROLE.Normal,
         isApproved: false,
         user: student._id,
+        password: DEFAULT_PASSWORD_HASH,
       });
       await newAccount.save();
       studentAccount = newAccount;
@@ -273,6 +277,7 @@ export const addStudentsToCourseAndTeam = async (
           crispRole: CRISP_ROLE.Normal,
           isApproved: false,
           user: student._id,
+          password: DEFAULT_PASSWORD_HASH,
         });
         await newAccount.save();
         studentAccount = newAccount;
@@ -422,6 +427,7 @@ export const addTAsToCourse = async (courseId: string, TADataList: any[]) => {
         crispRole: CRISP_ROLE.Normal,
         isApproved: false,
         user: TA._id,
+        password: DEFAULT_PASSWORD_HASH,
       });
       await newAccount.save();
       TAAccount = newAccount;
@@ -489,6 +495,7 @@ export const addTAAndTeamToCourse = async (
         crispRole: CRISP_ROLE.Normal,
         isApproved: false,
         user: ta._id,
+        password: DEFAULT_PASSWORD_HASH,
       });
       await newAccount.save();
       taAccount = newAccount;
@@ -500,6 +507,7 @@ export const addTAAndTeamToCourse = async (
           crispRole: CRISP_ROLE.Normal,
           isApproved: false,
           user: ta._id,
+          password: DEFAULT_PASSWORD_HASH,
         });
         await newAccount.save();
         taAccount = newAccount;
@@ -663,6 +671,7 @@ export const addFacultyToCourse = async (
         crispRole: CRISP_ROLE.Faculty,
         isApproved: false,
         user: facultyMember._id,
+        password: DEFAULT_PASSWORD_HASH,
       });
       await newAccount.save();
       facultyAccount = newAccount;
@@ -676,6 +685,7 @@ export const addFacultyToCourse = async (
           crispRole: CRISP_ROLE.Faculty,
           isApproved: false,
           user: facultyMember._id,
+          password: DEFAULT_PASSWORD_HASH,
         });
         await newAccount.save();
         facultyAccount = newAccount;
