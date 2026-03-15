@@ -76,9 +76,9 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
     return c;
   };
 
-  const getTeamDatas = async () => {
+  const getTeamDatas = async (): Promise<TeamData[]> => {
     const res = await fetch(`/api/github/course/${courseId}`);
-    if (!res.ok) throw new Error('Failed to fetch team data');
+    if (!res.ok) return [];
     const teamDatas: TeamData[] = await res.json();
     return teamDatas;
   };
@@ -87,11 +87,9 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
     const fetchData = async () => {
       setStatus(Status.Loading);
       try {
-        const [fetchedCourse, fetchedTeamDatas] = await Promise.all([
-          getCourse(),
-          getTeamDatas(),
-        ]);
+        const fetchedCourse = await getCourse();
         setCourse(fetchedCourse);
+        const fetchedTeamDatas = await getTeamDatas();
         setTeamDatas(fetchedTeamDatas);
         setStatus(Status.Idle);
       } catch (error) {

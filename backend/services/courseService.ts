@@ -195,20 +195,19 @@ export const addStudentsToCourse = async (
     } else {
       studentAccount = await AccountModel.findOne({ user: student._id });
       if (!studentAccount) {
-        continue;
+        const newAccount = new AccountModel({
+          email: studentData.email,
+          crispRole: CRISP_ROLE.Normal,
+          isApproved: false,
+          user: student._id,
+        });
+        await newAccount.save();
+        studentAccount = newAccount;
+        student.name = studentData.name.toUpperCase();
+        student.gitHandle = studentData.gitHandle ?? student.gitHandle;
+      } else {
+        student.gitHandle = studentData.gitHandle ?? student.gitHandle;
       }
-      const courseRoleTuple = studentAccount.courseRoles.filter(
-        r => r.course === courseId
-      );
-      if (
-        (courseRoleTuple.length !== 0 &&
-          studentAccount.crispRole !== CRISP_ROLE.TrialUser) ||
-        studentData.name.toUpperCase() !== student.name.toUpperCase() ||
-        studentData.email.toLowerCase() !== studentAccount.email.toLowerCase() // Check is case-insensitive to handle email case-insensitivity cases
-      ) {
-        continue;
-      }
-      student.gitHandle = studentData.gitHandle ?? student.gitHandle;
     }
     if (!student.enrolledCourses.includes(course._id)) {
       student.enrolledCourses.push(course._id);
@@ -268,19 +267,17 @@ export const addStudentsToCourseAndTeam = async (
       studentAccount = newAccount;
     } else {
       studentAccount = await AccountModel.findOne({ user: student._id });
-      if (!studentAccount) continue;
-
-      const courseRoleTuple = studentAccount.courseRoles.filter(
-        (cr: { course: string }) => cr.course === courseId
-      );
-      if (
-        (courseRoleTuple.length !== 0 &&
-          studentAccount.crispRole !== CRISP_ROLE.TrialUser) ||
-        (r.name && r.name.toUpperCase() !== student.name.toUpperCase()) ||
-        (r.email &&
-          r.email.toLowerCase() !== studentAccount.email.toLowerCase())
-      ) {
-        continue;
+      if (!studentAccount) {
+        const newAccount = new AccountModel({
+          email: r.email,
+          crispRole: CRISP_ROLE.Normal,
+          isApproved: false,
+          user: student._id,
+        });
+        await newAccount.save();
+        studentAccount = newAccount;
+        if (r.name) student.name = r.name.toUpperCase();
+        student.gitHandle = r.gitHandle ?? student.gitHandle;
       } else {
         student.gitHandle = r.gitHandle ?? student.gitHandle;
       }
@@ -497,19 +494,17 @@ export const addTAAndTeamToCourse = async (
       taAccount = newAccount;
     } else {
       taAccount = await AccountModel.findOne({ user: ta._id });
-      if (!taAccount) continue;
-
-      const courseRoleTuple = taAccount.courseRoles.filter(
-        (cr: { course: string }) => cr.course === courseId
-      );
-      if (
-        (courseRoleTuple.length !== 0 &&
-          taAccount.crispRole !== CRISP_ROLE.TrialUser) ||
-        (TAData.name && TAData.name.toUpperCase() !== ta.name.toUpperCase()) ||
-        (TAData.email &&
-          TAData.email.toLowerCase() !== taAccount.email.toLowerCase())
-      ) {
-        continue;
+      if (!taAccount) {
+        const newAccount = new AccountModel({
+          email: TAData.email,
+          crispRole: CRISP_ROLE.Normal,
+          isApproved: false,
+          user: ta._id,
+        });
+        await newAccount.save();
+        taAccount = newAccount;
+        if (TAData.name) ta.name = TAData.name.toUpperCase();
+        ta.gitHandle = TAData.gitHandle ?? ta.gitHandle;
       } else {
         ta.gitHandle = TAData.gitHandle ?? ta.gitHandle;
       }
@@ -676,21 +671,21 @@ export const addFacultyToCourse = async (
         user: facultyMember._id,
       });
       if (!facultyAccount) {
-        continue;
+        const newAccount = new AccountModel({
+          email: facultyData.email,
+          crispRole: CRISP_ROLE.Faculty,
+          isApproved: false,
+          user: facultyMember._id,
+        });
+        await newAccount.save();
+        facultyAccount = newAccount;
+        facultyMember.name = facultyData.name.toUpperCase();
+        facultyMember.gitHandle =
+          facultyData.gitHandle ?? facultyMember.gitHandle;
+      } else {
+        facultyMember.gitHandle =
+          facultyData.gitHandle ?? facultyMember.gitHandle;
       }
-      const courseRoleTuple = facultyAccount.courseRoles.filter(
-        r => r.course === courseId
-      );
-      if (
-        (courseRoleTuple.length !== 0 &&
-          facultyAccount.crispRole !== CRISP_ROLE.TrialUser) ||
-        facultyData.name.toUpperCase() !== facultyMember.name.toUpperCase() ||
-        facultyData.email.toLowerCase() !== facultyAccount.email.toLowerCase()
-      ) {
-        continue;
-      }
-      facultyMember.gitHandle =
-        facultyData.gitHandle ?? facultyMember.gitHandle;
     }
     if (!facultyMember.enrolledCourses.includes(course._id)) {
       facultyMember.enrolledCourses.push(course._id);
