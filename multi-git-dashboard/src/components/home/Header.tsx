@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { IconGitBranch } from '@tabler/icons-react';
 import classes from '@styles/Home.module.css';
 import { Button, useMantineTheme } from '@mantine/core';
+import CrispLogo from '../shared/CrispLogo';
 
 const Header: React.FC = () => {
   const router = useRouter();
@@ -28,31 +29,28 @@ const Header: React.FC = () => {
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <IconGitBranch
-              size={36}
-              className={classes.headerIcon}
-              stroke={2}
-              color="white"
-            />
-
-            <Typography
-              variant="h5"
-              component="a"
-              href="#"
-              sx={{
-                color: 'white',
-                fontWeight: 'bold',
-                ml: 1.5,
-                textDecoration: 'none',
-                letterSpacing: '0.5px',
-                fontSize: '1.5rem',
-              }}
-            >
-              CRISP
-            </Typography>
+            <CrispLogo />
           </Box>
 
-          <Box sx={{ display: 'flex', gap: 2 }}>
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <Button
+              key="user-guide"
+              onClick={() => router.push('/user-guide')}
+              color={theme.colors.green[9]}
+              size="md"
+              autoContrast
+            >
+              User Guide
+            </Button>
+            <Button
+              key="dev-guide"
+              onClick={() => router.push('/dev-guide')}
+              color={theme.colors.green[9]}
+              size="md"
+              autoContrast
+            >
+              Dev Guide
+            </Button>
             <Button
               key="signin"
               onClick={() => router.push('/auth/signin')}
