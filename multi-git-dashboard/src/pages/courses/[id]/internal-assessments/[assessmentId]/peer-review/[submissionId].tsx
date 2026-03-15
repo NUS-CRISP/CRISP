@@ -29,6 +29,7 @@ import PeerReviewCommentSidebar from '@/components/peer-review/PeerReviewComment
 import PeerReviewSummaryModal from '@/components/cards/Modals/PeerReviewSummaryModal';
 import PeerReviewGradeSubmissionModal from '@/components/cards/Modals/PeerReviewGradeSubmissionModal';
 import PeerReviewGradingSummaryModal from '@/components/cards/Modals/PeerReviewGradingSummaryModal';
+import FlagCommentConfirmationModal from '@/components/cards/Modals/FlagCommentConfirmationModal';
 
 import { getLanguageForFile } from '@/lib/peer-review/utils';
 import { getMe } from '@/lib/auth/utils';
@@ -92,6 +93,8 @@ const PeerReviewGradingDetailPage: React.FC = () => {
     setFeedback,
     saveDraftNow,
     submitGrading,
+    flagComment,
+    unflagComment,
   } = usePeerReviewGradingData({
     courseId: id,
     assessmentId,
@@ -210,6 +213,8 @@ const PeerReviewGradingDetailPage: React.FC = () => {
   const [gradingSummaryOpen, setGradingSummaryOpen] = useState(false);
   const [gradeOpen, setGradeOpen] = useState(false);
   const [savingGrade, setSavingGrade] = useState(false);
+  const [flagCommentId, setFlagCommentId] = useState<string | null>(null);
+  const [unflagCommentId, setUnflagCommentId] = useState<string | null>(null);
 
   if (!ready || !me || loading) return <Center>Loading...</Center>;
 
@@ -508,9 +513,11 @@ const PeerReviewGradingDetailPage: React.FC = () => {
           onAddComment={async () => false}
           onUpdateComment={async () => false}
           onDeleteComment={() => {}}
-          onFlagComment={() => {}}
+          onFlagComment={commentId => setFlagCommentId(commentId)}
+          onUnflagComment={commentId => setUnflagCommentId(commentId)}
           onCancelComment={() => renderFocusedAndStaticDecos([])}
           selectedLines={null}
+          canEditComments={false}
         />
       </Group>
 
@@ -547,6 +554,50 @@ const PeerReviewGradingDetailPage: React.FC = () => {
         maxMarks={maxMarks}
         tasks={gradingTasks}
         isFaculty={isFaculty}
+      />
+
+      <FlagCommentConfirmationModal
+        opened={!!flagCommentId}
+        onClose={() => setFlagCommentId(null)}
+        onCancel={() => setFlagCommentId(null)}
+        title="Flag Comment?"
+        onConfirm={async (reason: string) => {
+          if (!flagCommentId) return;
+          try {
+            await flagComment(flagCommentId, reason);
+          } catch {
+            notifications.show({
+              color: 'red',
+              title: 'Failed to flag comment',
+              message: 'Please try again.',
+            });
+          } finally {
+            setFlagCommentId(null);
+          }
+        }}
+      />
+
+      <FlagCommentConfirmationModal
+        opened={!!unflagCommentId}
+        onClose={() => setUnflagCommentId(null)}
+        onCancel={() => setUnflagCommentId(null)}
+        title="Unflag Comment?"
+        confirmLabel="Unflag"
+        confirmColor="blue"
+        onConfirm={async (reason: string) => {
+          if (!unflagCommentId) return;
+          try {
+            await unflagComment(unflagCommentId, reason);
+          } catch {
+            notifications.show({
+              color: 'red',
+              title: 'Failed to unflag comment',
+              message: 'Please try again.',
+            });
+          } finally {
+            setUnflagCommentId(null);
+          }
+        }}
       />
 
       {error && (

@@ -10,6 +10,7 @@ import {
   apiStartGradingTask,
   apiSaveGradingTaskDraft,
   apiSubmitGradingTask,
+  apiFlagComment,
 } from '@/lib/peer-review/api';
 
 import {
@@ -223,6 +224,59 @@ export default function usePeerReviewGradingData({
     [scheduleSaveDraft]
   );
 
+  const refreshComments = useCallback(async () => {
+    const res = await apiFetchGradingDTO(
+      courseId,
+      assessmentId,
+      peerReviewSubmissionId
+    );
+    if (res) {
+      setComments((res.comments as PeerReviewComment[]) ?? []);
+    }
+  }, [courseId, assessmentId, peerReviewSubmissionId]);
+
+  const flagComment = useCallback(
+    async (commentId: string, flagReason: string) => {
+      const peerReviewId = dto?.peerReviewId;
+      if (!peerReviewId) return;
+      // Optimistic update: show badge immediately, clear any prior unflaggedAt
+      setComments(prev =>
+        prev.map(c =>
+          c._id === commentId
+            ? { ...c, isFlagged: true, flagReason, unflaggedAt: undefined }
+            : c
+        )
+      );
+      await apiFlagComment(courseId, peerReviewId, commentId, true, flagReason);
+      await refreshComments();
+    },
+    [courseId, dto?.peerReviewId, refreshComments]
+  );
+
+  const unflagComment = useCallback(
+    async (commentId: string, unflagReason: string) => {
+      const peerReviewId = dto?.peerReviewId;
+      if (!peerReviewId) return;
+      // Optimistic update: stamp unflaggedAt so the badge disappears immediately
+      setComments(prev =>
+        prev.map(c =>
+          c._id === commentId
+            ? { ...c, unflagReason, unflaggedAt: new Date() }
+            : c
+        )
+      );
+      await apiFlagComment(
+        courseId,
+        peerReviewId,
+        commentId,
+        false,
+        unflagReason
+      );
+      await refreshComments();
+    },
+    [courseId, dto?.peerReviewId, refreshComments]
+  );
+
   const submitGrading = useCallback(async () => {
     if (!myTask?._id) {
       setError('No grading task yet. Click "Start grading" first.');
@@ -268,5 +322,7 @@ export default function usePeerReviewGradingData({
     setFeedback: updateFeedback,
     saveDraftNow,
     submitGrading,
+    flagComment,
+    unflagComment,
   };
 }

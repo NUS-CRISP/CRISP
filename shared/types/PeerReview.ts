@@ -94,6 +94,11 @@ export interface PeerReviewComment {
   flagReason?: string;
   flaggedAt?: Date;
   flaggedBy?: string;
+  
+  // Unflag Fields
+  unflagReason?: string;
+  unflaggedAt?: Date;
+  unflaggedBy?: string;
 }
 
 export interface AssignedReviewDTO {

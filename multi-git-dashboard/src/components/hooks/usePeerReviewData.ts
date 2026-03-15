@@ -252,14 +252,30 @@ export default function usePeerReviewData({
 
   const flagComment = useCallback(
     async (commentId: string, flagReason: string) => {
+      // Optimistic update: show the badge immediately
+      setComments(prev =>
+        prev.map(c =>
+          c._id === commentId
+            ? { ...c, isFlagged: true, flagReason, unflaggedAt: undefined }
+            : c
+        )
+      );
       await apiFlagComment(courseId, assignmentId, commentId, true, flagReason);
       await refreshComments();
     },
-    [courseId, assignmentId]
+    [courseId, assignmentId, refreshComments, setComments]
   );
 
   const unflagComment = useCallback(
     async (commentId: string, unflagReason: string) => {
+      // Optimistic update: stamp unflaggedAt so the badge disappears immediately
+      setComments(prev =>
+        prev.map(c =>
+          c._id === commentId
+            ? { ...c, unflagReason, unflaggedAt: new Date() }
+            : c
+        )
+      );
       await apiFlagComment(
         courseId,
         assignmentId,
@@ -269,7 +285,7 @@ export default function usePeerReviewData({
       );
       await refreshComments();
     },
-    [courseId, assignmentId]
+    [courseId, assignmentId, refreshComments, setComments]
   );
 
   const submitReview = useCallback(async () => {

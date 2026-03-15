@@ -82,6 +82,7 @@ const PeerReviewDetail: React.FC = () => {
     updateComment,
     deleteComment,
     flagComment,
+    unflagComment,
     submitReview,
   } = usePeerReviewData({
     courseId: id,
@@ -108,6 +109,7 @@ const PeerReviewDetail: React.FC = () => {
 
   const [deleteCommentId, setDeleteCommentId] = useState<string | null>(null);
   const [flagCommentId, setFlagCommentId] = useState<string | null>(null);
+  const [unflagCommentId, setUnflagCommentId] = useState<string | null>(null);
   const [submitReviewModalOpened, setSubmitReviewModalOpened] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -513,6 +515,30 @@ const PeerReviewDetail: React.FC = () => {
     [flagCommentId, flagComment, focusedCommentIds, renderFocusedAndStaticDecos]
   );
 
+  // Unflag comment handler
+  const requestUnflagComment = useCallback((commentId: string) => {
+    setUnflagCommentId(commentId);
+  }, []);
+
+  const handleUnflagComment = useCallback(
+    async (unflagReason: string) => {
+      if (!unflagCommentId) return;
+
+      try {
+        await unflagComment(unflagCommentId, unflagReason);
+      } catch (error) {
+        notifications.show({
+          color: 'red',
+          title: 'Failed to unflag comment',
+          message: (error as Error).message || 'Please try again.',
+        });
+      } finally {
+        setUnflagCommentId(null);
+      }
+    },
+    [unflagCommentId, unflagComment]
+  );
+
   // Focus comment handler
   const handleFocusComment = useCallback(
     (comment: PeerReviewComment) => {
@@ -659,6 +685,7 @@ const PeerReviewDetail: React.FC = () => {
           onUpdateComment={handleUpdateComment}
           onDeleteComment={requestDeleteComment}
           onFlagComment={requestFlagComment}
+          onUnflagComment={requestUnflagComment}
           onCancelComment={clearCommentDecorations}
           selectedLines={
             activeWidget
@@ -666,6 +693,7 @@ const PeerReviewDetail: React.FC = () => {
               : null
           }
           readOnly={isReadOnly}
+          canEditComments={canEdit}
         />
         <SubmitReviewConfirmationModal
           opened={submitReviewModalOpened}
@@ -690,6 +718,15 @@ const PeerReviewDetail: React.FC = () => {
           onConfirm={handleFlagComment}
           onCancel={() => setFlagCommentId(null)}
           title="Flag Comment?"
+        />
+        <FlagCommentConfirmationModal
+          opened={!!unflagCommentId}
+          onClose={() => setUnflagCommentId(null)}
+          onConfirm={handleUnflagComment}
+          onCancel={() => setUnflagCommentId(null)}
+          title="Unflag Comment?"
+          confirmLabel="Unflag"
+          confirmColor="blue"
         />
       </Group>
     </Container>

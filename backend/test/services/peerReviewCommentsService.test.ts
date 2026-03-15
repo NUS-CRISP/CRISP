@@ -271,6 +271,34 @@ describe('peerReviewCommentsService', () => {
       expect((res[0] as any).comment).toBe(c.comment);
     });
 
+    it('Student (reviewee): hides flagged comments', async () => {
+      const studentId = oid();
+      const pr = await makePeerReview();
+      (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
+
+      const reviewee = await makeTeam({ members: [studentId] });
+      const assignment = await makeAssignment(pr._id, reviewee._id);
+
+      await makeComment(pr._id, assignment._id, {
+        comment: 'visible comment',
+        isFlagged: false,
+      });
+      await makeComment(pr._id, assignment._id, {
+        comment: 'hidden flagged comment',
+        isFlagged: true,
+        flagReason: 'Inappropriate language',
+      });
+
+      const res = await getPeerReviewCommentsByAssignmentId(
+        studentId.toString(),
+        COURSE_ROLE.Student,
+        assignment._id.toString()
+      );
+
+      expect(res).toHaveLength(1);
+      expect((res[0] as any).comment).toBe('visible comment');
+    });
+
     it('TA supervising: returns visible comments', async () => {
       const taId = oid();
       const pr = await makePeerReview();
@@ -1140,6 +1168,44 @@ describe('peerReviewCommentsService edge cases', () => {
     expect(hasMyComment).toBe(true);
   });
 
+  it('Student + Individual reviewerType: hides flagged comments in submission view', async () => {
+    const studentId = new Types.ObjectId();
+    const pr = await makePeerReview({ reviewerType: 'Individual' });
+    (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
+
+    const reviewee = await makeTeam({ members: [new Types.ObjectId()] });
+    const assignment = await makeAssignment(pr._id, reviewee._id);
+
+    const submission = await makeSubmission(pr._id, assignment._id, {
+      reviewerKind: 'Student',
+      reviewerUserId: studentId.toString(),
+    });
+
+    await makeComment(pr._id, assignment._id, {
+      author: studentId,
+      peerReviewSubmissionId: submission._id,
+      comment: 'visible comment',
+      isFlagged: false,
+    });
+    await makeComment(pr._id, assignment._id, {
+      author: new Types.ObjectId(),
+      peerReviewSubmissionId: submission._id,
+      comment: 'flagged comment',
+      isFlagged: true,
+      flagReason: 'Needs moderation',
+    });
+
+    const res = await getPeerReviewCommentsByAssignmentId(
+      studentId.toString(),
+      COURSE_ROLE.Student,
+      assignment._id.toString()
+    );
+
+    expect(res).toHaveLength(1);
+    expect(res[0].comment).toBe('visible comment');
+    expect(res[0].isFlagged).toBe(false);
+  });
+
   it('Student + Team reviewerType: returns null when homeTeam not found (homeTeam branch)', async () => {
     const studentId = new Types.ObjectId();
     const pr = await makePeerReview({ reviewerType: 'Team' });
@@ -1325,6 +1391,8 @@ describe('peerReviewCommentsService edge cases', () => {
 
       await makeComment(pr._id, assignment._id, {
         peerReviewSubmissionId: submission._id,
+        isFlagged: true,
+        flagReason: 'Spam',
       });
 
       const res = await getPeerReviewCommentsBySubmissionId(
@@ -1336,6 +1404,8 @@ describe('peerReviewCommentsService edge cases', () => {
 
       expect(Array.isArray(res)).toBe(true);
       expect(res.length).toBe(1);
+      expect(res[0].isFlagged).toBe(true);
+      expect(res[0].flagReason).toBe('Spam');
     });
 
     it('returns comments for Faculty', async () => {
