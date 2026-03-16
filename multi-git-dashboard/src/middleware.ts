@@ -13,5 +13,7 @@ export const EXCLUDE_PEER_REVIEW_REGEX =
   /^(?!\/courses\/[^/]+\/peer-review\/[^/]).+/;
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|auth|favicon.png|$).*)'],
+  matcher: [
+    '/((?!_next/static|_next/image|auth|user-guide|dev-guide|.*\\..*|$).*)',
+  ],
 };

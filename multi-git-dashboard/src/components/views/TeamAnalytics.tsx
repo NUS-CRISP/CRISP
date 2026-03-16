@@ -2,7 +2,6 @@ import {
   Avatar,
   Badge,
   Box,
-  Button,
   Card,
   Center,
   Loader,
@@ -16,7 +15,7 @@ import { getInitials, AVATAR_COLORS } from '@/lib/utils';
 import { Course } from '@shared/types/Course';
 import { TeamData } from '@shared/types/TeamData';
 import { Status } from '@shared/types/util/Status';
-import { IconDownload, IconSearch } from '@tabler/icons-react';
+import { IconSearch } from '@tabler/icons-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import pageLayout from '@/styles/root-layout.module.css';
@@ -125,7 +124,7 @@ const TeamAnalytics: React.FC<TeamAnalyticsProps> = ({
       className={pageLayout.page}
       pl={20}
       pr={20}
-      style={{ paddingRight: 36 }}
+      style={{ paddingRight: 24 }}
     >
       <Box className={pageLayout.pageHeader}>
         <Box className={classes.headerRow}>
@@ -137,14 +136,14 @@ const TeamAnalytics: React.FC<TeamAnalyticsProps> = ({
               Track team performance, code quality, and project progress
             </Text>
           </Box>
-          <Button
+          {/* <Button
             variant="default"
             leftSection={<IconDownload size={16} />}
             // To implement export function
             className={classes.exportButton}
           >
             Export Report
-          </Button>
+          </Button> */}
         </Box>
       </Box>
 
@@ -197,7 +196,7 @@ const TeamAnalytics: React.FC<TeamAnalyticsProps> = ({
       ) : (
         <SimpleGrid
           cols={{ base: 1, sm: 2, lg: 3 }}
-          spacing="lg"
+          spacing="md"
           className={classes.grid}
         >
           {filteredAndSortedTeams.map(team => {
@@ -239,7 +238,7 @@ const TeamAnalytics: React.FC<TeamAnalyticsProps> = ({
                     <Avatar
                       key={user}
                       radius="xl"
-                      size="lg"
+                      size="md"
                       color={AVATAR_COLORS[index % AVATAR_COLORS.length]} // alternate the colours LOL
                       className={classes.avatar}
                     >

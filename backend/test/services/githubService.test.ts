@@ -304,7 +304,8 @@ describe('gitHubService', () => {
           mockFacultyAccountId,
           courseWithoutGitHub._id.toString()
         )
-      ).rejects.toThrow(NotFoundError);
+      ).resolves.toEqual([]);
+
     });
 
     it('should throw NotFoundError if faculty member is not authorized to view team data', async () => {
@@ -398,7 +399,7 @@ describe('gitHubService', () => {
           mockFacultyAccountId,
           courseWithNoTeamData._id.toString()
         )
-      ).rejects.toThrow('No team data found for course');
+      ).resolves.toEqual([]);
     });
 
     it('should return sorted team data for normal user with assigned teams', async () => {

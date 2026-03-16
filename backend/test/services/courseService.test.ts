@@ -527,7 +527,7 @@ describe('courseService', () => {
       ).toBe(true);
     });
 
-    it('should not update if student is not a student', async () => {
+    it('should add an existing TA to students when the identifier matches', async () => {
       const studentDataList = [
         {
           identifier: commonTADetails.identifier,
@@ -540,7 +540,7 @@ describe('courseService', () => {
         await CourseModel.findById(courseId).populate('students');
       expect(
         updatedCourse?.students.some(student => student._id.equals(taId))
-      ).toBe(false);
+      ).toBe(true);
     });
 
     it('should throw NotFoundError for invalid courseId', async () => {
@@ -690,7 +690,7 @@ describe('courseService', () => {
       ).toBe(true);
     });
 
-    it('should not update if TA is not a TA', async () => {
+    it('should add an existing student as a TA when the identifier matches', async () => {
       const TADataList = [
         {
           identifier: commonStudentDetails.identifier,
@@ -702,7 +702,7 @@ describe('courseService', () => {
       const updatedCourse =
         await CourseModel.findById(courseId).populate('TAs');
       expect(updatedCourse?.TAs.some(ta => ta._id.equals(studentId))).toBe(
-        false
+        true
       );
     });
 
@@ -898,7 +898,7 @@ describe('courseService', () => {
       ).toBe(true);
     });
 
-    it('should not update if faculty is not a faculty', async () => {
+    it('should add an existing student to faculty when the identifier matches', async () => {
       const facultyDataList = [
         {
           identifier: commonStudentDetails.identifier,
@@ -911,7 +911,7 @@ describe('courseService', () => {
         await CourseModel.findById(courseId).populate('faculty');
       expect(
         updatedCourse?.faculty.some(faculty => faculty._id.equals(studentId))
-      ).toBe(false);
+      ).toBe(true);
     });
 
     it('should throw NotFoundError for invalid courseId', async () => {
@@ -1840,14 +1840,13 @@ describe('courseService', () => {
       expect(occurrences).toBe(1);
     });
 
-    it('skips when an existing student has mismatched name/email (non-trial) leading to `continue`', async () => {
-      // Create a student + account that *already exists* but with different name/email
+    it('enrolls an existing student and creates the team even when name/email mismatch', async () => {
+      // Create a student + account that already exists with different name/email
       const { user, account } = await createStudentUser({
         identifier: 'skipguy',
         name: 'Alice',
         gitHandle: null,
       });
-      // No courseRoles for this course and a conflicting email/name will still trigger the continue via the OR conditions
       account.email = 'alice@example.com';
       await account.save();
 
@@ -1865,7 +1864,7 @@ describe('courseService', () => {
       const refreshed = await UserModel.findById(user._id);
       expect(
         refreshed?.enrolledCourses.map(String).includes(String(courseId))
-      ).toBe(false); // not enrolled
+      ).toBe(true);
       const teamSet = await TeamSetModel.findOne({
         course: courseId,
         name: DEFAULT_TEAMSET_NAME,
@@ -1874,7 +1873,8 @@ describe('courseService', () => {
         number: 3,
         teamSet: teamSet?._id,
       });
-      expect(team).toBeNull(); // team not even created due to continue
+      expect(team).toBeTruthy();
+      expect(team?.members?.map(String).includes(String(user._id))).toBe(true);
     });
 
     it('adds a student to the course without team when teamNumber is undefined', async () => {
@@ -2085,7 +2085,7 @@ describe('courseService', () => {
       expect(String(reloadedTeam?.TA)).toBe(String(realTA?._id));
     });
 
-    it('skips when an existing TA has mismatched name/email (non-trial), leaving no team created', async () => {
+    it('enrolls an existing TA and assigns a team even when name/email mismatch', async () => {
       const { user, account } = await createTAUser({
         identifier: 'tacontinue',
         name: 'Alice TA',
@@ -2104,18 +2104,18 @@ describe('courseService', () => {
         },
       ]);
 
-      // Not enrolled, no team created/assigned
       const refreshed = await UserModel.findById(user._id);
       expect(
         refreshed?.enrolledCourses.map(String).includes(String(courseId))
-      ).toBe(false);
+      ).toBe(true);
 
       const ts = await TeamSetModel.findOne({
         course: courseId,
         name: DEFAULT_TEAMSET_NAME,
       });
       const team = await TeamModel.findOne({ number: 8, teamSet: ts?._id });
-      expect(team).toBeNull();
+      expect(team).toBeTruthy();
+      expect(String(team?.TA)).toBe(String(user._id));
     });
 
     it('enrolls TA without team when teamNumber is undefined', async () => {

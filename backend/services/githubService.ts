@@ -71,18 +71,16 @@ export const getAuthorizedTeamDataByCourse = async (
     role === CRISP_ROLE.Admin ||
     role === CRISP_ROLE.TrialUser
   ) {
+    if (!(await CourseModel.exists({ _id: courseId, faculty: user._id }))) {
+      throw new NotFoundError('User is not authorized to view course');
+    }
+
+    // No GitHub repos configured yet (e.g. newly created course) → return empty so UI can show overview
     if (
       !course.gitHubOrgName &&
       (!course.gitHubRepoLinks || course.gitHubRepoLinks.length === 0)
     ) {
-      console.log('Course GitHub organization or repository links not found');
-      throw new NotFoundError(
-        'Course GitHub organization or repository links not found'
-      );
-    }
-    if (!(await CourseModel.exists({ _id: courseId, faculty: user._id }))) {
-      console.log('User is not authorized to view course');
-      throw new NotFoundError('User is not authorized to view course');
+      return [];
     }
 
     const teamDatas = await TeamDataModel.find({
@@ -90,8 +88,7 @@ export const getAuthorizedTeamDataByCourse = async (
     });
 
     if (teamDatas.length == 0) {
-      console.log('No team data found for course');
-      throw new NotFoundError('No team data found for course');
+      return [];
     }
     const sortedDatas = teamDatas.sort((a, b) => {
       if (a.repoName < b.repoName) return -1;
