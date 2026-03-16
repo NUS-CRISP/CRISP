@@ -19,8 +19,8 @@ import {
   updatePeerReviewCommentById,
   deletePeerReviewCommentById,
   flagPeerReviewCommentById,
+  getPeerReviewCommentsBySubmissionId,
 } from '../../services/peerReviewCommentsService';
-  import { getPeerReviewCommentsBySubmissionId } from '../../services/peerReviewCommentsService';
 
 // Dependent services are mocked
 import { getPeerReviewById } from '../../services/peerReviewService';
@@ -746,6 +746,43 @@ describe('peerReviewCommentsService', () => {
       expect(updated?.comment).toBe('updated text');
       expect(updated?.updatedAt).toBeTruthy();
     });
+
+    it('non-team reviewer cannot update another author\'s comment', async () => {
+      const studentId = oid();
+      const otherAuthorId = oid();
+      const pr = await makePeerReview({ reviewerType: 'Individual' });
+      (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
+
+      const reviewee = await makeTeam({ members: [oid()] });
+      const assignment = await makeAssignment(pr._id, reviewee._id);
+
+      const submission = await makeSubmission(pr._id, assignment._id, {
+        reviewerKind: 'Student',
+        reviewerUserId: studentId.toString(),
+      });
+
+      (fetchSubmissionForAssignment as jest.Mock).mockResolvedValue({
+        status: 'Draft',
+        reviewerKind: 'Student',
+        reviewerUserId: studentId.toString(),
+      });
+
+      const comment = await makeComment(pr._id, assignment._id, {
+        author: otherAuthorId,
+        peerReviewSubmissionId: submission._id,
+      });
+
+      await expect(
+        updatePeerReviewCommentById(
+          studentId.toString(),
+          COURSE_ROLE.Student,
+          assignment._id.toString(),
+          comment._id.toString(),
+          'should fail',
+          submission._id.toString()
+        )
+      ).rejects.toBeInstanceOf(MissingAuthorizationError);
+    });
   });
 
   describe('deletePeerReviewCommentById', () => {
@@ -1122,6 +1159,26 @@ describe('peerReviewCommentsService', () => {
           comment._id.toString(),
           true,
           'x'
+        )
+      ).rejects.toBeInstanceOf(MissingAuthorizationError);
+    });
+
+    it('TA not supervising cannot flag comment', async () => {
+      const taId = oid();
+      const pr = await makePeerReview();
+      (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
+
+      const reviewee = await makeTeam({ TA: oid(), members: [oid()] });
+      const assignment = await makeAssignment(pr._id, reviewee._id);
+      const comment = await makeComment(pr._id, assignment._id);
+
+      await expect(
+        flagPeerReviewCommentById(
+          taId.toString(),
+          COURSE_ROLE.TA,
+          comment._id.toString(),
+          true,
+          'not allowed'
         )
       ).rejects.toBeInstanceOf(MissingAuthorizationError);
     });
