@@ -142,7 +142,14 @@ export const getPeerReviewCommentsBySubmissionId = async (
     .populate('author', '_id name')
     .lean();
 
-  return decorateCommentsForViewer(comments, userId, userCourseRole, false);
+  // TA/Faculty graders can moderate all comments in the submission they're grading
+  const canModerateAll = userCourseRole !== COURSE_ROLE.Student;
+  return decorateCommentsForViewer(
+    comments,
+    userId,
+    userCourseRole,
+    canModerateAll
+  );
 };
 
 export const addPeerReviewCommentByAssignmentId = async (
@@ -359,6 +366,13 @@ export const flagPeerReviewCommentById = async (
   flagStatus: boolean,
   flagReason?: string
 ) => {
+  if (
+    userCourseRole !== COURSE_ROLE.TA &&
+    userCourseRole !== COURSE_ROLE.Faculty
+  ) {
+    throw new MissingAuthorizationError(UNAUTHORIZED_TO_FLAG_COMMENTS);
+  }
+
   const comment = await PeerReviewCommentModel.findById(commentId);
   if (!comment) throw new NotFoundError(COMMENT_NOT_FOUND);
 
@@ -379,10 +393,24 @@ export const flagPeerReviewCommentById = async (
     (userCourseRole === COURSE_ROLE.TA && isSupervisingTA) ||
     userCourseRole === COURSE_ROLE.Faculty
   ) {
-    comment.isFlagged = flagStatus;
-    comment.flagReason = flagReason;
-    comment.flaggedAt = new Date();
-    comment.flaggedBy = oid(userId);
+    if (flagStatus) {
+      // Flagging: record flag details and clear any prior unflag state
+      comment.isFlagged = true;
+      comment.flagReason = flagReason ?? '';
+      comment.flaggedAt = new Date();
+      comment.flaggedBy = oid(userId);
+      comment.unflagReason = '';
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (comment as any).unflaggedAt = null;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (comment as any).unflaggedBy = null;
+    } else {
+      // Unflagging: clear flag state and record unflag details
+      comment.isFlagged = false;
+      comment.unflagReason = flagReason ?? '';
+      comment.unflaggedAt = new Date();
+      comment.unflaggedBy = oid(userId);
+    }
     await comment.save();
     return;
   }
@@ -405,7 +433,10 @@ const fetchReviewee = async (teamId: string) => {
 };
 
 const findCommentsAnonymous = async (assignmentId: string) => {
-  return PeerReviewCommentModel.find({ peerReviewAssignmentId: assignmentId })
+  return PeerReviewCommentModel.find({
+    peerReviewAssignmentId: assignmentId,
+    isFlagged: { $ne: true },
+  })
     .select('-author -flaggedBy') // hide identity
     .lean();
 };
@@ -450,11 +481,16 @@ const decorateCommentsForViewer = async (
   userCourseRole: string,
   canModerateAll: boolean
 ) => {
-  if (!comments?.length) return comments;
+  const visibleComments =
+    userCourseRole === COURSE_ROLE.Student
+      ? comments.filter(comment => !comment.isFlagged)
+      : comments;
+
+  if (!visibleComments?.length) return visibleComments;
 
   const submissionIds = Array.from(
     new Set(
-      comments
+      visibleComments
         .map(c => c.peerReviewSubmissionId)
         .filter(Boolean)
         .map((id: any) => String(id))
@@ -485,7 +521,7 @@ const decorateCommentsForViewer = async (
 
   const reviewerTeamById = new Map(reviewerTeams.map(t => [String(t._id), t]));
 
-  return comments.map(c => {
+  return visibleComments.map(c => {
     const submission = c.peerReviewSubmissionId
       ? submissionById.get(String(c.peerReviewSubmissionId))
       : null;

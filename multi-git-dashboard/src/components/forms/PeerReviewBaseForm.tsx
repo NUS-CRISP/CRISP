@@ -51,6 +51,9 @@ interface PeerReviewBaseFormProps {
 
   // Optional: show loading controlled by parent
   externalLoading?: boolean;
+
+  // Optional: lock peer-review configuration fields (except title, description, end date)
+  lockReviewConfig?: boolean;
 }
 
 export type NormalizedPeerReviewBasePayload = {
@@ -78,6 +81,7 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
   onCancel,
   onSubmit,
   externalLoading,
+  lockReviewConfig = false,
 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -253,6 +257,7 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
           label="Start Date"
           {...form.getInputProps('startDate')}
           type="date"
+          disabled={lockReviewConfig}
           mb="xs"
         />
         <TextInput
@@ -272,6 +277,7 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
           value={form.values.teamSetId}
           onChange={val => form.setFieldValue('teamSetId', val || '')}
           searchable
+          disabled={lockReviewConfig}
           nothingFoundMessage="No results found"
           error={form.errors.teamSetId}
         />
@@ -285,6 +291,7 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
             form.setFieldValue('reviewerType', value as ReviewerType)
           }
           ml="4px"
+          readOnly={lockReviewConfig}
         >
           <Group>
             <Radio label="Team" value="Team" />
@@ -299,6 +306,7 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
           value={form.values.taAssignments ? 'yes' : 'no'}
           onChange={val => form.setFieldValue('taAssignments', val === 'yes')}
           ml="4px"
+          readOnly={lockReviewConfig}
         >
           <Group gap="28px">
             <Radio label="Yes" value="yes" />
@@ -316,6 +324,7 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
           label="Minimum Reviews per Reviewer"
           {...form.getInputProps('minReviews')}
           type="number"
+          disabled={lockReviewConfig}
           mb="xs"
         />
 
@@ -325,6 +334,7 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
           label="Maximum Reviews per Reviewer"
           {...form.getInputProps('maxReviews')}
           type="number"
+          disabled={lockReviewConfig}
           mb="xs"
         />
 

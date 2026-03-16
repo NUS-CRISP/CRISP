@@ -206,7 +206,6 @@ export const submitMySubmission = async (
   submission.status = 'Submitted';
   await submission.save();
 
-  console.log('submission successful');
   return submission;
 };
 

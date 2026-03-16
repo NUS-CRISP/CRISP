@@ -245,11 +245,10 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
 
   return (
     <Container pt="6px" pb="lg">
-      <ScrollArea
-        style={{ height: 'calc(100vh - 180px)' }}
+      <ScrollArea.Autosize
+        mah="calc(100vh - 180px)"
         scrollbarSize={8}
         offsetScrollbars
-        pb="md"
       >
         <Stack gap="md" my="md" mr="xs">
           <Card withBorder radius="md" p="md">
@@ -422,7 +421,7 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
             onPageChange={setPage}
           />
         </Stack>
-      </ScrollArea>
+      </ScrollArea.Autosize>
       <AssignGradersModal
         opened={assignModalOpened}
         onClose={closeAssignModal}

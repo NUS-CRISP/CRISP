@@ -19,6 +19,7 @@ import { Status } from '@shared/types/util/Status';
 import { useEffect, useState, useMemo } from 'react';
 import PeerReviewAccordionItem from '../peer-review/PeerReviewAccordianItem';
 import PeerReviewTAAccordianItem from '../peer-review/PeerReviewTAAccordianItem';
+import PeerReviewProgressOverview from '../peer-review/PeerReviewProgressOverview';
 import { TeamSet } from '@shared/types/TeamSet';
 import { PeerReview, PeerReviewInfoDTO } from '@shared/types/PeerReview';
 import PeerReviewAssignmentForm from '../forms/PeerReviewAssignmentForm';
@@ -265,7 +266,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
 
           <Group gap="xs" mt={6}>
             <Badge color={statusColor(peerReview.status)}>
-              {peerReview.status}
+              Review Period: {peerReview.status}
             </Badge>
             {isFaculty &&
               (peerReview.taAssignments ? (
@@ -338,29 +339,6 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
         </Group>
       </Card>
 
-      {isFaculty && (
-        <Modal
-          opened={openedAssignmentForm}
-          onClose={closeAssignmentForm}
-          title="Assign Peer Reviews"
-          centered
-        >
-          <PeerReviewAssignmentForm
-            courseId={courseId}
-            peerReviewId={peerReview._id}
-            reviewerType={peerReview.reviewerType}
-            taAssignmentsEnabled={!!peerReview.taAssignments}
-            minReviewsPerReviewer={peerReview.minReviewsPerReviewer}
-            maxReviewsPerReviewer={peerReview.maxReviewsPerReviewer}
-            onAssign={() => {
-              onUpdate();
-              fetchPeerReviewInfo();
-              closeAssignmentForm();
-            }}
-            onClose={closeAssignmentForm}
-          />
-        </Modal>
-      )}
       {peerReviewInfo && !peerReviewInfo.teams ? (
         <Text>No teams found.</Text>
       ) : status === Status.Loading || !peerReviewInfo ? (
@@ -369,12 +347,19 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
         </Center>
       ) : isFaculty || peerReview.status === 'Active' ? (
         <ScrollArea.Autosize mah={750} scrollbarSize={8}>
+          <PeerReviewProgressOverview
+            courseId={courseId}
+            peerReviewId={peerReview._id}
+            enabled={isFaculty || isTA}
+            showGrading={false}
+          />
           <Accordion
             defaultValue={['teaching-assistants']}
             value={opened}
             onChange={setOpened}
             multiple
             variant="separated"
+            mb="lg"
           >
             {(isFaculty || isTA) && peerReview.taAssignments && (
               <PeerReviewTAAccordianItem
@@ -419,6 +404,30 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
               : 'Peer review assignments will be available when the review period begins.'}
           </Text>
         </Card>
+      )}
+
+      {isFaculty && (
+        <Modal
+          opened={openedAssignmentForm}
+          onClose={closeAssignmentForm}
+          title="Assign Peer Reviews"
+          centered
+        >
+          <PeerReviewAssignmentForm
+            courseId={courseId}
+            peerReviewId={peerReview._id}
+            reviewerType={peerReview.reviewerType}
+            taAssignmentsEnabled={!!peerReview.taAssignments}
+            minReviewsPerReviewer={peerReview.minReviewsPerReviewer}
+            maxReviewsPerReviewer={peerReview.maxReviewsPerReviewer}
+            onAssign={() => {
+              onUpdate();
+              fetchPeerReviewInfo();
+              closeAssignmentForm();
+            }}
+            onClose={closeAssignmentForm}
+          />
+        </Modal>
       )}
     </Container>
   );

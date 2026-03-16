@@ -14,6 +14,7 @@ import {
   TAToAssignmentsMap,
   AssignedReviewDTO,
   RevieweeAssignmentsDTO,
+  PeerReviewProgressOverviewDTO,
 } from '@shared/types/PeerReview';
 import {
   initialiseAssignments,
@@ -23,6 +24,7 @@ import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 import UserModel, { User } from '@models/User';
 import TeamModel from '@models/Team';
 import { resolveTeamRepo } from './teamService';
+import { PeerReviewGradingTaskModel } from '@models/PeerReviewGradingTask';
 
 export interface NormalizedTeam {
   id: string;
@@ -138,6 +140,180 @@ export const getPeerReviewInfoById = async (
   };
 };
 
+export const getPeerReviewProgressOverviewById = async (
+  userId: string,
+  userCourseRole: string,
+  courseId: string,
+  peerReviewId: string
+): Promise<PeerReviewProgressOverviewDTO> => {
+  const peerReview = await getPeerReviewById(peerReviewId);
+
+  const ctx = await buildPeerReviewScopeContext(
+    userId,
+    userCourseRole,
+    courseId,
+    peerReviewId,
+    peerReview.reviewerType,
+    peerReview.taAssignments,
+    peerReview.teamSetId.toString()
+  );
+
+  if (ctx.scopedTeamIds.length === 0) {
+    return {
+      peerReviewId,
+      scope: userCourseRole === COURSE_ROLE.TA ? 'supervisingTeams' : 'course',
+      submissions: {
+        total: 0,
+        notStarted: 0,
+        draft: 0,
+        submitted: 0,
+        started: 0,
+      },
+      grading: {
+        total: 0,
+        graded: 0,
+        inProgress: 0,
+        notYetGraded: 0,
+        toBeAssigned: 0,
+      },
+    };
+  }
+
+  let submissions:
+    | Array<{
+        _id: Types.ObjectId;
+        status: 'NotStarted' | 'Draft' | 'Submitted';
+      }>
+    | any[] = [];
+
+  if (userCourseRole === COURSE_ROLE.Faculty) {
+    submissions = await PeerReviewSubmissionModel.find({
+      peerReviewId: oid(peerReviewId),
+      reviewerKind: { $in: ['Student', 'Team'] },
+    })
+      .select('_id status')
+      .lean();
+  } else {
+    const reviewerScope = computeReviewerScope(
+      userId,
+      userCourseRole,
+      peerReview.reviewerType,
+      peerReview.taAssignments,
+      ctx.scopedTeams
+    );
+
+    const scopedSubmissions = await loadSubmissionsForScope(
+      peerReviewId,
+      peerReview.reviewerType,
+      false,
+      reviewerScope.scopedMemberIds,
+      reviewerScope.scopedReviewerTeamIds,
+      []
+    );
+
+    submissions = [
+      ...scopedSubmissions.studentSubs,
+      ...scopedSubmissions.teamSubs,
+    ];
+  }
+
+  const totalSubmissions = submissions.length;
+  const notStarted = submissions.filter(s => s.status === 'NotStarted').length;
+  const draft = submissions.filter(s => s.status === 'Draft').length;
+  const submitted = submissions.filter(s => s.status === 'Submitted').length;
+  const started = totalSubmissions - notStarted;
+
+  if (totalSubmissions === 0) {
+    return {
+      peerReviewId,
+      scope: userCourseRole === COURSE_ROLE.TA ? 'supervisingTeams' : 'course',
+      submissions: {
+        total: 0,
+        notStarted: 0,
+        draft: 0,
+        submitted: 0,
+        started: 0,
+      },
+      grading: {
+        total: 0,
+        graded: 0,
+        inProgress: 0,
+        notYetGraded: 0,
+        toBeAssigned: 0,
+      },
+    };
+  }
+
+  const submissionIds = submissions.map(s => s._id);
+  const tasks = await PeerReviewGradingTaskModel.find({
+    peerReviewId: oid(peerReviewId),
+    peerReviewSubmissionId: { $in: submissionIds },
+  })
+    .select('peerReviewSubmissionId status')
+    .lean();
+
+  const taskStatusBySubmissionId = new Map<string, Set<string>>();
+  for (const task of tasks) {
+    const sid = String(task.peerReviewSubmissionId);
+    const set = taskStatusBySubmissionId.get(sid) ?? new Set<string>();
+    set.add(task.status);
+    taskStatusBySubmissionId.set(sid, set);
+  }
+
+  let graded = 0;
+  let inProgress = 0;
+  let notYetGraded = 0;
+  let toBeAssigned = 0;
+
+  for (const submission of submissions) {
+    const statuses = taskStatusBySubmissionId.get(String(submission._id));
+    if (!statuses || statuses.size === 0) {
+      toBeAssigned++;
+      continue;
+    }
+
+    // Definition precedence:
+    // 1) Already Graded => any Completed task
+    // 2) Is Grading => any InProgress task (draft grading)
+    // 3) Not Yet Graded => assigned to TAs only (Assigned)
+    if (statuses.has('Completed')) {
+      graded++;
+      continue;
+    }
+
+    if (statuses.has('InProgress')) {
+      inProgress++;
+      continue;
+    }
+
+    if (statuses.has('Assigned')) {
+      notYetGraded++;
+      continue;
+    }
+
+    toBeAssigned++;
+  }
+
+  return {
+    peerReviewId,
+    scope: userCourseRole === COURSE_ROLE.TA ? 'supervisingTeams' : 'course',
+    submissions: {
+      total: totalSubmissions,
+      notStarted,
+      draft,
+      submitted,
+      started,
+    },
+    grading: {
+      total: totalSubmissions,
+      graded,
+      inProgress,
+      notYetGraded,
+      toBeAssigned,
+    },
+  };
+};
+
 export interface PeerReviewSettings {
   assessmentName: string;
   description: string;
@@ -204,8 +380,6 @@ export const createPeerReviewById = async (
     teamSetId,
     session
   );
-
-  console.log('assignments initialised on peer review creation');
 
   return newPeerReview;
 };

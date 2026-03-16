@@ -11,11 +11,13 @@ import PeerReviewModel from '../../models/PeerReview';
 import PeerReviewAssignmentModel from '../../models/PeerReviewAssignment';
 import PeerReviewCommentModel from '../../models/PeerReviewComment';
 import PeerReviewSubmissionModel from '../../models/PeerReviewSubmission';
+import { PeerReviewGradingTaskModel } from '../../models/PeerReviewGradingTask';
 
 import {
   getAllPeerReviewsyId,
   getPeerReviewById,
   getPeerReviewInfoById,
+  getPeerReviewProgressOverviewById,
   createPeerReviewById,
   deletePeerReviewById,
   updatePeerReviewById,
@@ -191,6 +193,18 @@ const makeComment = async (assignmentId: Types.ObjectId) =>
     authorCourseRole: COURSE_ROLE.Student,
   }).save();
 
+const makeGradingTask = async (
+  prId: Types.ObjectId,
+  submissionId: Types.ObjectId,
+  status: 'Assigned' | 'InProgress' | 'Completed' = 'Assigned'
+) =>
+  new PeerReviewGradingTaskModel({
+    peerReviewId: prId,
+    peerReviewSubmissionId: submissionId,
+    grader: oid(),
+    status,
+  }).save();
+
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
   await mongoose.connect(mongoServer.getUri(), {
@@ -206,6 +220,7 @@ beforeEach(async () => {
   await PeerReviewSubmissionModel.deleteMany({});
   await PeerReviewAssignmentModel.deleteMany({});
   await PeerReviewModel.deleteMany({});
+  await PeerReviewGradingTaskModel.deleteMany({});
   await TeamDataModel.deleteMany({});
   await TeamModel.deleteMany({});
   await UserModel.deleteMany({});
@@ -1411,6 +1426,269 @@ describe('peerReviewService', () => {
       );
 
       expect(result.taIdsWanted).toEqual([taId]);
+    });
+  });
+
+  describe('getPeerReviewProgressOverviewById', () => {
+    it('TA with no assigned teams → returns empty overview with supervisingTeams scope', async () => {
+      const taId = oid();
+      await ensureUser(taId, 'TA');
+      const pr = await makePeerReview({ reviewerType: 'Individual', taAssignments: true });
+
+      const result = await getPeerReviewProgressOverviewById(
+        taId.toString(),
+        COURSE_ROLE.TA,
+        testCourseId.toString(),
+        pr._id.toString()
+      );
+
+      expect(result.peerReviewId).toBe(pr._id.toString());
+      expect(result.scope).toBe('supervisingTeams');
+      expect(result.submissions.total).toBe(0);
+      expect(result.grading.total).toBe(0);
+    });
+
+    it('Faculty with teams but no assignments → returns empty overview with course scope', async () => {
+      const pr = await makePeerReview({ reviewerType: 'Individual', taAssignments: false });
+      await makeTeam({ number: 20 });
+
+      const result = await getPeerReviewProgressOverviewById(
+        oidStr(),
+        COURSE_ROLE.Faculty,
+        testCourseId.toString(),
+        pr._id.toString()
+      );
+
+      expect(result.peerReviewId).toBe(pr._id.toString());
+      expect(result.scope).toBe('course');
+      expect(result.submissions.total).toBe(0);
+      expect(result.grading.total).toBe(0);
+    });
+
+    it('Faculty with assignments but no submissions → returns empty overview', async () => {
+      const pr = await makePeerReview({ reviewerType: 'Individual', taAssignments: false });
+      const team = await makeTeam({ number: 21 });
+      await makeAssignment(pr._id, team._id);
+
+      const result = await getPeerReviewProgressOverviewById(
+        oidStr(),
+        COURSE_ROLE.Faculty,
+        testCourseId.toString(),
+        pr._id.toString()
+      );
+
+      expect(result.peerReviewId).toBe(pr._id.toString());
+      expect(result.scope).toBe('course');
+      expect(result.submissions.total).toBe(0);
+    });
+
+    it('Faculty: counts submission statuses and all map to toBeAssigned when no grading tasks', async () => {
+      const pr = await makePeerReview({ reviewerType: 'Individual', taAssignments: false });
+      const team = await makeTeam({ number: 22 });
+      const assignment = await makeAssignment(pr._id, team._id);
+
+      await makeSubmission(pr._id, assignment._id, {
+        status: 'NotStarted',
+        reviewerKind: 'Student',
+        reviewerUserId: oid(),
+      });
+      await makeSubmission(pr._id, assignment._id, {
+        status: 'Draft',
+        reviewerKind: 'Student',
+        reviewerUserId: oid(),
+      });
+      await makeSubmission(pr._id, assignment._id, {
+        status: 'Submitted',
+        reviewerKind: 'Student',
+        reviewerUserId: oid(),
+      });
+
+      const result = await getPeerReviewProgressOverviewById(
+        oidStr(),
+        COURSE_ROLE.Faculty,
+        testCourseId.toString(),
+        pr._id.toString()
+      );
+
+      expect(result.submissions.total).toBe(3);
+      expect(result.submissions.notStarted).toBe(1);
+      expect(result.submissions.draft).toBe(1);
+      expect(result.submissions.submitted).toBe(1);
+      expect(result.submissions.started).toBe(2); // total - notStarted
+      expect(result.grading.total).toBe(3);
+      expect(result.grading.graded).toBe(0);
+      expect(result.grading.inProgress).toBe(0);
+      expect(result.grading.notYetGraded).toBe(0);
+      expect(result.grading.toBeAssigned).toBe(3);
+    });
+
+    it('Faculty: correctly buckets grading tasks – Completed, InProgress, Assigned, and no-task fallback', async () => {
+      const pr = await makePeerReview({ reviewerType: 'Individual', taAssignments: false });
+      const team = await makeTeam({ number: 23 });
+      const assignment = await makeAssignment(pr._id, team._id);
+
+      const sub1 = await makeSubmission(pr._id, assignment._id, {
+        status: 'Submitted',
+        reviewerKind: 'Student',
+        reviewerUserId: oid(),
+      });
+      const sub2 = await makeSubmission(pr._id, assignment._id, {
+        status: 'Submitted',
+        reviewerKind: 'Student',
+        reviewerUserId: oid(),
+      });
+      const sub3 = await makeSubmission(pr._id, assignment._id, {
+        status: 'Submitted',
+        reviewerKind: 'Student',
+        reviewerUserId: oid(),
+      });
+      // sub4 intentionally has no grading task → toBeAssigned
+      await makeSubmission(pr._id, assignment._id, {
+        status: 'Draft',
+        reviewerKind: 'Student',
+        reviewerUserId: oid(),
+      });
+
+      await makeGradingTask(pr._id, sub1._id, 'Completed');
+      await makeGradingTask(pr._id, sub2._id, 'InProgress');
+      await makeGradingTask(pr._id, sub3._id, 'Assigned');
+
+      const result = await getPeerReviewProgressOverviewById(
+        oidStr(),
+        COURSE_ROLE.Faculty,
+        testCourseId.toString(),
+        pr._id.toString()
+      );
+
+      expect(result.grading.total).toBe(4);
+      expect(result.grading.graded).toBe(1);       // Completed
+      expect(result.grading.inProgress).toBe(1);   // InProgress
+      expect(result.grading.notYetGraded).toBe(1); // Assigned
+      expect(result.grading.toBeAssigned).toBe(1); // no task
+    });
+
+    it('Faculty: falls back to toBeAssigned for unrecognized grading task status', async () => {
+      const pr = await makePeerReview({ reviewerType: 'Individual', taAssignments: false });
+      const team = await makeTeam({ number: 230 });
+      const assignment = await makeAssignment(pr._id, team._id);
+      const submission = await makeSubmission(pr._id, assignment._id, {
+        status: 'Submitted',
+        reviewerKind: 'Student',
+        reviewerUserId: oid(),
+      });
+
+      const gradingFindSpy = jest.spyOn(PeerReviewGradingTaskModel, 'find').mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        lean: jest.fn().mockResolvedValue([
+          {
+            peerReviewSubmissionId: submission._id,
+            status: 'UnexpectedStatus',
+          },
+        ]),
+      } as any);
+
+      const result = await getPeerReviewProgressOverviewById(
+        oidStr(),
+        COURSE_ROLE.Faculty,
+        testCourseId.toString(),
+        pr._id.toString()
+      );
+
+      expect(result.grading.total).toBe(1);
+      expect(result.grading.graded).toBe(0);
+      expect(result.grading.inProgress).toBe(0);
+      expect(result.grading.notYetGraded).toBe(0);
+      expect(result.grading.toBeAssigned).toBe(1);
+
+      gradingFindSpy.mockRestore();
+    });
+
+    it('Faculty: Completed takes precedence over InProgress when a submission has both task statuses', async () => {
+      const pr = await makePeerReview({ reviewerType: 'Individual', taAssignments: false });
+      const team = await makeTeam({ number: 24 });
+      const assignment = await makeAssignment(pr._id, team._id);
+      const sub = await makeSubmission(pr._id, assignment._id, {
+        status: 'Submitted',
+        reviewerKind: 'Student',
+        reviewerUserId: oid(),
+      });
+
+      // Two tasks for the same submission but different graders – one Completed, one InProgress
+      await makeGradingTask(pr._id, sub._id, 'Completed');
+      await new PeerReviewGradingTaskModel({
+        peerReviewId: pr._id,
+        peerReviewSubmissionId: sub._id,
+        grader: oid(),
+        status: 'InProgress',
+      }).save();
+
+      const result = await getPeerReviewProgressOverviewById(
+        oidStr(),
+        COURSE_ROLE.Faculty,
+        testCourseId.toString(),
+        pr._id.toString()
+      );
+
+      expect(result.grading.graded).toBe(1);
+      expect(result.grading.inProgress).toBe(0);
+    });
+
+    it('TA with assigned team → returns supervisingTeams scope scoped to that team only', async () => {
+      const taId = oid();
+      const otherTaId = oid();
+      const myStudentId = oid();
+      const otherStudentId = oid();
+      await ensureUser(taId, 'MyTA');
+      await ensureUser(otherTaId, 'OtherTA');
+      await ensureUser(myStudentId, 'MyStudent');
+      await ensureUser(otherStudentId, 'OtherStudent');
+
+      const pr = await makePeerReview({ reviewerType: 'Individual', taAssignments: true });
+
+      const myTeam = await makeTeam({ number: 25, TA: taId, members: [myStudentId] });
+      const otherTeam = await makeTeam({ number: 26, TA: otherTaId, members: [otherStudentId] });
+
+      const myAssignment = await makeAssignment(pr._id, myTeam._id);
+      const otherAssignment = await makeAssignment(pr._id, otherTeam._id);
+
+      // Supervised student submission (reviewing another team's assignment) should count
+      await makeSubmission(pr._id, otherAssignment._id, {
+        status: 'Draft',
+        reviewerKind: 'Student',
+        reviewerUserId: myStudentId,
+      });
+
+      // TA's own review should NOT be counted in progress overview
+      await makeSubmission(pr._id, myAssignment._id, {
+        status: 'Submitted',
+        reviewerKind: 'TA',
+        reviewerUserId: taId,
+      });
+
+      // Outsider student reviews (including reviews of supervised team's assignment) should NOT count
+      await makeSubmission(pr._id, myAssignment._id, {
+        status: 'Submitted',
+        reviewerKind: 'Student',
+        reviewerUserId: otherStudentId,
+      });
+      await makeSubmission(pr._id, otherAssignment._id, {
+        status: 'Submitted',
+        reviewerKind: 'Student',
+        reviewerUserId: otherStudentId,
+      });
+
+      const result = await getPeerReviewProgressOverviewById(
+        taId.toString(),
+        COURSE_ROLE.TA,
+        testCourseId.toString(),
+        pr._id.toString()
+      );
+
+      expect(result.scope).toBe('supervisingTeams');
+      // Only supervised student reviewer submissions should be counted
+      expect(result.submissions.total).toBe(1);
+      expect(result.submissions.draft).toBe(1);
+      expect(result.submissions.submitted).toBe(0);
     });
   });
 });

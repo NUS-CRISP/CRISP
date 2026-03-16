@@ -94,6 +94,11 @@ export interface PeerReviewComment {
   flagReason?: string;
   flaggedAt?: Date;
   flaggedBy?: string;
+  
+  // Unflag Fields
+  unflagReason?: string;
+  unflaggedAt?: Date;
+  unflaggedBy?: string;
 }
 
 export interface AssignedReviewDTO {
@@ -153,5 +158,24 @@ export interface PeerReviewInfoDTO {
   TAAssignments: TAToAssignmentsMap;
   capabilities: {
     assignmentPageTeamIds: string[];
+  };
+}
+
+export interface PeerReviewProgressOverviewDTO {
+  peerReviewId: string;
+  scope: 'course' | 'supervisingTeams';
+  submissions: {
+    total: number;
+    notStarted: number;
+    draft: number;
+    submitted: number;
+    started: number;
+  };
+  grading: {
+    total: number;
+    graded: number;
+    inProgress: number;
+    notYetGraded: number;
+    toBeAssigned: number;
   };
 }

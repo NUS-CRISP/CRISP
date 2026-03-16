@@ -241,6 +241,7 @@ describe('peerReviewAssessmentService', () => {
       description: 'd',
       startDate: new Date('2026-01-01'),
       endDate: new Date('2026-12-31'),
+      gradingStartDate: new Date('2026-12-31'),
       teamSetId: ts._id.toString(),
       reviewerType: 'Individual',
       taAssignments: false,
@@ -254,6 +255,17 @@ describe('peerReviewAssessmentService', () => {
     expect(createPeerReviewById).toHaveBeenCalled();
     expect(createAssignmentSet).toHaveBeenCalled();
 
+    const createdAssessment = await InternalAssessmentModel.findOne({
+      course: course._id,
+      assessmentName: 'A1',
+    });
+    expect(createdAssessment).toBeTruthy();
+    expect(createdAssessment?.startDate.toISOString()).toBe(
+      new Date('2026-01-01').toISOString()
+    );
+    // No gradingEndDate provided => assessment stays open-ended for grading
+    expect(createdAssessment?.endDate).toBeNull();
+
     const assessment = await makeAssessment(course._id, ts._id);
     const pr = await makePeerReview(course._id, ts._id, assessment._id);
 
@@ -264,6 +276,8 @@ describe('peerReviewAssessmentService', () => {
       description: 'dd',
       startDate: new Date('2026-01-01'),
       endDate: new Date('2026-12-31'),
+      gradingStartDate: new Date('2026-12-31'),
+      gradingEndDate: new Date('2027-01-15'),
       teamSetId: ts._id.toString(),
       reviewerType: 'Individual',
       taAssignments: true,
@@ -274,6 +288,9 @@ describe('peerReviewAssessmentService', () => {
     });
 
     expect(updated.updatedAssessment.assessmentName).toBe('Updated');
+    expect(updated.updatedAssessment.endDate?.toISOString()).toBe(
+      new Date('2027-01-15').toISOString()
+    );
     expect(updatePeerReviewById).toHaveBeenCalled();
 
     (deletePeerReviewById as jest.Mock).mockResolvedValue({ deletedPeerReviewId: pr._id.toString() });
@@ -282,6 +299,35 @@ describe('peerReviewAssessmentService', () => {
     const deleted = await deletePeerReviewAssessmentById(assessment._id.toString());
     expect(deleted.deletedPeerReviewId).toBe(pr._id.toString());
     expect(deleteInternalAssessmentById).toHaveBeenCalledWith(assessment._id.toString());
+  });
+
+  it('updatePeerReviewAssessmentById clears InternalAssessment endDate when gradingEndDate is omitted', async () => {
+    const course = await makeCourse();
+    const ts = await makeTeamSet(course._id);
+
+    const assessment = await makeAssessment(course._id, ts._id, {
+      endDate: new Date('2026-12-31'),
+    });
+    const pr = await makePeerReview(course._id, ts._id, assessment._id);
+
+    (updatePeerReviewById as jest.Mock).mockResolvedValue({ _id: pr._id });
+
+    const updated = await updatePeerReviewAssessmentById(assessment._id.toString(), {
+      assessmentName: 'Updated No Grading End',
+      description: 'desc',
+      startDate: new Date('2026-01-01'),
+      endDate: new Date('2026-12-31'),
+      gradingStartDate: new Date('2026-12-31'),
+      teamSetId: ts._id.toString(),
+      reviewerType: 'Individual',
+      taAssignments: true,
+      minReviews: 1,
+      maxReviews: 3,
+      scaleToMaxMarks: true,
+      maxMarks: 20,
+    });
+
+    expect(updated.updatedAssessment.endDate).toBeNull();
   });
 
   it('getPeerReviewSubmissionsForAssessmentById returns empty for TA without tasks', async () => {
@@ -757,6 +803,46 @@ describe('peerReviewAssessmentService', () => {
     await makePeerReview(course._id, emptyTs._id, emptyAssessment._id, { reviewerType: 'Team' });
     const emptyDto = await getPeerReviewResultsForAssessmentById(emptyAssessment._id.toString());
     expect(emptyDto.perStudent).toHaveLength(0);
+  });
+
+  it('ignores malformed completed grading tasks missing submission id in results aggregation', async () => {
+    const course = await makeCourse();
+    const ts = await makeTeamSet(course._id);
+    const assessment = await makeAssessment(course._id, ts._id);
+    const pr = await makePeerReview(course._id, ts._id, assessment._id, {
+      reviewerType: 'Individual',
+    });
+
+    const student = await makeUser('results-malformed-task-student');
+    const team = await makeTeam(ts._id, { number: 12, members: [student._id] });
+    await TeamSetModel.findByIdAndUpdate(ts._id, { $set: { teams: [team._id] } });
+
+    const assignment = await makeAssignment(pr._id, team._id);
+    const submission = await makeSubmission(pr._id, assignment._id, {
+      reviewerKind: 'Student',
+      reviewerUserId: student._id,
+      status: 'Submitted',
+    });
+
+    const gradingFindSpy = jest.spyOn(PeerReviewGradingTaskModel, 'find').mockReturnValue({
+      select: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockResolvedValue([
+        { peerReviewSubmissionId: undefined, score: 99 },
+        { peerReviewSubmissionId: submission._id, score: 8 },
+      ]),
+    } as any);
+
+    const dto = await getPeerReviewResultsForAssessmentById(
+      assessment._id.toString(),
+      'perStudent',
+      1,
+      10
+    );
+
+    expect(dto.perStudent).toHaveLength(1);
+    expect(dto.perStudent[0].aggregatedScore).toBe(8);
+
+    gradingFindSpy.mockRestore();
   });
 
   it('covers results edge branches for missing teamset doc and team reviewer aggregation', async () => {

@@ -322,11 +322,10 @@ const PeerReviewResults: React.FC<PeerReviewResultsProps> = ({
 
   return (
     <Container pt="6px" pb="lg">
-      <ScrollArea
-        style={{ height: 'calc(100vh - 180px)' }}
+      <ScrollArea.Autosize
+        mah="calc(100vh - 180px)"
         scrollbarSize={8}
         offsetScrollbars
-        pb="md"
       >
         <Stack gap="md" my="md" mr="xs">
           <Card withBorder radius="md" p="md">
@@ -447,7 +446,7 @@ const PeerReviewResults: React.FC<PeerReviewResultsProps> = ({
             onPageChange={setPage}
           />
         </Stack>
-      </ScrollArea>
+      </ScrollArea.Autosize>
 
       {/* Modal for Download Results */}
       <DownloadResultsCsvModal
