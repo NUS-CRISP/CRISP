@@ -166,10 +166,6 @@ const CreateCoursePage = () => {
     }
   };
 
-  // If navigated with /courses/create?courseId=..., load existing draft
-  // Note: `form` from `useForm` is a stable instance, so we intentionally
-  // omit it from the dependency array to avoid unnecessary re-runs.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!router.isReady) return;
     const idParam = router.query.courseId;
