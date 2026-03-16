@@ -51,7 +51,7 @@ export const getMe = async (req: Request, res: Response) => {
     'Cache-Control',
     'no-store, no-cache, must-revalidate, proxy-revalidate'
   );
-  
+
   try {
     const { account, userCourseRole } = await verifyRequestUser(req);
     const userId = await getUserIdByAccountId(account._id);
@@ -69,7 +69,7 @@ export const createCourse = async (req: Request, res: Response) => {
     'Cache-Control',
     'no-store, no-cache, must-revalidate, proxy-revalidate'
   );
-  
+
   try {
     const accountId = await getAccountId(req);
     const course = await createNewCourse(req.body, accountId);
