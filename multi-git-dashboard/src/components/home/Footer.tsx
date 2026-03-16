@@ -1,5 +1,4 @@
 import { Anchor, Container, Group } from '@mantine/core';
-import { IconGitBranch } from '@tabler/icons-react';
 import classes from '@styles/Footer.module.css';
 import Link from 'next/link';
 import CrispLogo from '../shared/CrispLogo';

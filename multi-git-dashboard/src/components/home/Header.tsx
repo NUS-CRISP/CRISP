@@ -1,7 +1,5 @@
-import { AppBar, Toolbar, Typography, Container, Box } from '@mui/material';
+import { AppBar, Toolbar, Container, Box } from '@mui/material';
 import { useRouter } from 'next/router';
-import { IconGitBranch } from '@tabler/icons-react';
-import classes from '@styles/Home.module.css';
 import { Button, useMantineTheme } from '@mantine/core';
 import CrispLogo from '../shared/CrispLogo';
 
