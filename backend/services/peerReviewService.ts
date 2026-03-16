@@ -1,7 +1,7 @@
 import PeerReviewModel from '@models/PeerReview';
 import CourseModel from '@models/Course';
 import { BadRequestError, NotFoundError } from './errors';
-import mongoose, { ClientSession, startSession, Types } from 'mongoose';
+import { ClientSession, Types } from 'mongoose';
 import PeerReviewAssignmentModel from '@models/PeerReviewAssignment';
 import PeerReviewCommentModel from '@models/PeerReviewComment';
 import PeerReviewSubmissionModel, {
@@ -332,7 +332,7 @@ export interface PeerReviewSettings {
 export const createPeerReviewById = async (
   courseId: string,
   peerReviewData: PeerReviewSettings,
-  session: ClientSession
+  session: ClientSession | null = null
 ) => {
   const course = await CourseModel.findById(courseId);
   if (!course) {
@@ -385,49 +385,37 @@ export const createPeerReviewById = async (
 };
 
 export const deletePeerReviewById = async (peerReviewId: string) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-  try {
-    const peerReview = await PeerReviewModel.findById(peerReviewId);
-    if (!peerReview) throw new NotFoundError('Peer review not found');
+  const peerReview = await PeerReviewModel.findById(peerReviewId);
+  if (!peerReview) throw new NotFoundError('Peer review not found');
 
-    const prAssignments: PeerReviewAssignment[] =
-      await PeerReviewAssignmentModel.find({
-        peerReviewId,
-      });
-    const assignmentIds = prAssignments.map(assignment => assignment._id);
-
-    // Delete associated comments
-    const delCommentsRes = await PeerReviewCommentModel.deleteMany({
-      peerReviewAssignmentId: { $in: assignmentIds },
+  const prAssignments: PeerReviewAssignment[] =
+    await PeerReviewAssignmentModel.find({
+      peerReviewId,
     });
+  const assignmentIds = prAssignments.map(assignment => assignment._id);
 
-    // Delete peer review assignments
-    const delAssignmentsRes =
-      await deleteAssignmentsByPeerReviewId(peerReviewId);
+  // Delete associated comments
+  const delCommentsRes = await PeerReviewCommentModel.deleteMany({
+    peerReviewAssignmentId: { $in: assignmentIds },
+  });
 
-    const delPeerReviewRes =
-      await PeerReviewModel.findByIdAndDelete(peerReviewId);
-    if (!delPeerReviewRes)
-      throw new NotFoundError('Peer review not found for deletion');
+  // Delete peer review assignments
+  const delAssignmentsRes = await deleteAssignmentsByPeerReviewId(peerReviewId);
 
-    await session.commitTransaction();
-    session.endSession();
+  const delPeerReviewRes =
+    await PeerReviewModel.findByIdAndDelete(peerReviewId);
+  if (!delPeerReviewRes)
+    throw new NotFoundError('Peer review not found for deletion');
 
-    return {
-      deletedPeerReviewId: peerReviewId,
-      deletedPeerReviewTitle: peerReview.title,
-      deleted: {
-        comments: delCommentsRes.deletedCount || 0,
-        assignments: delAssignmentsRes.deletedCount || 0,
-        peerReview: delPeerReviewRes ? 1 : 0,
-      },
-    };
-  } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-    throw error;
-  }
+  return {
+    deletedPeerReviewId: peerReviewId,
+    deletedPeerReviewTitle: peerReview.title,
+    deleted: {
+      comments: delCommentsRes.deletedCount || 0,
+      assignments: delAssignmentsRes.deletedCount || 0,
+      peerReview: delPeerReviewRes ? 1 : 0,
+    },
+  };
 };
 
 export const updatePeerReviewById = async (

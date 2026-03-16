@@ -200,14 +200,6 @@ beforeEach(async () => {
   await UserModel.deleteMany({});
 
   (getPeerReviewCommentsBySubmissionId as jest.Mock).mockResolvedValue([]);
-
-  jest.spyOn(mongoose, 'startSession').mockImplementation(async () => {
-    const session = await mongoose.connection.startSession();
-    jest.spyOn(session, 'startTransaction').mockImplementation(() => undefined as any);
-    jest.spyOn(session, 'commitTransaction').mockImplementation(async () => undefined as any);
-    jest.spyOn(session, 'abortTransaction').mockImplementation(async () => undefined as any);
-    return session;
-  });
 });
 
 afterAll(async () => {

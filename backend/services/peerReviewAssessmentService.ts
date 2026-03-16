@@ -6,7 +6,7 @@ import {
   BadRequestError,
   MissingAuthorizationError,
 } from './errors';
-import mongoose, { Types } from 'mongoose';
+import { Types } from 'mongoose';
 import TeamSetModel from '@models/TeamSet';
 import { createAssignmentSet } from './assessmentAssignmentSetService';
 import AssessmentResultModel from '@models/AssessmentResult';
@@ -75,8 +75,6 @@ export const createPeerReviewAssessmentForCourse = async (
   courseId: string,
   peerReviewAssessmentData: PeerReviewAssessmentData
 ) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
   const {
     assessmentName,
     description,
@@ -97,92 +95,81 @@ export const createPeerReviewAssessmentForCourse = async (
     ? new Date(gradingEndDate)
     : null;
 
+  const course = await CourseModel.findById(courseId).populate('students');
+  if (!course) throw new NotFoundError('Course not found');
+
+  const teamSet = await TeamSetModel.findById(teamSetId);
+  if (!teamSet) throw new NotFoundError('TeamSet not found');
+
+  // 1. Create InternalAssessment (peer_review type)
+  const assessment = await new InternalAssessmentModel({
+    course: courseId,
+    assessmentName: assessmentName,
+    assessmentType: 'peer_review',
+    description: description,
+    startDate: startDate,
+    endDate: internalAssessmentEndDate,
+    maxMarks: maxMarks,
+    scaleToMaxMarks: scaleToMaxMarks,
+    granularity: reviewerType.toLowerCase(),
+    teamSet: teamSet._id,
+    areSubmissionsEditable: false,
+    results: [],
+    isReleased: false,
+    questions: [], // no questions for peer review
+    questionsTotalMarks: 0,
+    releaseNumber: 0,
+  }).save();
+
+  // 2) Create AssessmentResults for all students
+  const results = await Promise.all(
+    (course.students as any[]).map(student =>
+      new AssessmentResultModel({
+        assessment: assessment._id,
+        student,
+        marks: [],
+        averageScore: 0,
+      }).save()
+    )
+  );
+
+  assessment.results = results.map(r => r._id);
+  await assessment.save();
+
+  course.internalAssessments.push(assessment._id);
+  await course.save();
+
+  // 3. Create PeerReview linked to InternalAssessment
+  const createPeerReviewData: PeerReviewSettings = {
+    assessmentName: assessmentName,
+    description: description,
+    startDate: startDate,
+    endDate: endDate,
+    teamSetId: teamSetId,
+    reviewerType: reviewerType,
+    taAssignments: taAssignments,
+    minReviews: minReviews,
+    maxReviews: maxReviews,
+    gradingStartDate: gradingStartDate,
+    gradingEndDate: gradingEndDate,
+    internalAssessmentId: assessment._id.toString(),
+  };
+  const newPeerReview = await createPeerReviewById(
+    courseId,
+    createPeerReviewData,
+    null
+  );
+
   try {
-    const course = await CourseModel.findById(courseId)
-      .populate('students')
-      .session(session);
-    if (!course) throw new NotFoundError('Course not found');
-
-    const teamSet = await TeamSetModel.findById(teamSetId).session(session);
-    if (!teamSet) throw new NotFoundError('TeamSet not found');
-
-    // 1. Create InternalAssessment (peer_review type)
-    const assessment = await new InternalAssessmentModel({
-      course: courseId,
-      assessmentName: assessmentName,
-      assessmentType: 'peer_review',
-      description: description,
-      startDate: startDate,
-      endDate: internalAssessmentEndDate,
-      maxMarks: maxMarks,
-      scaleToMaxMarks: scaleToMaxMarks,
-      granularity: reviewerType.toLowerCase(),
-      teamSet: teamSet._id,
-      areSubmissionsEditable: false,
-      results: [],
-      isReleased: false,
-      questions: [], // no questions for peer review
-      questionsTotalMarks: 0,
-      releaseNumber: 0,
-    }).save({ session });
-
-    // 2) Create AssessmentResults for all students
-    const results = await Promise.all(
-      (course.students as any[]).map(student =>
-        new AssessmentResultModel({
-          assessment: assessment._id,
-          student,
-          marks: [],
-          averageScore: 0,
-        }).save({ session })
-      )
+    await createAssignmentSet(
+      assessment._id.toString(),
+      teamSet._id.toString()
     );
-
-    assessment.results = results.map(r => r._id);
-    await assessment.save({ session });
-
-    course.internalAssessments.push(assessment._id);
-    await course.save({ session });
-
-    // 3. Create PeerReview linked to InternalAssessment
-    const createPeerReviewData: PeerReviewSettings = {
-      assessmentName: assessmentName,
-      description: description,
-      startDate: startDate,
-      endDate: endDate,
-      teamSetId: teamSetId,
-      reviewerType: reviewerType,
-      taAssignments: taAssignments,
-      minReviews: minReviews,
-      maxReviews: maxReviews,
-      gradingStartDate: gradingStartDate,
-      gradingEndDate: gradingEndDate,
-      internalAssessmentId: assessment._id.toString(),
-    };
-    const newPeerReview = await createPeerReviewById(
-      courseId,
-      createPeerReviewData,
-      session
-    );
-
-    await session.commitTransaction();
-    session.endSession();
-
-    try {
-      await createAssignmentSet(
-        assessment._id.toString(),
-        teamSet._id.toString()
-      );
-    } catch (e) {
-      console.error('createAssignmentSet failed:', e);
-    }
-
-    return newPeerReview;
   } catch (e) {
-    await session.abortTransaction();
-    session.endSession();
-    throw e;
+    console.error('createAssignmentSet failed:', e);
   }
+
+  return newPeerReview;
 };
 
 export const updatePeerReviewAssessmentById = async (
