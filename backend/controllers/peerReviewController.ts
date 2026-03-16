@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import {
   getAllPeerReviewsyId,
   getPeerReviewInfoById,
+  getPeerReviewProgressOverviewById,
   deletePeerReviewById,
   updatePeerReviewById,
 } from '../services/peerReviewService';
@@ -38,6 +39,35 @@ export const getPeerReviewInfo = async (req: Request, res: Response) => {
     res.status(200).json(peerReviewInfo);
   } catch (error) {
     return handleError(res, error, 'Failed to get peer review info');
+  }
+};
+
+export const getPeerReviewProgressOverview = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { account, userCourseRole } = await verifyRequestUser(req);
+    const userId = await verifyRequestPermission(account._id, userCourseRole, [
+      COURSE_ROLE.Faculty,
+      COURSE_ROLE.TA,
+    ]);
+    const { courseId, peerReviewId } = req.params;
+
+    const progressOverview = await getPeerReviewProgressOverviewById(
+      userId,
+      userCourseRole,
+      courseId,
+      peerReviewId
+    );
+
+    res.status(200).json(progressOverview);
+  } catch (error) {
+    return handleError(
+      res,
+      error,
+      'Failed to get peer review progress overview'
+    );
   }
 };
 

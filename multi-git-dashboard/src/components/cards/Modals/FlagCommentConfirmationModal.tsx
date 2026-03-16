@@ -17,7 +17,15 @@ const MAX_LEN = 500;
 
 const FlagCommentConfirmationModal: React.FC<
   FlagCommentConfirmationModalProps
-> = ({ opened, onClose, onConfirm, onCancel, title, confirmLabel = 'Flag', confirmColor = 'orange' }) => {
+> = ({
+  opened,
+  onClose,
+  onConfirm,
+  onCancel,
+  title,
+  confirmLabel = 'Flag',
+  confirmColor = 'orange',
+}) => {
   const [flagReason, setFlagReason] = useState('');
   const [touched, setTouched] = useState(false);
   const [debouncedFlagReason] = useDebouncedValue(flagReason, 500);
@@ -75,7 +83,11 @@ const FlagCommentConfirmationModal: React.FC<
         </Text>
 
         <Group gap="xs">
-          <Button color={confirmColor} onClick={handleConfirm} disabled={!canSubmit}>
+          <Button
+            color={confirmColor}
+            onClick={handleConfirm}
+            disabled={!canSubmit}
+          >
             {confirmLabel}
           </Button>
           <Button variant="light" color="gray" onClick={handleCancel}>

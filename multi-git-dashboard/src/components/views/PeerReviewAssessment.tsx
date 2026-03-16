@@ -81,6 +81,7 @@ const PeerReviewAssessment: React.FC<PeerReviewAssessmentProps> = ({
             courseId={id}
             assessment={assessment}
             isFaculty={isFaculty}
+            isTA={isTA}
             onUpdated={fetchAssessment}
             onDeleted={() => {
               // parent decides how to navigate away after delete

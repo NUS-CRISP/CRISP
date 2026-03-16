@@ -19,6 +19,7 @@ import { Status } from '@shared/types/util/Status';
 import { useEffect, useState, useMemo } from 'react';
 import PeerReviewAccordionItem from '../peer-review/PeerReviewAccordianItem';
 import PeerReviewTAAccordianItem from '../peer-review/PeerReviewTAAccordianItem';
+import PeerReviewProgressOverview from '../peer-review/PeerReviewProgressOverview';
 import { TeamSet } from '@shared/types/TeamSet';
 import { PeerReview, PeerReviewInfoDTO } from '@shared/types/PeerReview';
 import PeerReviewAssignmentForm from '../forms/PeerReviewAssignmentForm';
@@ -338,6 +339,13 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
         </Group>
       </Card>
 
+      <PeerReviewProgressOverview
+        courseId={courseId}
+        peerReviewId={peerReview._id}
+        enabled={isFaculty || isTA}
+        showGrading={false}
+      />
+
       {isFaculty && (
         <Modal
           opened={openedAssignmentForm}
@@ -367,7 +375,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
         <Center mt={150}>
           <Loader />
         </Center>
-      ) : isFaculty || (isTA && peerReview.status === 'Active') ? (
+      ) : true ? (
         <ScrollArea.Autosize mah={750} scrollbarSize={8}>
           <Accordion
             defaultValue={['teaching-assistants']}

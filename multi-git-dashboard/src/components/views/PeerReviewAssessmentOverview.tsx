@@ -5,6 +5,8 @@ import {
   Loader,
   Modal,
   Notification,
+  ScrollArea,
+  Stack,
   Text,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
@@ -16,24 +18,31 @@ import { InternalAssessment } from '@shared/types/InternalAssessment';
 import DeleteConfirmationModal from '../cards/Modals/DeleteConfirmationModal';
 import UpdatePeerReviewForm from '../forms/UpdatePeerReviewForm';
 import PeerReviewSettings from '../peer-review/PeerReviewSettings';
+import PeerReviewProgressOverview from '../peer-review/PeerReviewProgressOverview';
 import PeerReviewAssessmentDetail from './PeerReviewAssessmentDetail';
 
 interface PeerReviewAssessmentOverviewProps {
   courseId: string;
   assessment: InternalAssessment | null;
   isFaculty: boolean;
+  isTA?: boolean;
   onUpdated: () => void;
   onDeleted: () => void;
 }
 
 const PeerReviewAssessmentOverview: React.FC<
   PeerReviewAssessmentOverviewProps
-> = ({ courseId, assessment, isFaculty, onUpdated, onDeleted }) => {
+> = ({
+  courseId,
+  assessment,
+  isFaculty,
+  isTA = false,
+  onUpdated,
+  onDeleted,
+}) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [peerReview, setPeerReview] = useState<PeerReview | null>(null);
-
-  // Temp fetch of team sets here, will shift up to parent later
   const [teamSets, setTeamSets] = useState<TeamSet[]>([]);
 
   const [
@@ -135,7 +144,7 @@ const PeerReviewAssessmentOverview: React.FC<
     'Unknown Team Set';
 
   return (
-    <Container pb="lg">
+    <Container pb="lg" pt="6px">
       <Group justify="space-between" align="flex-start" mt="lg" mb="md">
         <div>
           <Text fw={700} fz="xl">
@@ -147,15 +156,29 @@ const PeerReviewAssessmentOverview: React.FC<
         </div>
       </Group>
 
-      <PeerReviewSettings
-        peerReview={peerReview}
-        teamSetName={teamSetName}
-        isFaculty={isFaculty}
-        onClickUpdate={openUpdateModal}
-        onClickDelete={openDeleteModal}
-      />
-
-      <PeerReviewAssessmentDetail assessment={assessment} />
+      <ScrollArea.Autosize
+        mah="calc(100vh - 220px)"
+        scrollbarSize={8}
+        offsetScrollbars
+        pb="lg"
+      >
+        <Stack gap={0} mr="xs" mb="sm" pb="md">
+          <PeerReviewProgressOverview
+            courseId={courseId}
+            peerReviewId={peerReview._id}
+            enabled={isFaculty || isTA}
+            showGrading={isFaculty}
+          />
+          <PeerReviewSettings
+            peerReview={peerReview}
+            teamSetName={teamSetName}
+            isFaculty={isFaculty}
+            onClickUpdate={openUpdateModal}
+            onClickDelete={openDeleteModal}
+          />
+          <PeerReviewAssessmentDetail assessment={assessment} />
+        </Stack>
+      </ScrollArea.Autosize>
 
       <Modal
         opened={openedUpdateModal}

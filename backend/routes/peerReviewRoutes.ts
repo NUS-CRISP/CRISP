@@ -2,6 +2,7 @@ import express from 'express';
 import {
   getAllPeerReviews,
   getPeerReviewInfo,
+  getPeerReviewProgressOverview,
   updatePeerReview,
   deletePeerReview,
 } from '../controllers/peerReviewController';
@@ -31,6 +32,10 @@ router.get('/:courseId/peer-reviews', getAllPeerReviews);
 router.put('/:courseId/:peerReviewId', updatePeerReview);
 router.delete('/:courseId/:peerReviewId', deletePeerReview);
 router.get('/:courseId/:peerReviewId', getPeerReviewInfo);
+router.get(
+  '/:courseId/:peerReviewId/progress-overview',
+  getPeerReviewProgressOverview
+);
 
 // Peer Review Assignment Routes
 router.get(

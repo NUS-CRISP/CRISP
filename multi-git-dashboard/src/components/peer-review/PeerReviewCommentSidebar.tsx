@@ -311,13 +311,21 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
                             )}
                             {canShowFlag && (
                               <Tooltip
-                                label={c.isFlagged && !c.unflaggedAt ? 'Unflag comment' : 'Flag comment'}
+                                label={
+                                  c.isFlagged && !c.unflaggedAt
+                                    ? 'Unflag comment'
+                                    : 'Flag comment'
+                                }
                                 withArrow
                                 position="top"
                               >
                                 <ActionIcon
                                   size={24}
-                                  color={c.isFlagged && !c.unflaggedAt ? 'orange' : undefined}
+                                  color={
+                                    c.isFlagged && !c.unflaggedAt
+                                      ? 'orange'
+                                      : undefined
+                                  }
                                   className={classes.commentFlagButton}
                                   onClick={() =>
                                     c.isFlagged && !c.unflaggedAt

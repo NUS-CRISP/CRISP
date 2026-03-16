@@ -160,3 +160,22 @@ export interface PeerReviewInfoDTO {
     assignmentPageTeamIds: string[];
   };
 }
+
+export interface PeerReviewProgressOverviewDTO {
+  peerReviewId: string;
+  scope: 'course' | 'supervisingTeams';
+  submissions: {
+    total: number;
+    notStarted: number;
+    draft: number;
+    submitted: number;
+    started: number;
+  };
+  grading: {
+    total: number;
+    graded: number;
+    inProgress: number;
+    notYetGraded: number;
+    toBeAssigned: number;
+  };
+}
