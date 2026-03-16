@@ -7,6 +7,7 @@ CRISP helps you keep track of course work, team activity, and review tasks in on
 2. **Wait for approval:** Your account must be approved before you can access course content.
 3. **Sign in:** Log in to reach your dashboard and course list.
 4. **Open your course:** As a faculty staff, you can add students to the course from the course page. As a student, you can access your available courses from the course list.
+
 ![Dashboard](/dashboard.png)
 
 If you do not see an expected course, team, or assessment, contact your instructor or course administrator first.

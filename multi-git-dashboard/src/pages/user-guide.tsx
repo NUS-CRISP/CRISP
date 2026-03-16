@@ -1,6 +1,5 @@
 import GuidePage from '@/components/guides/GuidePage';
 import ContactUs from '@/components/home/ContactUs';
-import FeatureCard from '@/components/home/FeatureCard';
 import Footer from '@/components/home/Footer';
 import { Container } from '@mantine/core';
 import { promises as fs } from 'fs';

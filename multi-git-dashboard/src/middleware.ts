@@ -14,6 +14,6 @@ export const EXCLUDE_PEER_REVIEW_REGEX =
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|auth|favicon.png|user-guide|dev-guide|$).*)',
+    '/((?!_next/static|_next/image|auth|user-guide|dev-guide|.*\\..*|$).*)',
   ],
 };
