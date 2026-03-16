@@ -4,7 +4,8 @@ import { InternalAssessment as SharedInternalAssessment } from '@shared/types/In
 import mongoose, { Schema, Types } from 'mongoose';
 
 export interface InternalAssessment
-  extends Omit<
+  extends
+    Omit<
       SharedInternalAssessment,
       | '_id'
       | 'course'

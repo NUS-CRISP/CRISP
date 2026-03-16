@@ -3,7 +3,8 @@ import { PeerReviewComment as SharedPeerReviewComment } from '@shared/types/Peer
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
 export interface PeerReviewComment
-  extends Omit<
+  extends
+    Omit<
       SharedPeerReviewComment,
       | '_id'
       | 'peerReviewId'
