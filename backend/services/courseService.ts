@@ -434,22 +434,26 @@ export const addTAsToCourse = async (courseId: string, TADataList: any[]) => {
     } else {
       TAAccount = await AccountModel.findOne({ user: TA._id });
       if (!TAAccount) {
-        continue;
+        const newAccount = new AccountModel({
+          email: TAData.email,
+          crispRole: CRISP_ROLE.Normal,
+          isApproved: false,
+          user: TA._id,
+          password: DEFAULT_PASSWORD_HASH,
+        });
+        await newAccount.save();
+        TAAccount = newAccount;
+        TA.name = TAData.name.toUpperCase();
+        TA.gitHandle = TAData.gitHandle ?? TA.gitHandle;
+      } else {
+        TA.gitHandle = TAData.gitHandle ?? TA.gitHandle;
       }
-      const courseRoleTuple = TAAccount.courseRoles.filter(
-        r => r.course === courseId
-      );
-      if (
-        (courseRoleTuple.length !== 0 &&
-          TAAccount.crispRole !== CRISP_ROLE.TrialUser) ||
-        TAData.name.toUpperCase() !== TA.name.toUpperCase() ||
-        TAData.email.toLowerCase() !== TAAccount.email.toLowerCase()
-      ) {
-        continue;
-      }
-      TA.gitHandle = TAData.gitHandle ?? TA.gitHandle;
     }
-    if (!TA.enrolledCourses.includes(course._id)) {
+    if (
+      !TA.enrolledCourses.some((id: any) =>
+        id?.equals ? id.equals(course._id) : String(id) === String(course._id)
+      )
+    ) {
       TA.enrolledCourses.push(course._id);
       TAAccount?.courseRoles.push({
         course: course._id.toString(),
