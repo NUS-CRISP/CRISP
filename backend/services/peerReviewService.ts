@@ -179,41 +179,27 @@ export const getPeerReviewProgressOverviewById = async (
     };
   }
 
-  const assignments = await PeerReviewAssignmentModel.find({
-    peerReviewId: oid(peerReviewId),
-    reviewee: { $in: ctx.scopedTeamIds.map(oid) },
-  })
-    .select('_id')
-    .lean();
+  const reviewerScope = computeReviewerScope(
+    userId,
+    userCourseRole,
+    peerReview.reviewerType,
+    peerReview.taAssignments,
+    ctx.scopedTeams
+  );
 
-  const assignmentIds = assignments.map(a => a._id);
-  if (assignmentIds.length === 0) {
-    return {
-      peerReviewId,
-      scope: userCourseRole === COURSE_ROLE.TA ? 'supervisingTeams' : 'course',
-      submissions: {
-        total: 0,
-        notStarted: 0,
-        draft: 0,
-        submitted: 0,
-        started: 0,
-      },
-      grading: {
-        total: 0,
-        graded: 0,
-        inProgress: 0,
-        notYetGraded: 0,
-        toBeAssigned: 0,
-      },
-    };
-  }
+  const scopedSubmissions = await loadSubmissionsForScope(
+    peerReviewId,
+    peerReview.reviewerType,
+    false,
+    reviewerScope.scopedMemberIds,
+    reviewerScope.scopedReviewerTeamIds,
+    []
+  );
 
-  const submissions = await PeerReviewSubmissionModel.find({
-    peerReviewId: oid(peerReviewId),
-    peerReviewAssignmentId: { $in: assignmentIds },
-  })
-    .select('_id status')
-    .lean();
+  const submissions = [
+    ...scopedSubmissions.studentSubs,
+    ...scopedSubmissions.teamSubs,
+  ];
 
   const totalSubmissions = submissions.length;
   const notStarted = submissions.filter(s => s.status === 'NotStarted').length;
@@ -378,8 +364,6 @@ export const createPeerReviewById = async (
     teamSetId,
     session
   );
-
-  console.log('assignments initialised on peer review creation');
 
   return newPeerReview;
 };

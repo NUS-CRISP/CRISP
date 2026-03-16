@@ -35,7 +35,7 @@ const PeerReviewGradingSummaryModal: React.FC<
       size="lg"
     >
       <ScrollArea.Autosize mah="65vh" type="auto" scrollbarSize={8}>
-        <Stack gap="sm">
+        <Stack gap="xs" mr="xs">
           {tasks.length === 0 ? (
             <Text c="dimmed" size="sm">
               No grading summary available yet.

@@ -266,7 +266,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
 
           <Group gap="xs" mt={6}>
             <Badge color={statusColor(peerReview.status)}>
-              {peerReview.status}
+              Review Period: {peerReview.status}
             </Badge>
             {isFaculty &&
               (peerReview.taAssignments ? (
@@ -359,6 +359,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
             onChange={setOpened}
             multiple
             variant="separated"
+            mb="lg"
           >
             {(isFaculty || isTA) && peerReview.taAssignments && (
               <PeerReviewTAAccordianItem

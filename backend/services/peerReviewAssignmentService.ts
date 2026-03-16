@@ -169,12 +169,6 @@ export const assignPeerReviews = async (
     assignTAs
   );
 
-  console.log('studentReviewers:', studentReviewers);
-  console.log('teamReviewers:', teamReviewers);
-  console.log('taReviewers:', taReviewers);
-  console.log('studentHomeTeam:', studentHomeTeam);
-  console.log('taHomeTeams:', taHomeTeams);
-
   // Get Eligible Reviewees
   const {
     studentToEligibleRevieweesMap,
@@ -197,10 +191,6 @@ export const assignPeerReviews = async (
     assignTAs
   );
 
-  console.log('studentToEligibleRevieweesMap:', studentToEligibleRevieweesMap);
-  console.log('teamToEligibleRevieweesMap:', teamToEligibleRevieweesMap);
-  console.log('taToEligibleRevieweesMap:', taToEligibleRevieweesMap);
-
   // Perform assignments
   const { assignedStudentsForTeam, assignedTeamsForTeam, assignedTAsForTeam } =
     performAssignments(
@@ -217,11 +207,6 @@ export const assignPeerReviews = async (
       assignDefault,
       assignTAs
     );
-
-  console.log('assignedStudentsForTeam:', assignedStudentsForTeam);
-  console.log('assignedTeamsForTeam:', assignedTeamsForTeam);
-  console.log('assignedTAsForTeam:', assignedTAsForTeam);
-  console.log('assignments completed, updating database...');
 
   await updateDBAssignmentsAndSubmissions(
     peerReviewId,
@@ -265,7 +250,6 @@ export const addManualAssignment = async (
     );
   }
 
-  console.log('checking manual assignment eligibility...');
   // Check if reviewer is eligible to review the reviewee
   await checkReviewerIsEligible(
     reviewerType,
@@ -275,7 +259,6 @@ export const addManualAssignment = async (
     isTA
   );
 
-  console.log('checking manual assignment limits...');
   // Check if reviewer has exceeded max reviews, TAs have no limit
   if (!isTA) {
     await checkMaxReviewsNotExceeded(
@@ -296,7 +279,6 @@ export const addManualAssignment = async (
     repoUrl
   );
 
-  console.log('checking manual assignment duplicates...');
   // Check if duplicate assignment
   await checkIsNotDuplicateSubmission(
     peerReviewId,
@@ -306,7 +288,6 @@ export const addManualAssignment = async (
     isTA
   );
 
-  console.log('creating submission...');
   // Add reviewer to assignment (create new assignment if none exists)
   await createSubmission(
     peerReviewId,
@@ -489,25 +470,15 @@ const buildEligibleRevieweeMaps = (
   assignDefault: boolean,
   assignTAs: boolean
 ) => {
-  console.log('allowSameTA:', allowSameTA);
-  console.log('reviewsPerReviewer:', reviewsPerReviewer);
-
   const studentToEligibleRevieweesMap = new Map<string, string[]>();
   if (reviewerType === 'Individual' && assignDefault) {
     for (const studentId of studentReviewers) {
       const homeTeamId = studentHomeTeam.get(studentId)!;
-      console.log('homeTeamId for student', studentId, ':', homeTeamId);
       const eligibleReviewees = makeEligibleReviewees(
         teamIdToTAMap,
         prTeamIds,
         allowSameTA,
         homeTeamId
-      );
-      console.log(
-        'eligibleReviewees for student',
-        studentId,
-        ':',
-        eligibleReviewees
       );
       if (eligibleReviewees.length < reviewsPerReviewer) {
         throw new BadRequestError(
@@ -854,8 +825,6 @@ const makeEligibleReviewees = (
   homeTeamId: string
 ) => {
   const homeTA = teamIdToTAMap.get(homeTeamId);
-  console.log('homeTeamId:', homeTeamId, 'homeTA:', homeTA);
-  console.log('prTeamIds:', prTeamIds);
   return prTeamIds.filter(tid => {
     if (tid === homeTeamId) return false; // cannot review own team
     if (!allowSameTA) {

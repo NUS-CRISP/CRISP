@@ -12,6 +12,7 @@ interface UpdatePeerReviewFormProps {
   teamSets: TeamSet[];
   peerReview: PeerReview;
   internalAssessment: InternalAssessment;
+  lockReviewConfig?: boolean;
   onUpdated: () => void;
   onClose?: () => void;
 }
@@ -51,6 +52,7 @@ const UpdatePeerReviewForm: React.FC<UpdatePeerReviewFormProps> = ({
   teamSets,
   peerReview,
   internalAssessment,
+  lockReviewConfig = false,
   onUpdated,
   onClose,
 }) => {
@@ -77,6 +79,7 @@ const UpdatePeerReviewForm: React.FC<UpdatePeerReviewFormProps> = ({
       teamSets={teamSets}
       mode="update"
       initialValues={toInitialValues(peerReview, internalAssessment)}
+      lockReviewConfig={lockReviewConfig}
       submitLabel="Update Peer Review"
       onCancel={onClose}
       onSubmit={submit}

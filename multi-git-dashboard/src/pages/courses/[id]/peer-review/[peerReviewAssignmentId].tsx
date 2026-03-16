@@ -1,11 +1,13 @@
 import {
   Container,
   Center,
+  Loader,
   ScrollArea,
   Group,
   Title,
   Anchor,
   Text,
+  Stack,
   Box,
   Card,
   Button,
@@ -48,7 +50,15 @@ const PeerReviewDetail: React.FC = () => {
     router.isReady &&
     typeof id === 'string' &&
     typeof peerReviewAssignmentId === 'string';
-  if (!ready) return <Center>Loading...</Center>;
+  if (!ready)
+    return (
+      <Center h="60vh">
+        <Stack align="center" gap="xs">
+          <Loader size="md" />
+          <Text c="dimmed">Loading peer review...</Text>
+        </Stack>
+      </Center>
+    );
 
   // Current User
   const [me, setMe] = useState<{
@@ -571,9 +581,37 @@ const PeerReviewDetail: React.FC = () => {
     }
   }, [submitReview, router, id]);
 
-  if (loading || !me) return <Center>Loading...</Center>;
-  if (!peerReviewAssignment) return <Center>Unable to load assignment.</Center>;
-  if (!repoTree) return <Center>No repository tree found.</Center>;
+  if (loading || !me)
+    return (
+      <Center h="60vh">
+        <Stack align="center" gap="xs">
+          <Loader size="md" />
+          <Text c="dimmed">Loading review assignment...</Text>
+        </Stack>
+      </Center>
+    );
+  if (!peerReviewAssignment)
+    return (
+      <Center h="60vh">
+        <Stack align="center" gap={4}>
+          <Text fw={600}>Unable to load assignment</Text>
+          <Text c="dimmed" fz="sm">
+            Please refresh and try again.
+          </Text>
+        </Stack>
+      </Center>
+    );
+  if (!repoTree)
+    return (
+      <Center h="60vh">
+        <Stack align="center" gap={4}>
+          <Text fw={600}>No repository tree found</Text>
+          <Text c="dimmed" fz="sm">
+            This assignment may not have a repository configured yet.
+          </Text>
+        </Stack>
+      </Center>
+    );
 
   const isReadOnly = isReviewee;
 
@@ -672,8 +710,13 @@ const PeerReviewDetail: React.FC = () => {
             </Card>
           </Box>
         ) : (
-          <Center>
-            <Text>Select a file to view</Text>
+          <Center style={{ flex: 1, minHeight: 420 }}>
+            <Stack align="center" gap={4}>
+              <Text fw={600}>Select a file to view</Text>
+              <Text c="dimmed" fz="sm">
+                Choose a file from the repository tree to open it.
+              </Text>
+            </Stack>
           </Center>
         )}
         <PeerReviewCommentSidebar

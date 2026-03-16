@@ -93,6 +93,10 @@ export const createPeerReviewAssessmentForCourse = async (
     scaleToMaxMarks,
   } = peerReviewAssessmentData;
 
+  const internalAssessmentEndDate = gradingEndDate
+    ? new Date(gradingEndDate)
+    : null;
+
   try {
     const course = await CourseModel.findById(courseId)
       .populate('students')
@@ -109,7 +113,7 @@ export const createPeerReviewAssessmentForCourse = async (
       assessmentType: 'peer_review',
       description: description,
       startDate: startDate,
-      endDate: endDate,
+      endDate: internalAssessmentEndDate,
       maxMarks: maxMarks,
       scaleToMaxMarks: scaleToMaxMarks,
       granularity: reviewerType.toLowerCase(),
@@ -193,11 +197,15 @@ export const updatePeerReviewAssessmentById = async (
   if (existing.assessmentType !== 'peer_review')
     throw new BadRequestError('Assessment is not a peer review assessment');
 
+  const internalAssessmentEndDate = updateData.gradingEndDate
+    ? new Date(updateData.gradingEndDate)
+    : null;
+
   const updatedAssessmentData = {
     assessmentName: updateData.assessmentName,
     description: updateData.description,
     startDate: updateData.startDate,
-    endDate: updateData.endDate,
+    endDate: internalAssessmentEndDate,
     maxMarks: updateData.maxMarks,
     scaleToMaxMarks: updateData.scaleToMaxMarks,
     granularity: updateData.reviewerType.toLowerCase(),

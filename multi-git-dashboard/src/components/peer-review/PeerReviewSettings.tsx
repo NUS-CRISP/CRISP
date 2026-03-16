@@ -15,16 +15,22 @@ interface PeerReviewSettingsProps {
   peerReview: PeerReview;
   teamSetName: string;
   isFaculty: boolean;
+  isGradingPhase?: boolean;
+  isAssessmentClosed?: boolean;
   onClickUpdate: () => void;
   onClickDelete: () => void;
+  onClickCloseAssessment?: () => void;
 }
 
 const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
   peerReview,
   teamSetName,
   isFaculty,
+  isGradingPhase = false,
+  isAssessmentClosed = false,
   onClickUpdate,
   onClickDelete,
+  onClickCloseAssessment,
 }) => {
   const {
     description,
@@ -36,6 +42,21 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
     maxReviewsPerReviewer,
     status,
   } = peerReview;
+
+  const statusLabel = isAssessmentClosed
+    ? 'Closed'
+    : isGradingPhase
+      ? 'Grading'
+      : status;
+
+  const statusColor =
+    statusLabel === 'Closed'
+      ? 'red'
+      : statusLabel === 'Active'
+        ? 'green'
+        : statusLabel === 'Grading'
+          ? 'violet'
+          : 'yellow';
 
   return (
     <Card
@@ -53,17 +74,7 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
         </Stack>
 
         <Group gap="xs">
-          <Badge
-            color={
-              status === 'Closed'
-                ? 'red'
-                : status === 'Active'
-                  ? 'green'
-                  : 'yellow'
-            }
-          >
-            {status}
-          </Badge>
+          <Badge color={statusColor}>{statusLabel}</Badge>
           <Badge variant="light">Reviewer Type: {reviewerType}</Badge>
           {isFaculty && (
             <Badge variant="light" color={taAssignments ? 'teal' : 'red'}>
@@ -126,22 +137,28 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
         </Stack>
         {isFaculty && (
           <Stack mt="sm">
-            <Button
-              onClick={onClickUpdate}
-              color="green"
-              variant="light"
-              disabled={status === 'Closed'}
-            >
+            <Button onClick={onClickUpdate} color="green" variant="light">
               Update Settings
             </Button>
             <Button
               color="red"
               variant="light"
               onClick={onClickDelete}
-              disabled={status === 'Closed'}
+              disabled={statusLabel === 'Closed' || isGradingPhase}
             >
               Delete Peer Review
             </Button>
+            {isGradingPhase &&
+              !isAssessmentClosed &&
+              onClickCloseAssessment && (
+                <Button
+                  color="violet"
+                  variant="light"
+                  onClick={onClickCloseAssessment}
+                >
+                  Close Assessment
+                </Button>
+              )}
           </Stack>
         )}
       </SimpleGrid>

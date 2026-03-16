@@ -108,6 +108,60 @@ const PeerReviewAssessmentOverview: React.FC<
     }
   };
 
+  const toDateInput = (value: Date | string | null | undefined) => {
+    if (!value) return '';
+    return new Date(value).toISOString().slice(0, 10);
+  };
+
+  const handleCloseAssessment = async () => {
+    if (!assessment || !peerReview) return;
+
+    const today = new Date().toISOString().slice(0, 10);
+
+    try {
+      setError(null);
+      const payload = {
+        assessmentName: peerReview.title,
+        description: peerReview.description,
+        startDate: toDateInput(peerReview.startDate),
+        endDate: toDateInput(peerReview.endDate),
+        teamSetId: peerReview.teamSetId,
+        reviewerType: peerReview.reviewerType,
+        taAssignments: !!peerReview.taAssignments,
+        minReviews: peerReview.minReviewsPerReviewer,
+        maxReviews: peerReview.maxReviewsPerReviewer,
+        maxMarks: assessment.maxMarks ?? 0,
+        scaleToMaxMarks: !!assessment.scaleToMaxMarks,
+        gradingStartDate: toDateInput(peerReview.gradingStartDate) || null,
+        gradingEndDate: today,
+      };
+
+      const res = await fetch(
+        `/api/peer-review-assessments/${courseId}/${assessment._id}/peer-review`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const body = await res.json();
+      if (!res.ok) throw new Error(body?.message ?? res.statusText);
+
+      notifications.show({
+        title: 'Assessment Closed',
+        message: 'Grading has been closed for this peer review assessment.',
+        color: 'green',
+        autoClose: 3000,
+      });
+
+      await fetchData();
+      onUpdated();
+    } catch (e) {
+      setError((e as Error).message ?? 'Failed to close assessment');
+    }
+  };
+
   if (loading) {
     return (
       <Center mt={150}>
@@ -143,6 +197,15 @@ const PeerReviewAssessmentOverview: React.FC<
     teamSets.find(ts => ts._id === peerReview.teamSetId)?.name ||
     'Unknown Team Set';
 
+  const now = new Date();
+  const reviewEndAt = new Date(peerReview.endDate);
+  const assessmentEndAt = assessment.endDate
+    ? new Date(assessment.endDate)
+    : null;
+  const isReviewClosed = now > reviewEndAt;
+  const isAssessmentClosed = !!(assessmentEndAt && now >= assessmentEndAt);
+  const isGradingPhase = isReviewClosed && !isAssessmentClosed;
+
   return (
     <Container pb="lg" pt="6px">
       <Group justify="space-between" align="flex-start" mt="lg" mb="md">
@@ -173,8 +236,11 @@ const PeerReviewAssessmentOverview: React.FC<
             peerReview={peerReview}
             teamSetName={teamSetName}
             isFaculty={isFaculty}
+            isGradingPhase={isGradingPhase}
+            isAssessmentClosed={isAssessmentClosed}
             onClickUpdate={openUpdateModal}
             onClickDelete={openDeleteModal}
+            onClickCloseAssessment={handleCloseAssessment}
           />
           <PeerReviewAssessmentDetail assessment={assessment} />
         </Stack>
@@ -192,6 +258,7 @@ const PeerReviewAssessmentOverview: React.FC<
           teamSets={teamSets}
           peerReview={peerReview}
           internalAssessment={assessment}
+          lockReviewConfig={isReviewClosed}
           onUpdated={() => {
             closeUpdateModal();
             fetchData();
