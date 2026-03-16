@@ -1,4 +1,8 @@
 import GuidePage from '@/components/guides/GuidePage';
+import ContactUs from '@/components/home/ContactUs';
+import FeatureCard from '@/components/home/FeatureCard';
+import Footer from '@/components/home/Footer';
+import { Container } from '@mantine/core';
 import { promises as fs } from 'fs';
 import type { GetStaticProps, InferGetStaticPropsType } from 'next';
 import path from 'path';
@@ -27,11 +31,17 @@ export const getStaticProps: GetStaticProps<UserGuideProps> = async () => {
 const UserGuide: React.FC<InferGetStaticPropsType<typeof getStaticProps>> = ({
   markdown,
 }) => (
-  <GuidePage
-    title="User Guide"
-    description="Learn how to get started with CRISP and make the most of its features."
-    markdown={markdown}
-  />
+  <div>
+    <GuidePage
+      title="User Guide"
+      description="Learn how to get started with CRISP and make the most of its features."
+      markdown={markdown}
+    ></GuidePage>
+    <Container mt="xl">
+      <ContactUs />
+    </Container>
+    <Footer />
+  </div>
 );
 
 export default UserGuide;

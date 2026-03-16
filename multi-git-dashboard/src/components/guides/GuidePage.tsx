@@ -3,6 +3,7 @@ import Header from '@/components/home/Header';
 import {
   Anchor,
   Container,
+  Image,
   List,
   Paper,
   Stack,
@@ -96,6 +97,19 @@ const GuidePage: React.FC<GuidePageProps> = ({ title, description, markdown }) =
         {children}
       </Paper>
     ),
+    img: ({ src, alt }) => (
+      <Image
+        src={src ?? ''}
+        alt={alt ?? ''}
+        radius="md"
+        mb="md"
+        mt="md"
+        style={{
+          border: `1px solid ${isDark ? '#1e3a5f' : 'var(--mantine-color-gray-3)'}`,
+          maxWidth: '100%',
+        }}
+      />
+    ),
   };
 
   return (
@@ -131,8 +145,6 @@ const GuidePage: React.FC<GuidePageProps> = ({ title, description, markdown }) =
             </Paper>
           </Stack>
         </Container>
-
-        <Footer />
       </div>
     </div>
   );
