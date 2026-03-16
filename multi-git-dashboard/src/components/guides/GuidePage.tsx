@@ -19,7 +19,11 @@ type GuidePageProps = {
   markdown: string;
 };
 
-const GuidePage: React.FC<GuidePageProps> = ({ title, description, markdown }) => {
+const GuidePage: React.FC<GuidePageProps> = ({
+  title,
+  description,
+  markdown,
+}) => {
   const colorScheme = useComputedColorScheme('light', {
     getInitialValueInEffect: false,
   });
@@ -32,7 +36,13 @@ const GuidePage: React.FC<GuidePageProps> = ({ title, description, markdown }) =
       </Title>
     ),
     h3: ({ children }) => (
-      <Title order={3} c={isDark ? 'white' : 'dark.9'} size="h4" mb="xs" mt="lg">
+      <Title
+        order={3}
+        c={isDark ? 'white' : 'dark.9'}
+        size="h4"
+        mb="xs"
+        mt="lg"
+      >
         {children}
       </Title>
     ),
@@ -47,7 +57,12 @@ const GuidePage: React.FC<GuidePageProps> = ({ title, description, markdown }) =
       </List>
     ),
     ol: ({ children }) => (
-      <List type="ordered" spacing="sm" c={isDark ? 'gray.4' : 'dark.6'} mb="md">
+      <List
+        type="ordered"
+        spacing="sm"
+        c={isDark ? 'gray.4' : 'dark.6'}
+        mb="md"
+      >
         {children}
       </List>
     ),
@@ -117,7 +132,11 @@ const GuidePage: React.FC<GuidePageProps> = ({ title, description, markdown }) =
         <Header />
       </div>
 
-      <div style={{ background: isDark ? '#062343' : 'var(--mantine-color-gray-0)' }}>
+      <div
+        style={{
+          background: isDark ? '#062343' : 'var(--mantine-color-gray-0)',
+        }}
+      >
         <Container size="lg" py="xl" style={{ minHeight: '80vh' }}>
           <Stack gap="xl">
             <div>
@@ -135,9 +154,7 @@ const GuidePage: React.FC<GuidePageProps> = ({ title, description, markdown }) =
               withBorder
               style={{
                 background: isDark ? 'var(--mantine-color-dark-7)' : 'white',
-                borderColor: isDark
-                  ? '#1e3a5f'
-                  : 'var(--mantine-color-gray-3)',
+                borderColor: isDark ? '#1e3a5f' : 'var(--mantine-color-gray-3)',
               }}
             >
               <Markdown components={markdownComponents}>{markdown}</Markdown>
