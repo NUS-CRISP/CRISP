@@ -314,10 +314,6 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
           </Group>
         </Radio.Group>
 
-        <Text fw={600} fz="sm" mt="md" mb="xs">
-          TA Grading Scope
-        </Text>
-
         <TextInput
           withAsterisk
           mt="md"
