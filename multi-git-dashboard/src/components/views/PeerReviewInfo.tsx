@@ -339,44 +339,20 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
         </Group>
       </Card>
 
-      <PeerReviewProgressOverview
-        courseId={courseId}
-        peerReviewId={peerReview._id}
-        enabled={isFaculty || isTA}
-        showGrading={false}
-      />
-
-      {isFaculty && (
-        <Modal
-          opened={openedAssignmentForm}
-          onClose={closeAssignmentForm}
-          title="Assign Peer Reviews"
-          centered
-        >
-          <PeerReviewAssignmentForm
-            courseId={courseId}
-            peerReviewId={peerReview._id}
-            reviewerType={peerReview.reviewerType}
-            taAssignmentsEnabled={!!peerReview.taAssignments}
-            minReviewsPerReviewer={peerReview.minReviewsPerReviewer}
-            maxReviewsPerReviewer={peerReview.maxReviewsPerReviewer}
-            onAssign={() => {
-              onUpdate();
-              fetchPeerReviewInfo();
-              closeAssignmentForm();
-            }}
-            onClose={closeAssignmentForm}
-          />
-        </Modal>
-      )}
       {peerReviewInfo && !peerReviewInfo.teams ? (
         <Text>No teams found.</Text>
       ) : status === Status.Loading || !peerReviewInfo ? (
         <Center mt={150}>
           <Loader />
         </Center>
-      ) : true ? (
+      ) : isFaculty || peerReview.status === 'Active' ? (
         <ScrollArea.Autosize mah={750} scrollbarSize={8}>
+          <PeerReviewProgressOverview
+            courseId={courseId}
+            peerReviewId={peerReview._id}
+            enabled={isFaculty || isTA}
+            showGrading={false}
+          />
           <Accordion
             defaultValue={['teaching-assistants']}
             value={opened}
@@ -427,6 +403,30 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
               : 'Peer review assignments will be available when the review period begins.'}
           </Text>
         </Card>
+      )}
+
+      {isFaculty && (
+        <Modal
+          opened={openedAssignmentForm}
+          onClose={closeAssignmentForm}
+          title="Assign Peer Reviews"
+          centered
+        >
+          <PeerReviewAssignmentForm
+            courseId={courseId}
+            peerReviewId={peerReview._id}
+            reviewerType={peerReview.reviewerType}
+            taAssignmentsEnabled={!!peerReview.taAssignments}
+            minReviewsPerReviewer={peerReview.minReviewsPerReviewer}
+            maxReviewsPerReviewer={peerReview.maxReviewsPerReviewer}
+            onAssign={() => {
+              onUpdate();
+              fetchPeerReviewInfo();
+              closeAssignmentForm();
+            }}
+            onClose={closeAssignmentForm}
+          />
+        </Modal>
       )}
     </Container>
   );
