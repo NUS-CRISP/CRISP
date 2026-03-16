@@ -1,5 +1,6 @@
 import AccountModel from '@models/Account';
 import CourseModel from '@models/Course';
+import TeamModel from '@models/Team';
 import TeamDataModel from '@models/TeamData';
 import UserModel from '@models/User';
 import { MongoMemoryServer } from 'mongodb-memory-server';
@@ -374,6 +375,340 @@ describe('gitHubService', () => {
         )
       ).rejects.toThrow(NotFoundError);
     });
+
+    it('should throw NotFoundError if faculty course has no team data', async () => {
+      const mockFacultyUser = await UserModel.findOne({ identifier: 'test' });
+
+      const courseWithNoTeamData = await CourseModel.create({
+        name: 'courseWithNoTeamData',
+        code: 'courseWithNoTeamData',
+        semester: 'testCourse',
+        startDate: new Date(),
+        faculty: [mockFacultyUser!._id],
+        TAs: [],
+        students: [],
+        teamSets: [],
+        courseType: 'GitHubOrg',
+        gitHubOrgName: 'org',
+        repoNameFilter: '',
+      });
+
+      await expect(
+        gitHubService.getAuthorizedTeamDataByCourse(
+          mockFacultyAccountId,
+          courseWithNoTeamData._id.toString()
+        )
+      ).rejects.toThrow('No team data found for course');
+    });
+
+    it('should return sorted team data for normal user with assigned teams', async () => {
+      const normalAccount = await AccountModel.findById(mockNormalAccountId);
+      const normalUserId = normalAccount!.user;
+
+      const mockFacultyUser = await UserModel.findOne({ identifier: 'test' });
+      const courseWithTeams = await CourseModel.create({
+        name: 'courseWithTeamsForNormal',
+        code: 'courseWithTeamsForNormal',
+        semester: 'testCourse',
+        startDate: new Date(),
+        faculty: [mockFacultyUser!._id],
+        TAs: [],
+        students: [],
+        teamSets: [],
+        courseType: 'GitHubOrg',
+        gitHubOrgName: 'org',
+        repoNameFilter: '',
+      });
+
+      const teamSet = await TeamSetModel.create({
+        name: 'Normal Team Set',
+        course: courseWithTeams._id,
+      });
+
+      const zData = await TeamDataModel.create({
+        repoName: 'zz-team',
+        gitHubOrgName: 'org',
+        course: courseWithTeams._id,
+        teamContributions: [],
+        pullRequests: 0,
+        issues: 0,
+        commits: 0,
+        teamId: 10,
+      });
+      const aData = await TeamDataModel.create({
+        repoName: 'aa-team',
+        gitHubOrgName: 'org',
+        course: courseWithTeams._id,
+        teamContributions: [],
+        pullRequests: 0,
+        issues: 0,
+        commits: 0,
+        teamId: 11,
+      });
+
+      await TeamModel.create({
+        teamSet: teamSet._id,
+        number: 1,
+        TA: normalUserId,
+        members: [],
+        teamData: zData._id,
+      });
+      await TeamModel.create({
+        teamSet: teamSet._id,
+        number: 2,
+        TA: normalUserId,
+        members: [],
+        teamData: aData._id,
+      });
+
+      const result = await gitHubService.getAuthorizedTeamDataByCourse(
+        mockNormalAccountId,
+        courseWithTeams._id.toString()
+      );
+
+      expect(result).toBeDefined();
+      expect(result!.map(team => team.repoName)).toEqual(['aa-team', 'zz-team']);
+    });
+
+    it('should handle equal repo names in faculty sorting comparator', async () => {
+      const mockFacultyUser = await UserModel.findOne({ identifier: 'test' });
+
+      const courseWithDuplicateRepoNames = await CourseModel.create({
+        name: 'courseWithDuplicateRepoNames',
+        code: 'courseWithDuplicateRepoNames',
+        semester: 'testCourse',
+        startDate: new Date(),
+        faculty: [mockFacultyUser!._id],
+        TAs: [],
+        students: [],
+        teamSets: [],
+        courseType: 'GitHubOrg',
+        gitHubOrgName: 'org',
+        repoNameFilter: '',
+      });
+
+      await TeamDataModel.create({
+        repoName: 'same-name',
+        gitHubOrgName: 'org',
+        course: courseWithDuplicateRepoNames._id,
+        teamContributions: [],
+        pullRequests: 0,
+        issues: 0,
+        commits: 0,
+        teamId: 100,
+      });
+      await TeamDataModel.create({
+        repoName: 'same-name',
+        gitHubOrgName: 'org',
+        course: courseWithDuplicateRepoNames._id,
+        teamContributions: [],
+        pullRequests: 0,
+        issues: 0,
+        commits: 0,
+        teamId: 101,
+      });
+
+      const result = await gitHubService.getAuthorizedTeamDataByCourse(
+        mockFacultyAccountId,
+        courseWithDuplicateRepoNames._id.toString()
+      );
+
+      expect(result).toBeDefined();
+      expect(result!).toHaveLength(2);
+      expect(result![0].repoName).toBe('same-name');
+      expect(result![1].repoName).toBe('same-name');
+    });
+
+    it('should exercise faculty sorting comparator less-than path', async () => {
+      const mockFacultyUser = await UserModel.findOne({ identifier: 'test' });
+
+      const courseWithSortableRepoNames = await CourseModel.create({
+        name: 'courseWithSortableRepoNames',
+        code: 'courseWithSortableRepoNames',
+        semester: 'testCourse',
+        startDate: new Date(),
+        faculty: [mockFacultyUser!._id],
+        TAs: [],
+        students: [],
+        teamSets: [],
+        courseType: 'GitHubOrg',
+        gitHubOrgName: 'org',
+        repoNameFilter: '',
+      });
+
+      // Insert in reverse order so comparator hits the a < b branch during sorting
+      await TeamDataModel.create({
+        repoName: 'zz-faculty',
+        gitHubOrgName: 'org',
+        course: courseWithSortableRepoNames._id,
+        teamContributions: [],
+        pullRequests: 0,
+        issues: 0,
+        commits: 0,
+        teamId: 200,
+      });
+      await TeamDataModel.create({
+        repoName: 'aa-faculty',
+        gitHubOrgName: 'org',
+        course: courseWithSortableRepoNames._id,
+        teamContributions: [],
+        pullRequests: 0,
+        issues: 0,
+        commits: 0,
+        teamId: 201,
+      });
+
+      const result = await gitHubService.getAuthorizedTeamDataByCourse(
+        mockFacultyAccountId,
+        courseWithSortableRepoNames._id.toString()
+      );
+
+      expect(result).toBeDefined();
+      expect(result!.map(team => team.repoName)).toEqual([
+        'aa-faculty',
+        'zz-faculty',
+      ]);
+    });
+
+    it('should exercise normal user sorting comparator greater-than path', async () => {
+      const normalAccount = await AccountModel.findById(mockNormalAccountId);
+      const normalUserId = normalAccount!.user;
+      const mockFacultyUser = await UserModel.findOne({ identifier: 'test' });
+
+      const courseWithTeams = await CourseModel.create({
+        name: 'courseWithTeamsComparatorGt',
+        code: 'courseWithTeamsComparatorGt',
+        semester: 'testCourse',
+        startDate: new Date(),
+        faculty: [mockFacultyUser!._id],
+        TAs: [],
+        students: [],
+        teamSets: [],
+        courseType: 'GitHubOrg',
+        gitHubOrgName: 'org',
+        repoNameFilter: '',
+      });
+
+      const teamSet = await TeamSetModel.create({
+        name: 'Comparator GT Team Set',
+        course: courseWithTeams._id,
+      });
+
+      const aData = await TeamDataModel.create({
+        repoName: 'aa-team',
+        gitHubOrgName: 'org',
+        course: courseWithTeams._id,
+        teamContributions: [],
+        pullRequests: 0,
+        issues: 0,
+        commits: 0,
+        teamId: 20,
+      });
+      const zData = await TeamDataModel.create({
+        repoName: 'zz-team',
+        gitHubOrgName: 'org',
+        course: courseWithTeams._id,
+        teamContributions: [],
+        pullRequests: 0,
+        issues: 0,
+        commits: 0,
+        teamId: 21,
+      });
+
+      await TeamModel.create({
+        teamSet: teamSet._id,
+        number: 11,
+        TA: normalUserId,
+        members: [],
+        teamData: aData._id,
+      });
+      await TeamModel.create({
+        teamSet: teamSet._id,
+        number: 12,
+        TA: normalUserId,
+        members: [],
+        teamData: zData._id,
+      });
+
+      const result = await gitHubService.getAuthorizedTeamDataByCourse(
+        mockNormalAccountId,
+        courseWithTeams._id.toString()
+      );
+
+      expect(result).toBeDefined();
+      expect(result!.map(team => team.repoName)).toEqual(['aa-team', 'zz-team']);
+    });
+
+    it('should handle equal repo names in normal user sorting comparator', async () => {
+      const normalAccount = await AccountModel.findById(mockNormalAccountId);
+      const normalUserId = normalAccount!.user;
+      const mockFacultyUser = await UserModel.findOne({ identifier: 'test' });
+
+      const courseWithTeams = await CourseModel.create({
+        name: 'courseWithTeamsComparatorEq',
+        code: 'courseWithTeamsComparatorEq',
+        semester: 'testCourse',
+        startDate: new Date(),
+        faculty: [mockFacultyUser!._id],
+        TAs: [],
+        students: [],
+        teamSets: [],
+        courseType: 'GitHubOrg',
+        gitHubOrgName: 'org',
+        repoNameFilter: '',
+      });
+
+      const teamSet = await TeamSetModel.create({
+        name: 'Comparator EQ Team Set',
+        course: courseWithTeams._id,
+      });
+
+      const same1 = await TeamDataModel.create({
+        repoName: 'same-normal',
+        gitHubOrgName: 'org',
+        course: courseWithTeams._id,
+        teamContributions: [],
+        pullRequests: 0,
+        issues: 0,
+        commits: 0,
+        teamId: 30,
+      });
+      const same2 = await TeamDataModel.create({
+        repoName: 'same-normal',
+        gitHubOrgName: 'org',
+        course: courseWithTeams._id,
+        teamContributions: [],
+        pullRequests: 0,
+        issues: 0,
+        commits: 0,
+        teamId: 31,
+      });
+
+      await TeamModel.create({
+        teamSet: teamSet._id,
+        number: 21,
+        TA: normalUserId,
+        members: [],
+        teamData: same1._id,
+      });
+      await TeamModel.create({
+        teamSet: teamSet._id,
+        number: 22,
+        TA: normalUserId,
+        members: [],
+        teamData: same2._id,
+      });
+
+      const result = await gitHubService.getAuthorizedTeamDataByCourse(
+        mockNormalAccountId,
+        courseWithTeams._id.toString()
+      );
+
+      expect(result).toBeDefined();
+      expect(result!).toHaveLength(2);
+      expect(result![0].repoName).toBe('same-normal');
+      expect(result![1].repoName).toBe('same-normal');
+    });
   });
 
   describe('getAuthorizedTeamDataNamesByCourse', () => {
@@ -389,6 +724,48 @@ describe('gitHubService', () => {
           expect.objectContaining({ repoName: 'team2' }),
         ])
       );
+    });
+
+    it('should throw NotFoundError when team data is undefined', async () => {
+      const mockFacultyUser = await UserModel.findOne({ identifier: 'test' });
+      const weirdRoleUser = await UserModel.create({
+        identifier: 'weird-role-user',
+        name: 'Weird Role User',
+      });
+      const weirdRoleAccount = await AccountModel.create({
+        email: 'weird-role@example.com',
+        password: 'hashedpassword',
+        crispRole: CRISP_ROLE.Normal,
+        user: weirdRoleUser._id,
+        isApproved: true,
+      });
+
+      // Bypass enum validation to hit the undefined-return branch in getAuthorizedTeamDataByCourse
+      await AccountModel.updateOne(
+        { _id: weirdRoleAccount._id },
+        { $set: { crispRole: 'UnknownRole' } }
+      );
+
+      const validCourse = await CourseModel.create({
+        name: 'validCourseForUndefinedTeamData',
+        code: 'validCourseForUndefinedTeamData',
+        semester: 'testCourse',
+        startDate: new Date(),
+        faculty: [mockFacultyUser!._id],
+        TAs: [],
+        students: [],
+        teamSets: [],
+        courseType: 'GitHubOrg',
+        gitHubOrgName: 'org',
+        repoNameFilter: '',
+      });
+
+      await expect(
+        gitHubService.getAuthorizedTeamDataNamesByCourse(
+          weirdRoleAccount._id.toString(),
+          validCourse._id.toString()
+        )
+      ).rejects.toThrow('No team datas found for course');
     });
   });
 });

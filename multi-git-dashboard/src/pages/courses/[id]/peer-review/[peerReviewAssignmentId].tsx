@@ -9,6 +9,7 @@ import {
   Box,
   Card,
   Button,
+  Badge,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import DeleteConfirmationModal from '@/components/cards/Modals/DeleteConfirmationModal';
@@ -29,6 +30,7 @@ import { getMe } from '@/lib/auth/utils';
 import SubmissionStatusBadge from '@/components/peer-review/SubmissionStatusBadge';
 import SaveStateBadge from '@/components/peer-review/SaveStateBadge';
 import SubmitReviewConfirmationModal from '@/components/cards/Modals/SubmitReviewConfirmationModal';
+import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -72,6 +74,8 @@ const PeerReviewDetail: React.FC = () => {
     submission,
     canEdit,
     saveState,
+    isReviewee,
+    isSupervisorTA,
 
     openFile,
     addComment,
@@ -404,7 +408,6 @@ const PeerReviewDetail: React.FC = () => {
   // Update comment handler
   const handleUpdateComment = useCallback(
     async (commentId: string, newComment: string) => {
-      if (!canEdit) return false;
       if (updatingCommentId) return false;
       if (!newComment.trim()) return false;
 
@@ -434,7 +437,7 @@ const PeerReviewDetail: React.FC = () => {
         setUpdatingCommentId(null);
       }
     },
-    [canEdit, updatingCommentId, updateComment]
+    [updatingCommentId, updateComment, comments]
   );
 
   // Delete comment handler
@@ -455,7 +458,7 @@ const PeerReviewDetail: React.FC = () => {
         renderFocusedAndStaticDecos(remainingIds);
       }
       notifications.show({
-        color: 'orange',
+        color: 'red',
         title: 'Comment deleted successfully!',
         message: 'Your comment has been deleted.',
       });
@@ -529,6 +532,8 @@ const PeerReviewDetail: React.FC = () => {
         title: 'Review submitted successfully!',
         message: 'Your peer review has been submitted.',
       });
+      // Redirect to peer review info page
+      router.push(`/courses/${id}/peer-review`);
     } catch (error) {
       notifications.show({
         color: 'red',
@@ -538,11 +543,13 @@ const PeerReviewDetail: React.FC = () => {
     } finally {
       setSubmitting(false);
     }
-  }, [submitReview]);
+  }, [submitReview, router, id]);
 
   if (loading || !me) return <Center>Loading...</Center>;
   if (!peerReviewAssignment) return <Center>Unable to load assignment.</Center>;
   if (!repoTree) return <Center>No repository tree found.</Center>;
+
+  const isReadOnly = isReviewee;
 
   return (
     <Container fluid className={classes.wrapper}>
@@ -565,23 +572,34 @@ const PeerReviewDetail: React.FC = () => {
         </Group>
         <Group gap="xs">
           <SaveStateBadge canEdit={canEdit} saveState={saveState} />
-          <SubmissionStatusBadge
-            userCourseRole={me.userCourseRole}
-            submission={submission}
-          />
-          {true && ( // To change to check for a submission
-            <Button
-              leftSection={<IconSend size={16} />}
-              radius="md"
-              size="xs"
-              fz="sm"
-              h="27px"
-              disabled={!canEdit || submission?.status === 'Submitted'}
-              onClick={() => setSubmitReviewModalOpened(true)}
-            >
-              Submit Review
-            </Button>
+          {isReadOnly && (
+            <Badge color="gray" variant="light" radius="md" size="lg">
+              Read-only (Reviewee)
+            </Badge>
           )}
+          {!isReadOnly && (
+            <SubmissionStatusBadge
+              userCourseRole={me.userCourseRole}
+              submission={submission}
+              isSupervisorTA={isSupervisorTA}
+            />
+          )}
+          {!isReadOnly &&
+            submission &&
+            (me.userCourseRole === COURSE_ROLE.Student ||
+              me.userCourseRole === COURSE_ROLE.TA) && (
+              <Button
+                leftSection={<IconSend size={16} />}
+                radius="md"
+                size="xs"
+                fz="sm"
+                h="27px"
+                disabled={!canEdit || submission?.status === 'Submitted'}
+                onClick={() => setSubmitReviewModalOpened(true)}
+              >
+                Submit Review
+              </Button>
+            )}
         </Group>
       </Group>
       <Group className={classes.body}>
@@ -647,6 +665,7 @@ const PeerReviewDetail: React.FC = () => {
               ? { start: activeWidget.start, end: activeWidget.end }
               : null
           }
+          readOnly={isReadOnly}
         />
         <SubmitReviewConfirmationModal
           opened={submitReviewModalOpened}

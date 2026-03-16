@@ -23,6 +23,8 @@ import AddManualAssignmentBox from './AddManualAssignmentBox';
 
 interface PeerReviewAccordionItemProps {
   currentTeam: PeerReviewTeamDTO;
+  currentUserId?: string;
+  taReviewerAssignmentIds?: string[];
   teams: {
     value: string;
     TA: {
@@ -34,7 +36,8 @@ interface PeerReviewAccordionItemProps {
   assignmentOfTeam: RevieweeAssignmentsDTO | null;
   reviewerType: 'Individual' | 'Team';
   maxReviewsPerReviewer: number;
-  hasFacultyPermission: boolean;
+  isFaculty: boolean;
+  isTA: boolean;
   addManualAssignment: (
     revieweeId: string,
     reviewerId: string,
@@ -53,10 +56,13 @@ const PeerReviewAccordionItem = forwardRef<
 >(
   ({
     currentTeam,
+    currentUserId,
+    taReviewerAssignmentIds,
     teams,
     assignmentOfTeam,
     reviewerType,
-    hasFacultyPermission,
+    isFaculty,
+    isTA,
     maxReviewsPerReviewer,
     addManualAssignment,
     deleteManualAssignment,
@@ -187,7 +193,7 @@ const PeerReviewAccordionItem = forwardRef<
                     <Text fw={600}>
                       Team Assignments ({numberOfTeamAssignments})
                     </Text>
-                    {hasFacultyPermission && (
+                    {isFaculty && (
                       <AddManualAssignmentBox
                         assignedCount={teamAssignedCount}
                         dropdownOptions={teamOptions}
@@ -202,7 +208,10 @@ const PeerReviewAccordionItem = forwardRef<
                   <Divider />
                   <PeerReviewAssignments
                     assignments={currentTeam.assignedReviewsToTeam}
-                    hasFacultyPermission={hasFacultyPermission}
+                    isFaculty={isFaculty}
+                    isTA={isTA}
+                    currentUserId={currentUserId}
+                    taReviewerAssignmentIds={taReviewerAssignmentIds}
                     onDelete={(reviewee: Team) =>
                       handleDelete(reviewee, currentTeam)
                     }
@@ -212,13 +221,17 @@ const PeerReviewAccordionItem = forwardRef<
               <Stack gap={4}>
                 <Text fw={600}>Members ({numberOfMembers})</Text>
                 <Divider />
-                {currentTeam.members.map(m => (
-                  <ScrollArea key={m.userId}>
-                    <Group justify="space-between" mt={4}>
-                      <Text>{m.name}</Text>
+                {currentTeam.members.map(m => {
+                  const isCurrentUser = m.userId === currentUserId;
+                  const shouldShowAssignments =
+                    isFaculty || isTA || isCurrentUser;
 
-                      {reviewerType === 'Individual' &&
-                        hasFacultyPermission && (
+                  return (
+                    <ScrollArea key={m.userId}>
+                      <Group justify="space-between" mt={4}>
+                        <Text>{m.name}</Text>
+
+                        {reviewerType === 'Individual' && isFaculty && (
                           <AddManualAssignmentBox
                             assignedCount={memberAssignedCount[m.userId] ?? 0}
                             dropdownOptions={getMemberOptions(m.userId)}
@@ -229,22 +242,27 @@ const PeerReviewAccordionItem = forwardRef<
                             }
                           />
                         )}
-                    </Group>
+                      </Group>
 
-                    {reviewerType === 'Individual' && (
-                      <>
-                        <PeerReviewAssignments
-                          assignments={m.assignedReviews}
-                          hasFacultyPermission={hasFacultyPermission}
-                          onDelete={(reviewee: Team) =>
-                            handleDelete(reviewee, m)
-                          }
-                        />
-                        <Divider />
-                      </>
-                    )}
-                  </ScrollArea>
-                ))}
+                      {reviewerType === 'Individual' &&
+                        shouldShowAssignments && (
+                          <>
+                            <PeerReviewAssignments
+                              assignments={m.assignedReviews}
+                              isFaculty={isFaculty}
+                              isTA={isTA}
+                              currentUserId={currentUserId}
+                              taReviewerAssignmentIds={taReviewerAssignmentIds}
+                              onDelete={(reviewee: Team) =>
+                                handleDelete(reviewee, m)
+                              }
+                            />
+                          </>
+                        )}
+                      <Divider mt={6} />
+                    </ScrollArea>
+                  );
+                })}
               </Stack>
             </Stack>
             <Stack>
@@ -278,7 +296,7 @@ const PeerReviewAccordionItem = forwardRef<
                   </Button>
                 </Stack>
               )}
-              {hasFacultyPermission && (
+              {isFaculty && (
                 <Stack gap={4}>
                   <Text fw={600} size="md">
                     Reviewers for Team ({numberOfReviewers})
@@ -288,8 +306,7 @@ const PeerReviewAccordionItem = forwardRef<
                   {assignmentOfTeam && numberOfReviewers > 0 ? (
                     <ScrollArea
                       style={{
-                        minHeight: '124px',
-                        maxHeight: '272px',
+                        height: '272px',
                         border: 'solid 1px',
                         borderColor: '#505050',
                         borderRadius: '6px',
@@ -307,13 +324,19 @@ const PeerReviewAccordionItem = forwardRef<
                                   size="sm"
                                   variant="light"
                                   key={`user-${reviewer.userId}`}
+                                  radius="sm"
                                 >
                                   {reviewer.name}
                                 </Badge>
                               )
                             )
                           : assignmentOfTeam.reviewers.teams.map(reviewer => (
-                              <Badge size="sm" key={`team-${reviewer.teamId}`}>
+                              <Badge
+                                size="sm"
+                                key={`team-${reviewer.teamId}`}
+                                variant="light"
+                                radius="sm"
+                              >
                                 Team {reviewer.teamNumber}
                               </Badge>
                             ))}
@@ -323,6 +346,7 @@ const PeerReviewAccordionItem = forwardRef<
                             color="yellow"
                             variant="light"
                             size="sm"
+                            radius="sm"
                           >
                             TA: {reviewer.name}
                           </Badge>

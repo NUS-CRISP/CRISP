@@ -2,7 +2,6 @@ import express from 'express';
 import {
   getAllPeerReviews,
   getPeerReviewInfo,
-  createPeerReview,
   updatePeerReview,
   deletePeerReview,
 } from '../controllers/peerReviewController';
@@ -29,7 +28,6 @@ const router = express.Router();
 
 // Peer Review Routes
 router.get('/:courseId/peer-reviews', getAllPeerReviews);
-router.post('/:courseId/peer-reviews', createPeerReview);
 router.put('/:courseId/:peerReviewId', updatePeerReview);
 router.delete('/:courseId/:peerReviewId', deletePeerReview);
 router.get('/:courseId/:peerReviewId', getPeerReviewInfo);

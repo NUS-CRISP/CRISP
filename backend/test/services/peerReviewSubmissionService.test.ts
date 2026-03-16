@@ -50,18 +50,38 @@ const makeTeamSet = async (courseId: Types.ObjectId) =>
 
 const makePeerReviewDoc = async (overrides: Partial<any> = {}) => {
   const now = Date.now();
+  const desiredStatus = overrides.status as
+    | 'Upcoming'
+    | 'Active'
+    | 'Closed'
+    | undefined;
+
+  const startDate =
+    desiredStatus === 'Closed'
+      ? new Date(now - 120_000)
+      : desiredStatus === 'Upcoming'
+        ? new Date(now + 60_000)
+        : new Date(now - 60_000);
+  const endDate =
+    desiredStatus === 'Closed'
+      ? new Date(now - 60_000)
+      : desiredStatus === 'Upcoming'
+        ? new Date(now + 120_000)
+        : new Date(now + 60_000);
+
   return new PeerReviewModel({
     course: testCourseId,
     teamSetId: testTeamSetId,
+    internalAssessmentId: oid(),
     title: 'PR',
     description: 'desc',
-    startDate: new Date(now - 60_000),
-    endDate: new Date(now + 60_000),
+    startDate,
+    endDate,
     reviewerType: 'Individual',
     taAssignments: false,
     minReviewsPerReviewer: 1,
     maxReviewsPerReviewer: 2,
-    status: 'Active',
+    status: undefined,
     ...overrides,
   }).save();
 };

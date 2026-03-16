@@ -19,6 +19,8 @@ import {
 } from '@shared/types/AssessmentAssignmentSet';
 import AssessmentResultCard from '../cards/AssessmentResultCard';
 import AssessmentResultCardGroup from '../cards/AssessmentResultCardGroup';
+import MapResultsToIdModal from '../cards/Modals/MapResultsToIdModal';
+import DownloadResultsCsvModal from '../cards/Modals/DownloadResultsCsvModal';
 
 export interface StudentResult {
   student: User;
@@ -514,40 +516,17 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
       </Group>
 
       {/* Modal for Download Results */}
-      <Modal
+      <DownloadResultsCsvModal
         opened={isResultFormOpen}
-        onClose={toggleResultForm}
-        title="Results CSV Options"
-        centered
-      >
-        <Text size="sm">
-          Provide the column headers for the results CSV. The CSV will include
-          columns for student name, ID, and average marks.
-        </Text>
-        <Group gap="md" mt="md">
-          <TextInput
-            label="Student Header"
-            placeholder="e.g., Student"
-            value={resultStudentHeader}
-            onChange={e => setResultStudentHeader(e.currentTarget.value)}
-          />
-          <TextInput
-            label="ID Header"
-            placeholder="e.g., SIS User ID"
-            value={resultIdHeader}
-            onChange={e => setResultIdHeader(e.currentTarget.value)}
-          />
-          <TextInput
-            label="Marks Header"
-            placeholder="e.g., Average Marks"
-            value={resultMarksHeader}
-            onChange={e => setResultMarksHeader(e.currentTarget.value)}
-          />
-        </Group>
-        <Button onClick={downloadCSV} color="blue" mt="md">
-          Download CSV
-        </Button>
-      </Modal>
+        onClose={() => setIsResultFormOpen(false)}
+        onDownload={({ studentHeader, idHeader, marksHeader }) => {
+          setResultStudentHeader(studentHeader);
+          setResultIdHeader(idHeader);
+          setResultMarksHeader(marksHeader);
+          downloadCSV();
+          setIsResultFormOpen(false);
+        }}
+      />
 
       {/* Modal for Download Comments */}
       <Modal
@@ -593,48 +572,16 @@ const AssessmentInternalResults: React.FC<AssessmentInternalResultsProps> = ({
       </Modal>
 
       {/* Modal for Map Results to ID */}
-      <Modal
+      <MapResultsToIdModal
         opened={isMapModalOpen}
-        onClose={toggleMapModal}
-        title="Map Results to CSV"
-        centered
-      >
-        <Text size="sm">
-          Upload a CSV file that includes a column with student IDs. Specify the
-          column header (e.g., "SIS User ID") and the header for the new results
-          column (e.g., "Result"). Rows with an empty ID cell will be left
-          unchanged. If a row’s ID is not found in our records, a warning will
-          be shown and that row will remain unchanged.
-        </Text>
-        <Group gap="md" mt="md">
-          <TextInput
-            label="CSV ID Column Header"
-            placeholder="e.g., SIS User ID"
-            value={mapIdHeader}
-            onChange={e => setMapIdHeader(e.currentTarget.value)}
-          />
-          <TextInput
-            label="New Results Column Header"
-            placeholder="e.g., Result"
-            value={mapResultHeader}
-            onChange={e => setMapResultHeader(e.currentTarget.value)}
-          />
-          <TextInput
-            type="file"
-            label="Select CSV File"
-            placeholder="Choose CSV file"
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            onChange={(e: any) => {
-              if (e.target.files.length > 0) {
-                setMapFile(e.target.files[0]);
-              }
-            }}
-          />
-        </Group>
-        <Button onClick={handleMapCSV} color="blue" mt="md">
-          Map CSV
-        </Button>
-      </Modal>
+        onClose={() => setIsMapModalOpen(false)}
+        onMap={(file, { idHeader, resultHeader }) => {
+          setMapFile(file);
+          setMapIdHeader(idHeader);
+          setMapResultHeader(resultHeader);
+          handleMapCSV();
+        }}
+      />
 
       <div style={{ flex: 0.95, marginTop: '20px' }}>
         {isLoading ? (

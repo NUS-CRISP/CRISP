@@ -238,8 +238,10 @@ const assertPeerReviewActive = (peerReview: PeerReview) => {
   if (
     peerReview.computedStatus === 'Upcoming' ||
     peerReview.computedStatus === 'Closed'
-  )
+  ) {
+    console.log('Peer review is not active:', peerReview.computedStatus);
     throw new BadRequestError(PEER_REVIEW_CLOSED);
+  }
 };
 
 const assertStudentInReviewerTeam = async (userId: string, teamId: string) => {

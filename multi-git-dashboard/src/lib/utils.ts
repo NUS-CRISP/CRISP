@@ -35,6 +35,17 @@ export const getCurrentWeekGenerator = (courseStartDate: Dayjs) => () => {
 export const getEndOfWeek = (date: Dayjs) =>
   date.isoWeekday(7).hour(23).minute(59).second(59).millisecond(999);
 
+export const formatDate = (value: Date | string | null | undefined) => {
+  if (!value) return '—';
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+};
+
 /* String Utils */
 export const getInitials = (name: string): string =>
   name

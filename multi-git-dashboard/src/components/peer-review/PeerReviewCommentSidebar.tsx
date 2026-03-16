@@ -8,6 +8,7 @@ import {
   ScrollArea,
   ActionIcon,
   Box,
+  Tooltip,
 } from '@mantine/core';
 import {
   IconChevronLeft,
@@ -37,6 +38,7 @@ interface PeerReviewCommentSidebarProps {
   onDeleteComment: (commentId: string) => void;
   onFlagComment: (commentId: string) => void;
   selectedLines?: { start: number; end: number } | null;
+  readOnly?: boolean;
 }
 
 const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
@@ -50,6 +52,7 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
   onDeleteComment,
   onFlagComment,
   selectedLines,
+  readOnly = false,
 }) => {
   const [opened, setOpened] = useState(true);
   const [newComment, setNewComment] = useState('');
@@ -143,7 +146,7 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
           type="auto"
           scrollbarSize={1}
         >
-          {selectedLines && (
+          {selectedLines && !readOnly && (
             <Box mr="8px">
               <Textarea
                 placeholder={`Add comment for lines ${selectedLines.start}-${selectedLines.end}...`}
@@ -187,66 +190,81 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
                 mb={4}
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  {c.author?.name && (
-                    <Text fw={500} lh={1.2}>
-                      {c.author.name}
-                    </Text>
+                  {!readOnly && (c.displayAuthorName || c.author?.name) && (
+                    <Tooltip
+                      label={c.displayAuthorName ?? c.author?.name}
+                      withArrow
+                      position="top-start"
+                    >
+                      <Text
+                        fw={500}
+                        lh={1.2}
+                        style={{
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
+                        {c.displayAuthorName ?? c.author.name}
+                      </Text>
+                    </Tooltip>
                   )}
                   <Text size="xs" c="dimmed" mt={4}>
                     {c.updatedAt && new Date(c.updatedAt).toLocaleDateString()}
                   </Text>
                 </div>
-                {user?.userId === c.author?._id && (
-                  <Group
-                    gap={4}
-                    wrap="nowrap"
-                    style={{ alignSelf: 'flex-start' }}
-                  >
-                    {editingId === c._id ? (
-                      <>
-                        <ActionIcon
-                          size={24}
-                          disabled={!editComment.trim()}
-                          onClick={() => handleEditSave(c._id)}
-                        >
-                          <IconCheck size={14} />
-                        </ActionIcon>
-                        <ActionIcon
-                          size={24}
-                          color="gray"
-                          onClick={handleEditCancel}
-                        >
-                          <IconX size={14} />
-                        </ActionIcon>
-                      </>
-                    ) : (
-                      <>
-                        <ActionIcon
-                          size={24}
-                          className={classes.commentEditButton}
-                          color="blue"
-                          onClick={() => handleEditStart(c._id, c.comment)}
-                        >
-                          <IconPencil size={14} />
-                        </ActionIcon>
-                        <ActionIcon
-                          size={24}
-                          className={classes.commentDeleteButton}
-                          onClick={() => onDeleteComment(c._id)}
-                        >
-                          <IconTrash size={14} />
-                        </ActionIcon>
-                        <ActionIcon
-                          size={24}
-                          className={classes.commentFlagButton}
-                          onClick={() => onFlagComment(c._id)}
-                        >
-                          <IconFlag size={14} />
-                        </ActionIcon>
-                      </>
-                    )}
-                  </Group>
-                )}
+                {(c.canManage || user?.userId === c.author?._id) &&
+                  !readOnly && (
+                    <Group
+                      gap={4}
+                      wrap="nowrap"
+                      style={{ alignSelf: 'flex-start', flexShrink: 0 }}
+                    >
+                      {editingId === c._id ? (
+                        <>
+                          <ActionIcon
+                            size={24}
+                            disabled={!editComment.trim()}
+                            onClick={() => handleEditSave(c._id)}
+                          >
+                            <IconCheck size={14} />
+                          </ActionIcon>
+                          <ActionIcon
+                            size={24}
+                            color="gray"
+                            onClick={handleEditCancel}
+                          >
+                            <IconX size={14} />
+                          </ActionIcon>
+                        </>
+                      ) : (
+                        <>
+                          <ActionIcon
+                            size={24}
+                            className={classes.commentEditButton}
+                            color="blue"
+                            onClick={() => handleEditStart(c._id, c.comment)}
+                          >
+                            <IconPencil size={14} />
+                          </ActionIcon>
+                          <ActionIcon
+                            size={24}
+                            className={classes.commentDeleteButton}
+                            onClick={() => onDeleteComment(c._id)}
+                          >
+                            <IconTrash size={14} />
+                          </ActionIcon>
+                          <ActionIcon
+                            size={24}
+                            className={classes.commentFlagButton}
+                            onClick={() => onFlagComment(c._id)}
+                          >
+                            <IconFlag size={14} />
+                          </ActionIcon>
+                        </>
+                      )}
+                    </Group>
+                  )}
               </Group>
 
               {editingId === c._id ? (

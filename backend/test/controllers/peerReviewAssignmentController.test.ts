@@ -6,7 +6,7 @@ import {
   deleteManualAssignment,
 } from '../../controllers/peerReviewAssignmentController';
 import {
-  getPeerReviewAssignmentById,
+  getPeerReviewAssignmentWithViewContext,
   assignPeerReviews,
   addManualAssignment,
   removeManualAssignment,
@@ -16,6 +16,7 @@ import { handleError } from '../../utils/error';
 
 jest.mock('../../services/peerReviewAssignmentService', () => ({
   getPeerReviewAssignmentById: jest.fn(),
+  getPeerReviewAssignmentWithViewContext: jest.fn(),
   assignPeerReviews: jest.fn(),
   addManualAssignment: jest.fn(),
   removeManualAssignment: jest.fn(),
@@ -57,8 +58,12 @@ describe('peerReviewAssignmentController', () => {
         userCourseRole: 'Student',
       });
       (verifyRequestPermission as jest.Mock).mockResolvedValue('u1');
-      (getPeerReviewAssignmentById as jest.Mock).mockResolvedValue({
-        _id: 'a1',
+      (getPeerReviewAssignmentWithViewContext as jest.Mock).mockResolvedValue({
+        assignment: {
+          _id: 'a1',
+          toObject: () => ({ _id: 'a1' }),
+        },
+        viewContext: { canEdit: false },
       });
 
       const req = makeReq({
@@ -74,14 +79,15 @@ describe('peerReviewAssignmentController', () => {
         'Student',
         []
       );
-      expect(getPeerReviewAssignmentById).toHaveBeenCalledWith(
+      expect(getPeerReviewAssignmentWithViewContext).toHaveBeenCalledWith(
         'Student',
         'u1',
-        'a1'
+        'a1',
+        'c1'
       );
 
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ _id: 'a1' });
+      expect(res.json).toHaveBeenCalledWith({ _id: 'a1', viewContext: { canEdit: false } });
     });
 
     it('calls handleError on failure', async () => {

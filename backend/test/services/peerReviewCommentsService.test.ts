@@ -9,6 +9,7 @@ import UserModel from '../../models/User';
 import PeerReviewAssignmentModel from '../../models/PeerReviewAssignment';
 import PeerReviewSubmissionModel from '../../models/PeerReviewSubmission';
 import PeerReviewCommentModel from '../../models/PeerReviewComment';
+import { PeerReviewGradingTaskModel } from '../../models/PeerReviewGradingTask';
 
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
@@ -19,6 +20,7 @@ import {
   deletePeerReviewCommentById,
   flagPeerReviewCommentById,
 } from '../../services/peerReviewCommentsService';
+  import { getPeerReviewCommentsBySubmissionId } from '../../services/peerReviewCommentsService';
 
 // Dependent services are mocked
 import { getPeerReviewById } from '../../services/peerReviewService';
@@ -66,18 +68,38 @@ const makeTeamSet = async (courseId: Types.ObjectId) =>
 
 const makePeerReview = async (overrides: Partial<any> = {}) => {
   const now = Date.now();
+  const desiredStatus = overrides.status as
+    | 'Upcoming'
+    | 'Active'
+    | 'Closed'
+    | undefined;
+
+  const startDate =
+    desiredStatus === 'Closed'
+      ? new Date(now - 120_000)
+      : desiredStatus === 'Upcoming'
+        ? new Date(now + 60_000)
+        : new Date(now - 60_000);
+  const endDate =
+    desiredStatus === 'Closed'
+      ? new Date(now - 60_000)
+      : desiredStatus === 'Upcoming'
+        ? new Date(now + 120_000)
+        : new Date(now + 60_000);
+
   return new PeerReviewModel({
     course: testCourseId,
     teamSetId: testTeamSetId,
+    internalAssessmentId: oid(),
     title: 'PR',
     description: 'desc',
-    startDate: new Date(now + 60_000),
-    endDate: new Date(now + 120_000),
+    startDate,
+    endDate,
     reviewerType: 'Individual',
     taAssignments: false,
     minReviewsPerReviewer: 1,
     maxReviewsPerReviewer: 2,
-    status: 'Active',
+    status: undefined,
     ...overrides,
   }).save();
 };
@@ -180,6 +202,7 @@ beforeEach(async () => {
   jest.clearAllMocks();
 
   await PeerReviewCommentModel.deleteMany({});
+  await PeerReviewGradingTaskModel.deleteMany({});
   await PeerReviewSubmissionModel.deleteMany({});
   await PeerReviewAssignmentModel.deleteMany({});
   await TeamModel.deleteMany({});
@@ -475,12 +498,19 @@ describe('peerReviewCommentsService', () => {
 
   describe('updatePeerReviewCommentById', () => {
     it('non-Faculty requires submissionId', async () => {
+      const pr = await makePeerReview();
+      const reviewee = await makeTeam({ members: [oid()] });
+      const assignment = await makeAssignment(pr._id, reviewee._id);
+      const comment = await makeComment(pr._id, assignment._id, {
+        author: oid(),
+      });
+
       await expect(
         updatePeerReviewCommentById(
           oidStr(),
           COURSE_ROLE.Student,
-          oidStr(),
-          oidStr(),
+          assignment._id.toString(),
+          comment._id.toString(),
           'x',
           ''
         )
@@ -488,6 +518,13 @@ describe('peerReviewCommentsService', () => {
     });
 
     it('non-Faculty rejects Submitted submission', async () => {
+      const pr = await makePeerReview();
+      const reviewee = await makeTeam({ members: [oid()] });
+      const assignment = await makeAssignment(pr._id, reviewee._id);
+      const comment = await makeComment(pr._id, assignment._id, {
+        author: oid(),
+      });
+
       (fetchSubmissionForAssignment as jest.Mock).mockResolvedValue({
         status: 'Submitted',
       });
@@ -496,8 +533,8 @@ describe('peerReviewCommentsService', () => {
         updatePeerReviewCommentById(
           oidStr(),
           COURSE_ROLE.Student,
-          oidStr(),
-          oidStr(),
+          assignment._id.toString(),
+          comment._id.toString(),
           'x',
           oidStr()
         )
@@ -596,7 +633,7 @@ describe('peerReviewCommentsService', () => {
       ).rejects.toBeInstanceOf(BadRequestError);
     });
 
-    it('only author can update (even Faculty)', async () => {
+    it('Faculty can update any comment', async () => {
       const pr = await makePeerReview();
       (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
 
@@ -616,7 +653,10 @@ describe('peerReviewCommentsService', () => {
           'new',
           ''
         )
-      ).rejects.toBeInstanceOf(MissingAuthorizationError);
+      ).resolves.toBeUndefined();
+
+      const updated = await PeerReviewCommentModel.findById(comment._id);
+      expect(updated?.comment).toBe('new');
     });
 
     it('rejects empty updatedComment', async () => {
@@ -1071,14 +1111,20 @@ describe('peerReviewCommentsService edge cases', () => {
     const assignment = await makeAssignment(pr._id, reviewee._id);
 
     // Create submission for this student as individual reviewer
-    await makeSubmission(pr._id, assignment._id, {
+    const submission = await makeSubmission(pr._id, assignment._id, {
       reviewerKind: 'Student',
       reviewerUserId: studentId.toString(),
     });
 
-    // Create two comments, only one by studentId
-    await makeComment(pr._id, assignment._id, { author: studentId });
-    await makeComment(pr._id, assignment._id, { author: new Types.ObjectId() });
+    // Create two comments in the same submission, only one by studentId
+    await makeComment(pr._id, assignment._id, {
+      author: studentId,
+      peerReviewSubmissionId: submission._id,
+    });
+    await makeComment(pr._id, assignment._id, {
+      author: new Types.ObjectId(),
+      peerReviewSubmissionId: submission._id,
+    });
 
     const res = await getPeerReviewCommentsByAssignmentId(
       studentId.toString(),
@@ -1086,10 +1132,12 @@ describe('peerReviewCommentsService edge cases', () => {
       assignment._id.toString()
     );
 
-    expect(res).toHaveLength(1);
-    // If populate is active, author is object; otherwise id. Just assert it corresponds.
-    const author = (res[0] as any).author?._id ?? (res[0] as any).author;
-    expect(author.toString()).toBe(studentId.toString());
+    expect(res).toHaveLength(2);
+    const hasMyComment = res.some(c => {
+      const author = (c as any).author?._id ?? (c as any).author;
+      return author?.toString() === studentId.toString();
+    });
+    expect(hasMyComment).toBe(true);
   });
 
   it('Student + Team reviewerType: returns null when homeTeam not found (homeTeam branch)', async () => {
@@ -1124,14 +1172,20 @@ describe('peerReviewCommentsService edge cases', () => {
     const homeTeam = await makeTeam({ members: [studentId] });
 
     // Create Team submission tied to homeTeam
-    await makeSubmission(pr._id, assignment._id, {
+    const submission = await makeSubmission(pr._id, assignment._id, {
       reviewerKind: 'Team',
       reviewerTeamId: homeTeam._id.toString(),
     });
 
-    // Create two comments, only one by studentId
-    await makeComment(pr._id, assignment._id, { author: studentId });
-    await makeComment(pr._id, assignment._id, { author: new Types.ObjectId() });
+    // Create two comments in the same team submission, only one by studentId
+    await makeComment(pr._id, assignment._id, {
+      author: studentId,
+      peerReviewSubmissionId: submission._id,
+    });
+    await makeComment(pr._id, assignment._id, {
+      author: new Types.ObjectId(),
+      peerReviewSubmissionId: submission._id,
+    });
 
     const res = await getPeerReviewCommentsByAssignmentId(
       studentId.toString(),
@@ -1139,9 +1193,12 @@ describe('peerReviewCommentsService edge cases', () => {
       assignment._id.toString()
     );
 
-    expect(res).toHaveLength(1);
-    const author = (res[0] as any).author?._id ?? (res[0] as any).author;
-    expect(author.toString()).toBe(studentId.toString());
+    expect(res).toHaveLength(2);
+    const hasMyComment = res.some(c => {
+      const author = (c as any).author?._id ?? (c as any).author;
+      return author?.toString() === studentId.toString();
+    });
+    expect(hasMyComment).toBe(true);
   });
 
   it('TA (not supervising): uses TA submission lookup and returns my comments', async () => {
@@ -1156,13 +1213,19 @@ describe('peerReviewCommentsService edge cases', () => {
     });
     const assignment = await makeAssignment(pr._id, reviewee._id);
 
-    await makeSubmission(pr._id, assignment._id, {
+    const submission = await makeSubmission(pr._id, assignment._id, {
       reviewerKind: 'TA',
       reviewerUserId: taId.toString(),
     });
 
-    await makeComment(pr._id, assignment._id, { author: taId });
-    await makeComment(pr._id, assignment._id, { author: new Types.ObjectId() });
+    await makeComment(pr._id, assignment._id, {
+      author: taId,
+      peerReviewSubmissionId: submission._id,
+    });
+    await makeComment(pr._id, assignment._id, {
+      author: new Types.ObjectId(),
+      peerReviewSubmissionId: submission._id,
+    });
 
     const res = await getPeerReviewCommentsByAssignmentId(
       taId.toString(),
@@ -1170,8 +1233,378 @@ describe('peerReviewCommentsService edge cases', () => {
       assignment._id.toString()
     );
 
-    expect(res).toHaveLength(1);
-    const author = (res[0] as any).author?._id ?? (res[0] as any).author;
-    expect(author.toString()).toBe(taId.toString());
+    expect(res).toHaveLength(2);
+    const hasMyComment = res.some(c => {
+      const author = (c as any).author?._id ?? (c as any).author;
+      return author?.toString() === taId.toString();
+    });
+    expect(hasMyComment).toBe(true);
   });
 });
+
+  describe('getPeerReviewCommentsBySubmissionId', () => {
+    it('throws NotFound when peer review not found for assessment', async () => {
+      await expect(
+        getPeerReviewCommentsBySubmissionId(
+          oidStr(),
+          COURSE_ROLE.Faculty,
+          oidStr(), // non-existent assessmentId
+          oidStr()
+        )
+      ).rejects.toBeInstanceOf(NotFoundError);
+    });
+
+    it('throws NotFound when submission not found', async () => {
+      const pr = await makePeerReview();
+      await expect(
+        getPeerReviewCommentsBySubmissionId(
+          oidStr(),
+          COURSE_ROLE.Faculty,
+          pr.internalAssessmentId.toString(),
+          oidStr() // non-existent submission
+        )
+      ).rejects.toBeInstanceOf(NotFoundError);
+    });
+
+    it('throws BadRequest when submission does not belong to peer review', async () => {
+      const pr1 = await makePeerReview();
+      const pr2 = await makePeerReview();
+
+      const reviewee = await makeTeam({ members: [oid()] });
+      const assignment = await makeAssignment(pr2._id, reviewee._id);
+      const submission = await makeSubmission(pr2._id, assignment._id, {
+        reviewerKind: 'Student',
+        reviewerUserId: oidStr(),
+      });
+
+      await expect(
+        getPeerReviewCommentsBySubmissionId(
+          oidStr(),
+          COURSE_ROLE.Faculty,
+          pr1.internalAssessmentId.toString(), // belongs to pr1, not pr2
+          submission._id.toString()
+        )
+      ).rejects.toBeInstanceOf(BadRequestError);
+    });
+
+    it('throws MissingAuthorizationError when TA has no grading task', async () => {
+      const pr = await makePeerReview();
+      const reviewee = await makeTeam({ members: [oid()] });
+      const assignment = await makeAssignment(pr._id, reviewee._id);
+      const submission = await makeSubmission(pr._id, assignment._id, {
+        reviewerKind: 'Student',
+        reviewerUserId: oidStr(),
+      });
+
+      await expect(
+        getPeerReviewCommentsBySubmissionId(
+          oidStr(),
+          COURSE_ROLE.TA,
+          pr.internalAssessmentId.toString(),
+          submission._id.toString()
+        )
+      ).rejects.toBeInstanceOf(MissingAuthorizationError);
+    });
+
+    it('returns comments for TA with grading task assigned', async () => {
+      const taId = oid();
+      const pr = await makePeerReview();
+      const reviewee = await makeTeam({ members: [oid()] });
+      const assignment = await makeAssignment(pr._id, reviewee._id);
+      const submission = await makeSubmission(pr._id, assignment._id, {
+        reviewerKind: 'Student',
+        reviewerUserId: oidStr(),
+      });
+
+      await PeerReviewGradingTaskModel.create({
+        peerReviewId: pr._id,
+        peerReviewSubmissionId: submission._id,
+        grader: taId,
+        status: 'Assigned',
+      });
+
+      await makeComment(pr._id, assignment._id, {
+        peerReviewSubmissionId: submission._id,
+      });
+
+      const res = await getPeerReviewCommentsBySubmissionId(
+        taId.toString(),
+        COURSE_ROLE.TA,
+        pr.internalAssessmentId.toString(),
+        submission._id.toString()
+      );
+
+      expect(Array.isArray(res)).toBe(true);
+      expect(res.length).toBe(1);
+    });
+
+    it('returns comments for Faculty', async () => {
+      const pr = await makePeerReview();
+      const reviewee = await makeTeam({ members: [oid()] });
+      const assignment = await makeAssignment(pr._id, reviewee._id);
+      const submission = await makeSubmission(pr._id, assignment._id, {
+        reviewerKind: 'Student',
+        reviewerUserId: oidStr(),
+      });
+
+      await makeComment(pr._id, assignment._id, {
+        peerReviewSubmissionId: submission._id,
+      });
+
+      const res = await getPeerReviewCommentsBySubmissionId(
+        oidStr(),
+        COURSE_ROLE.Faculty,
+        pr.internalAssessmentId.toString(),
+        submission._id.toString()
+      );
+
+      expect(Array.isArray(res)).toBe(true);
+      expect(res.length).toBe(1);
+    });
+  });
+
+  describe('updatePeerReviewCommentById additional coverage', () => {
+    it('TA supervising can update any comment successfully', async () => {
+      const taId = oid();
+      const pr = await makePeerReview();
+      (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
+
+      const reviewee = await makeTeam({ TA: taId, members: [oid()] });
+      const assignment = await makeAssignment(pr._id, reviewee._id);
+      const comment = await makeComment(pr._id, assignment._id, { author: oid() });
+
+      await expect(
+        updatePeerReviewCommentById(
+          taId.toString(),
+          COURSE_ROLE.TA,
+          assignment._id.toString(),
+          comment._id.toString(),
+          'updated by supervising TA',
+          ''
+        )
+      ).resolves.toBeUndefined();
+
+      const updated = await PeerReviewCommentModel.findById(comment._id);
+      expect(updated?.comment).toBe('updated by supervising TA');
+    });
+
+    it('TA supervising rejects empty comment', async () => {
+      const taId = oid();
+      const pr = await makePeerReview();
+      (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
+
+      const reviewee = await makeTeam({ TA: taId, members: [oid()] });
+      const assignment = await makeAssignment(pr._id, reviewee._id);
+      const comment = await makeComment(pr._id, assignment._id, { author: oid() });
+
+      await expect(
+        updatePeerReviewCommentById(
+          taId.toString(),
+          COURSE_ROLE.TA,
+          assignment._id.toString(),
+          comment._id.toString(),
+          '   ',
+          ''
+        )
+      ).rejects.toBeInstanceOf(BadRequestError);
+    });
+
+    it('Student + Team reviewer + no reviewerTeamId: throws MissingAuthorizationError', async () => {
+      const studentId = oid();
+      const pr = await makePeerReview();
+      (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
+
+      const reviewee = await makeTeam({ members: [oid()] });
+      const assignment = await makeAssignment(pr._id, reviewee._id);
+
+      const fakeSubmissionId = new Types.ObjectId();
+      const comment = await new PeerReviewCommentModel({
+        peerReviewId: pr._id,
+        peerReviewAssignmentId: assignment._id,
+        peerReviewSubmissionId: fakeSubmissionId,
+        filePath: 'a.ts',
+        startLine: 1,
+        endLine: 1,
+        comment: 'original',
+        author: oid(),
+        authorCourseRole: COURSE_ROLE.Student,
+      }).save();
+
+      (fetchSubmissionForAssignment as jest.Mock).mockResolvedValue({
+        status: 'Draft',
+        reviewerKind: 'Team',
+        reviewerTeamId: undefined,
+      });
+
+      await expect(
+        updatePeerReviewCommentById(
+          studentId.toString(),
+          COURSE_ROLE.Student,
+          assignment._id.toString(),
+          comment._id.toString(),
+          'new text',
+          fakeSubmissionId.toString()
+        )
+      ).rejects.toBeInstanceOf(MissingAuthorizationError);
+    });
+
+    it('Student + Team reviewer + reviewerTeamId: rejects empty comment', async () => {
+      const studentId = oid();
+      const pr = await makePeerReview();
+      (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
+
+      const reviewee = await makeTeam({ members: [oid()] });
+      const assignment = await makeAssignment(pr._id, reviewee._id);
+
+      const fakeSubmissionId = new Types.ObjectId();
+      const comment = await new PeerReviewCommentModel({
+        peerReviewId: pr._id,
+        peerReviewAssignmentId: assignment._id,
+        peerReviewSubmissionId: fakeSubmissionId,
+        filePath: 'a.ts',
+        startLine: 1,
+        endLine: 1,
+        comment: 'original',
+        author: oid(),
+        authorCourseRole: COURSE_ROLE.Student,
+      }).save();
+
+      (fetchSubmissionForAssignment as jest.Mock).mockResolvedValue({
+        status: 'Draft',
+        reviewerKind: 'Team',
+        reviewerTeamId: oidStr(),
+      });
+
+      await expect(
+        updatePeerReviewCommentById(
+          studentId.toString(),
+          COURSE_ROLE.Student,
+          assignment._id.toString(),
+          comment._id.toString(),
+          '   ',
+          fakeSubmissionId.toString()
+        )
+      ).rejects.toBeInstanceOf(BadRequestError);
+    });
+
+    it('Student + Team reviewer + reviewerTeamId: updates successfully', async () => {
+      const studentId = oid();
+      const pr = await makePeerReview();
+      (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
+
+      const reviewee = await makeTeam({ members: [oid()] });
+      const assignment = await makeAssignment(pr._id, reviewee._id);
+
+      const fakeSubmissionId = new Types.ObjectId();
+      const comment = await new PeerReviewCommentModel({
+        peerReviewId: pr._id,
+        peerReviewAssignmentId: assignment._id,
+        peerReviewSubmissionId: fakeSubmissionId,
+        filePath: 'a.ts',
+        startLine: 1,
+        endLine: 1,
+        comment: 'original',
+        author: oid(),
+        authorCourseRole: COURSE_ROLE.Student,
+      }).save();
+
+      (fetchSubmissionForAssignment as jest.Mock).mockResolvedValue({
+        status: 'Draft',
+        reviewerKind: 'Team',
+        reviewerTeamId: oidStr(),
+      });
+
+      await expect(
+        updatePeerReviewCommentById(
+          studentId.toString(),
+          COURSE_ROLE.Student,
+          assignment._id.toString(),
+          comment._id.toString(),
+          'team updated text',
+          fakeSubmissionId.toString()
+        )
+      ).resolves.toBeUndefined();
+
+      const updated = await PeerReviewCommentModel.findById(comment._id);
+      expect(updated?.comment).toBe('team updated text');
+    });
+  });
+
+  describe('deletePeerReviewCommentById additional coverage', () => {
+    it('Student + Team reviewer + no reviewerTeamId: throws MissingAuthorizationError', async () => {
+      const studentId = oid();
+      const pr = await makePeerReview();
+      (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
+
+      const reviewee = await makeTeam({ members: [oid()] });
+      const assignment = await makeAssignment(pr._id, reviewee._id);
+
+      const fakeSubmissionId = new Types.ObjectId();
+      const comment = await new PeerReviewCommentModel({
+        peerReviewId: pr._id,
+        peerReviewAssignmentId: assignment._id,
+        peerReviewSubmissionId: fakeSubmissionId,
+        filePath: 'a.ts',
+        startLine: 1,
+        endLine: 1,
+        comment: 'hello',
+        author: oid(),
+        authorCourseRole: COURSE_ROLE.Student,
+      }).save();
+
+      (fetchSubmissionForAssignment as jest.Mock).mockResolvedValue({
+        status: 'Draft',
+        reviewerKind: 'Team',
+        reviewerTeamId: undefined,
+      });
+
+      await expect(
+        deletePeerReviewCommentById(
+          studentId.toString(),
+          COURSE_ROLE.Student,
+          assignment._id.toString(),
+          comment._id.toString(),
+          fakeSubmissionId.toString()
+        )
+      ).rejects.toBeInstanceOf(MissingAuthorizationError);
+    });
+
+    it('Student + Team reviewer + reviewerTeamId: deletes successfully', async () => {
+      const studentId = oid();
+      const pr = await makePeerReview();
+      (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
+
+      const reviewee = await makeTeam({ members: [oid()] });
+      const assignment = await makeAssignment(pr._id, reviewee._id);
+
+      const fakeSubmissionId = new Types.ObjectId();
+      const comment = await new PeerReviewCommentModel({
+        peerReviewId: pr._id,
+        peerReviewAssignmentId: assignment._id,
+        peerReviewSubmissionId: fakeSubmissionId,
+        filePath: 'a.ts',
+        startLine: 1,
+        endLine: 1,
+        comment: 'hello',
+        author: oid(),
+        authorCourseRole: COURSE_ROLE.Student,
+      }).save();
+
+      (fetchSubmissionForAssignment as jest.Mock).mockResolvedValue({
+        status: 'Draft',
+        reviewerKind: 'Team',
+        reviewerTeamId: oidStr(),
+      });
+
+      const res = await deletePeerReviewCommentById(
+        studentId.toString(),
+        COURSE_ROLE.Student,
+        assignment._id.toString(),
+        comment._id.toString(),
+        fakeSubmissionId.toString()
+      );
+
+      expect((res as any).deletedCount).toBe(1);
+      expect(await PeerReviewCommentModel.findById(comment._id)).toBeNull();
+    });
+  });

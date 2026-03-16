@@ -99,16 +99,18 @@ export const getAuthorizedTeamDataByCourse = async (
   } else if (role === CRISP_ROLE.Normal) {
     const teamSets = await TeamSetModel.find({ course: courseId });
     if (teamSets.length === 0) {
+      console.log('No team sets found for course');
       throw new NotFoundError('No team sets found for course');
     }
     const teams = await TeamModel.find({
       teamSet: { $in: teamSets.map(ts => ts._id) },
-      TA: user,
+      $or: [{ TA: user }, { members: user._id }],
     }).populate<{ teamData: TeamData }>({
       path: 'teamData',
       options: { sort: { repoName: 1 } },
     });
     if (teams.length == 0) {
+      console.log('No teams found for course');
       throw new NotFoundError('No teams found for course');
     }
     const sortedDatas = teams

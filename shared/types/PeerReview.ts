@@ -34,6 +34,12 @@ export interface PeerReview {
   minReviewsPerReviewer: number;
   maxReviewsPerReviewer: number;
   teamSetId: string;
+  
+  // Assessment-related
+  internalAssessmentId: string;
+  gradingStartDate?: Date;
+  gradingEndDate?: Date;
+  gradingStatus?: "NotStarted" | "InProgress" | "Completed";
 }
 
 export interface PeerReviewAssignment {
@@ -63,11 +69,6 @@ export interface PeerReviewSubmission {
   lastEditedAt?: Date;
   submittedAt?: Date;
   overallComment?: string;
-  
-  // For integration with assessment subsequently
-  scores: Record<string, number>;
-  totalScore?: number;
-  feedback?: string;
 }
 
 export interface PeerReviewComment {
@@ -83,6 +84,8 @@ export interface PeerReviewComment {
   endLine: number;
   
   author: User;
+  displayAuthorName?: string;
+  canManage?: boolean;
   authorCourseRole: CourseRole;
   comment: string;
   
@@ -104,7 +107,6 @@ export interface AssignedReviewDTO {
   submittedAt?: Date;
   
   overallComment?: string;
-  totalScore?: number;
 }
 
 export interface PeerReviewTeamMemberDTO {
