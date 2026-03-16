@@ -179,27 +179,43 @@ export const getPeerReviewProgressOverviewById = async (
     };
   }
 
-  const reviewerScope = computeReviewerScope(
-    userId,
-    userCourseRole,
-    peerReview.reviewerType,
-    peerReview.taAssignments,
-    ctx.scopedTeams
-  );
+  let submissions:
+    | Array<{
+        _id: Types.ObjectId;
+        status: 'NotStarted' | 'Draft' | 'Submitted';
+      }>
+    | any[] = [];
 
-  const scopedSubmissions = await loadSubmissionsForScope(
-    peerReviewId,
-    peerReview.reviewerType,
-    false,
-    reviewerScope.scopedMemberIds,
-    reviewerScope.scopedReviewerTeamIds,
-    []
-  );
+  if (userCourseRole === COURSE_ROLE.Faculty) {
+    submissions = await PeerReviewSubmissionModel.find({
+      peerReviewId: oid(peerReviewId),
+      reviewerKind: { $in: ['Student', 'Team'] },
+    })
+      .select('_id status')
+      .lean();
+  } else {
+    const reviewerScope = computeReviewerScope(
+      userId,
+      userCourseRole,
+      peerReview.reviewerType,
+      peerReview.taAssignments,
+      ctx.scopedTeams
+    );
 
-  const submissions = [
-    ...scopedSubmissions.studentSubs,
-    ...scopedSubmissions.teamSubs,
-  ];
+    const scopedSubmissions = await loadSubmissionsForScope(
+      peerReviewId,
+      peerReview.reviewerType,
+      false,
+      reviewerScope.scopedMemberIds,
+      reviewerScope.scopedReviewerTeamIds,
+      []
+    );
+
+    submissions = [
+      ...scopedSubmissions.studentSubs,
+      ...scopedSubmissions.teamSubs,
+    ];
+  }
 
   const totalSubmissions = submissions.length;
   const notStarted = submissions.filter(s => s.status === 'NotStarted').length;

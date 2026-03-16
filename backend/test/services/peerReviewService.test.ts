@@ -1600,32 +1600,45 @@ describe('peerReviewService', () => {
     it('TA with assigned team → returns supervisingTeams scope scoped to that team only', async () => {
       const taId = oid();
       const otherTaId = oid();
+      const myStudentId = oid();
+      const otherStudentId = oid();
       await ensureUser(taId, 'MyTA');
       await ensureUser(otherTaId, 'OtherTA');
+      await ensureUser(myStudentId, 'MyStudent');
+      await ensureUser(otherStudentId, 'OtherStudent');
 
       const pr = await makePeerReview({ reviewerType: 'Individual', taAssignments: true });
 
-      const myTeam = await makeTeam({ number: 25, TA: taId, members: [oid()] });
-      const otherTeam = await makeTeam({ number: 26, TA: otherTaId, members: [oid()] });
+      const myTeam = await makeTeam({ number: 25, TA: taId, members: [myStudentId] });
+      const otherTeam = await makeTeam({ number: 26, TA: otherTaId, members: [otherStudentId] });
 
       const myAssignment = await makeAssignment(pr._id, myTeam._id);
       const otherAssignment = await makeAssignment(pr._id, otherTeam._id);
 
-      // 1 submission under myTeam, 2 under otherTeam
-      await makeSubmission(pr._id, myAssignment._id, {
+      // Supervised student submission (reviewing another team's assignment) should count
+      await makeSubmission(pr._id, otherAssignment._id, {
         status: 'Draft',
         reviewerKind: 'Student',
-        reviewerUserId: oid(),
+        reviewerUserId: myStudentId,
+      });
+
+      // TA's own review should NOT be counted in progress overview
+      await makeSubmission(pr._id, myAssignment._id, {
+        status: 'Submitted',
+        reviewerKind: 'TA',
+        reviewerUserId: taId,
+      });
+
+      // Outsider student reviews (including reviews of supervised team's assignment) should NOT count
+      await makeSubmission(pr._id, myAssignment._id, {
+        status: 'Submitted',
+        reviewerKind: 'Student',
+        reviewerUserId: otherStudentId,
       });
       await makeSubmission(pr._id, otherAssignment._id, {
         status: 'Submitted',
         reviewerKind: 'Student',
-        reviewerUserId: oid(),
-      });
-      await makeSubmission(pr._id, otherAssignment._id, {
-        status: 'Submitted',
-        reviewerKind: 'Student',
-        reviewerUserId: oid(),
+        reviewerUserId: otherStudentId,
       });
 
       const result = await getPeerReviewProgressOverviewById(
@@ -1636,7 +1649,7 @@ describe('peerReviewService', () => {
       );
 
       expect(result.scope).toBe('supervisingTeams');
-      // Only myTeam's 1 submission should be counted
+      // Only supervised student reviewer submissions should be counted
       expect(result.submissions.total).toBe(1);
       expect(result.submissions.draft).toBe(1);
       expect(result.submissions.submitted).toBe(0);
