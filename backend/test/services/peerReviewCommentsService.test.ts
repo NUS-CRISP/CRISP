@@ -1488,6 +1488,33 @@ describe('peerReviewCommentsService edge cases', () => {
       expect(Array.isArray(res)).toBe(true);
       expect(res.length).toBe(1);
     });
+
+    it('returns empty array for student when all submission comments are flagged', async () => {
+      const studentId = oid();
+      const pr = await makePeerReview();
+      const reviewee = await makeTeam({ members: [oid()] });
+      const assignment = await makeAssignment(pr._id, reviewee._id);
+      const submission = await makeSubmission(pr._id, assignment._id, {
+        reviewerKind: 'Student',
+        reviewerUserId: studentId.toString(),
+      });
+
+      await makeComment(pr._id, assignment._id, {
+        peerReviewSubmissionId: submission._id,
+        author: oid(),
+        isFlagged: true,
+        flagReason: 'Spam',
+      });
+
+      const res = await getPeerReviewCommentsBySubmissionId(
+        studentId.toString(),
+        COURSE_ROLE.Student,
+        pr.internalAssessmentId.toString(),
+        submission._id.toString()
+      );
+
+      expect(res).toEqual([]);
+    });
   });
 
   describe('updatePeerReviewCommentById additional coverage', () => {

@@ -805,6 +805,46 @@ describe('peerReviewAssessmentService', () => {
     expect(emptyDto.perStudent).toHaveLength(0);
   });
 
+  it('ignores malformed completed grading tasks missing submission id in results aggregation', async () => {
+    const course = await makeCourse();
+    const ts = await makeTeamSet(course._id);
+    const assessment = await makeAssessment(course._id, ts._id);
+    const pr = await makePeerReview(course._id, ts._id, assessment._id, {
+      reviewerType: 'Individual',
+    });
+
+    const student = await makeUser('results-malformed-task-student');
+    const team = await makeTeam(ts._id, { number: 12, members: [student._id] });
+    await TeamSetModel.findByIdAndUpdate(ts._id, { $set: { teams: [team._id] } });
+
+    const assignment = await makeAssignment(pr._id, team._id);
+    const submission = await makeSubmission(pr._id, assignment._id, {
+      reviewerKind: 'Student',
+      reviewerUserId: student._id,
+      status: 'Submitted',
+    });
+
+    const gradingFindSpy = jest.spyOn(PeerReviewGradingTaskModel, 'find').mockReturnValue({
+      select: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockResolvedValue([
+        { peerReviewSubmissionId: undefined, score: 99 },
+        { peerReviewSubmissionId: submission._id, score: 8 },
+      ]),
+    } as any);
+
+    const dto = await getPeerReviewResultsForAssessmentById(
+      assessment._id.toString(),
+      'perStudent',
+      1,
+      10
+    );
+
+    expect(dto.perStudent).toHaveLength(1);
+    expect(dto.perStudent[0].aggregatedScore).toBe(8);
+
+    gradingFindSpy.mockRestore();
+  });
+
   it('covers results edge branches for missing teamset doc and team reviewer aggregation', async () => {
     const course = await makeCourse();
     const missingTeamSetId = oid();

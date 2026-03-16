@@ -1567,6 +1567,42 @@ describe('peerReviewService', () => {
       expect(result.grading.toBeAssigned).toBe(1); // no task
     });
 
+    it('Faculty: falls back to toBeAssigned for unrecognized grading task status', async () => {
+      const pr = await makePeerReview({ reviewerType: 'Individual', taAssignments: false });
+      const team = await makeTeam({ number: 230 });
+      const assignment = await makeAssignment(pr._id, team._id);
+      const submission = await makeSubmission(pr._id, assignment._id, {
+        status: 'Submitted',
+        reviewerKind: 'Student',
+        reviewerUserId: oid(),
+      });
+
+      const gradingFindSpy = jest.spyOn(PeerReviewGradingTaskModel, 'find').mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        lean: jest.fn().mockResolvedValue([
+          {
+            peerReviewSubmissionId: submission._id,
+            status: 'UnexpectedStatus',
+          },
+        ]),
+      } as any);
+
+      const result = await getPeerReviewProgressOverviewById(
+        oidStr(),
+        COURSE_ROLE.Faculty,
+        testCourseId.toString(),
+        pr._id.toString()
+      );
+
+      expect(result.grading.total).toBe(1);
+      expect(result.grading.graded).toBe(0);
+      expect(result.grading.inProgress).toBe(0);
+      expect(result.grading.notYetGraded).toBe(0);
+      expect(result.grading.toBeAssigned).toBe(1);
+
+      gradingFindSpy.mockRestore();
+    });
+
     it('Faculty: Completed takes precedence over InProgress when a submission has both task statuses', async () => {
       const pr = await makePeerReview({ reviewerType: 'Individual', taAssignments: false });
       const team = await makeTeam({ number: 24 });

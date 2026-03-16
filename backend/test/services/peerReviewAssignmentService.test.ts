@@ -666,6 +666,86 @@ describe('peerReviewAssignmentService', () => {
       }).lean();
       expect(subs).toHaveLength(0);
     });
+
+    it('skips a reviewee when its assignment is missing from the loaded assignment map', async () => {
+      const prId = oid();
+      const teamSetId = oid();
+
+      (getPeerReviewById as jest.Mock).mockResolvedValue({
+        _id: prId,
+        reviewerType: 'Team',
+        taAssignments: false,
+        teamSetId,
+      });
+
+      const teamA = await makeTeam({
+        teamSet: teamSetId,
+        members: [oid()],
+        number: 11,
+        TA: oid(),
+      });
+      const teamB = await makeTeam({
+        teamSet: teamSetId,
+        members: [oid()],
+        number: 12,
+        TA: oid(),
+      });
+
+      (getTeamDataById as jest.Mock).mockResolvedValue(
+        new Map([
+          [
+            teamA._id.toString(),
+            { repoName: 'RA', repoUrl: 'UA', gitHubOrgName: '' },
+          ],
+          [
+            teamB._id.toString(),
+            { repoName: 'RB', repoUrl: 'UB', gitHubOrgName: '' },
+          ],
+        ])
+      );
+
+      const originalFind = PeerReviewAssignmentModel.find.bind(
+        PeerReviewAssignmentModel
+      );
+      const findSpy = jest
+        .spyOn(PeerReviewAssignmentModel, 'find')
+        .mockImplementation((...args: any[]) => {
+          const query = args[0];
+          if (query?.peerReviewId && query?.reviewee?.$in) {
+            return {
+              select: () => ({
+                lean: async () => {
+                  const docs = await originalFind(query)
+                    .select('_id reviewee repoName repoUrl')
+                    .lean();
+                  return docs.slice(0, 1);
+                },
+              }),
+            } as any;
+          }
+
+          return originalFind(query) as any;
+        });
+
+      try {
+        await assignPeerReviews(
+          testCourseId.toString(),
+          prId.toString(),
+          oidStr(),
+          1,
+          true,
+          ['default']
+        );
+      } finally {
+        findSpy.mockRestore();
+      }
+
+      const submissions = await PeerReviewSubmissionModel.find({
+        peerReviewId: prId,
+      }).lean();
+
+      expect(submissions).toHaveLength(1);
+    });
   });
 
   describe('addManualAssignment', () => {
@@ -1264,6 +1344,47 @@ describe('peerReviewAssignmentService', () => {
       expect(a1?.repoUrl).toBe('Url1');
       expect(a2?.repoName).toBe('Repo2');
       expect(a2?.repoUrl).toBe('Url2');
+    });
+
+    it('initialiseAssignments applies the provided session', async () => {
+      const prId = oid();
+      const teamSetId = oid();
+
+      const team = await makeTeam({
+        teamSet: teamSetId,
+        number: 3,
+        members: [oid()],
+      });
+
+      (getTeamDataById as jest.Mock).mockResolvedValue(
+        new Map([
+          [
+            team._id.toString(),
+            { repoName: 'Repo3', repoUrl: 'Url3', gitHubOrgName: 'Org3' },
+          ],
+        ])
+      );
+
+      const session = await mongoose.startSession();
+
+      try {
+        await initialiseAssignmentsSvc(
+          testCourseId.toString(),
+          prId.toString(),
+          teamSetId.toString(),
+          session
+        );
+      } finally {
+        await session.endSession();
+      }
+
+      const assignment = await PeerReviewAssignmentModel.findOne({
+        peerReviewId: prId,
+        reviewee: team._id,
+      }).lean();
+
+      expect(assignment?.repoName).toBe('Repo3');
+      expect(assignment?.repoUrl).toBe('Url3');
     });
 
     it('deleteAssignmentsByPeerReviewId deletes submissions then assignments', async () => {
