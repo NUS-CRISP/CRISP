@@ -100,6 +100,7 @@ export const getAuthorizedTeamDataByCourse = async (
     const teamSets = await TeamSetModel.find({ course: courseId });
     if (teamSets.length === 0) {
       console.log('No team sets found for course');
+      console.log('No team sets found for course');
       throw new NotFoundError('No team sets found for course');
     }
     const teams = await TeamModel.find({
@@ -110,6 +111,7 @@ export const getAuthorizedTeamDataByCourse = async (
       options: { sort: { repoName: 1 } },
     });
     if (teams.length == 0) {
+      console.log('No teams found for course');
       console.log('No teams found for course');
       throw new NotFoundError('No teams found for course');
     }
