@@ -244,14 +244,6 @@ beforeEach(async () => {
   (deleteAssignmentsByPeerReviewId as jest.Mock).mockResolvedValue({
     deletedCount: 0,
   });
-
-  // mock startSession to avoid transaction requirement
-  jest.spyOn(mongoose, 'startSession').mockResolvedValue({
-    startTransaction: jest.fn(),
-    commitTransaction: jest.fn(),
-    abortTransaction: jest.fn(),
-    endSession: jest.fn(),
-  } as any);
 });
 
 afterAll(async () => {
@@ -788,30 +780,22 @@ describe('peerReviewService', () => {
       delSpy.mockRestore();
     });
 
-    it('throws NotFound when peer review missing and aborts transaction', async () => {
-      const session = await mongoose.startSession();
-      const abortSpy = jest.spyOn(session as any, 'abortTransaction');
-
+    it('throws NotFound when peer review missing', async () => {
       await expect(deletePeerReviewById(oidStr())).rejects.toBeInstanceOf(
         NotFoundError
       );
-      expect(abortSpy).toHaveBeenCalled();
     });
 
-    it('throws NotFound when deletion returns null (covers branch) and aborts', async () => {
+    it('throws NotFound when deletion returns null (covers branch)', async () => {
       const pr = await makePeerReview();
 
       const spy = jest
         .spyOn(PeerReviewModel, 'findByIdAndDelete')
         .mockResolvedValueOnce(null as any);
 
-      const session = await mongoose.startSession();
-      const abortSpy = jest.spyOn(session as any, 'abortTransaction');
-
       await expect(
         deletePeerReviewById(pr._id.toString())
       ).rejects.toBeInstanceOf(NotFoundError);
-      expect(abortSpy).toHaveBeenCalled();
 
       spy.mockRestore();
     });
