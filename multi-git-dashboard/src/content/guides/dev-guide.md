@@ -32,29 +32,40 @@ Octokit for GitHub API. Used for repository access, PR data, and code analysis. 
 
 ## Development
 
-- **Environment:** Copy each package's `.env.example` to `.env.development`. The example files already contain the full key list; use the notes below to understand what each key is for. Feel free to contact current developers for clarifications/specific credentials.
+- Clone the repository from GitHub to your local machine.
+```
+git clone https://github.com/NUS-CRISP/CRISP.git
+```
+- **Environment Setup:** Copy each package's `.env.example` to `.env.development`. The example files already contain the full key list; use the notes below to understand what each key is for. Feel free to contact current developers for clarifications/specific credentials.
 - **Frontend environment (`multi-git-dashboard/.env.example`):**
-  - `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`: GitHub App credentials used by the app's GitHub integration flows.
+  - `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`: GitHub App credentials used by the app's GitHub integration flows. See [GitHub App documentation](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-as-a-github-app-installation) for more details.
   - `MONGODB_URI`: MongoDB connection string for the frontend's server-side data access.
-  - `DB_NAME`: MongoDB database name used by NextAuth and other frontend server-side queries.
-  - `NEXTAUTH_SECRET`, `NEXTAUTH_URL`: NextAuth session secret and frontend base URL for auth callbacks.
-  - `NODE_ENV`: Runtime environment, usually `development` for local setup.
-  - `NEXT_PUBLIC_TRIAL_USER_ID`: User ID for the trial or demo login path.
-  - `NEXT_PUBLIC_TELEGRAM_BOT_NAME`, `NEXT_PUBLIC_TELEGRAM_BOT_HANDLE`: If you need to test the Telegram bot during development, you can set these to your own Telegram bot name and handle after creating one using @BotFather.
+  - `DB_NAME`: `crisp`
+  - `NEXTAUTH_SECRET`, `NEXTAUTH_URL`: NextAuth session secret and frontend base URL (`http://localhost:3002`) for auth callbacks.
+  - `NODE_ENV`: Runtime environment, set as `development` for local development.
+  - `NEXT_PUBLIC_DOMAIN`: `localhost`
+  - `NEXT_PUBLIC_BACKEND_PORT`: `3002`
+  - `BACKEND_PORT`: `3003`
+  - `TELEGRAM_BOT_NAME`, `TELEGRAM_BOT_HANDLE`: If you need to test the Telegram bot during development, you can set these to your own Telegram bot name and handle after creating one using @BotFather.
+
 - **Backend environment (`backend/.env.example`):**
-  - `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`, `GITHUB_APP_INSTALLATION_ID`: GitHub App credentials and installation ID used for backend GitHub API access.
-  - `MONGODB_URI`: MongoDB connection string for the backend API and jobs.
-  - `PORT`: Port the Express server listens on locally.
+  - `GITHUB_APP_ID`: GitHub App credentials used by the app's GitHub integration flows. See [GitHub App documentation](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-as-a-github-app-installation) for more details.
+  - `GITHUB_APP_PRIVATE_KEY`, `GITHUB_APP_INSTALLATION_ID`: GitHub App credentials and installation ID used for backend GitHub API access. Contact current developers for credentials.
+  - `MONGODB_URI`: `mongodb://localhost:27017/crisp`
+  - `PORT`: `3003`
   - `RUN_JOB_NOW`: Set to `true` to run scheduled jobs immediately on startup.
-  - `NEXTAUTH_SECRET`, `NEXTAUTH_TOKEN_HEADER`: Auth settings the backend uses to validate frontend-issued sessions and locate the expected auth cookie or header.
-  - `GOOGLE_CLIENT_EMAIL`, `GOOGLE_PRIVATE_KEY`: Google service account credentials used for Google API integrations.
-  - `FRONTEND_URI`: Frontend base URL used when building backend redirect URLs.
-  - `CLIENT_ID`, `CLIENT_SECRET`: OAuth credentials for Jira integration.
-  - `SONAR_URI`, `SONAR_TOKEN`: SonarQube server URL and access token used by code analysis jobs.
+  - `NEXTAUTH_SECRET`: Generated key from local terminal: `openssl rand -base64 32`
+  - `NEXTAUTH_TOKEN_HEADER`: `next-auth.session-token`
+  - `GOOGLE_CLIENT_EMAIL`: `crisp-web@rising-solstice-414305.iam.gserviceaccount.com`
+  - `GOOGLE_PRIVATE_KEY`: Contact current developers for credentials.
+  - `FRONTEND_URI`: `http://localhost:3002`
+  - `CLIENT_ID`, `CLIENT_SECRET`: OAuth credentials for Jira integration. Contact current developers for credentials.
+  - `SONAR_URI`: `http://localhost:9000
+  - `SONAR_TOKEN`: SonarQube server URL and access token used by code analysis jobs. Contact current developers for credentials.
   - `SONAR_PATH`, `REPO_PATH`: Sonar scanner path and local repository base path used during analysis runs.
-  - `AI_TOKEN`: API token used by the AI insights job.
-  - `TEST_EMAIL_ON_NOTIFICATION_JOB_START`, `RUN_NOTIFICATION_JOB`: Flags for testing or enabling the notification job.
-  - `SMTP_SERVICE`, `SMTP_USER`, `SMTP_PASS`: SMTP credentials for outgoing email. Contact current developers for credentials.
+  - `AI_TOKEN`: API token used by the AI insights job. Contact current developers for credentials.
+  - `TEST_EMAIL_ON_NOTIFICATION_JOB_START`:, `RUN_NOTIFICATION_JOB`: Flags for testing email and notification job. Default to `false`.
+  - `SMTP_SERVICE`, `SMTP_USER`, `SMTP_PASS`: SMTP credentials for outgoing email. Contact current developers for credentials if necessary.
   - `TEST_TO_EMAIL`: Recipient for notification test emails.
   - `TELEGRAM_BOT_TOKEN`: If you need to test the Telegram bot during development, you can set this to your own Telegram bot token after creating one using @BotFather.
 
