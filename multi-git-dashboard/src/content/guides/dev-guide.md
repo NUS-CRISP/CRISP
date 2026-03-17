@@ -70,22 +70,48 @@ git clone https://github.com/NUS-CRISP/CRISP.git
   - `TELEGRAM_BOT_TOKEN`: If you need to test the Telegram bot during development, you can set this to your own Telegram bot token after creating one using @BotFather.
 
 - **Install:** Navigate to both `multi-git-dashboard` and `backend` directories and run `npm install`.
-- **Run:** Start the development servers by running `npm run dev` in both directories.
 
-- **Commit Guideline:** Use the format `<type>(<optional scope>): <description>`. Valid types include `feat`, `fix`, `refactor`, `perf`, `style`, `test`, `docs`, `build`, `ops`, and `chore`.
-- **Pull Requests:** Before pushing, format your code by running `npm run prettier-format` in both the frontend and backend directories. Submit PRs against the `staging` branch.
+## Running the System
+You may choose to run the system manually or using Docker.
+
+### Manual Setup
+- Install dependencies by running `npm install` in both the frontend and backend directories. 
+- Start the development servers by running `npm run dev` in both directories **simultaneously**.
+
+### Docker Setup
+- Run `docker compose up --build -d` to start
+- Run `docker compose down` to stop.
+- To access the system, open your browser and navigate to `http://localhost`.
 
 ## VM Deployment
 
-To deploy:
+### SoC Staging VM
+To deploy in SoC Staging VM (using Docker):
+1. `sudo -s`
+2. `docker compose down`
+3. `git fetch`
+4. `git pull`
+5. `docker compose up --build -d`
 
-1. `docker compose down`
-2. `docker compose up --build -d`
-
-After deploying, verify the database connection by checking the logs (`docker logs crisp-backend-1`). You should see a successful connection message.
+### SoC **Production** VM
+To deploy in SoC Production VM (using Docker):
+1. `sudo -s`
+2. `sudo reboot`
+3. `docker compose down`
+4. `sudo lsof -i :27017`
+5. `sudo lsof -i :80`
+6. `sudo kill -9 <pid>` Kill any running instances of MongoDB and NGINX.
+7. `cd CRISP`
+8. `git fetch`
+9. `git pull`
+10. `docker compose up --build -d`
 
 ## Debugging
 
+- **Viewing Docker Logs:**
+1. `docker ps` to view all running containers.
+2. `docker logs <id>` to view the logs of a specific container.
+where `<id>` is the respective container ID: `multi-git-dashboard`, `backend`, `mongo`, `nginx`.
 - **Insufficient Disk Space:** If the landing page is broken or logs show "No space left on device", run `docker system prune -a --volumes` and delete old course repos from `/sadm/home/Repositories/`.
 - **Sonarqube Not Running:** Start it manually with `docker start sonarqube`.
 - **Port Conflicts:** If ports 8080 or 27017 are taken (usually after a reboot), kill the process, then run `docker compose down` and `docker compose up` again.
