@@ -117,6 +117,47 @@ where `<id>` is the respective container ID: `multi-git-dashboard`, `backend`, `
 - **Port Conflicts:** If ports 8080 or 27017 are taken (usually after a reboot), kill the process, then run `docker compose down` and `docker compose up` again.
 - **Unrecognized Errors:** Run `docker compose down` and reboot the VM.
 
+## Contribution Guidelines
+
+### Commits
+Write clear and detailed commit messages. A commit message consists of a header, a body, and a footer. The header has a special format that includes a type, a scope, and a subject:
+```
+<type>(<optional scope>): <description>
+<optional body>
+<optional footer>
+```
+**Types:**
+  - `feat`: Commits that add or remove a new feature
+  - `fix`: Commits that fix a bug
+- `refactor`: Commits that rewrite/restructure your code, however does not change any API behaviour
+- `perf`: Commits that improve performance
+- `style`: Commits that do not affect the meaning (white-space, formatting, missing semi-colons, etc)
+- `test`: Commits that add missing tests or correcting existing tests
+- `docs`: Commits that affect documentation only
+- `build`: Commits that affect build components like build tool, ci pipeline, dependencies, project version, ...
+- `ops`: Commits that affect operational components like infrastructure, deployment, backup, recovery, ...
+- `chore`: Miscellaneous commits e.g. modifying .gitignore
+
+### Pull Requests
+Once you're ready to share your contributions, follow these steps to submit a Pull Request using the forking workflow:
+
+1. Create a New Branch: Create a new branch for your changes based on the main branch on your GitHub fork.   
+  `git checkout -b feature/my-new-feature main`
+
+2. Make Your Changes: Implement your feature or fix and commit your changes using the provided format.
+3. Keep Your Branch Updated: Regularly pull the latest changes from the upstream repository and merge them into your branch to keep it up to date.
+  `git fetch upstream`
+  `git rebase upstream/main`
+
+4. Run the code formatter: Run the Prettier script in both the frontend and the backend
+  `cd multi-git-dashboard`
+  `npm run prettier-format`
+  `cd ../backend`
+  `npm run prettier-format`
+5. Push Your Changes: Push your branch and changes to your GitHub fork.
+  `git push origin feature/my-new-feature`
+6. Open a Pull Request (PR): Go to your fork on GitHub and create a new Pull Request against the staging branch of the upstream repository. Make sure to fill out the Pull Request Template with the necessary details.
+
 ## Database Access
 
 To connect to the VM DB using MongoDB Compass:
