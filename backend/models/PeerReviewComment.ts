@@ -3,7 +3,8 @@ import { PeerReviewComment as SharedPeerReviewComment } from '@shared/types/Peer
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
 export interface PeerReviewComment
-  extends Omit<
+  extends
+    Omit<
       SharedPeerReviewComment,
       | '_id'
       | 'peerReviewId'
@@ -11,6 +12,7 @@ export interface PeerReviewComment
       | 'peerReviewSubmissionId'
       | 'author'
       | 'flaggedBy'
+      | 'unflaggedBy'
     >,
     Document {
   _id: Types.ObjectId;
@@ -19,6 +21,7 @@ export interface PeerReviewComment
   peerReviewSubmissionId: Types.ObjectId;
   author: Types.ObjectId;
   flaggedBy?: Types.ObjectId;
+  unflaggedBy?: Types.ObjectId;
 }
 
 const peerReviewCommentSchema = new Schema<PeerReviewComment>(
@@ -72,6 +75,10 @@ const peerReviewCommentSchema = new Schema<PeerReviewComment>(
     flagReason: { type: String, default: '' },
     flaggedAt: { type: Date },
     flaggedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    // Unflag Fields
+    unflagReason: { type: String, default: '' },
+    unflaggedAt: { type: Date },
+    unflaggedBy: { type: Schema.Types.ObjectId, ref: 'User' },
   },
   {
     timestamps: true,

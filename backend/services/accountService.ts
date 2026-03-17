@@ -6,6 +6,10 @@ import mongoose from 'mongoose';
 import { NotificationPeriod } from '@shared/types/Account';
 import { CRISP_ROLE, CrispRole } from '@shared/types/auth/CrispRole';
 
+/** Bcrypt hash for default password "password" - used for accounts created via course upload until user sets their own. */
+export const DEFAULT_PASSWORD_HASH =
+  '$2b$10$Zl4PRJxyXJVLlBUv2aUn9uR5dvado3uINtVBcpeTPxEuAGwkXteKS';
+
 export const createNewAccount = async (
   identifier: string,
   name: string,
@@ -17,8 +21,11 @@ export const createNewAccount = async (
   let newUser;
 
   if (existingAccount) {
-    // Check for pre-created account
-    if (!existingAccount.password) {
+    // Check for pre-created account (no password or still using default from upload)
+    const hasNoRealPassword =
+      !existingAccount.password ||
+      existingAccount.password === DEFAULT_PASSWORD_HASH;
+    if (hasNoRealPassword) {
       const salt = await bcrypt.genSalt();
       const passwordHash = await bcrypt.hash(password, salt);
       existingAccount.password = passwordHash;

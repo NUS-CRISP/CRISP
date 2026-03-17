@@ -34,6 +34,12 @@ export interface PeerReview {
   minReviewsPerReviewer: number;
   maxReviewsPerReviewer: number;
   teamSetId: string;
+  
+  // Assessment-related
+  internalAssessmentId: string;
+  gradingStartDate?: Date;
+  gradingEndDate?: Date;
+  gradingStatus?: "NotStarted" | "InProgress" | "Completed";
 }
 
 export interface PeerReviewAssignment {
@@ -63,11 +69,6 @@ export interface PeerReviewSubmission {
   lastEditedAt?: Date;
   submittedAt?: Date;
   overallComment?: string;
-  
-  // For integration with assessment subsequently
-  scores: Record<string, number>;
-  totalScore?: number;
-  feedback?: string;
 }
 
 export interface PeerReviewComment {
@@ -83,6 +84,8 @@ export interface PeerReviewComment {
   endLine: number;
   
   author: User;
+  displayAuthorName?: string;
+  canManage?: boolean;
   authorCourseRole: CourseRole;
   comment: string;
   
@@ -91,6 +94,11 @@ export interface PeerReviewComment {
   flagReason?: string;
   flaggedAt?: Date;
   flaggedBy?: string;
+  
+  // Unflag Fields
+  unflagReason?: string;
+  unflaggedAt?: Date;
+  unflaggedBy?: string;
 }
 
 export interface AssignedReviewDTO {
@@ -104,7 +112,6 @@ export interface AssignedReviewDTO {
   submittedAt?: Date;
   
   overallComment?: string;
-  totalScore?: number;
 }
 
 export interface PeerReviewTeamMemberDTO {
@@ -151,5 +158,24 @@ export interface PeerReviewInfoDTO {
   TAAssignments: TAToAssignmentsMap;
   capabilities: {
     assignmentPageTeamIds: string[];
+  };
+}
+
+export interface PeerReviewProgressOverviewDTO {
+  peerReviewId: string;
+  scope: 'course' | 'supervisingTeams';
+  submissions: {
+    total: number;
+    notStarted: number;
+    draft: number;
+    submitted: number;
+    started: number;
+  };
+  grading: {
+    total: number;
+    graded: number;
+    inProgress: number;
+    notYetGraded: number;
+    toBeAssigned: number;
   };
 }

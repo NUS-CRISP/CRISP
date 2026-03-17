@@ -11,7 +11,6 @@ import {
   Accordion,
   Avatar,
   Box,
-  Button,
   Card,
   Center,
   Group,
@@ -24,7 +23,6 @@ import {
 import {
   IconCalendar,
   IconCode,
-  IconDownload,
   IconGitPullRequest,
   IconUsersGroup,
 } from '@tabler/icons-react';
@@ -244,7 +242,7 @@ const TeamAnalyticsDetail: React.FC<TeamAnalyticsDetailProps> = ({
       className={`${pageLayout.page} ${classes.detailPage}`}
       pl={20}
       pr={20}
-      style={{ paddingRight: 36 }}
+      style={{ paddingRight: 24 }}
     >
       <Box className={pageLayout.pageHeader}>
         <Title order={1} className={classes.detailTitle}>
@@ -284,13 +282,13 @@ const TeamAnalyticsDetail: React.FC<TeamAnalyticsDetailProps> = ({
               {memberHandles.length !== 1 ? 's' : ''}
             </Text>
           </Group>
-          <Button
+          {/* <Button
             variant="default"
             leftSection={<IconDownload size={16} />}
             className={classes.exportButton}
           >
             Export Report
-          </Button>
+          </Button> */}
         </Group>
       </Box>
 

@@ -166,7 +166,6 @@ const CreateCoursePage = () => {
     }
   };
 
-  // If navigated with /courses/create?courseId=..., load existing draft
   useEffect(() => {
     if (!router.isReady) return;
     const idParam = router.query.courseId;
@@ -210,7 +209,7 @@ const CreateCoursePage = () => {
       }
     };
     loadDraft();
-  }, [router.isReady, router.query.courseId, form]);
+  }, [router.isReady, router.query.courseId]);
 
   const saveCurrentStep = async (publish = false) => {
     const body: Record<string, unknown> = {};
@@ -341,6 +340,8 @@ const CreateCoursePage = () => {
           maxWidth: 1200,
           display: 'flex',
           flexDirection: 'column',
+          // Ensure content is not hidden behind the fixed footer
+          paddingBottom: '96px',
         }}
       >
         <Title

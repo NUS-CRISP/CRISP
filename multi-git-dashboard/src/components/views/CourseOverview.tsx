@@ -6,14 +6,13 @@ import {
   Divider,
   Group,
   Loader,
-  ScrollArea,
   SimpleGrid,
   Stack,
   Text,
   ThemeIcon,
   Title,
 } from '@mantine/core';
-import { hasFacultyPermission } from '@/lib/auth/utils';
+import { hasFacultyPermission, hasTAPermission } from '@/lib/auth/utils';
 import { Course } from '@shared/types/Course';
 import { TeamData, TeamPR } from '@shared/types/TeamData';
 import { Status } from '@shared/types/util/Status';
@@ -64,7 +63,8 @@ const timeAgo = (d: Date) => {
 const normalizePrState = (s?: string) => (s ?? '').trim().toLowerCase();
 
 const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
-  const permission = hasFacultyPermission();
+  const isFaculty = hasFacultyPermission();
+  const isTA = hasTAPermission(courseId);
 
   const [course, setCourse] = useState<Course | null>(null);
   const [teamDatas, setTeamDatas] = useState<TeamData[]>([]);
@@ -77,9 +77,9 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
     return c;
   };
 
-  const getTeamDatas = async () => {
+  const getTeamDatas = async (): Promise<TeamData[]> => {
     const res = await fetch(`/api/github/course/${courseId}`);
-    if (!res.ok) throw new Error('Failed to fetch team data');
+    if (!res.ok) return [];
     const teamDatas: TeamData[] = await res.json();
     return teamDatas;
   };
@@ -88,11 +88,9 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
     const fetchData = async () => {
       setStatus(Status.Loading);
       try {
-        const [fetchedCourse, fetchedTeamDatas] = await Promise.all([
-          getCourse(),
-          getTeamDatas(),
-        ]);
+        const fetchedCourse = await getCourse();
         setCourse(fetchedCourse);
+        const fetchedTeamDatas = await getTeamDatas();
         setTeamDatas(fetchedTeamDatas);
         setStatus(Status.Idle);
       } catch (error) {
@@ -227,12 +225,9 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
   }
 
   return (
-    <ScrollArea
+    <Box
       style={{
-        height: '100vh',
         paddingRight: '20px',
-        overflowY: 'auto',
-        scrollbarWidth: 'thin',
       }}
     >
       <Box className={pageLayout.page} pl={20} pr={20}>
@@ -243,6 +238,141 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
           <Text c="dimmed" className={pageLayout.pageSubtitle}>
             Manage your course, track progress, and review student performance
           </Text>
+        </Box>
+
+        <Box mt={24} mb={24}>
+          <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md">
+            <Card
+              withBorder
+              radius="xl"
+              component={Link}
+              href={`/courses/${courseId}/team-analytics`}
+              className={`${classes.navCard} ${classes.navCardPrimary}`}
+            >
+              <ThemeIcon radius="md" size={64} className={classes.navIcon}>
+                <IconUsersGroup size={28} />
+              </ThemeIcon>
+              <Title order={3} className={classes.navTitle}>
+                Team Analytics
+              </Title>
+              <Text className={classes.navDescription}>
+                Deep dive into team performance metrics, code quality, and
+                project progress
+              </Text>
+            </Card>
+
+            <Card
+              withBorder
+              radius="xl"
+              component={Link}
+              href={`/courses/${courseId}/peer-review`}
+              className={`${classes.navCard} ${classes.navCardFeatured}`}
+            >
+              <ThemeIcon radius="md" size={64} className={classes.navIcon}>
+                <IconMessagePlus size={28} />
+              </ThemeIcon>
+              <Title order={3} className={classes.navTitle}>
+                Peer Review
+              </Title>
+              <Text className={classes.navDescription}>
+                Review peer evaluations and provide feedback
+              </Text>
+            </Card>
+
+            {isFaculty || isTA ? (
+              <Card
+                withBorder
+                radius="xl"
+                component={Link}
+                href={`/courses/${courseId}/assessments`}
+                className={`${classes.navCard} ${classes.navCardFeatured}`}
+              >
+                <ThemeIcon radius="md" size={64} className={classes.navIcon}>
+                  <IconChecklist size={28} />
+                </ThemeIcon>
+                <Group justify="space-between" wrap="nowrap">
+                  <Title order={3} className={classes.navTitle}>
+                    Assessments
+                  </Title>
+                </Group>
+                <Text className={classes.navDescription}>
+                  Set up a new assignment or evaluation for your students
+                </Text>
+              </Card>
+            ) : (
+              <Card
+                withBorder
+                radius="xl"
+                component="div"
+                className={`${classes.navCard} ${classes.navCardFeatured} ${classes.navCardDisabled}`}
+              >
+                <ThemeIcon radius="md" size={64} className={classes.navIcon}>
+                  <IconChecklist size={28} />
+                </ThemeIcon>
+                <Group justify="space-between" wrap="nowrap">
+                  <Title order={3} className={classes.navTitle}>
+                    Assessments
+                  </Title>
+                </Group>
+                <Text className={classes.navDescription}>
+                  Set up a new assignment or evaluation for your students
+                </Text>
+                <Text size="xs" c="dimmed" mt="sm">
+                  Available to faculty and TAs only
+                </Text>
+              </Card>
+            )}
+
+            {isFaculty ? (
+              <Card
+                withBorder
+                radius="xl"
+                component={Link}
+                href={`/courses/${courseId}/repositories`}
+                className={`${classes.navCard} ${classes.navCardSettings}`}
+              >
+                <ThemeIcon
+                  radius="md"
+                  size={64}
+                  className={classes.navIconMuted}
+                >
+                  <IconSettings size={28} />
+                </ThemeIcon>
+                <Title order={3} className={classes.navTitle}>
+                  Course Settings
+                </Title>
+                <Text className={classes.navDescription}>
+                  Manage people, repositories, timeline, and course
+                  configuration
+                </Text>
+              </Card>
+            ) : (
+              <Card
+                withBorder
+                radius="xl"
+                component="div"
+                className={`${classes.navCard} ${classes.navCardSettings} ${classes.navCardDisabled}`}
+              >
+                <ThemeIcon
+                  radius="md"
+                  size={64}
+                  className={classes.navIconMuted}
+                >
+                  <IconSettings size={28} />
+                </ThemeIcon>
+                <Title order={3} className={classes.navTitle}>
+                  Course Settings
+                </Title>
+                <Text className={classes.navDescription}>
+                  Manage people, repositories, timeline, and course
+                  configuration
+                </Text>
+                <Text size="xs" c="dimmed" mt="sm">
+                  Available to faculty only
+                </Text>
+              </Card>
+            )}
+          </SimpleGrid>
         </Box>
 
         <Group align="stretch" className={classes.overviewRow}>
@@ -291,142 +421,7 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
           </Card>
         </Group>
 
-        <Box mt={30}>
-          <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="lg">
-            <Card
-              withBorder
-              radius="xl"
-              component={Link}
-              href={`/courses/${courseId}/team-analytics`}
-              className={`${classes.navCard} ${classes.navCardPrimary}`}
-            >
-              <ThemeIcon radius="md" size={80} className={classes.navIcon}>
-                <IconUsersGroup size={34} />
-              </ThemeIcon>
-              <Title order={3} className={classes.navTitle}>
-                Team Analytics
-              </Title>
-              <Text className={classes.navDescription}>
-                Deep dive into team performance metrics, code quality, and
-                project progress
-              </Text>
-            </Card>
-
-            <Card
-              withBorder
-              radius="xl"
-              component={Link}
-              href={`/courses/${courseId}/peer-review`}
-              className={`${classes.navCard} ${classes.navCardFeatured}`}
-            >
-              <ThemeIcon radius="md" size={80} className={classes.navIcon}>
-                <IconMessagePlus size={34} />
-              </ThemeIcon>
-              <Title order={3} className={classes.navTitle}>
-                Peer Review
-              </Title>
-              <Text className={classes.navDescription}>
-                Review peer evaluations and provide feedback
-              </Text>
-            </Card>
-
-            {permission ? (
-              <Card
-                withBorder
-                radius="xl"
-                component={Link}
-                href={`/courses/${courseId}/assessments`}
-                className={`${classes.navCard} ${classes.navCardFeatured}`}
-              >
-                <ThemeIcon radius="md" size={80} className={classes.navIcon}>
-                  <IconChecklist size={34} />
-                </ThemeIcon>
-                <Group justify="space-between" wrap="nowrap">
-                  <Title order={3} className={classes.navTitle}>
-                    Create Assessment
-                  </Title>
-                </Group>
-                <Text className={classes.navDescription}>
-                  Set up a new assignment or evaluation for your students
-                </Text>
-              </Card>
-            ) : (
-              <Card
-                withBorder
-                radius="xl"
-                component="div"
-                className={`${classes.navCard} ${classes.navCardFeatured} ${classes.navCardDisabled}`}
-              >
-                <ThemeIcon radius="md" size={80} className={classes.navIcon}>
-                  <IconChecklist size={34} />
-                </ThemeIcon>
-                <Group justify="space-between" wrap="nowrap">
-                  <Title order={3} className={classes.navTitle}>
-                    Create Assessment
-                  </Title>
-                </Group>
-                <Text className={classes.navDescription}>
-                  Set up a new assignment or evaluation for your students
-                </Text>
-                <Text size="xs" c="dimmed" mt="sm">
-                  Available to faculty only
-                </Text>
-              </Card>
-            )}
-
-            {permission ? (
-              <Card
-                withBorder
-                radius="xl"
-                component={Link}
-                href={`/courses/${courseId}/repositories`}
-                className={`${classes.navCard} ${classes.navCardSettings}`}
-              >
-                <ThemeIcon
-                  radius="md"
-                  size={80}
-                  className={classes.navIconMuted}
-                >
-                  <IconSettings size={34} />
-                </ThemeIcon>
-                <Title order={3} className={classes.navTitle}>
-                  Course Settings
-                </Title>
-                <Text className={classes.navDescription}>
-                  Manage people, repositories, timeline, and course
-                  configuration
-                </Text>
-              </Card>
-            ) : (
-              <Card
-                withBorder
-                radius="xl"
-                component="div"
-                className={`${classes.navCard} ${classes.navCardSettings} ${classes.navCardDisabled}`}
-              >
-                <ThemeIcon
-                  radius="md"
-                  size={80}
-                  className={classes.navIconMuted}
-                >
-                  <IconSettings size={34} />
-                </ThemeIcon>
-                <Title order={3} className={classes.navTitle}>
-                  Course Settings
-                </Title>
-                <Text className={classes.navDescription}>
-                  Manage people, repositories, timeline, and course
-                  configuration
-                </Text>
-                <Text size="xs" c="dimmed" mt="sm">
-                  Available to faculty only
-                </Text>
-              </Card>
-            )}
-          </SimpleGrid>
-        </Box>
-
-        <Box mt={40} pb={30}>
+        <Box mt={30} pb={24}>
           <Group justify="space-between" mb="md">
             <Title order={2}>Recent activity</Title>
             <Text size="sm" c="dimmed">
@@ -501,7 +496,7 @@ const CourseOverview: React.FC<OverviewProps> = ({ courseId }) => {
           </Card>
         </Box>
       </Box>
-    </ScrollArea>
+    </Box>
   );
 };
 

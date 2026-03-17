@@ -10,6 +10,7 @@ import { BadRequestError, NotFoundError } from './errors';
 import { InternalAssessment } from '@shared/types/InternalAssessment';
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 import { DEFAULT_TEAMSET_NAME } from '@shared/types/TeamSet';
+import { DEFAULT_PASSWORD_HASH } from './accountService';
 
 /*----------------------------------------Course----------------------------------------*/
 export const createNewCourse = async (courseData: any, accountId: string) => {
@@ -189,26 +190,27 @@ export const addStudentsToCourse = async (
         crispRole: CRISP_ROLE.Normal,
         isApproved: false,
         user: student._id,
+        password: DEFAULT_PASSWORD_HASH,
       });
       await newAccount.save();
       studentAccount = newAccount;
     } else {
       studentAccount = await AccountModel.findOne({ user: student._id });
       if (!studentAccount) {
-        continue;
+        const newAccount = new AccountModel({
+          email: studentData.email,
+          crispRole: CRISP_ROLE.Normal,
+          isApproved: false,
+          user: student._id,
+          password: DEFAULT_PASSWORD_HASH,
+        });
+        await newAccount.save();
+        studentAccount = newAccount;
+        student.name = studentData.name.toUpperCase();
+        student.gitHandle = studentData.gitHandle ?? student.gitHandle;
+      } else {
+        student.gitHandle = studentData.gitHandle ?? student.gitHandle;
       }
-      const courseRoleTuple = studentAccount.courseRoles.filter(
-        r => r.course === courseId
-      );
-      if (
-        (courseRoleTuple.length !== 0 &&
-          studentAccount.crispRole !== CRISP_ROLE.TrialUser) ||
-        studentData.name.toUpperCase() !== student.name.toUpperCase() ||
-        studentData.email.toLowerCase() !== studentAccount.email.toLowerCase() // Check is case-insensitive to handle email case-insensitivity cases
-      ) {
-        continue;
-      }
-      student.gitHandle = studentData.gitHandle ?? student.gitHandle;
     }
     if (!student.enrolledCourses.includes(course._id)) {
       student.enrolledCourses.push(course._id);
@@ -263,24 +265,24 @@ export const addStudentsToCourseAndTeam = async (
         crispRole: CRISP_ROLE.Normal,
         isApproved: false,
         user: student._id,
+        password: DEFAULT_PASSWORD_HASH,
       });
       await newAccount.save();
       studentAccount = newAccount;
     } else {
       studentAccount = await AccountModel.findOne({ user: student._id });
-      if (!studentAccount) continue;
-
-      const courseRoleTuple = studentAccount.courseRoles.filter(
-        (cr: { course: string }) => cr.course === courseId
-      );
-      if (
-        (courseRoleTuple.length !== 0 &&
-          studentAccount.crispRole !== CRISP_ROLE.TrialUser) ||
-        (r.name && r.name.toUpperCase() !== student.name.toUpperCase()) ||
-        (r.email &&
-          r.email.toLowerCase() !== studentAccount.email.toLowerCase())
-      ) {
-        continue;
+      if (!studentAccount) {
+        const newAccount = new AccountModel({
+          email: r.email,
+          crispRole: CRISP_ROLE.Normal,
+          isApproved: false,
+          user: student._id,
+          password: DEFAULT_PASSWORD_HASH,
+        });
+        await newAccount.save();
+        studentAccount = newAccount;
+        if (r.name) student.name = r.name.toUpperCase();
+        student.gitHandle = r.gitHandle ?? student.gitHandle;
       } else {
         student.gitHandle = r.gitHandle ?? student.gitHandle;
       }
@@ -425,28 +427,33 @@ export const addTAsToCourse = async (courseId: string, TADataList: any[]) => {
         crispRole: CRISP_ROLE.Normal,
         isApproved: false,
         user: TA._id,
+        password: DEFAULT_PASSWORD_HASH,
       });
       await newAccount.save();
       TAAccount = newAccount;
     } else {
       TAAccount = await AccountModel.findOne({ user: TA._id });
       if (!TAAccount) {
-        continue;
+        const newAccount = new AccountModel({
+          email: TAData.email,
+          crispRole: CRISP_ROLE.Normal,
+          isApproved: false,
+          user: TA._id,
+          password: DEFAULT_PASSWORD_HASH,
+        });
+        await newAccount.save();
+        TAAccount = newAccount;
+        TA.name = TAData.name.toUpperCase();
+        TA.gitHandle = TAData.gitHandle ?? TA.gitHandle;
+      } else {
+        TA.gitHandle = TAData.gitHandle ?? TA.gitHandle;
       }
-      const courseRoleTuple = TAAccount.courseRoles.filter(
-        r => r.course === courseId
-      );
-      if (
-        (courseRoleTuple.length !== 0 &&
-          TAAccount.crispRole !== CRISP_ROLE.TrialUser) ||
-        TAData.name.toUpperCase() !== TA.name.toUpperCase() ||
-        TAData.email.toLowerCase() !== TAAccount.email.toLowerCase()
-      ) {
-        continue;
-      }
-      TA.gitHandle = TAData.gitHandle ?? TA.gitHandle;
     }
-    if (!TA.enrolledCourses.includes(course._id)) {
+    if (
+      !TA.enrolledCourses.some((id: any) =>
+        id?.equals ? id.equals(course._id) : String(id) === String(course._id)
+      )
+    ) {
       TA.enrolledCourses.push(course._id);
       TAAccount?.courseRoles.push({
         course: course._id.toString(),
@@ -492,24 +499,24 @@ export const addTAAndTeamToCourse = async (
         crispRole: CRISP_ROLE.Normal,
         isApproved: false,
         user: ta._id,
+        password: DEFAULT_PASSWORD_HASH,
       });
       await newAccount.save();
       taAccount = newAccount;
     } else {
       taAccount = await AccountModel.findOne({ user: ta._id });
-      if (!taAccount) continue;
-
-      const courseRoleTuple = taAccount.courseRoles.filter(
-        (cr: { course: string }) => cr.course === courseId
-      );
-      if (
-        (courseRoleTuple.length !== 0 &&
-          taAccount.crispRole !== CRISP_ROLE.TrialUser) ||
-        (TAData.name && TAData.name.toUpperCase() !== ta.name.toUpperCase()) ||
-        (TAData.email &&
-          TAData.email.toLowerCase() !== taAccount.email.toLowerCase())
-      ) {
-        continue;
+      if (!taAccount) {
+        const newAccount = new AccountModel({
+          email: TAData.email,
+          crispRole: CRISP_ROLE.Normal,
+          isApproved: false,
+          user: ta._id,
+          password: DEFAULT_PASSWORD_HASH,
+        });
+        await newAccount.save();
+        taAccount = newAccount;
+        if (TAData.name) ta.name = TAData.name.toUpperCase();
+        ta.gitHandle = TAData.gitHandle ?? ta.gitHandle;
       } else {
         ta.gitHandle = TAData.gitHandle ?? ta.gitHandle;
       }
@@ -668,6 +675,7 @@ export const addFacultyToCourse = async (
         crispRole: CRISP_ROLE.Faculty,
         isApproved: false,
         user: facultyMember._id,
+        password: DEFAULT_PASSWORD_HASH,
       });
       await newAccount.save();
       facultyAccount = newAccount;
@@ -676,21 +684,22 @@ export const addFacultyToCourse = async (
         user: facultyMember._id,
       });
       if (!facultyAccount) {
-        continue;
+        const newAccount = new AccountModel({
+          email: facultyData.email,
+          crispRole: CRISP_ROLE.Faculty,
+          isApproved: false,
+          user: facultyMember._id,
+          password: DEFAULT_PASSWORD_HASH,
+        });
+        await newAccount.save();
+        facultyAccount = newAccount;
+        facultyMember.name = facultyData.name.toUpperCase();
+        facultyMember.gitHandle =
+          facultyData.gitHandle ?? facultyMember.gitHandle;
+      } else {
+        facultyMember.gitHandle =
+          facultyData.gitHandle ?? facultyMember.gitHandle;
       }
-      const courseRoleTuple = facultyAccount.courseRoles.filter(
-        r => r.course === courseId
-      );
-      if (
-        (courseRoleTuple.length !== 0 &&
-          facultyAccount.crispRole !== CRISP_ROLE.TrialUser) ||
-        facultyData.name.toUpperCase() !== facultyMember.name.toUpperCase() ||
-        facultyData.email.toLowerCase() !== facultyAccount.email.toLowerCase()
-      ) {
-        continue;
-      }
-      facultyMember.gitHandle =
-        facultyData.gitHandle ?? facultyMember.gitHandle;
     }
     if (!facultyMember.enrolledCourses.includes(course._id)) {
       facultyMember.enrolledCourses.push(course._id);

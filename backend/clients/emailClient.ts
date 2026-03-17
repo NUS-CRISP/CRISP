@@ -79,20 +79,13 @@ export const sendNotificationEmail = async (
 
   transporter.sendMail(notificationMailOptions, (error, info) => {
     if (error) {
-      console.log(error);
-    } else {
-      console.log(
-        'Email sent!' +
-          info.response +
-          ' Sender: ' +
-          mailOptions.from +
-          ' Recipient: ' +
-          mailOptions.to +
-          ' Subject: ' +
-          mailOptions.subject +
-          ' Body: ' +
-          mailOptions.text
-      );
+      console.error('[EmailClient] Error sending email:', {
+        to: notificationMailOptions.to,
+        subject: notificationMailOptions.subject,
+        error: error.message,
+        code: (error as any).code,
+        response: (error as any).response,
+      });
     }
   });
 };

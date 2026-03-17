@@ -15,6 +15,7 @@ import {
 } from '../../services/peerReviewCommentsService';
 import { verifyRequestPermission, verifyRequestUser } from '../../utils/auth';
 import { handleError } from '../../utils/error';
+import { MissingAuthorizationError } from '../../services/errors';
 
 jest.mock('../../services/peerReviewCommentsService', () => ({
   getPeerReviewCommentsByAssignmentId: jest.fn(),
@@ -327,6 +328,37 @@ describe('peerReviewCommentsController', () => {
       expect(res.json).toHaveBeenCalledWith({
         message: 'Peer review comment flagged successfully',
       });
+    });
+
+    it('rejects students before calling the service', async () => {
+      const err = new MissingAuthorizationError(
+        'Access denied, insufficient permissions'
+      );
+      (verifyRequestUser as jest.Mock).mockResolvedValue({
+        account: { _id: 'acc1' },
+        userCourseRole: 'Student',
+      });
+      (verifyRequestPermission as jest.Mock).mockRejectedValue(err);
+
+      const req = makeReq({
+        params: { commentId: 'c1' } as any,
+        body: { flagStatus: true, flagReason: 'spam' },
+      });
+      const res = makeRes();
+
+      await flagPeerReviewComment(req, res);
+
+      expect(verifyRequestPermission).toHaveBeenCalledWith(
+        'acc1',
+        'Student',
+        expect.arrayContaining(['Faculty member', 'Teaching assistant'])
+      );
+      expect(flagPeerReviewCommentById).not.toHaveBeenCalled();
+      expect(handleError).toHaveBeenCalledWith(
+        res,
+        err,
+        'Failed to flag peer review comment'
+      );
     });
 
     it('calls handleError on failure', async () => {

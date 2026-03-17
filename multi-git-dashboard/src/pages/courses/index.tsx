@@ -3,7 +3,7 @@ import { useTutorialContext } from '@/components/tutorial/TutorialContext';
 import TutorialPopover from '@/components/tutorial/TutorialPopover';
 import WelcomeMessage from '@/components/views/WelcomeMessage';
 import { hasFacultyPermission } from '@/lib/auth/utils';
-import { Box, Button, ScrollArea, Title } from '@mantine/core';
+import { Box, Button, Title } from '@mantine/core';
 import { Course } from '@shared/types/Course';
 import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/router';
@@ -64,13 +64,10 @@ const CourseListPage: React.FC = () => {
   };
 
   return (
-    <ScrollArea
+    <Box
       style={{
-        height: '100vh',
         paddingTop: '8px',
         paddingRight: '20px',
-        overflowY: 'auto',
-        scrollbarWidth: 'thin',
       }}
     >
       <Box className={pageLayout.page}>
@@ -170,7 +167,7 @@ const CourseListPage: React.FC = () => {
           <WelcomeMessage opened={curTutorialStage === 0} />
         )}
       </Box>
-    </ScrollArea>
+    </Box>
   );
 };
 

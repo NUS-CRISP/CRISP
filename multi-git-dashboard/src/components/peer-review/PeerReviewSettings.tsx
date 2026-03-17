@@ -9,34 +9,28 @@ import {
   Button,
 } from '@mantine/core';
 import { PeerReview } from '@shared/types/PeerReview';
+import { formatDate } from '../../lib/utils';
 
 interface PeerReviewSettingsProps {
   peerReview: PeerReview;
   teamSetName: string;
-  hasFacultyPermission: boolean;
+  isFaculty: boolean;
+  isGradingPhase?: boolean;
+  isAssessmentClosed?: boolean;
   onClickUpdate: () => void;
   onClickDelete: () => void;
-  onClickAssign: () => void;
+  onClickCloseAssessment?: () => void;
 }
-
-const formatDate = (value: Date | string | null | undefined) => {
-  if (!value) return '—';
-  const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) return '—';
-  return date.toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-};
 
 const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
   peerReview,
   teamSetName,
-  hasFacultyPermission,
+  isFaculty,
+  isGradingPhase = false,
+  isAssessmentClosed = false,
   onClickUpdate,
   onClickDelete,
-  onClickAssign,
+  onClickCloseAssessment,
 }) => {
   const {
     description,
@@ -48,6 +42,21 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
     maxReviewsPerReviewer,
     status,
   } = peerReview;
+
+  const statusLabel = isAssessmentClosed
+    ? 'Closed'
+    : isGradingPhase
+      ? 'Grading'
+      : status;
+
+  const statusColor =
+    statusLabel === 'Closed'
+      ? 'red'
+      : statusLabel === 'Active'
+        ? 'green'
+        : statusLabel === 'Grading'
+          ? 'violet'
+          : 'yellow';
 
   return (
     <Card
@@ -65,19 +74,9 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
         </Stack>
 
         <Group gap="xs">
-          <Badge
-            color={
-              status === 'Closed'
-                ? 'green'
-                : status === 'Active'
-                  ? 'yellow'
-                  : 'violet'
-            }
-          >
-            {status}
-          </Badge>
-          <Badge variant="outline">Reviewer Type: {reviewerType}</Badge>
-          {hasFacultyPermission && (
+          <Badge color={statusColor}>{statusLabel}</Badge>
+          <Badge variant="light">Reviewer Type: {reviewerType}</Badge>
+          {isFaculty && (
             <Badge variant="light" color={taAssignments ? 'teal' : 'red'}>
               TA Reviews: {taAssignments ? 'Enabled' : 'Disabled'}
             </Badge>
@@ -103,7 +102,7 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
             <Text fz="sm">{formatDate(startDate)}</Text>
           </Stack>
 
-          {hasFacultyPermission && (
+          {isFaculty && (
             <>
               <Stack gap={2}>
                 <Text fz="xs" c="dimmed">
@@ -127,7 +126,7 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
             </Text>
             <Text fz="sm">{formatDate(endDate)}</Text>
           </Stack>
-          {hasFacultyPermission && (
+          {isFaculty && (
             <Stack gap={2}>
               <Text fz="xs" c="dimmed">
                 Max. Reviews / Reviewer
@@ -136,32 +135,30 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
             </Stack>
           )}
         </Stack>
-        {hasFacultyPermission && (
+        {isFaculty && (
           <Stack mt="sm">
-            <Button
-              onClick={onClickUpdate}
-              color="green"
-              variant="light"
-              disabled={status === 'Closed'}
-            >
+            <Button onClick={onClickUpdate} color="green" variant="light">
               Update Settings
             </Button>
             <Button
               color="red"
               variant="light"
               onClick={onClickDelete}
-              disabled={status === 'Closed'}
+              disabled={statusLabel === 'Closed' || isGradingPhase}
             >
               Delete Peer Review
             </Button>
-            <Button
-              color="yellow"
-              variant="light"
-              onClick={onClickAssign}
-              disabled={status === 'Closed'}
-            >
-              Assign All Peer Reviews
-            </Button>
+            {isGradingPhase &&
+              !isAssessmentClosed &&
+              onClickCloseAssessment && (
+                <Button
+                  color="violet"
+                  variant="light"
+                  onClick={onClickCloseAssessment}
+                >
+                  Close Assessment
+                </Button>
+              )}
           </Stack>
         )}
       </SimpleGrid>

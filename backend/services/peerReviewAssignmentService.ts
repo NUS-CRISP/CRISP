@@ -1,16 +1,16 @@
 import PeerReviewAssignmentModel, {
   PeerReviewAssignment,
 } from '@models/PeerReviewAssignment';
-import TeamModel, { Team } from '@models/Team';
+import TeamModel from '@models/Team';
 import { BadRequestError, NotFoundError } from './errors';
-import { Types } from 'mongoose';
+import { Types, ClientSession } from 'mongoose';
 import { getPeerReviewById, getTeamDataById } from './peerReviewService';
 import type { AnyBulkWriteOperation } from 'mongodb';
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 import { MissingAuthorizationError } from './errors';
-import PeerReviewSubmissionModel, {
-  PeerReviewSubmission,
-} from '@models/PeerReviewSubmission';
+import PeerReviewSubmissionModel from '@models/PeerReviewSubmission';
+import PeerReviewCommentModel from '@models/PeerReviewComment';
+import PeerReviewGradingTaskModel from '@models/PeerReviewGradingTask';
 import { resolveTeamRepo } from './teamService';
 
 export interface NormalizedTeam {
@@ -25,7 +25,8 @@ const oid = (s: string) => new Types.ObjectId(s);
 export const getPeerReviewAssignmentById = async (
   userCourseRole: string,
   userId: string,
-  assignmentId: string
+  assignmentId: string,
+  _courseId?: string
 ) => {
   const assignment =
     await PeerReviewAssignmentModel.findById(assignmentId).populate('reviewee');
@@ -47,10 +48,31 @@ export const getPeerReviewAssignmentById = async (
   if (userCourseRole === COURSE_ROLE.Student) {
     // Check if student is part of the reviewee team
     const revieweeTeam = await TeamModel.findById(assignment.reviewee)
-      .select('_id members')
+      .select('_id members teamSet')
       .lean();
     const isMember = (revieweeTeam!.members ?? []).map(String).includes(userId);
     if (revieweeTeam && isMember) return assignment;
+
+    // Team-reviewer mode: student can access if their home team is assigned
+    // as reviewer for this assignment (reviewerKind = Team)
+    if (revieweeTeam?.teamSet) {
+      const myTeam = await TeamModel.findOne({
+        teamSet: revieweeTeam.teamSet,
+        members: oid(userId),
+      })
+        .select('_id')
+        .lean();
+
+      if (myTeam) {
+        const isTeamReviewer = await PeerReviewSubmissionModel.exists({
+          peerReviewAssignmentId: oid(assignmentId),
+          reviewerKind: 'Team',
+          reviewerTeamId: myTeam._id,
+        });
+
+        if (isTeamReviewer) return assignment;
+      }
+    }
   }
 
   if (userCourseRole === COURSE_ROLE.TA) {
@@ -65,6 +87,40 @@ export const getPeerReviewAssignmentById = async (
   throw new MissingAuthorizationError(
     'You are not authorized to view this assignment'
   );
+};
+
+export const getPeerReviewAssignmentWithViewContext = async (
+  userCourseRole: string,
+  userId: string,
+  assignmentId: string,
+  courseId?: string
+) => {
+  const assignment = await getPeerReviewAssignmentById(
+    userCourseRole,
+    userId,
+    assignmentId,
+    courseId
+  );
+
+  const revieweeTeam = await TeamModel.findById(assignment.reviewee)
+    .select('_id members TA')
+    .lean();
+
+  const isReviewee =
+    userCourseRole === COURSE_ROLE.Student &&
+    Boolean(revieweeTeam?.members?.map(String).includes(userId));
+
+  const isSupervisorTA =
+    userCourseRole === COURSE_ROLE.TA &&
+    Boolean(revieweeTeam?.TA?.toString() === userId);
+
+  return {
+    assignment,
+    viewContext: {
+      isReviewee,
+      isSupervisorTA,
+    },
+  };
 };
 
 // Assign peer reviews for a given peer review ID
@@ -113,12 +169,6 @@ export const assignPeerReviews = async (
     assignTAs
   );
 
-  console.log('studentReviewers:', studentReviewers);
-  console.log('teamReviewers:', teamReviewers);
-  console.log('taReviewers:', taReviewers);
-  console.log('studentHomeTeam:', studentHomeTeam);
-  console.log('taHomeTeams:', taHomeTeams);
-
   // Get Eligible Reviewees
   const {
     studentToEligibleRevieweesMap,
@@ -141,10 +191,6 @@ export const assignPeerReviews = async (
     assignTAs
   );
 
-  console.log('studentToEligibleRevieweesMap:', studentToEligibleRevieweesMap);
-  console.log('teamToEligibleRevieweesMap:', teamToEligibleRevieweesMap);
-  console.log('taToEligibleRevieweesMap:', taToEligibleRevieweesMap);
-
   // Perform assignments
   const { assignedStudentsForTeam, assignedTeamsForTeam, assignedTAsForTeam } =
     performAssignments(
@@ -161,11 +207,6 @@ export const assignPeerReviews = async (
       assignDefault,
       assignTAs
     );
-
-  console.log('assignedStudentsForTeam:', assignedStudentsForTeam);
-  console.log('assignedTeamsForTeam:', assignedTeamsForTeam);
-  console.log('assignedTAsForTeam:', assignedTAsForTeam);
-  console.log('assignments completed, updating database...');
 
   await updateDBAssignmentsAndSubmissions(
     peerReviewId,
@@ -209,7 +250,6 @@ export const addManualAssignment = async (
     );
   }
 
-  console.log('checking manual assignment eligibility...');
   // Check if reviewer is eligible to review the reviewee
   await checkReviewerIsEligible(
     reviewerType,
@@ -219,7 +259,6 @@ export const addManualAssignment = async (
     isTA
   );
 
-  console.log('checking manual assignment limits...');
   // Check if reviewer has exceeded max reviews, TAs have no limit
   if (!isTA) {
     await checkMaxReviewsNotExceeded(
@@ -240,7 +279,6 @@ export const addManualAssignment = async (
     repoUrl
   );
 
-  console.log('checking manual assignment duplicates...');
   // Check if duplicate assignment
   await checkIsNotDuplicateSubmission(
     peerReviewId,
@@ -250,7 +288,6 @@ export const addManualAssignment = async (
     isTA
   );
 
-  console.log('creating submission...');
   // Add reviewer to assignment (create new assignment if none exists)
   await createSubmission(
     peerReviewId,
@@ -295,32 +332,34 @@ export const removeManualAssignment = async (
 export const initialiseAssignments = async (
   courseId: string,
   peerReviewId: string,
-  teamSetId: string
+  teamSetId: string,
+  session: ClientSession | null
 ) => {
-  const prTeams: Team[] = await TeamModel.find({
+  const teamsQuery = TeamModel.find({
     teamSet: teamSetId,
   }).lean();
+
+  if (session) teamsQuery.session(session);
+  const prTeams = await teamsQuery;
 
   const prTeamDataById = await getTeamDataById(
     courseId,
     prTeams.map(t => t._id.toString())
   );
 
-  console.log(
-    'during assignment initialisations, peerReviewTeamDataById:',
-    prTeamDataById
-  );
-
-  for (const team of prTeams) {
-    const newAssignment = new PeerReviewAssignmentModel({
-      peerReviewId: peerReviewId,
-      repoName: prTeamDataById.get(team._id.toString())?.repoName,
-      repoUrl: prTeamDataById.get(team._id.toString())?.repoUrl,
+  const docs = prTeams.map(team => {
+    const teamData = prTeamDataById.get(team._id.toString());
+    return {
+      peerReviewId,
+      repoName: teamData?.repoName,
+      repoUrl: teamData?.repoUrl,
       reviewee: team._id,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-    await newAssignment.save();
+      deadline: null,
+    };
+  });
+
+  if (docs.length > 0) {
+    await PeerReviewAssignmentModel.insertMany(docs, { session });
   }
   return;
 };
@@ -431,25 +470,15 @@ const buildEligibleRevieweeMaps = (
   assignDefault: boolean,
   assignTAs: boolean
 ) => {
-  console.log('allowSameTA:', allowSameTA);
-  console.log('reviewsPerReviewer:', reviewsPerReviewer);
-
   const studentToEligibleRevieweesMap = new Map<string, string[]>();
   if (reviewerType === 'Individual' && assignDefault) {
     for (const studentId of studentReviewers) {
       const homeTeamId = studentHomeTeam.get(studentId)!;
-      console.log('homeTeamId for student', studentId, ':', homeTeamId);
       const eligibleReviewees = makeEligibleReviewees(
         teamIdToTAMap,
         prTeamIds,
         allowSameTA,
         homeTeamId
-      );
-      console.log(
-        'eligibleReviewees for student',
-        studentId,
-        ':',
-        eligibleReviewees
       );
       if (eligibleReviewees.length < reviewsPerReviewer) {
         throw new BadRequestError(
@@ -585,14 +614,15 @@ const updateDBAssignmentsAndSubmissions = async (
     teamIdToRepoMap
   );
 
-  // 2. Load existing submissions for these assignments (so we can do partial updates)
-  const existing = await loadExistingSubmissions(
-    peerReviewId,
-    Array.from(assignmentByReviewee.values()).map(a => a._id.toString())
-  );
+  // 2. Full reset of reviewer progress state before re-assignment
+  //    - delete all previous comments
+  //    - delete all previous grading tasks
+  //    - delete all previous submissions
+  await resetPeerReviewProgressData(peerReviewId);
 
-  // 3. Build desired reviewer sets per assignment (based on assignDefault/assignTAs flags)
-  const desired = buildDesiredReviewerSets(
+  // 3. Create fresh blank submissions for the new assignment result
+  await createFreshSubmissions(
+    peerReviewId,
     reviewerType,
     taAssignmentsEnabled,
     assignDefault,
@@ -601,15 +631,102 @@ const updateDBAssignmentsAndSubmissions = async (
     assignmentByReviewee,
     assignedStudentsForTeam,
     assignedTeamsForTeam,
-    assignedTAsForTeam,
-    existing
+    assignedTAsForTeam
   );
 
-  // 4. Compute diffs and apply (bulk ops)
-  await applySubmissionDiffs(peerReviewId, desired, existing);
-
-  // 5. Remove assignments (and their submissions) for teams no longer in prTeamIds
+  // 4. Remove assignments (and their submissions) for teams no longer in prTeamIds
   await deleteStaleAssignmentsAndSubmissions(peerReviewId, prTeamIds);
+};
+
+const resetPeerReviewProgressData = async (peerReviewId: string) => {
+  const peerReviewIdObj = oid(peerReviewId);
+
+  await PeerReviewCommentModel.deleteMany({
+    peerReviewId: peerReviewIdObj,
+  });
+
+  await PeerReviewGradingTaskModel.deleteMany({
+    peerReviewId: peerReviewIdObj,
+  });
+
+  await PeerReviewSubmissionModel.deleteMany({
+    peerReviewId: peerReviewIdObj,
+  });
+};
+
+const createFreshSubmissions = async (
+  peerReviewId: string,
+  reviewerType: string,
+  taAssignmentsEnabled: boolean,
+  assignDefault: boolean,
+  assignTAs: boolean,
+  prTeamIds: string[],
+  assignmentByReviewee: Map<string, PeerReviewAssignment>,
+  assignedStudentsForTeam: Map<string, Set<string>>,
+  assignedTeamsForTeam: Map<string, Set<string>>,
+  assignedTAsForTeam: Map<string, Set<string>>
+) => {
+  const now = new Date();
+  const docs: any[] = [];
+
+  for (const reviewee of prTeamIds) {
+    const assignment = assignmentByReviewee.get(reviewee);
+    if (!assignment) continue;
+
+    if (assignDefault) {
+      if (reviewerType === 'Individual') {
+        const students = Array.from(
+          assignedStudentsForTeam.get(reviewee) ?? []
+        );
+        for (const reviewerUserId of students) {
+          docs.push({
+            peerReviewId: oid(peerReviewId),
+            peerReviewAssignmentId: assignment._id,
+            reviewerKind: 'Student',
+            reviewerUserId: oid(reviewerUserId),
+            status: 'NotStarted',
+            createdAt: now,
+            updatedAt: now,
+            scores: {},
+          });
+        }
+      } else if (reviewerType === 'Team') {
+        const teams = Array.from(assignedTeamsForTeam.get(reviewee) ?? []);
+        for (const reviewerTeamId of teams) {
+          docs.push({
+            peerReviewId: oid(peerReviewId),
+            peerReviewAssignmentId: assignment._id,
+            reviewerKind: 'Team',
+            reviewerTeamId: oid(reviewerTeamId),
+            status: 'NotStarted',
+            createdAt: now,
+            updatedAt: now,
+            scores: {},
+          });
+        }
+      }
+    }
+
+    if (taAssignmentsEnabled && assignTAs) {
+      const tas = Array.from(assignedTAsForTeam.get(reviewee) ?? []);
+      for (const reviewerUserId of tas) {
+        docs.push({
+          peerReviewId: oid(peerReviewId),
+          peerReviewAssignmentId: assignment._id,
+          reviewerKind: 'TA',
+          reviewerUserId: oid(reviewerUserId),
+          status: 'NotStarted',
+          createdAt: now,
+          updatedAt: now,
+          scores: {},
+        });
+      }
+    }
+  }
+
+  if (docs.length > 0) {
+    await PeerReviewSubmissionModel.insertMany(docs, { ordered: true });
+  }
 };
 
 const upsertAndLoadAssignments = async (
@@ -622,11 +739,8 @@ const upsertAndLoadAssignments = async (
 ) => {
   const now = new Date();
   const ops: AnyBulkWriteOperation[] = prTeamIds.map(reviewee => {
-    const { repoName, repoUrl } = teamIdToRepoMap.get(reviewee) ?? {
-      repoName: 'no repo',
-      repoUrl: 'no repo',
-      gitHubOrgName: '',
-    };
+    const teamData = teamIdToRepoMap.get(reviewee)!;
+    const { repoName, repoUrl } = teamData;
     return {
       updateOne: {
         filter: { peerReviewId: oid(peerReviewId), reviewee: oid(reviewee) },
@@ -660,239 +774,6 @@ const upsertAndLoadAssignments = async (
     finalMap.set(a.reviewee.toString(), a);
   }
   return finalMap;
-};
-
-const loadExistingSubmissions = async (
-  peerReviewId: string,
-  assignmentIds: string[]
-) => {
-  const subs = await PeerReviewSubmissionModel.find({
-    peerReviewId: oid(peerReviewId),
-    peerReviewAssignmentId: { $in: assignmentIds.map(oid) },
-  })
-    .select(
-      '_id peerReviewAssignmentId reviewerKind reviewerUserId reviewerTeamId status'
-    )
-    .lean();
-
-  // Key: assignmentId -> { Student: Set(userId), Team: Set(teamId), TA: Set(userId) }
-  const byAssignment = new Map<
-    string,
-    { Student: Set<string>; Team: Set<string>; TA: Set<string> }
-  >();
-
-  for (const s of subs) {
-    const aid = s.peerReviewAssignmentId.toString();
-    if (!byAssignment.has(aid)) {
-      byAssignment.set(aid, {
-        Student: new Set(),
-        Team: new Set(),
-        TA: new Set(),
-      });
-    }
-    const entry = byAssignment.get(aid)!;
-
-    if (s.reviewerKind === 'Student' && s.reviewerUserId)
-      entry.Student.add(s.reviewerUserId.toString());
-    if (s.reviewerKind === 'TA' && s.reviewerUserId)
-      entry.TA.add(s.reviewerUserId.toString());
-    if (s.reviewerKind === 'Team' && s.reviewerTeamId)
-      entry.Team.add(s.reviewerTeamId.toString());
-  }
-
-  return { subs, byAssignment };
-};
-
-const buildDesiredReviewerSets = (
-  reviewerType: string,
-  taAssignmentsEnabled: boolean,
-  assignDefault: boolean,
-  assignTAs: boolean,
-  prTeamIds: string[],
-  assignmentByReviewee: Map<string, PeerReviewAssignment>,
-  assignedStudentsForTeam: Map<string, Set<string>>,
-  assignedTeamsForTeam: Map<string, Set<string>>,
-  assignedTAsForTeam: Map<string, Set<string>>,
-  existing: {
-    subs: PeerReviewSubmission[];
-    byAssignment: Map<
-      string,
-      { Student: Set<string>; Team: Set<string>; TA: Set<string> }
-    >;
-  }
-) => {
-  const desired = new Map<
-    string,
-    { Student: Set<string>; Team: Set<string>; TA: Set<string> }
-  >();
-
-  for (const reviewee of prTeamIds) {
-    const assignment = assignmentByReviewee.get(reviewee);
-    const assignmentId = assignment!._id.toString();
-
-    const prev = existing.byAssignment.get(assignmentId) ?? {
-      Student: new Set<string>(),
-      Team: new Set<string>(),
-      TA: new Set<string>(),
-    };
-
-    // Default group: Student/Team reviewers
-    const nextStudent =
-      reviewerType === 'Individual'
-        ? assignDefault
-          ? new Set(Array.from(assignedStudentsForTeam.get(reviewee) ?? []))
-          : prev.Student
-        : new Set<string>();
-
-    const nextTeam =
-      reviewerType === 'Team'
-        ? assignDefault
-          ? new Set(Array.from(assignedTeamsForTeam.get(reviewee) ?? []))
-          : prev.Team
-        : new Set<string>();
-
-    // TA group
-    const nextTA = !taAssignmentsEnabled
-      ? new Set<string>()
-      : assignTAs
-        ? new Set(Array.from(assignedTAsForTeam.get(reviewee) ?? []))
-        : prev.TA;
-
-    desired.set(assignmentId, {
-      Student: nextStudent,
-      Team: nextTeam,
-      TA: nextTA,
-    });
-  }
-
-  return desired;
-};
-
-const applySubmissionDiffs = async (
-  peerReviewId: string,
-  desired: Map<
-    string,
-    { Student: Set<string>; Team: Set<string>; TA: Set<string> }
-  >,
-  existing: {
-    subs: PeerReviewSubmission[];
-    byAssignment: Map<
-      string,
-      { Student: Set<string>; Team: Set<string>; TA: Set<string> }
-    >;
-  }
-) => {
-  const now = new Date();
-  const ops: AnyBulkWriteOperation[] = [];
-
-  for (const [assignmentId, want] of desired.entries()) {
-    const have = existing.byAssignment.get(assignmentId) ?? {
-      Student: new Set<string>(),
-      Team: new Set<string>(),
-      TA: new Set<string>(),
-    };
-
-    // Student diffs
-    diffSets(have.Student, want.Student).forEach(d => {
-      ops.push({
-        deleteMany: {
-          filter: {
-            peerReviewId: oid(peerReviewId),
-            peerReviewAssignmentId: oid(assignmentId),
-            reviewerKind: 'Student',
-            reviewerUserId: oid(d),
-          },
-        },
-      });
-    });
-    diffSets(want.Student, have.Student).forEach(d => {
-      ops.push({
-        insertOne: {
-          document: {
-            peerReviewId: oid(peerReviewId),
-            peerReviewAssignmentId: oid(assignmentId),
-            reviewerKind: 'Student',
-            reviewerUserId: oid(d),
-            status: 'NotStarted',
-            createdAt: now,
-            updatedAt: now,
-            scores: {}, // safe default
-          },
-        },
-      });
-    });
-
-    // Team diffs
-    diffSets(have.Team, want.Team).forEach(d => {
-      ops.push({
-        deleteMany: {
-          filter: {
-            peerReviewId: oid(peerReviewId),
-            peerReviewAssignmentId: oid(assignmentId),
-            reviewerKind: 'Team',
-            reviewerTeamId: oid(d),
-          },
-        },
-      });
-    });
-    diffSets(want.Team, have.Team).forEach(d => {
-      ops.push({
-        insertOne: {
-          document: {
-            peerReviewId: oid(peerReviewId),
-            peerReviewAssignmentId: oid(assignmentId),
-            reviewerKind: 'Team',
-            reviewerTeamId: oid(d),
-            status: 'NotStarted',
-            createdAt: now,
-            updatedAt: now,
-            scores: {},
-          },
-        },
-      });
-    });
-
-    // TA diffs
-    diffSets(have.TA, want.TA).forEach(d => {
-      ops.push({
-        deleteMany: {
-          filter: {
-            peerReviewId: oid(peerReviewId),
-            peerReviewAssignmentId: oid(assignmentId),
-            reviewerKind: 'TA',
-            reviewerUserId: oid(d),
-          },
-        },
-      });
-    });
-    diffSets(want.TA, have.TA).forEach(d => {
-      ops.push({
-        insertOne: {
-          document: {
-            peerReviewId: oid(peerReviewId),
-            peerReviewAssignmentId: oid(assignmentId),
-            reviewerKind: 'TA',
-            reviewerUserId: oid(d),
-            status: 'NotStarted',
-            createdAt: now,
-            updatedAt: now,
-            scores: {},
-          },
-        },
-      });
-    });
-  }
-
-  if (ops.length > 0) {
-    await PeerReviewSubmissionModel.bulkWrite(ops, { ordered: true });
-  }
-};
-
-const diffSets = (a: Set<string>, b: Set<string>) => {
-  // returns elements in a but not in b
-  const out: string[] = [];
-  for (const x of a) if (!b.has(x)) out.push(x);
-  return out;
 };
 
 const deleteStaleAssignmentsAndSubmissions = async (
@@ -944,8 +825,6 @@ const makeEligibleReviewees = (
   homeTeamId: string
 ) => {
   const homeTA = teamIdToTAMap.get(homeTeamId);
-  console.log('homeTeamId:', homeTeamId, 'homeTA:', homeTA);
-  console.log('prTeamIds:', prTeamIds);
   return prTeamIds.filter(tid => {
     if (tid === homeTeamId) return false; // cannot review own team
     if (!allowSameTA) {

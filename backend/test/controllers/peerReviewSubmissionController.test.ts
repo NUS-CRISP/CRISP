@@ -162,7 +162,7 @@ describe('peerReviewSubmissionController', () => {
       });
 
       const req = makeReq({
-        params: { courseId: 'c1', assignmentId: 'a1' } as any,
+        params: { courseId: 'c1', peerReviewAssignmentId: 'a1' } as any,
       });
       const res = makeRes();
 
@@ -182,7 +182,7 @@ describe('peerReviewSubmissionController', () => {
       (verifyRequestUser as jest.Mock).mockRejectedValue(err);
 
       const req = makeReq({
-        params: { courseId: 'c1', assignmentId: 'a1' } as any,
+        params: { courseId: 'c1', peerReviewAssignmentId: 'a1' } as any,
       });
       const res = makeRes();
 
@@ -209,7 +209,7 @@ describe('peerReviewSubmissionController', () => {
       });
 
       const req = makeReq({
-        params: { courseId: 'c1', assignmentId: 'a1' } as any,
+        params: { courseId: 'c1', peerReviewAssignmentId: 'a1' } as any,
       });
       const res = makeRes();
 
@@ -225,7 +225,7 @@ describe('peerReviewSubmissionController', () => {
       (verifyRequestUser as jest.Mock).mockRejectedValue(err);
 
       const req = makeReq({
-        params: { courseId: 'c1', assignmentId: 'a1' } as any,
+        params: { courseId: 'c1', peerReviewAssignmentId: 'a1' } as any,
       });
       const res = makeRes();
 
