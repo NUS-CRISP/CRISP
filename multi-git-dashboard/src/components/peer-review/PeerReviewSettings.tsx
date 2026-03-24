@@ -157,7 +157,6 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
                   }}
                   peerReviewId={peerReview._id}
                   courseId={courseId}
-                  peerReviewTitle={peerReview.title}
                 />
               </>
             )}
