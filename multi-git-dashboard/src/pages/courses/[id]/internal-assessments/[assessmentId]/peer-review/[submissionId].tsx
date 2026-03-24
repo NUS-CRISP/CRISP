@@ -33,7 +33,10 @@ import PeerReviewGradeSubmissionModal from '@/components/cards/Modals/PeerReview
 import PeerReviewGradingSummaryModal from '@/components/cards/Modals/PeerReviewGradingSummaryModal';
 import FlagCommentConfirmationModal from '@/components/cards/Modals/FlagCommentConfirmationModal';
 
-import { getLanguageForFile } from '@/lib/peer-review/utils';
+import {
+  getLanguageForFile,
+  buildGithubRepoUrl,
+} from '@/lib/peer-review/utils';
 import { getMe } from '@/lib/auth/utils';
 
 import usePeerReviewGradingData from '@/components/hooks/usePeerReviewGradingData';
@@ -344,7 +347,7 @@ const PeerReviewGradingDetailPage: React.FC = () => {
                 Reviewee: Team {revieweeTeam.teamNumber}
                 {repo?.repoUrl && (
                   <Anchor
-                    href={repo.repoUrl}
+                    href={buildGithubRepoUrl(repo.repoUrl, commitOrTag)}
                     target="_blank"
                     rel="noreferrer"
                     underline="never"

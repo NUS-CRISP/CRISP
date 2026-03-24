@@ -27,6 +27,23 @@ const buildFetchFileApiRoute = (
   return `https://raw.githubusercontent.com/${owner}/${repo}/${ref}/${path}`;
 };
 
+// Function to build a GitHub URL that navigates to a specific commit/tag
+export const buildGithubRepoUrl = (
+  repoUrl: string,
+  commitOrTag?: string
+): string => {
+  if (!commitOrTag) return repoUrl;
+
+  // Remove .git suffix if present
+  let baseUrl = repoUrl.endsWith('.git') ? repoUrl.slice(0, -4) : repoUrl;
+
+  // Remove trailing slash if present
+  baseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+
+  // Append /tree/{commitOrTag} to navigate to that version
+  return `${baseUrl}/tree/${commitOrTag}`;
+};
+
 // Function to fetch and parse GitHub repository structure
 export const fetchGithubRepoStructure = async (
   repoUrl: string,

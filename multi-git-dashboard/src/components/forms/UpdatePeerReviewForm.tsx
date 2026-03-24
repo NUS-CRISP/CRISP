@@ -34,6 +34,8 @@ function toInitialValues(
 
     maxReviews: peerReview.maxReviewsPerReviewer ?? 1,
 
+    commitOrTag: peerReview.commitOrTag ?? '',
+
     maxMarks: assessment.maxMarks ?? 0,
     scaleToMaxMarks: Boolean(assessment.scaleToMaxMarks),
 
