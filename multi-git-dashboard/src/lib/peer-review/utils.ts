@@ -8,20 +8,23 @@ const parseGithubRepo = (repoUrl: string) => {
   return { owner: match[1], repo: match[2] };
 };
 
-const buildFetchRepoApiRoute = (owner: string, repo: string) => {
-  return `https://api.github.com/repos/${owner}/${repo}/git/trees/main?recursive=1`;
+const buildFetchRepoApiRoute = (owner: string, repo: string, commitOrTag?: string) => {
+  const ref = commitOrTag || 'main';
+  return `https://api.github.com/repos/${owner}/${repo}/git/trees/${ref}?recursive=1`;
 };
 
-const buildFetchFileApiRoute = (owner: string, repo: string, path: string) => {
-  return `https://raw.githubusercontent.com/${owner}/${repo}/main/${path}`;
+const buildFetchFileApiRoute = (owner: string, repo: string, path: string, commitOrTag?: string) => {
+  const ref = commitOrTag || 'main';
+  return `https://raw.githubusercontent.com/${owner}/${repo}/${ref}/${path}`;
 };
 
 // Function to fetch and parse GitHub repository structure
 export const fetchGithubRepoStructure = async (
-  repoUrl: string
+  repoUrl: string,
+  commitOrTag?: string
 ): Promise<RepoNode> => {
   const { owner, repo } = parseGithubRepo(repoUrl);
-  const res = await fetch(buildFetchRepoApiRoute(owner, repo));
+  const res = await fetch(buildFetchRepoApiRoute(owner, repo, commitOrTag));
   if (!res.ok) throw new Error('Failed to fetch repository structure');
   const data = await res.json();
 
@@ -61,10 +64,11 @@ export const fetchGithubRepoStructure = async (
 // Function to fetch file content from GitHub
 export const fetchFileContent = async (
   repoUrl: string,
-  filePath: string
+  filePath: string,
+  commitOrTag?: string
 ): Promise<string> => {
   const { owner, repo } = parseGithubRepo(repoUrl);
-  const res = await fetch(buildFetchFileApiRoute(owner, repo, filePath));
+  const res = await fetch(buildFetchFileApiRoute(owner, repo, filePath, commitOrTag));
   if (!res.ok) throw new Error('Failed to fetch file content');
   return await res.text();
 };

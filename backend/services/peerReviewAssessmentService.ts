@@ -61,8 +61,8 @@ interface PeerReviewAssessmentData {
   teamSetId: string;
   reviewerType: 'Individual' | 'Team';
   taAssignments: boolean;
-  minReviews: number;
   maxReviews: number;
+  commitOrTag?: string; // Repository commit/tag, empty for latest
   gradingStartDate?: Date;
   gradingEndDate?: Date;
 
@@ -83,8 +83,8 @@ export const createPeerReviewAssessmentForCourse = async (
     teamSetId,
     reviewerType,
     taAssignments,
-    minReviews,
     maxReviews,
+    commitOrTag,
     gradingStartDate,
     gradingEndDate,
     maxMarks,
@@ -148,8 +148,8 @@ export const createPeerReviewAssessmentForCourse = async (
     teamSetId: teamSetId,
     reviewerType: reviewerType,
     taAssignments: taAssignments,
-    minReviews: minReviews,
     maxReviews: maxReviews,
+    commitOrTag: commitOrTag,
     gradingStartDate: gradingStartDate,
     gradingEndDate: gradingEndDate,
     internalAssessmentId: assessment._id.toString(),
@@ -221,8 +221,8 @@ export const updatePeerReviewAssessmentById = async (
     teamSetId: updateData.teamSetId,
     reviewerType: updateData.reviewerType,
     taAssignments: updateData.taAssignments,
-    minReviews: updateData.minReviews,
     maxReviews: updateData.maxReviews,
+    commitOrTag: updateData.commitOrTag,
     gradingStartDate: updateData.gradingStartDate,
     gradingEndDate: updateData.gradingEndDate,
   };
@@ -806,7 +806,7 @@ export const getPeerReviewGradingDTO = async (
   const assignment = await PeerReviewAssignmentModel.findById(
     submission.peerReviewAssignmentId
   )
-    .select('_id reviewee repoName repoUrl')
+    .select('_id reviewee repoName repoUrl commitOrTag')
     .lean();
   if (!assignment) throw new NotFoundError('Peer review assignment not found');
 
@@ -929,7 +929,7 @@ export const getPeerReviewGradingDTO = async (
         teamId: String(revieweeTeam._id),
         teamNumber: revieweeTeam.number,
       },
-      repo: { repoName: assignment.repoName, repoUrl: assignment.repoUrl },
+      repo: { repoName: assignment.repoName, repoUrl: assignment.repoUrl, commitOrTag: assignment.commitOrTag },
     },
 
     comments,

@@ -32,7 +32,6 @@ function toInitialValues(
 
     taAssignments: Boolean(peerReview.taAssignments),
 
-    minReviews: peerReview.minReviewsPerReviewer ?? 0,
     maxReviews: peerReview.maxReviewsPerReviewer ?? 1,
 
     maxMarks: assessment.maxMarks ?? 0,

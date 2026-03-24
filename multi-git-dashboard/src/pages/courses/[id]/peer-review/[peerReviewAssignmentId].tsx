@@ -633,6 +633,11 @@ const PeerReviewDetail: React.FC = () => {
           >
             <Title order={4}>{peerReviewAssignment.repoName}</Title>
           </Anchor>
+          {peerReviewAssignment.commitOrTag && (
+            <Badge variant="light" color="blue" title="Repository version for review">
+              {peerReviewAssignment.commitOrTag}
+            </Badge>
+          )}
         </Group>
         <Group gap="xs">
           <SaveStateBadge canEdit={canEdit} saveState={saveState} />

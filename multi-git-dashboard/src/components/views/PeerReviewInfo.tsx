@@ -307,10 +307,9 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
 
             <Stack gap={2}>
               <Text fz="xs" c="dimmed">
-                Reviews / Reviewer
+                Max. Reviews / Reviewer
               </Text>
               <Text fz="sm">
-                {peerReview.minReviewsPerReviewer} –{' '}
                 {peerReview.maxReviewsPerReviewer}
               </Text>
             </Stack>
@@ -418,7 +417,6 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
             peerReviewId={peerReview._id}
             reviewerType={peerReview.reviewerType}
             taAssignmentsEnabled={!!peerReview.taAssignments}
-            minReviewsPerReviewer={peerReview.minReviewsPerReviewer}
             maxReviewsPerReviewer={peerReview.maxReviewsPerReviewer}
             onAssign={() => {
               onUpdate();

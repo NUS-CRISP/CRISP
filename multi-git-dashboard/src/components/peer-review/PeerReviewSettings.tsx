@@ -38,8 +38,8 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
     endDate,
     reviewerType,
     taAssignments,
-    minReviewsPerReviewer,
     maxReviewsPerReviewer,
+    commitOrTag,
     status,
   } = peerReview;
 
@@ -76,6 +76,11 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
         <Group gap="xs">
           <Badge color={statusColor}>{statusLabel}</Badge>
           <Badge variant="light">Reviewer Type: {reviewerType}</Badge>
+          {commitOrTag && (
+            <Badge variant="light" color="blue" title="Repository version for review">
+              Commit/Tag: {commitOrTag}
+            </Badge>
+          )}
           {isFaculty && (
             <Badge variant="light" color={taAssignments ? 'teal' : 'red'}>
               TA Reviews: {taAssignments ? 'Enabled' : 'Disabled'}
@@ -104,12 +109,6 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
 
           {isFaculty && (
             <>
-              <Stack gap={2}>
-                <Text fz="xs" c="dimmed">
-                  Min. Reviews / Reviewer
-                </Text>
-                <Text fz="sm">{minReviewsPerReviewer ?? '—'}</Text>
-              </Stack>
               <Stack gap={2}>
                 <Text fz="xs" c="dimmed">
                   Team set

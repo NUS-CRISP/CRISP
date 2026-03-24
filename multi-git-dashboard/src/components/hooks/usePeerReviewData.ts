@@ -133,7 +133,7 @@ export default function usePeerReviewData({
           throw new Error('Repository URL not found for this assignment.');
         }
 
-        const tree = await fetchGithubRepoStructure(repoUrl);
+        const tree = await fetchGithubRepoStructure(repoUrl, prAssignment?.commitOrTag);
         if (cancelled) return;
 
         const comments = await apiFetchComments(courseId, assignmentId);
@@ -148,7 +148,8 @@ export default function usePeerReviewData({
           setCurrFile(files[0]);
           const content = await fetchFileContent(
             prAssignment?.repoUrl ?? '',
-            files[0]
+            files[0],
+            prAssignment?.commitOrTag
           );
           if (!cancelled)
             setFileContent(prev => ({ ...prev, [files[0]]: content }));
@@ -171,7 +172,8 @@ export default function usePeerReviewData({
       if (!fileContent[filePath]) {
         const content = await fetchFileContent(
           peerReviewAssignment.repoUrl,
-          filePath
+          filePath,
+          peerReviewAssignment.commitOrTag
         );
         setFileContent(prev => ({ ...prev, [filePath]: content }));
       }

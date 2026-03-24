@@ -78,7 +78,8 @@ export const getPeerReviewInfoById = async (
   const assignmentState = await loadAssignmentsState(
     courseId,
     peerReviewId,
-    ctx.scopedTeamIds
+    ctx.scopedTeamIds,
+    peerReview.commitOrTag
   );
 
   const reviewerScope = computeReviewerScope(
@@ -127,7 +128,8 @@ export const getPeerReviewInfoById = async (
     ctx.teamDataById,
     ctx.usersById,
     assignedReviewMaps.memberAssignedMap,
-    assignedReviewMaps.teamAssignedMap
+    assignedReviewMaps.teamAssignedMap,
+    peerReview.commitOrTag
   );
 
   return {
@@ -322,8 +324,8 @@ export interface PeerReviewSettings {
   teamSetId: string;
   reviewerType: 'Individual' | 'Team';
   taAssignments: boolean;
-  minReviews: number;
   maxReviews: number;
+  commitOrTag?: string; // e.g., "v1.0", "main", or empty for latest
   internalAssessmentId?: string;
   gradingStartDate?: Date;
   gradingEndDate?: Date;
@@ -347,8 +349,8 @@ export const createPeerReviewById = async (
     teamSetId,
     reviewerType,
     taAssignments,
-    minReviews: minReviewsPerReviewer,
     maxReviews: maxReviewsPerReviewer,
+    commitOrTag,
     internalAssessmentId,
     gradingStartDate,
     gradingEndDate,
@@ -365,8 +367,8 @@ export const createPeerReviewById = async (
     teamSetId,
     taAssignments,
     reviewerType,
-    minReviewsPerReviewer,
     maxReviewsPerReviewer,
+    commitOrTag,
     internalAssessmentId,
     gradingStartDate,
     gradingEndDate,
@@ -378,7 +380,8 @@ export const createPeerReviewById = async (
     courseId,
     newPeerReview._id.toString(),
     teamSetId,
-    session
+    session,
+    newPeerReview.commitOrTag
   );
 
   return newPeerReview;
@@ -433,8 +436,6 @@ export const updatePeerReviewById = async (
       pr.reviewerType !== settingsData.reviewerType) ||
     (settingsData.taAssignments !== undefined &&
       pr.taAssignments !== settingsData.taAssignments) ||
-    (settingsData.minReviews !== undefined &&
-      pr.minReviewsPerReviewer !== Number(settingsData.minReviews)) ||
     (settingsData.maxReviews !== undefined &&
       pr.maxReviewsPerReviewer !== Number(settingsData.maxReviews));
 
@@ -457,10 +458,11 @@ export const updatePeerReviewById = async (
   if (settingsData.taAssignments !== undefined)
     pr.taAssignments = settingsData.taAssignments;
 
-  if (settingsData.minReviews !== undefined)
-    pr.minReviewsPerReviewer = Number(settingsData.minReviews);
   if (settingsData.maxReviews !== undefined)
     pr.maxReviewsPerReviewer = Number(settingsData.maxReviews);
+
+  if (settingsData.commitOrTag !== undefined)
+    pr.commitOrTag = settingsData.commitOrTag || undefined;
 
   if (settingsData.gradingStartDate !== undefined)
     pr.gradingStartDate = settingsData.gradingStartDate
@@ -479,7 +481,8 @@ export const updatePeerReviewById = async (
       pr.course.toString(),
       peerReviewId,
       pr.teamSetId.toString(),
-      null
+      null,
+      pr.commitOrTag
     );
   }
 
@@ -522,7 +525,8 @@ const buildPeerReviewScopeContext = async (
 const loadAssignmentsState = async (
   courseId: string,
   peerReviewId: string,
-  scopedTeamIds: string[]
+  scopedTeamIds: string[],
+  commitOrTag?: string
 ) => {
   const assignmentDocs = await PeerReviewAssignmentModel.find({
     peerReviewId: oid(peerReviewId),
@@ -560,6 +564,7 @@ const loadAssignmentsState = async (
       },
       repoName: repoName,
       repoUrl: repoUrl ?? TEMP_FALLBACK_URL,
+      commitOrTag,
     };
 
     assignmentById.set(assignmentDto._id, assignmentDto);
@@ -687,6 +692,7 @@ const addMissingAssignmentsForSubmissions = async (
       },
       repoName: repoName,
       repoUrl: repoUrl ?? TEMP_FALLBACK_URL,
+      commitOrTag: a.commitOrTag,
     });
   }
 };
@@ -820,7 +826,8 @@ const buildTeamsDTO = (
   >,
   usersById: Map<string, string>,
   memberAssignedMap: Map<string, AssignedReviewDTO[]>,
-  teamAssignedMap: Map<string, AssignedReviewDTO[]>
+  teamAssignedMap: Map<string, AssignedReviewDTO[]>,
+  commitOrTag?: string
 ) => {
   return scopedTeams.map(team => {
     const teamData = teamDataById.get(team.id);
@@ -840,6 +847,7 @@ const buildTeamsDTO = (
       teamNumber: team.number,
       repoUrl: teamData!.repoUrl,
       repoName: teamData!.repoName,
+      commitOrTag,
       TA: { id: team.taId ?? '', name: taName },
       members,
       assignedReviewsToTeam,

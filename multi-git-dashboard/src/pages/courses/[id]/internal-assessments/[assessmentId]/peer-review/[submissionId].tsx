@@ -229,6 +229,7 @@ const PeerReviewGradingDetailPage: React.FC = () => {
     );
 
   const repo = dto?.assignment?.repo ?? { repoName: '', repoUrl: '' };
+  const commitOrTag = dto?.assignment?.repo?.commitOrTag;
   const revieweeTeam = dto?.assignment?.revieweeTeam ?? null;
   const reviewer = dto?.reviewer ?? null;
   const submission = dto?.submission ?? null;
@@ -354,6 +355,11 @@ const PeerReviewGradingDetailPage: React.FC = () => {
                   </Anchor>
                 )}
               </Group>
+            </Badge>
+          )}
+          {commitOrTag && (
+            <Badge variant="light" color="blue" h="27px" radius="md" title="Repository version for grading">
+              {commitOrTag}
             </Badge>
           )}
         </Group>
