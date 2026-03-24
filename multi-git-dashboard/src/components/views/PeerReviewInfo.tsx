@@ -202,18 +202,22 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
         });
         return;
       }
-      
+
       // Get the reviewee team name for the notification
-      const revieweeTeam = peerReviewInfo?.teams.find(t => t.teamId === revieweeId);
-      const revieweeLabel = revieweeTeam ? `Team ${revieweeTeam.teamNumber}` : revieweeId;
-      
+      const revieweeTeam = peerReviewInfo?.teams.find(
+        t => t.teamId === revieweeId
+      );
+      const revieweeLabel = revieweeTeam
+        ? `Team ${revieweeTeam.teamNumber}`
+        : revieweeId;
+
       notifications.show({
         title: 'Success',
         message: `${revieweeLabel} assigned successfully`,
         color: 'green',
         autoClose: 3000,
       });
-      
+
       fetchPeerReviewInfo(); // Refresh the peer review info to reflect new assignments
     } catch (error) {
       console.error('Failed to add manual assignment:', error);
@@ -264,7 +268,8 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
       console.error('Failed to delete manual assignment:', error);
       notifications.show({
         title: 'Error',
-        message: 'Failed to delete manual assignment: ' + (error as Error).message,
+        message:
+          'Failed to delete manual assignment: ' + (error as Error).message,
         color: 'red',
         autoClose: 3000,
       });
