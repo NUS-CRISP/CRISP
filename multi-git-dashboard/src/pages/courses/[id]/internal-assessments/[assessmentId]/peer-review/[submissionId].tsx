@@ -358,7 +358,13 @@ const PeerReviewGradingDetailPage: React.FC = () => {
             </Badge>
           )}
           {commitOrTag && (
-            <Badge variant="light" color="blue" h="27px" radius="md" title="Repository version for grading">
+            <Badge
+              variant="light"
+              color="blue"
+              h="27px"
+              radius="md"
+              title="Repository version for grading"
+            >
               {commitOrTag}
             </Badge>
           )}
