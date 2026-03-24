@@ -14,9 +14,10 @@ import {
   Badge,
   Divider,
 } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
 import { useDisclosure } from '@mantine/hooks';
 import { Status } from '@shared/types/util/Status';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import PeerReviewAccordionItem from '../peer-review/PeerReviewAccordianItem';
 import PeerReviewTAAccordianItem from '../peer-review/PeerReviewTAAccordianItem';
 import PeerReviewProgressOverview from '../peer-review/PeerReviewProgressOverview';
@@ -193,18 +194,34 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
       const data = await response.json();
       if (!response.ok) {
         console.error('Failed to add manual assignment:', response.statusText);
-        setNotification({
-          type: NotificationType.Error,
-          value: 'Failed to add manual assignment: ' + data.message,
+        notifications.show({
+          title: 'Error',
+          message: 'Failed to add manual assignment: ' + data.message,
+          color: 'red',
+          autoClose: 3000,
         });
         return;
       }
+      
+      // Get the reviewee team name for the notification
+      const revieweeTeam = peerReviewInfo?.teams.find(t => t.teamId === revieweeId);
+      const revieweeLabel = revieweeTeam ? `Team ${revieweeTeam.teamNumber}` : revieweeId;
+      
+      notifications.show({
+        title: 'Success',
+        message: `${revieweeLabel} assigned successfully`,
+        color: 'green',
+        autoClose: 3000,
+      });
+      
       fetchPeerReviewInfo(); // Refresh the peer review info to reflect new assignments
     } catch (error) {
       console.error('Failed to add manual assignment:', error);
-      setNotification({
-        type: NotificationType.Error,
-        value: 'Failed to add manual assignment: ' + (error as Error).message,
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to add manual assignment: ' + (error as Error).message,
+        color: 'red',
+        autoClose: 3000,
       });
     } finally {
       setStatus(Status.Idle);
@@ -228,15 +245,29 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
       const data = await response.json();
       if (!response.ok) {
         console.error('Failed to delete manual assignment:', data.message);
-        setNotification({
-          type: NotificationType.Error,
-          value: 'Failed to delete manual assignment: ' + data.message,
+        notifications.show({
+          title: 'Error',
+          message: 'Failed to delete manual assignment: ' + data.message,
+          color: 'red',
+          autoClose: 3000,
         });
         return;
       }
+      notifications.show({
+        title: 'Success',
+        message: 'Reviewer removed successfully',
+        color: 'green',
+        autoClose: 3000,
+      });
       fetchPeerReviewInfo(); // Refresh the peer review info to reflect new assignments
     } catch (error) {
       console.error('Failed to delete manual assignment:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to delete manual assignment: ' + (error as Error).message,
+        color: 'red',
+        autoClose: 3000,
+      });
     } finally {
       setStatus(Status.Idle);
     }
@@ -266,7 +297,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
   };
 
   return (
-    <Container pb="lg">
+    <Container mb="lg">
       {notification && (
         <Notification
           title={notification.type}
@@ -381,7 +412,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
           <Loader />
         </Center>
       ) : isFaculty || peerReview.status === 'Active' ? (
-        <ScrollArea.Autosize mah={750} scrollbarSize={8}>
+        <>
           <Accordion
             defaultValue={['teaching-assistants']}
             value={opened}
@@ -464,7 +495,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
                 />
               ))}
           </Accordion>
-        </ScrollArea.Autosize>
+        </>
       ) : (
         <Card withBorder radius="md" p="lg" my="md">
           <Text c="dimmed" ta="center">
