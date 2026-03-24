@@ -109,7 +109,7 @@ const PeerReviewTAAccordionItem = forwardRef<
                   taEntries
                     .filter(([taId, info]) => {
                       if (!showUnassignedOnly) return true;
-                      return info.assignedReviews.length === 0;
+                      return taId && info.assignedReviews.length === 0;
                     })
                     .map(([taId, info]) => (
                       <ScrollArea key={taId}>

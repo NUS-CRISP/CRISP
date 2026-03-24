@@ -1,7 +1,6 @@
 import {
   Box,
   Card,
-  Divider,
   Group,
   Progress,
   RingProgress,
@@ -21,7 +20,6 @@ import { PeerReviewProgressOverviewDTO } from '@shared/types/PeerReview';
 interface PeerReviewProgressOverviewProps {
   courseId: string;
   peerReviewId: string;
-  title?: string;
   enabled?: boolean;
   showGrading?: boolean;
 }
@@ -90,7 +88,6 @@ const StatCard: React.FC<{
 const PeerReviewProgressOverview: React.FC<PeerReviewProgressOverviewProps> = ({
   courseId,
   peerReviewId,
-  title = 'Progress Overview',
   enabled = true,
   showGrading = true,
 }) => {

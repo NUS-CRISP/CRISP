@@ -3,7 +3,6 @@ import {
   Center,
   Container,
   Loader,
-  ScrollArea,
   Modal,
   Text,
   Notification,
@@ -17,7 +16,7 @@ import {
 import { notifications } from '@mantine/notifications';
 import { useDisclosure } from '@mantine/hooks';
 import { Status } from '@shared/types/util/Status';
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import PeerReviewAccordionItem from '../peer-review/PeerReviewAccordianItem';
 import PeerReviewTAAccordianItem from '../peer-review/PeerReviewTAAccordianItem';
 import PeerReviewProgressOverview from '../peer-review/PeerReviewProgressOverview';
@@ -297,7 +296,14 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
       closeStartModal();
       onUpdate(); // Refresh parent data
     } catch (error) {
-      throw error;
+      console.error('Failed to start peer review:', error);
+      notifications.show({
+        title: 'Error',
+        message:
+          'Failed to start peer review: ' + (error as Error).message,
+        color: 'red',
+        autoClose: 3000,
+      });
     }
   };
 
@@ -541,7 +547,6 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
           onConfirm={handleStartPeerReview}
           peerReviewId={peerReview._id}
           courseId={courseId}
-          peerReviewTitle={peerReview.title}
         />
       )}
     </Container>

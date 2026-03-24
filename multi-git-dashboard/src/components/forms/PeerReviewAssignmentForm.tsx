@@ -53,7 +53,7 @@ const PeerReviewAssignmentForm: React.FC<PeerReviewAssignmentFormProps> = ({
       reviewsPerReviewer: (value: string | number) => {
         const num = typeof value === 'number' ? value : Number(value);
         if (isNaN(num) || !Number.isInteger(num) || num < 1) {
-          return `Number of reviews must be >= 1`;
+          return 'Number of reviews must be >= 1';
         } else if (num > maxReviewsPerReviewer) {
           return `Number of reviews cannot exceed ${maxReviewsPerReviewer}`;
         }

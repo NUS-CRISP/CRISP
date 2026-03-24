@@ -17,7 +17,6 @@ interface StartPeerReviewModalProps {
   onConfirm: () => Promise<void>;
   peerReviewId: string;
   courseId: string;
-  peerReviewTitle: string;
 }
 
 const StartPeerReviewModal: React.FC<StartPeerReviewModalProps> = ({
@@ -26,7 +25,6 @@ const StartPeerReviewModal: React.FC<StartPeerReviewModalProps> = ({
   onConfirm,
   peerReviewId,
   courseId,
-  peerReviewTitle,
 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

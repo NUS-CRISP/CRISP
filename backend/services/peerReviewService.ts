@@ -105,7 +105,7 @@ export const getPeerReviewInfoById = async (
         const taObj = ta as any;
         // Add TA name to usersById if not already there
         if (taObj._id && !ctx.usersById.has(taObj._id.toString())) {
-          ctx.usersById.set(taObj._id.toString(), taObj.name || 'Unknown');
+          ctx.usersById.set(taObj._id.toString(), taObj.name);
         }
         return taObj._id.toString();
       });

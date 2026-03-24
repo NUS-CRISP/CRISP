@@ -97,7 +97,6 @@ const makePeerReview = async (overrides: Partial<any> = {}) => {
     endDate,
     reviewerType: 'Individual',
     taAssignments: false,
-    minReviewsPerReviewer: 1,
     maxReviewsPerReviewer: 2,
     status: undefined,
     ...overrides,
