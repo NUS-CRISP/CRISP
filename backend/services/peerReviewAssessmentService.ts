@@ -929,7 +929,11 @@ export const getPeerReviewGradingDTO = async (
         teamId: String(revieweeTeam._id),
         teamNumber: revieweeTeam.number,
       },
-      repo: { repoName: assignment.repoName, repoUrl: assignment.repoUrl, commitOrTag: assignment.commitOrTag },
+      repo: {
+        repoName: assignment.repoName,
+        repoUrl: assignment.repoUrl,
+        commitOrTag: assignment.commitOrTag,
+      },
     },
 
     comments,

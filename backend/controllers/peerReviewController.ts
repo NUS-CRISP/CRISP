@@ -5,6 +5,8 @@ import {
   getPeerReviewProgressOverviewById,
   deletePeerReviewById,
   updatePeerReviewById,
+  getUnassignedReviewers,
+  startPeerReviewNow,
 } from '../services/peerReviewService';
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 import { verifyRequestUser, verifyRequestPermission } from '../utils/auth';
@@ -100,5 +102,38 @@ export const updatePeerReview = async (req: Request, res: Response) => {
       .json({ message: 'Peer review settings updated successfully' });
   } catch (error) {
     return handleError(res, error, 'Failed to update peer review');
+  }
+};
+
+export const getUnassignedReviewersInfo = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { account, userCourseRole } = await verifyRequestUser(req);
+    await verifyRequestPermission(account._id, userCourseRole, [
+      COURSE_ROLE.Faculty,
+    ]);
+
+    const unassignedInfo = await getUnassignedReviewers(
+      req.params.peerReviewId
+    );
+    res.status(200).json(unassignedInfo);
+  } catch (error) {
+    return handleError(res, error, 'Failed to get unassigned reviewers info');
+  }
+};
+
+export const startPeerReview = async (req: Request, res: Response) => {
+  try {
+    const { account, userCourseRole } = await verifyRequestUser(req);
+    await verifyRequestPermission(account._id, userCourseRole, [
+      COURSE_ROLE.Faculty,
+    ]);
+
+    await startPeerReviewNow(req.params.peerReviewId);
+    res.status(200).json({ message: 'Peer review started successfully' });
+  } catch (error) {
+    return handleError(res, error, 'Failed to start peer review');
   }
 };

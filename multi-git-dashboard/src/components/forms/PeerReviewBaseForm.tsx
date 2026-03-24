@@ -252,7 +252,7 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
           type="date"
           mb="xs"
         />
-        
+
         <TextInput
           mt="md"
           mb="xs"
@@ -307,7 +307,6 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
             <Radio label="No" value="no" />
           </Group>
         </Radio.Group>
-        
 
         <TextInput
           withAsterisk

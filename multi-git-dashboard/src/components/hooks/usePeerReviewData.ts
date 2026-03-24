@@ -133,7 +133,10 @@ export default function usePeerReviewData({
           throw new Error('Repository URL not found for this assignment.');
         }
 
-        const tree = await fetchGithubRepoStructure(repoUrl, prAssignment?.commitOrTag);
+        const tree = await fetchGithubRepoStructure(
+          repoUrl,
+          prAssignment?.commitOrTag
+        );
         if (cancelled) return;
 
         const comments = await apiFetchComments(courseId, assignmentId);

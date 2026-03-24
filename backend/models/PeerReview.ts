@@ -51,7 +51,7 @@ const peerReviewSchema = new Schema<PeerReview>(
       required: true,
       default: 'Individual',
     },
-    
+
     maxReviewsPerReviewer: {
       type: Number,
       required: true,
@@ -61,7 +61,7 @@ const peerReviewSchema = new Schema<PeerReview>(
           return Number.isInteger(value) && value > 0;
         },
         message: 'maxReviewsPerReviewer must be >= 1',
-      }
+      },
     },
 
     teamSetId: { type: Schema.Types.ObjectId, ref: 'TeamSet', required: true },

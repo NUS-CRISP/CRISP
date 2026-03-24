@@ -8,12 +8,21 @@ const parseGithubRepo = (repoUrl: string) => {
   return { owner: match[1], repo: match[2] };
 };
 
-const buildFetchRepoApiRoute = (owner: string, repo: string, commitOrTag?: string) => {
+const buildFetchRepoApiRoute = (
+  owner: string,
+  repo: string,
+  commitOrTag?: string
+) => {
   const ref = commitOrTag || 'main';
   return `https://api.github.com/repos/${owner}/${repo}/git/trees/${ref}?recursive=1`;
 };
 
-const buildFetchFileApiRoute = (owner: string, repo: string, path: string, commitOrTag?: string) => {
+const buildFetchFileApiRoute = (
+  owner: string,
+  repo: string,
+  path: string,
+  commitOrTag?: string
+) => {
   const ref = commitOrTag || 'main';
   return `https://raw.githubusercontent.com/${owner}/${repo}/${ref}/${path}`;
 };
@@ -68,7 +77,9 @@ export const fetchFileContent = async (
   commitOrTag?: string
 ): Promise<string> => {
   const { owner, repo } = parseGithubRepo(repoUrl);
-  const res = await fetch(buildFetchFileApiRoute(owner, repo, filePath, commitOrTag));
+  const res = await fetch(
+    buildFetchFileApiRoute(owner, repo, filePath, commitOrTag)
+  );
   if (!res.ok) throw new Error('Failed to fetch file content');
   return await res.text();
 };

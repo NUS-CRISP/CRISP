@@ -71,13 +71,7 @@ const StatCard: React.FC<{
   title: string;
   children: React.ReactNode;
 }> = ({ color, icon, title, children }) => (
-  <Card
-    withBorder
-    radius="md"
-    p="sm"
-    h="100%"
-    style={{ backgroundColor: '#2b2b2b' }}
-  >
+  <Card withBorder radius="md" p="sm" h="100%">
     <Group justify="space-between" align="flex-start" mb="sm" wrap="nowrap">
       <Box>
         <Text fw={700} fz="sm" mt={2}>
@@ -242,110 +236,162 @@ const PeerReviewProgressOverview: React.FC<PeerReviewProgressOverviewProps> = ({
   if (!enabled) return null;
 
   return (
-    <Card
-      withBorder
-      radius="md"
-      p="lg"
-      mb="md"
-      style={{ backgroundColor: '#2b2b2b' }}
-    >
-      <Stack gap="sm">
-        <Stack gap={2}>
-          <Text fw={600} fz="sm">
-            {title}
-          </Text>
-          <Text c="dimmed" fz="sm">
-            Review activity and completion status.
-          </Text>
-        </Stack>
-
-        <Divider my="xs" />
-
-        {error ? (
-          <Text c="red" fz="sm">
-            {error}
-          </Text>
-        ) : (
-          <Box>
-            <SimpleGrid
-              cols={{ base: 1, sm: 2, lg: showGrading ? 3 : 2 }}
-              spacing="sm"
+    <Stack gap="sm">
+      {error ? (
+        <Text c="red" fz="sm">
+          {error}
+        </Text>
+      ) : (
+        <Box>
+          <SimpleGrid
+            cols={{ base: 1, sm: 2, lg: showGrading ? 3 : 2 }}
+            spacing="sm"
+          >
+            <StatCard
+              color="cyan"
+              icon={<IconChartArrowsVertical size={18} />}
+              title="Reviews Started"
             >
-              <StatCard
-                color="cyan"
-                icon={<IconChartArrowsVertical size={18} />}
-                title="Reviews Started"
-              >
-                <Stack gap="sm">
-                  <Group justify="space-between" align="flex-end" wrap="nowrap">
-                    <Box>
-                      <Text fz="30px" fw={800} lh={1}>
-                        {loading ? '—' : overview.submissions.started}
-                      </Text>
-                      <Text fz="sm" c="dimmed" mt={4}>
-                        Out of {loading ? '—' : overview.submissions.total}{' '}
-                        submissions
-                      </Text>
-                    </Box>
-                  </Group>
-
-                  <Progress.Root size="md" radius="xl">
-                    <Progress.Section
-                      value={
-                        loading
-                          ? 0
-                          : exactPct(
-                              overview.submissions.started,
-                              overview.submissions.total
-                            )
-                      }
-                      color="cyan"
-                      aria-label="Started reviews"
-                    />
-                    <Progress.Section
-                      value={
-                        loading
-                          ? 0
-                          : Math.max(
-                              0,
-                              100 -
-                                exactPct(
-                                  overview.submissions.started,
-                                  overview.submissions.total
-                                )
-                            )
-                      }
-                      color="dark.4"
-                      aria-label="Not started reviews"
-                    />
-                  </Progress.Root>
-
-                  <Group justify="space-between" gap="sm">
-                    <Text fz="11px" c="dimmed">
-                      {loading ? '—' : `${reviewsStartedPct}% started`}
+              <Stack gap="sm">
+                <Group justify="space-between" align="flex-end" wrap="nowrap">
+                  <Box>
+                    <Text fz="30px" fw={800} lh={1}>
+                      {loading ? '—' : overview.submissions.started}
                     </Text>
-                    <Text fz="11px" c="dimmed">
-                      {loading
-                        ? '—'
-                        : `${Math.max(overview.submissions.total - overview.submissions.started, 0)} still idle`}
+                    <Text fz="sm" c="dimmed" mt={4}>
+                      Out of {loading ? '—' : overview.submissions.total}{' '}
+                      submissions
                     </Text>
-                  </Group>
+                  </Box>
+                </Group>
+
+                <Progress.Root size="md" radius="xl">
+                  <Progress.Section
+                    value={
+                      loading
+                        ? 0
+                        : exactPct(
+                            overview.submissions.started,
+                            overview.submissions.total
+                          )
+                    }
+                    color="cyan"
+                    aria-label="Started reviews"
+                  />
+                  <Progress.Section
+                    value={
+                      loading
+                        ? 0
+                        : Math.max(
+                            0,
+                            100 -
+                              exactPct(
+                                overview.submissions.started,
+                                overview.submissions.total
+                              )
+                          )
+                    }
+                    color="dark.4"
+                    aria-label="Not started reviews"
+                  />
+                </Progress.Root>
+
+                <Group justify="space-between" gap="sm">
+                  <Text fz="11px" c="dimmed">
+                    {loading ? '—' : `${reviewsStartedPct}% started`}
+                  </Text>
+                  <Text fz="11px" c="dimmed">
+                    {loading
+                      ? '—'
+                      : `${Math.max(overview.submissions.total - overview.submissions.started, 0)} still idle`}
+                  </Text>
+                </Group>
+              </Stack>
+            </StatCard>
+
+            <StatCard
+              color="blue"
+              icon={<IconClipboardCheck size={18} />}
+              title="Submission Status"
+            >
+              <Stack gap="sm">
+                <Group justify="space-between" align="center" wrap="nowrap">
+                  <Stack gap={2}>
+                    <Text fz="11px" c="dimmed" tt="uppercase" fw={700}>
+                      Completed
+                    </Text>
+                    <Text fw={800} fz="xl" lh={1}>
+                      {loading ? '—' : `${submissionsCompletedPct}%`}
+                    </Text>
+                  </Stack>
+
+                  <RingProgress
+                    size={112}
+                    thickness={12}
+                    rootColor="rgba(255,255,255,0.08)"
+                    transitionDuration={300}
+                    sections={
+                      loading
+                        ? []
+                        : submissionStatusItems.map(item => ({
+                            value: item.value,
+                            color: item.color,
+                          }))
+                    }
+                    label={
+                      <Stack gap={0} align="center">
+                        <Text ta="center" fz="lg" fw={800} lh={1.1}>
+                          {loading ? '—' : overview.submissions.total}
+                        </Text>
+                        <Text ta="center" fz="10px" c="dimmed">
+                          total
+                        </Text>
+                      </Stack>
+                    }
+                  />
+                </Group>
+
+                <Progress.Root size="sm" radius="xl">
+                  {loading
+                    ? null
+                    : submissionStatusItems.map(item => (
+                        <Progress.Section
+                          key={item.label}
+                          value={item.value}
+                          color={item.color}
+                          aria-label={item.label}
+                        />
+                      ))}
+                </Progress.Root>
+
+                <Stack gap={6}>
+                  {submissionStatusItems.map(item => (
+                    <LegendItem
+                      key={item.label}
+                      color={item.color}
+                      label={item.label}
+                      count={loading ? undefined : item.count}
+                      percent={loading ? undefined : item.percent}
+                    />
+                  ))}
                 </Stack>
-              </StatCard>
+              </Stack>
+            </StatCard>
 
+            {showGrading && (
               <StatCard
-                color="blue"
-                icon={<IconClipboardCheck size={18} />}
-                title="Submission Status"
+                color="green"
+                icon={<IconChecks size={18} />}
+                title="Grading Status"
               >
                 <Stack gap="sm">
                   <Group justify="space-between" align="center" wrap="nowrap">
                     <Stack gap={2}>
                       <Text fz="11px" c="dimmed" tt="uppercase" fw={700}>
-                        Completed
+                        Graded
                       </Text>
                       <Text fw={800} fz="xl" lh={1}>
-                        {loading ? '—' : `${submissionsCompletedPct}%`}
+                        {loading ? '—' : `${gradingCompletedPct}%`}
                       </Text>
                     </Stack>
 
@@ -357,7 +403,7 @@ const PeerReviewProgressOverview: React.FC<PeerReviewProgressOverviewProps> = ({
                       sections={
                         loading
                           ? []
-                          : submissionStatusItems.map(item => ({
+                          : gradingStatusItems.map(item => ({
                               value: item.value,
                               color: item.color,
                             }))
@@ -365,7 +411,7 @@ const PeerReviewProgressOverview: React.FC<PeerReviewProgressOverviewProps> = ({
                       label={
                         <Stack gap={0} align="center">
                           <Text ta="center" fz="lg" fw={800} lh={1.1}>
-                            {loading ? '—' : overview.submissions.total}
+                            {loading ? '—' : overview.grading.total}
                           </Text>
                           <Text ta="center" fz="10px" c="dimmed">
                             total
@@ -378,7 +424,7 @@ const PeerReviewProgressOverview: React.FC<PeerReviewProgressOverviewProps> = ({
                   <Progress.Root size="sm" radius="xl">
                     {loading
                       ? null
-                      : submissionStatusItems.map(item => (
+                      : gradingStatusItems.map(item => (
                           <Progress.Section
                             key={item.label}
                             value={item.value}
@@ -389,7 +435,7 @@ const PeerReviewProgressOverview: React.FC<PeerReviewProgressOverviewProps> = ({
                   </Progress.Root>
 
                   <Stack gap={6}>
-                    {submissionStatusItems.map(item => (
+                    {gradingStatusItems.map(item => (
                       <LegendItem
                         key={item.label}
                         color={item.color}
@@ -401,82 +447,11 @@ const PeerReviewProgressOverview: React.FC<PeerReviewProgressOverviewProps> = ({
                   </Stack>
                 </Stack>
               </StatCard>
-
-              {showGrading && (
-                <StatCard
-                  color="green"
-                  icon={<IconChecks size={18} />}
-                  title="Grading Status"
-                >
-                  <Stack gap="sm">
-                    <Group justify="space-between" align="center" wrap="nowrap">
-                      <Stack gap={2}>
-                        <Text fz="11px" c="dimmed" tt="uppercase" fw={700}>
-                          Graded
-                        </Text>
-                        <Text fw={800} fz="xl" lh={1}>
-                          {loading ? '—' : `${gradingCompletedPct}%`}
-                        </Text>
-                      </Stack>
-
-                      <RingProgress
-                        size={112}
-                        thickness={12}
-                        rootColor="rgba(255,255,255,0.08)"
-                        transitionDuration={300}
-                        sections={
-                          loading
-                            ? []
-                            : gradingStatusItems.map(item => ({
-                                value: item.value,
-                                color: item.color,
-                              }))
-                        }
-                        label={
-                          <Stack gap={0} align="center">
-                            <Text ta="center" fz="lg" fw={800} lh={1.1}>
-                              {loading ? '—' : overview.grading.total}
-                            </Text>
-                            <Text ta="center" fz="10px" c="dimmed">
-                              total
-                            </Text>
-                          </Stack>
-                        }
-                      />
-                    </Group>
-
-                    <Progress.Root size="sm" radius="xl">
-                      {loading
-                        ? null
-                        : gradingStatusItems.map(item => (
-                            <Progress.Section
-                              key={item.label}
-                              value={item.value}
-                              color={item.color}
-                              aria-label={item.label}
-                            />
-                          ))}
-                    </Progress.Root>
-
-                    <Stack gap={6}>
-                      {gradingStatusItems.map(item => (
-                        <LegendItem
-                          key={item.label}
-                          color={item.color}
-                          label={item.label}
-                          count={loading ? undefined : item.count}
-                          percent={loading ? undefined : item.percent}
-                        />
-                      ))}
-                    </Stack>
-                  </Stack>
-                </StatCard>
-              )}
-            </SimpleGrid>
-          </Box>
-        )}
-      </Stack>
-    </Card>
+            )}
+          </SimpleGrid>
+        </Box>
+      )}
+    </Stack>
   );
 };
 

@@ -90,6 +90,28 @@ export const getPeerReviewInfoById = async (
     ctx.scopedTeams
   );
 
+  // For Faculty viewing TA assignments, fetch ALL course TAs, not just supervising ones
+  let allCourseTAIds: string[] = reviewerScope.taIdsWanted;
+  if (
+    peerReview.taAssignments &&
+    userCourseRole === COURSE_ROLE.Faculty &&
+    reviewerScope.taIdsWanted.length > 0
+  ) {
+    const course = await CourseModel.findById(peerReview.course)
+      .populate('TAs', '_id name')
+      .lean();
+    if (course && course.TAs) {
+      allCourseTAIds = course.TAs.map(ta => {
+        const taObj = ta as any;
+        // Add TA name to usersById if not already there
+        if (taObj._id && !ctx.usersById.has(taObj._id.toString())) {
+          ctx.usersById.set(taObj._id.toString(), taObj.name || 'Unknown');
+        }
+        return taObj._id.toString();
+      });
+    }
+  }
+
   const submissions = await loadSubmissionsForScope(
     peerReviewId,
     peerReview.reviewerType,
@@ -108,7 +130,7 @@ export const getPeerReviewInfoById = async (
   const assignedReviewMaps = buildAssignedReviewMaps(
     submissions,
     assignmentState.assignmentById,
-    reviewerScope.taIdsWanted,
+    allCourseTAIds,
     ctx.usersById
   );
 
@@ -1006,6 +1028,141 @@ const toAssignedReviewDTO = (
     submittedAt: submission.submittedAt,
     overallComment: submission.overallComment,
   };
+};
+
+export const getUnassignedReviewers = async (
+  peerReviewId: string
+): Promise<{
+  unassignedCount: number;
+  hasUnassigned: boolean;
+  reviewerType: 'Individual' | 'Team';
+  taAssignmentsEnabled: boolean;
+  unassignedIndividuals: Array<{
+    userId: string;
+    name: string;
+    teamNumber: number;
+  }>;
+  unassignedTeams: Array<{ teamId: string; teamNumber: number }>;
+  unassignedTAs: Array<{ userId: string; name: string }>;
+}> => {
+  const pr = await PeerReviewModel.findById(peerReviewId).populate('course');
+  if (!pr) throw new NotFoundError('Peer review not found');
+
+  // Get all peer review submissions to see who has been assigned
+  const submissions = await PeerReviewSubmissionModel.find({
+    peerReviewId,
+  });
+
+  const assignedReviewerIds = new Set<string>();
+  const assignedTeamIds = new Set<string>();
+  const assignedTAIds = new Set<string>();
+
+  for (const submission of submissions) {
+    if (submission.reviewerUserId) {
+      if (submission.reviewerKind === 'TA') {
+        assignedTAIds.add(submission.reviewerUserId.toString());
+      } else {
+        assignedReviewerIds.add(submission.reviewerUserId.toString());
+      }
+    }
+    if (submission.reviewerTeamId) {
+      assignedTeamIds.add(submission.reviewerTeamId.toString());
+    }
+  }
+
+  const unassignedIndividuals: Array<{
+    userId: string;
+    name: string;
+    teamNumber: number;
+  }> = [];
+  const unassignedTeams: Array<{ teamId: string; teamNumber: number }> = [];
+  const unassignedTAs: Array<{ userId: string; name: string }> = [];
+
+  if (pr.reviewerType === 'Individual') {
+    // Get course students
+    const course = await CourseModel.findById(pr.course).populate('students');
+    if (course && course.students) {
+      // Get teams to map students to team numbers
+      const teams = await TeamModel.find({ teamSet: pr.teamSetId });
+      const teamNumberMap = new Map<string, number>();
+      for (const team of teams) {
+        if (team.members) {
+          for (const memberId of team.members) {
+            teamNumberMap.set(memberId.toString(), team.number);
+          }
+        }
+      }
+
+      for (const student of course.students as any[]) {
+        if (!assignedReviewerIds.has(student._id.toString())) {
+          unassignedIndividuals.push({
+            userId: student._id.toString(),
+            name: student.name,
+            teamNumber: teamNumberMap.get(student._id.toString()) || 0,
+          });
+        }
+      }
+    }
+  } else {
+    // Team reviewer type
+    const teams = await TeamModel.find({ teamSet: pr.teamSetId });
+    for (const team of teams) {
+      if (!assignedTeamIds.has(team._id.toString())) {
+        unassignedTeams.push({
+          teamId: team._id.toString(),
+          teamNumber: team.number,
+        });
+      }
+    }
+  }
+
+  // Get unassigned TAs if enabled
+  if (pr.taAssignments) {
+    const course = await CourseModel.findById(pr.course).populate('TAs');
+    if (course && course.TAs) {
+      for (const ta of course.TAs as any[]) {
+        if (!assignedTAIds.has(ta._id.toString())) {
+          unassignedTAs.push({
+            userId: ta._id.toString(),
+            name: ta.name,
+          });
+        }
+      }
+    }
+  }
+
+  const totalUnassigned =
+    unassignedIndividuals.length +
+    unassignedTeams.length +
+    unassignedTAs.length;
+
+  return {
+    unassignedCount: totalUnassigned,
+    hasUnassigned: totalUnassigned > 0,
+    reviewerType: pr.reviewerType,
+    taAssignmentsEnabled: pr.taAssignments,
+    unassignedIndividuals,
+    unassignedTeams,
+    unassignedTAs,
+  };
+};
+
+export const startPeerReviewNow = async (
+  peerReviewId: string
+): Promise<void> => {
+  const pr = await PeerReviewModel.findById(peerReviewId);
+  if (!pr) throw new NotFoundError('Peer review not found');
+
+  const now = new Date();
+  if (pr.status !== 'Upcoming') {
+    throw new BadRequestError(
+      'Peer review can only be started if it is in Upcoming status'
+    );
+  }
+
+  // Set start date to now
+  pr.startDate = now;
+  await pr.save();
 };
 
 export const __testables = {
