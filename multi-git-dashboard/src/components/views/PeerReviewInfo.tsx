@@ -299,8 +299,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
       console.error('Failed to start peer review:', error);
       notifications.show({
         title: 'Error',
-        message:
-          'Failed to start peer review: ' + (error as Error).message,
+        message: 'Failed to start peer review: ' + (error as Error).message,
         color: 'red',
         autoClose: 3000,
       });
