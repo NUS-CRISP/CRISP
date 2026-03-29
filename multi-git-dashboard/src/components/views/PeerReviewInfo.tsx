@@ -3,7 +3,6 @@ import {
   Center,
   Container,
   Loader,
-  ScrollArea,
   Modal,
   Text,
   Notification,
@@ -14,6 +13,7 @@ import {
   Badge,
   Divider,
 } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
 import { useDisclosure } from '@mantine/hooks';
 import { Status } from '@shared/types/util/Status';
 import { useEffect, useState, useMemo } from 'react';
@@ -23,6 +23,8 @@ import PeerReviewProgressOverview from '../peer-review/PeerReviewProgressOvervie
 import { TeamSet } from '@shared/types/TeamSet';
 import { PeerReview, PeerReviewInfoDTO } from '@shared/types/PeerReview';
 import PeerReviewAssignmentForm from '../forms/PeerReviewAssignmentForm';
+import StartPeerReviewModal from '../cards/Modals/StartPeerReviewModal';
+import ShowUnassignedButton from '../peer-review/ShowUnassignedButton';
 import { useRouter } from 'next/router';
 import { formatDate } from '../../lib/utils';
 import { getMe, hasTAPermission } from '@/lib/auth/utils';
@@ -114,6 +116,11 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
     { open: openAssignmentForm, close: closeAssignmentForm },
   ] = useDisclosure(false);
 
+  const [openedStartModal, { open: openStartModal, close: closeStartModal }] =
+    useDisclosure(false);
+
+  const [showUnassignedOnly, setShowUnassignedOnly] = useState(false);
+
   const teamSetName =
     teamSets.find(ts => ts._id === peerReview.teamSetId)?.name ||
     'Unknown Team Set';
@@ -186,18 +193,38 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
       const data = await response.json();
       if (!response.ok) {
         console.error('Failed to add manual assignment:', response.statusText);
-        setNotification({
-          type: NotificationType.Error,
-          value: 'Failed to add manual assignment: ' + data.message,
+        notifications.show({
+          title: 'Error',
+          message: 'Failed to add manual assignment: ' + data.message,
+          color: 'red',
+          autoClose: 3000,
         });
         return;
       }
+
+      // Get the reviewee team name for the notification
+      const revieweeTeam = peerReviewInfo?.teams.find(
+        t => t.teamId === revieweeId
+      );
+      const revieweeLabel = revieweeTeam
+        ? `Team ${revieweeTeam.teamNumber}`
+        : revieweeId;
+
+      notifications.show({
+        title: 'Success',
+        message: `${revieweeLabel} assigned successfully`,
+        color: 'green',
+        autoClose: 3000,
+      });
+
       fetchPeerReviewInfo(); // Refresh the peer review info to reflect new assignments
     } catch (error) {
       console.error('Failed to add manual assignment:', error);
-      setNotification({
-        type: NotificationType.Error,
-        value: 'Failed to add manual assignment: ' + (error as Error).message,
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to add manual assignment: ' + (error as Error).message,
+        color: 'red',
+        autoClose: 3000,
       });
     } finally {
       setStatus(Status.Idle);
@@ -221,22 +248,66 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
       const data = await response.json();
       if (!response.ok) {
         console.error('Failed to delete manual assignment:', data.message);
-        setNotification({
-          type: NotificationType.Error,
-          value: 'Failed to delete manual assignment: ' + data.message,
+        notifications.show({
+          title: 'Error',
+          message: 'Failed to delete manual assignment: ' + data.message,
+          color: 'red',
+          autoClose: 3000,
         });
         return;
       }
+      notifications.show({
+        title: 'Success',
+        message: 'Reviewer removed successfully',
+        color: 'green',
+        autoClose: 3000,
+      });
       fetchPeerReviewInfo(); // Refresh the peer review info to reflect new assignments
     } catch (error) {
       console.error('Failed to delete manual assignment:', error);
+      notifications.show({
+        title: 'Error',
+        message:
+          'Failed to delete manual assignment: ' + (error as Error).message,
+        color: 'red',
+        autoClose: 3000,
+      });
     } finally {
       setStatus(Status.Idle);
     }
   };
 
+  const handleStartPeerReview = async () => {
+    try {
+      const response = await fetch(`${baseApiRoute}/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to start peer review');
+      }
+
+      setNotification({
+        type: NotificationType.Success,
+        value: 'Peer review started successfully!',
+      });
+      closeStartModal();
+      onUpdate(); // Refresh parent data
+    } catch (error) {
+      console.error('Failed to start peer review:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to start peer review: ' + (error as Error).message,
+        color: 'red',
+        autoClose: 3000,
+      });
+    }
+  };
+
   return (
-    <Container pb="lg">
+    <Container mb="lg">
       {notification && (
         <Notification
           title={notification.type}
@@ -247,13 +318,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
           {notification.value}
         </Notification>
       )}
-      <Card
-        withBorder
-        radius="md"
-        p="lg"
-        my="md"
-        style={{ backgroundColor: '#2b2b2b' }}
-      >
+      <Card withBorder radius="md" p="lg" my="md">
         <Group justify="space-between" align="flex-start" mb="xs">
           <Stack gap={2}>
             <Text fw={800} fz="xl">
@@ -307,32 +372,43 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
 
             <Stack gap={2}>
               <Text fz="xs" c="dimmed">
-                Reviews / Reviewer
+                Max. Reviews / Reviewer
               </Text>
-              <Text fz="sm">
-                {peerReview.minReviewsPerReviewer} –{' '}
-                {peerReview.maxReviewsPerReviewer}
-              </Text>
+              <Text fz="sm">{peerReview.maxReviewsPerReviewer}</Text>
             </Stack>
           </Group>
 
           {isFaculty && (
             <Group gap="sm" mt="md">
+              {peerReview.status === 'Upcoming' && (
+                <Button color="green" onClick={openStartModal}>
+                  Start Peer Review Now
+                </Button>
+              )}
+
               <Button
                 color="yellow"
                 variant="light"
                 onClick={openAssignmentForm}
                 disabled={peerReview.status === 'Closed'}
               >
-                Assign All Peer Reviews
+                Assign Peer Reviews
               </Button>
+
+              {isFaculty && (
+                <ShowUnassignedButton
+                  peerReviewId={peerReview._id}
+                  courseId={courseId}
+                  onFilterChange={setShowUnassignedOnly}
+                />
+              )}
 
               <Button
                 variant="light"
                 color="blue"
                 onClick={goToAssessmentManagement}
               >
-                Manage in Assessments
+                Manage Assessment
               </Button>
             </Group>
           )}
@@ -346,13 +422,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
           <Loader />
         </Center>
       ) : isFaculty || peerReview.status === 'Active' ? (
-        <ScrollArea.Autosize mah={750} scrollbarSize={8}>
-          <PeerReviewProgressOverview
-            courseId={courseId}
-            peerReviewId={peerReview._id}
-            enabled={isFaculty || isTA}
-            showGrading={false}
-          />
+        <>
           <Accordion
             defaultValue={['teaching-assistants']}
             value={opened}
@@ -361,6 +431,20 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
             variant="separated"
             mb="lg"
           >
+            <Accordion.Item value="progress">
+              <Accordion.Control>
+                <Text fw={600}>Progress Overview</Text>
+              </Accordion.Control>
+              <Accordion.Panel>
+                <PeerReviewProgressOverview
+                  courseId={courseId}
+                  peerReviewId={peerReview._id}
+                  enabled={isFaculty || isTA}
+                  showGrading={false}
+                />
+              </Accordion.Panel>
+            </Accordion.Item>
+
             {(isFaculty || isTA) && peerReview.taAssignments && (
               <PeerReviewTAAccordianItem
                 teams={peerReviewInfo.teams.map(t => ({
@@ -369,33 +453,59 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
                   label: `Team ${t.teamNumber}`,
                 }))}
                 TAToAssignments={peerReviewInfo.TAAssignments}
+                showUnassignedOnly={showUnassignedOnly}
                 isFaculty={isFaculty}
                 addManualAssignment={addManualAssignment}
                 deleteManualAssignment={deleteManualAssignment}
               />
             )}
-            {peerReviewInfo.teams.map(team => (
-              <PeerReviewAccordionItem
-                key={team.teamId}
-                currentTeam={team}
-                currentUserId={me?.userId}
-                taReviewerAssignmentIds={myTAReviewerAssignmentIds}
-                teams={peerReviewInfo.teams.map(t => ({
-                  value: t.teamId,
-                  TA: t.TA,
-                  label: `Team ${t.teamNumber}`,
-                }))}
-                reviewerType={peerReviewInfo.reviewerType}
-                assignmentOfTeam={peerReviewInfo.assignmentsOfTeam[team.teamId]}
-                maxReviewsPerReviewer={peerReview.maxReviewsPerReviewer}
-                isFaculty={isFaculty}
-                isTA={isTA}
-                addManualAssignment={addManualAssignment}
-                deleteManualAssignment={deleteManualAssignment}
-              />
-            ))}
+
+            {peerReviewInfo.teams
+              .filter(team => {
+                if (!showUnassignedOnly) return true;
+
+                // When filtering for unassigned, only show teams with unassigned reviewers
+                if (peerReviewInfo.reviewerType === 'Individual') {
+                  // For Individual type, check if any team member has no assignments
+                  return team.members.some(
+                    member => member.assignedReviews.length === 0
+                  );
+                } else if (peerReviewInfo.reviewerType === 'Team') {
+                  // For Team type, check if the team has no assigned reviewers (teams)
+                  const teamAssignments =
+                    peerReviewInfo.assignmentsOfTeam[team.teamId];
+                  return (
+                    !teamAssignments ||
+                    teamAssignments.reviewers.teams.length === 0
+                  );
+                }
+                return true;
+              })
+              .map(team => (
+                <PeerReviewAccordionItem
+                  key={team.teamId}
+                  currentTeam={team}
+                  currentUserId={me?.userId}
+                  taReviewerAssignmentIds={myTAReviewerAssignmentIds}
+                  teams={peerReviewInfo.teams.map(t => ({
+                    value: t.teamId,
+                    TA: t.TA,
+                    label: `Team ${t.teamNumber}`,
+                  }))}
+                  reviewerType={peerReviewInfo.reviewerType}
+                  assignmentOfTeam={
+                    peerReviewInfo.assignmentsOfTeam[team.teamId]
+                  }
+                  maxReviewsPerReviewer={peerReview.maxReviewsPerReviewer}
+                  showUnassignedOnly={showUnassignedOnly}
+                  isFaculty={isFaculty}
+                  isTA={isTA}
+                  addManualAssignment={addManualAssignment}
+                  deleteManualAssignment={deleteManualAssignment}
+                />
+              ))}
           </Accordion>
-        </ScrollArea.Autosize>
+        </>
       ) : (
         <Card withBorder radius="md" p="lg" my="md">
           <Text c="dimmed" ta="center">
@@ -418,7 +528,6 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
             peerReviewId={peerReview._id}
             reviewerType={peerReview.reviewerType}
             taAssignmentsEnabled={!!peerReview.taAssignments}
-            minReviewsPerReviewer={peerReview.minReviewsPerReviewer}
             maxReviewsPerReviewer={peerReview.maxReviewsPerReviewer}
             onAssign={() => {
               onUpdate();
@@ -428,6 +537,16 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
             onClose={closeAssignmentForm}
           />
         </Modal>
+      )}
+
+      {isFaculty && (
+        <StartPeerReviewModal
+          opened={openedStartModal}
+          onClose={closeStartModal}
+          onConfirm={handleStartPeerReview}
+          peerReviewId={peerReview._id}
+          courseId={courseId}
+        />
       )}
     </Container>
   );

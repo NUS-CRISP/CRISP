@@ -131,7 +131,6 @@ const makePeerReview = async (
     endDate,
     reviewerType: 'Individual',
     taAssignments: true,
-    minReviewsPerReviewer: 1,
     maxReviewsPerReviewer: 3,
     ...overrides,
   }).save();
@@ -237,7 +236,7 @@ describe('peerReviewAssessmentService', () => {
       teamSetId: ts._id.toString(),
       reviewerType: 'Individual',
       taAssignments: false,
-      minReviews: 1,
+      
       maxReviews: 2,
       maxMarks: 10,
       scaleToMaxMarks: true,
@@ -273,7 +272,7 @@ describe('peerReviewAssessmentService', () => {
       teamSetId: ts._id.toString(),
       reviewerType: 'Individual',
       taAssignments: true,
-      minReviews: 1,
+      
       maxReviews: 3,
       scaleToMaxMarks: true,
       maxMarks: 20,
@@ -313,7 +312,7 @@ describe('peerReviewAssessmentService', () => {
       teamSetId: ts._id.toString(),
       reviewerType: 'Individual',
       taAssignments: true,
-      minReviews: 1,
+      
       maxReviews: 3,
       scaleToMaxMarks: true,
       maxMarks: 20,
@@ -430,7 +429,7 @@ describe('peerReviewAssessmentService', () => {
         teamSetId: ts._id.toString(),
         reviewerType: 'Individual',
         taAssignments: false,
-        minReviews: 1,
+        
         maxReviews: 1,
         scaleToMaxMarks: true,
       })
@@ -451,7 +450,7 @@ describe('peerReviewAssessmentService', () => {
         teamSetId: oid().toString(),
         reviewerType: 'Individual',
         taAssignments: false,
-        minReviews: 1,
+        
         maxReviews: 2,
         maxMarks: 10,
         scaleToMaxMarks: true,
@@ -467,7 +466,7 @@ describe('peerReviewAssessmentService', () => {
         teamSetId: oid().toString(),
         reviewerType: 'Individual',
         taAssignments: false,
-        minReviews: 1,
+        
         maxReviews: 2,
         maxMarks: 10,
         scaleToMaxMarks: true,
@@ -486,7 +485,7 @@ describe('peerReviewAssessmentService', () => {
         teamSetId: ts._id.toString(),
         reviewerType: 'Team',
         taAssignments: true,
-        minReviews: 1,
+        
         maxReviews: 2,
         maxMarks: 10,
         scaleToMaxMarks: true,
@@ -502,7 +501,7 @@ describe('peerReviewAssessmentService', () => {
         teamSetId: oid().toString(),
         reviewerType: 'Individual',
         taAssignments: false,
-        minReviews: 1,
+        
         maxReviews: 1,
         scaleToMaxMarks: true,
       })
@@ -523,7 +522,7 @@ describe('peerReviewAssessmentService', () => {
         teamSetId: ts._id.toString(),
         reviewerType: 'Individual',
         taAssignments: false,
-        minReviews: 1,
+        
         maxReviews: 1,
         scaleToMaxMarks: true,
       })
@@ -540,7 +539,7 @@ describe('peerReviewAssessmentService', () => {
         teamSetId: ts._id.toString(),
         reviewerType: 'Individual',
         taAssignments: false,
-        minReviews: 1,
+        
         maxReviews: 1,
         scaleToMaxMarks: true,
       })
@@ -557,7 +556,7 @@ describe('peerReviewAssessmentService', () => {
         teamSetId: ts._id.toString(),
         reviewerType: 'Individual',
         taAssignments: false,
-        minReviews: 1,
+        
         maxReviews: 1,
         scaleToMaxMarks: true,
       })

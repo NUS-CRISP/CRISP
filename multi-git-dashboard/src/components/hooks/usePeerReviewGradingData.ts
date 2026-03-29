@@ -91,13 +91,20 @@ export default function usePeerReviewGradingData({
       setScore(typeof task?.score === 'number' ? task!.score : '');
       setFeedback(task?.feedback ?? '');
 
-      const tree = await fetchGithubRepoStructure(repoUrl);
+      const tree = await fetchGithubRepoStructure(
+        repoUrl,
+        res.assignment?.repo?.commitOrTag
+      );
       setRepoTree(tree);
 
       const files = flattenTree(tree);
       if (files[0]) {
         setCurrFile(files[0]);
-        const content = await fetchFileContent(repoUrl, files[0]);
+        const content = await fetchFileContent(
+          repoUrl,
+          files[0],
+          res.assignment?.repo?.commitOrTag
+        );
         setFileContent(prev => ({ ...prev, [files[0]]: content }));
       } else {
         setCurrFile(null);
@@ -121,7 +128,11 @@ export default function usePeerReviewGradingData({
 
       setCurrFile(filePath);
       if (!fileContent[filePath]) {
-        const content = await fetchFileContent(repoUrl, filePath);
+        const content = await fetchFileContent(
+          repoUrl,
+          filePath,
+          dto?.assignment?.repo?.commitOrTag
+        );
         setFileContent(prev => ({ ...prev, [filePath]: content }));
       }
     },

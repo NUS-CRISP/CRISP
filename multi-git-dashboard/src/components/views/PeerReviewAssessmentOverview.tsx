@@ -128,7 +128,6 @@ const PeerReviewAssessmentOverview: React.FC<
         teamSetId: peerReview.teamSetId,
         reviewerType: peerReview.reviewerType,
         taAssignments: !!peerReview.taAssignments,
-        minReviews: peerReview.minReviewsPerReviewer,
         maxReviews: peerReview.maxReviewsPerReviewer,
         maxMarks: assessment.maxMarks ?? 0,
         scaleToMaxMarks: !!assessment.scaleToMaxMarks,
@@ -234,6 +233,7 @@ const PeerReviewAssessmentOverview: React.FC<
           />
           <PeerReviewSettings
             peerReview={peerReview}
+            courseId={courseId}
             teamSetName={teamSetName}
             isFaculty={isFaculty}
             isGradingPhase={isGradingPhase}
@@ -241,6 +241,7 @@ const PeerReviewAssessmentOverview: React.FC<
             onClickUpdate={openUpdateModal}
             onClickDelete={openDeleteModal}
             onClickCloseAssessment={handleCloseAssessment}
+            onStartPeerReview={onUpdated}
           />
           <PeerReviewAssessmentDetail assessment={assessment} />
         </Stack>

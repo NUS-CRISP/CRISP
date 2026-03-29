@@ -333,7 +333,8 @@ export const initialiseAssignments = async (
   courseId: string,
   peerReviewId: string,
   teamSetId: string,
-  session: ClientSession | null
+  session: ClientSession | null,
+  commitOrTag?: string
 ) => {
   const teamsQuery = TeamModel.find({
     teamSet: teamSetId,
@@ -353,6 +354,7 @@ export const initialiseAssignments = async (
       peerReviewId,
       repoName: teamData?.repoName,
       repoUrl: teamData?.repoUrl,
+      commitOrTag,
       reviewee: team._id,
       deadline: null,
     };

@@ -20,7 +20,6 @@ interface PeerReviewAssignmentFormProps {
   peerReviewId: string;
   reviewerType: 'Individual' | 'Team';
   taAssignmentsEnabled: boolean;
-  minReviewsPerReviewer: number;
   maxReviewsPerReviewer: number;
   onAssign: () => void;
   onClose: () => void;
@@ -31,7 +30,6 @@ const PeerReviewAssignmentForm: React.FC<PeerReviewAssignmentFormProps> = ({
   peerReviewId,
   reviewerType,
   taAssignmentsEnabled,
-  minReviewsPerReviewer,
   maxReviewsPerReviewer,
   onAssign,
   onClose,
@@ -47,19 +45,15 @@ const PeerReviewAssignmentForm: React.FC<PeerReviewAssignmentFormProps> = ({
 
   const form = useForm({
     initialValues: {
-      reviewsPerReviewer: Math.max(minReviewsPerReviewer, 1),
+      reviewsPerReviewer: Math.min(maxReviewsPerReviewer, 1),
       allowSameTA: false,
       groupsToAssign: ['default'],
     },
     validate: {
       reviewsPerReviewer: (value: string | number) => {
         const num = typeof value === 'number' ? value : Number(value);
-        if (
-          isNaN(num) ||
-          !Number.isInteger(num) ||
-          num < minReviewsPerReviewer
-        ) {
-          return `Number of reviews must be an integer greater than or equal to ${minReviewsPerReviewer}`;
+        if (isNaN(num) || !Number.isInteger(num) || num < 1) {
+          return 'Number of reviews must be >= 1';
         } else if (num > maxReviewsPerReviewer) {
           return `Number of reviews cannot exceed ${maxReviewsPerReviewer}`;
         }
@@ -178,7 +172,7 @@ const PeerReviewAssignmentForm: React.FC<PeerReviewAssignmentFormProps> = ({
         </Text>
         <Select
           placeholder="Select number of reviews to assign per reviewer"
-          data={rangeOptions(minReviewsPerReviewer, maxReviewsPerReviewer)}
+          data={rangeOptions(1, maxReviewsPerReviewer)}
           value={form.values.reviewsPerReviewer.toString()}
           onChange={val =>
             form.setFieldValue('reviewsPerReviewer', Number(val))

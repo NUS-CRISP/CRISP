@@ -25,7 +25,10 @@ import PeerReviewCommentSidebar from '@/components/peer-review/PeerReviewComment
 import dynamic from 'next/dynamic';
 import classes from '@styles/PeerReview.module.css';
 import usePeerReviewData from '@/components/hooks/usePeerReviewData';
-import { getLanguageForFile } from '@/lib/peer-review/utils';
+import {
+  getLanguageForFile,
+  buildGithubRepoUrl,
+} from '@/lib/peer-review/utils';
 import type { editor as MEditor, IDisposable } from 'monaco-editor';
 import type { OnMount, Monaco } from '@monaco-editor/react';
 import { getMe } from '@/lib/auth/utils';
@@ -626,13 +629,25 @@ const PeerReviewDetail: React.FC = () => {
           <IconListDetails style={{ opacity: 0.8 }} />
           <Title order={4}>Peer Review:</Title>
           <Anchor
-            href={peerReviewAssignment.repoUrl}
+            href={buildGithubRepoUrl(
+              peerReviewAssignment.repoUrl,
+              peerReviewAssignment.commitOrTag
+            )}
             target="_blank"
             rel="noreferrer"
             underline="never"
           >
             <Title order={4}>{peerReviewAssignment.repoName}</Title>
           </Anchor>
+          {peerReviewAssignment.commitOrTag && (
+            <Badge
+              variant="light"
+              color="blue"
+              title="Repository version for review"
+            >
+              {peerReviewAssignment.commitOrTag}
+            </Badge>
+          )}
         </Group>
         <Group gap="xs">
           <SaveStateBadge canEdit={canEdit} saveState={saveState} />

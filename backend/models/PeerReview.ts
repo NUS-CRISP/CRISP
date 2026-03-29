@@ -52,20 +52,23 @@ const peerReviewSchema = new Schema<PeerReview>(
       default: 'Individual',
     },
 
-    teamSetId: { type: Schema.Types.ObjectId, ref: 'TeamSet', required: true },
-    taAssignments: { type: Boolean, required: true, default: false },
-    minReviewsPerReviewer: { type: Number, required: true, min: 0 },
     maxReviewsPerReviewer: {
       type: Number,
       required: true,
-      min: 1,
+      default: 1,
       validate: {
-        validator: function (this: PeerReview, v: number) {
-          return v >= this.minReviewsPerReviewer;
+        validator: function (value: number) {
+          return Number.isInteger(value) && value > 0;
         },
-        message: `maxReviewsPerReviewer must be greater than or equal to minReviewsPerReviewer`,
+        message: 'maxReviewsPerReviewer must be >= 1',
       },
     },
+
+    teamSetId: { type: Schema.Types.ObjectId, ref: 'TeamSet', required: true },
+    taAssignments: { type: Boolean, required: true, default: false },
+
+    // Repository configuration
+    commitOrTag: { type: String, default: null },
 
     // Assessment-related
     internalAssessmentId: {

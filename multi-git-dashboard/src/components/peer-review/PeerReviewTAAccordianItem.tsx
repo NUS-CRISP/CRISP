@@ -27,6 +27,7 @@ interface PeerReviewTAAccordionItemProps {
     label: string;
   }[];
   TAToAssignments: TAToAssignmentsMap;
+  showUnassignedOnly?: boolean;
   isFaculty: boolean;
   addManualAssignment: (
     revieweeId: string,
@@ -47,6 +48,7 @@ const PeerReviewTAAccordionItem = forwardRef<
   ({
     teams,
     TAToAssignments,
+    showUnassignedOnly,
     isFaculty,
     addManualAssignment,
     deleteManualAssignment,
@@ -104,38 +106,43 @@ const PeerReviewTAAccordionItem = forwardRef<
               <Stack gap={8}>
                 <Divider />
                 {taEntries.length > 0 ? (
-                  taEntries.map(([taId, info]) => (
-                    <ScrollArea key={taId}>
-                      <Group justify="space-between" mt={4}>
-                        <Text>
-                          {info.taName} ({taAssignedCount[taId]})
-                        </Text>
-                        {isFaculty && (
-                          <AddManualAssignmentBox
-                            assignedCount={taAssignedCount[taId] ?? 0}
-                            dropdownOptions={getTaOptions(taId)}
-                            maxReviewsPerReviewer={teams.length} // TAs have no limit
-                            reviewerId={taId}
-                            addManualAssignment={(reviewee, reviewer) =>
-                              addManualAssignment(reviewee, reviewer, true)
-                            }
-                          />
-                        )}
-                      </Group>
-                      <PeerReviewAssignments
-                        assignments={info.assignedReviews}
-                        isFaculty={isFaculty}
-                        onDelete={(reviewee: Team) => {
-                          setToBeDeletedReviewer({
-                            reviewee,
-                            reviewer: { taId, taName: info.taName },
-                          });
-                          openDeleteModal();
-                        }}
-                      />
-                      <Divider />
-                    </ScrollArea>
-                  ))
+                  taEntries
+                    .filter(([taId, info]) => {
+                      if (!showUnassignedOnly) return true;
+                      return taId && info.assignedReviews.length === 0;
+                    })
+                    .map(([taId, info]) => (
+                      <ScrollArea key={taId}>
+                        <Group justify="space-between" mt={4}>
+                          <Text>
+                            {info.taName} ({taAssignedCount[taId]})
+                          </Text>
+                          {isFaculty && (
+                            <AddManualAssignmentBox
+                              assignedCount={taAssignedCount[taId] ?? 0}
+                              dropdownOptions={getTaOptions(taId)}
+                              maxReviewsPerReviewer={teams.length} // TAs have no limit
+                              reviewerId={taId}
+                              addManualAssignment={(reviewee, reviewer) =>
+                                addManualAssignment(reviewee, reviewer, true)
+                              }
+                            />
+                          )}
+                        </Group>
+                        <PeerReviewAssignments
+                          assignments={info.assignedReviews}
+                          isFaculty={isFaculty}
+                          onDelete={(reviewee: Team) => {
+                            setToBeDeletedReviewer({
+                              reviewee,
+                              reviewer: { taId, taName: info.taName },
+                            });
+                            openDeleteModal();
+                          }}
+                        />
+                        <Divider />
+                      </ScrollArea>
+                    ))
                 ) : (
                   <Text c="dimmed" size="xs">
                     (no TA assignments found)

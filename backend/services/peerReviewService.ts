@@ -78,7 +78,8 @@ export const getPeerReviewInfoById = async (
   const assignmentState = await loadAssignmentsState(
     courseId,
     peerReviewId,
-    ctx.scopedTeamIds
+    ctx.scopedTeamIds,
+    peerReview.commitOrTag
   );
 
   const reviewerScope = computeReviewerScope(
@@ -88,6 +89,28 @@ export const getPeerReviewInfoById = async (
     peerReview.taAssignments,
     ctx.scopedTeams
   );
+
+  // For Faculty viewing TA assignments, fetch ALL course TAs, not just supervising ones
+  let allCourseTAIds: string[] = reviewerScope.taIdsWanted;
+  if (
+    peerReview.taAssignments &&
+    userCourseRole === COURSE_ROLE.Faculty &&
+    reviewerScope.taIdsWanted.length > 0
+  ) {
+    const course = await CourseModel.findById(peerReview.course)
+      .populate('TAs', '_id name')
+      .lean();
+    if (course && course.TAs) {
+      allCourseTAIds = course.TAs.map(ta => {
+        const taObj = ta as any;
+        // Add TA name to usersById if not already there
+        if (taObj._id && !ctx.usersById.has(taObj._id.toString())) {
+          ctx.usersById.set(taObj._id.toString(), taObj.name);
+        }
+        return taObj._id.toString();
+      });
+    }
+  }
 
   const submissions = await loadSubmissionsForScope(
     peerReviewId,
@@ -107,7 +130,7 @@ export const getPeerReviewInfoById = async (
   const assignedReviewMaps = buildAssignedReviewMaps(
     submissions,
     assignmentState.assignmentById,
-    reviewerScope.taIdsWanted,
+    allCourseTAIds,
     ctx.usersById
   );
 
@@ -127,7 +150,8 @@ export const getPeerReviewInfoById = async (
     ctx.teamDataById,
     ctx.usersById,
     assignedReviewMaps.memberAssignedMap,
-    assignedReviewMaps.teamAssignedMap
+    assignedReviewMaps.teamAssignedMap,
+    peerReview.commitOrTag
   );
 
   return {
@@ -322,8 +346,8 @@ export interface PeerReviewSettings {
   teamSetId: string;
   reviewerType: 'Individual' | 'Team';
   taAssignments: boolean;
-  minReviews: number;
   maxReviews: number;
+  commitOrTag?: string; // e.g., "v1.0", "main", or empty for latest
   internalAssessmentId?: string;
   gradingStartDate?: Date;
   gradingEndDate?: Date;
@@ -347,8 +371,8 @@ export const createPeerReviewById = async (
     teamSetId,
     reviewerType,
     taAssignments,
-    minReviews: minReviewsPerReviewer,
     maxReviews: maxReviewsPerReviewer,
+    commitOrTag,
     internalAssessmentId,
     gradingStartDate,
     gradingEndDate,
@@ -365,8 +389,8 @@ export const createPeerReviewById = async (
     teamSetId,
     taAssignments,
     reviewerType,
-    minReviewsPerReviewer,
     maxReviewsPerReviewer,
+    commitOrTag,
     internalAssessmentId,
     gradingStartDate,
     gradingEndDate,
@@ -378,7 +402,8 @@ export const createPeerReviewById = async (
     courseId,
     newPeerReview._id.toString(),
     teamSetId,
-    session
+    session,
+    newPeerReview.commitOrTag
   );
 
   return newPeerReview;
@@ -433,8 +458,6 @@ export const updatePeerReviewById = async (
       pr.reviewerType !== settingsData.reviewerType) ||
     (settingsData.taAssignments !== undefined &&
       pr.taAssignments !== settingsData.taAssignments) ||
-    (settingsData.minReviews !== undefined &&
-      pr.minReviewsPerReviewer !== Number(settingsData.minReviews)) ||
     (settingsData.maxReviews !== undefined &&
       pr.maxReviewsPerReviewer !== Number(settingsData.maxReviews));
 
@@ -457,10 +480,11 @@ export const updatePeerReviewById = async (
   if (settingsData.taAssignments !== undefined)
     pr.taAssignments = settingsData.taAssignments;
 
-  if (settingsData.minReviews !== undefined)
-    pr.minReviewsPerReviewer = Number(settingsData.minReviews);
   if (settingsData.maxReviews !== undefined)
     pr.maxReviewsPerReviewer = Number(settingsData.maxReviews);
+
+  if (settingsData.commitOrTag !== undefined)
+    pr.commitOrTag = settingsData.commitOrTag || undefined;
 
   if (settingsData.gradingStartDate !== undefined)
     pr.gradingStartDate = settingsData.gradingStartDate
@@ -479,7 +503,8 @@ export const updatePeerReviewById = async (
       pr.course.toString(),
       peerReviewId,
       pr.teamSetId.toString(),
-      null
+      null,
+      pr.commitOrTag
     );
   }
 
@@ -522,7 +547,8 @@ const buildPeerReviewScopeContext = async (
 const loadAssignmentsState = async (
   courseId: string,
   peerReviewId: string,
-  scopedTeamIds: string[]
+  scopedTeamIds: string[],
+  commitOrTag?: string
 ) => {
   const assignmentDocs = await PeerReviewAssignmentModel.find({
     peerReviewId: oid(peerReviewId),
@@ -560,6 +586,7 @@ const loadAssignmentsState = async (
       },
       repoName: repoName,
       repoUrl: repoUrl ?? TEMP_FALLBACK_URL,
+      commitOrTag,
     };
 
     assignmentById.set(assignmentDto._id, assignmentDto);
@@ -687,6 +714,7 @@ const addMissingAssignmentsForSubmissions = async (
       },
       repoName: repoName,
       repoUrl: repoUrl ?? TEMP_FALLBACK_URL,
+      commitOrTag: a.commitOrTag,
     });
   }
 };
@@ -820,7 +848,8 @@ const buildTeamsDTO = (
   >,
   usersById: Map<string, string>,
   memberAssignedMap: Map<string, AssignedReviewDTO[]>,
-  teamAssignedMap: Map<string, AssignedReviewDTO[]>
+  teamAssignedMap: Map<string, AssignedReviewDTO[]>,
+  commitOrTag?: string
 ) => {
   return scopedTeams.map(team => {
     const teamData = teamDataById.get(team.id);
@@ -840,6 +869,7 @@ const buildTeamsDTO = (
       teamNumber: team.number,
       repoUrl: teamData!.repoUrl,
       repoName: teamData!.repoName,
+      commitOrTag,
       TA: { id: team.taId ?? '', name: taName },
       members,
       assignedReviewsToTeam,
@@ -998,6 +1028,141 @@ const toAssignedReviewDTO = (
     submittedAt: submission.submittedAt,
     overallComment: submission.overallComment,
   };
+};
+
+export const getUnassignedReviewers = async (
+  peerReviewId: string
+): Promise<{
+  unassignedCount: number;
+  hasUnassigned: boolean;
+  reviewerType: 'Individual' | 'Team';
+  taAssignmentsEnabled: boolean;
+  unassignedIndividuals: Array<{
+    userId: string;
+    name: string;
+    teamNumber: number;
+  }>;
+  unassignedTeams: Array<{ teamId: string; teamNumber: number }>;
+  unassignedTAs: Array<{ userId: string; name: string }>;
+}> => {
+  const pr = await PeerReviewModel.findById(peerReviewId).populate('course');
+  if (!pr) throw new NotFoundError('Peer review not found');
+
+  // Get all peer review submissions to see who has been assigned
+  const submissions = await PeerReviewSubmissionModel.find({
+    peerReviewId,
+  });
+
+  const assignedReviewerIds = new Set<string>();
+  const assignedTeamIds = new Set<string>();
+  const assignedTAIds = new Set<string>();
+
+  for (const submission of submissions) {
+    if (submission.reviewerUserId) {
+      if (submission.reviewerKind === 'TA') {
+        assignedTAIds.add(submission.reviewerUserId.toString());
+      } else {
+        assignedReviewerIds.add(submission.reviewerUserId.toString());
+      }
+    }
+    if (submission.reviewerTeamId) {
+      assignedTeamIds.add(submission.reviewerTeamId.toString());
+    }
+  }
+
+  const unassignedIndividuals: Array<{
+    userId: string;
+    name: string;
+    teamNumber: number;
+  }> = [];
+  const unassignedTeams: Array<{ teamId: string; teamNumber: number }> = [];
+  const unassignedTAs: Array<{ userId: string; name: string }> = [];
+
+  if (pr.reviewerType === 'Individual') {
+    // Get course students
+    const course = await CourseModel.findById(pr.course).populate('students');
+    if (course && course.students) {
+      // Get teams to map students to team numbers
+      const teams = await TeamModel.find({ teamSet: pr.teamSetId });
+      const teamNumberMap = new Map<string, number>();
+      for (const team of teams) {
+        if (team.members) {
+          for (const memberId of team.members) {
+            teamNumberMap.set(memberId.toString(), team.number);
+          }
+        }
+      }
+
+      for (const student of course.students as any[]) {
+        if (!assignedReviewerIds.has(student._id.toString())) {
+          unassignedIndividuals.push({
+            userId: student._id.toString(),
+            name: student.name,
+            teamNumber: teamNumberMap.get(student._id.toString()) || 0,
+          });
+        }
+      }
+    }
+  } else {
+    // Team reviewer type
+    const teams = await TeamModel.find({ teamSet: pr.teamSetId });
+    for (const team of teams) {
+      if (!assignedTeamIds.has(team._id.toString())) {
+        unassignedTeams.push({
+          teamId: team._id.toString(),
+          teamNumber: team.number,
+        });
+      }
+    }
+  }
+
+  // Get unassigned TAs if enabled
+  if (pr.taAssignments) {
+    const course = await CourseModel.findById(pr.course).populate('TAs');
+    if (course && course.TAs) {
+      for (const ta of course.TAs as any[]) {
+        if (!assignedTAIds.has(ta._id.toString())) {
+          unassignedTAs.push({
+            userId: ta._id.toString(),
+            name: ta.name,
+          });
+        }
+      }
+    }
+  }
+
+  const totalUnassigned =
+    unassignedIndividuals.length +
+    unassignedTeams.length +
+    unassignedTAs.length;
+
+  return {
+    unassignedCount: totalUnassigned,
+    hasUnassigned: totalUnassigned > 0,
+    reviewerType: pr.reviewerType,
+    taAssignmentsEnabled: pr.taAssignments,
+    unassignedIndividuals,
+    unassignedTeams,
+    unassignedTAs,
+  };
+};
+
+export const startPeerReviewNow = async (
+  peerReviewId: string
+): Promise<void> => {
+  const pr = await PeerReviewModel.findById(peerReviewId);
+  if (!pr) throw new NotFoundError('Peer review not found');
+
+  const now = new Date();
+  if (pr.status !== 'Upcoming') {
+    throw new BadRequestError(
+      'Peer review can only be started if it is in Upcoming status'
+    );
+  }
+
+  // Set start date to now
+  pr.startDate = now;
+  await pr.save();
 };
 
 export const __testables = {

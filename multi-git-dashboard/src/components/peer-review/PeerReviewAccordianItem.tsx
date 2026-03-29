@@ -36,6 +36,7 @@ interface PeerReviewAccordionItemProps {
   assignmentOfTeam: RevieweeAssignmentsDTO | null;
   reviewerType: 'Individual' | 'Team';
   maxReviewsPerReviewer: number;
+  showUnassignedOnly?: boolean;
   isFaculty: boolean;
   isTA: boolean;
   addManualAssignment: (
@@ -61,9 +62,10 @@ const PeerReviewAccordionItem = forwardRef<
     teams,
     assignmentOfTeam,
     reviewerType,
+    maxReviewsPerReviewer,
+    showUnassignedOnly,
     isFaculty,
     isTA,
-    maxReviewsPerReviewer,
     addManualAssignment,
     deleteManualAssignment,
   }) => {
@@ -221,48 +223,56 @@ const PeerReviewAccordionItem = forwardRef<
               <Stack gap={4}>
                 <Text fw={600}>Members ({numberOfMembers})</Text>
                 <Divider />
-                {currentTeam.members.map(m => {
-                  const isCurrentUser = m.userId === currentUserId;
-                  const shouldShowAssignments =
-                    isFaculty || isTA || isCurrentUser;
+                {currentTeam.members
+                  .filter(m => {
+                    if (!showUnassignedOnly) return true;
+                    // Only show members with no assignments
+                    return m.assignedReviews.length === 0;
+                  })
+                  .map(m => {
+                    const isCurrentUser = m.userId === currentUserId;
+                    const shouldShowAssignments =
+                      isFaculty || isTA || isCurrentUser;
 
-                  return (
-                    <ScrollArea key={m.userId}>
-                      <Group justify="space-between" mt={4}>
-                        <Text>{m.name}</Text>
+                    return (
+                      <ScrollArea key={m.userId}>
+                        <Group justify="space-between" mt={4}>
+                          <Text>{m.name}</Text>
 
-                        {reviewerType === 'Individual' && isFaculty && (
-                          <AddManualAssignmentBox
-                            assignedCount={memberAssignedCount[m.userId] ?? 0}
-                            dropdownOptions={getMemberOptions(m.userId)}
-                            maxReviewsPerReviewer={maxReviewsPerReviewer}
-                            reviewerId={m.userId}
-                            addManualAssignment={(reviewee, reviewer) =>
-                              addManualAssignment(reviewee, reviewer, false)
-                            }
-                          />
-                        )}
-                      </Group>
-
-                      {reviewerType === 'Individual' &&
-                        shouldShowAssignments && (
-                          <>
-                            <PeerReviewAssignments
-                              assignments={m.assignedReviews}
-                              isFaculty={isFaculty}
-                              isTA={isTA}
-                              currentUserId={currentUserId}
-                              taReviewerAssignmentIds={taReviewerAssignmentIds}
-                              onDelete={(reviewee: Team) =>
-                                handleDelete(reviewee, m)
+                          {reviewerType === 'Individual' && isFaculty && (
+                            <AddManualAssignmentBox
+                              assignedCount={memberAssignedCount[m.userId] ?? 0}
+                              dropdownOptions={getMemberOptions(m.userId)}
+                              maxReviewsPerReviewer={maxReviewsPerReviewer}
+                              reviewerId={m.userId}
+                              addManualAssignment={(reviewee, reviewer) =>
+                                addManualAssignment(reviewee, reviewer, false)
                               }
                             />
-                          </>
-                        )}
-                      <Divider mt={6} />
-                    </ScrollArea>
-                  );
-                })}
+                          )}
+                        </Group>
+
+                        {reviewerType === 'Individual' &&
+                          shouldShowAssignments && (
+                            <>
+                              <PeerReviewAssignments
+                                assignments={m.assignedReviews}
+                                isFaculty={isFaculty}
+                                isTA={isTA}
+                                currentUserId={currentUserId}
+                                taReviewerAssignmentIds={
+                                  taReviewerAssignmentIds
+                                }
+                                onDelete={(reviewee: Team) =>
+                                  handleDelete(reviewee, m)
+                                }
+                              />
+                            </>
+                          )}
+                        <Divider mt={6} />
+                      </ScrollArea>
+                    );
+                  })}
               </Stack>
             </Stack>
             <Stack>

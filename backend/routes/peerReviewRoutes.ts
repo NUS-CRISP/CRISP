@@ -5,6 +5,8 @@ import {
   getPeerReviewProgressOverview,
   updatePeerReview,
   deletePeerReview,
+  getUnassignedReviewersInfo,
+  startPeerReview,
 } from '../controllers/peerReviewController';
 import {
   getPeerReviewAssignment,
@@ -32,6 +34,11 @@ router.get('/:courseId/peer-reviews', getAllPeerReviews);
 router.put('/:courseId/:peerReviewId', updatePeerReview);
 router.delete('/:courseId/:peerReviewId', deletePeerReview);
 router.get('/:courseId/:peerReviewId', getPeerReviewInfo);
+router.post('/:courseId/:peerReviewId/start', startPeerReview);
+router.get(
+  '/:courseId/:peerReviewId/unassigned-reviewers',
+  getUnassignedReviewersInfo
+);
 router.get(
   '/:courseId/:peerReviewId/progress-overview',
   getPeerReviewProgressOverview

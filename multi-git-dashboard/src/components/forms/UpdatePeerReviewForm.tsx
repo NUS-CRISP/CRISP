@@ -32,8 +32,9 @@ function toInitialValues(
 
     taAssignments: Boolean(peerReview.taAssignments),
 
-    minReviews: peerReview.minReviewsPerReviewer ?? 0,
     maxReviews: peerReview.maxReviewsPerReviewer ?? 1,
+
+    commitOrTag: peerReview.commitOrTag ?? '',
 
     maxMarks: assessment.maxMarks ?? 0,
     scaleToMaxMarks: Boolean(assessment.scaleToMaxMarks),
