@@ -110,10 +110,11 @@ const PeerReviewAccordionItem = forwardRef<
             t.value !== currentTeam.teamId &&
             !teamAssignedReviewees.has(t.value)
         )
+        .sort((a, b) => a.label.localeCompare(b.label))
         .map(t => ({
           value: t.value,
           label:
-            t.TA.id === currentTeam.TA.id ? `(Same TA) ${t.label}` : t.label,
+            t.TA?.id === currentTeam.TA?.id ? `(Same TA) ${t.label}` : t.label,
         }));
     }, [teams, currentTeam.teamId, teamAssignedReviewees]);
 
@@ -145,7 +146,8 @@ const PeerReviewAccordionItem = forwardRef<
         )
         .map(t => ({
           value: t.value,
-          label: t.TA === currentTeam.TA ? `(Same TA) ${t.label}` : t.label,
+          label:
+            t.TA?.id === currentTeam.TA?.id ? `(Same TA) ${t.label}` : t.label,
         }));
 
     const handleDelete = (
@@ -169,13 +171,13 @@ const PeerReviewAccordionItem = forwardRef<
                 <Text c="dimmed">{currentTeam.repoName}</Text>
               )}
             </Group>
-            <Group gap="sm">
-              {currentTeam.TA && (
+            {currentTeam.TA && currentTeam.TA.name && (
+              <Group gap="sm">
                 <Badge mr="sm" color="gray" variant="light">
                   TA: {currentTeam.TA.name}
                 </Badge>
-              )}
-            </Group>
+              </Group>
+            )}
           </Group>
         </Accordion.Control>
         <Accordion.Panel>
@@ -208,16 +210,24 @@ const PeerReviewAccordionItem = forwardRef<
                     )}
                   </Group>
                   <Divider />
-                  <PeerReviewAssignments
-                    assignments={currentTeam.assignedReviewsToTeam}
-                    isFaculty={isFaculty}
-                    isTA={isTA}
-                    currentUserId={currentUserId}
-                    taReviewerAssignmentIds={taReviewerAssignmentIds}
-                    onDelete={(reviewee: Team) =>
-                      handleDelete(reviewee, currentTeam)
-                    }
-                  />
+                  <div
+                    style={{
+                      overflowX: 'auto',
+                      whiteSpace: 'nowrap',
+                      paddingBottom: 4,
+                    }}
+                  >
+                    <PeerReviewAssignments
+                      assignments={currentTeam.assignedReviewsToTeam}
+                      isFaculty={isFaculty}
+                      isTA={isTA}
+                      currentUserId={currentUserId}
+                      taReviewerAssignmentIds={taReviewerAssignmentIds}
+                      onDelete={(reviewee: Team) =>
+                        handleDelete(reviewee, currentTeam)
+                      }
+                    />
+                  </div>
                 </>
               )}
               <Stack gap={4}>
@@ -316,10 +326,13 @@ const PeerReviewAccordionItem = forwardRef<
                   {assignmentOfTeam && numberOfReviewers > 0 ? (
                     <ScrollArea
                       style={{
-                        height: '272px',
+                        maxHeight: 'calc(10 * 32px + 18px)',
+                        height: 'auto',
                         border: 'solid 1px',
                         borderColor: '#505050',
                         borderRadius: '6px',
+                        padding: '8px 0',
+                        transition: 'max-height 0.2s',
                       }}
                       mt="xs"
                       px="sm"
@@ -335,6 +348,7 @@ const PeerReviewAccordionItem = forwardRef<
                                   variant="light"
                                   key={`user-${reviewer.userId}`}
                                   radius="sm"
+                                  style={{ minHeight: 28 }}
                                 >
                                   {reviewer.name}
                                 </Badge>
@@ -346,6 +360,7 @@ const PeerReviewAccordionItem = forwardRef<
                                 key={`team-${reviewer.teamId}`}
                                 variant="light"
                                 radius="sm"
+                                style={{ minHeight: 24 }}
                               >
                                 Team {reviewer.teamNumber}
                               </Badge>
@@ -357,6 +372,7 @@ const PeerReviewAccordionItem = forwardRef<
                             variant="light"
                             size="sm"
                             radius="sm"
+                            style={{ minHeight: 24 }}
                           >
                             TA: {reviewer.name}
                           </Badge>

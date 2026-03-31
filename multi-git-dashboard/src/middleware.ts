@@ -8,9 +8,12 @@ export default withAuth({
 
 // Exclude home ('/') and auth ('/auth/*')
 export const EXCLUDE_AUTH_REGEX = /^(?!\/auth).+/;
-// Exclude peer review assignment ('/courses/:id/peer-review/:assignmentId')
-export const EXCLUDE_PEER_REVIEW_REGEX =
+// Exclude peer review reviewer console ('/courses/:id/peer-review/:assignmentId')
+export const EXCLUDE_PEER_REVIEW_REVIEWER_CONSOLE_REGEX =
   /^(?!\/courses\/[^/]+\/peer-review\/[^/]).+/;
+// Exclude peer review grading console ('/courses/:id/internal-assessments/:assessmentId/peer-review/:submissionId')
+export const EXCLUDE_PEER_REVIEW_GRADING_CONSOLE_REGEX =
+  /^(?!\/courses\/[^/]+\/internal-assessments\/[^/]+\/peer-review\/[^/]).+/;
 
 export const config = {
   matcher: [

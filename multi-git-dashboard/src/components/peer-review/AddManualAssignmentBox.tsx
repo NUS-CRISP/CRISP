@@ -39,25 +39,27 @@ const AddManualAssignmentBox: React.FC<AddManualAssignmentBoxProps> = ({
           </Button>
         </Menu.Target>
         <Menu.Dropdown>
-          {dropdownOptions.length === 0 ? (
-            <Menu.Item disabled>
-              <Text fz="sm" c="dimmed">
-                No teams available
-              </Text>
-            </Menu.Item>
-          ) : (
-            dropdownOptions.map(option => (
-              <Menu.Item
-                key={option.value}
-                onClick={() => {
-                  addManualAssignment(option.value, reviewerId);
-                  setOpened(false);
-                }}
-              >
-                {option.label}
+          <div style={{ maxHeight: 180, overflowY: 'auto' }}>
+            {dropdownOptions.length === 0 ? (
+              <Menu.Item disabled>
+                <Text fz="sm" c="dimmed">
+                  No teams available
+                </Text>
               </Menu.Item>
-            ))
-          )}
+            ) : (
+              dropdownOptions.map(option => (
+                <Menu.Item
+                  key={option.value}
+                  onClick={() => {
+                    addManualAssignment(option.value, reviewerId);
+                    setOpened(false);
+                  }}
+                >
+                  {option.label}
+                </Menu.Item>
+              ))
+            )}
+          </div>
         </Menu.Dropdown>
       </Menu>
     </Group>
