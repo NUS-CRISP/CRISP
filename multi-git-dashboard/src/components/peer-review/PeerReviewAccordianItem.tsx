@@ -110,6 +110,7 @@ const PeerReviewAccordionItem = forwardRef<
             t.value !== currentTeam.teamId &&
             !teamAssignedReviewees.has(t.value)
         )
+        .sort((a, b) => a.label.localeCompare(b.label))
         .map(t => ({
           value: t.value,
           isSameTA: t.TA?.id === currentTeam.TA?.id,
