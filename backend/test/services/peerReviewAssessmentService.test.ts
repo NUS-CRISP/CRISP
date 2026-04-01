@@ -1298,4 +1298,156 @@ describe('peerReviewAssessmentService', () => {
 
     orphanedGradingTaskFindSpy.mockRestore();
   });
+
+  it('covers grader with null/undefined name falls back to Unknown', async () => {
+    const course = await makeCourse();
+    const ts = await makeTeamSet(course._id);
+    const assessment = await makeAssessment(course._id, ts._id);
+    const pr = await makePeerReview(course._id, ts._id, assessment._id, { reviewerType: 'Individual' });
+
+    const s1 = await makeUser('grader-null-name-s1');
+    const team = await makeTeam(ts._id, { number: 50, members: [s1._id] });
+    await TeamSetModel.findByIdAndUpdate(ts._id, { $set: { teams: [team._id] } });
+
+    const assignment = await makeAssignment(pr._id, team._id);
+    const submission = await makeSubmission(pr._id, assignment._id, {
+      reviewerKind: 'Student',
+      reviewerUserId: s1._id,
+      status: 'Submitted',
+    });
+
+    const gradingTaskFindSpy = jest.spyOn(PeerReviewGradingTaskModel, 'find').mockReturnValue({
+      select: jest.fn().mockReturnThis(),
+      populate: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockResolvedValue([
+        {
+          peerReviewSubmissionId: {
+            _id: submission._id,
+            reviewerKind: 'Student',
+            reviewerUserId: s1._id,
+            peerReviewAssignmentId: assignment._id,
+          },
+          grader: { _id: oid(), name: null }, // Grader with null name
+          status: 'Completed',
+          score: 8,
+        },
+      ]),
+    } as any);
+
+    const resultDto = await getPeerReviewResultsForAssessmentById(
+      assessment._id.toString(),
+      'perStudent',
+      1,
+      10
+    );
+
+    const s1Row = resultDto.perStudent.find(r => r.studentId === String(s1._id));
+    expect(s1Row?.graders.length).toBe(1);
+    expect(s1Row?.graders[0].graderName).toBe('Unknown');
+
+    gradingTaskFindSpy.mockRestore();
+  });
+
+  it('covers revieweeTeamNumber ternary when revieweeTeamId falsy', async () => {
+    const course = await makeCourse();
+    const ts = await makeTeamSet(course._id);
+    const assessment = await makeAssessment(course._id, ts._id);
+    const pr = await makePeerReview(course._id, ts._id, assessment._id, { reviewerType: 'Individual' });
+
+    const s1 = await makeUser('ternary-falsy-s1');
+    const team = await makeTeam(ts._id, { number: 70, members: [s1._id] });
+    await TeamSetModel.findByIdAndUpdate(ts._id, { $set: { teams: [team._id] } });
+
+    const assignment = await makeAssignment(pr._id, team._id);
+    const submission = await makeSubmission(pr._id, assignment._id, {
+      reviewerKind: 'Student',
+      reviewerUserId: s1._id,
+      status: 'Submitted',
+    });
+
+    const grader = await makeUser('ternary-grader');
+    
+    // Mock the assignment find to return assignment without reviewee field
+    const assignmentFindSpy = jest.spyOn(PeerReviewAssignmentModel, 'find').mockReturnValue({
+      select: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockResolvedValue([
+        { _id: assignment._id, reviewee: null } as any,
+      ]),
+    } as any);
+
+    // Mock the grading task find to return proper structure
+    const gradingFindSpy = jest.spyOn(PeerReviewGradingTaskModel, 'find').mockReturnValue({
+      select: jest.fn().mockReturnThis(),
+      populate: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockResolvedValue([
+        {
+          peerReviewSubmissionId: {
+            _id: submission._id,
+            reviewerKind: 'Student',
+            reviewerUserId: s1._id,
+            peerReviewAssignmentId: assignment._id,
+          },
+          grader: { _id: grader._id, name: grader.name },
+          status: 'Completed',
+          score: 5,
+        },
+      ]),
+    } as any);
+
+    const resultDto = await getPeerReviewResultsForAssessmentById(
+      assessment._id.toString(),
+      'perStudent',
+      1,
+      10
+    );
+
+    const s1Row = resultDto.perStudent.find(r => r.studentId === String(s1._id));
+    expect(s1Row?.graders.length).toBe(1);
+    // When revieweeTeamId is falsy, revieweeTeamNumber should be undefined
+    expect(s1Row?.graders[0].revieweeTeamNumber).toBeUndefined();
+
+    assignmentFindSpy.mockRestore();
+    gradingFindSpy.mockRestore();
+  });
+
+  it('covers revieweeTeamNumber when assignment missing reviewee', async () => {
+    const course = await makeCourse();
+    const ts = await makeTeamSet(course._id);
+    const assessment = await makeAssessment(course._id, ts._id);
+    const pr = await makePeerReview(course._id, ts._id, assessment._id, { reviewerType: 'Individual' });
+
+    const s1 = await makeUser('no-reviewee-s1');
+    const team = await makeTeam(ts._id, { number: 60, members: [s1._id] });
+    await TeamSetModel.findByIdAndUpdate(ts._id, { $set: { teams: [team._id] } });
+
+    // Create assignment without reviewee
+    const assignmentNoReviewee = await makeAssignment(pr._id, oid() as any);
+    const submission = await makeSubmission(pr._id, assignmentNoReviewee._id, {
+      reviewerKind: 'Student',
+      reviewerUserId: s1._id,
+      status: 'Submitted',
+    });
+
+    const grader = await makeUser('no-reviewee-grader');
+    await new PeerReviewGradingTaskModel({
+      peerReviewId: pr._id,
+      peerReviewSubmissionId: submission._id,
+      grader: grader._id,
+      status: 'Completed',
+      score: 7,
+    }).save();
+
+    const resultDto = await getPeerReviewResultsForAssessmentById(
+      assessment._id.toString(),
+      'perStudent',
+      1,
+      10
+    );
+
+    // Should have s1 in results, but grader will have undefined revieweeTeamNumber
+    const s1Row = resultDto.perStudent.find(r => r.studentId === String(s1._id));
+    expect(s1Row?.graders.length).toBe(1);
+    expect(s1Row?.graders[0].revieweeTeamNumber).toBeUndefined();
+  });
 });
+
