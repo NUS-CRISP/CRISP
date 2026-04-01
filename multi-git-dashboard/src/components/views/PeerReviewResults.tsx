@@ -496,104 +496,96 @@ const PeerReviewResults: React.FC<PeerReviewResultsProps> = ({
                                 </Text>
                               ) : (
                                 <Stack gap="xs">
-                                  {row.graders.map(
-                                    (grader, idx) => (
-                                      <Card
-                                        key={idx}
-                                        withBorder
-                                        p="sm"
-                                        radius="sm"
+                                  {row.graders.map((grader, idx) => (
+                                    <Card
+                                      key={idx}
+                                      withBorder
+                                      p="sm"
+                                      radius="sm"
+                                    >
+                                      <Group
+                                        justify="space-between"
+                                        align="flex-start"
+                                        mb="xs"
                                       >
-                                        <Group
-                                          justify="space-between"
-                                          align="flex-start"
-                                          mb="xs"
-                                        >
-                                          <Group gap="xs" align="center">
-                                            <Text fw={600} size="sm">
-                                              {grader.graderName}
-                                            </Text>
-                                            <Badge
-                                              variant="light"
-                                              color={
-                                                grader.status === 'Completed'
-                                                  ? 'green'
-                                                  : grader.status ===
-                                                      'InProgress'
-                                                    ? 'blue'
-                                                    : 'yellow'
-                                              }
-                                            >
-                                              {grader.status === 'InProgress'
-                                                ? 'In Progress'
-                                                : grader.status}
-                                            </Badge>
-                                          </Group>
-                                          {grader.revieweeTeamNumber && (
-                                            <Badge
-                                              size="sm"
-                                              variant="light"
-                                              color="violet"
-                                            >
-                                              Reviewee: Team{' '}
-                                              {grader.revieweeTeamNumber}
-                                            </Badge>
-                                          )}
-                                        </Group>
-
-                                        {grader.status === 'Completed' && (
-                                          <>
-                                            <Group gap="xl" mb="xs">
-                                              <Text size="sm">
-                                                <Text span fw={600}>
-                                                  Score:
-                                                </Text>{' '}
-                                                {typeof grader.score ===
-                                                'number'
-                                                  ? `${grader.score} / ${dto.maxMarks}`
-                                                  : 'N/A'}
-                                              </Text>
-                                              {grader.gradedAt && (
-                                                <Text size="xs" c="dimmed">
-                                                  Graded:{' '}
-                                                  {new Date(
-                                                    grader.gradedAt
-                                                  ).toLocaleDateString()}
-                                                </Text>
-                                              )}
-                                            </Group>
-
-                                            {grader.feedback && (
-                                              <>
-                                                <Text size="sm" fw={600} mb={4}>
-                                                  Feedback
-                                                </Text>
-                                                <Text
-                                                  size="sm"
-                                                  style={{
-                                                    whiteSpace: 'pre-wrap',
-                                                    wordBreak: 'break-word',
-                                                  }}
-                                                >
-                                                  {grader.feedback}
-                                                </Text>
-                                              </>
-                                            )}
-                                          </>
-                                        )}
-
-                                        {grader.status !== 'Completed' && (
-                                          <Text
-                                            size="sm"
-                                            c="dimmed"
-                                            fs="italic"
-                                          >
-                                            Grading not yet completed.
+                                        <Group gap="xs" align="center">
+                                          <Text fw={600} size="sm">
+                                            {grader.graderName}
                                           </Text>
+                                          <Badge
+                                            variant="light"
+                                            color={
+                                              grader.status === 'Completed'
+                                                ? 'green'
+                                                : grader.status === 'InProgress'
+                                                  ? 'blue'
+                                                  : 'yellow'
+                                            }
+                                          >
+                                            {grader.status === 'InProgress'
+                                              ? 'In Progress'
+                                              : grader.status}
+                                          </Badge>
+                                        </Group>
+                                        {grader.revieweeTeamNumber && (
+                                          <Badge
+                                            size="sm"
+                                            variant="light"
+                                            color="violet"
+                                          >
+                                            Reviewee: Team{' '}
+                                            {grader.revieweeTeamNumber}
+                                          </Badge>
                                         )}
-                                      </Card>
-                                    )
-                                  )}
+                                      </Group>
+
+                                      {grader.status === 'Completed' && (
+                                        <>
+                                          <Group gap="xl" mb="xs">
+                                            <Text size="sm">
+                                              <Text span fw={600}>
+                                                Score:
+                                              </Text>{' '}
+                                              {typeof grader.score === 'number'
+                                                ? `${grader.score} / ${dto.maxMarks}`
+                                                : 'N/A'}
+                                            </Text>
+                                            {grader.gradedAt && (
+                                              <Text size="xs" c="dimmed">
+                                                Graded:{' '}
+                                                {new Date(
+                                                  grader.gradedAt
+                                                ).toLocaleDateString()}
+                                              </Text>
+                                            )}
+                                          </Group>
+
+                                          {grader.feedback && (
+                                            <>
+                                              <Text size="sm" fw={600} mb={4}>
+                                                Feedback
+                                              </Text>
+                                              <Text
+                                                size="sm"
+                                                style={{
+                                                  whiteSpace: 'pre-wrap',
+                                                  wordBreak: 'break-word',
+                                                }}
+                                              >
+                                                {grader.feedback}
+                                              </Text>
+                                            </>
+                                          )}
+                                        </>
+                                      )}
+
+                                      {grader.status !== 'Completed' && (
+                                        <Text size="sm" c="dimmed" fs="italic">
+                                          Grading not yet completed.
+                                        </Text>
+                                      )}
+                                    </Card>
+                                  ))}
                                 </Stack>
                               )}
                             </div>
