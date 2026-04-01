@@ -117,7 +117,7 @@ const UnassignedReviewersFilter: React.FC<UnassignedReviewersFilterProps> = ({
             onClick={open}
             style={{ cursor: 'pointer' }}
           >
-            {unassignedInfo.unassignedCount} Unassigned
+            Unassigned
           </Badge>
         )}
       </Group>
@@ -135,19 +135,13 @@ const UnassignedReviewersFilter: React.FC<UnassignedReviewersFilterProps> = ({
           <Tabs value={activeTab} onChange={setActiveTab}>
             <Tabs.List>
               {unassignedInfo.reviewerType === 'Individual' && (
-                <Tabs.Tab value="individuals">
-                  Individuals ({unassignedInfo.unassignedIndividuals.length})
-                </Tabs.Tab>
+                <Tabs.Tab value="individuals">Individuals</Tabs.Tab>
               )}
               {unassignedInfo.reviewerType === 'Team' && (
-                <Tabs.Tab value="teams">
-                  Teams ({unassignedInfo.unassignedTeams.length})
-                </Tabs.Tab>
+                <Tabs.Tab value="teams">Teams</Tabs.Tab>
               )}
               {unassignedInfo.taAssignmentsEnabled && (
-                <Tabs.Tab value="tas">
-                  TAs ({unassignedInfo.unassignedTAs.length})
-                </Tabs.Tab>
+                <Tabs.Tab value="tas">TAs</Tabs.Tab>
               )}
             </Tabs.List>
 

@@ -13,13 +13,14 @@ import {
   Divider,
   Card,
   ScrollArea,
+  Accordion,
+  Badge,
 } from '@mantine/core';
 import {
   PeerReviewResultsDTO,
   PeerReviewResultsStudentRow,
 } from '@shared/types/PeerReviewAssessment';
 import { IconSearch } from '@tabler/icons-react';
-import PeerReviewStudentRowCard from '../cards/PeerReviewStudentRowCard';
 import PeerReviewTeamCard from '../cards/PeerReviewTeamCard';
 import DownloadResultsCsvModal from '../cards/Modals/DownloadResultsCsvModal';
 import MapResultsToIdModal from '../cards/Modals/MapResultsToIdModal';
@@ -48,6 +49,9 @@ const PeerReviewResults: React.FC<PeerReviewResultsProps> = ({
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState<string>('20');
+  const [expandedStudentId, setExpandedStudentId] = useState<string | null>(
+    null
+  );
 
   // CSV modals
   const [isResultFormOpen, setIsResultFormOpen] = useState(false);
@@ -294,6 +298,17 @@ const PeerReviewResults: React.FC<PeerReviewResultsProps> = ({
     reader.readAsText(mapFile);
   };
 
+  // Handle expanding/collapsing student accordion
+  const handleExpandStudent = (studentId: string) => {
+    if (expandedStudentId === studentId) {
+      // Collapse if already expanded
+      setExpandedStudentId(null);
+    } else {
+      // Expand
+      setExpandedStudentId(studentId);
+    }
+  };
+
   if (isLoading) {
     return (
       <Group justify="center" style={{ height: '60vh' }}>
@@ -407,13 +422,187 @@ const PeerReviewResults: React.FC<PeerReviewResultsProps> = ({
           <Stack gap="xs">
             {viewMode === 'perStudent' ? (
               filteredStudents.length > 0 ? (
-                filteredStudents.map(row => (
-                  <PeerReviewStudentRowCard
-                    key={row.studentId}
-                    row={row}
-                    maxMarks={dto.maxMarks}
-                  />
-                ))
+                <Accordion
+                  value={expandedStudentId || ''}
+                  onChange={val => {
+                    if (val) {
+                      handleExpandStudent(val);
+                    } else {
+                      setExpandedStudentId(null);
+                    }
+                  }}
+                  variant="separated"
+                  multiple={false}
+                >
+                  {filteredStudents.map(row => {
+                    const graded =
+                      row.aggregatedScore !== null &&
+                      row.aggregatedScore !== undefined;
+
+                    return (
+                      <Accordion.Item key={row.studentId} value={row.studentId}>
+                        <Accordion.Control>
+                          <Group
+                            justify="space-between"
+                            align="center"
+                            w="100%"
+                          >
+                            <Group align="center" gap="md">
+                              <div
+                                style={{
+                                  width: 6,
+                                  height: 46,
+                                  borderRadius: 8,
+                                  backgroundColor: graded ? '#4CAF50' : 'gray',
+                                }}
+                              />
+                              <Stack gap={2}>
+                                <Text fw={650} fz="lg">
+                                  {row.studentName}
+                                </Text>
+                                <Text fz="sm" c="dimmed">
+                                  Team {row.teamNumber}
+                                </Text>
+                              </Stack>
+                            </Group>
+
+                            <Stack gap={6} align="flex-end" mr="sm">
+                              <Badge
+                                variant="light"
+                                color={graded ? 'green' : 'orange'}
+                              >
+                                {graded ? 'GRADED' : 'NOT YET GRADED'}
+                              </Badge>
+
+                              <Text fw={800} fz="xl">
+                                {graded ? row.aggregatedScore!.toFixed(2) : '-'}{' '}
+                                / {dto.maxMarks.toFixed(2)}
+                              </Text>
+                            </Stack>
+                          </Group>
+                        </Accordion.Control>
+
+                        <Accordion.Panel>
+                          <Stack gap="md" pl="md" pr="md">
+                            <Divider />
+                            <div>
+                              <Text fw={600} size="sm" mb="md">
+                                Grades from Reviewers ({row.graders.length})
+                              </Text>
+
+                              {row.graders.length === 0 ? (
+                                <Text c="dimmed" size="sm">
+                                  No grading data available yet.
+                                </Text>
+                              ) : (
+                                <Stack gap="xs">
+                                  {row.graders.map(
+                                    (grader: any, idx: number) => (
+                                      <Card
+                                        key={idx}
+                                        withBorder
+                                        p="sm"
+                                        radius="sm"
+                                      >
+                                        <Group
+                                          justify="space-between"
+                                          align="flex-start"
+                                          mb="xs"
+                                        >
+                                          <Group gap="xs" align="center">
+                                            <Text fw={600} size="sm">
+                                              {grader.graderName}
+                                            </Text>
+                                            <Badge
+                                              variant="light"
+                                              color={
+                                                grader.status === 'Completed'
+                                                  ? 'green'
+                                                  : grader.status ===
+                                                      'InProgress'
+                                                    ? 'blue'
+                                                    : 'yellow'
+                                              }
+                                            >
+                                              {grader.status === 'InProgress'
+                                                ? 'In Progress'
+                                                : grader.status}
+                                            </Badge>
+                                          </Group>
+                                          {grader.revieweeTeamNumber && (
+                                            <Badge
+                                              size="sm"
+                                              variant="light"
+                                              color="violet"
+                                            >
+                                              Reviewee: Team{' '}
+                                              {grader.revieweeTeamNumber}
+                                            </Badge>
+                                          )}
+                                        </Group>
+
+                                        {grader.status === 'Completed' && (
+                                          <>
+                                            <Group gap="xl" mb="xs">
+                                              <Text size="sm">
+                                                <Text span fw={600}>
+                                                  Score:
+                                                </Text>{' '}
+                                                {typeof grader.score ===
+                                                'number'
+                                                  ? `${grader.score} / ${dto.maxMarks}`
+                                                  : 'N/A'}
+                                              </Text>
+                                              {grader.gradedAt && (
+                                                <Text size="xs" c="dimmed">
+                                                  Graded:{' '}
+                                                  {new Date(
+                                                    grader.gradedAt
+                                                  ).toLocaleDateString()}
+                                                </Text>
+                                              )}
+                                            </Group>
+
+                                            {grader.feedback && (
+                                              <>
+                                                <Text size="sm" fw={600} mb={4}>
+                                                  Feedback
+                                                </Text>
+                                                <Text
+                                                  size="sm"
+                                                  style={{
+                                                    whiteSpace: 'pre-wrap',
+                                                    wordBreak: 'break-word',
+                                                  }}
+                                                >
+                                                  {grader.feedback}
+                                                </Text>
+                                              </>
+                                            )}
+                                          </>
+                                        )}
+
+                                        {grader.status !== 'Completed' && (
+                                          <Text
+                                            size="sm"
+                                            c="dimmed"
+                                            fs="italic"
+                                          >
+                                            Grading not yet completed.
+                                          </Text>
+                                        )}
+                                      </Card>
+                                    )
+                                  )}
+                                </Stack>
+                              )}
+                            </div>
+                          </Stack>
+                        </Accordion.Panel>
+                      </Accordion.Item>
+                    );
+                  })}
+                </Accordion>
               ) : (
                 <Text c="dimmed" ta="center" mt="md">
                   No students to display.
