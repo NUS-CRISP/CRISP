@@ -85,7 +85,6 @@ describe('PeerReviewModel', () => {
       endDate,
       reviewerType: 'Individual',
       taAssignments: false,
-      minReviewsPerReviewer: 1,
       maxReviewsPerReviewer: 2,
       // status omitted to test default unless overridden
       ...overrides,
@@ -119,7 +118,6 @@ describe('PeerReviewModel', () => {
   it('should not save without required fields', async () => {
     const pr = new PeerReviewModel({
       // missing course, title, startDate, endDate, teamSetId, etc.
-      minReviewsPerReviewer: 1,
       maxReviewsPerReviewer: 2,
       taAssignments: false,
     });
@@ -136,7 +134,6 @@ describe('PeerReviewModel', () => {
       endDate: new Date(Date.now() + 60000),
       reviewerType: 'Individual',
       taAssignments: false,
-      minReviewsPerReviewer: 1,
       maxReviewsPerReviewer: 2,
     });
 
@@ -194,31 +191,11 @@ describe('PeerReviewModel', () => {
     await expect(pr.save()).rejects.toThrow(/gradingEndDate must be after gradingStartDate/i);
   });
 
-  it('should enforce minReviewsPerReviewer >= 0', async () => {
-    const pr = new PeerReviewModel(
-      makeValidPeerReview({ minReviewsPerReviewer: -1 })
-    );
-    await expect(pr.save()).rejects.toThrow(/minReviewsPerReviewer/i);
-  });
-
   it('should enforce maxReviewsPerReviewer >= 1', async () => {
     const pr = new PeerReviewModel(
       makeValidPeerReview({ maxReviewsPerReviewer: 0 })
     );
     await expect(pr.save()).rejects.toThrow(/maxReviewsPerReviewer/i);
-  });
-
-  it('should enforce maxReviewsPerReviewer >= minReviewsPerReviewer', async () => {
-    const pr = new PeerReviewModel(
-      makeValidPeerReview({
-        minReviewsPerReviewer: 3,
-        maxReviewsPerReviewer: 2,
-      })
-    );
-
-    await expect(pr.save()).rejects.toThrow(
-      /maxReviewsPerReviewer must be greater than or equal to minReviewsPerReviewer/i
-    );
   });
 
   it('should compute computedStatus = Upcoming when now < startDate', async () => {

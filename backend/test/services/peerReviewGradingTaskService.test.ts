@@ -102,7 +102,6 @@ const makePeerReview = async (
     endDate,
     reviewerType: 'Individual',
     taAssignments: true,
-    minReviewsPerReviewer: 1,
     maxReviewsPerReviewer: 3,
     ...overrides,
   }).save();

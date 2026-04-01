@@ -77,7 +77,6 @@ beforeEach(async () => {
     endDate: new Date(now + 120_000),
     taAssignments: false,
     reviewerType: 'Individual',
-    minReviewsPerReviewer: 1,
     maxReviewsPerReviewer: 2,
   }).save();
   testPeerReviewId = peerReview._id;
@@ -190,7 +189,6 @@ describe('PeerReviewAssignmentModel', () => {
       endDate: new Date(now + 120_000),
       taAssignments: false,
       reviewerType: 'Individual',
-      minReviewsPerReviewer: 1,
       maxReviewsPerReviewer: 2,
     }).save();
 

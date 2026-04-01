@@ -31,9 +31,11 @@ export interface PeerReview {
   endDate: Date;
   reviewerType: ReviewerType;
   taAssignments: boolean;
-  minReviewsPerReviewer: number;
   maxReviewsPerReviewer: number;
   teamSetId: string;
+  
+  // Repository configuration
+  commitOrTag?: string; // e.g., "v1.0", "main", "abc123" - empty means latest
   
   // Assessment-related
   internalAssessmentId: string;
@@ -52,6 +54,7 @@ export interface PeerReviewAssignment {
   reviewee: Team;
   repoName: string;
   repoUrl: string;
+  commitOrTag?: string; // Same as PeerReview.commitOrTag for consistency
 }
 
 export interface PeerReviewSubmission {
@@ -125,6 +128,7 @@ export interface PeerReviewTeamDTO {
   teamNumber: number;
   repoUrl: string;
   repoName: string;
+  commitOrTag?: string; // From PeerReview
   TA: {
     id: string;
     name: string;

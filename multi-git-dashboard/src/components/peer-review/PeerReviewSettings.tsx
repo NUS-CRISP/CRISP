@@ -10,9 +10,13 @@ import {
 } from '@mantine/core';
 import { PeerReview } from '@shared/types/PeerReview';
 import { formatDate } from '../../lib/utils';
+import { useState } from 'react';
+import { useRouter } from 'next/router';
+import StartPeerReviewModal from '../cards/Modals/StartPeerReviewModal';
 
 interface PeerReviewSettingsProps {
   peerReview: PeerReview;
+  courseId?: string;
   teamSetName: string;
   isFaculty: boolean;
   isGradingPhase?: boolean;
@@ -20,10 +24,12 @@ interface PeerReviewSettingsProps {
   onClickUpdate: () => void;
   onClickDelete: () => void;
   onClickCloseAssessment?: () => void;
+  onStartPeerReview?: () => void;
 }
 
 const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
   peerReview,
+  courseId,
   teamSetName,
   isFaculty,
   isGradingPhase = false,
@@ -31,15 +37,18 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
   onClickUpdate,
   onClickDelete,
   onClickCloseAssessment,
+  onStartPeerReview,
 }) => {
+  const router = useRouter();
+  const [openedStartModal, setOpenedStartModal] = useState(false);
   const {
     description,
     startDate,
     endDate,
     reviewerType,
     taAssignments,
-    minReviewsPerReviewer,
     maxReviewsPerReviewer,
+    commitOrTag,
     status,
   } = peerReview;
 
@@ -59,13 +68,7 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
           : 'yellow';
 
   return (
-    <Card
-      withBorder
-      radius="md"
-      p="lg"
-      mb="md"
-      style={{ backgroundColor: '#2b2b2b' }}
-    >
+    <Card withBorder radius="md" p="lg" my="md">
       <Group justify="space-between" mb="xs">
         <Stack gap={2}>
           <Text fw={600} fz="sm">
@@ -76,6 +79,15 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
         <Group gap="xs">
           <Badge color={statusColor}>{statusLabel}</Badge>
           <Badge variant="light">Reviewer Type: {reviewerType}</Badge>
+          {commitOrTag && (
+            <Badge
+              variant="light"
+              color="blue"
+              title="Repository version for review"
+            >
+              Commit/Tag: {commitOrTag}
+            </Badge>
+          )}
           {isFaculty && (
             <Badge variant="light" color={taAssignments ? 'teal' : 'red'}>
               TA Reviews: {taAssignments ? 'Enabled' : 'Disabled'}
@@ -106,12 +118,6 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
             <>
               <Stack gap={2}>
                 <Text fz="xs" c="dimmed">
-                  Min. Reviews / Reviewer
-                </Text>
-                <Text fz="sm">{minReviewsPerReviewer ?? '—'}</Text>
-              </Stack>
-              <Stack gap={2}>
-                <Text fz="xs" c="dimmed">
                   Team set
                 </Text>
                 <Text fz="sm">{teamSetName}</Text>
@@ -137,6 +143,34 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
         </Stack>
         {isFaculty && (
           <Stack mt="sm">
+            {peerReview.status === 'Upcoming' && courseId && (
+              <>
+                <Button color="green" onClick={() => setOpenedStartModal(true)}>
+                  Start Peer Review Now
+                </Button>
+                <StartPeerReviewModal
+                  opened={openedStartModal}
+                  onClose={() => setOpenedStartModal(false)}
+                  onConfirm={async () => {
+                    onStartPeerReview?.();
+                    setOpenedStartModal(false);
+                  }}
+                  peerReviewId={peerReview._id}
+                  courseId={courseId}
+                />
+              </>
+            )}
+            {courseId && (
+              <Button
+                color="yellow"
+                variant="light"
+                onClick={() => router.push(`/courses/${courseId}/peer-review`)}
+              >
+                {peerReview.status === 'Upcoming'
+                  ? 'Assign Peer Reviews'
+                  : 'View Peer Review'}
+              </Button>
+            )}
             <Button onClick={onClickUpdate} color="green" variant="light">
               Update Settings
             </Button>

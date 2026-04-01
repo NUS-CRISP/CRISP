@@ -89,7 +89,6 @@ beforeEach(async () => {
     endDate: new Date(now + 120000),
     taAssignments: false,
     reviewerType: 'Individual',
-    minReviewsPerReviewer: 1,
     maxReviewsPerReviewer: 2,
   }).save();
   testPeerReviewId = peerReview._id;

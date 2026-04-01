@@ -33,7 +33,10 @@ import PeerReviewGradeSubmissionModal from '@/components/cards/Modals/PeerReview
 import PeerReviewGradingSummaryModal from '@/components/cards/Modals/PeerReviewGradingSummaryModal';
 import FlagCommentConfirmationModal from '@/components/cards/Modals/FlagCommentConfirmationModal';
 
-import { getLanguageForFile } from '@/lib/peer-review/utils';
+import {
+  getLanguageForFile,
+  buildGithubRepoUrl,
+} from '@/lib/peer-review/utils';
 import { getMe } from '@/lib/auth/utils';
 
 import usePeerReviewGradingData from '@/components/hooks/usePeerReviewGradingData';
@@ -229,6 +232,7 @@ const PeerReviewGradingDetailPage: React.FC = () => {
     );
 
   const repo = dto?.assignment?.repo ?? { repoName: '', repoUrl: '' };
+  const commitOrTag = dto?.assignment?.repo?.commitOrTag;
   const revieweeTeam = dto?.assignment?.revieweeTeam ?? null;
   const reviewer = dto?.reviewer ?? null;
   const submission = dto?.submission ?? null;
@@ -343,7 +347,7 @@ const PeerReviewGradingDetailPage: React.FC = () => {
                 Reviewee: Team {revieweeTeam.teamNumber}
                 {repo?.repoUrl && (
                   <Anchor
-                    href={repo.repoUrl}
+                    href={buildGithubRepoUrl(repo.repoUrl, commitOrTag)}
                     target="_blank"
                     rel="noreferrer"
                     underline="never"
@@ -354,6 +358,17 @@ const PeerReviewGradingDetailPage: React.FC = () => {
                   </Anchor>
                 )}
               </Group>
+            </Badge>
+          )}
+          {commitOrTag && (
+            <Badge
+              variant="light"
+              color="blue"
+              h="27px"
+              radius="md"
+              title="Repository version for grading"
+            >
+              {commitOrTag}
             </Badge>
           )}
         </Group>

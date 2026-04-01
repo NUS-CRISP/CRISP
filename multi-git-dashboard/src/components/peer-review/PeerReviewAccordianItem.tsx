@@ -36,6 +36,7 @@ interface PeerReviewAccordionItemProps {
   assignmentOfTeam: RevieweeAssignmentsDTO | null;
   reviewerType: 'Individual' | 'Team';
   maxReviewsPerReviewer: number;
+  showUnassignedOnly?: boolean;
   isFaculty: boolean;
   isTA: boolean;
   addManualAssignment: (
@@ -61,9 +62,10 @@ const PeerReviewAccordionItem = forwardRef<
     teams,
     assignmentOfTeam,
     reviewerType,
+    maxReviewsPerReviewer,
+    showUnassignedOnly,
     isFaculty,
     isTA,
-    maxReviewsPerReviewer,
     addManualAssignment,
     deleteManualAssignment,
   }) => {
@@ -108,10 +110,11 @@ const PeerReviewAccordionItem = forwardRef<
             t.value !== currentTeam.teamId &&
             !teamAssignedReviewees.has(t.value)
         )
+        .sort((a, b) => a.label.localeCompare(b.label))
         .map(t => ({
           value: t.value,
           label:
-            t.TA.id === currentTeam.TA.id ? `(Same TA) ${t.label}` : t.label,
+            t.TA?.id === currentTeam.TA?.id ? `(Same TA) ${t.label}` : t.label,
         }));
     }, [teams, currentTeam.teamId, teamAssignedReviewees]);
 
@@ -143,7 +146,8 @@ const PeerReviewAccordionItem = forwardRef<
         )
         .map(t => ({
           value: t.value,
-          label: t.TA === currentTeam.TA ? `(Same TA) ${t.label}` : t.label,
+          label:
+            t.TA?.id === currentTeam.TA?.id ? `(Same TA) ${t.label}` : t.label,
         }));
 
     const handleDelete = (
@@ -167,13 +171,13 @@ const PeerReviewAccordionItem = forwardRef<
                 <Text c="dimmed">{currentTeam.repoName}</Text>
               )}
             </Group>
-            <Group gap="sm">
-              {currentTeam.TA && (
+            {currentTeam.TA && currentTeam.TA.name && (
+              <Group gap="sm">
                 <Badge mr="sm" color="gray" variant="light">
                   TA: {currentTeam.TA.name}
                 </Badge>
-              )}
-            </Group>
+              </Group>
+            )}
           </Group>
         </Accordion.Control>
         <Accordion.Panel>
@@ -206,63 +210,79 @@ const PeerReviewAccordionItem = forwardRef<
                     )}
                   </Group>
                   <Divider />
-                  <PeerReviewAssignments
-                    assignments={currentTeam.assignedReviewsToTeam}
-                    isFaculty={isFaculty}
-                    isTA={isTA}
-                    currentUserId={currentUserId}
-                    taReviewerAssignmentIds={taReviewerAssignmentIds}
-                    onDelete={(reviewee: Team) =>
-                      handleDelete(reviewee, currentTeam)
-                    }
-                  />
+                  <div
+                    style={{
+                      overflowX: 'auto',
+                      whiteSpace: 'nowrap',
+                      paddingBottom: 4,
+                    }}
+                  >
+                    <PeerReviewAssignments
+                      assignments={currentTeam.assignedReviewsToTeam}
+                      isFaculty={isFaculty}
+                      isTA={isTA}
+                      currentUserId={currentUserId}
+                      taReviewerAssignmentIds={taReviewerAssignmentIds}
+                      onDelete={(reviewee: Team) =>
+                        handleDelete(reviewee, currentTeam)
+                      }
+                    />
+                  </div>
                 </>
               )}
               <Stack gap={4}>
                 <Text fw={600}>Members ({numberOfMembers})</Text>
                 <Divider />
-                {currentTeam.members.map(m => {
-                  const isCurrentUser = m.userId === currentUserId;
-                  const shouldShowAssignments =
-                    isFaculty || isTA || isCurrentUser;
+                {currentTeam.members
+                  .filter(m => {
+                    if (!showUnassignedOnly) return true;
+                    // Only show members with no assignments
+                    return m.assignedReviews.length === 0;
+                  })
+                  .map(m => {
+                    const isCurrentUser = m.userId === currentUserId;
+                    const shouldShowAssignments =
+                      isFaculty || isTA || isCurrentUser;
 
-                  return (
-                    <ScrollArea key={m.userId}>
-                      <Group justify="space-between" mt={4}>
-                        <Text>{m.name}</Text>
+                    return (
+                      <ScrollArea key={m.userId}>
+                        <Group justify="space-between" mt={4}>
+                          <Text>{m.name}</Text>
 
-                        {reviewerType === 'Individual' && isFaculty && (
-                          <AddManualAssignmentBox
-                            assignedCount={memberAssignedCount[m.userId] ?? 0}
-                            dropdownOptions={getMemberOptions(m.userId)}
-                            maxReviewsPerReviewer={maxReviewsPerReviewer}
-                            reviewerId={m.userId}
-                            addManualAssignment={(reviewee, reviewer) =>
-                              addManualAssignment(reviewee, reviewer, false)
-                            }
-                          />
-                        )}
-                      </Group>
-
-                      {reviewerType === 'Individual' &&
-                        shouldShowAssignments && (
-                          <>
-                            <PeerReviewAssignments
-                              assignments={m.assignedReviews}
-                              isFaculty={isFaculty}
-                              isTA={isTA}
-                              currentUserId={currentUserId}
-                              taReviewerAssignmentIds={taReviewerAssignmentIds}
-                              onDelete={(reviewee: Team) =>
-                                handleDelete(reviewee, m)
+                          {reviewerType === 'Individual' && isFaculty && (
+                            <AddManualAssignmentBox
+                              assignedCount={memberAssignedCount[m.userId] ?? 0}
+                              dropdownOptions={getMemberOptions(m.userId)}
+                              maxReviewsPerReviewer={maxReviewsPerReviewer}
+                              reviewerId={m.userId}
+                              addManualAssignment={(reviewee, reviewer) =>
+                                addManualAssignment(reviewee, reviewer, false)
                               }
                             />
-                          </>
-                        )}
-                      <Divider mt={6} />
-                    </ScrollArea>
-                  );
-                })}
+                          )}
+                        </Group>
+
+                        {reviewerType === 'Individual' &&
+                          shouldShowAssignments && (
+                            <>
+                              <PeerReviewAssignments
+                                assignments={m.assignedReviews}
+                                isFaculty={isFaculty}
+                                isTA={isTA}
+                                currentUserId={currentUserId}
+                                taReviewerAssignmentIds={
+                                  taReviewerAssignmentIds
+                                }
+                                onDelete={(reviewee: Team) =>
+                                  handleDelete(reviewee, m)
+                                }
+                              />
+                            </>
+                          )}
+                        <Divider mt={6} />
+                      </ScrollArea>
+                    );
+                  })}
               </Stack>
             </Stack>
             <Stack>
@@ -306,10 +326,13 @@ const PeerReviewAccordionItem = forwardRef<
                   {assignmentOfTeam && numberOfReviewers > 0 ? (
                     <ScrollArea
                       style={{
-                        height: '272px',
+                        maxHeight: 'calc(10 * 32px + 18px)',
+                        height: 'auto',
                         border: 'solid 1px',
                         borderColor: '#505050',
                         borderRadius: '6px',
+                        padding: '8px 0',
+                        transition: 'max-height 0.2s',
                       }}
                       mt="xs"
                       px="sm"
@@ -325,6 +348,7 @@ const PeerReviewAccordionItem = forwardRef<
                                   variant="light"
                                   key={`user-${reviewer.userId}`}
                                   radius="sm"
+                                  style={{ minHeight: 28 }}
                                 >
                                   {reviewer.name}
                                 </Badge>
@@ -336,6 +360,7 @@ const PeerReviewAccordionItem = forwardRef<
                                 key={`team-${reviewer.teamId}`}
                                 variant="light"
                                 radius="sm"
+                                style={{ minHeight: 24 }}
                               >
                                 Team {reviewer.teamNumber}
                               </Badge>
@@ -347,6 +372,7 @@ const PeerReviewAccordionItem = forwardRef<
                             variant="light"
                             size="sm"
                             radius="sm"
+                            style={{ minHeight: 24 }}
                           >
                             TA: {reviewer.name}
                           </Badge>

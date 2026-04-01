@@ -5,6 +5,8 @@ import {
   getPeerReviewProgressOverview,
   deletePeerReview,
   updatePeerReview,
+  getUnassignedReviewersInfo,
+  startPeerReview,
 } from '../../controllers/peerReviewController';
 import {
   getAllPeerReviewsyId,
@@ -12,6 +14,8 @@ import {
   getPeerReviewProgressOverviewById,
   deletePeerReviewById,
   updatePeerReviewById,
+  getUnassignedReviewers,
+  startPeerReviewNow,
 } from '../../services/peerReviewService';
 import { verifyRequestUser, verifyRequestPermission } from '../../utils/auth';
 import { handleError } from '../../utils/error';
@@ -22,6 +26,8 @@ jest.mock('../../services/peerReviewService', () => ({
   getPeerReviewProgressOverviewById: jest.fn(),
   deletePeerReviewById: jest.fn(),
   updatePeerReviewById: jest.fn(),
+  getUnassignedReviewers: jest.fn(),
+  startPeerReviewNow: jest.fn(),
 }));
 
 jest.mock('../../utils/auth', () => ({
@@ -326,6 +332,97 @@ describe('peerReviewController', () => {
         res,
         err,
         'Failed to get peer review progress overview'
+      );
+    });
+  });
+
+  describe('getUnassignedReviewersInfo', () => {
+    it('returns 200 with unassigned reviewers info', async () => {
+      (verifyRequestUser as jest.Mock).mockResolvedValue({
+        account: { _id: 'acc1' },
+        userCourseRole: 'Faculty',
+      });
+      (verifyRequestPermission as jest.Mock).mockResolvedValue('u1');
+      (getUnassignedReviewers as jest.Mock).mockResolvedValue({
+        peerReviewId: 'pr1',
+        unassignedReviewers: [{ _id: 'u2', name: 'John' }],
+      });
+
+      const req = makeReq({ params: { peerReviewId: 'pr1' } as any });
+      const res = makeRes();
+
+      await getUnassignedReviewersInfo(req, res);
+
+      expect(verifyRequestUser).toHaveBeenCalledWith(req);
+      expect(verifyRequestPermission).toHaveBeenCalledWith(
+        'acc1',
+        'Faculty',
+        expect.any(Array)
+      );
+      expect(getUnassignedReviewers).toHaveBeenCalledWith('pr1');
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({ peerReviewId: 'pr1' })
+      );
+    });
+
+    it('calls handleError on failure', async () => {
+      const err = new Error('boom');
+      (verifyRequestUser as jest.Mock).mockRejectedValue(err);
+
+      const req = makeReq({ params: { peerReviewId: 'pr1' } as any });
+      const res = makeRes();
+
+      await getUnassignedReviewersInfo(req, res);
+
+      expect(handleError).toHaveBeenCalledWith(
+        res,
+        err,
+        'Failed to get unassigned reviewers info'
+      );
+    });
+  });
+
+  describe('startPeerReview', () => {
+    it('returns 200 with success message', async () => {
+      (verifyRequestUser as jest.Mock).mockResolvedValue({
+        account: { _id: 'acc1' },
+        userCourseRole: 'Faculty',
+      });
+      (verifyRequestPermission as jest.Mock).mockResolvedValue('u1');
+      (startPeerReviewNow as jest.Mock).mockResolvedValue(undefined);
+
+      const req = makeReq({ params: { peerReviewId: 'pr1' } as any });
+      const res = makeRes();
+
+      await startPeerReview(req, res);
+
+      expect(verifyRequestUser).toHaveBeenCalledWith(req);
+      expect(verifyRequestPermission).toHaveBeenCalledWith(
+        'acc1',
+        'Faculty',
+        expect.any(Array)
+      );
+      expect(startPeerReviewNow).toHaveBeenCalledWith('pr1');
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Peer review started successfully',
+      });
+    });
+
+    it('calls handleError on failure', async () => {
+      const err = new Error('boom');
+      (verifyRequestUser as jest.Mock).mockRejectedValue(err);
+
+      const req = makeReq({ params: { peerReviewId: 'pr1' } as any });
+      const res = makeRes();
+
+      await startPeerReview(req, res);
+
+      expect(handleError).toHaveBeenCalledWith(
+        res,
+        err,
+        'Failed to start peer review'
       );
     });
   });

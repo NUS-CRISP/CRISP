@@ -25,8 +25,8 @@ export interface PeerReviewBaseFormValues {
   teamSetId: string;
   reviewerType: ReviewerType;
   taAssignments: boolean;
-  minReviews: string | number;
   maxReviews: string | number;
+  commitOrTag: string;
 
   // Assessment-linked fields
   maxMarks: string | number;
@@ -64,8 +64,8 @@ export type NormalizedPeerReviewBasePayload = {
   teamSetId: string;
   reviewerType: ReviewerType;
   taAssignments: boolean;
-  minReviews: number;
   maxReviews: number;
+  commitOrTag: string;
   maxMarks: number;
   scaleToMaxMarks: boolean;
   gradingStartDate?: string | null;
@@ -94,8 +94,8 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
     teamSetId: '',
     reviewerType: 'Individual',
     taAssignments: false,
-    minReviews: 0,
     maxReviews: 1,
+    commitOrTag: '',
     maxMarks: 10,
     scaleToMaxMarks: true,
     gradingStartDate: '',
@@ -123,20 +123,10 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
         return null;
       },
       teamSetId: v => (!v ? 'Please select a Team Set' : null),
-      minReviews: v => {
-        const num = typeof v === 'number' ? v : Number(v);
-        if (!Number.isInteger(num) || num < 0)
-          return 'Minimum reviews must be a non-negative integer';
-        if (num > Number(form.values.maxReviews))
-          return 'Minimum reviews cannot exceed maximum reviews';
-        return null;
-      },
       maxReviews: v => {
         const num = typeof v === 'number' ? v : Number(v);
         if (!Number.isInteger(num) || num < 1)
           return 'Maximum reviews must be a positive integer';
-        if (num < Number(form.values.minReviews))
-          return 'Maximum reviews cannot be less than minimum reviews';
         return null;
       },
       maxMarks: v => {
@@ -172,8 +162,8 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
 
     taAssignments: Boolean(values.taAssignments),
 
-    minReviews: Number(values.minReviews ?? 0),
     maxReviews: Number(values.maxReviews ?? 1),
+    commitOrTag: values.commitOrTag.trim(),
 
     maxMarks: Number(values.maxMarks ?? 0),
     scaleToMaxMarks: Boolean(values.scaleToMaxMarks),
@@ -234,11 +224,6 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
       )}
 
       <form onSubmit={form.onSubmit(handleSubmit)}>
-        <Text fz="xl" fw={600} my="xs">
-          Peer Review Settings
-        </Text>
-        <Divider mb="md" />
-
         <TextInput
           withAsterisk
           label="Peer Review Title"
@@ -266,6 +251,15 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
           {...form.getInputProps('endDate')}
           type="date"
           mb="xs"
+        />
+
+        <TextInput
+          mt="md"
+          mb="xs"
+          label="Repository Commit or Tag"
+          placeholder="e.g., v1.0, main, abc123"
+          description="Specify a commit hash or tag to use for reviews. Leave empty to use the latest version."
+          {...form.getInputProps('commitOrTag')}
         />
 
         <Text fw={600} fz="sm" mt="md" mb="xs">
@@ -313,16 +307,6 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
             <Radio label="No" value="no" />
           </Group>
         </Radio.Group>
-
-        <TextInput
-          withAsterisk
-          mt="md"
-          label="Minimum Reviews per Reviewer"
-          {...form.getInputProps('minReviews')}
-          type="number"
-          disabled={lockReviewConfig}
-          mb="xs"
-        />
 
         <TextInput
           withAsterisk

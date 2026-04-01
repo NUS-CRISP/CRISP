@@ -111,7 +111,7 @@ export interface PeerReviewGradingSummary {
 export interface PeerReviewGradingAssignmentDTO {
   peerReviewAssignmentId: string;
   revieweeTeam: { teamId: string; teamNumber: number };
-  repo: { repoName: string; repoUrl: string };
+  repo: { repoName: string; repoUrl: string; commitOrTag?: string };
 }
 
 export type PeerReviewGradingReviewerDTO =

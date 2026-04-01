@@ -22,11 +22,13 @@ import {
   deletePeerReviewById,
   updatePeerReviewById,
   getTeamDataById,
+  getUnassignedReviewers,
+  startPeerReviewNow,
   __testables,
 } from '../../services/peerReviewService';
 
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
-import { NotFoundError } from '../../services/errors';
+import { NotFoundError, BadRequestError } from '../../services/errors';
 
 // mock dependent services
 import {
@@ -131,7 +133,6 @@ const makePeerReview = async (overrides: Partial<any> = {}) => {
     endDate: new Date(now + 60_000),
     reviewerType: 'Individual',
     taAssignments: false,
-    minReviewsPerReviewer: 1,
     maxReviewsPerReviewer: 2,
     status: 'Active',
     ...overrides,
@@ -383,6 +384,12 @@ describe('peerReviewService', () => {
       await ensureUser(ta1, 'TA1');
       await ensureUser(ta2, 'TA2');
 
+      // Add TAs to course so Faculty can see them
+      await CourseModel.updateOne(
+        { _id: testCourseId },
+        { $set: { TAs: [ta1, ta2] } }
+      );
+
       // Make PR with taAssignments enabled so Faculty taIdsWanted path runs
       const pr = await makePeerReview({
         reviewerType: 'Individual',
@@ -583,7 +590,6 @@ describe('peerReviewService', () => {
         internalAssessmentId: oidStr(),
         reviewerType: 'Individual',
         taAssignments: false,
-        minReviews: 1,
         maxReviews: 2,
       }, null as any);
 
@@ -592,6 +598,7 @@ describe('peerReviewService', () => {
         testCourseId.toString(),
         pr._id.toString(),
         testTeamSetId.toString(),
+        null,
         null
       );
     });
@@ -607,7 +614,6 @@ describe('peerReviewService', () => {
           internalAssessmentId: oidStr(),
           reviewerType: 'Individual',
           taAssignments: false,
-          minReviews: 1,
           maxReviews: 2,
         }, null as any)
       ).rejects.toBeInstanceOf(NotFoundError);
@@ -635,6 +641,7 @@ describe('peerReviewService', () => {
         testCourseId.toString(),
         pr._id.toString(),
         testTeamSetId.toString(),
+        null,
         null
       );
     });
@@ -664,7 +671,6 @@ describe('peerReviewService', () => {
       const pr = await makePeerReview({
         description: 'old description',
         reviewerType: 'Individual',
-        minReviewsPerReviewer: 1,
         maxReviewsPerReviewer: 2,
       });
 
@@ -676,7 +682,6 @@ describe('peerReviewService', () => {
         startDate: newStart,
         endDate: newEnd,
         reviewerType: 'Team',
-        minReviews: 3,
         maxReviews: 5,
       } as any);
 
@@ -684,7 +689,6 @@ describe('peerReviewService', () => {
       expect(updated.startDate.toISOString()).toBe(newStart.toISOString());
       expect(updated.endDate.toISOString()).toBe(newEnd.toISOString());
       expect(updated.reviewerType).toBe('Team');
-      expect(updated.minReviewsPerReviewer).toBe(3);
       expect(updated.maxReviewsPerReviewer).toBe(5);
       expect(deleteAssignmentsByPeerReviewId).toHaveBeenCalledWith(
         pr._id.toString()
@@ -693,6 +697,7 @@ describe('peerReviewService', () => {
         testCourseId.toString(),
         pr._id.toString(),
         pr.teamSetId.toString(),
+        null,
         null
       );
     });
@@ -730,6 +735,25 @@ describe('peerReviewService', () => {
       await expect(
         updatePeerReviewById(oidStr(), { assessmentName: 'x' } as any)
       ).rejects.toBeInstanceOf(NotFoundError);
+    });
+
+    it('updates commitOrTag field', async () => {
+      const pr = await makePeerReview({
+        commitOrTag: undefined,
+      });
+
+      const updated = await updatePeerReviewById(pr._id.toString(), {
+        commitOrTag: 'v1.0.0',
+      } as any);
+
+      expect(updated.commitOrTag).toBe('v1.0.0');
+
+      // Also test clearing it
+      const cleared = await updatePeerReviewById(pr._id.toString(), {
+        commitOrTag: '',
+      } as any);
+
+      expect(cleared.commitOrTag).toBeUndefined();
     });
   });
 
@@ -877,6 +901,12 @@ describe('peerReviewService', () => {
       await ensureUser(s2, 'Student 2');
       await ensureUser(ta1, 'TA 1');
 
+      // Add TA to course so Faculty can see TA assignments
+      await CourseModel.updateOne(
+        { _id: testCourseId },
+        { $set: { TAs: [ta1] } }
+      );
+
       const pr = await makePeerReview({
         reviewerType: 'Individual',
         taAssignments: true,
@@ -976,6 +1006,72 @@ describe('peerReviewService', () => {
       const dtoB = info.teams.find(t => t.teamId === teamB._id.toString());
       expect(dtoB).toBeTruthy();
       expect(dtoB?.assignedReviewsToTeam.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('handles case where course has no TAs (covers course.TAs falsy branch)', async () => {
+      const s1 = oid();
+      const ta1 = oid();
+      const ta2 = oid();
+      const ta3 = oid(); // TA with no team supervision (won't be in usersById initially)
+      await ensureUser(s1, 'Student 1');
+      await ensureUser(ta1, 'TA 1');
+      await ensureUser(ta2, 'TA 2');
+      await ensureUser(ta3, 'TA 3');
+
+      // Add all TAs to course
+      // ta1 is a team member (will be in usersById)
+      // ta2 supervises a team (will be in taIdsWanted)
+      // ta3 is ONLY in course TAs (not in any team, not supervising) -> won't be in ctx.usersById initially
+      await CourseModel.updateOne(
+        { _id: testCourseId },
+        { $set: { TAs: [ta1, ta2, ta3] } }
+      );
+
+      const pr = await makePeerReview({
+        reviewerType: 'Individual',
+        taAssignments: true,
+      });
+
+      // Create teams with TAs so taIdsWanted is populated
+      const teamA = await makeTeam({ number: 1, members: [s1, ta1], TA: ta2 });
+      const teamB = await makeTeam({ number: 2, members: [oid()], TA: ta2 }); // ta2 supervises both, ta3 supervises none
+      await makeTeamData(1);
+      await makeTeamData(2);
+
+      const aA = await makeAssignment(pr._id, teamA._id);
+      const aB = await makeAssignment(pr._id, teamB._id);
+
+      // Create student submission 
+      await makeSubmission(pr._id, aA._id, {
+        reviewerKind: 'Student',
+        reviewerUserId: s1,
+        status: 'Draft',
+      });
+
+      // Create TA submissions to ensure taIdsWanted is populated with ta2
+      await makeSubmission(pr._id, aA._id, {
+        reviewerKind: 'TA',
+        reviewerUserId: ta2,
+        status: 'Draft',
+      });
+
+      const info = await getPeerReviewInfoById(
+        oidStr(),
+        COURSE_ROLE.Faculty,
+        testCourseId.toString(),
+        pr._id.toString()
+      );
+
+      // - ta1 already in usersById (team member)
+      // - ta2 already in usersById (supervising team via taIdsWanted)
+      // - ta3 NOT in usersById initially
+      expect(info._id).toBe(pr._id.toString());
+      expect(info.teams.length).toBeGreaterThanOrEqual(2);
+
+      // ta3 should be in TAAssignments
+      // because it was fetched from course.TAs and added to allCourseTAIds
+      expect(info.TAAssignments[ta3.toString()]).toBeTruthy();
+      expect(info.TAAssignments[ta3.toString()].taName).toBe('TA 3');
     });
   });
 
@@ -1673,6 +1769,195 @@ describe('peerReviewService', () => {
       expect(result.submissions.total).toBe(1);
       expect(result.submissions.draft).toBe(1);
       expect(result.submissions.submitted).toBe(0);
+    });
+  });
+
+  describe('getUnassignedReviewers', () => {
+    it('throws NotFound when peer review missing', async () => {
+      await expect(
+        getUnassignedReviewers(oidStr())
+      ).rejects.toBeInstanceOf(NotFoundError);
+    });
+
+    it('Individual reviewerType: returns unassigned students and assigned ones are excluded', async () => {
+      const s1 = oid();
+      const s2 = oid();
+      const s3 = oid();
+      await ensureUser(s1, 'Student 1');
+      await ensureUser(s2, 'Student 2');
+      await ensureUser(s3, 'Student 3');
+
+      // Add students to course
+      await CourseModel.updateOne(
+        { _id: testCourseId },
+        { $set: { students: [s1, s2, s3] } }
+      );
+
+      const pr = await makePeerReview({
+        reviewerType: 'Individual',
+        taAssignments: false,
+      });
+
+      const teamA = await makeTeam({ number: 1, members: [s1] });
+      const teamB = await makeTeam({ number: 2, members: [s2] });
+      const teamC = await makeTeam({ number: 3, members: [s3] });
+
+      const aA = await makeAssignment(pr._id, teamA._id);
+      const aB = await makeAssignment(pr._id, teamB._id);
+
+      // Only s1 and s2 have submissions (are assigned)
+      await makeSubmission(pr._id, aA._id, {
+        reviewerKind: 'Student',
+        reviewerUserId: s1,
+        status: 'Draft',
+      });
+
+      await makeSubmission(pr._id, aB._id, {
+        reviewerKind: 'Student',
+        reviewerUserId: s2,
+        status: 'Draft',
+      });
+
+      const result = await getUnassignedReviewers(pr._id.toString());
+
+      expect(result.reviewerType).toBe('Individual');
+      expect(result.taAssignmentsEnabled).toBe(false);
+      expect(result.hasUnassigned).toBe(true);
+      expect(result.unassignedCount).toBe(1);
+      expect(result.unassignedIndividuals).toHaveLength(1);
+      expect(result.unassignedIndividuals[0].userId).toBe(s3.toString());
+      expect(result.unassignedTeams).toHaveLength(0);
+      expect(result.unassignedTAs).toHaveLength(0);
+    });
+
+    it('Team reviewerType: returns unassigned teams', async () => {
+      const pr = await makePeerReview({
+        reviewerType: 'Team',
+        taAssignments: false,
+      });
+
+      const teamA = await makeTeam({ number: 1, members: [oid()] });
+      const teamB = await makeTeam({ number: 2, members: [oid()] });
+      const teamC = await makeTeam({ number: 3, members: [oid()] });
+
+      const aA = await makeAssignment(pr._id, teamA._id);
+
+      // Only teamB has a submission
+      await makeSubmission(pr._id, aA._id, {
+        reviewerKind: 'Team',
+        reviewerTeamId: teamB._id,
+        status: 'Draft',
+      });
+
+      const result = await getUnassignedReviewers(pr._id.toString());
+
+      expect(result.reviewerType).toBe('Team');
+      expect(result.hasUnassigned).toBe(true);
+      expect(result.unassignedCount).toBe(2); // teamA and teamC
+      expect(result.unassignedTeams).toHaveLength(2);
+      expect(result.unassignedIndividuals).toHaveLength(0);
+    });
+
+    it('includes unassigned TAs when taAssignments enabled', async () => {
+      const s1 = oid();
+      const ta1 = oid();
+      const ta2 = oid();
+      await ensureUser(s1, 'Student 1');
+      await ensureUser(ta1, 'TA 1');
+      await ensureUser(ta2, 'TA 2');
+
+      await CourseModel.updateOne(
+        { _id: testCourseId },
+        { $set: { students: [s1], TAs: [ta1, ta2] } }
+      );
+
+      const pr = await makePeerReview({
+        reviewerType: 'Individual',
+        taAssignments: true,
+      });
+
+      const teamA = await makeTeam({ number: 1, members: [s1] });
+      const aA = await makeAssignment(pr._id, teamA._id);
+
+      // Assign ta1 but not ta2
+      await makeSubmission(pr._id, aA._id, {
+        reviewerKind: 'TA',
+        reviewerUserId: ta1,
+        status: 'Draft',
+      });
+
+      const result = await getUnassignedReviewers(pr._id.toString());
+
+      expect(result.taAssignmentsEnabled).toBe(true);
+      expect(result.unassignedTAs).toHaveLength(1);
+      expect(result.unassignedTAs[0].userId).toBe(ta2.toString());
+    });
+
+    it('returns empty arrays when all reviewers are assigned', async () => {
+      const s1 = oid();
+      await ensureUser(s1, 'Student 1');
+      await CourseModel.updateOne(
+        { _id: testCourseId },
+        { $set: { students: [s1] } }
+      );
+
+      const pr = await makePeerReview({
+        reviewerType: 'Individual',
+        taAssignments: false,
+      });
+
+      const teamA = await makeTeam({ number: 1, members: [s1] });
+      const aA = await makeAssignment(pr._id, teamA._id);
+
+      await makeSubmission(pr._id, aA._id, {
+        reviewerKind: 'Student',
+        reviewerUserId: s1,
+        status: 'Draft',
+      });
+
+      const result = await getUnassignedReviewers(pr._id.toString());
+
+      expect(result.hasUnassigned).toBe(false);
+      expect(result.unassignedCount).toBe(0);
+      expect(result.unassignedIndividuals).toHaveLength(0);
+    });
+  });
+
+  describe('startPeerReviewNow', () => {
+    it('throws NotFound when peer review missing', async () => {
+      await expect(
+        startPeerReviewNow(oidStr())
+      ).rejects.toBeInstanceOf(NotFoundError);
+    });
+
+    it('throws BadRequest when peer review is not in Upcoming status', async () => {
+      const pr = await makePeerReview({ status: 'Active' });
+
+      await expect(
+        startPeerReviewNow(pr._id.toString())
+      ).rejects.toBeInstanceOf(BadRequestError);
+    });
+
+    it('updates startDate to now and returns when status is Upcoming', async () => {
+      const now = Date.now();
+      const futureStart = new Date(now + 7 * 24 * 60 * 60 * 1000); // 7 days from now
+      const futureEnd = new Date(now + 14 * 24 * 60 * 60 * 1000); // 14 days from now
+      
+      const pr = await makePeerReview({
+        status: 'Upcoming',
+        startDate: futureStart,
+        endDate: futureEnd,
+      });
+
+      const beforeCall = Date.now();
+      await startPeerReviewNow(pr._id.toString());
+      const afterCall = Date.now();
+
+      const updated = await PeerReviewModel.findById(pr._id);
+      expect(updated?.status).toBe('Active');
+      expect(updated?.startDate).toBeDefined();
+      expect(updated!.startDate.getTime()).toBeGreaterThanOrEqual(beforeCall);
+      expect(updated!.startDate.getTime()).toBeLessThanOrEqual(afterCall);
     });
   });
 });
