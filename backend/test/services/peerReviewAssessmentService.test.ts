@@ -817,6 +817,7 @@ describe('peerReviewAssessmentService', () => {
 
     const gradingFindSpy = jest.spyOn(PeerReviewGradingTaskModel, 'find').mockReturnValue({
       select: jest.fn().mockReturnThis(),
+      populate: jest.fn().mockReturnThis(),
       lean: jest.fn().mockResolvedValue([
         { peerReviewSubmissionId: undefined, score: 99 },
         { peerReviewSubmissionId: submission._id, score: 8 },
