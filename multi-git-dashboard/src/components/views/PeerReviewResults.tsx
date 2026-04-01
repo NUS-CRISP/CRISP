@@ -497,7 +497,7 @@ const PeerReviewResults: React.FC<PeerReviewResultsProps> = ({
                               ) : (
                                 <Stack gap="xs">
                                   {row.graders.map(
-                                    (grader: any, idx: number) => (
+                                    (grader, idx) => (
                                       <Card
                                         key={idx}
                                         withBorder
