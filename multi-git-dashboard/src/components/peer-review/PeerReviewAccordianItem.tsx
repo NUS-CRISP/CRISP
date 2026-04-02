@@ -308,23 +308,22 @@ const PeerReviewAccordionItem = forwardRef<
                   >
                     Go to Team's Github Repository
                   </Button>
-                  {numberOfReviewers > 0 && (
-                    <Button
-                      component="a"
-                      onClick={() =>
-                        router.push(
-                          `${router.asPath.replace(/\/$/, '')}/${assignmentOfTeam?.assignment._id}`
-                        )
-                      }
-                      size="xs"
-                      rel="noreferrer"
-                      target="_blank"
-                      variant="light"
-                      color="gray"
-                    >
-                      See Peer Review for Team
-                    </Button>
-                  )}
+                  <Button
+                    component="a"
+                    onClick={() =>
+                      router.push(
+                        `${router.asPath.replace(/\/$/, '')}/${assignmentOfTeam?.assignment._id}`
+                      )
+                    }
+                    size="xs"
+                    rel="noreferrer"
+                    target="_blank"
+                    variant="light"
+                    color="gray"
+                    disabled={numberOfReviewers === 0}
+                  >
+                    See Peer Review for Team
+                  </Button>
                 </Stack>
               )}
               {isFaculty && (
