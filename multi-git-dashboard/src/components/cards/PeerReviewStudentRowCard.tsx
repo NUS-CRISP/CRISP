@@ -4,15 +4,37 @@ import { PeerReviewResultsStudentRow } from '@shared/types/PeerReviewAssessment'
 const PeerReviewStudentRowCard = ({
   row,
   maxMarks,
+  onViewGraders,
 }: {
   row: PeerReviewResultsStudentRow;
   maxMarks: number;
+  onViewGraders?: (studentId: string) => void;
 }) => {
   const graded =
     row.aggregatedScore !== null && row.aggregatedScore !== undefined;
 
   return (
-    <Card withBorder radius="md">
+    <Card
+      withBorder
+      radius="md"
+      style={{
+        cursor: onViewGraders ? 'pointer' : 'default',
+        transition: 'all 0.2s ease',
+      }}
+      onClick={() => onViewGraders?.(row.studentId)}
+      onMouseEnter={e => {
+        if (onViewGraders) {
+          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+          e.currentTarget.style.transform = 'translateY(-2px)';
+        }
+      }}
+      onMouseLeave={e => {
+        if (onViewGraders) {
+          e.currentTarget.style.boxShadow = '';
+          e.currentTarget.style.transform = '';
+        }
+      }}
+    >
       <Group justify="space-between" align="center">
         <Group align="center" gap="md">
           <div

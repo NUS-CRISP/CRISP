@@ -91,7 +91,18 @@ const PeerReviewTAAccordionItem = forwardRef<
         .filter(t => !assigned.has(t.value))
         .map(t => ({
           value: t.value,
-          label: t.TA.id === taId ? `(Is Supervising) ${t.label}` : t.label,
+          isSupervising: t.TA.id === taId,
+          label: t.label,
+        }))
+        .sort((a, b) => {
+          if (a.isSupervising !== b.isSupervising) {
+            return a.isSupervising ? 1 : -1; // non-supervising first
+          }
+          return a.label.localeCompare(b.label);
+        })
+        .map(t => ({
+          value: t.value,
+          label: t.isSupervising ? `(Is Supervising) ${t.label}` : t.label,
         }));
     };
 

@@ -113,8 +113,18 @@ const PeerReviewAccordionItem = forwardRef<
         .sort((a, b) => a.label.localeCompare(b.label))
         .map(t => ({
           value: t.value,
-          label:
-            t.TA?.id === currentTeam.TA?.id ? `(Same TA) ${t.label}` : t.label,
+          isSameTA: t.TA?.id === currentTeam.TA?.id,
+          label: t.label,
+        }))
+        .sort((a, b) => {
+          if (a.isSameTA !== b.isSameTA) {
+            return a.isSameTA ? 1 : -1; // non-same-TA first
+          }
+          return a.label.localeCompare(b.label);
+        })
+        .map(t => ({
+          value: t.value,
+          label: t.isSameTA ? `(Same TA) ${t.label}` : t.label,
         }));
     }, [teams, currentTeam.teamId, teamAssignedReviewees]);
 
@@ -146,8 +156,18 @@ const PeerReviewAccordionItem = forwardRef<
         )
         .map(t => ({
           value: t.value,
-          label:
-            t.TA?.id === currentTeam.TA?.id ? `(Same TA) ${t.label}` : t.label,
+          isSameTA: t.TA?.id === currentTeam.TA?.id,
+          label: t.label,
+        }))
+        .sort((a, b) => {
+          if (a.isSameTA !== b.isSameTA) {
+            return a.isSameTA ? 1 : -1; // non-same-TA first
+          }
+          return a.label.localeCompare(b.label);
+        })
+        .map(t => ({
+          value: t.value,
+          label: t.isSameTA ? `(Same TA) ${t.label}` : t.label,
         }));
 
     const handleDelete = (
