@@ -9,7 +9,7 @@ import { getTeamSetsByCourseId } from './teamSetService';
 import TeamDataModel from '@models/TeamData';
 import { extractRepoNameFromUrl, normalizeGitHubUrl } from '../utils/github';
 
-const TEMP_FALLBACK_URL = 'https://github.com/gongg21/AddSubtract.git'; // temporary for development
+const FALLBACK_URL = 'https://github.com/NUS-CRISP/CRISP.git';
 
 export const getTeamsByCourseId = async (courseId: string) => {
   const teamSets = await getTeamSetsByCourseId(courseId);
@@ -191,7 +191,7 @@ export const resolveTeamRepo = async (courseId: string, teamId: string) => {
   if (!teamData) {
     return {
       repoName: team.number.toString(),
-      repoUrl: TEMP_FALLBACK_URL,
+      repoUrl: FALLBACK_URL,
       gitHubOrgName: 'N/A',
     };
   }
@@ -212,7 +212,7 @@ export const resolveTeamRepo = async (courseId: string, teamId: string) => {
   const match = links.find(l => extractRepoNameFromUrl(l) === repoName);
   return {
     repoName,
-    repoUrl: match ?? TEMP_FALLBACK_URL,
+    repoUrl: match ?? FALLBACK_URL,
     gitHubOrgName: 'N/A',
   };
 };

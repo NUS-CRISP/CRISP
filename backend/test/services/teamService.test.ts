@@ -704,7 +704,7 @@ describe('teamService', () => {
         team._id.toHexString()
       );
       expect(result.repoName).toBe(team.number.toString());
-      expect(result.repoUrl).toBe('https://github.com/gongg21/AddSubtract.git');
+      expect(result.repoUrl).toBe('https://github.com/NUS-CRISP/CRISP.git');
       expect(result.gitHubOrgName).toBe('N/A');
     });
 
@@ -842,7 +842,7 @@ describe('teamService', () => {
       );
 
       expect(result.repoName).toBe('test-repo');
-      expect(result.repoUrl).toBe('https://github.com/gongg21/AddSubtract.git');
+      expect(result.repoUrl).toBe('https://github.com/NUS-CRISP/CRISP.git');
     });
   });
 });

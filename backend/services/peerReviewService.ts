@@ -35,7 +35,7 @@ export interface NormalizedTeam {
 
 const oid = (s: string) => new Types.ObjectId(s);
 
-const TEMP_FALLBACK_URL = 'https://github.com/gongg21/AddSubtract.git';
+const TEMP_FALLBACK_URL = 'https://github.com/NUS-CRISP/CRISP.git';
 
 export const getAllPeerReviewsyId = async (courseId: string) => {
   const peerReviews = await PeerReviewModel.find({ course: courseId });
