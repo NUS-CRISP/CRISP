@@ -102,6 +102,10 @@ export const getPeerReviewAssignmentWithViewContext = async (
     courseId
   );
 
+  const peerReview = await getPeerReviewById(
+    assignment.peerReviewId.toString()
+  );
+
   const revieweeTeam = await TeamModel.findById(assignment.reviewee)
     .select('_id members TA')
     .lean();
@@ -114,8 +118,14 @@ export const getPeerReviewAssignmentWithViewContext = async (
     userCourseRole === COURSE_ROLE.TA &&
     Boolean(revieweeTeam?.TA?.toString() === userId);
 
+  // Add commitOrTag from parent PeerReview to assignment DTO
+  const assignmentWithCommitOrTag = {
+    ...assignment.toObject(),
+    commitOrTag: peerReview.commitOrTag,
+  };
+
   return {
-    assignment,
+    assignment: assignmentWithCommitOrTag,
     viewContext: {
       isReviewee,
       isSupervisorTA,
