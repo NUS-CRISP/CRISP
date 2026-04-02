@@ -851,7 +851,7 @@ const buildTeamsDTO = (
   teamAssignedMap: Map<string, AssignedReviewDTO[]>,
   commitOrTag?: string
 ) => {
-  return scopedTeams.map(team => {
+  const teamDtos = scopedTeams.map(team => {
     const teamData = teamDataById.get(team.id);
     const taName = team.taId ? (usersById.get(team.taId) ?? '') : '';
 
@@ -875,6 +875,8 @@ const buildTeamsDTO = (
       assignedReviewsToTeam,
     };
   });
+
+  return teamDtos.sort((a, b) => a.teamNumber - b.teamNumber);
 };
 
 // Helper Functions
