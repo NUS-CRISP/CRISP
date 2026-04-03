@@ -52,7 +52,7 @@ const ShowUnassignedButton: React.FC<ShowUnassignedButtonProps> = ({
         showUnassignedOnly ? <IconEyeOff size={18} /> : <IconEye size={18} />
       }
     >
-      {showUnassignedOnly ? 'Show All' : `Show Unassigned (${unassignedCount})`}
+      {showUnassignedOnly ? 'Show All' : 'Show Unassigned'}
     </Button>
   );
 };

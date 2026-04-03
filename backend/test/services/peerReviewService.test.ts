@@ -946,6 +946,10 @@ describe('peerReviewService', () => {
       );
 
       expect(info.teams.length).toBeGreaterThanOrEqual(2);
+      // Teams should be sorted by teamNumber from buildTeamsDTO
+      for (let i = 1; i < info.teams.length; i++) {
+        expect(info.teams[i].teamNumber).toBeGreaterThanOrEqual(info.teams[i - 1].teamNumber);
+      }
       // since Faculty, capabilities.assignmentPageTeamIds should include scoped team ids
       expect(
         info.capabilities.assignmentPageTeamIds.length
@@ -1003,6 +1007,10 @@ describe('peerReviewService', () => {
       );
 
       // find teamB dto should have assignedReviewsToTeam non-empty
+      // Teams should be sorted by teamNumber from buildTeamsDTO
+      for (let i = 1; i < info.teams.length; i++) {
+        expect(info.teams[i].teamNumber).toBeGreaterThanOrEqual(info.teams[i - 1].teamNumber);
+      }
       const dtoB = info.teams.find(t => t.teamId === teamB._id.toString());
       expect(dtoB).toBeTruthy();
       expect(dtoB?.assignedReviewsToTeam.length).toBeGreaterThanOrEqual(1);
@@ -1067,6 +1075,10 @@ describe('peerReviewService', () => {
       // - ta3 NOT in usersById initially
       expect(info._id).toBe(pr._id.toString());
       expect(info.teams.length).toBeGreaterThanOrEqual(2);
+      // Teams should be sorted by teamNumber from buildTeamsDTO
+      for (let i = 1; i < info.teams.length; i++) {
+        expect(info.teams[i].teamNumber).toBeGreaterThanOrEqual(info.teams[i - 1].teamNumber);
+      }
 
       // ta3 should be in TAAssignments
       // because it was fetched from course.TAs and added to allCourseTAIds

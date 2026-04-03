@@ -595,13 +595,42 @@ export const getPeerReviewResultsForAssessmentById = async (
     peerReviewId: oid(String(peerReview._id)),
     reviewerKind: { $in: ['Student', 'Team'] },
   })
-    .select('_id reviewerKind reviewerUserId reviewerTeamId')
+    .select(
+      '_id peerReviewAssignmentId reviewerKind reviewerUserId reviewerTeamId status'
+    )
     .lean();
 
   const submissionIds = submissions.map(s => s._id);
 
-  // Load completed grading tasks with scores
-  const tasks = await PeerReviewGradingTaskModel.find({
+  // Load assignments to know which team each submission was for
+  const assignmentIds = Array.from(
+    new Set(submissions.map(s => String(s.peerReviewAssignmentId)))
+  ).map(oid);
+  const assignments = await PeerReviewAssignmentModel.find({
+    _id: { $in: assignmentIds },
+  })
+    .select('_id reviewee')
+    .lean();
+
+  const assignmentByIdMap = new Map(
+    (assignments as any[]).map(a => [String(a._id), a])
+  );
+
+  // Load all grading tasks (not just completed) for grader details
+  const allGradingTasks = await PeerReviewGradingTaskModel.find({
+    peerReviewId: oid(String(peerReview._id)),
+    peerReviewSubmissionId: { $in: submissionIds },
+  })
+    .select('peerReviewSubmissionId status score feedback gradedAt grader')
+    .populate('grader', '_id name')
+    .populate(
+      'peerReviewSubmissionId',
+      'reviewerKind reviewerUserId reviewerTeamId peerReviewAssignmentId'
+    )
+    .lean();
+
+  // Load completed grading tasks with scores for aggregation
+  const completedTasks = await PeerReviewGradingTaskModel.find({
     peerReviewId: oid(String(peerReview._id)),
     peerReviewSubmissionId: { $in: submissionIds },
     status: 'Completed',
@@ -612,12 +641,70 @@ export const getPeerReviewResultsForAssessmentById = async (
 
   // submissionId -> [scores]
   const scoresBySubmission = new Map<string, number[]>();
-  for (const t of tasks) {
+  for (const t of completedTasks) {
     if (!t.peerReviewSubmissionId) continue;
     const sid = String(t.peerReviewSubmissionId);
     const arr = scoresBySubmission.get(sid) ?? [];
     arr.push(Number(t.score));
     scoresBySubmission.set(sid, arr);
+  }
+
+  // Build a map of team IDs to team numbers/names for graders
+  const teamIdToTeam = new Map<string, { number: number; name?: string }>();
+  for (const t of teams) {
+    teamIdToTeam.set(String(t._id), {
+      number: t.number,
+      name: `Team ${t.number}`,
+    });
+  }
+
+  // Build graders map: submissionId -> enriched grader details
+  const gradersBySubmissionId = new Map<
+    string,
+    Array<{
+      graderId: string;
+      graderName: string;
+      status: 'Assigned' | 'InProgress' | 'Completed';
+      score?: number;
+      feedback?: string;
+      gradedAt?: Date;
+      revieweeTeamNumber?: number;
+    }>
+  >();
+
+  for (const task of allGradingTasks) {
+    const submission = task.peerReviewSubmissionId as any;
+    if (!submission) continue;
+
+    // task.peerReviewSubmissionId is populated, so it's an object with _id
+    const submissionId = String(submission._id);
+
+    const grader = task.grader as any;
+    if (!grader) continue;
+
+    const graderId = String(grader._id);
+    const graderName = grader.name ?? 'Unknown';
+
+    // Find the reviewee team for this submission
+    const submissionAssignment = assignmentByIdMap.get(
+      String(submission.peerReviewAssignmentId)
+    ) as any;
+    const revieweeTeamId = submissionAssignment?.reviewee;
+    const revieweeTeamNumber = revieweeTeamId
+      ? teams.find(t => String(t._id) === String(revieweeTeamId))?.number
+      : undefined;
+
+    const graders = gradersBySubmissionId.get(submissionId) ?? [];
+    graders.push({
+      graderId,
+      graderName,
+      status: task.status,
+      score: task.score,
+      feedback: task.feedback,
+      gradedAt: task.gradedAt,
+      revieweeTeamNumber,
+    });
+    gradersBySubmissionId.set(submissionId, graders);
   }
 
   // reviewerKey -> [submissionGrade]
@@ -655,12 +742,30 @@ export const getPeerReviewResultsForAssessmentById = async (
       aggregatedScore = aggregatedByReviewer.get(`T:${info.teamId}`) ?? null;
     }
 
+    // Get graders for this student's submission (where they or their team is the reviewer)
+    const studentSubmissionGraders = Array.from(gradersBySubmissionId.entries())
+      .filter(([submissionId]) => {
+        const submission = submissions.find(
+          s => String(s._id) === submissionId
+        );
+        if (!submission) return false;
+
+        // Check if student (or their team) is the reviewer of this submission
+        if (peerReview.reviewerType === 'Individual') {
+          return String(submission.reviewerUserId) === studentId;
+        } else {
+          return String(submission.reviewerTeamId) === info.teamId;
+        }
+      })
+      .flatMap(([, graders]) => graders);
+
     perStudent.push({
       studentId,
       studentName: info.studentName,
       teamId: info.teamId,
       teamNumber: info.teamNumber,
       aggregatedScore,
+      graders: studentSubmissionGraders,
     });
   }
 
@@ -932,7 +1037,7 @@ export const getPeerReviewGradingDTO = async (
       repo: {
         repoName: assignment.repoName,
         repoUrl: assignment.repoUrl,
-        commitOrTag: assignment.commitOrTag,
+        commitOrTag: peerReview.commitOrTag,
       },
     },
 

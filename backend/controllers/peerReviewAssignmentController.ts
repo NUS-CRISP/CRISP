@@ -28,7 +28,7 @@ export const getPeerReviewAssignment = async (req: Request, res: Response) => {
         courseId
       );
     const payload = {
-      ...assignment.toObject(),
+      ...assignment,
       viewContext,
     };
     res.status(200).json(payload);

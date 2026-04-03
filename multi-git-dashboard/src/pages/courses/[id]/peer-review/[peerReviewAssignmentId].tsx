@@ -598,9 +598,18 @@ const PeerReviewDetail: React.FC = () => {
       <Center h="60vh">
         <Stack align="center" gap={4}>
           <Text fw={600}>Unable to load assignment</Text>
-          <Text c="dimmed" fz="sm">
-            Please refresh and try again.
-          </Text>
+          {me.userCourseRole === COURSE_ROLE.Faculty ? (
+            <Text c="dimmed" fz="sm">
+              Please check the repository links and commit/tag configured.
+            </Text>
+          ) : (
+            <Text c="dimmed" fz="sm">
+              Please contact your instructor for assistance.
+            </Text>
+          )}
+          <Button variant="light" onClick={() => router.back()} mt="xs">
+            Back to Peer Review
+          </Button>
         </Stack>
       </Center>
     );
@@ -608,10 +617,13 @@ const PeerReviewDetail: React.FC = () => {
     return (
       <Center h="60vh">
         <Stack align="center" gap={4}>
-          <Text fw={600}>No repository tree found</Text>
+          <Text fw={600}>No repository found</Text>
           <Text c="dimmed" fz="sm">
             This assignment may not have a repository configured yet.
           </Text>
+          <Button variant="light" onClick={() => router.back()} mt="xs">
+            Back to Peer Review
+          </Button>
         </Stack>
       </Center>
     );

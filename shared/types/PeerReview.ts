@@ -54,7 +54,7 @@ export interface PeerReviewAssignment {
   reviewee: Team;
   repoName: string;
   repoUrl: string;
-  commitOrTag?: string; // Same as PeerReview.commitOrTag for consistency
+  commitOrTag?: string; // From parent PeerReview, not stored on assignment model
 }
 
 export interface PeerReviewSubmission {

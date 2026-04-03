@@ -242,9 +242,18 @@ const PeerReviewGradingDetailPage: React.FC = () => {
       <Center h="60vh">
         <Stack align="center" gap={4}>
           <Text fw={600}>Unable to load grading console</Text>
-          <Text c="dimmed" fz="sm">
-            Please refresh and try again.
-          </Text>
+          {me.userCourseRole === COURSE_ROLE.Faculty ? (
+            <Text c="dimmed" fz="sm">
+              Please check the repository links and commit/tag configured.
+            </Text>
+          ) : (
+            <Text c="dimmed" fz="sm">
+              Please contact a faculty member for assistance.
+            </Text>
+          )}
+          <Button variant="light" onClick={() => router.back()}>
+            Back to Submissions
+          </Button>
         </Stack>
       </Center>
     );

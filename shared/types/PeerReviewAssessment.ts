@@ -67,6 +67,15 @@ export interface PeerReviewResultsStudentRow {
   teamId: string;
   teamNumber: number;
   aggregatedScore: number | null; // AssessmentResult.averageScore (or computed)
+  graders: Array<{
+    graderId: string;
+    graderName: string;
+    status: 'Assigned' | 'InProgress' | 'Completed';
+    score?: number;
+    feedback?: string;
+    gradedAt?: Date;
+    revieweeTeamNumber?: number; // Which team's submission is being graded
+  }>;
 }
 
 export interface PeerReviewResultsTeamCard {

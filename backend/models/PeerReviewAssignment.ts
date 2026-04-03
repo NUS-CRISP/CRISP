@@ -20,7 +20,6 @@ const peerReviewAssignmentSchema = new Schema<PeerReviewAssignment>(
     },
     repoName: { type: String, required: true },
     repoUrl: { type: String, required: true },
-    commitOrTag: { type: String, default: null },
     reviewee: {
       type: Schema.Types.ObjectId,
       ref: 'Team',
