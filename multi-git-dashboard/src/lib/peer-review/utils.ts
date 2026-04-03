@@ -50,7 +50,9 @@ export const fetchGithubRepoStructure = async (
   commitOrTag?: string
 ): Promise<RepoNode> => {
   const { owner, repo } = parseGithubRepo(repoUrl);
-  const res = await fetch(buildFetchRepoApiRoute(owner, repo, commitOrTag));
+  const res = await fetch(buildFetchRepoApiRoute(owner, repo, commitOrTag), {
+    cache: 'no-store',
+  });
   if (!res.ok) throw new Error('Failed to fetch repository structure');
   const data = await res.json();
 

@@ -61,7 +61,6 @@ describe('peerReviewAssignmentController', () => {
       (getPeerReviewAssignmentWithViewContext as jest.Mock).mockResolvedValue({
         assignment: {
           _id: 'a1',
-          toObject: () => ({ _id: 'a1' }),
         },
         viewContext: { canEdit: false },
       });

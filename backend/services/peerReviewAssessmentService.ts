@@ -1037,7 +1037,7 @@ export const getPeerReviewGradingDTO = async (
       repo: {
         repoName: assignment.repoName,
         repoUrl: assignment.repoUrl,
-        commitOrTag: assignment.commitOrTag,
+        commitOrTag: peerReview.commitOrTag,
       },
     },
 

@@ -35,7 +35,7 @@ export interface NormalizedTeam {
 
 const oid = (s: string) => new Types.ObjectId(s);
 
-const TEMP_FALLBACK_URL = 'https://github.com/gongg21/AddSubtract.git';
+const FALLBACK_URL = 'https://github.com/NUS-CRISP/CRISP.git';
 
 export const getAllPeerReviewsyId = async (courseId: string) => {
   const peerReviews = await PeerReviewModel.find({ course: courseId });
@@ -79,7 +79,7 @@ export const getPeerReviewInfoById = async (
     courseId,
     peerReviewId,
     ctx.scopedTeamIds,
-    peerReview.commitOrTag
+    peerReview
   );
 
   const reviewerScope = computeReviewerScope(
@@ -124,7 +124,8 @@ export const getPeerReviewInfoById = async (
   await addMissingAssignmentsForSubmissions(
     courseId,
     submissions,
-    assignmentState.assignmentById
+    assignmentState.assignmentById,
+    peerReview
   );
 
   const assignedReviewMaps = buildAssignedReviewMaps(
@@ -548,7 +549,7 @@ const loadAssignmentsState = async (
   courseId: string,
   peerReviewId: string,
   scopedTeamIds: string[],
-  commitOrTag?: string
+  peerReview: any
 ) => {
   const assignmentDocs = await PeerReviewAssignmentModel.find({
     peerReviewId: oid(peerReviewId),
@@ -585,8 +586,8 @@ const loadAssignmentsState = async (
         TA: revieweeTA as any,
       },
       repoName: repoName,
-      repoUrl: repoUrl ?? TEMP_FALLBACK_URL,
-      commitOrTag,
+      repoUrl: repoUrl ?? FALLBACK_URL,
+      commitOrTag: peerReview?.commitOrTag,
     };
 
     assignmentById.set(assignmentDto._id, assignmentDto);
@@ -668,7 +669,8 @@ const addMissingAssignmentsForSubmissions = async (
     teamSubs: PeerReviewSubmission[];
     taSubs: PeerReviewSubmission[];
   },
-  assignmentById: Map<string, PeerReviewAssignment>
+  assignmentById: Map<string, PeerReviewAssignment>,
+  peerReview: any
 ) => {
   const neededIds = new Set<string>();
   for (const s of [
@@ -713,8 +715,8 @@ const addMissingAssignmentsForSubmissions = async (
         TA: revieweeTA as any,
       },
       repoName: repoName,
-      repoUrl: repoUrl ?? TEMP_FALLBACK_URL,
-      commitOrTag: a.commitOrTag,
+      repoUrl: repoUrl ?? FALLBACK_URL,
+      commitOrTag: peerReview?.commitOrTag,
     });
   }
 };
@@ -851,7 +853,7 @@ const buildTeamsDTO = (
   teamAssignedMap: Map<string, AssignedReviewDTO[]>,
   commitOrTag?: string
 ) => {
-  return scopedTeams.map(team => {
+  const teamDtos = scopedTeams.map(team => {
     const teamData = teamDataById.get(team.id);
     const taName = team.taId ? (usersById.get(team.taId) ?? '') : '';
 
@@ -875,6 +877,8 @@ const buildTeamsDTO = (
       assignedReviewsToTeam,
     };
   });
+
+  return teamDtos.sort((a, b) => a.teamNumber - b.teamNumber);
 };
 
 // Helper Functions
