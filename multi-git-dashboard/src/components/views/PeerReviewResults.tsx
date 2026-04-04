@@ -25,6 +25,7 @@ import PeerReviewTeamCard from '../cards/PeerReviewTeamCard';
 import DownloadResultsCsvModal from '../cards/Modals/DownloadResultsCsvModal';
 import MapResultsToIdModal from '../cards/Modals/MapResultsToIdModal';
 import ResultsPaginationDisplay from '../peer-review/ResultsPaginationDisplay';
+import { parseApiErrorMessage } from '@/lib/peer-review/utils';
 
 interface PeerReviewResultsProps {
   courseId: string;
@@ -81,7 +82,10 @@ const PeerReviewResults: React.FC<PeerReviewResultsProps> = ({
         { method: 'GET' }
       );
       const text = await res.text();
-      if (!res.ok) throw new Error(text || res.statusText);
+      if (!res.ok)
+        throw new Error(
+          parseApiErrorMessage(text, 'Failed to load peer review results')
+        );
       const data: PeerReviewResultsDTO = JSON.parse(text);
       setDto(data);
     } catch (e) {

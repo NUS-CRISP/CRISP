@@ -26,6 +26,7 @@ import PeerReviewSubmissionCard from '../cards/PeerReviewSubmissionCard';
 import AssignGradersModal from '../cards/Modals/AssignGradersModal';
 import ResultsPaginationDisplay from '../peer-review/ResultsPaginationDisplay';
 import { getMe } from '@/lib/auth/utils';
+import { parseApiErrorMessage } from '@/lib/peer-review/utils';
 
 type StatusFilter = 'All' | 'NotStarted' | 'Draft' | 'Submitted';
 type ReviewerKindFilter = 'All' | 'Student' | 'Team' | 'TA';
@@ -91,7 +92,10 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
       );
 
       const text = await res.text();
-      if (!res.ok) throw new Error(text || res.statusText);
+      if (!res.ok)
+        throw new Error(
+          parseApiErrorMessage(text, 'Failed to load submissions')
+        );
 
       const data: PeerReviewSubmissionsDTO = JSON.parse(text);
       setDto(data);
@@ -398,7 +402,6 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
                     assessmentId={assessmentId}
                     peerReviewStatus={dto.peerReviewStatus}
                     item={item}
-                    maxMarks={dto.maxMarks}
                     isFaculty={isFaculty}
                     onAfterAction={fetchSubmissions}
                   />
