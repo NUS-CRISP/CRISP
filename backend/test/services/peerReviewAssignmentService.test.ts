@@ -1295,6 +1295,43 @@ describe('peerReviewAssignmentService', () => {
       expect(left).toHaveLength(0);
     });
 
+    it('returns early when assignment exists but reviewer submission does not exist', async () => {
+      const prId = oid();
+      const teamSetId = oid();
+
+      (getPeerReviewById as jest.Mock).mockResolvedValue({
+        _id: prId,
+        reviewerType: 'Individual',
+        teamSetId,
+      });
+
+      const revieweeTeam = await makeTeam({ teamSet: teamSetId });
+      const assignment = await makeAssignment(prId, revieweeTeam._id);
+
+      const existingReviewer = oid();
+      await makeSubmission(prId, assignment._id, {
+        reviewerKind: 'Student',
+        reviewerUserId: existingReviewer,
+      });
+
+      // Remove a different reviewer => no matching submission to delete
+      await expect(
+        removeManualAssignment(
+          prId.toString(),
+          revieweeTeam._id.toString(),
+          oidStr(),
+          false
+        )
+      ).resolves.toBeUndefined();
+
+      const subsLeft = await PeerReviewSubmissionModel.find({
+        peerReviewId: prId,
+        peerReviewAssignmentId: assignment._id,
+      }).lean();
+
+      expect(subsLeft).toHaveLength(1);
+    });
+
     it('deletes comments and grading tasks tied to the removed submission', async () => {
       const prId = oid();
       const teamSetId = oid();

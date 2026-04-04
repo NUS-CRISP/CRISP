@@ -1399,6 +1399,64 @@ describe('peerReviewCommentsService edge cases', () => {
     expect((res[0] as any).displayAuthorName).toBe('Team 42');
   });
 
+  it('Student + Team reviewerType: sets canManage=true for reviewer team member even when not author', async () => {
+    const studentId = new Types.ObjectId();
+    const pr = await makePeerReview({ reviewerType: 'Team' });
+    (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
+
+    const reviewee = await makeTeam({ members: [new Types.ObjectId()] });
+    const assignment = await makeAssignment(pr._id, reviewee._id);
+
+    const homeTeam = await makeTeam({ number: 77, members: [studentId] });
+    const submission = await makeSubmission(pr._id, assignment._id, {
+      reviewerKind: 'Team',
+      reviewerTeamId: homeTeam._id.toString(),
+    });
+
+    await makeComment(pr._id, assignment._id, {
+      author: new Types.ObjectId(),
+      peerReviewSubmissionId: submission._id,
+      comment: 'peer team comment',
+    });
+
+    const res = await getPeerReviewCommentsByAssignmentId(
+      studentId.toString(),
+      COURSE_ROLE.Student,
+      assignment._id.toString()
+    );
+
+    expect(res).toHaveLength(1);
+    expect((res[0] as any).canManage).toBe(true);
+  });
+
+  it('Faculty view handles comments without submissionId', async () => {
+    const pr = await makePeerReview();
+    (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
+
+    const reviewee = await makeTeam({ members: [new Types.ObjectId()] });
+    const assignment = await makeAssignment(pr._id, reviewee._id);
+
+    await new PeerReviewCommentModel({
+      peerReviewId: pr._id,
+      peerReviewAssignmentId: assignment._id,
+      filePath: 'src/no-submission.ts',
+      startLine: 1,
+      endLine: 1,
+      comment: 'legacy comment',
+      author: new Types.ObjectId(),
+      authorCourseRole: COURSE_ROLE.Student,
+    }).save();
+
+    const res = await getPeerReviewCommentsByAssignmentId(
+      oidStr(),
+      COURSE_ROLE.Faculty,
+      assignment._id.toString()
+    );
+
+    expect(res).toHaveLength(1);
+    expect((res[0] as any).peerReviewSubmissionId).toBeUndefined();
+  });
+
   it('TA (not supervising): uses TA submission lookup and returns my comments', async () => {
     const taId = new Types.ObjectId();
     const pr = await makePeerReview({ reviewerType: 'Individual' });
