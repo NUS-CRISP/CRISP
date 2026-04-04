@@ -600,7 +600,8 @@ const PeerReviewDetail: React.FC = () => {
       error.toLowerCase().includes('not authorized') ||
       error.toLowerCase().includes('permission') ||
       error.toLowerCase().includes('forbidden') ||
-      error.toLowerCase().includes('not found') && error.includes('assignment');
+      (error.toLowerCase().includes('not found') &&
+        error.includes('assignment'));
 
     return (
       <Center h="60vh">

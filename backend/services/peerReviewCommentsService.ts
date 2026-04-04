@@ -257,7 +257,9 @@ export const updatePeerReviewCommentById = async (
   // TAs can update any comment for teams they supervise
   if (userCourseRole === COURSE_ROLE.TA) {
     const assignment = await fetchAssignment(assignmentId);
-    const peerReview = await getPeerReviewById(assignment.peerReviewId.toString());
+    const peerReview = await getPeerReviewById(
+      assignment.peerReviewId.toString()
+    );
     const reviewee = await fetchReviewee(assignment.reviewee.toString());
     const isSupervisingTA = reviewee.TA?.toString() === userId;
     const taReviewerSubmission = await findSubmissionForUserOnAssignment(
@@ -340,7 +342,9 @@ export const deletePeerReviewCommentById = async (
     const assignment = await fetchAssignment(
       comment.peerReviewAssignmentId.toString()
     );
-    const peerReview = await getPeerReviewById(assignment.peerReviewId.toString());
+    const peerReview = await getPeerReviewById(
+      assignment.peerReviewId.toString()
+    );
     const reviewee = await fetchReviewee(assignment.reviewee.toString());
     const isSupervisingTA = reviewee.TA?.toString() === userId;
     const taReviewerSubmission = await findSubmissionForUserOnAssignment(

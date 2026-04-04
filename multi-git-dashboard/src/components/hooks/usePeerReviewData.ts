@@ -111,24 +111,25 @@ export default function usePeerReviewData({
         const submissions: PeerReviewSubmission[] =
           await apiFetchSubmissionsForAssignment(courseId, assignmentId);
         if (cancelled) return;
-        
+
         // Determine which submission belongs to the current user
         let mySubmission: PeerReviewSubmission | null = null;
         let effectiveSupervisorView = supervisorView;
         let hasReviewerSubmission = false;
-        
+
         if (userCourseRole === COURSE_ROLE.Student) {
           mySubmission = submissions?.[0] ?? null;
           hasReviewerSubmission = Boolean(mySubmission);
         } else if (userCourseRole === COURSE_ROLE.TA) {
           // Find TA's own submission (if they're a reviewer for this team)
-          const taSubmission = submissions.find(
-            sub =>
-              sub.reviewerKind === 'TA' &&
-              Boolean(currentUserId) &&
-              String(sub.reviewerUserId) === String(currentUserId)
-          ) ?? null;
-          
+          const taSubmission =
+            submissions.find(
+              sub =>
+                sub.reviewerKind === 'TA' &&
+                Boolean(currentUserId) &&
+                String(sub.reviewerUserId) === String(currentUserId)
+            ) ?? null;
+
           if (taSubmission) {
             // TA is a reviewer for this team - always show normal reviewer view
             mySubmission = taSubmission;
@@ -143,22 +144,25 @@ export default function usePeerReviewData({
         }
         setSubmission(mySubmission);
         setIsSupervisorTA(effectiveSupervisorView);
-        
+
         const canEditNow = (() => {
           // Faculty has read-only monitoring access
           if (userCourseRole === COURSE_ROLE.Faculty) return false;
           if (revieweeView) return false;
           if (effectiveSupervisorView) return false;
-          
+
           // Student or TA as reviewer: can edit if submission exists and not submitted
-          if (userCourseRole === COURSE_ROLE.Student || userCourseRole === COURSE_ROLE.TA) {
+          if (
+            userCourseRole === COURSE_ROLE.Student ||
+            userCourseRole === COURSE_ROLE.TA
+          ) {
             return Boolean(
               hasReviewerSubmission &&
-                mySubmission &&
-                mySubmission.status !== 'Submitted'
+              mySubmission &&
+              mySubmission.status !== 'Submitted'
             );
           }
-          
+
           return false;
         })();
         setCanEdit(canEditNow);
@@ -194,7 +198,8 @@ export default function usePeerReviewData({
         }
       } catch (err) {
         if (cancelled) return;
-        const errorMessage = (err as Error).message || 'Failed to load assignment';
+        const errorMessage =
+          (err as Error).message || 'Failed to load assignment';
         setError(errorMessage);
         console.error('Error loading peer review assignment:', err);
       } finally {
