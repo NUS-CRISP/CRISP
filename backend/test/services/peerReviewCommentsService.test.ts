@@ -317,6 +317,42 @@ describe('peerReviewCommentsService', () => {
       expect(res.length).toBe(1);
     });
 
+    it('TA supervising + reviewer: returns only comments from own TA submission', async () => {
+      const taId = oid();
+      const pr = await makePeerReview({ reviewerType: 'Individual' });
+      (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
+
+      const reviewee = await makeTeam({ TA: taId, members: [oid()] });
+      const assignment = await makeAssignment(pr._id, reviewee._id);
+
+      const myTaSubmission = await makeSubmission(pr._id, assignment._id, {
+        reviewerKind: 'TA',
+        reviewerUserId: taId.toString(),
+      });
+      const otherSubmission = await makeSubmission(pr._id, assignment._id, {
+        reviewerKind: 'Student',
+        reviewerUserId: oidStr(),
+      });
+
+      const myComment = await makeComment(pr._id, assignment._id, {
+        author: taId,
+        peerReviewSubmissionId: myTaSubmission._id,
+      });
+      await makeComment(pr._id, assignment._id, {
+        author: oid(),
+        peerReviewSubmissionId: otherSubmission._id,
+      });
+
+      const res = await getPeerReviewCommentsByAssignmentId(
+        taId.toString(),
+        COURSE_ROLE.TA,
+        assignment._id.toString()
+      );
+
+      expect(res).toHaveLength(1);
+      expect(res[0]._id.toString()).toBe(myComment._id.toString());
+    });
+
     it('TA not supervising + no submission: throws MissingAuthorizationError', async () => {
       const taId = oid();
       const pr = await makePeerReview();
@@ -518,6 +554,28 @@ describe('peerReviewCommentsService', () => {
       );
 
       expect(created._id).toBeDefined();
+      expect(fetchSubmissionForAssignment).not.toHaveBeenCalled();
+      expect(assertSubmissionWritableByCaller).not.toHaveBeenCalled();
+    });
+
+    it('TA supervising without reviewer submission can add comment without submissionId', async () => {
+      const taId = oid();
+      const pr = await makePeerReview({ reviewerType: 'Individual' });
+      (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
+
+      const reviewee = await makeTeam({ TA: taId, members: [oid()] });
+      const assignment = await makeAssignment(pr._id, reviewee._id);
+
+      const created = await addPeerReviewCommentByAssignmentId(
+        taId.toString(),
+        COURSE_ROLE.TA,
+        assignment._id.toString(),
+        '',
+        { filePath: 'a.ts', startLine: 2, endLine: 2, comment: 'supervising ta comment' }
+      );
+
+      expect(created._id).toBeDefined();
+      expect(created.peerReviewSubmissionId).toBeUndefined();
       expect(fetchSubmissionForAssignment).not.toHaveBeenCalled();
       expect(assertSubmissionWritableByCaller).not.toHaveBeenCalled();
     });
@@ -1142,6 +1200,29 @@ describe('peerReviewCommentsService', () => {
       expect(updated?.isFlagged).toBe(false);
     });
 
+    it('TA supervising flag without reason defaults flagReason to empty string', async () => {
+      const taId = oid();
+      const pr = await makePeerReview();
+      (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
+
+      const reviewee = await makeTeam({ TA: taId });
+      const assignment = await makeAssignment(pr._id, reviewee._id);
+      const comment = await makeComment(pr._id, assignment._id);
+
+      await expect(
+        flagPeerReviewCommentById(
+          taId.toString(),
+          COURSE_ROLE.TA,
+          comment._id.toString(),
+          true
+        )
+      ).resolves.toBeUndefined();
+
+      const updated = await PeerReviewCommentModel.findById(comment._id);
+      expect(updated?.isFlagged).toBe(true);
+      expect(updated?.flagReason).toBe('');
+    });
+
     it('Unauthorized user cannot flag', async () => {
       const pr = await makePeerReview();
       (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
@@ -1321,6 +1402,104 @@ describe('peerReviewCommentsService edge cases', () => {
       return author?.toString() === studentId.toString();
     });
     expect(hasMyComment).toBe(true);
+  });
+
+  it('Student + Team reviewerType: uses reviewer team name when author name is unavailable', async () => {
+    const studentId = new Types.ObjectId();
+    const pr = await makePeerReview({ reviewerType: 'Team' });
+    (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
+
+    // reviewee does not contain studentId
+    const reviewee = await makeTeam({ members: [new Types.ObjectId()] });
+    const assignment = await makeAssignment(pr._id, reviewee._id);
+
+    // Home team (reviewer team)
+    const homeTeam = await makeTeam({ number: 42, members: [studentId] });
+
+    const submission = await makeSubmission(pr._id, assignment._id, {
+      reviewerKind: 'Team',
+      reviewerTeamId: homeTeam._id.toString(),
+    });
+
+    // Intentionally do not create author user, so populate('author') has no name
+    await new PeerReviewCommentModel({
+      peerReviewId: pr._id,
+      peerReviewAssignmentId: assignment._id,
+      peerReviewSubmissionId: submission._id,
+      filePath: 'src/a.ts',
+      startLine: 1,
+      endLine: 2,
+      comment: 'system generated',
+      author: new Types.ObjectId(),
+      authorCourseRole: COURSE_ROLE.Student,
+    }).save();
+
+    const res = await getPeerReviewCommentsByAssignmentId(
+      studentId.toString(),
+      COURSE_ROLE.Student,
+      assignment._id.toString()
+    );
+
+    expect(res).toHaveLength(1);
+    expect((res[0] as any).displayAuthorName).toBe('Team 42');
+  });
+
+  it('Student + Team reviewerType: sets canManage=true for reviewer team member even when not author', async () => {
+    const studentId = new Types.ObjectId();
+    const pr = await makePeerReview({ reviewerType: 'Team' });
+    (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
+
+    const reviewee = await makeTeam({ members: [new Types.ObjectId()] });
+    const assignment = await makeAssignment(pr._id, reviewee._id);
+
+    const homeTeam = await makeTeam({ number: 77, members: [studentId] });
+    const submission = await makeSubmission(pr._id, assignment._id, {
+      reviewerKind: 'Team',
+      reviewerTeamId: homeTeam._id.toString(),
+    });
+
+    await makeComment(pr._id, assignment._id, {
+      author: new Types.ObjectId(),
+      peerReviewSubmissionId: submission._id,
+      comment: 'peer team comment',
+    });
+
+    const res = await getPeerReviewCommentsByAssignmentId(
+      studentId.toString(),
+      COURSE_ROLE.Student,
+      assignment._id.toString()
+    );
+
+    expect(res).toHaveLength(1);
+    expect((res[0] as any).canManage).toBe(true);
+  });
+
+  it('Faculty view handles comments without submissionId', async () => {
+    const pr = await makePeerReview();
+    (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
+
+    const reviewee = await makeTeam({ members: [new Types.ObjectId()] });
+    const assignment = await makeAssignment(pr._id, reviewee._id);
+
+    await new PeerReviewCommentModel({
+      peerReviewId: pr._id,
+      peerReviewAssignmentId: assignment._id,
+      filePath: 'src/no-submission.ts',
+      startLine: 1,
+      endLine: 1,
+      comment: 'legacy comment',
+      author: new Types.ObjectId(),
+      authorCourseRole: COURSE_ROLE.Student,
+    }).save();
+
+    const res = await getPeerReviewCommentsByAssignmentId(
+      oidStr(),
+      COURSE_ROLE.Faculty,
+      assignment._id.toString()
+    );
+
+    expect(res).toHaveLength(1);
+    expect((res[0] as any).peerReviewSubmissionId).toBeUndefined();
   });
 
   it('TA (not supervising): uses TA submission lookup and returns my comments', async () => {

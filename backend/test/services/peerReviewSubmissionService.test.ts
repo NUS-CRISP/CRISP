@@ -321,6 +321,40 @@ describe('peerReviewSubmissionService', () => {
       );
     });
 
+    it('TA supervising + reviewer: returns only my TA submission', async () => {
+      const taId = oid();
+      const pr = await makePeerReviewDoc({ reviewerType: 'Individual' });
+      (getPeerReviewById as jest.Mock).mockResolvedValue({
+        _id: pr._id,
+        teamSetId: pr.teamSetId,
+        reviewerType: 'Individual',
+      });
+
+      const reviewee = await makeTeam({ TA: taId });
+      const assignment = await makeAssignment(pr._id, reviewee._id);
+
+      const mine = await makeSubmission(pr._id, assignment._id, {
+        reviewerKind: 'TA',
+        reviewerUserId: taId.toString(),
+        status: 'Draft',
+      });
+
+      await makeSubmission(pr._id, assignment._id, {
+        reviewerKind: 'Student',
+        reviewerUserId: oidStr(),
+        status: 'Draft',
+      });
+
+      const res = await getSubmissionsByAssignmentId(
+        taId.toString(),
+        COURSE_ROLE.TA,
+        assignment._id.toString()
+      );
+
+      expect(res).toHaveLength(1);
+      expect(res[0]._id.toString()).toBe(mine._id.toString());
+    });
+
     it('TA not supervising: returns own TA submission, throws if none', async () => {
       const taId = oid();
       const pr = await makePeerReviewDoc({ reviewerType: 'Individual' });

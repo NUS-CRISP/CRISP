@@ -89,7 +89,7 @@ const AssignGradersModal: React.FC<AssignGradersModalProps> = ({
       notifications.show({
         color: 'red',
         title: 'Assignment failed',
-        message: (err as Error).message || 'Failed to assign graders.',
+        message: 'Failed to assign graders: ' + (err as Error).message,
       });
     } finally {
       setLoading(false);

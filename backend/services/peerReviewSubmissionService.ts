@@ -56,6 +56,17 @@ export const getSubmissionsByAssignmentId = async (
 
   // TAs can see their own TA submission and of those they supervise
   if (userCourseRole === COURSE_ROLE.TA) {
+    const myTaSubmission = await PeerReviewSubmissionModel.findOne({
+      peerReviewId: oid(peerReview._id.toString()),
+      peerReviewAssignmentId: oid(assignment._id.toString()),
+      reviewerKind: 'TA',
+      reviewerUserId: oid(userId),
+    }).lean();
+
+    if (myTaSubmission) {
+      return [myTaSubmission];
+    }
+
     const isSupervising = await isTAForAssignmentReviewee(
       userId,
       peerReviewAssignmentId
@@ -71,15 +82,7 @@ export const getSubmissionsByAssignmentId = async (
       return submissions;
     }
 
-    const submission = await PeerReviewSubmissionModel.find({
-      peerReviewId: oid(peerReview._id.toString()),
-      peerReviewAssignmentId: oid(assignment._id.toString()),
-      reviewerKind: 'TA',
-      reviewerUserId: oid(userId),
-    }).lean();
-
-    if (submission.length === 0) throw new NotFoundError(SUBMISSION_NOT_FOUND);
-    return submission;
+    throw new NotFoundError(SUBMISSION_NOT_FOUND);
   }
 
   // Coordinators can view all submissions for this assignment
