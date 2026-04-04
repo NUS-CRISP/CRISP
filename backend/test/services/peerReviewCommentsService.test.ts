@@ -557,6 +557,28 @@ describe('peerReviewCommentsService', () => {
       expect(fetchSubmissionForAssignment).not.toHaveBeenCalled();
       expect(assertSubmissionWritableByCaller).not.toHaveBeenCalled();
     });
+
+    it('TA supervising without reviewer submission can add comment without submissionId', async () => {
+      const taId = oid();
+      const pr = await makePeerReview({ reviewerType: 'Individual' });
+      (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
+
+      const reviewee = await makeTeam({ TA: taId, members: [oid()] });
+      const assignment = await makeAssignment(pr._id, reviewee._id);
+
+      const created = await addPeerReviewCommentByAssignmentId(
+        taId.toString(),
+        COURSE_ROLE.TA,
+        assignment._id.toString(),
+        '',
+        { filePath: 'a.ts', startLine: 2, endLine: 2, comment: 'supervising ta comment' }
+      );
+
+      expect(created._id).toBeDefined();
+      expect(created.peerReviewSubmissionId).toBeUndefined();
+      expect(fetchSubmissionForAssignment).not.toHaveBeenCalled();
+      expect(assertSubmissionWritableByCaller).not.toHaveBeenCalled();
+    });
   });
 
   describe('updatePeerReviewCommentById', () => {
@@ -1176,6 +1198,29 @@ describe('peerReviewCommentsService', () => {
 
       const updated = await PeerReviewCommentModel.findById(comment._id);
       expect(updated?.isFlagged).toBe(false);
+    });
+
+    it('TA supervising flag without reason defaults flagReason to empty string', async () => {
+      const taId = oid();
+      const pr = await makePeerReview();
+      (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
+
+      const reviewee = await makeTeam({ TA: taId });
+      const assignment = await makeAssignment(pr._id, reviewee._id);
+      const comment = await makeComment(pr._id, assignment._id);
+
+      await expect(
+        flagPeerReviewCommentById(
+          taId.toString(),
+          COURSE_ROLE.TA,
+          comment._id.toString(),
+          true
+        )
+      ).resolves.toBeUndefined();
+
+      const updated = await PeerReviewCommentModel.findById(comment._id);
+      expect(updated?.isFlagged).toBe(true);
+      expect(updated?.flagReason).toBe('');
     });
 
     it('Unauthorized user cannot flag', async () => {

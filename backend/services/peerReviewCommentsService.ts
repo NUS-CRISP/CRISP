@@ -590,7 +590,7 @@ const decorateCommentsForViewer = async (
         submission.reviewerTeamId
       ) {
         const team = reviewerTeamById.get(String(submission.reviewerTeamId));
-        if (team && (team.members ?? []).map(String).includes(userId)) {
+        if (team && team.members?.map(String).includes(userId)) {
           canManage = true;
         }
       }
