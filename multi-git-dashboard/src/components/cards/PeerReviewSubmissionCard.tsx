@@ -133,7 +133,7 @@ const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
     } catch (err) {
       notifications.show({
         title: 'Error',
-        message: 'Failed to load TAs',
+        message: 'Failed to load TAs: ' + (err as Error).message,
         color: 'red',
       });
     } finally {
@@ -168,7 +168,7 @@ const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
     } catch (err) {
       notifications.show({
         title: 'Error',
-        message: (err as Error).message,
+        message: 'Failed to assign grader: ' + (err as Error).message,
         color: 'red',
       });
     } finally {
@@ -217,7 +217,7 @@ const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
     } catch (err) {
       notifications.show({
         title: 'Error',
-        message: (err as Error).message,
+        message: 'Failed to unassign grader: ' + (err as Error).message,
         color: 'red',
       });
     } finally {

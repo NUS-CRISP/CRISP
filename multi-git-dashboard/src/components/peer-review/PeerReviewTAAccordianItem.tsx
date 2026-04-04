@@ -63,14 +63,23 @@ const PeerReviewTAAccordionItem = forwardRef<
       { open: openDeleteModal, close: closeDeleteModal },
     ] = useDisclosure(false);
 
-    // Convert TAToAssignments object to array for mapping
+    // Convert TAToAssignments object to array for mapping + filtering for unassigned
     const taEntries = useMemo(
-      () =>
-        Object.entries(TAToAssignments) as Array<
+      () => {
+        const temp = Object.entries(TAToAssignments) as Array<
           [string, { taName: string; assignedReviews: AssignedReviewDTO[] }]
-        >,
-      [TAToAssignments]
+        >;
+        
+        return temp.filter(([taId, info]) => {
+          if (!showUnassignedOnly) return true;
+          return taId && info.assignedReviews.length === 0;
+        });
+      },
+      [TAToAssignments, showUnassignedOnly]
     );
+    
+    if (taEntries.length === 0 && showUnassignedOnly)
+      return null; // Don't render the TA section if filtering for unassigned and there are none
 
     // Get dropdown options for TAs excluding already assigned reviewees
     const taAssignedCount = useMemo(() => {
@@ -107,10 +116,6 @@ const PeerReviewTAAccordionItem = forwardRef<
                 <Divider />
                 {taEntries.length > 0 ? (
                   taEntries
-                    .filter(([taId, info]) => {
-                      if (!showUnassignedOnly) return true;
-                      return taId && info.assignedReviews.length === 0;
-                    })
                     .map(([taId, info]) => (
                       <ScrollArea key={taId}>
                         <Group justify="space-between" mt={4}>

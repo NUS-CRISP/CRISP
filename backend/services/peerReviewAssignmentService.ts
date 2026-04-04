@@ -331,11 +331,27 @@ export const removeManualAssignment = async (
 
   const filter = buildSubmissionIdentityFilter(reviewerType, reviewerId, isTA);
 
-  await PeerReviewSubmissionModel.deleteOne({
+  const submission = await PeerReviewSubmissionModel.findOne({
     peerReviewId: peerReviewId,
     peerReviewAssignmentId: existingAssignment._id,
     ...filter,
+  })
+    .select('_id')
+    .lean();
+
+  if (!submission) {
+    return;
+  }
+
+  await PeerReviewCommentModel.deleteMany({
+    peerReviewSubmissionId: submission._id,
   });
+
+  await PeerReviewGradingTaskModel.deleteMany({
+    peerReviewSubmissionId: submission._id,
+  });
+
+  await PeerReviewSubmissionModel.deleteOne({ _id: submission._id });
 };
 
 // Initialise empty assignments for new peer reviews

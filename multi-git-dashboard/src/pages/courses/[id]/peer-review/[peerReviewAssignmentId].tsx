@@ -79,6 +79,7 @@ const PeerReviewDetail: React.FC = () => {
   // Fetch peer review assignment data
   const {
     loading,
+    error,
     peerReviewAssignment,
     repoTree,
     currFile,
@@ -101,6 +102,7 @@ const PeerReviewDetail: React.FC = () => {
     courseId: id,
     assignmentId: peerReviewAssignmentId,
     userCourseRole: me?.userCourseRole,
+    currentUserId: me?.userId,
   });
 
   /* ===== Refs and States for Editor and Interaction Logic ===== */
@@ -593,6 +595,31 @@ const PeerReviewDetail: React.FC = () => {
         </Stack>
       </Center>
     );
+  if (error) {
+    const isPermissionError =
+      error.toLowerCase().includes('not authorized') ||
+      error.toLowerCase().includes('permission') ||
+      error.toLowerCase().includes('forbidden') ||
+      error.toLowerCase().includes('not found') && error.includes('assignment');
+
+    return (
+      <Center h="60vh">
+        <Stack align="center" gap={4}>
+          <Text fw={600}>
+            {isPermissionError ? 'Access Denied' : 'Error Loading Assignment'}
+          </Text>
+          <Text c="dimmed" fz="sm">
+            {isPermissionError
+              ? 'You do not have permission to access this assignment.'
+              : error}
+          </Text>
+          <Button variant="light" onClick={() => router.back()} mt="xs">
+            Back to Peer Review
+          </Button>
+        </Stack>
+      </Center>
+    );
+  }
   if (!peerReviewAssignment)
     return (
       <Center h="60vh">
