@@ -320,6 +320,7 @@ const PeerReviewAccordionItem = forwardRef<
                     target="_blank"
                     variant="light"
                     color="gray"
+                    disabled={numberOfReviewers === 0}
                   >
                     See Peer Review for Team
                   </Button>
