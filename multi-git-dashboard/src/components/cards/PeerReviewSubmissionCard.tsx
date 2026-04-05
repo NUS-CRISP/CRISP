@@ -293,38 +293,42 @@ const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
         </Stack>
 
         <Stack gap={6} align="flex-end">
-          <Badge variant="light">
-            Grades Given: {item.grading.completedCount}/{item.grading.count}
-          </Badge>
-          {isFaculty && item.grading.graders.length > 0 ? (
-            <Stack gap={4} align="flex-end">
-              <Text fz="xs" c="dimmed">
-                Graders:
-              </Text>
-              {item.grading.graders.map(grader => (
-                <Group key={grader.id} gap={4}>
-                  <Text fz="xs">{grader.name}</Text>
-                  <ActionIcon
-                    size="xs"
-                    color="red"
-                    variant="subtle"
-                    disabled={isPeerReviewClosed}
-                    onClick={() => handleUnassignGrader(grader.id)}
-                    loading={unassigningGrader === grader.id}
-                  >
-                    <IconX size={12} />
-                  </ActionIcon>
-                </Group>
-              ))}
-            </Stack>
-          ) : (
-            <Text
-              fz="xs"
-              c="dimmed"
-              style={{ maxWidth: 260, textAlign: 'right' }}
-            >
-              Graders: {gradersLabel}
-            </Text>
+          {isFaculty && (
+            <>
+              <Badge variant="light">
+                Grades Given: {item.grading.completedCount}/{item.grading.count}
+              </Badge>
+              {item.grading.graders.length > 0 ? (
+                <Stack gap={4} align="flex-end">
+                  <Text fz="xs" c="dimmed">
+                    Graders:
+                  </Text>
+                  {item.grading.graders.map(grader => (
+                    <Group key={grader.id} gap={4}>
+                      <Text fz="xs">{grader.name}</Text>
+                      <ActionIcon
+                        size="xs"
+                        color="red"
+                        variant="subtle"
+                        disabled={isPeerReviewClosed}
+                        onClick={() => handleUnassignGrader(grader.id)}
+                        loading={unassigningGrader === grader.id}
+                      >
+                        <IconX size={12} />
+                      </ActionIcon>
+                    </Group>
+                  ))}
+                </Stack>
+              ) : (
+                <Text
+                  fz="xs"
+                  c="dimmed"
+                  style={{ maxWidth: 260, textAlign: 'right' }}
+                >
+                  Graders: {gradersLabel}
+                </Text>
+              )}
+            </>
           )}
           {item.grading.lastGradedAt && (
             <Text fz="xs" c="dimmed">

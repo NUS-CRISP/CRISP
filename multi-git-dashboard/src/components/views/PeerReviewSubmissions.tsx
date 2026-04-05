@@ -374,18 +374,19 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
                     }
                     w={160}
                   />
-
-                  <Select
-                    label="Grader"
-                    placeholder="All graders"
-                    data={graderOptions}
-                    value={graderFilter}
-                    onChange={setGraderFilter}
-                    clearable
-                    searchable
-                    nothingFoundMessage="No graders assigned"
-                    w={220}
-                  />
+                  {isFaculty && (
+                    <Select
+                      label="Grader"
+                      placeholder="All graders"
+                      data={graderOptions}
+                      value={graderFilter}
+                      onChange={setGraderFilter}
+                      clearable
+                      searchable
+                      nothingFoundMessage="No graders assigned"
+                      w={220}
+                    />
+                  )}
                 </Group>
               </Stack>
             </Collapse>
