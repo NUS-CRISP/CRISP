@@ -217,6 +217,7 @@ const PeerReviewDetail: React.FC = () => {
     hoverDecoRef.current = editor.deltaDecorations(hoverDecoRef.current, []);
     dragDecosRef.current = editor.deltaDecorations(dragDecosRef.current, []);
     iconDecoRef.current = editor.deltaDecorations(iconDecoRef.current, []);
+    activeWidgetRef.current = null;
     setActiveWidget(null);
   };
 
@@ -236,10 +237,18 @@ const PeerReviewDetail: React.FC = () => {
     let startLine: number | null = null;
 
     const onMouseDown = editor.onMouseDown((e: MEditor.IEditorMouseEvent) => {
-      // 1) Click on glyph margin: start selection
+      // While comment input is active, lock line interactions.
+      if (activeWidgetRef.current) {
+        return;
+      }
+
+      // 1) Click on gutter icon area: start selection
       if (
         canEdit &&
-        e.target.type === monaco.editor.MouseTargetType.GUTTER_GLYPH_MARGIN &&
+        (e.target.type ===
+          monaco.editor.MouseTargetType.GUTTER_LINE_DECORATIONS ||
+          e.target.type ===
+            monaco.editor.MouseTargetType.GUTTER_GLYPH_MARGIN) &&
         e.target.position
       ) {
         startLine = e.target.position.lineNumber;
@@ -261,7 +270,7 @@ const PeerReviewDetail: React.FC = () => {
               range: new monaco.Range(startLine, 1, startLine, 1),
               options: {
                 isWholeLine: true,
-                glyphMarginClassName: classes.reviewLineIcon,
+                linesDecorationsClassName: classes.reviewLineIcon,
               },
             },
           ]
@@ -325,9 +334,13 @@ const PeerReviewDetail: React.FC = () => {
         dragDecosRef.current,
         decos
       );
+      iconDecoRef.current = editor.deltaDecorations(iconDecoRef.current, []);
+      hoverDecoRef.current = editor.deltaDecorations(hoverDecoRef.current, []);
 
       const top = editor.getTopForLineNumber(finish);
-      setActiveWidget({ start, end: finish, top });
+      const widget = { start, end: finish, top };
+      activeWidgetRef.current = widget;
+      setActiveWidget(widget);
       startLine = null;
     });
 
@@ -338,6 +351,7 @@ const PeerReviewDetail: React.FC = () => {
           hoverDecoRef.current,
           []
         );
+        iconDecoRef.current = editor.deltaDecorations(iconDecoRef.current, []);
         return;
       }
 
@@ -373,7 +387,7 @@ const PeerReviewDetail: React.FC = () => {
             options: {
               isWholeLine: true,
               className: classes.reviewLineHighlight,
-              glyphMarginClassName: classes.reviewLineIcon,
+              linesDecorationsClassName: classes.reviewLineIcon,
             },
           },
         ]);
