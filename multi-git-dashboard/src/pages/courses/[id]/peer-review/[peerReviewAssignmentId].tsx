@@ -14,9 +14,15 @@ import {
   Badge,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
+import { useColorScheme } from '@mantine/hooks';
 import DeleteConfirmationModal from '@/components/cards/Modals/DeleteConfirmationModal';
 import FlagCommentConfirmationModal from '@/components/cards/Modals/FlagCommentConfirmationModal';
-import { IconListDetails, IconArrowLeft, IconSend } from '@tabler/icons-react';
+import {
+  IconListDetails,
+  IconArrowLeft,
+  IconSend,
+  IconClipboardList,
+} from '@tabler/icons-react';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState, useRef } from 'react';
 import { PeerReviewComment } from '@shared/types/PeerReview';
@@ -35,6 +41,7 @@ import { getMe } from '@/lib/auth/utils';
 import SubmissionStatusBadge from '@/components/peer-review/SubmissionStatusBadge';
 import SaveStateBadge from '@/components/peer-review/SaveStateBadge';
 import SubmitReviewConfirmationModal from '@/components/cards/Modals/SubmitReviewConfirmationModal';
+import PeerReviewSummaryModal from '@/components/cards/Modals/PeerReviewSummaryModal';
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
@@ -43,6 +50,8 @@ const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
 
 const PeerReviewDetail: React.FC = () => {
   const router = useRouter();
+  const browserColorScheme = useColorScheme();
+  const monacoTheme = browserColorScheme === 'dark' ? 'vs-dark' : 'vs-light';
   const { id, peerReviewAssignmentId } = router.query as {
     id: string;
     peerReviewAssignmentId: string;
@@ -121,6 +130,7 @@ const PeerReviewDetail: React.FC = () => {
   const [updatingCommentId, setUpdatingCommentId] = useState<string | null>(
     null
   );
+  const [summaryOpen, setSummaryOpen] = useState(false);
 
   const [deleteCommentId, setDeleteCommentId] = useState<string | null>(null);
   const [flagCommentId, setFlagCommentId] = useState<string | null>(null);
@@ -207,6 +217,7 @@ const PeerReviewDetail: React.FC = () => {
     hoverDecoRef.current = editor.deltaDecorations(hoverDecoRef.current, []);
     dragDecosRef.current = editor.deltaDecorations(dragDecosRef.current, []);
     iconDecoRef.current = editor.deltaDecorations(iconDecoRef.current, []);
+    activeWidgetRef.current = null;
     setActiveWidget(null);
   };
 
@@ -226,10 +237,18 @@ const PeerReviewDetail: React.FC = () => {
     let startLine: number | null = null;
 
     const onMouseDown = editor.onMouseDown((e: MEditor.IEditorMouseEvent) => {
-      // 1) Click on glyph margin: start selection
+      // While comment input is active, lock line interactions.
+      if (activeWidgetRef.current) {
+        return;
+      }
+
+      // 1) Click on gutter icon area: start selection
       if (
         canEdit &&
-        e.target.type === monaco.editor.MouseTargetType.GUTTER_GLYPH_MARGIN &&
+        (e.target.type ===
+          monaco.editor.MouseTargetType.GUTTER_LINE_DECORATIONS ||
+          e.target.type ===
+            monaco.editor.MouseTargetType.GUTTER_GLYPH_MARGIN) &&
         e.target.position
       ) {
         startLine = e.target.position.lineNumber;
@@ -251,7 +270,7 @@ const PeerReviewDetail: React.FC = () => {
               range: new monaco.Range(startLine, 1, startLine, 1),
               options: {
                 isWholeLine: true,
-                glyphMarginClassName: classes.reviewLineIcon,
+                linesDecorationsClassName: classes.reviewLineIcon,
               },
             },
           ]
@@ -315,9 +334,13 @@ const PeerReviewDetail: React.FC = () => {
         dragDecosRef.current,
         decos
       );
+      iconDecoRef.current = editor.deltaDecorations(iconDecoRef.current, []);
+      hoverDecoRef.current = editor.deltaDecorations(hoverDecoRef.current, []);
 
       const top = editor.getTopForLineNumber(finish);
-      setActiveWidget({ start, end: finish, top });
+      const widget = { start, end: finish, top };
+      activeWidgetRef.current = widget;
+      setActiveWidget(widget);
       startLine = null;
     });
 
@@ -328,6 +351,7 @@ const PeerReviewDetail: React.FC = () => {
           hoverDecoRef.current,
           []
         );
+        iconDecoRef.current = editor.deltaDecorations(iconDecoRef.current, []);
         return;
       }
 
@@ -363,7 +387,7 @@ const PeerReviewDetail: React.FC = () => {
             options: {
               isWholeLine: true,
               className: classes.reviewLineHighlight,
-              glyphMarginClassName: classes.reviewLineIcon,
+              linesDecorationsClassName: classes.reviewLineIcon,
             },
           },
         ]);
@@ -657,6 +681,66 @@ const PeerReviewDetail: React.FC = () => {
     );
 
   const isReadOnly = isReviewee;
+  const isFacultyOrTA =
+    me.userCourseRole === COURSE_ROLE.Faculty ||
+    me.userCourseRole === COURSE_ROLE.TA;
+  const isStudentOrTA =
+    me.userCourseRole === COURSE_ROLE.Student ||
+    me.userCourseRole === COURSE_ROLE.TA;
+  const isSubmitted = submission?.status === 'Submitted';
+
+  const showSupervisorSummaryButton =
+    !isReadOnly && !submission && isSupervisorTA && isFacultyOrTA;
+  const showStudentTaActionButton =
+    !isReadOnly && !!submission && isStudentOrTA;
+
+  const statusElement = isReadOnly ? (
+    <Badge color="gray" variant="light" radius="md" size="lg">
+      Read-only (Reviewee)
+    </Badge>
+  ) : (
+    <SubmissionStatusBadge
+      userCourseRole={me.userCourseRole}
+      submission={submission}
+      isSupervisorTA={isSupervisorTA}
+    />
+  );
+
+  const reviewSummaryButton = (
+    <Button
+      leftSection={<IconClipboardList size={16} />}
+      radius="md"
+      size="xs"
+      fz="sm"
+      h="27px"
+      color="yellow"
+      onClick={() => setSummaryOpen(true)}
+    >
+      Review Summary
+    </Button>
+  );
+
+  const submitReviewButton = (
+    <Button
+      leftSection={<IconSend size={16} />}
+      radius="md"
+      size="xs"
+      fz="sm"
+      h="27px"
+      disabled={!canEdit}
+      onClick={() => setSubmitReviewModalOpened(true)}
+    >
+      Submit Review
+    </Button>
+  );
+
+  const actionElement = showSupervisorSummaryButton
+    ? reviewSummaryButton
+    : showStudentTaActionButton
+      ? isSubmitted
+        ? reviewSummaryButton
+        : submitReviewButton
+      : null;
 
   return (
     <Container fluid className={classes.wrapper}>
@@ -691,34 +775,8 @@ const PeerReviewDetail: React.FC = () => {
         </Group>
         <Group gap="xs">
           <SaveStateBadge canEdit={canEdit} saveState={saveState} />
-          {isReadOnly && (
-            <Badge color="gray" variant="light" radius="md" size="lg">
-              Read-only (Reviewee)
-            </Badge>
-          )}
-          {!isReadOnly && (
-            <SubmissionStatusBadge
-              userCourseRole={me.userCourseRole}
-              submission={submission}
-              isSupervisorTA={isSupervisorTA}
-            />
-          )}
-          {!isReadOnly &&
-            submission &&
-            (me.userCourseRole === COURSE_ROLE.Student ||
-              me.userCourseRole === COURSE_ROLE.TA) && (
-              <Button
-                leftSection={<IconSend size={16} />}
-                radius="md"
-                size="xs"
-                fz="sm"
-                h="27px"
-                disabled={!canEdit || submission?.status === 'Submitted'}
-                onClick={() => setSubmitReviewModalOpened(true)}
-              >
-                Submit Review
-              </Button>
-            )}
+          {statusElement}
+          {actionElement}
         </Group>
       </Group>
       <Group className={classes.body}>
@@ -745,7 +803,7 @@ const PeerReviewDetail: React.FC = () => {
                 key={currFile}
                 path={currFile}
                 language={getLanguageForFile(currFile)}
-                theme="vs-dark"
+                theme={monacoTheme}
                 value={currentCode}
                 options={{
                   readOnly: true,
@@ -792,6 +850,18 @@ const PeerReviewDetail: React.FC = () => {
           }
           readOnly={isReadOnly}
           canEditComments={canEdit}
+        />
+        <PeerReviewSummaryModal
+          opened={summaryOpen}
+          onClose={() => setSummaryOpen(false)}
+          repoName={peerReviewAssignment.repoName}
+          comments={comments}
+          onNavigate={(filePath, line) => {
+            openFile(filePath);
+            setTimeout(() => {
+              editorRef.current?.revealLineInCenter?.(line);
+            }, 200);
+          }}
         />
         <SubmitReviewConfirmationModal
           opened={submitReviewModalOpened}

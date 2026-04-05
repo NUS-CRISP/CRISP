@@ -3,12 +3,8 @@
   max-width: 100%;
 }
 
-.wrapper :global(.monaco-editor .margin) {
-  padding-left: 8px;
-}
-
 .wrapper :global(.monaco-editor .margin .glyph-margin) {
-  width: 6px;
+  width: 0;
 }
 
 .wrapper :global(.monaco-editor .margin),
@@ -17,7 +13,13 @@
 .wrapper :global(.monaco-editor .line-numbers) {
   user-select: none !important;
   -webkit-user-select: none !important;
-  pointer-events: none !important;
+}
+
+.wrapper :global(.monaco-editor .margin),
+.wrapper :global(.monaco-editor .margin-view-overlays),
+.wrapper :global(.monaco-editor .line-numbers),
+.wrapper :global(.monaco-editor .margin-view-overlays .line-numbers) {
+  cursor: pointer !important;
 }
 
 /* Layout */
@@ -130,12 +132,23 @@
 }
 
 .reviewLineIcon {
-  width: 20px;
-  height: 20px;
-  background: url('/plus.svg') no-repeat center center;
-  background-size: contain;
+  width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(59, 130, 246, 0.75);
+  background:
+    linear-gradient(white, white) center / 8px 1.5px no-repeat,
+    linear-gradient(white, white) center / 1.5px 8px no-repeat,
+    rgba(59, 130, 246, 0.9);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+  transition: transform 120ms ease, filter 120ms ease;
   cursor: pointer;
   pointer-events: auto;
+}
+
+.wrapper :global(.monaco-editor .margin-view-overlays .reviewLineIcon:hover) {
+  transform: scale(1.06);
+  filter: brightness(1.08);
 }
 
 /* Comments Related */
@@ -145,7 +158,6 @@
   height: '100%';
   display: flex;
   flex-direction: column;
-  background-color: #1e1e1e;
   border-radius: 8px;
 }
 

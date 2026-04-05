@@ -8,6 +8,7 @@ import {
   Stack,
   Text,
   ThemeIcon,
+  Tooltip,
 } from '@mantine/core';
 import {
   IconChartArrowsVertical,
@@ -67,8 +68,9 @@ const StatCard: React.FC<{
   color: string;
   icon: React.ReactNode;
   title: string;
+  iconTooltip?: string;
   children: React.ReactNode;
-}> = ({ color, icon, title, children }) => (
+}> = ({ color, icon, title, iconTooltip, children }) => (
   <Card withBorder radius="md" p="sm" h="100%">
     <Group justify="space-between" align="flex-start" mb="sm" wrap="nowrap">
       <Box>
@@ -76,9 +78,17 @@ const StatCard: React.FC<{
           {title}
         </Text>
       </Box>
-      <ThemeIcon size={34} radius="xl" color={color} variant="light">
-        {icon}
-      </ThemeIcon>
+      {iconTooltip ? (
+        <Tooltip label={iconTooltip} withArrow position="top">
+          <ThemeIcon size={34} radius="xl" color={color} variant="light">
+            {icon}
+          </ThemeIcon>
+        </Tooltip>
+      ) : (
+        <ThemeIcon size={34} radius="xl" color={color} variant="light">
+          {icon}
+        </ThemeIcon>
+      )}
     </Group>
 
     {children}
@@ -248,6 +258,7 @@ const PeerReviewProgressOverview: React.FC<PeerReviewProgressOverviewProps> = ({
               color="cyan"
               icon={<IconChartArrowsVertical size={18} />}
               title="Reviews Started"
+              iconTooltip="Shows how many assigned reviews have been started (draft or submitted) out of total assignments."
             >
               <Stack gap="sm">
                 <Group justify="space-between" align="flex-end" wrap="nowrap">
@@ -310,6 +321,7 @@ const PeerReviewProgressOverview: React.FC<PeerReviewProgressOverviewProps> = ({
               color="blue"
               icon={<IconClipboardCheck size={18} />}
               title="Submission Status"
+              iconTooltip="Shows distribution of submission states: not started, draft, and completed."
             >
               <Stack gap="sm">
                 <Group justify="space-between" align="center" wrap="nowrap">
@@ -380,6 +392,7 @@ const PeerReviewProgressOverview: React.FC<PeerReviewProgressOverviewProps> = ({
                 color="green"
                 icon={<IconChecks size={18} />}
                 title="Grading Status"
+                iconTooltip="Shows grading progress across all submissions: graded, in progress, not yet graded, and unassigned."
               >
                 <Stack gap="sm">
                   <Group justify="space-between" align="center" wrap="nowrap">

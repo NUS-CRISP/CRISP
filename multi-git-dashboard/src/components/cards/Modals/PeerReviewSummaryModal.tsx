@@ -16,6 +16,8 @@ type PeerReviewCommentForSummary = {
   startLine: number;
   endLine: number;
   comment: string;
+  isFlagged?: boolean;
+  flagReason?: string;
 };
 
 type PeerReviewSummaryModalProps = {
@@ -77,20 +79,41 @@ const PeerReviewSummaryModal: React.FC<PeerReviewSummaryModalProps> = ({
                     <Button
                       key={c._id}
                       variant="subtle"
-                      justify="space-between"
+                      fullWidth
                       onClick={() => onNavigate(filePath, c.startLine)}
                       styles={{
-                        inner: { justifyContent: 'space-between' },
+                        root: {
+                          height: 'auto',
+                          paddingTop: 8,
+                          paddingBottom: 8,
+                        },
+                        inner: {
+                          justifyContent: 'flex-start',
+                          alignItems: 'flex-start',
+                        },
+                        label: { width: '100%' },
                       }}
                     >
-                      <Group gap="xs">
-                        <Badge variant="outline">
-                          L{c.startLine}-{c.endLine}
-                        </Badge>
-                        <Text size="sm" lineClamp={1}>
+                      <Stack
+                        gap={4}
+                        style={{ width: '100%', alignItems: 'flex-start' }}
+                      >
+                        <Group gap="xs">
+                          <Badge variant="outline">
+                            L{c.startLine}-{c.endLine}
+                          </Badge>
+                          {c.isFlagged && <Badge color="red">Flagged</Badge>}
+                        </Group>
+                        <Text size="sm" lineClamp={1} style={{ maxWidth: 500 }}>
                           {c.comment}
                         </Text>
-                      </Group>
+                        {c.isFlagged && (
+                          <Text size="xs" c="dimmed" lineClamp={2}>
+                            Flag reason:{' '}
+                            {c.flagReason?.trim() || 'No reason provided'}
+                          </Text>
+                        )}
+                      </Stack>
                     </Button>
                   ))}
                 </Stack>

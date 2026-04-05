@@ -14,6 +14,7 @@ import {
   Badge,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
+import { useColorScheme } from '@mantine/hooks';
 import {
   IconArrowLeft,
   IconClipboardList,
@@ -49,6 +50,8 @@ const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
 
 const PeerReviewGradingDetailPage: React.FC = () => {
   const router = useRouter();
+  const browserColorScheme = useColorScheme();
+  const monacoTheme = browserColorScheme === 'dark' ? 'vs-dark' : 'vs-light';
   const { id, assessmentId, submissionId } = router.query as {
     id: string;
     assessmentId: string;
@@ -519,7 +522,7 @@ const PeerReviewGradingDetailPage: React.FC = () => {
                 key={currFile}
                 path={currFile}
                 language={getLanguageForFile(currFile)}
-                theme="vs-dark"
+                theme={monacoTheme}
                 value={currentCode}
                 options={{
                   readOnly: true,
