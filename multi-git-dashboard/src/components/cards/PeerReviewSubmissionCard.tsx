@@ -23,6 +23,7 @@ import { useRouter } from 'next/router';
 import { PeerReviewSubmissionListItemDTO } from '@shared/types/PeerReviewAssessment';
 import DeleteConfirmationModal from './Modals/DeleteConfirmationModal';
 import { User } from '@shared/types/User';
+import { getApiErrorMessage } from '@/lib/peer-review/utils';
 
 const formatDateTime = (value?: Date | string) => {
   if (!value) return '—';
@@ -43,7 +44,6 @@ interface PeerReviewSubmissionCardProps {
   peerReviewStatus: 'Upcoming' | 'Active' | 'Closed';
   userId: string;
   item: PeerReviewSubmissionListItemDTO;
-  maxMarks: number;
   isFaculty: boolean;
   onAfterAction?: () => void;
 }
@@ -123,7 +123,9 @@ const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
     setLoadingTAs(true);
     try {
       const res = await fetch(`/api/courses/${courseId}/people`);
-      if (!res.ok) throw new Error('Failed to fetch TAs');
+      if (!res.ok) {
+        throw new Error(await getApiErrorMessage(res, 'Failed to fetch TAs'));
+      }
       const data = await res.json();
       const tas = (data.TAs || []).map((ta: User) => ({
         id: ta._id,
@@ -154,8 +156,9 @@ const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
       );
 
       if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || 'Failed to assign grader');
+        throw new Error(
+          await getApiErrorMessage(res, 'Failed to assign grader')
+        );
       }
 
       notifications.show({
@@ -203,8 +206,9 @@ const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
       );
 
       if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || 'Failed to unassign grader');
+        throw new Error(
+          await getApiErrorMessage(res, 'Failed to unassign grader')
+        );
       }
 
       notifications.show({
@@ -290,7 +294,7 @@ const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
 
         <Stack gap={6} align="flex-end">
           <Badge variant="light">
-            Grade: {item.grading.completedCount}/{item.grading.count}
+            Grades Given: {item.grading.completedCount}/{item.grading.count}
           </Badge>
           {isFaculty && item.grading.graders.length > 0 ? (
             <Stack gap={4} align="flex-end">

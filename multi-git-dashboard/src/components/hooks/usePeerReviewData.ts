@@ -111,12 +111,10 @@ export default function usePeerReviewData({
         const submissions: PeerReviewSubmission[] =
           await apiFetchSubmissionsForAssignment(courseId, assignmentId);
         if (cancelled) return;
-
         // Determine which submission belongs to the current user
         let mySubmission: PeerReviewSubmission | null = null;
         let effectiveSupervisorView = supervisorView;
         let hasReviewerSubmission = false;
-
         if (userCourseRole === COURSE_ROLE.Student) {
           mySubmission = submissions?.[0] ?? null;
           hasReviewerSubmission = Boolean(mySubmission);
@@ -144,7 +142,6 @@ export default function usePeerReviewData({
         }
         setSubmission(mySubmission);
         setIsSupervisorTA(effectiveSupervisorView);
-
         const canEditNow = (() => {
           // Faculty has read-only monitoring access
           if (userCourseRole === COURSE_ROLE.Faculty) return false;
