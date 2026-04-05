@@ -103,7 +103,9 @@ const PeerReviewTAAccordionItem = forwardRef<
     return (
       <Accordion.Item key={'teaching-assistants'} value={'teaching-assistants'}>
         <Accordion.Control>
-          <Text fw={600}>TA Assignments</Text>
+          <Text fw={600}>
+            {isFaculty ? 'TA Assignments' : 'Your Assigned Reviews'}
+          </Text>
         </Accordion.Control>
         <Accordion.Panel>
           <Group display="flex" align="flex-start">

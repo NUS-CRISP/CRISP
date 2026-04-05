@@ -395,22 +395,21 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
                 Assign Peer Reviews
               </Button>
 
-              {isFaculty && (
-                <ShowUnassignedButton
-                  peerReviewId={peerReview._id}
-                  courseId={courseId}
-                  onFilterChange={setShowUnassignedOnly}
-                />
-              )}
-
-              <Button
-                variant="light"
-                color="blue"
-                onClick={goToAssessmentManagement}
-              >
-                Manage Assessment
-              </Button>
+              <ShowUnassignedButton
+                peerReviewId={peerReview._id}
+                courseId={courseId}
+                onFilterChange={setShowUnassignedOnly}
+              />
             </Group>
+          )}
+          {(isFaculty || isTA) && (
+            <Button
+              variant="light"
+              color="blue"
+              onClick={goToAssessmentManagement}
+            >
+              {isFaculty ? 'Manage Assessment' : 'Grade Reviews'}
+            </Button>
           )}
         </Group>
       </Card>
@@ -460,6 +459,8 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
                 deleteManualAssignment={deleteManualAssignment}
               />
             )}
+
+            <Divider my="lg" />
 
             {peerReviewInfo.teams
               .filter(team => {
