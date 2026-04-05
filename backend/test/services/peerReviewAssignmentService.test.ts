@@ -6,6 +6,8 @@ import TeamModel from '../../models/Team';
 import TeamDataModel from '../../models/TeamData';
 import PeerReviewAssignmentModel from '../../models/PeerReviewAssignment';
 import PeerReviewSubmissionModel from '../../models/PeerReviewSubmission';
+import PeerReviewCommentModel from '../../models/PeerReviewComment';
+import PeerReviewGradingTaskModel from '../../models/PeerReviewGradingTask';
 
 import {
   getPeerReviewAssignmentById,
@@ -150,6 +152,8 @@ beforeEach(async () => {
   jest.clearAllMocks();
 
   await PeerReviewSubmissionModel.deleteMany({});
+  await PeerReviewCommentModel.deleteMany({});
+  await PeerReviewGradingTaskModel.deleteMany({});
   await PeerReviewAssignmentModel.deleteMany({});
   await TeamDataModel.deleteMany({});
   await TeamModel.deleteMany({});
@@ -1289,6 +1293,138 @@ describe('peerReviewAssignmentService', () => {
       }).lean();
 
       expect(left).toHaveLength(0);
+    });
+
+    it('returns early when assignment exists but reviewer submission does not exist', async () => {
+      const prId = oid();
+      const teamSetId = oid();
+
+      (getPeerReviewById as jest.Mock).mockResolvedValue({
+        _id: prId,
+        reviewerType: 'Individual',
+        teamSetId,
+      });
+
+      const revieweeTeam = await makeTeam({ teamSet: teamSetId });
+      const assignment = await makeAssignment(prId, revieweeTeam._id);
+
+      const existingReviewer = oid();
+      await makeSubmission(prId, assignment._id, {
+        reviewerKind: 'Student',
+        reviewerUserId: existingReviewer,
+      });
+
+      // Remove a different reviewer => no matching submission to delete
+      await expect(
+        removeManualAssignment(
+          prId.toString(),
+          revieweeTeam._id.toString(),
+          oidStr(),
+          false
+        )
+      ).resolves.toBeUndefined();
+
+      const subsLeft = await PeerReviewSubmissionModel.find({
+        peerReviewId: prId,
+        peerReviewAssignmentId: assignment._id,
+      }).lean();
+
+      expect(subsLeft).toHaveLength(1);
+    });
+
+    it('deletes comments and grading tasks tied to the removed submission', async () => {
+      const prId = oid();
+      const teamSetId = oid();
+
+      (getPeerReviewById as jest.Mock).mockResolvedValue({
+        _id: prId,
+        reviewerType: 'Individual',
+        teamSetId,
+      });
+
+      const revieweeTeam = await makeTeam({ teamSet: teamSetId });
+      const assignment = await makeAssignment(prId, revieweeTeam._id);
+
+      const reviewerUserId = oid();
+      const removedSubmission = await makeSubmission(prId, assignment._id, {
+        reviewerKind: 'Student',
+        reviewerUserId,
+      });
+
+      const keptSubmission = await makeSubmission(prId, assignment._id, {
+        reviewerKind: 'Student',
+        reviewerUserId: oid(),
+      });
+
+      await new PeerReviewCommentModel({
+        peerReviewId: prId,
+        peerReviewAssignmentId: assignment._id,
+        peerReviewSubmissionId: removedSubmission._id,
+        filePath: 'src/a.ts',
+        startLine: 1,
+        endLine: 1,
+        comment: 'to be deleted',
+        author: reviewerUserId,
+        authorCourseRole: COURSE_ROLE.Student,
+      }).save();
+
+      await new PeerReviewCommentModel({
+        peerReviewId: prId,
+        peerReviewAssignmentId: assignment._id,
+        peerReviewSubmissionId: keptSubmission._id,
+        filePath: 'src/a.ts',
+        startLine: 1,
+        endLine: 1,
+        comment: 'should remain',
+        author: oid(),
+        authorCourseRole: COURSE_ROLE.Student,
+      }).save();
+
+      await new PeerReviewGradingTaskModel({
+        peerReviewId: prId,
+        peerReviewSubmissionId: removedSubmission._id,
+        grader: oid(),
+        status: 'Assigned',
+      }).save();
+
+      await new PeerReviewGradingTaskModel({
+        peerReviewId: prId,
+        peerReviewSubmissionId: keptSubmission._id,
+        grader: oid(),
+        status: 'Assigned',
+      }).save();
+
+      await removeManualAssignment(
+        prId.toString(),
+        revieweeTeam._id.toString(),
+        reviewerUserId.toString(),
+        false
+      );
+
+      const deletedSubmission = await PeerReviewSubmissionModel.findById(
+        removedSubmission._id
+      ).lean();
+      expect(deletedSubmission).toBeNull();
+
+      const removedSubmissionComments = await PeerReviewCommentModel.find({
+        peerReviewSubmissionId: removedSubmission._id,
+      }).lean();
+      expect(removedSubmissionComments).toHaveLength(0);
+
+      const removedSubmissionTasks = await PeerReviewGradingTaskModel.find({
+        peerReviewSubmissionId: removedSubmission._id,
+      }).lean();
+      expect(removedSubmissionTasks).toHaveLength(0);
+
+      const keptSubmissionComments = await PeerReviewCommentModel.find({
+        peerReviewSubmissionId: keptSubmission._id,
+      }).lean();
+      expect(keptSubmissionComments).toHaveLength(1);
+
+      const keptSubmissionTasks = await PeerReviewGradingTaskModel.find({
+        peerReviewSubmissionId: keptSubmission._id,
+      }).lean();
+      expect(keptSubmissionTasks).toHaveLength(1);
     });
   });
 

@@ -431,20 +431,21 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
             variant="separated"
             mb="lg"
           >
-            <Accordion.Item value="progress">
-              <Accordion.Control>
-                <Text fw={600}>Progress Overview</Text>
-              </Accordion.Control>
-              <Accordion.Panel>
-                <PeerReviewProgressOverview
-                  courseId={courseId}
-                  peerReviewId={peerReview._id}
-                  enabled={isFaculty || isTA}
-                  showGrading={false}
-                />
-              </Accordion.Panel>
-            </Accordion.Item>
-
+            {(isFaculty || isTA) && (
+              <Accordion.Item value="progress">
+                <Accordion.Control>
+                  <Text fw={600}>Progress Overview</Text>
+                </Accordion.Control>
+                <Accordion.Panel>
+                  <PeerReviewProgressOverview
+                    courseId={courseId}
+                    peerReviewId={peerReview._id}
+                    enabled={isFaculty || isTA}
+                    showGrading={false}
+                  />
+                </Accordion.Panel>
+              </Accordion.Item>
+            )}
             {(isFaculty || isTA) && peerReview.taAssignments && (
               <PeerReviewTAAccordianItem
                 teams={peerReviewInfo.teams.map(t => ({

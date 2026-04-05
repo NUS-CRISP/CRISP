@@ -10,6 +10,7 @@ import {
 } from '@mantine/core';
 import { IconAlertCircle, IconUserPlus } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
+import { getApiErrorMessage } from '@/lib/peer-review/utils';
 
 interface AssignGradersModalProps {
   opened: boolean;
@@ -74,8 +75,11 @@ const AssignGradersModal: React.FC<AssignGradersModalProps> = ({
         }
       );
 
-      const text = await res.text();
-      if (!res.ok) throw new Error(text || res.statusText);
+      if (!res.ok) {
+        throw new Error(
+          await getApiErrorMessage(res, 'Unable to assign graders.')
+        );
+      }
 
       notifications.show({
         color: 'green',
@@ -89,7 +93,7 @@ const AssignGradersModal: React.FC<AssignGradersModalProps> = ({
       notifications.show({
         color: 'red',
         title: 'Assignment failed',
-        message: (err as Error).message || 'Failed to assign graders.',
+        message: (err as Error).message || 'Unable to assign graders.',
       });
     } finally {
       setLoading(false);

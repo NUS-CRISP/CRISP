@@ -148,3 +148,27 @@ export const getLanguageForFile = (filename: string) => {
       return 'plaintext';
   }
 };
+
+export const parseApiErrorMessage = (raw: string, fallback: string) => {
+  const trimmed = raw?.trim();
+  if (!trimmed) return fallback;
+
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (typeof parsed === 'string') return parsed;
+    if (typeof parsed?.message === 'string') return parsed.message;
+    if (typeof parsed?.error === 'string') return parsed.error;
+  } catch {
+    // not JSON, use raw text
+  }
+
+  return trimmed;
+};
+
+export const getApiErrorMessage = async (
+  res: Response,
+  fallback = 'Request failed'
+) => {
+  const text = await res.text();
+  return parseApiErrorMessage(text, res.statusText || fallback);
+};

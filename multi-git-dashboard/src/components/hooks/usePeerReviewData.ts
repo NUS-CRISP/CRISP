@@ -27,6 +27,7 @@ type UsePeerReviewDataArgs = {
   courseId: string;
   assignmentId: string;
   userCourseRole?: string;
+  currentUserId?: string;
 };
 
 type PeerReviewAssignmentWithViewContext = PeerReviewAssignment & {
@@ -40,10 +41,12 @@ export default function usePeerReviewData({
   courseId,
   assignmentId,
   userCourseRole,
+  currentUserId,
 }: UsePeerReviewDataArgs) {
   const [loading, setLoading] = useState(true);
   const [peerReviewAssignment, setPeerReviewAssignment] =
     useState<PeerReviewAssignmentWithViewContext | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [repoTree, setRepoTree] = useState<RepoNode | null>(null);
   const [currFile, setCurrFile] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState<Record<string, string>>({});
@@ -92,6 +95,7 @@ export default function usePeerReviewData({
     const initialLoad = async () => {
       try {
         setLoading(true);
+        setError(null);
         const prAssignment = await apiFetchPeerReviewAssignment(
           courseId,
           assignmentId
@@ -102,28 +106,60 @@ export default function usePeerReviewData({
         const revieweeView = Boolean(viewContext?.isReviewee);
         const supervisorView = Boolean(viewContext?.isSupervisorTA);
         setIsReviewee(revieweeView);
-        setIsSupervisorTA(supervisorView);
+        // setIsSupervisorTA will be updated after we determine effective supervisor view
 
         const submissions: PeerReviewSubmission[] =
           await apiFetchSubmissionsForAssignment(courseId, assignmentId);
         if (cancelled) return;
-        const mySubmission =
-          userCourseRole === COURSE_ROLE.Student
-            ? (submissions?.[0] ?? null)
-            : userCourseRole === COURSE_ROLE.TA && !supervisorView
-              ? (submissions?.[0] ?? null)
-              : null;
+        // Determine which submission belongs to the current user
+        let mySubmission: PeerReviewSubmission | null = null;
+        let effectiveSupervisorView = supervisorView;
+        let hasReviewerSubmission = false;
+        if (userCourseRole === COURSE_ROLE.Student) {
+          mySubmission = submissions?.[0] ?? null;
+          hasReviewerSubmission = Boolean(mySubmission);
+        } else if (userCourseRole === COURSE_ROLE.TA) {
+          // Find TA's own submission (if they're a reviewer for this team)
+          const taSubmission =
+            submissions.find(
+              sub =>
+                sub.reviewerKind === 'TA' &&
+                Boolean(currentUserId) &&
+                String(sub.reviewerUserId) === String(currentUserId)
+            ) ?? null;
+
+          if (taSubmission) {
+            // TA is a reviewer for this team - always show normal reviewer view
+            mySubmission = taSubmission;
+            effectiveSupervisorView = false; // Never show supervising view if they're reviewing
+            hasReviewerSubmission = true;
+          } else if (supervisorView) {
+            // TA is not a reviewer but is supervising - show supervising view with all comments
+            mySubmission = null;
+            effectiveSupervisorView = true;
+            hasReviewerSubmission = false;
+          }
+        }
         setSubmission(mySubmission);
+        setIsSupervisorTA(effectiveSupervisorView);
         const canEditNow = (() => {
-          if (userCourseRole === COURSE_ROLE.Faculty) return true;
+          // Faculty has read-only monitoring access
+          if (userCourseRole === COURSE_ROLE.Faculty) return false;
           if (revieweeView) return false;
-          if (userCourseRole === COURSE_ROLE.TA && supervisorView) return true;
-          if (userCourseRole === COURSE_ROLE.TA) {
-            return Boolean(mySubmission && mySubmission.status !== 'Submitted');
+          if (effectiveSupervisorView) return false;
+
+          // Student or TA as reviewer: can edit if submission exists and not submitted
+          if (
+            userCourseRole === COURSE_ROLE.Student ||
+            userCourseRole === COURSE_ROLE.TA
+          ) {
+            return Boolean(
+              hasReviewerSubmission &&
+              mySubmission &&
+              mySubmission.status !== 'Submitted'
+            );
           }
-          if (userCourseRole === COURSE_ROLE.Student) {
-            return Boolean(mySubmission && mySubmission.status !== 'Submitted');
-          }
+
           return false;
         })();
         setCanEdit(canEditNow);
@@ -157,6 +193,12 @@ export default function usePeerReviewData({
           if (!cancelled)
             setFileContent(prev => ({ ...prev, [files[0]]: content }));
         }
+      } catch (err) {
+        if (cancelled) return;
+        const errorMessage =
+          (err as Error).message || 'Failed to load assignment';
+        setError(errorMessage);
+        console.error('Error loading peer review assignment:', err);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -166,7 +208,7 @@ export default function usePeerReviewData({
       cancelled = true;
       if (touchDraftTimer.current) clearTimeout(touchDraftTimer.current);
     };
-  }, [courseId, assignmentId, userCourseRole]);
+  }, [courseId, assignmentId, userCourseRole, currentUserId]);
 
   const openFile = useCallback(
     async (filePath: string) => {
@@ -295,20 +337,16 @@ export default function usePeerReviewData({
 
   const submitReview = useCallback(async () => {
     if (!canEdit) throw new Error('Read-only');
-    await apiSubmitReview(courseId, assignmentId);
-    const updated = await apiFetchSubmissionsForAssignment(
-      courseId,
-      assignmentId
-    );
-    const mySubmission =
-      userCourseRole === COURSE_ROLE.Student
-        ? (updated?.[0] ?? null)
-        : userCourseRole === COURSE_ROLE.TA && !isSupervisorTA
-          ? (updated?.[0] ?? null)
-          : null;
-    setSubmission(mySubmission);
+    if (userCourseRole === COURSE_ROLE.Faculty) {
+      throw new Error('Faculty cannot submit reviews');
+    }
+    const updatedSubmission = await apiSubmitReview(courseId, assignmentId);
+    if (!updatedSubmission) {
+      throw new Error('Failed to submit review');
+    }
+    setSubmission(updatedSubmission);
     setCanEdit(false);
-  }, [canEdit, courseId, assignmentId, userCourseRole, isSupervisorTA]);
+  }, [canEdit, courseId, assignmentId, userCourseRole]);
 
   const currentCode = useMemo(() => {
     if (!currFile) return '// No file selected';
@@ -317,6 +355,7 @@ export default function usePeerReviewData({
 
   return {
     loading,
+    error,
     peerReviewAssignment,
     repoTree,
     currFile,
