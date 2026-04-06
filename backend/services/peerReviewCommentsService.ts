@@ -423,10 +423,18 @@ export const flagPeerReviewCommentById = async (
 
   const reviewee = await fetchReviewee(assignment.reviewee.toString());
   const isSupervisingTA = reviewee.TA?.toString() === userId;
+  const hasGradingTask = await PeerReviewGradingTaskModel.exists({
+    peerReviewId: comment.peerReviewId,
+    peerReviewSubmissionId: comment.peerReviewSubmissionId,
+    grader: oid(userId),
+  });
+  const isAssignedGrader = Boolean(hasGradingTask);
 
-  // Course coordinator can flag any comment and if TA, can only flag comments of teams they are supervising
+  // Course coordinator can flag any comment.
+  // TA can flag if supervising this reviewee team OR if assigned as grader for this submission.
   if (
-    (userCourseRole === COURSE_ROLE.TA && isSupervisingTA) ||
+    (userCourseRole === COURSE_ROLE.TA &&
+      (isSupervisingTA || isAssignedGrader)) ||
     userCourseRole === COURSE_ROLE.Faculty
   ) {
     if (flagStatus) {
@@ -436,9 +444,7 @@ export const flagPeerReviewCommentById = async (
       comment.flaggedAt = new Date();
       comment.flaggedBy = oid(userId);
       comment.unflagReason = '';
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (comment as any).unflaggedAt = null;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (comment as any).unflaggedBy = null;
     } else {
       // Unflagging: clear flag state and record unflag details

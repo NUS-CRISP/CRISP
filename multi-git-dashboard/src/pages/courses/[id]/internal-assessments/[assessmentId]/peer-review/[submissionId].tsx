@@ -280,6 +280,7 @@ const PeerReviewGradingDetailPage: React.FC = () => {
     isPeerReviewActive && isFaculty && !myTask && isSubmitted;
   const canGrade =
     isPeerReviewActive &&
+    isSubmitted &&
     !!myTask &&
     (myTask.status === 'Assigned' || myTask.status === 'InProgress');
   const gradingTasks = dto?.gradingTasks ?? [];
@@ -492,7 +493,7 @@ const PeerReviewGradingDetailPage: React.FC = () => {
               h="27px"
               onClick={() => setGradeOpen(true)}
             >
-              Submit Grade
+              Grade Review
             </Button>
           )}
         </Group>
