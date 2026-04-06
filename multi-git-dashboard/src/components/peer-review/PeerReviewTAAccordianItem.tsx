@@ -17,7 +17,7 @@ import DeleteConfirmationModal from '../cards/Modals/DeleteConfirmationModal';
 import PeerReviewAssignments from './PeerReviewAssignments';
 import { useDisclosure } from '@mantine/hooks';
 
-type SubmissionStatusFilter = 'All' | 'NotStarted' | 'Draft' | 'Submitted';
+type SubmissionStatusValue = 'NotStarted' | 'Draft' | 'Submitted';
 
 interface PeerReviewTAAccordionItemProps {
   teams: {
@@ -29,7 +29,7 @@ interface PeerReviewTAAccordionItemProps {
     label: string;
   }[];
   TAToAssignments: TAToAssignmentsMap;
-  statusFilter?: SubmissionStatusFilter;
+  statusFilters?: SubmissionStatusValue[];
   showUnassignedOnly?: boolean;
   isFaculty: boolean;
   addManualAssignment: (
@@ -51,7 +51,7 @@ const PeerReviewTAAccordionItem = forwardRef<
   ({
     teams,
     TAToAssignments,
-    statusFilter = 'All',
+    statusFilters = [],
     showUnassignedOnly,
     isFaculty,
     addManualAssignment,
@@ -74,18 +74,18 @@ const PeerReviewTAAccordionItem = forwardRef<
       >;
 
       const matchesStatus = (a: AssignedReviewDTO) =>
-        statusFilter === 'All' ? true : a.status === statusFilter;
+        statusFilters.length === 0 ? true : statusFilters.includes(a.status);
 
       return temp.filter(([taId, info]) => {
         if (!showUnassignedOnly) {
-          if (statusFilter === 'All') return true;
+          if (statusFilters.length === 0) return true;
           return info.assignedReviews.some(matchesStatus);
         }
 
         const visibleAssignments = info.assignedReviews.filter(matchesStatus);
         return taId && visibleAssignments.length === 0;
       });
-    }, [TAToAssignments, showUnassignedOnly, statusFilter]);
+    }, [TAToAssignments, showUnassignedOnly, statusFilters]);
 
     if (taEntries.length === 0 && showUnassignedOnly) return null; // Don't render the TA section if filtering for unassigned and there are none
 
@@ -145,7 +145,7 @@ const PeerReviewTAAccordionItem = forwardRef<
                       </Group>
                       <PeerReviewAssignments
                         assignments={info.assignedReviews}
-                        statusFilter={statusFilter}
+                        statusFilters={statusFilters}
                         isFaculty={isFaculty}
                         onDelete={(reviewee: Team) => {
                           setToBeDeletedReviewer({

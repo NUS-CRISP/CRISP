@@ -13,7 +13,7 @@ import {
   Badge,
   Divider,
   Popover,
-  Select,
+  Checkbox,
   Switch,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
@@ -46,7 +46,7 @@ enum NotificationType {
   Warning = 'Warning',
 }
 
-type SubmissionStatusFilter = 'All' | 'NotStarted' | 'Draft' | 'Submitted';
+type SubmissionStatusValue = 'NotStarted' | 'Draft' | 'Submitted';
 
 const statusColor = (status: string) => {
   if (status === 'Closed') return 'red';
@@ -124,8 +124,9 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
     useDisclosure(false);
 
   const [showUnassignedOnly, setShowUnassignedOnly] = useState(false);
-  const [statusFilter, setStatusFilter] =
-    useState<SubmissionStatusFilter>('All');
+  const [statusFilters, setStatusFilters] = useState<SubmissionStatusValue[]>(
+    []
+  );
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const teamSetName =
@@ -182,9 +183,9 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
   }, [isTA, me?.userId, peerReviewInfo?.TAAssignments]);
 
   const hasStatusMatch = useCallback(
-    (statuses: Array<'NotStarted' | 'Draft' | 'Submitted'>) =>
-      statusFilter === 'All' || statuses.includes(statusFilter),
-    [statusFilter]
+    (status: SubmissionStatusValue) =>
+      statusFilters.length === 0 || statusFilters.includes(status),
+    [statusFilters]
   );
 
   const isUpcoming = peerReview.status === 'Upcoming';
@@ -432,7 +433,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
                     <Popover.Target>
                       <Button
                         variant={
-                          statusFilter !== 'All' || showUnassignedOnly
+                          statusFilters.length > 0 || showUnassignedOnly
                             ? 'filled'
                             : 'light'
                         }
@@ -444,21 +445,19 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
                     </Popover.Target>
                     <Popover.Dropdown>
                       <Stack gap="md" w={220}>
-                        <Select
+                        <Checkbox.Group
                           label="Submission Status"
-                          data={[
-                            { value: 'All', label: 'All' },
-                            { value: 'NotStarted', label: 'Not Started' },
-                            { value: 'Draft', label: 'Draft' },
-                            { value: 'Submitted', label: 'Submitted' },
-                          ]}
-                          value={statusFilter}
+                          value={statusFilters}
                           onChange={v =>
-                            setStatusFilter(
-                              (v as SubmissionStatusFilter) || 'All'
-                            )
+                            setStatusFilters(v as SubmissionStatusValue[])
                           }
-                        />
+                        >
+                          <Stack gap={6} mt="xs">
+                            <Checkbox value="NotStarted" label="Not Started" />
+                            <Checkbox value="Draft" label="Draft" />
+                            <Checkbox value="Submitted" label="Submitted" />
+                          </Stack>
+                        </Checkbox.Group>
 
                         {isFaculty && (
                           <Switch
@@ -475,7 +474,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
                             size="xs"
                             variant="default"
                             onClick={() => {
-                              setStatusFilter('All');
+                              setStatusFilters([]);
                               setShowUnassignedOnly(false);
                             }}
                           >
@@ -538,7 +537,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
                   label: `Team ${t.teamNumber}`,
                 }))}
                 TAToAssignments={peerReviewInfo.TAAssignments}
-                statusFilter={statusFilter}
+                statusFilters={statusFilters}
                 showUnassignedOnly={showUnassignedOnly}
                 isFaculty={isFaculty}
                 addManualAssignment={addManualAssignment}
@@ -553,14 +552,14 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
                   peerReviewInfo.reviewerType === 'Individual'
                     ? team.members.some(member =>
                         member.assignedReviews.some(ar =>
-                          hasStatusMatch([ar.status])
+                          hasStatusMatch(ar.status)
                         )
                       )
                     : team.assignedReviewsToTeam.some(ar =>
-                        hasStatusMatch([ar.status])
+                        hasStatusMatch(ar.status)
                       );
 
-                if (!matchesStatusForTeam && statusFilter !== 'All')
+                if (!matchesStatusForTeam && statusFilters.length > 0)
                   return false;
 
                 if (!showUnassignedOnly) return true;
@@ -598,7 +597,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
                     peerReviewInfo.assignmentsOfTeam[team.teamId]
                   }
                   maxReviewsPerReviewer={peerReview.maxReviewsPerReviewer}
-                  statusFilter={statusFilter}
+                  statusFilters={statusFilters}
                   showUnassignedOnly={showUnassignedOnly}
                   isFaculty={isFaculty}
                   isTA={isTA}

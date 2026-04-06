@@ -21,7 +21,7 @@ import DeleteConfirmationModal from '../cards/Modals/DeleteConfirmationModal';
 import PeerReviewAssignments from './PeerReviewAssignments';
 import AddManualAssignmentBox from './AddManualAssignmentBox';
 
-type SubmissionStatusFilter = 'All' | 'NotStarted' | 'Draft' | 'Submitted';
+type SubmissionStatusValue = 'NotStarted' | 'Draft' | 'Submitted';
 
 interface PeerReviewAccordionItemProps {
   currentTeam: PeerReviewTeamDTO;
@@ -38,7 +38,7 @@ interface PeerReviewAccordionItemProps {
   assignmentOfTeam: RevieweeAssignmentsDTO | null;
   reviewerType: 'Individual' | 'Team';
   maxReviewsPerReviewer: number;
-  statusFilter?: SubmissionStatusFilter;
+  statusFilters?: SubmissionStatusValue[];
   showUnassignedOnly?: boolean;
   isFaculty: boolean;
   isTA: boolean;
@@ -66,7 +66,7 @@ const PeerReviewAccordionItem = forwardRef<
     assignmentOfTeam,
     reviewerType,
     maxReviewsPerReviewer,
-    statusFilter = 'All',
+    statusFilters = [],
     showUnassignedOnly,
     isFaculty,
     isTA,
@@ -232,7 +232,7 @@ const PeerReviewAccordionItem = forwardRef<
                   >
                     <PeerReviewAssignments
                       assignments={currentTeam.assignedReviewsToTeam}
-                      statusFilter={statusFilter}
+                      statusFilters={statusFilters}
                       isFaculty={isFaculty}
                       isTA={isTA}
                       currentUserId={currentUserId}
@@ -281,7 +281,7 @@ const PeerReviewAccordionItem = forwardRef<
                             <>
                               <PeerReviewAssignments
                                 assignments={m.assignedReviews}
-                                statusFilter={statusFilter}
+                                statusFilters={statusFilters}
                                 isFaculty={isFaculty}
                                 isTA={isTA}
                                 currentUserId={currentUserId}

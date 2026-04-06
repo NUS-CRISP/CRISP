@@ -4,11 +4,11 @@ import { useRouter } from 'next/router';
 import { AssignedReviewDTO } from '@shared/types/PeerReview';
 import { Team } from '@shared/types/Team';
 
-type SubmissionStatusFilter = 'All' | 'NotStarted' | 'Draft' | 'Submitted';
+type SubmissionStatusValue = 'NotStarted' | 'Draft' | 'Submitted';
 
 interface PeerReviewAssignmentsProps {
   assignments: AssignedReviewDTO[];
-  statusFilter?: SubmissionStatusFilter;
+  statusFilters?: SubmissionStatusValue[];
   isFaculty: boolean;
   isTA?: boolean;
   currentUserId?: string;
@@ -18,7 +18,7 @@ interface PeerReviewAssignmentsProps {
 
 const PeerReviewAssignments: React.FC<PeerReviewAssignmentsProps> = ({
   assignments,
-  statusFilter = 'All',
+  statusFilters = [],
   isFaculty,
   isTA = false,
   currentUserId,
@@ -28,7 +28,7 @@ const PeerReviewAssignments: React.FC<PeerReviewAssignmentsProps> = ({
   const router = useRouter();
 
   const filteredAssignments = assignments.filter(a =>
-    statusFilter === 'All' ? true : a.status === statusFilter
+    statusFilters.length === 0 ? true : statusFilters.includes(a.status)
   );
 
   if (filteredAssignments.length === 0) {
