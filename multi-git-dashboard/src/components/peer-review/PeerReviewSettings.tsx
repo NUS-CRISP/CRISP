@@ -141,60 +141,64 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
             </Stack>
           )}
         </Stack>
-        {isFaculty && (
-          <Stack mt="sm">
-            {peerReview.status === 'Upcoming' && courseId && (
-              <>
-                <Button color="green" onClick={() => setOpenedStartModal(true)}>
-                  Start Peer Review Now
-                </Button>
-                <StartPeerReviewModal
-                  opened={openedStartModal}
-                  onClose={() => setOpenedStartModal(false)}
-                  onConfirm={async () => {
-                    onStartPeerReview?.();
-                    setOpenedStartModal(false);
-                  }}
-                  peerReviewId={peerReview._id}
-                  courseId={courseId}
-                />
-              </>
-            )}
-            {courseId && (
-              <Button
-                color="yellow"
-                variant="light"
-                onClick={() => router.push(`/courses/${courseId}/peer-review`)}
-              >
-                {peerReview.status === 'Upcoming'
-                  ? 'Assign Peer Reviews'
-                  : 'View Peer Review'}
+        <Stack mt="sm">
+          {peerReview.status === 'Upcoming' && courseId && isFaculty && (
+            <>
+              <Button color="green" onClick={() => setOpenedStartModal(true)}>
+                Start Peer Review Now
               </Button>
-            )}
-            <Button onClick={onClickUpdate} color="green" variant="light">
-              Update Settings
-            </Button>
-            <Button
-              color="red"
-              variant="light"
-              onClick={onClickDelete}
-              disabled={statusLabel === 'Closed' || isGradingPhase}
-            >
-              Delete Peer Review
-            </Button>
-            {isGradingPhase &&
-              !isAssessmentClosed &&
-              onClickCloseAssessment && (
-                <Button
-                  color="violet"
-                  variant="light"
-                  onClick={onClickCloseAssessment}
-                >
-                  Close Assessment
-                </Button>
-              )}
-          </Stack>
-        )}
+              <StartPeerReviewModal
+                opened={openedStartModal}
+                onClose={() => setOpenedStartModal(false)}
+                onConfirm={async () => {
+                  onStartPeerReview?.();
+                  setOpenedStartModal(false);
+                }}
+                peerReviewId={peerReview._id}
+                courseId={courseId}
+              />
+            </>
+          )}
+
+          <Button
+            color="yellow"
+            variant="light"
+            onClick={() => router.push(`/courses/${courseId}/peer-review`)}
+          >
+            {!isFaculty
+              ? 'Monitor Your Teams'
+              : peerReview.status === 'Upcoming'
+                ? 'Assign Peer Reviews'
+                : 'View Peer Review'}
+          </Button>
+
+          {isFaculty && (
+            <>
+              <Button onClick={onClickUpdate} color="green" variant="light">
+                Update Settings
+              </Button>
+              <Button
+                color="red"
+                variant="light"
+                onClick={onClickDelete}
+                disabled={statusLabel === 'Closed' || isGradingPhase}
+              >
+                Delete Peer Review
+              </Button>
+              {isGradingPhase &&
+                !isAssessmentClosed &&
+                onClickCloseAssessment && (
+                  <Button
+                    color="violet"
+                    variant="light"
+                    onClick={onClickCloseAssessment}
+                  >
+                    Close Assessment
+                  </Button>
+                )}
+            </>
+          )}
+        </Stack>
       </SimpleGrid>
     </Card>
   );

@@ -358,7 +358,11 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
                   maxRows={4}
                 />
               ) : (
-                <Text className={classes.commentText} size="sm">
+                <Text
+                  className={classes.commentText}
+                  size="sm"
+                  style={{ maxHeight: 120, overflowY: 'auto' }}
+                >
                   {c.comment}
                 </Text>
               )}
