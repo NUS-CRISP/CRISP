@@ -41,7 +41,7 @@
   flex-direction: column;
   align-items: stretch;
   height: 100%;
-  border: 1px solid #505050;
+  border: 0.5px solid gray;
   border-radius: 6px;
   padding-left: 8px;
   padding-right: 8px;
@@ -66,7 +66,7 @@
   font-weight: 700;
   font-size: 14;
   border-bottom-style: solid;
-  border-bottom-width: 1px;
+  border-bottom-width: 0.5px;
   padding: 16px 0px 10px 0px;
   overflow: hidden;
   color: dimgray;
@@ -87,10 +87,8 @@
 
 .editorTitle {
   font-size: 16px;
-  font-weight: bold;
-  font-family: 'ui-monospace';
   border-bottom-style: solid;
-  border-bottom-width: 1px;
+  border-bottom-width: 0.5px;
   padding-bottom: 12px;
   overflow: hidden;
 }
@@ -172,7 +170,7 @@
 .commentSidebarTitle {
   font-size: 16px;
   border-bottom-style: solid;
-  border-bottom-width: 1px;
+  border-bottom-width: 0.5px;
   padding-bottom: 8px;
   text-overflow: ellipsis;
   overflow: hidden;
@@ -223,18 +221,37 @@
 
 .commentEditButton {
   background-color: transparent;
+  color: #495057;
 }
 
 .commentDeleteButton {
   background-color: transparent;
+  color: #495057;
 }
 
 .commentFlagButton {
   background-color: transparent;
+  color: #495057;
 }
 
-.commentDeleteButton:hover {
-  background-color: #8a8a8a;
+.commentEditButton:hover,
+.commentDeleteButton:hover,
+.commentFlagButton:hover {
+  background-color: rgba(73, 80, 87, 0.2);
+  color: #343a40;
+}
+
+/* Keep icon contrast clear in dark mode as well */
+:global([data-mantine-color-scheme='dark']) .commentEditButton,
+:global([data-mantine-color-scheme='dark']) .commentDeleteButton,
+:global([data-mantine-color-scheme='dark']) .commentFlagButton {
+  color: #ced4da;
+}
+
+:global([data-mantine-color-scheme='dark']) .commentEditButton:hover,
+:global([data-mantine-color-scheme='dark']) .commentDeleteButton:hover,
+:global([data-mantine-color-scheme='dark']) .commentFlagButton:hover {
+  background-color: rgba(206, 212, 218, 0.14);
 }
 
 .commentText {

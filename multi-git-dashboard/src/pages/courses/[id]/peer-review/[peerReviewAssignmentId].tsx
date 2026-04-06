@@ -521,13 +521,9 @@ const PeerReviewDetail: React.FC = () => {
   ]);
 
   // Flag comment handler
-  const requestFlagComment = useCallback(
-    async (commentId: string) => {
-      if (!canEdit) return;
-      setFlagCommentId(commentId);
-    },
-    [canEdit]
-  );
+  const requestFlagComment = useCallback(async (commentId: string) => {
+    setFlagCommentId(commentId);
+  }, []);
 
   const handleFlagComment = useCallback(
     async (flagReason: string) => {

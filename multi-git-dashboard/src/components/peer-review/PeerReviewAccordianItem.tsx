@@ -303,33 +303,40 @@ const PeerReviewAccordionItem = forwardRef<
             <Stack>
               {currentTeam.repoUrl && (
                 <Stack w={250}>
-                  <Button
-                    component="a"
-                    href={currentTeam.repoUrl}
-                    rel="noreferrer"
-                    size="xs"
-                    target="_blank"
-                    variant="light"
-                    color="gray"
-                  >
-                    Go to Team's Github Repository
-                  </Button>
-                  <Button
-                    component="a"
-                    onClick={() =>
-                      router.push(
-                        `${router.asPath.replace(/\/$/, '')}/${assignmentOfTeam?.assignment._id}`
-                      )
-                    }
-                    size="xs"
-                    rel="noreferrer"
-                    target="_blank"
-                    variant="light"
-                    color="gray"
-                    disabled={numberOfReviewers === 0}
-                  >
-                    See Peer Review for Team
-                  </Button>
+                  {(() => {
+                    const assignmentId = assignmentOfTeam?.assignment._id;
+                    const canViewPeerReview = Boolean(assignmentId);
+
+                    return (
+                      <>
+                        <Button
+                          component="a"
+                          href={currentTeam.repoUrl}
+                          rel="noreferrer"
+                          size="xs"
+                          target="_blank"
+                          variant="light"
+                          color="gray"
+                        >
+                          Go to Team's Github Repository
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            if (!canViewPeerReview || !assignmentId) return;
+                            router.push(
+                              `${router.asPath.replace(/\/$/, '')}/${assignmentId}`
+                            );
+                          }}
+                          size="xs"
+                          variant="light"
+                          color="gray"
+                          disabled={!canViewPeerReview}
+                        >
+                          See Peer Review for Team
+                        </Button>
+                      </>
+                    );
+                  })()}
                 </Stack>
               )}
               {isFaculty && (
