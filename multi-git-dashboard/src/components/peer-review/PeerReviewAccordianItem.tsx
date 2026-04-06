@@ -21,6 +21,8 @@ import DeleteConfirmationModal from '../cards/Modals/DeleteConfirmationModal';
 import PeerReviewAssignments from './PeerReviewAssignments';
 import AddManualAssignmentBox from './AddManualAssignmentBox';
 
+type SubmissionStatusFilter = 'All' | 'NotStarted' | 'Draft' | 'Submitted';
+
 interface PeerReviewAccordionItemProps {
   currentTeam: PeerReviewTeamDTO;
   currentUserId?: string;
@@ -36,6 +38,7 @@ interface PeerReviewAccordionItemProps {
   assignmentOfTeam: RevieweeAssignmentsDTO | null;
   reviewerType: 'Individual' | 'Team';
   maxReviewsPerReviewer: number;
+  statusFilter?: SubmissionStatusFilter;
   showUnassignedOnly?: boolean;
   isFaculty: boolean;
   isTA: boolean;
@@ -63,6 +66,7 @@ const PeerReviewAccordionItem = forwardRef<
     assignmentOfTeam,
     reviewerType,
     maxReviewsPerReviewer,
+    statusFilter = 'All',
     showUnassignedOnly,
     isFaculty,
     isTA,
@@ -228,6 +232,7 @@ const PeerReviewAccordionItem = forwardRef<
                   >
                     <PeerReviewAssignments
                       assignments={currentTeam.assignedReviewsToTeam}
+                      statusFilter={statusFilter}
                       isFaculty={isFaculty}
                       isTA={isTA}
                       currentUserId={currentUserId}
@@ -276,6 +281,7 @@ const PeerReviewAccordionItem = forwardRef<
                             <>
                               <PeerReviewAssignments
                                 assignments={m.assignedReviews}
+                                statusFilter={statusFilter}
                                 isFaculty={isFaculty}
                                 isTA={isTA}
                                 currentUserId={currentUserId}
@@ -338,8 +344,7 @@ const PeerReviewAccordionItem = forwardRef<
                       style={{
                         maxHeight: 'calc(10 * 32px + 18px)',
                         height: 'auto',
-                        border: 'solid 1px',
-                        borderColor: '#505050',
+                        border: '0.5px solid gray',
                         borderRadius: '6px',
                         padding: '8px 0',
                         transition: 'max-height 0.2s',
