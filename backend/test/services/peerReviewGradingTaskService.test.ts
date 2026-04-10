@@ -721,4 +721,60 @@ describe('peerReviewGradingTaskService', () => {
       bulkAssignGradersByAssessmentId(courseUnset._id.toString(), assessmentUnset._id.toString(), 1, true)
     ).rejects.toBeInstanceOf(BadRequestError);
   });
+
+  it('blocks grading updates/submission when linked review submission is not submitted or missing', async () => {
+    const grader = await makeUser('grader-status-guard');
+    const course = await makeCourse();
+    const ts = await makeTeamSet(course._id);
+    const assessment = await makeAssessment(course._id, ts._id);
+    const pr = await makePeerReview(course._id, ts._id, assessment._id, {
+      status: 'Active',
+    });
+    const reviewee = await makeTeam(ts._id);
+    const assignment = await makeAssignment(pr._id, reviewee._id);
+
+    // Draft submission should fail grading updates and submission
+    const draftSubmission = await makeSubmission(pr._id, assignment._id, {
+      status: 'Draft',
+    });
+    const draftTask = await new PeerReviewGradingTaskModel({
+      peerReviewId: pr._id,
+      peerReviewSubmissionId: draftSubmission._id,
+      grader: grader._id,
+      status: 'Assigned',
+    }).save();
+
+    await expect(
+      updateGradingTaskById(grader._id.toString(), draftTask._id.toString(), {
+        score: 2,
+      })
+    ).rejects.toBeInstanceOf(BadRequestError);
+
+    await expect(
+      submitGradingTaskById(grader._id.toString(), draftTask._id.toString())
+    ).rejects.toBeInstanceOf(BadRequestError);
+
+    // Missing submission should fail after peer review active check passes
+    const missingSubmissionTask = await new PeerReviewGradingTaskModel({
+      peerReviewId: pr._id,
+      peerReviewSubmissionId: oid(),
+      grader: grader._id,
+      status: 'Assigned',
+    }).save();
+
+    await expect(
+      updateGradingTaskById(
+        grader._id.toString(),
+        missingSubmissionTask._id.toString(),
+        { score: 3 }
+      )
+    ).rejects.toBeInstanceOf(NotFoundError);
+
+    await expect(
+      submitGradingTaskById(
+        grader._id.toString(),
+        missingSubmissionTask._id.toString()
+      )
+    ).rejects.toBeInstanceOf(NotFoundError);
+  });
 });

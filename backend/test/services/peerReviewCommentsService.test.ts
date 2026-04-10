@@ -1128,7 +1128,7 @@ describe('peerReviewCommentsService', () => {
       ).rejects.toBeInstanceOf(NotFoundError);
     });
 
-    it('throws NotFound when assignment missing for comment', async () => {
+    it('Faculty can flag even if assignment is missing for comment', async () => {
       const pr = await makePeerReview();
       (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
 
@@ -1148,7 +1148,11 @@ describe('peerReviewCommentsService', () => {
           true,
           'r'
         )
-      ).rejects.toBeInstanceOf(NotFoundError);
+      ).resolves.toBeUndefined();
+
+      const updated = await PeerReviewCommentModel.findById(comment._id);
+      expect(updated?.isFlagged).toBe(true);
+      expect(updated?.flagReason).toBe('r');
     });
 
     it('TA supervising can flag comment', async () => {
@@ -1243,7 +1247,7 @@ describe('peerReviewCommentsService', () => {
       ).rejects.toBeInstanceOf(MissingAuthorizationError);
     });
 
-    it('TA not supervising cannot flag comment', async () => {
+    it('TA not supervising can still flag comment', async () => {
       const taId = oid();
       const pr = await makePeerReview();
       (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
@@ -1258,9 +1262,13 @@ describe('peerReviewCommentsService', () => {
           COURSE_ROLE.TA,
           comment._id.toString(),
           true,
-          'not allowed'
+          'allowed now'
         )
-      ).rejects.toBeInstanceOf(MissingAuthorizationError);
+      ).resolves.toBeUndefined();
+
+      const updated = await PeerReviewCommentModel.findById(comment._id);
+      expect(updated?.isFlagged).toBe(true);
+      expect(updated?.flagReason).toBe('allowed now');
     });
   });
 });

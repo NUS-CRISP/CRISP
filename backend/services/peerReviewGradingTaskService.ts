@@ -32,6 +32,22 @@ const assertPeerReviewActive = async (peerReviewId: Types.ObjectId) => {
   }
 };
 
+const assertSubmissionSubmittedForTask = async (
+  peerReviewSubmissionId: Types.ObjectId
+) => {
+  const submission = await PeerReviewSubmissionModel.findById(
+    peerReviewSubmissionId
+  )
+    .select('status')
+    .lean();
+
+  if (!submission) throw new NotFoundError('Peer review submission not found');
+
+  if (submission.status !== 'Submitted') {
+    throw new BadRequestError('Cannot grade unsubmitted reviews');
+  }
+};
+
 const resolvePeerReviewAndSubmission = async (
   assessmentId: string,
   peerReviewSubmissionId: string
@@ -140,6 +156,9 @@ export const updateGradingTaskById = async (
   const task = await PeerReviewGradingTaskModel.findById(taskId);
   if (!task) throw new NotFoundError(TASK_NOT_FOUND);
   await assertPeerReviewActive(task.peerReviewId as Types.ObjectId);
+  await assertSubmissionSubmittedForTask(
+    task.peerReviewSubmissionId as Types.ObjectId
+  );
 
   // Only the grader can modify their task
   if (String(task.grader) !== String(oid(userId))) {
@@ -173,6 +192,9 @@ export const submitGradingTaskById = async (userId: string, taskId: string) => {
   const task = await PeerReviewGradingTaskModel.findById(taskId);
   if (!task) throw new NotFoundError(TASK_NOT_FOUND);
   await assertPeerReviewActive(task.peerReviewId as Types.ObjectId);
+  await assertSubmissionSubmittedForTask(
+    task.peerReviewSubmissionId as Types.ObjectId
+  );
 
   if (String(task.grader) !== String(oid(userId))) {
     throw new MissingAuthorizationError(ACCESS_DENIED);

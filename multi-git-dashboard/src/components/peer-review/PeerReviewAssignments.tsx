@@ -4,8 +4,11 @@ import { useRouter } from 'next/router';
 import { AssignedReviewDTO } from '@shared/types/PeerReview';
 import { Team } from '@shared/types/Team';
 
+type SubmissionStatusValue = 'NotStarted' | 'Draft' | 'Submitted';
+
 interface PeerReviewAssignmentsProps {
   assignments: AssignedReviewDTO[];
+  statusFilters?: SubmissionStatusValue[];
   isFaculty: boolean;
   isTA?: boolean;
   currentUserId?: string;
@@ -15,6 +18,7 @@ interface PeerReviewAssignmentsProps {
 
 const PeerReviewAssignments: React.FC<PeerReviewAssignmentsProps> = ({
   assignments,
+  statusFilters = [],
   isFaculty,
   isTA = false,
   currentUserId,
@@ -23,7 +27,11 @@ const PeerReviewAssignments: React.FC<PeerReviewAssignmentsProps> = ({
 }) => {
   const router = useRouter();
 
-  if (assignments.length === 0) {
+  const filteredAssignments = assignments.filter(a =>
+    statusFilters.length === 0 ? true : statusFilters.includes(a.status)
+  );
+
+  if (filteredAssignments.length === 0) {
     return (
       <Text c="dimmed" size="xs" mb="xs">
         (no assignments found)
@@ -33,7 +41,7 @@ const PeerReviewAssignments: React.FC<PeerReviewAssignmentsProps> = ({
 
   return (
     <Stack gap="sm" my="xs">
-      {assignments.map(a => {
+      {filteredAssignments.map(a => {
         const teamNumber =
           (a.assignment.reviewee as Partial<Team> | undefined)?.number ??
           (a.assignment.reviewee as { teamNumber?: number } | undefined)
@@ -100,6 +108,17 @@ const PeerReviewAssignments: React.FC<PeerReviewAssignmentsProps> = ({
                 h="21.5px"
               >
                 Draft
+              </Badge>
+            )}
+            {a.status === 'NotStarted' && (
+              <Badge
+                color="gray"
+                variant="light"
+                size="sm"
+                radius="sm"
+                h="21.5px"
+              >
+                Not Started
               </Badge>
             )}
             {isFaculty && (

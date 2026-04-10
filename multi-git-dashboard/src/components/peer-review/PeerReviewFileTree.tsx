@@ -16,7 +16,7 @@ const PeerReviewFileTree: React.FC<PeerReviewFileTreeProps> = ({
   openFile,
   level = 0,
 }) => {
-  const [openDirs, setOpenDirs] = useState<{ [path: string]: boolean }>({});
+  const [isOpen, setIsOpen] = useState(level === 0);
 
   if (repoNode.type === 'file') {
     return (
@@ -30,7 +30,6 @@ const PeerReviewFileTree: React.FC<PeerReviewFileTreeProps> = ({
     );
   }
 
-  const isOpen = openDirs[repoNode.path] ?? false;
   return (
     <>
       <NavLink
@@ -42,9 +41,7 @@ const PeerReviewFileTree: React.FC<PeerReviewFileTreeProps> = ({
             <IconFolder size={16} style={{ marginLeft: '10px' }} />
           )
         }
-        onClick={() =>
-          setOpenDirs(prev => ({ ...prev, [repoNode.path]: !isOpen }))
-        }
+        onClick={() => setIsOpen(prev => !prev)}
         style={{ paddingLeft: `${level * 16}px` }}
       />
       {isOpen &&

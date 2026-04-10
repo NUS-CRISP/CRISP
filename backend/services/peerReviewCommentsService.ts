@@ -412,46 +412,25 @@ export const flagPeerReviewCommentById = async (
   const comment = await PeerReviewCommentModel.findById(commentId);
   if (!comment) throw new NotFoundError(COMMENT_NOT_FOUND);
 
-  const assignment = await PeerReviewAssignmentModel.findById(
-    comment.peerReviewAssignmentId
-  );
-  if (!assignment) {
-    throw new NotFoundError(
-      'Peer review assignment not found for this comment'
-    );
+  // TA/Faculty moderation is allowed at any point (draft/submitted, grading in-progress/completed).
+  if (flagStatus) {
+    // Flagging: record flag details and clear any prior unflag state
+    comment.isFlagged = true;
+    comment.flagReason = flagReason ?? '';
+    comment.flaggedAt = new Date();
+    comment.flaggedBy = oid(userId);
+    comment.unflagReason = '';
+    (comment as any).unflaggedAt = null;
+    (comment as any).unflaggedBy = null;
+  } else {
+    // Unflagging: clear flag state and record unflag details
+    comment.isFlagged = false;
+    comment.unflagReason = flagReason ?? '';
+    comment.unflaggedAt = new Date();
+    comment.unflaggedBy = oid(userId);
   }
-
-  const reviewee = await fetchReviewee(assignment.reviewee.toString());
-  const isSupervisingTA = reviewee.TA?.toString() === userId;
-
-  // Course coordinator can flag any comment and if TA, can only flag comments of teams they are supervising
-  if (
-    (userCourseRole === COURSE_ROLE.TA && isSupervisingTA) ||
-    userCourseRole === COURSE_ROLE.Faculty
-  ) {
-    if (flagStatus) {
-      // Flagging: record flag details and clear any prior unflag state
-      comment.isFlagged = true;
-      comment.flagReason = flagReason ?? '';
-      comment.flaggedAt = new Date();
-      comment.flaggedBy = oid(userId);
-      comment.unflagReason = '';
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (comment as any).unflaggedAt = null;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (comment as any).unflaggedBy = null;
-    } else {
-      // Unflagging: clear flag state and record unflag details
-      comment.isFlagged = false;
-      comment.unflagReason = flagReason ?? '';
-      comment.unflaggedAt = new Date();
-      comment.unflaggedBy = oid(userId);
-    }
-    await comment.save();
-    return;
-  }
-
-  throw new MissingAuthorizationError(UNAUTHORIZED_TO_FLAG_COMMENTS);
+  await comment.save();
+  return;
 };
 
 // Helpers
@@ -563,7 +542,10 @@ const decorateCommentsForViewer = async (
       : null;
 
     let displayAuthorName = c.author?.name;
-    let canManage = canModerateAll;
+    let canManage =
+      canModerateAll ||
+      userCourseRole === COURSE_ROLE.TA ||
+      userCourseRole === COURSE_ROLE.Faculty;
 
     // Only show team name if there's no individual author (system-generated comments)
     if (
