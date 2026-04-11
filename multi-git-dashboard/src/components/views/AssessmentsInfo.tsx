@@ -11,12 +11,20 @@ import {
 import { Assessment } from '@shared/types/Assessment';
 import { InternalAssessment } from '@shared/types/InternalAssessment';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import AssessmentCard from '../cards/AssessmentCard';
 import CreateAssessmentForm from '../forms/CreateAssessmentForm';
 import InternalAssessmentCard from '../cards/InternalAssessmentCard';
 import TutorialPopover from '../tutorial/TutorialPopover';
 import { TeamSet } from '@shared/types/TeamSet';
+import { useRouter } from 'next/router';
+
+type CreateAssessmentTabValue =
+  | 'internal'
+  | 'peerReview'
+  | 'internalCsv'
+  | 'googleForms'
+  | 'googleCsv';
 
 interface AssessmentInfoProps {
   courseId: string;
@@ -33,12 +41,62 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
   teamSets,
   onUpdate,
 }) => {
+  const router = useRouter();
+  const isFaculty = hasFacultyPermission();
   console.log(internalAssessments);
   const [isCreatingAssessment, setIsCreatingAssessment] = useState(false);
+  const [createAssessmentTab, setCreateAssessmentTab] =
+    useState<CreateAssessmentTabValue>('internal');
 
-  const toggleForm = () => {
-    setIsCreatingAssessment(o => !o);
+  const openCreateAssessmentModal = (
+    tab: CreateAssessmentTabValue = 'internal'
+  ) => {
+    setCreateAssessmentTab(tab);
+    setIsCreatingAssessment(true);
   };
+
+  const closeCreateAssessmentModal = () => {
+    setIsCreatingAssessment(false);
+  };
+
+  useEffect(() => {
+    if (!router.isReady) return;
+    if (!isFaculty) return;
+
+    const openCreateAssessment = router.query.openCreateAssessment;
+    const requestedTab = router.query.createAssessmentTab;
+
+    const shouldOpen =
+      openCreateAssessment === '1' || openCreateAssessment === 'true';
+
+    if (!shouldOpen) return;
+
+    const validTabs: CreateAssessmentTabValue[] = [
+      'internal',
+      'peerReview',
+      'internalCsv',
+      'googleForms',
+      'googleCsv',
+    ];
+
+    const requestedTabValue =
+      typeof requestedTab === 'string' &&
+      validTabs.includes(requestedTab as CreateAssessmentTabValue)
+        ? (requestedTab as CreateAssessmentTabValue)
+        : 'internal';
+
+    openCreateAssessmentModal(requestedTabValue);
+
+    const cleanedQuery = { ...router.query };
+    delete cleanedQuery.openCreateAssessment;
+    delete cleanedQuery.createAssessmentTab;
+
+    router.replace(
+      { pathname: router.pathname, query: cleanedQuery },
+      undefined,
+      { shallow: true }
+    );
+  }, [router.isReady, router.query, isFaculty]);
 
   const handleAssessmentCreated = () => {
     setIsCreatingAssessment(false);
@@ -87,14 +145,16 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
 
   return (
     <Container>
-      {hasFacultyPermission() && (
+      {isFaculty && (
         <Group style={{ marginBottom: '16px', marginTop: '16px' }}>
-          <Button onClick={toggleForm}>Create Assessment</Button>
+          <Button onClick={() => openCreateAssessmentModal('internal')}>
+            Create Assessment
+          </Button>
         </Group>
       )}
       <Modal
         opened={isCreatingAssessment}
-        onClose={toggleForm}
+        onClose={closeCreateAssessmentModal}
         title="Create Assessment"
         size="xl"
       >
@@ -102,6 +162,7 @@ const AssessmentInfo: React.FC<AssessmentInfoProps> = ({
           teamSets={teamSets}
           courseId={courseId}
           onAssessmentCreated={handleAssessmentCreated}
+          initialTab={createAssessmentTab}
         />
       </Modal>
 

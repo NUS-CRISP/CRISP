@@ -1,9 +1,16 @@
-import { Tabs, Container, ScrollArea } from '@mantine/core';
+import {
+  Tabs,
+  Container,
+  ScrollArea,
+  ActionIcon,
+  Tooltip,
+} from '@mantine/core';
 import { TeamSet } from '@shared/types/TeamSet';
 import { PeerReview } from '@shared/types/PeerReview';
 import PeerReviewInfo from './PeerReviewInfo';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
+import { IconPlus } from '@tabler/icons-react';
 
 interface PeerReviewOverviewProps {
   courseId: string;
@@ -75,36 +82,70 @@ const PeerReviewOverview: React.FC<PeerReviewOverviewProps> = ({
     }
   };
 
+  const goToCreatePeerReviewAssessment = () => {
+    router.push({
+      pathname: `/courses/${courseId}/assessments`,
+      query: {
+        openCreateAssessment: '1',
+        createAssessmentTab: 'peerReview',
+      },
+    });
+  };
+
   return (
     <Container>
       <Tabs mt="md" value={activeTab} onChange={handleTabChange}>
-        <Tabs.List
+        <div
           style={{
+            display: 'flex',
             justifyContent: 'center',
+            alignItems: 'center',
+            gap: '12px',
           }}
         >
-          {courseId && peerReviews.length > 0 ? (
-            peerReviews.map(pr => (
-              <Tabs.Tab
-                key={pr._id}
-                value={pr._id}
-                style={{
-                  padding: '10px 16px',
-                  fontWeight: 500,
-                  fontSize: '14px',
-                  transition: 'all 150ms ease',
-                  cursor: 'pointer',
-                }}
-              >
-                {pr.title}
+          <Tabs.List
+            style={{
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
+            {courseId && peerReviews.length > 0 ? (
+              peerReviews.map(pr => (
+                <Tabs.Tab
+                  key={pr._id}
+                  value={pr._id}
+                  style={{
+                    padding: '10px 16px',
+                    fontWeight: 500,
+                    fontSize: '14px',
+                    transition: 'all 150ms ease',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {pr.title}
+                </Tabs.Tab>
+              ))
+            ) : (
+              <Tabs.Tab key={'default'} value={'default'}>
+                No Peer Reviews Available
               </Tabs.Tab>
-            ))
-          ) : (
-            <Tabs.Tab key={'default'} value={'default'}>
-              No Peer Reviews Available
-            </Tabs.Tab>
+            )}
+          </Tabs.List>
+
+          {isFaculty && (
+            <Tooltip label="Create Peer Review Assessment" withArrow>
+              <ActionIcon
+                variant="light"
+                color="blue"
+                size="md"
+                onClick={goToCreatePeerReviewAssessment}
+                aria-label="Create Peer Review Assessment"
+              >
+                <IconPlus size={16} />
+              </ActionIcon>
+            </Tooltip>
           )}
-        </Tabs.List>
+        </div>
 
         {peerReviews.map(pr => (
           <Tabs.Panel key={pr._id} value={pr._id} pt="xs">
