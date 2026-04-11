@@ -61,29 +61,6 @@ const NotificationTypeToColorMap: Record<NotificationType, string> = {
   [NotificationType.Warning]: 'yellow',
 };
 
-const usePersistedAccordion = (key: string, validValues: string[]) => {
-  const [opened, setOpened] = useState<string[]>(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem(key) || '[]');
-      return Array.isArray(saved)
-        ? saved.filter(v => validValues.includes(v))
-        : [];
-    } catch {
-      return [];
-    }
-  });
-
-  useEffect(() => {
-    localStorage.setItem(key, JSON.stringify(opened));
-  }, [key, opened]);
-
-  useEffect(() => {
-    setOpened(prev => prev.filter(v => validValues.includes(v)));
-  }, [validValues]);
-
-  return [opened, setOpened] as const;
-};
-
 const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
   courseId,
   teamSets,
@@ -165,14 +142,75 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
 
   // Persist Accordion State
   const values = useMemo(() => {
-    const items = peerReviewInfo?.teams.map(t => t.teamId) || [];
-    if (peerReview.taAssignments) items.push('teaching-assistants');
+    const items: string[] = [];
+    if ((isFaculty || isTA) && peerReviewInfo) {
+      items.push('progress');
+    }
+    if ((isFaculty || isTA) && peerReview.taAssignments) {
+      items.push('teaching-assistants');
+    }
+    const teamItems = peerReviewInfo?.teams.map(t => t.teamId) || [];
+    items.push(...teamItems);
     return items;
-  }, [peerReviewInfo]);
-  const [opened, setOpened] = usePersistedAccordion(
-    'peer-review-accordion',
-    values
-  );
+  }, [peerReviewInfo, isFaculty, isTA, peerReview.taAssignments]);
+
+  const accordionStorageKey = `peer-review-accordion-${peerReview._id}`;
+  const [opened, setOpened] = useState<string[]>([]);
+  const [hydratedAccordionKey, setHydratedAccordionKey] = useState<
+    string | null
+  >(null);
+  const [hasSavedAccordionState, setHasSavedAccordionState] = useState(false);
+
+  // Load persisted accordion state once per peer review
+  useEffect(() => {
+    setHydratedAccordionKey(null);
+
+    try {
+      const saved = localStorage.getItem(accordionStorageKey);
+      setHasSavedAccordionState(saved !== null);
+
+      if (!saved) {
+        setOpened([]);
+      } else {
+        const parsed = JSON.parse(saved);
+        setOpened(Array.isArray(parsed) ? parsed : []);
+      }
+    } catch {
+      setHasSavedAccordionState(false);
+      setOpened([]);
+    } finally {
+      setHydratedAccordionKey(accordionStorageKey);
+    }
+  }, [accordionStorageKey]);
+
+  // Reconcile open items after values are known
+  useEffect(() => {
+    if (hydratedAccordionKey !== accordionStorageKey) return;
+    if (!peerReviewInfo) return;
+
+    setOpened(prev => {
+      const filtered = prev.filter(v => values.includes(v));
+
+      if (filtered.length > 0) return filtered;
+      if (hasSavedAccordionState) return [];
+
+      // First visit: open first available item by default
+      return values.slice(0, 1);
+    });
+  }, [
+    values,
+    peerReviewInfo,
+    hydratedAccordionKey,
+    accordionStorageKey,
+    hasSavedAccordionState,
+  ]);
+
+  // Persist whenever state changes after hydration
+  useEffect(() => {
+    if (hydratedAccordionKey !== accordionStorageKey) return;
+    if (!peerReviewInfo) return;
+    localStorage.setItem(accordionStorageKey, JSON.stringify(opened));
+  }, [opened, accordionStorageKey, hydratedAccordionKey, peerReviewInfo]);
 
   const myTAReviewerAssignmentIds = useMemo(() => {
     if (!isTA || !me?.userId || !peerReviewInfo?.TAAssignments)
@@ -507,7 +545,6 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
       ) : isFaculty || peerReview.status === 'Active' ? (
         <>
           <Accordion
-            defaultValue={['teaching-assistants']}
             value={opened}
             onChange={setOpened}
             multiple

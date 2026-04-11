@@ -2,6 +2,8 @@ import { Tabs, Container, ScrollArea } from '@mantine/core';
 import { TeamSet } from '@shared/types/TeamSet';
 import { PeerReview } from '@shared/types/PeerReview';
 import PeerReviewInfo from './PeerReviewInfo';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/router';
 
 interface PeerReviewOverviewProps {
   courseId: string;
@@ -18,11 +20,64 @@ const PeerReviewOverview: React.FC<PeerReviewOverviewProps> = ({
   isFaculty,
   onUpdate,
 }) => {
+  const router = useRouter();
   const defaultTab = peerReviews[0]?._id || 'default';
+  const [activeTab, setActiveTab] = useState<string | null>(null);
+  const handledRequestedTabRef = useRef<string | null>(null);
+  const requestedPeerReviewTab =
+    typeof router.query.peerReviewId === 'string'
+      ? router.query.peerReviewId
+      : null;
+
+  useEffect(() => {
+    // Priority: explicit tab from navigation query > current valid tab > saved tab > default
+    if (
+      requestedPeerReviewTab &&
+      handledRequestedTabRef.current !== requestedPeerReviewTab
+    ) {
+      if (peerReviews.length === 0) {
+        return;
+      }
+
+      const requestedExists = peerReviews.some(
+        pr => pr._id === requestedPeerReviewTab
+      );
+      if (requestedExists) {
+        handledRequestedTabRef.current = requestedPeerReviewTab;
+        setActiveTab(requestedPeerReviewTab);
+        localStorage.setItem(
+          `activePeerReviewTab_${courseId}`,
+          requestedPeerReviewTab
+        );
+        return;
+      }
+
+      // Query tab does not exist in loaded data; mark as handled and fall back below
+      handledRequestedTabRef.current = requestedPeerReviewTab;
+    }
+
+    if (activeTab && peerReviews.some(pr => pr._id === activeTab)) {
+      return;
+    }
+
+    const savedTab = localStorage.getItem(`activePeerReviewTab_${courseId}`);
+    if (savedTab && peerReviews.some(pr => pr._id === savedTab)) {
+      setActiveTab(savedTab);
+    } else {
+      setActiveTab(defaultTab);
+    }
+  }, [courseId, defaultTab, peerReviews, requestedPeerReviewTab, activeTab]);
+
+  const handleTabChange = (tabValue: string | null) => {
+    if (tabValue) {
+      setActiveTab(tabValue);
+      localStorage.setItem(`activePeerReviewTab_${courseId}`, tabValue);
+    }
+  };
 
   return (
     <Container>
-      <Tabs mt="md" defaultValue={defaultTab}>
+      <Tabs mt="md" value={activeTab} onChange={handleTabChange}>
         <Tabs.List
           style={{
             justifyContent: 'center',
@@ -30,7 +85,17 @@ const PeerReviewOverview: React.FC<PeerReviewOverviewProps> = ({
         >
           {courseId && peerReviews.length > 0 ? (
             peerReviews.map(pr => (
-              <Tabs.Tab key={pr._id} value={pr._id}>
+              <Tabs.Tab
+                key={pr._id}
+                value={pr._id}
+                style={{
+                  padding: '10px 16px',
+                  fontWeight: 500,
+                  fontSize: '14px',
+                  transition: 'all 150ms ease',
+                  cursor: 'pointer',
+                }}
+              >
                 {pr.title}
               </Tabs.Tab>
             ))
