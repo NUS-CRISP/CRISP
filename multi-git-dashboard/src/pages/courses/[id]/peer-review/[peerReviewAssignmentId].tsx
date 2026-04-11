@@ -642,6 +642,23 @@ const PeerReviewDetail: React.FC = () => {
   );
 
   const handleSubmitReview = useCallback(async () => {
+    const hasBlockingFlaggedComments =
+      isReviewerConsole &&
+      submission?.status !== 'Submitted' &&
+      flaggedCommentsForReviewer.length > 0;
+
+    if (hasBlockingFlaggedComments) {
+      setSubmitReviewModalOpened(false);
+      setFlaggedCommentsModalOpened(true);
+      notifications.show({
+        color: 'orange',
+        title: 'Resolve flagged comments first',
+        message:
+          'You must revise all flagged comments before submitting your review.',
+      });
+      return;
+    }
+
     try {
       setSubmitting(true);
       await submitReview();
@@ -662,7 +679,14 @@ const PeerReviewDetail: React.FC = () => {
     } finally {
       setSubmitting(false);
     }
-  }, [submitReview, router, id]);
+  }, [
+    submitReview,
+    router,
+    id,
+    isReviewerConsole,
+    submission?.status,
+    flaggedCommentsForReviewer.length,
+  ]);
 
   if (loading || !me)
     return (
@@ -742,6 +766,8 @@ const PeerReviewDetail: React.FC = () => {
     me.userCourseRole === COURSE_ROLE.Student ||
     me.userCourseRole === COURSE_ROLE.TA;
   const isSubmitted = submission?.status === 'Submitted';
+  const hasBlockingFlaggedComments =
+    isReviewerConsole && !isSubmitted && flaggedCommentsForReviewer.length > 0;
 
   const showSupervisorSummaryButton =
     !isReadOnly && !submission && isSupervisorTA && isFacultyOrTA;
@@ -782,7 +808,14 @@ const PeerReviewDetail: React.FC = () => {
       fz="sm"
       h="27px"
       disabled={!canEdit}
-      onClick={() => setSubmitReviewModalOpened(true)}
+      onClick={() => {
+        if (hasBlockingFlaggedComments) {
+          setSubmitReviewModalOpened(false);
+          setFlaggedCommentsModalOpened(true);
+          return;
+        }
+        setSubmitReviewModalOpened(true);
+      }}
     >
       Submit Review
     </Button>
