@@ -12,6 +12,7 @@ import {
   Card,
   Button,
   Badge,
+  Alert,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { useColorScheme } from '@mantine/hooks';
@@ -22,6 +23,7 @@ import {
   IconArrowLeft,
   IconSend,
   IconClipboardList,
+  IconAlertTriangle,
 } from '@tabler/icons-react';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState, useRef } from 'react';
@@ -42,6 +44,7 @@ import SubmissionStatusBadge from '@/components/peer-review/SubmissionStatusBadg
 import SaveStateBadge from '@/components/peer-review/SaveStateBadge';
 import SubmitReviewConfirmationModal from '@/components/cards/Modals/SubmitReviewConfirmationModal';
 import PeerReviewSummaryModal from '@/components/cards/Modals/PeerReviewSummaryModal';
+import FlaggedCommentsModal from '@/components/cards/Modals/FlaggedCommentsModal';
 import { COURSE_ROLE } from '@shared/types/auth/CourseRole';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
@@ -137,6 +140,9 @@ const PeerReviewDetail: React.FC = () => {
   const [unflagCommentId, setUnflagCommentId] = useState<string | null>(null);
   const [submitReviewModalOpened, setSubmitReviewModalOpened] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [flaggedCommentsModalOpened, setFlaggedCommentsModalOpened] =
+    useState(false);
+  const hasShownFlaggedModalRef = useRef(false);
 
   type ActiveWidget = { start: number; end: number; top: number } | null;
   const [activeWidget, setActiveWidget] = useState<ActiveWidget>(null);
@@ -155,6 +161,31 @@ const PeerReviewDetail: React.FC = () => {
   useEffect(() => {
     currFileRef.current = currFile;
   }, [currFile]);
+
+  useEffect(() => {
+    hasShownFlaggedModalRef.current = false;
+  }, [peerReviewAssignmentId]);
+
+  const isReviewerConsole =
+    !isReviewee &&
+    Boolean(submission) &&
+    (me?.userCourseRole === COURSE_ROLE.Student ||
+      me?.userCourseRole === COURSE_ROLE.TA);
+  const flaggedCommentsForReviewer = comments.filter(
+    c => c.isFlagged && !c.unflaggedAt
+  );
+
+  useEffect(() => {
+    if (!isReviewerConsole) return;
+
+    if (
+      flaggedCommentsForReviewer.length > 0 &&
+      !hasShownFlaggedModalRef.current
+    ) {
+      hasShownFlaggedModalRef.current = true;
+      setFlaggedCommentsModalOpened(true);
+    }
+  }, [isReviewerConsole, flaggedCommentsForReviewer.length]);
 
   /* ===== Helper Functions ===== */
   const renderFocusedAndStaticDecos = useCallback(
@@ -454,7 +485,22 @@ const PeerReviewDetail: React.FC = () => {
 
       const currComment = comments.find(c => c._id === commentId);
       if (!currComment) return false;
-      if (currComment.comment === newComment) return true;
+      const unchanged = currComment.comment.trim() === newComment.trim();
+      const isFlagged = Boolean(
+        currComment.isFlagged && !currComment.unflaggedAt
+      );
+
+      if (unchanged && isFlagged) {
+        notifications.show({
+          color: 'orange',
+          title: 'Comment still flagged',
+          message:
+            'Please revise the comment text before updating to resolve moderation.',
+        });
+        return false;
+      }
+
+      if (unchanged) return true;
 
       try {
         setUpdatingCommentId(commentId);
@@ -581,6 +627,18 @@ const PeerReviewDetail: React.FC = () => {
       editorRef.current?.revealLineInCenter?.(comment.startLine);
     },
     [renderFocusedAndStaticDecos]
+  );
+
+  const handleOpenFlaggedComment = useCallback(
+    async (comment: PeerReviewComment) => {
+      await openFile(comment.filePath);
+      setFlaggedCommentsModalOpened(false);
+      setTimeout(() => {
+        renderFocusedAndStaticDecos([comment._id]);
+        editorRef.current?.revealLineInCenter?.(comment.startLine);
+      }, 120);
+    },
+    [openFile, renderFocusedAndStaticDecos]
   );
 
   const handleSubmitReview = useCallback(async () => {
@@ -775,6 +833,30 @@ const PeerReviewDetail: React.FC = () => {
           {actionElement}
         </Group>
       </Group>
+      {isReviewerConsole && flaggedCommentsForReviewer.length > 0 && (
+        <Alert
+          icon={<IconAlertTriangle size={16} />}
+          color="orange"
+          variant="light"
+          mb="sm"
+        >
+          <Group justify="space-between" align="center" wrap="nowrap" gap="sm">
+            <Text size="sm" style={{ flex: 1 }}>
+              {isSubmitted
+                ? `You have ${flaggedCommentsForReviewer.length} flagged comment(s). This review has already been submitted, take note for future peer reviews.`
+                : `You have ${flaggedCommentsForReviewer.length} flagged comment(s) that require revision.`}
+            </Text>
+            <Button
+              size="compact-xs"
+              variant="subtle"
+              color="orange"
+              onClick={() => setFlaggedCommentsModalOpened(true)}
+            >
+              View flagged comments
+            </Button>
+          </Group>
+        </Alert>
+      )}
       <Group className={classes.body}>
         <Box className={classes.repositoryBox}>
           <Text className={classes.repositoryTitle}>Repository</Text>
@@ -891,6 +973,13 @@ const PeerReviewDetail: React.FC = () => {
           title="Unflag Comment?"
           confirmLabel="Unflag"
           confirmColor="blue"
+        />
+        <FlaggedCommentsModal
+          opened={flaggedCommentsModalOpened}
+          onClose={() => setFlaggedCommentsModalOpened(false)}
+          isSubmitted={Boolean(isSubmitted)}
+          comments={flaggedCommentsForReviewer}
+          onOpenComment={handleOpenFlaggedComment}
         />
       </Group>
     </Container>

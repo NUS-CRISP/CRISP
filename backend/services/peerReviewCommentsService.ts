@@ -244,11 +244,29 @@ export const updatePeerReviewCommentById = async (
   const comment = await PeerReviewCommentModel.findById(commentId);
   if (!comment) throw new NotFoundError(COMMENT_NOT_FOUND);
 
+  const trimmedUpdatedComment = updatedComment.trim();
+  const trimmedCurrentComment = comment.comment.trim();
+  const isContentChanged = trimmedUpdatedComment !== trimmedCurrentComment;
+
+  if (comment.isFlagged && !isContentChanged) {
+    throw new BadRequestError(
+      'Flagged comment must be revised before it can be resolved'
+    );
+  }
+
   // Faculty can update any comment
   if (userCourseRole === COURSE_ROLE.Faculty) {
-    if (updatedComment.trim().length === 0)
+    if (trimmedUpdatedComment.length === 0)
       throw new BadRequestError('Comment text cannot be empty');
     comment.comment = updatedComment;
+
+    if (comment.isFlagged && isContentChanged) {
+      comment.isFlagged = false;
+      comment.unflagReason = 'Resolved by reviewer update';
+      comment.unflaggedAt = new Date();
+      comment.unflaggedBy = oid(userId);
+    }
+
     comment.updatedAt = new Date();
     await comment.save();
     return;
@@ -272,9 +290,17 @@ export const updatePeerReviewCommentById = async (
     );
 
     if (isSupervisingTA && !taReviewerSubmission) {
-      if (updatedComment.trim().length === 0)
+      if (trimmedUpdatedComment.length === 0)
         throw new BadRequestError('Comment text cannot be empty');
       comment.comment = updatedComment;
+
+      if (comment.isFlagged && isContentChanged) {
+        comment.isFlagged = false;
+        comment.unflagReason = 'Resolved by reviewer update';
+        comment.unflaggedAt = new Date();
+        comment.unflaggedBy = oid(userId);
+      }
+
       comment.updatedAt = new Date();
       await comment.save();
       return;
@@ -313,10 +339,18 @@ export const updatePeerReviewCommentById = async (
       throw new MissingAuthorizationError(UNAUTHORIZED_TO_UPDATE_COMMENTS);
   }
 
-  if (updatedComment.trim().length === 0)
+  if (trimmedUpdatedComment.length === 0)
     throw new BadRequestError('Comment text cannot be empty');
 
   comment.comment = updatedComment;
+
+  if (comment.isFlagged && isContentChanged) {
+    comment.isFlagged = false;
+    comment.unflagReason = 'Resolved by reviewer update';
+    comment.unflaggedAt = new Date();
+    comment.unflaggedBy = oid(userId);
+  }
+
   comment.updatedAt = new Date();
   await comment.save();
   return;
@@ -501,17 +535,24 @@ const findCommentsForSubmissionVisible = async (
     .populate('author', '_id name')
     .lean();
 
-  return decorateCommentsForViewer(comments, userId, userCourseRole, false);
+  return decorateCommentsForViewer(comments, userId, userCourseRole, false, {
+    showFlaggedToStudents: true,
+  });
 };
 
 const decorateCommentsForViewer = async (
   comments: any[],
   userId: string,
   userCourseRole: string,
-  canModerateAll: boolean
+  canModerateAll: boolean,
+  options?: {
+    showFlaggedToStudents?: boolean;
+  }
 ) => {
+  const showFlaggedToStudents = Boolean(options?.showFlaggedToStudents);
+
   const visibleComments =
-    userCourseRole === COURSE_ROLE.Student
+    userCourseRole === COURSE_ROLE.Student && !showFlaggedToStudents
       ? comments.filter(comment => !comment.isFlagged)
       : comments;
 

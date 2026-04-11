@@ -353,6 +353,34 @@ describe('peerReviewCommentsService', () => {
       expect((res[0] as any).comment).toBe('submitted comment');
     });
 
+    it('Student (reviewee): returns empty array when there are no Submitted submissions', async () => {
+      const studentId = oid();
+      const pr = await makePeerReview();
+      (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
+
+      const reviewee = await makeTeam({ members: [studentId] });
+      const assignment = await makeAssignment(pr._id, reviewee._id);
+
+      const draftSubmission = await makeSubmission(pr._id, assignment._id, {
+        reviewerKind: 'Student',
+        reviewerUserId: oidStr(),
+        status: 'Draft',
+      });
+
+      await makeComment(pr._id, assignment._id, {
+        comment: 'draft-only comment',
+        peerReviewSubmissionId: draftSubmission._id,
+      });
+
+      const res = await getPeerReviewCommentsByAssignmentId(
+        studentId.toString(),
+        COURSE_ROLE.Student,
+        assignment._id.toString()
+      );
+
+      expect(res).toEqual([]);
+    });
+
     it('TA supervising: returns visible comments', async () => {
       const taId = oid();
       const pr = await makePeerReview();
@@ -857,6 +885,129 @@ describe('peerReviewCommentsService', () => {
       const updated = await PeerReviewCommentModel.findById(comment._id);
       expect(updated?.comment).toBe('updated text');
       expect(updated?.updatedAt).toBeTruthy();
+    });
+
+    it('auto-unflags flagged comment when reviewer updates with changed content', async () => {
+      const pr = await makePeerReview();
+      (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
+
+      const reviewerId = oid();
+      const reviewee = await makeTeam({ members: [oid()] });
+      const assignment = await makeAssignment(pr._id, reviewee._id);
+
+      const submission = await makeSubmission(pr._id, assignment._id, {
+        reviewerKind: 'Student',
+        reviewerUserId: reviewerId.toString(),
+      });
+
+      (fetchSubmissionForAssignment as jest.Mock).mockResolvedValue({
+        status: 'Draft',
+        reviewerKind: 'Student',
+        reviewerUserId: reviewerId.toString(),
+      });
+
+      const comment = await makeComment(pr._id, assignment._id, {
+        author: reviewerId,
+        peerReviewSubmissionId: submission._id,
+        comment: 'original flagged comment',
+        isFlagged: true,
+        flagReason: 'Please revise wording',
+      });
+
+      await expect(
+        updatePeerReviewCommentById(
+          reviewerId.toString(),
+          COURSE_ROLE.Student,
+          assignment._id.toString(),
+          comment._id.toString(),
+          'revised comment text',
+          submission._id.toString()
+        )
+      ).resolves.toBeUndefined();
+
+      const updated = await PeerReviewCommentModel.findById(comment._id);
+      expect(updated?.comment).toBe('revised comment text');
+      expect(updated?.isFlagged).toBe(false);
+      expect(updated?.unflaggedAt).toBeTruthy();
+      expect(updated?.unflagReason).toBe('Resolved by reviewer update');
+      expect(updated?.unflaggedBy?.toString()).toBe(reviewerId.toString());
+    });
+
+    it('Faculty auto-unflags flagged comment when updating with changed content', async () => {
+      const pr = await makePeerReview();
+      (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
+
+      const reviewee = await makeTeam({ members: [oid()] });
+      const assignment = await makeAssignment(pr._id, reviewee._id);
+
+      const comment = await makeComment(pr._id, assignment._id, {
+        author: oid(),
+        comment: 'faculty flagged comment',
+        isFlagged: true,
+        flagReason: 'Needs revision',
+      });
+
+      const facultyId = oid();
+      await expect(
+        updatePeerReviewCommentById(
+          facultyId.toString(),
+          COURSE_ROLE.Faculty,
+          assignment._id.toString(),
+          comment._id.toString(),
+          'faculty revised comment',
+          ''
+        )
+      ).resolves.toBeUndefined();
+
+      const updated = await PeerReviewCommentModel.findById(comment._id);
+      expect(updated?.comment).toBe('faculty revised comment');
+      expect(updated?.isFlagged).toBe(false);
+      expect(updated?.unflaggedAt).toBeTruthy();
+      expect(updated?.unflagReason).toBe('Resolved by reviewer update');
+      expect(updated?.unflaggedBy?.toString()).toBe(facultyId.toString());
+    });
+
+    it('keeps comment flagged when update text is unchanged', async () => {
+      const pr = await makePeerReview();
+      (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
+
+      const reviewerId = oid();
+      const reviewee = await makeTeam({ members: [oid()] });
+      const assignment = await makeAssignment(pr._id, reviewee._id);
+
+      const submission = await makeSubmission(pr._id, assignment._id, {
+        reviewerKind: 'Student',
+        reviewerUserId: reviewerId.toString(),
+      });
+
+      (fetchSubmissionForAssignment as jest.Mock).mockResolvedValue({
+        status: 'Draft',
+        reviewerKind: 'Student',
+        reviewerUserId: reviewerId.toString(),
+      });
+
+      const comment = await makeComment(pr._id, assignment._id, {
+        author: reviewerId,
+        peerReviewSubmissionId: submission._id,
+        comment: 'unchanged flagged comment',
+        isFlagged: true,
+        flagReason: 'Needs revision',
+      });
+
+      await expect(
+        updatePeerReviewCommentById(
+          reviewerId.toString(),
+          COURSE_ROLE.Student,
+          assignment._id.toString(),
+          comment._id.toString(),
+          'unchanged flagged comment',
+          submission._id.toString()
+        )
+      ).rejects.toBeInstanceOf(BadRequestError);
+
+      const unchanged = await PeerReviewCommentModel.findById(comment._id);
+      expect(unchanged?.isFlagged).toBe(true);
+      expect(unchanged?.comment).toBe('unchanged flagged comment');
     });
 
     it('non-team reviewer cannot update another author\'s comment', async () => {
@@ -1368,7 +1519,7 @@ describe('peerReviewCommentsService edge cases', () => {
     expect(hasMyComment).toBe(true);
   });
 
-  it('Student + Individual reviewerType: hides flagged comments in submission view', async () => {
+  it('Student + Individual reviewerType: includes flagged comments in submission view for reviewer remediation', async () => {
     const studentId = new Types.ObjectId();
     const pr = await makePeerReview({ reviewerType: 'Individual' });
     (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
@@ -1401,9 +1552,9 @@ describe('peerReviewCommentsService edge cases', () => {
       assignment._id.toString()
     );
 
-    expect(res).toHaveLength(1);
-    expect(res[0].comment).toBe('visible comment');
-    expect(res[0].isFlagged).toBe(false);
+    expect(res).toHaveLength(2);
+    expect(res.some(c => c.comment === 'visible comment')).toBe(true);
+    expect(res.some(c => c.comment === 'flagged comment')).toBe(true);
   });
 
   it('Student + Team reviewerType: returns null when homeTeam not found (homeTeam branch)', async () => {
@@ -1802,6 +1953,39 @@ describe('peerReviewCommentsService edge cases', () => {
           ''
         )
       ).rejects.toBeInstanceOf(BadRequestError);
+    });
+
+    it('TA supervising auto-unflags flagged comment when updating with changed content', async () => {
+      const taId = oid();
+      const pr = await makePeerReview({ reviewerType: 'Individual' });
+      (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
+
+      const reviewee = await makeTeam({ TA: taId, members: [oid()] });
+      const assignment = await makeAssignment(pr._id, reviewee._id);
+      const comment = await makeComment(pr._id, assignment._id, {
+        author: oid(),
+        comment: 'ta flagged comment',
+        isFlagged: true,
+        flagReason: 'Revise this',
+      });
+
+      await expect(
+        updatePeerReviewCommentById(
+          taId.toString(),
+          COURSE_ROLE.TA,
+          assignment._id.toString(),
+          comment._id.toString(),
+          'ta revised comment',
+          ''
+        )
+      ).resolves.toBeUndefined();
+
+      const updated = await PeerReviewCommentModel.findById(comment._id);
+      expect(updated?.comment).toBe('ta revised comment');
+      expect(updated?.isFlagged).toBe(false);
+      expect(updated?.unflaggedAt).toBeTruthy();
+      expect(updated?.unflagReason).toBe('Resolved by reviewer update');
+      expect(updated?.unflaggedBy?.toString()).toBe(taId.toString());
     });
 
     it('Student + Team reviewer + no reviewerTeamId: throws MissingAuthorizationError', async () => {
