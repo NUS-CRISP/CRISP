@@ -448,8 +448,22 @@ const fetchReviewee = async (teamId: string) => {
 };
 
 const findCommentsAnonymous = async (assignmentId: string) => {
+  const submittedSubmissionIds = (
+    await PeerReviewSubmissionModel.find({
+      peerReviewAssignmentId: assignmentId,
+      status: 'Submitted',
+    })
+      .select('_id')
+      .lean()
+  ).map(s => s._id);
+
+  if (submittedSubmissionIds.length === 0) {
+    return [];
+  }
+
   return PeerReviewCommentModel.find({
     peerReviewAssignmentId: assignmentId,
+    peerReviewSubmissionId: { $in: submittedSubmissionIds },
     isFlagged: { $ne: true },
   })
     .select('-author -flaggedBy') // hide identity

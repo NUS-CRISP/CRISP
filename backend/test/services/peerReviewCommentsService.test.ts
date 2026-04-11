@@ -255,7 +255,16 @@ describe('peerReviewCommentsService', () => {
       const reviewee = await makeTeam({ members: [studentId] });
       const assignment = await makeAssignment(pr._id, reviewee._id);
 
-      const c = await makeComment(pr._id, assignment._id, { author: oid() });
+      const submittedSubmission = await makeSubmission(pr._id, assignment._id, {
+        reviewerKind: 'Student',
+        reviewerUserId: oidStr(),
+        status: 'Submitted',
+      });
+
+      const c = await makeComment(pr._id, assignment._id, {
+        author: oid(),
+        peerReviewSubmissionId: submittedSubmission._id,
+      });
 
       const res = await getPeerReviewCommentsByAssignmentId(
         studentId.toString(),
@@ -278,14 +287,22 @@ describe('peerReviewCommentsService', () => {
       const reviewee = await makeTeam({ members: [studentId] });
       const assignment = await makeAssignment(pr._id, reviewee._id);
 
+      const submittedSubmission = await makeSubmission(pr._id, assignment._id, {
+        reviewerKind: 'Student',
+        reviewerUserId: oidStr(),
+        status: 'Submitted',
+      });
+
       await makeComment(pr._id, assignment._id, {
         comment: 'visible comment',
         isFlagged: false,
+        peerReviewSubmissionId: submittedSubmission._id,
       });
       await makeComment(pr._id, assignment._id, {
         comment: 'hidden flagged comment',
         isFlagged: true,
         flagReason: 'Inappropriate language',
+        peerReviewSubmissionId: submittedSubmission._id,
       });
 
       const res = await getPeerReviewCommentsByAssignmentId(
@@ -296,6 +313,44 @@ describe('peerReviewCommentsService', () => {
 
       expect(res).toHaveLength(1);
       expect((res[0] as any).comment).toBe('visible comment');
+    });
+
+    it('Student (reviewee): does not see comments from Draft submissions', async () => {
+      const studentId = oid();
+      const pr = await makePeerReview();
+      (getPeerReviewById as jest.Mock).mockResolvedValue(pr);
+
+      const reviewee = await makeTeam({ members: [studentId] });
+      const assignment = await makeAssignment(pr._id, reviewee._id);
+
+      const draftSubmission = await makeSubmission(pr._id, assignment._id, {
+        reviewerKind: 'Student',
+        reviewerUserId: oidStr(),
+        status: 'Draft',
+      });
+      const submittedSubmission = await makeSubmission(pr._id, assignment._id, {
+        reviewerKind: 'Student',
+        reviewerUserId: oidStr(),
+        status: 'Submitted',
+      });
+
+      await makeComment(pr._id, assignment._id, {
+        comment: 'draft comment',
+        peerReviewSubmissionId: draftSubmission._id,
+      });
+      await makeComment(pr._id, assignment._id, {
+        comment: 'submitted comment',
+        peerReviewSubmissionId: submittedSubmission._id,
+      });
+
+      const res = await getPeerReviewCommentsByAssignmentId(
+        studentId.toString(),
+        COURSE_ROLE.Student,
+        assignment._id.toString()
+      );
+
+      expect(res).toHaveLength(1);
+      expect((res[0] as any).comment).toBe('submitted comment');
     });
 
     it('TA supervising: returns visible comments', async () => {
