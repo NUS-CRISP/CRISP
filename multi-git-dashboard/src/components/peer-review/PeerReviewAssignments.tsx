@@ -26,6 +26,7 @@ const PeerReviewAssignments: React.FC<PeerReviewAssignmentsProps> = ({
   onDelete,
 }) => {
   const router = useRouter();
+  const peerReviewBasePath = router.asPath.split('?')[0].split('#')[0];
 
   const filteredAssignments = assignments.filter(a =>
     statusFilters.length === 0 ? true : statusFilters.includes(a.status)
@@ -81,7 +82,7 @@ const PeerReviewAssignments: React.FC<PeerReviewAssignmentsProps> = ({
               disabled={disableNavigation}
               onClick={() =>
                 router.push(
-                  `${router.asPath.replace(/\/$/, '')}/${a.assignment._id}`
+                  `${peerReviewBasePath.replace(/\/$/, '')}/${a.assignment._id}`
                 )
               }
             >

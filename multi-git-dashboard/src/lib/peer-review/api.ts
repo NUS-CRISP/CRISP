@@ -177,7 +177,14 @@ export const apiUpdateComment = async (
       body: JSON.stringify({ comment: updatedComment, submissionId }),
     });
     if (!response.ok) {
-      throw new Error('Failed to update comment');
+      let message = 'Failed to update comment';
+      try {
+        const data = await response.json();
+        if (data?.message) message = data.message;
+      } catch {
+        // ignore body parse failures and keep default message
+      }
+      throw new Error(message);
     }
     return;
   } catch (err) {

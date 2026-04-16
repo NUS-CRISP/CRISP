@@ -1,6 +1,12 @@
 .wrapper {
   padding: 20px;
   max-width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .wrapper :global(.monaco-editor .margin .glyph-margin) {
@@ -80,9 +86,12 @@
 }
 
 .body {
-  height: 90vh;
+  flex: 1;
+  min-height: 0;
+  max-height: 100%;
   gap: 8px;
   align-items: stretch;
+  overflow: hidden;
 }
 
 .editorTitle {

@@ -74,6 +74,7 @@ const PeerReviewAccordionItem = forwardRef<
     deleteManualAssignment,
   }) => {
     const router = useRouter();
+    const peerReviewBasePath = router.asPath.split('?')[0].split('#')[0];
 
     const [
       openedDeleteModal,
@@ -324,7 +325,7 @@ const PeerReviewAccordionItem = forwardRef<
                           onClick={() => {
                             if (!canViewPeerReview || !assignmentId) return;
                             router.push(
-                              `${router.asPath.replace(/\/$/, '')}/${assignmentId}`
+                              `${peerReviewBasePath.replace(/\/$/, '')}/${assignmentId}`
                             );
                           }}
                           size="xs"

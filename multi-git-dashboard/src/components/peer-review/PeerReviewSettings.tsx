@@ -163,7 +163,12 @@ const PeerReviewSettings: React.FC<PeerReviewSettingsProps> = ({
           <Button
             color="yellow"
             variant="light"
-            onClick={() => router.push(`/courses/${courseId}/peer-review`)}
+            onClick={() =>
+              router.push({
+                pathname: `/courses/${courseId}/peer-review`,
+                query: { peerReviewId: peerReview._id },
+              })
+            }
           >
             {!isFaculty
               ? 'Monitor Your Teams'
