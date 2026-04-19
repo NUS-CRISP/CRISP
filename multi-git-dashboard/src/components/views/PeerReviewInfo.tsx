@@ -583,6 +583,8 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
             )}
             <Divider my="lg" />
 
+            <Divider my="lg" />
+
             {peerReviewInfo.teams
               .filter(team => {
                 const matchesStatusForTeam =
