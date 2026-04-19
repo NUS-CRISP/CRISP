@@ -584,6 +584,7 @@ describe('peerReviewGradingTaskService', () => {
     );
     expect(constrained.assignedCount).toBeGreaterThan(0);
 
+    // Solo TA who is also the reviewer: their submission is skipped silently (not thrown)
     const soloCourse = await makeCourse({ TAs: [ta1._id] });
     const soloSet = await makeTeamSet(soloCourse._id);
     const soloAssessment = await makeAssessment(soloCourse._id, soloSet._id);
@@ -596,9 +597,14 @@ describe('peerReviewGradingTaskService', () => {
       status: 'Submitted',
     });
 
-    await expect(
-      bulkAssignGradersByAssessmentId(soloCourse._id.toString(), soloAssessment._id.toString(), 1, false)
-    ).rejects.toBeInstanceOf(BadRequestError);
+    const soloResult = await bulkAssignGradersByAssessmentId(
+      soloCourse._id.toString(),
+      soloAssessment._id.toString(),
+      1,
+      false
+    );
+    expect(soloResult.submissionsCount).toBe(1);
+    expect(soloResult.assignedCount).toBe(0); // TA submission skipped — self-reviewer
   });
 
   it('covers manual assignment edge branches', async () => {
@@ -682,9 +688,13 @@ describe('peerReviewGradingTaskService', () => {
         }) as any) as any
     );
 
-    await expect(
-      bulkAssignGradersByAssessmentId(course._id.toString(), assessment._id.toString(), 2, false)
-    ).rejects.toBeInstanceOf(BadRequestError);
+    // TA submission: ta2=self-reviewer blocked, ta3=supervisor blocked (mocked), ta1=eligible for slot 1
+    // Slot 2 can't be filled → TA submission breaks with partial assignment (not a throw)
+    const partialResult = await bulkAssignGradersByAssessmentId(
+      course._id.toString(), assessment._id.toString(), 2, false
+    );
+    expect(partialResult.submissionsCount).toBe(1);
+    expect(partialResult.assignedCount).toBe(1);
     teamFindSpy.mockRestore();
 
     const courseDeleted = await makeCourse({ TAs: [ta1._id] });
@@ -720,6 +730,93 @@ describe('peerReviewGradingTaskService', () => {
     await expect(
       bulkAssignGradersByAssessmentId(courseUnset._id.toString(), assessmentUnset._id.toString(), 1, true)
     ).rejects.toBeInstanceOf(BadRequestError);
+  });
+
+  it('throws when all TAs are ineligible for a student submission due to supervisor constraint', async () => {
+    const ta = await makeUser('constrained-ta');
+    const course = await makeCourse({ TAs: [ta._id] });
+    const ts = await makeTeamSet(course._id);
+    const assessment = await makeAssessment(course._id, ts._id);
+    const pr = await makePeerReview(course._id, ts._id, assessment._id);
+
+    // TA supervises the reviewee team — blocked when allowSupervisingTAs = false
+    const revieweeTeam = await makeTeam(ts._id, { TA: ta._id });
+    const assignment = await makeAssignment(pr._id, revieweeTeam._id);
+    await makeSubmission(pr._id, assignment._id, {
+      reviewerKind: 'Student',
+      reviewerUserId: oid(),
+      status: 'Submitted',
+    });
+
+    await expect(
+      bulkAssignGradersByAssessmentId(course._id.toString(), assessment._id.toString(), 1, false)
+    ).rejects.toBeInstanceOf(BadRequestError);
+  });
+
+  it('solo TA assigned to supervising team can still grade student submission when allowSupervisingTAs is true', async () => {
+    const ta = await makeUser('solo-ta-supervisor');
+    const course = await makeCourse({ TAs: [ta._id] });
+    const ts = await makeTeamSet(course._id);
+    const assessment = await makeAssessment(course._id, ts._id);
+    const pr = await makePeerReview(course._id, ts._id, assessment._id);
+
+    // TA supervises the reviewee team
+    const revieweeTeam = await makeTeam(ts._id, { TA: ta._id });
+    const assignment = await makeAssignment(pr._id, revieweeTeam._id);
+    await makeSubmission(pr._id, assignment._id, {
+      reviewerKind: 'Student',
+      reviewerUserId: oid(),
+      status: 'Submitted',
+    });
+
+    const result = await bulkAssignGradersByAssessmentId(
+      course._id.toString(),
+      assessment._id.toString(),
+      1,
+      true // allow same TA
+    );
+
+    expect(result.submissionsCount).toBe(1);
+    expect(result.assignedCount).toBe(1);
+
+    const tasks = await PeerReviewGradingTaskModel.find({ peerReviewId: pr._id }).lean();
+    expect(tasks).toHaveLength(1);
+    expect(tasks[0].grader.toString()).toBe(ta._id.toString());
+  });
+
+  it('preserves existing grading tasks when bulk assignment computation fails', async () => {
+    const ta = await makeUser('preserve-ta');
+    const course = await makeCourse({ TAs: [ta._id] });
+    const ts = await makeTeamSet(course._id);
+    const assessment = await makeAssessment(course._id, ts._id);
+    const pr = await makePeerReview(course._id, ts._id, assessment._id);
+
+    const revieweeTeam = await makeTeam(ts._id);
+    const assignment = await makeAssignment(pr._id, revieweeTeam._id);
+    const submission = await makeSubmission(pr._id, assignment._id, {
+      reviewerKind: 'Student',
+      reviewerUserId: oid(),
+      status: 'Submitted',
+    });
+
+    // Pre-existing grading task
+    const existingTask = await new PeerReviewGradingTaskModel({
+      peerReviewId: pr._id,
+      peerReviewSubmissionId: submission._id,
+      grader: ta._id,
+      status: 'Completed',
+      score: 9,
+    }).save();
+
+    // Requesting 2 graders when only 1 TA exists → should throw
+    await expect(
+      bulkAssignGradersByAssessmentId(course._id.toString(), assessment._id.toString(), 2, true)
+    ).rejects.toBeInstanceOf(BadRequestError);
+
+    // Existing task must still be intact
+    const remaining = await PeerReviewGradingTaskModel.findById(existingTask._id).lean();
+    expect(remaining).not.toBeNull();
+    expect(remaining!.score).toBe(9);
   });
 
   it('blocks grading updates/submission when linked review submission is not submitted or missing', async () => {
