@@ -21,14 +21,20 @@ const NOT_ASSIGNED = 'Not assigned to grade this submission';
 
 const assertPeerReviewActive = async (peerReviewId: Types.ObjectId) => {
   const pr = await PeerReviewModel.findById(peerReviewId).select(
-    'startDate endDate status'
+    'startDate endDate gradingStartDate gradingEndDate status'
   );
   if (!pr) throw new NotFoundError('Peer review not found');
 
-  if (pr.status !== 'Active') {
+  if (pr.status === 'Upcoming' || pr.status === 'Active') {
     throw new BadRequestError(
-      'Grading is only available while the peer review is Active'
+      'Grading is not available until the peer review has closed'
     );
+  }
+
+  // Peer review is Closed — check grading window if dates are set
+  const hasGradingDates = pr.gradingStartDate || pr.gradingEndDate;
+  if (hasGradingDates && pr.computedGradingStatus !== 'InProgress') {
+    throw new BadRequestError('Grading is not currently open');
   }
 };
 
@@ -290,11 +296,6 @@ export const bulkAssignGradersByAssessmentId = async (
     assignments.map(a => [String(a._id), String(a.reviewee)])
   );
 
-  // Delete existing grading tasks for this peer review
-  await PeerReviewGradingTaskModel.deleteMany({
-    peerReviewId: peerReview._id,
-  });
-
   // Round-robin assignment with conflict avoidance
   const tasksToCreate: any[] = [];
   let taIndex = 0;
@@ -337,7 +338,10 @@ export const bulkAssignGradersByAssessmentId = async (
       }
 
       if (!candidateTA) {
-        // Could not find enough eligible TAs for this submission
+        // TA-reviewer submissions where the only TA is also the reviewer
+        // cannot be self-assigned — skip them silently.
+        if (submission.reviewerKind === 'TA') break;
+
         throw new BadRequestError(
           `Unable to assign ${numGradersPerSubmission} graders to all submissions with current constraints`
         );
@@ -352,6 +356,11 @@ export const bulkAssignGradersByAssessmentId = async (
       });
     }
   }
+
+  // Only delete existing tasks once new assignment is fully computed (no throw above)
+  await PeerReviewGradingTaskModel.deleteMany({
+    peerReviewId: peerReview._id,
+  });
 
   // Bulk insert new tasks
   await PeerReviewGradingTaskModel.insertMany(tasksToCreate);
