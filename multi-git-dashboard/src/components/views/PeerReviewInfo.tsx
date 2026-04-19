@@ -12,11 +12,14 @@ import {
   Stack,
   Badge,
   Divider,
+  Popover,
+  Checkbox,
+  Switch,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { useDisclosure } from '@mantine/hooks';
 import { Status } from '@shared/types/util/Status';
-import { useEffect, useState, useMemo } from 'react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
 import PeerReviewAccordionItem from '../peer-review/PeerReviewAccordianItem';
 import PeerReviewTAAccordianItem from '../peer-review/PeerReviewTAAccordianItem';
 import PeerReviewProgressOverview from '../peer-review/PeerReviewProgressOverview';
@@ -24,7 +27,6 @@ import { TeamSet } from '@shared/types/TeamSet';
 import { PeerReview, PeerReviewInfoDTO } from '@shared/types/PeerReview';
 import PeerReviewAssignmentForm from '../forms/PeerReviewAssignmentForm';
 import StartPeerReviewModal from '../cards/Modals/StartPeerReviewModal';
-import ShowUnassignedButton from '../peer-review/ShowUnassignedButton';
 import { useRouter } from 'next/router';
 import { formatDate } from '../../lib/utils';
 import { getMe, hasTAPermission } from '@/lib/auth/utils';
@@ -44,6 +46,8 @@ enum NotificationType {
   Warning = 'Warning',
 }
 
+type SubmissionStatusValue = 'NotStarted' | 'Draft' | 'Submitted';
+
 const statusColor = (status: string) => {
   if (status === 'Closed') return 'red';
   if (status === 'Active') return 'green';
@@ -55,29 +59,6 @@ const NotificationTypeToColorMap: Record<NotificationType, string> = {
   [NotificationType.Success]: 'green',
   [NotificationType.Info]: 'blue',
   [NotificationType.Warning]: 'yellow',
-};
-
-const usePersistedAccordion = (key: string, validValues: string[]) => {
-  const [opened, setOpened] = useState<string[]>(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem(key) || '[]');
-      return Array.isArray(saved)
-        ? saved.filter(v => validValues.includes(v))
-        : [];
-    } catch {
-      return [];
-    }
-  });
-
-  useEffect(() => {
-    localStorage.setItem(key, JSON.stringify(opened));
-  }, [key, opened]);
-
-  useEffect(() => {
-    setOpened(prev => prev.filter(v => validValues.includes(v)));
-  }, [validValues]);
-
-  return [opened, setOpened] as const;
 };
 
 const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
@@ -120,6 +101,10 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
     useDisclosure(false);
 
   const [showUnassignedOnly, setShowUnassignedOnly] = useState(false);
+  const [statusFilters, setStatusFilters] = useState<SubmissionStatusValue[]>(
+    []
+  );
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const teamSetName =
     teamSets.find(ts => ts._id === peerReview.teamSetId)?.name ||
@@ -157,14 +142,75 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
 
   // Persist Accordion State
   const values = useMemo(() => {
-    const items = peerReviewInfo?.teams.map(t => t.teamId) || [];
-    if (peerReview.taAssignments) items.push('teaching-assistants');
+    const items: string[] = [];
+    if ((isFaculty || isTA) && peerReviewInfo) {
+      items.push('progress');
+    }
+    if ((isFaculty || isTA) && peerReview.taAssignments) {
+      items.push('teaching-assistants');
+    }
+    const teamItems = peerReviewInfo?.teams.map(t => t.teamId) || [];
+    items.push(...teamItems);
     return items;
-  }, [peerReviewInfo]);
-  const [opened, setOpened] = usePersistedAccordion(
-    'peer-review-accordion',
-    values
-  );
+  }, [peerReviewInfo, isFaculty, isTA, peerReview.taAssignments]);
+
+  const accordionStorageKey = `peer-review-accordion-${peerReview._id}`;
+  const [opened, setOpened] = useState<string[]>([]);
+  const [hydratedAccordionKey, setHydratedAccordionKey] = useState<
+    string | null
+  >(null);
+  const [hasSavedAccordionState, setHasSavedAccordionState] = useState(false);
+
+  // Load persisted accordion state once per peer review
+  useEffect(() => {
+    setHydratedAccordionKey(null);
+
+    try {
+      const saved = localStorage.getItem(accordionStorageKey);
+      setHasSavedAccordionState(saved !== null);
+
+      if (!saved) {
+        setOpened([]);
+      } else {
+        const parsed = JSON.parse(saved);
+        setOpened(Array.isArray(parsed) ? parsed : []);
+      }
+    } catch {
+      setHasSavedAccordionState(false);
+      setOpened([]);
+    } finally {
+      setHydratedAccordionKey(accordionStorageKey);
+    }
+  }, [accordionStorageKey]);
+
+  // Reconcile open items after values are known
+  useEffect(() => {
+    if (hydratedAccordionKey !== accordionStorageKey) return;
+    if (!peerReviewInfo) return;
+
+    setOpened(prev => {
+      const filtered = prev.filter(v => values.includes(v));
+
+      if (filtered.length > 0) return filtered;
+      if (hasSavedAccordionState) return [];
+
+      // First visit: open first available item by default
+      return values.slice(0, 1);
+    });
+  }, [
+    values,
+    peerReviewInfo,
+    hydratedAccordionKey,
+    accordionStorageKey,
+    hasSavedAccordionState,
+  ]);
+
+  // Persist whenever state changes after hydration
+  useEffect(() => {
+    if (hydratedAccordionKey !== accordionStorageKey) return;
+    if (!peerReviewInfo) return;
+    localStorage.setItem(accordionStorageKey, JSON.stringify(opened));
+  }, [opened, accordionStorageKey, hydratedAccordionKey, peerReviewInfo]);
 
   const myTAReviewerAssignmentIds = useMemo(() => {
     if (!isTA || !me?.userId || !peerReviewInfo?.TAAssignments)
@@ -173,6 +219,18 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
     if (!mine?.assignedReviews) return [] as string[];
     return mine.assignedReviews.map(a => a.assignment._id);
   }, [isTA, me?.userId, peerReviewInfo?.TAAssignments]);
+
+  const hasStatusMatch = useCallback(
+    (status: SubmissionStatusValue) =>
+      statusFilters.length === 0 || statusFilters.includes(status),
+    [statusFilters]
+  );
+
+  const isUpcoming = peerReview.status === 'Upcoming';
+  const isClosed = peerReview.status === 'Closed';
+  const isTAOnly = isTA && !isFaculty;
+  const showTAActionButton = isTAOnly && !isUpcoming;
+  const showTAFilterButton = isTAOnly && !isUpcoming && !isClosed;
 
   // Handlers
   const addManualAssignment = async (
@@ -319,46 +377,47 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
         </Notification>
       )}
       <Card withBorder radius="md" p="lg" my="md">
-        <Group justify="space-between" align="flex-start" mb="xs">
-          <Stack gap={2}>
+        <Group mb="xs">
+          <Stack gap={6}>
             <Text fw={800} fz="xl">
               {peerReview.title}
             </Text>
-            <Text c="dimmed" fz="sm">
+            <Text c="dimmed" fz="sm" mb="xs">
               {peerReview.description || '—'}
             </Text>
+            <Group gap="xs" mt={2}>
+              <Badge color={statusColor(peerReview.status)}>
+                Review Period: {peerReview.status}
+              </Badge>
+              {isFaculty &&
+                (peerReview.taAssignments ? (
+                  <Badge variant="light" color="teal">
+                    TA Reviews Enabled
+                  </Badge>
+                ) : (
+                  <Badge variant="light" color="red">
+                    TA Reviews Disabled
+                  </Badge>
+                ))}
+              <Badge variant="light">
+                Reviewer Type: {peerReview.reviewerType}
+              </Badge>
+            </Group>
           </Stack>
-
-          <Group gap="xs" mt={6}>
-            <Badge color={statusColor(peerReview.status)}>
-              Review Period: {peerReview.status}
-            </Badge>
-            {isFaculty &&
-              (peerReview.taAssignments ? (
-                <Badge variant="light" color="teal">
-                  TA Reviews Enabled
-                </Badge>
-              ) : (
-                <Badge variant="light" color="red">
-                  TA Reviews Disabled
-                </Badge>
-              ))}
-            <Badge variant="light">
-              Reviewer Type: {peerReview.reviewerType}
-            </Badge>
-          </Group>
         </Group>
 
         <Divider my="sm" />
 
-        <Group justify="space-between" align="flex-end" mt="sm">
-          <Group gap="xl">
-            <Stack gap={2}>
-              <Text fz="xs" c="dimmed">
-                Team Set
-              </Text>
-              <Text fz="sm">{teamSetName}</Text>
-            </Stack>
+        <Stack gap="md" mt="sm">
+          <Group gap="xl" wrap="wrap">
+            {isFaculty && (
+              <Stack gap={2}>
+                <Text fz="xs" c="dimmed">
+                  Team Set
+                </Text>
+                <Text fz="sm">{teamSetName}</Text>
+              </Stack>
+            )}
 
             <Stack gap={2}>
               <Text fz="xs" c="dimmed">
@@ -378,40 +437,103 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
             </Stack>
           </Group>
 
-          {isFaculty && (
-            <Group gap="sm" mt="md">
-              {peerReview.status === 'Upcoming' && (
-                <Button color="green" onClick={openStartModal}>
-                  Start Peer Review Now
+          <Group justify="space-between" align="center" wrap="wrap">
+            {isFaculty ? (
+              <Group gap="sm">
+                {peerReview.status === 'Upcoming' && (
+                  <Button color="green" onClick={openStartModal}>
+                    Start Peer Review Now
+                  </Button>
+                )}
+
+                <Button
+                  color="yellow"
+                  variant="light"
+                  onClick={openAssignmentForm}
+                  disabled={peerReview.status === 'Closed'}
+                >
+                  Assign Peer Reviews
                 </Button>
-              )}
+              </Group>
+            ) : (
+              <div />
+            )}
 
-              <Button
-                color="yellow"
-                variant="light"
-                onClick={openAssignmentForm}
-                disabled={peerReview.status === 'Closed'}
-              >
-                Assign Peer Reviews
-              </Button>
+            {(isFaculty || showTAActionButton) && (
+              <Group gap="sm" ml="auto">
+                {(isFaculty || showTAFilterButton) && (
+                  <Popover
+                    opened={filtersOpen}
+                    onChange={setFiltersOpen}
+                    position="bottom-end"
+                    withArrow
+                  >
+                    <Popover.Target>
+                      <Button
+                        variant={
+                          statusFilters.length > 0 || showUnassignedOnly
+                            ? 'filled'
+                            : 'light'
+                        }
+                        color="gray"
+                        onClick={() => setFiltersOpen(o => !o)}
+                      >
+                        Filter
+                      </Button>
+                    </Popover.Target>
+                    <Popover.Dropdown>
+                      <Stack gap="md" w={220}>
+                        <Checkbox.Group
+                          label="Submission Status"
+                          value={statusFilters}
+                          onChange={v =>
+                            setStatusFilters(v as SubmissionStatusValue[])
+                          }
+                        >
+                          <Stack gap={6} mt="xs">
+                            <Checkbox value="NotStarted" label="Not Started" />
+                            <Checkbox value="Draft" label="Draft" />
+                            <Checkbox value="Submitted" label="Submitted" />
+                          </Stack>
+                        </Checkbox.Group>
 
-              <ShowUnassignedButton
-                peerReviewId={peerReview._id}
-                courseId={courseId}
-                onFilterChange={setShowUnassignedOnly}
-              />
-            </Group>
-          )}
-          {(isFaculty || isTA) && (
-            <Button
-              variant="light"
-              color="blue"
-              onClick={goToAssessmentManagement}
-            >
-              {isFaculty ? 'Manage Assessment' : 'Grade Reviews'}
-            </Button>
-          )}
-        </Group>
+                        {isFaculty && (
+                          <Switch
+                            label="Show Unassigned Only"
+                            checked={showUnassignedOnly}
+                            onChange={e =>
+                              setShowUnassignedOnly(e.currentTarget.checked)
+                            }
+                          />
+                        )}
+
+                        <Group justify="space-between" mt={4}>
+                          <Button
+                            size="xs"
+                            variant="default"
+                            onClick={() => {
+                              setStatusFilters([]);
+                              setShowUnassignedOnly(false);
+                            }}
+                          >
+                            Reset
+                          </Button>
+                        </Group>
+                      </Stack>
+                    </Popover.Dropdown>
+                  </Popover>
+                )}
+                <Button
+                  variant="light"
+                  color="blue"
+                  onClick={goToAssessmentManagement}
+                >
+                  {isFaculty ? 'Manage Assessment' : 'Grade Reviews'}
+                </Button>
+              </Group>
+            )}
+          </Group>
+        </Stack>
       </Card>
 
       {peerReviewInfo && !peerReviewInfo.teams ? (
@@ -423,7 +545,6 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
       ) : isFaculty || peerReview.status === 'Active' ? (
         <>
           <Accordion
-            defaultValue={['teaching-assistants']}
             value={opened}
             onChange={setOpened}
             multiple
@@ -453,17 +574,33 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
                   label: `Team ${t.teamNumber}`,
                 }))}
                 TAToAssignments={peerReviewInfo.TAAssignments}
+                statusFilters={statusFilters}
                 showUnassignedOnly={showUnassignedOnly}
                 isFaculty={isFaculty}
                 addManualAssignment={addManualAssignment}
                 deleteManualAssignment={deleteManualAssignment}
               />
             )}
+            <Divider my="lg" />
 
             <Divider my="lg" />
 
             {peerReviewInfo.teams
               .filter(team => {
+                const matchesStatusForTeam =
+                  peerReviewInfo.reviewerType === 'Individual'
+                    ? team.members.some(member =>
+                        member.assignedReviews.some(ar =>
+                          hasStatusMatch(ar.status)
+                        )
+                      )
+                    : team.assignedReviewsToTeam.some(ar =>
+                        hasStatusMatch(ar.status)
+                      );
+
+                if (!matchesStatusForTeam && statusFilters.length > 0)
+                  return false;
+
                 if (!showUnassignedOnly) return true;
 
                 // When filtering for unassigned, only show teams with unassigned reviewers
@@ -499,6 +636,7 @@ const PeerReviewInfo: React.FC<PeerReviewInfoProps> = ({
                     peerReviewInfo.assignmentsOfTeam[team.teamId]
                   }
                   maxReviewsPerReviewer={peerReview.maxReviewsPerReviewer}
+                  statusFilters={statusFilters}
                   showUnassignedOnly={showUnassignedOnly}
                   isFaculty={isFaculty}
                   isTA={isTA}

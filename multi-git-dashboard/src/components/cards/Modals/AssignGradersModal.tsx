@@ -4,11 +4,16 @@ import {
   Stack,
   NumberInput,
   Switch,
+  Checkbox,
   Button,
   Group,
   Alert,
 } from '@mantine/core';
-import { IconAlertCircle, IconUserPlus } from '@tabler/icons-react';
+import {
+  IconAlertCircle,
+  IconAlertTriangle,
+  IconUserPlus,
+} from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 import { getApiErrorMessage } from '@/lib/peer-review/utils';
 
@@ -32,10 +37,14 @@ const AssignGradersModal: React.FC<AssignGradersModalProps> = ({
     useState<boolean>(false);
   const [loading, setLoading] = useState(false);
   const [taCount, setTaCount] = useState<number>(0);
+  const [confirmDestructiveAction, setConfirmDestructiveAction] =
+    useState(false);
 
   // Fetch TA count for the course
   useEffect(() => {
     if (!opened || !courseId) return;
+
+    setConfirmDestructiveAction(false);
 
     const fetchTACount = async () => {
       try {
@@ -107,6 +116,11 @@ const AssignGradersModal: React.FC<AssignGradersModalProps> = ({
           This will assign TAs as graders to all peer review submissions.
         </Alert>
 
+        <Alert icon={<IconAlertTriangle />} color="red" variant="light">
+          Warning: Re-assigning graders will delete all existing grades and
+          feedback for this assessment.
+        </Alert>
+
         <NumberInput
           label="Graders per submission"
           description={`Select between 1 and ${taCount} graders.`}
@@ -125,12 +139,18 @@ const AssignGradersModal: React.FC<AssignGradersModalProps> = ({
           onChange={e => setAllowSupervisingTAs(e.currentTarget.checked)}
         />
 
+        <Checkbox
+          label="I understand that existing grades and feedback will be permanently deleted."
+          checked={confirmDestructiveAction}
+          onChange={e => setConfirmDestructiveAction(e.currentTarget.checked)}
+        />
+
         <Group justify="flex-end" mt="md">
           <Button
             leftSection={<IconUserPlus size={16} />}
             onClick={handleAssign}
             loading={loading}
-            disabled={taCount === 0}
+            disabled={taCount === 0 || !confirmDestructiveAction}
           >
             Assign Graders
           </Button>

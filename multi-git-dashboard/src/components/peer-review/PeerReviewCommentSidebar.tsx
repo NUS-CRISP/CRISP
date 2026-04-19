@@ -231,7 +231,7 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
                         {c.updatedAt &&
                           new Date(c.updatedAt).toLocaleDateString()}
                       </Text>
-                      {isStaffViewer && c.isFlagged && !c.unflaggedAt && (
+                      {c.isFlagged && !c.unflaggedAt && (
                         <Popover
                           width={240}
                           position="bottom-start"
@@ -247,7 +247,9 @@ const PeerReviewCommentSidebar: React.FC<PeerReviewCommentSidebarProps> = ({
                               className={classes.flaggedIndicatorButton}
                               onClick={event => event.stopPropagation()}
                             >
-                              Flagged
+                              {isStaffViewer
+                                ? 'Flagged'
+                                : 'Flagged for revision'}
                             </Button>
                           </Popover.Target>
                           <Popover.Dropdown

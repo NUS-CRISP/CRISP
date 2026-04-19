@@ -5,21 +5,44 @@ import UploadGoogleCSV from './UploadGoogleAssessmentFormCsv';
 import UploadInternalCSV from './UploadInternalAssessmentFormCsv';
 import { TeamSet } from '@shared/types/TeamSet';
 import CreatePeerReviewForm from './CreatePeerReviewForm';
+import { useEffect, useState } from 'react';
+
+type CreateAssessmentTabValue =
+  | 'internal'
+  | 'peerReview'
+  | 'internalCsv'
+  | 'googleForms'
+  | 'googleCsv';
 
 interface CreateAssessmentFormProps {
   courseId: string | string[] | undefined;
   onAssessmentCreated: () => void;
   teamSets: TeamSet[];
+  initialTab?: CreateAssessmentTabValue;
 }
 
 const CreateAssessmentForm: React.FC<CreateAssessmentFormProps> = ({
   courseId,
   onAssessmentCreated,
   teamSets,
+  initialTab = 'internal',
 }) => {
+  const [activeTab, setActiveTab] =
+    useState<CreateAssessmentTabValue>(initialTab);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
+
   return (
     <Box mx="auto">
-      <Tabs defaultValue="internal" variant="outline">
+      <Tabs
+        value={activeTab}
+        onChange={value =>
+          setActiveTab((value as CreateAssessmentTabValue) || 'internal')
+        }
+        variant="outline"
+      >
         <Tabs.List justify="center">
           <Tabs.Tab value="internal">Internal Form</Tabs.Tab>
           <Tabs.Tab value="peerReview">Peer Review</Tabs.Tab>

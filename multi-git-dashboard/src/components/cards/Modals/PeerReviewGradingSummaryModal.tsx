@@ -48,11 +48,6 @@ const PeerReviewGradingSummaryModal: React.FC<
                     <Text fw={600} size="sm">
                       {isFaculty ? task.grader.name : 'Your Grade'}
                     </Text>
-                    {isFaculty && (
-                      <Text size="xs" c="dimmed">
-                        Grader ID: {task.grader.id}
-                      </Text>
-                    )}
                   </Stack>
                   <Badge
                     variant="light"

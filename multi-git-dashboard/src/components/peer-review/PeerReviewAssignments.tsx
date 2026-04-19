@@ -4,8 +4,11 @@ import { useRouter } from 'next/router';
 import { AssignedReviewDTO } from '@shared/types/PeerReview';
 import { Team } from '@shared/types/Team';
 
+type SubmissionStatusValue = 'NotStarted' | 'Draft' | 'Submitted';
+
 interface PeerReviewAssignmentsProps {
   assignments: AssignedReviewDTO[];
+  statusFilters?: SubmissionStatusValue[];
   isFaculty: boolean;
   isTA?: boolean;
   currentUserId?: string;
@@ -15,6 +18,7 @@ interface PeerReviewAssignmentsProps {
 
 const PeerReviewAssignments: React.FC<PeerReviewAssignmentsProps> = ({
   assignments,
+  statusFilters = [],
   isFaculty,
   isTA = false,
   currentUserId,
@@ -22,8 +26,13 @@ const PeerReviewAssignments: React.FC<PeerReviewAssignmentsProps> = ({
   onDelete,
 }) => {
   const router = useRouter();
+  const peerReviewBasePath = router.asPath.split('?')[0].split('#')[0];
 
-  if (assignments.length === 0) {
+  const filteredAssignments = assignments.filter(a =>
+    statusFilters.length === 0 ? true : statusFilters.includes(a.status)
+  );
+
+  if (filteredAssignments.length === 0) {
     return (
       <Text c="dimmed" size="xs" mb="xs">
         (no assignments found)
@@ -33,7 +42,7 @@ const PeerReviewAssignments: React.FC<PeerReviewAssignmentsProps> = ({
 
   return (
     <Stack gap="sm" my="xs">
-      {assignments.map(a => {
+      {filteredAssignments.map(a => {
         const teamNumber =
           (a.assignment.reviewee as Partial<Team> | undefined)?.number ??
           (a.assignment.reviewee as { teamNumber?: number } | undefined)
@@ -73,7 +82,7 @@ const PeerReviewAssignments: React.FC<PeerReviewAssignmentsProps> = ({
               disabled={disableNavigation}
               onClick={() =>
                 router.push(
-                  `${router.asPath.replace(/\/$/, '')}/${a.assignment._id}`
+                  `${peerReviewBasePath.replace(/\/$/, '')}/${a.assignment._id}`
                 )
               }
             >
@@ -100,6 +109,17 @@ const PeerReviewAssignments: React.FC<PeerReviewAssignmentsProps> = ({
                 h="21.5px"
               >
                 Draft
+              </Badge>
+            )}
+            {a.status === 'NotStarted' && (
+              <Badge
+                color="gray"
+                variant="light"
+                size="sm"
+                radius="sm"
+                h="21.5px"
+              >
+                Not Started
               </Badge>
             )}
             {isFaculty && (

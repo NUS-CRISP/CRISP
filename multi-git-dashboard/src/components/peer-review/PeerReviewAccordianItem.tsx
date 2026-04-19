@@ -21,6 +21,8 @@ import DeleteConfirmationModal from '../cards/Modals/DeleteConfirmationModal';
 import PeerReviewAssignments from './PeerReviewAssignments';
 import AddManualAssignmentBox from './AddManualAssignmentBox';
 
+type SubmissionStatusValue = 'NotStarted' | 'Draft' | 'Submitted';
+
 interface PeerReviewAccordionItemProps {
   currentTeam: PeerReviewTeamDTO;
   currentUserId?: string;
@@ -36,6 +38,7 @@ interface PeerReviewAccordionItemProps {
   assignmentOfTeam: RevieweeAssignmentsDTO | null;
   reviewerType: 'Individual' | 'Team';
   maxReviewsPerReviewer: number;
+  statusFilters?: SubmissionStatusValue[];
   showUnassignedOnly?: boolean;
   isFaculty: boolean;
   isTA: boolean;
@@ -63,6 +66,7 @@ const PeerReviewAccordionItem = forwardRef<
     assignmentOfTeam,
     reviewerType,
     maxReviewsPerReviewer,
+    statusFilters = [],
     showUnassignedOnly,
     isFaculty,
     isTA,
@@ -70,6 +74,7 @@ const PeerReviewAccordionItem = forwardRef<
     deleteManualAssignment,
   }) => {
     const router = useRouter();
+    const peerReviewBasePath = router.asPath.split('?')[0].split('#')[0];
 
     const [
       openedDeleteModal,
@@ -228,6 +233,7 @@ const PeerReviewAccordionItem = forwardRef<
                   >
                     <PeerReviewAssignments
                       assignments={currentTeam.assignedReviewsToTeam}
+                      statusFilters={statusFilters}
                       isFaculty={isFaculty}
                       isTA={isTA}
                       currentUserId={currentUserId}
@@ -276,6 +282,7 @@ const PeerReviewAccordionItem = forwardRef<
                             <>
                               <PeerReviewAssignments
                                 assignments={m.assignedReviews}
+                                statusFilters={statusFilters}
                                 isFaculty={isFaculty}
                                 isTA={isTA}
                                 currentUserId={currentUserId}
@@ -297,33 +304,40 @@ const PeerReviewAccordionItem = forwardRef<
             <Stack>
               {currentTeam.repoUrl && (
                 <Stack w={250}>
-                  <Button
-                    component="a"
-                    href={currentTeam.repoUrl}
-                    rel="noreferrer"
-                    size="xs"
-                    target="_blank"
-                    variant="light"
-                    color="gray"
-                  >
-                    Go to Team's Github Repository
-                  </Button>
-                  <Button
-                    component="a"
-                    onClick={() =>
-                      router.push(
-                        `${router.asPath.replace(/\/$/, '')}/${assignmentOfTeam?.assignment._id}`
-                      )
-                    }
-                    size="xs"
-                    rel="noreferrer"
-                    target="_blank"
-                    variant="light"
-                    color="gray"
-                    disabled={numberOfReviewers === 0}
-                  >
-                    See Peer Review for Team
-                  </Button>
+                  {(() => {
+                    const assignmentId = assignmentOfTeam?.assignment._id;
+                    const canViewPeerReview = Boolean(assignmentId);
+
+                    return (
+                      <>
+                        <Button
+                          component="a"
+                          href={currentTeam.repoUrl}
+                          rel="noreferrer"
+                          size="xs"
+                          target="_blank"
+                          variant="light"
+                          color="gray"
+                        >
+                          Go to Team's Github Repository
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            if (!canViewPeerReview || !assignmentId) return;
+                            router.push(
+                              `${peerReviewBasePath.replace(/\/$/, '')}/${assignmentId}`
+                            );
+                          }}
+                          size="xs"
+                          variant="light"
+                          color="gray"
+                          disabled={!canViewPeerReview}
+                        >
+                          See Peer Review for Team
+                        </Button>
+                      </>
+                    );
+                  })()}
                 </Stack>
               )}
               {isFaculty && (
@@ -338,8 +352,7 @@ const PeerReviewAccordionItem = forwardRef<
                       style={{
                         maxHeight: 'calc(10 * 32px + 18px)',
                         height: 'auto',
-                        border: 'solid 1px',
-                        borderColor: '#505050',
+                        border: '0.5px solid gray',
                         borderRadius: '6px',
                         padding: '8px 0',
                         transition: 'max-height 0.2s',
