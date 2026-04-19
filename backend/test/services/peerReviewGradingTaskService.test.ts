@@ -177,7 +177,7 @@ describe('peerReviewGradingTaskService', () => {
     const course = await makeCourse();
     const ts = await makeTeamSet(course._id);
     const assessment = await makeAssessment(course._id, ts._id);
-    const pr = await makePeerReview(course._id, ts._id, assessment._id);
+    const pr = await makePeerReview(course._id, ts._id, assessment._id, { status: 'Closed' });
 
     const reviewee = await makeTeam(ts._id);
     const assignment = await makeAssignment(pr._id, reviewee._id);
@@ -203,10 +203,27 @@ describe('peerReviewGradingTaskService', () => {
     const course = await makeCourse();
     const ts = await makeTeamSet(course._id);
     const assessment = await makeAssessment(course._id, ts._id);
-    const pr = await makePeerReview(course._id, ts._id, assessment._id);
+    const pr = await makePeerReview(course._id, ts._id, assessment._id, { status: 'Closed' });
     const reviewee = await makeTeam(ts._id);
     const assignment = await makeAssignment(pr._id, reviewee._id);
     const submission = await makeSubmission(pr._id, assignment._id, { status: 'Draft' });
+
+    await expect(
+      startGradingTaskForFacultyById(oid().toString(), assessment._id.toString(), submission._id.toString())
+    ).rejects.toBeInstanceOf(BadRequestError);
+  });
+
+  it('startGradingTaskForFacultyById rejects when closed review grading window is not open', async () => {
+    const course = await makeCourse();
+    const ts = await makeTeamSet(course._id);
+    const assessment = await makeAssessment(course._id, ts._id);
+    const pr = await makePeerReview(course._id, ts._id, assessment._id, {
+      status: 'Closed',
+      gradingStartDate: new Date(Date.now() + 60_000),
+    });
+    const reviewee = await makeTeam(ts._id);
+    const assignment = await makeAssignment(pr._id, reviewee._id);
+    const submission = await makeSubmission(pr._id, assignment._id, { status: 'Submitted' });
 
     await expect(
       startGradingTaskForFacultyById(oid().toString(), assessment._id.toString(), submission._id.toString())
@@ -238,7 +255,7 @@ describe('peerReviewGradingTaskService', () => {
     const course = await makeCourse();
     const ts = await makeTeamSet(course._id);
     const assessment = await makeAssessment(course._id, ts._id);
-    const pr = await makePeerReview(course._id, ts._id, assessment._id);
+    const pr = await makePeerReview(course._id, ts._id, assessment._id, { status: 'Closed' });
     const reviewee = await makeTeam(ts._id);
     const assignment = await makeAssignment(pr._id, reviewee._id);
     const submission = await makeSubmission(pr._id, assignment._id, { status: 'Submitted' });
@@ -274,7 +291,7 @@ describe('peerReviewGradingTaskService', () => {
     const course = await makeCourse();
     const ts = await makeTeamSet(course._id);
     const assessment = await makeAssessment(course._id, ts._id);
-    const pr = await makePeerReview(course._id, ts._id, assessment._id);
+    const pr = await makePeerReview(course._id, ts._id, assessment._id, { status: 'Closed' });
     const reviewee = await makeTeam(ts._id);
     const assignment = await makeAssignment(pr._id, reviewee._id);
     const submission = await makeSubmission(pr._id, assignment._id, { status: 'Submitted' });
@@ -402,7 +419,7 @@ describe('peerReviewGradingTaskService', () => {
       startGradingTaskForFacultyById(user._id.toString(), assessment._id.toString(), oid().toString())
     ).rejects.toBeInstanceOf(NotFoundError);
 
-    const pr = await makePeerReview(course._id, ts._id, assessment._id, { status: 'Closed' });
+    const pr = await makePeerReview(course._id, ts._id, assessment._id, { status: 'Upcoming' });
     const reviewee = await makeTeam(ts._id);
     const assignment = await makeAssignment(pr._id, reviewee._id);
     const submission = await makeSubmission(pr._id, assignment._id, { status: 'Submitted' });
@@ -413,7 +430,7 @@ describe('peerReviewGradingTaskService', () => {
 
     await expect(
       startGradingTaskForFacultyById(user._id.toString(), assessment._id.toString(), submission._id.toString())
-    ).rejects.toBeInstanceOf(BadRequestError);
+    ).rejects.toBeInstanceOf(BadRequestError); // Upcoming → grading not yet available
 
     const assessment2 = await makeAssessment(course._id, ts._id);
     await makePeerReview(course._id, ts._id, assessment2._id);
@@ -422,7 +439,9 @@ describe('peerReviewGradingTaskService', () => {
     ).rejects.toBeInstanceOf(BadRequestError);
 
     const activeAssessment = await makeAssessment(course._id, ts._id);
-    const activePr = await makePeerReview(course._id, ts._id, activeAssessment._id);
+    const activePr = await makePeerReview(course._id, ts._id, activeAssessment._id, {
+      status: 'Closed',
+    });
     const activeAssignment = await makeAssignment(activePr._id, reviewee._id);
     const activeSubmission = await makeSubmission(activePr._id, activeAssignment._id, { status: 'Submitted' });
 
@@ -472,12 +491,12 @@ describe('peerReviewGradingTaskService', () => {
     const course = await makeCourse();
     const ts = await makeTeamSet(course._id);
     const assessment = await makeAssessment(course._id, ts._id);
-    const pr = await makePeerReview(course._id, ts._id, assessment._id, { status: 'Closed' });
+    const pr = await makePeerReview(course._id, ts._id, assessment._id, { status: 'Upcoming' });
     const reviewee = await makeTeam(ts._id);
     const assignment = await makeAssignment(pr._id, reviewee._id);
     const submission = await makeSubmission(pr._id, assignment._id, { status: 'Submitted' });
 
-    const closedTask = await new PeerReviewGradingTaskModel({
+    const upcomingTask = await new PeerReviewGradingTaskModel({
       peerReviewId: pr._id,
       peerReviewSubmissionId: submission._id,
       grader: grader._id,
@@ -485,14 +504,14 @@ describe('peerReviewGradingTaskService', () => {
     }).save();
 
     await expect(
-      updateGradingTaskById(grader._id.toString(), closedTask._id.toString(), { score: 1 })
-    ).rejects.toBeInstanceOf(BadRequestError);
+      updateGradingTaskById(grader._id.toString(), upcomingTask._id.toString(), { score: 1 })
+    ).rejects.toBeInstanceOf(BadRequestError); // Upcoming → grading not yet available
     await expect(
-      submitGradingTaskById(grader._id.toString(), closedTask._id.toString())
+      submitGradingTaskById(grader._id.toString(), upcomingTask._id.toString())
     ).rejects.toBeInstanceOf(BadRequestError);
 
     const assessment2 = await makeAssessment(course._id, ts._id);
-    const pr2 = await makePeerReview(course._id, ts._id, assessment2._id);
+    const pr2 = await makePeerReview(course._id, ts._id, assessment2._id, { status: 'Closed' });
     const assignment2 = await makeAssignment(pr2._id, reviewee._id);
     const submission2 = await makeSubmission(pr2._id, assignment2._id, { status: 'Submitted' });
 
@@ -825,7 +844,7 @@ describe('peerReviewGradingTaskService', () => {
     const ts = await makeTeamSet(course._id);
     const assessment = await makeAssessment(course._id, ts._id);
     const pr = await makePeerReview(course._id, ts._id, assessment._id, {
-      status: 'Active',
+      status: 'Closed',
     });
     const reviewee = await makeTeam(ts._id);
     const assignment = await makeAssignment(pr._id, reviewee._id);

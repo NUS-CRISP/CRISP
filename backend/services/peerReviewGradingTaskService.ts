@@ -21,14 +21,20 @@ const NOT_ASSIGNED = 'Not assigned to grade this submission';
 
 const assertPeerReviewActive = async (peerReviewId: Types.ObjectId) => {
   const pr = await PeerReviewModel.findById(peerReviewId).select(
-    'startDate endDate status'
+    'startDate endDate gradingStartDate gradingEndDate status'
   );
   if (!pr) throw new NotFoundError('Peer review not found');
 
-  if (pr.status !== 'Active') {
+  if (pr.status === 'Upcoming' || pr.status === 'Active') {
     throw new BadRequestError(
-      'Grading is only available while the peer review is Active'
+      'Grading is not available until the peer review has closed'
     );
+  }
+
+  // Peer review is Closed — check grading window if dates are set
+  const hasGradingDates = pr.gradingStartDate || pr.gradingEndDate;
+  if (hasGradingDates && pr.computedGradingStatus !== 'InProgress') {
+    throw new BadRequestError('Grading is not currently open');
   }
 };
 
