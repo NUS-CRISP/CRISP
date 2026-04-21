@@ -312,7 +312,9 @@ const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
                         size="xs"
                         color="red"
                         variant="subtle"
-                        disabled={!isPeerReviewClosed || gradingStatus === 'Completed'}
+                        disabled={
+                          !isPeerReviewClosed || gradingStatus === 'Completed'
+                        }
                         onClick={() => handleUnassignGrader(grader.id)}
                         loading={unassigningGrader === grader.id}
                       >
