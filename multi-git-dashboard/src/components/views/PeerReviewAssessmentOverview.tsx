@@ -197,10 +197,12 @@ const PeerReviewAssessmentOverview: React.FC<
     'Unknown Team Set';
 
   const now = new Date();
+  const reviewStartAt = new Date(peerReview.startDate);
   const reviewEndAt = new Date(peerReview.endDate);
   const assessmentEndAt = assessment.endDate
     ? new Date(assessment.endDate)
     : null;
+  const isReviewStarted = now >= reviewStartAt;
   const isReviewClosed = now > reviewEndAt;
   const isAssessmentClosed = !!(assessmentEndAt && now >= assessmentEndAt);
   const isGradingPhase = isReviewClosed && !isAssessmentClosed;
@@ -259,7 +261,7 @@ const PeerReviewAssessmentOverview: React.FC<
           teamSets={teamSets}
           peerReview={peerReview}
           internalAssessment={assessment}
-          lockReviewConfig={isReviewClosed}
+          lockReviewConfig={isReviewStarted}
           onUpdated={() => {
             closeUpdateModal();
             fetchData();

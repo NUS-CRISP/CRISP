@@ -460,7 +460,9 @@ export const updatePeerReviewById = async (
     (settingsData.taAssignments !== undefined &&
       pr.taAssignments !== settingsData.taAssignments) ||
     (settingsData.maxReviews !== undefined &&
-      pr.maxReviewsPerReviewer !== Number(settingsData.maxReviews));
+      pr.maxReviewsPerReviewer !== Number(settingsData.maxReviews)) ||
+    (settingsData.commitOrTag !== undefined &&
+      (pr.commitOrTag ?? '') !== (settingsData.commitOrTag ?? ''));
 
   // map request -> model fields
   if (settingsData.assessmentName !== undefined)

@@ -194,7 +194,10 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
         color: 'green',
       });
     } catch (e) {
-      setError((e as Error).message || 'Something went wrong');
+      const msg = (e as Error).message || '';
+      if (msg !== '__SUBMIT_INTERCEPTED__') {
+        setError(msg || 'Something went wrong');
+      }
     } finally {
       setLoading(false);
     }
@@ -242,7 +245,6 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
           label="Start Date"
           {...form.getInputProps('startDate')}
           type="date"
-          disabled={lockReviewConfig}
           mb="xs"
         />
         <TextInput
@@ -260,6 +262,7 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
           placeholder="e.g., v1.0, main, abc123"
           description="Specify a commit hash or tag to use for reviews. Leave empty to use the latest version."
           {...form.getInputProps('commitOrTag')}
+          disabled={lockReviewConfig}
         />
 
         <Text fw={600} fz="sm" mt="md" mb="xs">
@@ -285,11 +288,14 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
             form.setFieldValue('reviewerType', value as ReviewerType)
           }
           ml="4px"
-          readOnly={lockReviewConfig}
         >
           <Group>
-            <Radio label="Team" value="Team" />
-            <Radio label="Individual" value="Individual" />
+            <Radio label="Team" value="Team" disabled={lockReviewConfig} />
+            <Radio
+              label="Individual"
+              value="Individual"
+              disabled={lockReviewConfig}
+            />
           </Group>
         </Radio.Group>
 
@@ -300,11 +306,10 @@ const PeerReviewBaseForm: React.FC<PeerReviewBaseFormProps> = ({
           value={form.values.taAssignments ? 'yes' : 'no'}
           onChange={val => form.setFieldValue('taAssignments', val === 'yes')}
           ml="4px"
-          readOnly={lockReviewConfig}
         >
           <Group gap="28px">
-            <Radio label="Yes" value="yes" />
-            <Radio label="No" value="no" />
+            <Radio label="Yes" value="yes" disabled={lockReviewConfig} />
+            <Radio label="No" value="no" disabled={lockReviewConfig} />
           </Group>
         </Radio.Group>
 

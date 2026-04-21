@@ -737,23 +737,56 @@ describe('peerReviewService', () => {
       ).rejects.toBeInstanceOf(NotFoundError);
     });
 
-    it('updates commitOrTag field', async () => {
-      const pr = await makePeerReview({
-        commitOrTag: undefined,
-      });
+    it('resets assignments when commitOrTag changes', async () => {
+      const pr = await makePeerReview({ commitOrTag: undefined });
 
       const updated = await updatePeerReviewById(pr._id.toString(), {
         commitOrTag: 'v1.0.0',
       } as any);
 
       expect(updated.commitOrTag).toBe('v1.0.0');
+      expect(deleteAssignmentsByPeerReviewId).toHaveBeenCalledWith(
+        pr._id.toString()
+      );
+      expect(initialiseAssignments).toHaveBeenCalledWith(
+        testCourseId.toString(),
+        pr._id.toString(),
+        pr.teamSetId.toString(),
+        null,
+        'v1.0.0'
+      );
+    });
 
-      // Also test clearing it
+    it('does not reset assignments when commitOrTag is unchanged', async () => {
+      const pr = await makePeerReview({ commitOrTag: 'v1.0.0' });
+
+      const updated = await updatePeerReviewById(pr._id.toString(), {
+        commitOrTag: 'v1.0.0',
+      } as any);
+
+      expect(updated.commitOrTag).toBe('v1.0.0');
+      expect(deleteAssignmentsByPeerReviewId).not.toHaveBeenCalled();
+      expect(initialiseAssignments).not.toHaveBeenCalled();
+    });
+
+    it('resets assignments when commitOrTag is cleared', async () => {
+      const pr = await makePeerReview({ commitOrTag: 'v1.0.0' });
+
       const cleared = await updatePeerReviewById(pr._id.toString(), {
         commitOrTag: '',
       } as any);
 
       expect(cleared.commitOrTag).toBeUndefined();
+      expect(deleteAssignmentsByPeerReviewId).toHaveBeenCalledWith(
+        pr._id.toString()
+      );
+      expect(initialiseAssignments).toHaveBeenCalledWith(
+        testCourseId.toString(),
+        pr._id.toString(),
+        pr.teamSetId.toString(),
+        null,
+        undefined
+      );
     });
   });
 

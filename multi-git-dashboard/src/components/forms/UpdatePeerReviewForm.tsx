@@ -1,4 +1,7 @@
 // UpdatePeerReviewAssessmentForm.tsx
+import { useState, useRef } from 'react';
+import { Button, Group, Modal, Text } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
 import PeerReviewBaseForm, {
   NormalizedPeerReviewBasePayload,
   PeerReviewBaseFormValues,
@@ -48,6 +51,16 @@ function toInitialValues(
   };
 }
 
+const hasStructuralChanges = (
+  peerReview: PeerReview,
+  payload: NormalizedPeerReviewBasePayload
+): boolean =>
+  String(peerReview.teamSetId) !== String(payload.teamSetId) ||
+  peerReview.reviewerType !== payload.reviewerType ||
+  Boolean(peerReview.taAssignments) !== payload.taAssignments ||
+  (peerReview.maxReviewsPerReviewer ?? 1) !== payload.maxReviews ||
+  (peerReview.commitOrTag ?? '') !== (payload.commitOrTag ?? '');
+
 const UpdatePeerReviewForm: React.FC<UpdatePeerReviewFormProps> = ({
   courseId,
   teamSets,
@@ -57,7 +70,10 @@ const UpdatePeerReviewForm: React.FC<UpdatePeerReviewFormProps> = ({
   onUpdated,
   onClose,
 }) => {
-  const submit = async (payload: NormalizedPeerReviewBasePayload) => {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const pendingPayload = useRef<NormalizedPeerReviewBasePayload | null>(null);
+
+  const performSubmit = async (payload: NormalizedPeerReviewBasePayload) => {
     const res = await fetch(
       `/api/peer-review-assessments/${courseId}/${internalAssessment._id}/peer-review`,
       {
@@ -74,17 +90,65 @@ const UpdatePeerReviewForm: React.FC<UpdatePeerReviewFormProps> = ({
     onClose?.();
   };
 
+  const handleSubmit = async (payload: NormalizedPeerReviewBasePayload) => {
+    if (!lockReviewConfig && hasStructuralChanges(peerReview, payload)) {
+      pendingPayload.current = payload;
+      setConfirmOpen(true);
+      throw new Error('__SUBMIT_INTERCEPTED__');
+    }
+    await performSubmit(payload);
+  };
+
+  const handleConfirm = async () => {
+    setConfirmOpen(false);
+    if (pendingPayload.current) {
+      await performSubmit(pendingPayload.current);
+      pendingPayload.current = null;
+      notifications.show({
+        title: 'Peer Review Updated',
+        message: 'Updated successfully.',
+        color: 'green',
+      });
+    }
+  };
+
   return (
-    <PeerReviewBaseForm
-      courseId={courseId}
-      teamSets={teamSets}
-      mode="update"
-      initialValues={toInitialValues(peerReview, internalAssessment)}
-      lockReviewConfig={lockReviewConfig}
-      submitLabel="Update Peer Review"
-      onCancel={onClose}
-      onSubmit={submit}
-    />
+    <>
+      <PeerReviewBaseForm
+        courseId={courseId}
+        teamSets={teamSets}
+        mode="update"
+        initialValues={toInitialValues(peerReview, internalAssessment)}
+        lockReviewConfig={lockReviewConfig}
+        submitLabel="Update Peer Review"
+        onCancel={onClose}
+        onSubmit={handleSubmit}
+      />
+
+      <Modal
+        opened={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        title="Reset Assignments?"
+        centered
+        size="sm"
+      >
+        <Text fz="sm" mb="lg">
+          You have changed one or more structural settings (team set, reviewer
+          type, TA assignments, max reviews, or commit/tag).
+          <br />
+          <br />
+          Saving will <strong>delete all existing assignments</strong>.
+        </Text>
+        <Group justify="flex-end" gap="sm">
+          <Button color="orange" onClick={handleConfirm}>
+            Reset & Save
+          </Button>
+          <Button variant="default" onClick={() => setConfirmOpen(false)}>
+            Cancel
+          </Button>
+        </Group>
+      </Modal>
+    </>
   );
 };
 
