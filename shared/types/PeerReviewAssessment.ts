@@ -44,7 +44,8 @@ export interface PeerReviewSubmissionsDTO {
   internalAssessmentId: string;
   peerReviewId: string;
   peerReviewStatus: 'Upcoming' | 'Active' | 'Closed';
-  
+  gradingStatus: 'NotStarted' | 'InProgress' | 'Completed';
+
   reviewerType: ReviewerType;
   taAssignments: boolean;
   maxMarks: number;

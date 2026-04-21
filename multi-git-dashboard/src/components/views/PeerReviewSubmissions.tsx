@@ -402,6 +402,7 @@ const PeerReviewSubmissions: React.FC<PeerReviewSubmissionsProps> = ({
                     userId={me.userId}
                     assessmentId={assessmentId}
                     peerReviewStatus={dto.peerReviewStatus}
+                    gradingStatus={dto.gradingStatus}
                     item={item}
                     isFaculty={isFaculty}
                     onAfterAction={fetchSubmissions}

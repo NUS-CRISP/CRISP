@@ -271,7 +271,7 @@ export const getPeerReviewSubmissionsForAssessmentById = async (
   const peerReview = await PeerReviewModel.findOne({
     internalAssessmentId: assessmentId,
   }).select(
-    '_id reviewerType taAssignments internalAssessmentId startDate endDate status'
+    '_id reviewerType taAssignments internalAssessmentId startDate endDate gradingStartDate gradingEndDate status'
   );
   if (!peerReview)
     throw new NotFoundError('Peer review not found for assessment');
@@ -279,6 +279,17 @@ export const getPeerReviewSubmissionsForAssessmentById = async (
     | 'Upcoming'
     | 'Active'
     | 'Closed';
+
+  // Mirror assertPeerReviewActive Option B: no grading dates + Closed = open
+  const hasGradingDates =
+    peerReview.gradingStartDate || peerReview.gradingEndDate;
+  const gradingStatus: 'NotStarted' | 'InProgress' | 'Completed' =
+    peerReviewStatus === 'Closed' && !hasGradingDates
+      ? 'InProgress'
+      : ((peerReview.computedGradingStatus ?? 'NotStarted') as
+          | 'NotStarted'
+          | 'InProgress'
+          | 'Completed');
 
   let allowedSubmissionIds: Types.ObjectId[] | null = null;
   if (userCourseRole === COURSE_ROLE.TA) {
@@ -308,6 +319,7 @@ export const getPeerReviewSubmissionsForAssessmentById = async (
       internalAssessmentId: String(assessment._id),
       peerReviewId: String(peerReview._id),
       peerReviewStatus,
+      gradingStatus,
       reviewerType: peerReview.reviewerType,
       taAssignments: peerReview.taAssignments,
       maxMarks: assessment.maxMarks ?? 0,
@@ -504,6 +516,7 @@ export const getPeerReviewSubmissionsForAssessmentById = async (
     internalAssessmentId: String(assessment._id),
     peerReviewId: String(peerReview._id),
     peerReviewStatus,
+    gradingStatus,
     reviewerType: peerReview.reviewerType,
     taAssignments: peerReview.taAssignments,
     maxMarks: assessment.maxMarks ?? 0,

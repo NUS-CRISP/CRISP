@@ -42,6 +42,7 @@ interface PeerReviewSubmissionCardProps {
   courseId: string;
   assessmentId: string;
   peerReviewStatus: 'Upcoming' | 'Active' | 'Closed';
+  gradingStatus: 'NotStarted' | 'InProgress' | 'Completed';
   userId: string;
   item: PeerReviewSubmissionListItemDTO;
   isFaculty: boolean;
@@ -52,6 +53,7 @@ const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
   courseId,
   assessmentId,
   peerReviewStatus,
+  gradingStatus,
   userId,
   item,
   isFaculty,
@@ -73,8 +75,8 @@ const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
   const [loadingTAs, setLoadingTAs] = useState(false);
 
   const isSubmissionSubmitted = item.status === 'Submitted';
-  const isPeerReviewActive = peerReviewStatus === 'Active';
   const isPeerReviewClosed = peerReviewStatus === 'Closed';
+  const isGradingOpen = isPeerReviewClosed && gradingStatus === 'InProgress';
   const myGrader = item.grading.graders.find(g => g.id === userId);
   const isMyGradingInProgress = myGrader?.status === 'InProgress';
   const isMyGradingCompleted = myGrader?.status === 'Completed';
@@ -85,8 +87,8 @@ const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
   let buttonIcon: JSX.Element;
   let buttonText: string;
 
-  if (!isPeerReviewActive || !isSubmissionSubmitted) {
-    // Not submitted - both Faculty and TAs can only view
+  if (!isGradingOpen || !isSubmissionSubmitted) {
+    // Grading not open or submission not ready — view only
     buttonColor = 'blue';
     buttonIcon = <IconEye size={16} />;
     buttonText = 'View';
@@ -310,7 +312,7 @@ const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
                         size="xs"
                         color="red"
                         variant="subtle"
-                        disabled={isPeerReviewClosed}
+                        disabled={!isPeerReviewClosed || gradingStatus === 'Completed'}
                         onClick={() => handleUnassignGrader(grader.id)}
                         loading={unassigningGrader === grader.id}
                       >
@@ -346,7 +348,7 @@ const PeerReviewSubmissionCard: React.FC<PeerReviewSubmissionCardProps> = ({
                 variant="subtle"
                 size="sm"
                 leftSection={<IconUserPlus size={16} />}
-                disabled={isPeerReviewClosed}
+                disabled={!isPeerReviewClosed || gradingStatus === 'Completed'}
                 loading={assigningGrader || loadingTAs}
               >
                 Assign Grader
