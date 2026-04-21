@@ -751,6 +751,15 @@ describe('peerReviewService', () => {
       ).rejects.toBeInstanceOf(BadRequestError);
     });
 
+    it('throws BadRequestError when teamSetId is changed on an Active peer review', async () => {
+      const pr = await makePeerReview();
+      const differentTeamSetId = oidStr();
+
+      await expect(
+        updatePeerReviewById(pr._id.toString(), { teamSetId: differentTeamSetId } as any)
+      ).rejects.toBeInstanceOf(BadRequestError);
+    });
+
     it('throws BadRequestError when structural fields are changed on a Closed peer review', async () => {
       const now = Date.now();
       const pr = await makePeerReview({
