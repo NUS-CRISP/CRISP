@@ -451,6 +451,27 @@ export const updatePeerReviewById = async (
   const pr = await PeerReviewModel.findById(peerReviewId);
   if (!pr) throw new NotFoundError('Peer review not found');
 
+  // Block structural changes once the review has started
+  if (pr.status !== 'Upcoming') {
+    const attemptingStructuralChange =
+      (settingsData.teamSetId !== undefined &&
+        String(pr.teamSetId) !== String(settingsData.teamSetId)) ||
+      (settingsData.reviewerType !== undefined &&
+        pr.reviewerType !== settingsData.reviewerType) ||
+      (settingsData.taAssignments !== undefined &&
+        pr.taAssignments !== settingsData.taAssignments) ||
+      (settingsData.maxReviews !== undefined &&
+        pr.maxReviewsPerReviewer !== Number(settingsData.maxReviews)) ||
+      (settingsData.commitOrTag !== undefined &&
+        (pr.commitOrTag ?? '') !== (settingsData.commitOrTag ?? ''));
+
+    if (attemptingStructuralChange) {
+      throw new BadRequestError(
+        'Structural settings cannot be changed once the peer review has started'
+      );
+    }
+  }
+
   // Determine if assignment structure should be reset BEFORE save()
   const structuralChanged =
     (settingsData.teamSetId !== undefined &&
