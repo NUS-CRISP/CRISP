@@ -622,9 +622,12 @@ describe('peerReviewService', () => {
 
   describe('updatePeerReviewById', () => {
     it('updates peer review and reinitialises assignments when teamSetId provided', async () => {
+      const now = Date.now();
       const pr = await makePeerReview({
         title: 'Old',
         teamSetId: testTeamSetId,
+        startDate: new Date(now + 60_000),
+        endDate: new Date(now + 120_000),
       });
 
       const updated = await updatePeerReviewById(pr._id.toString(), {
@@ -668,10 +671,13 @@ describe('peerReviewService', () => {
     });
 
     it('updates description, review window, reviewerType and review limits', async () => {
+      const now = Date.now();
       const pr = await makePeerReview({
         description: 'old description',
         reviewerType: 'Individual',
         maxReviewsPerReviewer: 2,
+        startDate: new Date(now + 60_000),
+        endDate: new Date(now + 120_000),
       });
 
       const newStart = new Date('2026-04-01T00:00:00.000Z');
@@ -737,9 +743,53 @@ describe('peerReviewService', () => {
       ).rejects.toBeInstanceOf(NotFoundError);
     });
 
-    it('updates commitOrTag field', async () => {
+    it('throws BadRequestError when structural fields are changed on an Active peer review', async () => {
+      const pr = await makePeerReview({ reviewerType: 'Individual' }); // default is Active
+
+      await expect(
+        updatePeerReviewById(pr._id.toString(), { reviewerType: 'Team' } as any)
+      ).rejects.toBeInstanceOf(BadRequestError);
+    });
+
+    it('throws BadRequestError when teamSetId is changed on an Active peer review', async () => {
+      const pr = await makePeerReview();
+      const differentTeamSetId = oidStr();
+
+      await expect(
+        updatePeerReviewById(pr._id.toString(), { teamSetId: differentTeamSetId } as any)
+      ).rejects.toBeInstanceOf(BadRequestError);
+    });
+
+    it('throws BadRequestError when structural fields are changed on a Closed peer review', async () => {
+      const now = Date.now();
+      const pr = await makePeerReview({
+        startDate: new Date(now - 120_000),
+        endDate: new Date(now - 60_000),
+        maxReviewsPerReviewer: 2,
+      });
+
+      await expect(
+        updatePeerReviewById(pr._id.toString(), { maxReviews: 3 } as any)
+      ).rejects.toBeInstanceOf(BadRequestError);
+    });
+
+    it('allows non-structural field changes on an Active peer review', async () => {
+      const pr = await makePeerReview({ title: 'Old' }); // default is Active
+
+      const updated = await updatePeerReviewById(pr._id.toString(), {
+        assessmentName: 'New Title',
+      } as any);
+
+      expect(updated.title).toBe('New Title');
+      expect(deleteAssignmentsByPeerReviewId).not.toHaveBeenCalled();
+    });
+
+    it('resets assignments when commitOrTag changes', async () => {
+      const now = Date.now();
       const pr = await makePeerReview({
         commitOrTag: undefined,
+        startDate: new Date(now + 60_000),
+        endDate: new Date(now + 120_000),
       });
 
       const updated = await updatePeerReviewById(pr._id.toString(), {
@@ -747,13 +797,53 @@ describe('peerReviewService', () => {
       } as any);
 
       expect(updated.commitOrTag).toBe('v1.0.0');
+      expect(deleteAssignmentsByPeerReviewId).toHaveBeenCalledWith(
+        pr._id.toString()
+      );
+      expect(initialiseAssignments).toHaveBeenCalledWith(
+        testCourseId.toString(),
+        pr._id.toString(),
+        pr.teamSetId.toString(),
+        null,
+        'v1.0.0'
+      );
+    });
 
-      // Also test clearing it
+    it('does not reset assignments when commitOrTag is unchanged', async () => {
+      const pr = await makePeerReview({ commitOrTag: 'v1.0.0' });
+
+      const updated = await updatePeerReviewById(pr._id.toString(), {
+        commitOrTag: 'v1.0.0',
+      } as any);
+
+      expect(updated.commitOrTag).toBe('v1.0.0');
+      expect(deleteAssignmentsByPeerReviewId).not.toHaveBeenCalled();
+      expect(initialiseAssignments).not.toHaveBeenCalled();
+    });
+
+    it('resets assignments when commitOrTag is cleared', async () => {
+      const now = Date.now();
+      const pr = await makePeerReview({
+        commitOrTag: 'v1.0.0',
+        startDate: new Date(now + 60_000),
+        endDate: new Date(now + 120_000),
+      });
+
       const cleared = await updatePeerReviewById(pr._id.toString(), {
         commitOrTag: '',
       } as any);
 
       expect(cleared.commitOrTag).toBeUndefined();
+      expect(deleteAssignmentsByPeerReviewId).toHaveBeenCalledWith(
+        pr._id.toString()
+      );
+      expect(initialiseAssignments).toHaveBeenCalledWith(
+        testCourseId.toString(),
+        pr._id.toString(),
+        pr.teamSetId.toString(),
+        null,
+        undefined
+      );
     });
   });
 
